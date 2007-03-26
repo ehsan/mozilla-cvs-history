@@ -84,8 +84,6 @@ content/global/charsetOverlay.xul,                    toolkit/content/global/cha
 content/global/charsetOverlay.js,                     toolkit/content/global/charsetOverlay.js 
 content/global/selectDialog.js,                       toolkit/content/global/selectDialog.js 
 content/global/selectDialog.xul,                      toolkit/content/global/selectDialog.xul 
-content/global/nsWidgetStateManager.js,               toolkit/content/global/nsWidgetStateManager.js 
-content/global/widgetStateManager.js,                 toolkit/content/global/widgetStateManager.js 
 content/global/nsTreeController.js,                   toolkit/content/global/nsTreeController.js 
 content/global/nsTreeSorting.js,                      toolkit/content/global/nsTreeSorting.js 
 content/global/nsClipboard.js,                        toolkit/content/global/nsClipboard.js 
