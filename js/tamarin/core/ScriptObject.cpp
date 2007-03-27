@@ -87,7 +87,7 @@ namespace avmplus
 		: 
 #ifdef DEBUGGER 
 			AvmPlusScriptableObject((Atom)vtable), 
-#endif DEBUGGER
+#endif // DEBUGGER
 			vtable(vtable)
 	{
 		// initialize slots in this object to initial values from traits.

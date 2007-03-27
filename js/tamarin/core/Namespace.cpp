@@ -46,7 +46,7 @@ namespace avmplus
     Namespace::Namespace(Atom prefix, Stringp uri, NamespaceType flags)
 #ifdef DEBUGGER
 		: AvmPlusScriptableObject(kNamespaceType)
-#endif DEBUGGER
+#endif // DEBUGGER
 	{
 		// verify our parameters are interned strings
 		AvmAssert (uri->isInterned());

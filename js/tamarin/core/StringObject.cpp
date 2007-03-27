@@ -72,7 +72,7 @@ namespace avmplus
 	String::String(int len)
 #ifdef DEBUGGER
 		: AvmPlusScriptableObject(kStringType)
-#endif DEBUGGER
+#endif // DEBUGGER
 	{
 		AvmAssert(len >= 0);
 		MMGC_MEM_TYPE(this);
@@ -84,7 +84,7 @@ namespace avmplus
 	String::String(const char *str, int utf8len, int utf16len)
 #ifdef DEBUGGER
 		: AvmPlusScriptableObject(kStringType)
-#endif DEBUGGER
+#endif // DEBUGGER
 	{
 		AvmAssert(utf8len >= 0);
 		AvmAssert(utf16len >= 0);
@@ -101,7 +101,7 @@ namespace avmplus
 	String::String(const wchar *str, int len)
 #ifdef DEBUGGER
 		: AvmPlusScriptableObject(kStringType)
-#endif DEBUGGER
+#endif // DEBUGGER
 	{
 		AvmAssert(len >= 0);
 		m_length = len;
@@ -115,7 +115,7 @@ namespace avmplus
 	String::String(Stringp s1, Stringp s2)
 #ifdef DEBUGGER
 		: AvmPlusScriptableObject(kStringType)
-#endif DEBUGGER
+#endif // DEBUGGER
 	{
 		m_length = s1->length() + s2->length();
 		AvmAssert(m_length >= 0);
@@ -128,7 +128,7 @@ namespace avmplus
 	String::String(Stringp s, int pos, int len)
 #ifdef DEBUGGER
 		: AvmPlusScriptableObject(kStringType)
-#endif DEBUGGER
+#endif // DEBUGGER
 	{
 		// out-of-bounds requests return sensible things
 		if (pos < 0) {
