@@ -43,64 +43,6 @@ namespace avmplus
 {
 #ifdef DEBUGGER
 	/**
-	 * The ScriptObjectTable is used to track what objects are
-	 * in the system, for heap dumps.
-	 */
-	class ScriptObjectTable : public MMgc::GCObject
-	{
-	public:
-		ScriptObjectTable(AvmCore *core);
-		
-		/**
-		 * This will be called when a ScriptObject is constructed.
-		 * The ScriptObject will be added to the scriptObjectTable.
-		 *
-		 * There will be a matching call to deleteScriptObject
-		 * upon ScriptObject destruction.
-		 *
-		 * @param scriptObject the address to the ScriptObject
-		 *                     being constructed.
-		 */
-		void addScriptObject(ScriptObject *object);
-
-		/**
-		 * This will be called when a ScriptObject is destroyed.
-		 * The ScriptObject will be removed from the scriptObjectTable.
-		 *
-		 * There will be a matching call to addScriptObject
-		 * upon ScriptObject construction.
-		 *
-		 * @param scriptObject the address to the ScriptObject
-		 *                     being destroyed.
-		 */
-		void deleteScriptObject(ScriptObject *object);
-
-		/**
-		 * Used to iterate over the contents of the table.
-		 */
-		bool nextObject(int& index,
-						ScriptObject*& object,
-						StackTrace*& stackTrace);
-
-		/**
-		 * Returns # of objects in table
-		 */
-		int size() const { return table->getSize(); }
-		
-	private:
-		AvmCore *core;
-		DWB(Hashtable*) table;
-
-		static Atom mask(ScriptObject *object) {
-			return object->atom() ^ 0xFFFFFFF8;
-		}
-
-		static ScriptObject* unmask(Atom atom) {
-			return AvmCore::atomToScriptObject(atom ^ 0xFFFFFFF8);
-		}
-	};
-	
-	/**
 	 * The Profiler class is a pure virtual base class.  It specifies
 	 * an interface which must be implemented by profilers that
 	 * wish to plug in to the AVM+ virtual machine.
@@ -110,10 +52,12 @@ namespace avmplus
 	 * informed about events of interest to profilers, such as
 	 * function entry and exit and execution of each line of code.
 	 */
-	class Profiler : public MMgc::GCCallback
+	class Profiler : public MMgc::GCFinalizedObject
 	{
 	public:
-		Profiler(MMgc::GC *gc) : MMgc :: GCCallback(gc){}
+		Profiler()
+		{
+		}
 
 		virtual ~Profiler() {}
 
@@ -173,29 +117,6 @@ namespace avmplus
 		 * @param method  the method being entered
 		 */
 		virtual void sendCatch(AbstractFunction* method) = 0;
-
-		/**
-		 * This is called when we want to write out heap profiling data.
-		 * ActionScript function heapdump() triggers this call.
-		 *
-		 * @param heapDumpName enables the user to label this heap dump.
-		 *                     This string will be sent down to the
-		 *                     profiling output so that the user can
-		 *                     refer to it later in the profiling output.
-		 *                     heapDumpName should be NULL if the
-		 *                     user calls ActionScript heapdump()
-		 *                     with no parameter to label the dump.
-		 */
-		virtual void sendHeapDump(String *heapDumpName) = 0;
-		
-		/**
-		 * This returns the size of the String, including the String type size,
-		 * and the length of the String multiplied by the wchar size.
-		 *
-		 * @param myString the address to the String for which size
-		 * should be computed.
-		 */
-		virtual int computeStringSize(String *myString) = 0;
 
 		/**
 		 * Is profiling wanted at all?

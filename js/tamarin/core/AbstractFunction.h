@@ -297,6 +297,15 @@ namespace avmplus
 		virtual uint32 size() const;
 #endif
 	};
+
+#ifdef DEBUGGER	
+	// for sampling
+	class FakeAbstractFunction : public AbstractFunction
+	{
+	public:
+		void verify(Toplevel *) {}
+	};
+#endif
 }
 
 #endif /* __avmplus_AbstractFunction__ */

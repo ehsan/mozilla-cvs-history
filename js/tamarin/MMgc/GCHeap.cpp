@@ -771,6 +771,12 @@ namespace MMgc
 	{
 		GCAssert(block->inUse());
 
+#ifdef _DEBUG
+		// trash it. fb == free block
+		memset(block->baseAddr, 0xfb, block->size * kBlockSize);
+		block->freeTrace = GetStackTraceIndex(2);
+#endif
+
 		// Try to coalesce this block with its predecessor
 		HeapBlock *prevBlock = block - block->sizePrevious;
 		if (!prevBlock->inUse() && prevBlock->committed) {
@@ -1073,6 +1079,7 @@ namespace MMgc
 
 #ifdef MEMORY_INFO
 		block->allocTrace = 0;
+		block->freeTrace = 0;
 #endif
 
 		AddToFreeList(block);
@@ -1089,6 +1096,7 @@ namespace MMgc
 			block->dirty = false;
 #ifdef MEMORY_INFO
 			block->allocTrace = 0;
+			block->freeTrace = 0;
 #endif
 		}
 

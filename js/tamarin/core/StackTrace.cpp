@@ -194,44 +194,5 @@ namespace avmplus
 		}
 		return stringRep;
 	}
-
-	
-	FakeCallStackNode::FakeCallStackNode(AvmCore *core, const char *name)
-	{
-		this->core = core;
-		if(core && core->sampling && core->fakeMethodInfos && core->builtinPool)
-		{
-			this->core = core;
-			// have to turn sampling off during allocations to avoid recursion
-			core->sampling = false;
-			Stringp s = core->internAllocAscii(name);
-			Atom a = core->fakeMethodInfos->get(s->atom());
-			AbstractFunction *af = (AbstractFunction*)AvmCore::atomToGCObject(a);
-			if(!af)
-			{
-				af = new (core->GetGC()) FakeAbstractFunction();
-				a = AvmCore::gcObjectToAtom(af);
-				core->fakeMethodInfos->add(s->atom(), a);
-				af->name = s;
-				af->pool = core->builtinPool;
-			}
-			initialize(NULL, af, NULL, NULL, 0, NULL, NULL);
-			core->sampling = true;
-			core->sampleCheck();
-		}
-		else
-		{
-			memset(this, 0, sizeof(FakeCallStackNode));
-		}
-	}
-
-	FakeCallStackNode::~FakeCallStackNode()
-	{
-		if(core)
-		{
-			exit();
-			core->sampleCheck();
-		}
-	}
 #endif /* DEBUGGER */
 }	

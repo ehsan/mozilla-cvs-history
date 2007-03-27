@@ -277,6 +277,7 @@ namespace MMgc
 			bool dirty;		  // needs zero'ing, only valid if committed
 #ifdef MEMORY_INFO
 			int allocTrace;
+			int freeTrace;
 #endif
 			bool inUse() { return prev == NULL; }
 		};

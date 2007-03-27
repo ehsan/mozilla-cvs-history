@@ -84,10 +84,17 @@
 
 #include "avmbuild.h"
 
-#if defined(_MAC) || defined(UNIX)
-//#include <stdlib.h>
+#if defined(_MAC)
 #include <alloca.h>
 #endif
+
+#ifdef UNIX
+#ifdef HAVE_ALLOCA_H
+#include <alloca.h>
+#else // HAVE_ALLOCA_H
+#include <stdlib.h>
+#endif // HAVE_ALLOCA_H
+#endif // UNIX
 
 #ifdef WIN32
 #include <malloc.h>
@@ -177,6 +184,7 @@ namespace avmplus
 	class Profiler;
 	class RegExpClass;
 	class RegExpObject;
+	class Sampler;
 	class ScopeChain;
 	class ScopeTypeChain;
 	class ScriptBuffer;
@@ -241,6 +249,7 @@ namespace avmplus
 #include "Multiname.h"
 #include "DynamicProfiler.h"
 #include "StaticProfiler.h"
+#include "Sampler.h"
 #include "AvmCore.h"
 #include "AtomWriteBarrier.h"
 #include "avmplusHashtable.h"

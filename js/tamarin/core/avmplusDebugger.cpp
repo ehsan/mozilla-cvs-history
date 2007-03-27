@@ -124,7 +124,7 @@ namespace avmplus
 		if (!changed && !exited) 
 			return;  // still on the same line in the same function?
 
-		if (core->profiler->profilingDataWanted && core->profiler->profileSwitch)
+		if (core->profiler->profilingDataWanted && core->profiler->profileSwitch && !core->sampler()->sampling)
 		{
 			core->profiler->sendLineTimestamp(line);
 		}
@@ -206,7 +206,7 @@ namespace avmplus
 		// filename changed
 		if (prev != filename) 
 		{
-			if (core->profiler->profilingDataWanted)
+			if (core->profiler->profilingDataWanted && !core->sampler()->sampling)
 			{
 				UTF8String* sourceFile = filename->toUTF8String();
 				core->profiler->sendDebugFileUrl(sourceFile);
@@ -648,7 +648,7 @@ namespace avmplus
 	{
 		// use the method info to locate the abcfile / source 
 		AbstractFunction* m = trace->info;
-		if (trace->filename)
+		if (trace->filename && debugger)
 		{
 			uintptr index = (uintptr)debugger->pool2abcIndex.get(Atom((PoolObject*)m->pool));
 
@@ -692,7 +692,7 @@ namespace avmplus
 			int firstArgument, pastLastArgument;
 			argumentBounds(&firstArgument, &pastLastArgument);
 			count = pastLastArgument - firstArgument;
-			if (count > 0)
+			if ((count > 0) && debugger)
 			{
 				// pull the args into an array -- skip [0] which is [this]
 				ar = (Atom*) debugger->core->GetGC()->Calloc(count, sizeof(Atom), GC::kContainsPointers|GC::kZero);
@@ -740,7 +740,7 @@ namespace avmplus
 			localBounds(&firstLocal, &pastLastLocal);
 			count = pastLastLocal - firstLocal;
 			AvmAssert(count >= 0);
-			if (count > 0)
+			if ((count > 0) && debugger)
 			{
 				// frame looks like [this][param0...paramN][local0...localN]
 				ar = (Atom*) debugger->core->GetGC()->Calloc(count, sizeof(Atom), GC::kContainsPointers|GC::kZero);

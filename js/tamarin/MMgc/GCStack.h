@@ -38,6 +38,10 @@
 #ifndef __GCStack__
 #define __GCStack__
 
+#ifdef UNIX
+#include <string.h>
+#endif
+
 namespace MMgc
 {	
 	template<typename T, int defSize=512>

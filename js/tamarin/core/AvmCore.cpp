@@ -86,7 +86,8 @@ namespace avmplus
 		NATIVE_SCRIPT(0, Toplevel)
 	END_NATIVE_SCRIPTS()
 
-	AvmCore::AvmCore(GC *g) : GCRoot(g), console(NULL), mirBuffers(g, 4), gcInterface(g)
+	AvmCore::AvmCore(GC *g) : GCRoot(g), console(NULL), gc(g), mirBuffers(g, 4), 
+		gcInterface(g)
     {
 		// sanity check for all our types
 		AvmAssert (sizeof(int8) == 1);
@@ -107,11 +108,6 @@ namespace avmplus
 		AvmAssert (sizeof(uintptr) == 4);		
 		#endif	
 			
-		#ifdef DEBUGGER	
-		sampling = false;
-		autoStartSampling = false;
-		#endif
-
 		// set default mode flags
 		#ifdef AVMPLUS_VERBOSE
 		verbose = false;
@@ -149,10 +145,6 @@ namespace avmplus
 
 		#endif // AVMPLUS_MIR
 
-		#ifdef DEBUGGER	
-		allocationTracking = false;
-		#endif
-
 		interrupts = false;
 
 		gcInterface.SetCore(this);
@@ -167,17 +159,11 @@ namespace avmplus
 		minstack           = 0;
 		
 		#ifdef DEBUGGER
+		_sampler.setCore(this);
 		langID			   = -1;
 		debugger           = NULL;
 		profiler		   = NULL;
 		callStack          = NULL;
-		stackTraces        = NULL;
-		numTraces          = 0;
-		samples            = NULL;
-		takeSample         = false;
-		samplingNow        = false;
-		numSamples         = 0;
-		fakeMethodInfos    = 0;
         #endif /* DEBUGGER */
 
 		interrupted        = false;
@@ -255,15 +241,11 @@ namespace avmplus
 
 	AvmCore::~AvmCore()
 	{		
-#ifdef DEBUGGER
-		stopSampling();
-#endif
-
 		// Free the numbers and strings tables
 		delete [] strings;
-		if (GetGC()) 
+		if (gc) 
 		{
-			GetGC()->SetGCContextVariable(GC::GCV_AVMCORE, NULL);
+			gc->SetGCContextVariable(GC::GCV_AVMCORE, NULL);
 		}
 
 		#if defined(AVMPLUS_MIR) && defined(AVMPLUS_VERBOSE)
@@ -318,7 +300,7 @@ namespace avmplus
 
 #ifdef DEBUGGER
 		// sampling can begin now, requires builtinPool
-		initSampling();
+		_sampler.initSampling();
 #endif
 	}
 	
@@ -2558,24 +2540,16 @@ return the result of the comparison ToPrimitive(x) == y.
 		}
 
 #ifdef DEBUGGER
-		if(stackTraces)
-		{
-			uint32 n = GetGC()->Size(stackTraces)/sizeof(StackTrace*);
-			n = 1<<FindOneBit(n);
-			bool rehash= false;
-			for (uint32 i=0; i<n; i++)
-			{
-				if(stackTraces[i] && !GetGC()->GetMark(stackTraces[i]))
-				{
-					rehash = true;
-					stackTraces[i] = NULL;
-				}
-			}
-			if(rehash)
-				rehashTraces(n);
-		}
+		_sampler.presweep();
 #endif
     }
+
+	void AvmCore::postsweep()
+	{
+#ifdef DEBUGGER
+		_sampler.postsweep();
+#endif
+	}
 
 	bool wcharEquals(const wchar *s1, const wchar *s2)
 	{
@@ -2835,7 +2809,7 @@ return the result of the comparison ToPrimitive(x) == y.
 				deletedCount--;
 				AvmAssert(deletedCount >= 0);
 			}
-			s = new (GetGC()) String(buffer, len);
+			s = new (gc) String(buffer, len);
 			stringCount++;
 			strings[i] = s;
 			s->setInterned(this);
@@ -3154,7 +3128,7 @@ return the result of the comparison ToPrimitive(x) == y.
 			}
 		}
 		return allocDouble(n);
-		#elif AVMPLUS_LINUX
+		#elif AVMPLUS_UNIX
 		int id3;
 		asm("movups %1, %%xmm0;"
 			"cvttsd2si %%xmm0, %%ecx;"
@@ -3270,131 +3244,6 @@ return the result of the comparison ToPrimitive(x) == y.
 	}
 #endif
 
-#ifdef DEBUGGER
-	int AvmCore::sizeInternedTables()
-	{
-		int size = 0;
-
-		//add size of strings array
-		size += numStrings * sizeof(Stringp);
-		for (int i = 0; i < numStrings; i++)
-		{
-			if (strings[i] > AVMPLUS_STRING_DELETED)
-			{
-				size += profiler->computeStringSize(strings[i]);
-			}
-		}
-
-		// add size of namespaces array
-		size += numNamespaces * sizeof(Namespace*);
-		for (int i=0; i < numNamespaces; i++)
-		{
-			if (namespaces[i] != NULL)
-			{
-				if (namespaces[i]->m_prefix != undefinedAtom)
-				{
-					size += profiler->computeStringSize(atomToString(namespaces[i]->m_prefix));
-				}
-				size += profiler->computeStringSize(namespaces[i]->getURI());
-			}
-		}
-
-		return size;
-	}
-
-	void AvmCore::sample()
-	{
-		if(!AvmCore::sampling) return;
-		if(!callStack)
-		{
-			return;
-		}
-
-		uint64 time = GC::GetPerformanceCounter();
-
-		size_t sampleSize = sizeof(uint64) + sizeof(uint32) + 
-			callStack->depth * (sizeof(void*) + sizeof(void*) + sizeof(int));
-
-		if(currentSample + sampleSize > samples->uncommitted())
-		{
-			samples->grow();
-			if(currentSample + sampleSize > samples->uncommitted())
-			{
-				// exhausted buffer
-				return;
-			}
-		}
-
-		CallStackNode *csn = callStack;
-		byte *p = currentSample;
-		*(uint64*)p = time;
-		p += sizeof(uint64);
-		*(uint32*)p = callStack->depth;
-		p += sizeof(uint32);
-		while(csn)
-		{
-			// FIXME: this is essentially a 12 byte copy, faster way?
-			*(AbstractFunction**)p = csn->info;
-			p += sizeof(AbstractFunction*);
-			*(Stringp*)p = csn->filename;
-			p += sizeof(Stringp);
-			*(int*)p = csn->linenum;
-			p += sizeof(int);
-			csn = csn->next;
-		}
-		currentSample = p;
-		numSamples++;		
-		takeSample = 0;			
-	}
-
-	void AvmCore::clearSamples()
-	{
-		currentSample = samples->start();
-		numSamples = 0;
-	}
-
-	void AvmCore::startSampling()
-	{
-		if(!AvmCore::sampling) return;
-		if(samplingNow)
-			return;
-		numSamples = 0;
-		samplingNow = true;
-		if(!samples->start())
-			currentSample = samples->reserve(512 * 1024 * 1024);
-		timerHandle = OSDep::startIntWriteTimer(1, &takeSample);
-	}
-
-	void AvmCore::stopSampling()
-	{
-		if(!AvmCore::sampling) return;
-		if(!samplingNow)
-			return;
-		OSDep::stopTimer(timerHandle);
-		currentSample = samples->start();
-		samplingNow = false;
-	}
-
-	void AvmCore::initSampling()
-	{
-		if(AvmCore::sampling)
-		{
-			samples = new (GetGC()) GrowableBuffer(GetGC()->GetGCHeap());
-			fakeMethodInfos = new (GetGC()) Hashtable(GetGC());
-		}
-		if(AvmCore::sampling || allocationTracking)
-		{
-			stackTraces = (StackTrace**)GetGC()->Alloc(sizeof(StackTrace*) * 1024, GC::kZero);
-		}
-
-		if(AvmCore::sampling && autoStartSampling)
-		{
-			startSampling();
-		}
-	}
-
-#endif
-
     /**
      * traits with base traits.  These should only be used
 	 * for Object instance traits, and activation objects (e.g. global scope)
@@ -3498,99 +3347,6 @@ return the result of the comparison ToPrimitive(x) == y.
 		return stackTrace;
 	}
 
-	void AvmCore::rehashTraces(int newSize)
-	{
-		uint32 oldNumTraces = numTraces;
-		numTraces = 0;
-		StackTrace **oldStackTraces = stackTraces;
-		stackTraces = (StackTrace**)GetGC()->Calloc(newSize, sizeof(StackTrace*), GC::kZero);
-
-		uint32 bitMask = newSize-1;
-
-		for(uint32 i=0, n=oldNumTraces; i<n; i++)
-		{
-			StackTrace *t = oldStackTraces[i];
-			if(t) 
-			{
-				uint32 j = (StackTrace::hashCode(t->elements, t->depth)&0x7FFFFFFF) & bitMask;
-				uint32 n = 7;
-				while (stackTraces[j] != NULL) {
-					j = (j + (n++)) & bitMask; // quadratic probe
-				}
-				stackTraces[j] = t;
-			}
-		}
-		numTraces = oldNumTraces;
-	}
-
-	int AvmCore::findTrace(void /*StackTrace::Element*/ *ve, int depth)
-	{
-		StackTrace::Element *e = (StackTrace::Element*)ve;
-		uint32 sizeTraces = GetGC()->Size(stackTraces)/sizeof(StackTrace*);
-		uint32 shift = FindOneBit(sizeTraces);
-		uint32 bitMask = (1<<shift)-1;
-		if(numTraces*4 > bitMask*3)
-		{
-			rehashTraces((bitMask+1)*2);
-			sizeTraces = GetGC()->Size(stackTraces)/sizeof(StackTrace*);
-			shift = FindOneBit(sizeTraces);
-			bitMask = (1<<shift)-1;
-		}
-
-		uintptr hashCode = StackTrace::hashCode(e, depth);
-		uint32 j = (hashCode&0x7FFFFFFF) & bitMask;
-		uint32 n = 7;
-		while (stackTraces[j] != NULL && !stackTraces[j]->equals(e,depth)) {
-			j = (j + (n++)) & bitMask; // quadratic probe
-		}
-		return j;
-	}
-
-
-	StackTrace* AvmCore::getStackTrace(void /*StackTrace::Element*/ *ve, int depth)
-	{
-		StackTrace::Element *e = (StackTrace::Element*)ve;
-		int i = findTrace(e, depth);
-		StackTrace *t = stackTraces[i];
-		if(t)
-			return t;
-
-		int extra = depth > 0 ? sizeof(StackTrace::Element) * (depth-1) : 0;
-		t = new (GetGC(), extra) StackTrace();
-		t->depth = depth;
-		memcpy(t->elements, e, extra + sizeof(StackTrace::Element));
-		stackTraces[i] = t;
-		numTraces++;
-		return t;
-	}
-
-	StackTrace* AvmCore::getStackTrace()
-	{
-		if(callStack)
-		{
-			StackTrace::Element *elements = (StackTrace::Element*)alloca(callStack->depth * sizeof(StackTrace::Element));
-			StackTrace::Element *e = elements;
-			CallStackNode *curr = callStack;
-			while (curr) {
-				e->info     = curr->info;
-				e->filename = curr->filename;
-				e->linenum  = curr->linenum;
-				e++;
-				curr = curr->next;
-			}
-
-			int i = findTrace(elements, callStack->depth);
-			StackTrace *t = stackTraces[i];
-			if(t)
-				return t;
-			StackTrace *st = newStackTrace();
-			stackTraces[i] = st;
-			numTraces++;
-			return st;
-		}
-		return NULL;
-	}
-
 	#ifdef _DEBUG
 	void AvmCore::dumpStackTrace()
 	{
@@ -3599,32 +3355,7 @@ return the result of the comparison ToPrimitive(x) == y.
 		AvmDebugMsg(false, buffer.c_str());
 	}
 	#endif
-
-	/*static*/
-	void AvmCore::chargeAllocation(Atom a)
-	{
-		GC *gc = GC::GetGC((const void*)a);
-		AvmCore *core = (AvmCore*)gc->GetGCContextVariable(GC::GCV_AVMCORE);
-		if(!core->callStack || !core->callStack->env)
-			return;
-
-		Toplevel *toplevel = core->callStack->env->toplevel();
-		ClassClosure *clazz = NULL;
-		switch(a&7)
-		{
-		case kStringType:
-			clazz = toplevel->stringClass;
-			break;
-		case kNamespaceType:
-			clazz = toplevel->namespaceClass;
-			break;
-		}
-		if(clazz)
-		{
-			clazz->addInstance(a);
-		}
-	}
-    #endif /* DEBUGGER */
+	#endif /* DEBUGGER */
 
 	int AvmCore::integer(Atom atom) const
 	{
@@ -3668,7 +3399,7 @@ return the result of the comparison ToPrimitive(x) == y.
 		id = _mm_cvttsd_si32(_mm_set_sd(d));
 		if (id != (int)0x80000000)
 			return id;
-        #elif AVMPLUS_LINUX
+        #elif AVMPLUS_UNIX
         asm("movups %1, %%xmm0;"
             "cvttsd2si %%xmm0, %%eax;"
             "movl %%eax, %0" : "=r" (id) : "m" (d) : "%eax");

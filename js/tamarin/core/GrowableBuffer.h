@@ -48,10 +48,10 @@
 #include <pthread.h>
 #endif /* AVMPLUS_MACH_EXCEPTIONS */
 
-#ifdef AVMPLUS_LINUX
+#ifdef AVMPLUS_UNIX
 #include <pthread.h>
 #include <stdio.h>
-#endif /* AVMPLUS_LINUX */
+#endif /* AVMPLUS_UNIX */
 
 namespace avmplus
 {
@@ -104,10 +104,10 @@ namespace avmplus
 		static void staticDestroy();
 		#endif
 
-		#ifdef AVMPLUS_LINUX
+		#ifdef AVMPLUS_UNIX
 		GenericGuard *next;
 		virtual bool handleException(byte*) = 0;
-		#endif // AVMPLUS_LINUX
+		#endif // AVMPLUS_UNIX
 
 	protected:
 		void init();
@@ -195,16 +195,16 @@ namespace avmplus
 	class BufferGuard : public GenericGuard
 	{
 	public:
-		#ifdef AVMPLUS_LINUX
+		#ifdef AVMPLUS_UNIX
 		BufferGuard(jmp_buf jmpBuf);
 		#else
 		BufferGuard(int *jmpBuf);
-		#endif // AVMPLUS_LINUX
+		#endif // AVMPLUS_UNIX
 		virtual ~BufferGuard();
 
-		#ifdef AVMPLUS_LINUX
+		#ifdef AVMPLUS_UNIX
 		virtual bool handleException(byte*);
-		#endif // AVMPLUS_LINUX
+		#endif // AVMPLUS_UNIX
 
 	protected:
         #ifdef AVMPLUS_WIN32
@@ -219,11 +219,11 @@ namespace avmplus
 		#endif
 		
 	private:
-		#ifdef AVMPLUS_LINUX
+		#ifdef AVMPLUS_UNIX
 		jmp_buf jmpBuf;
 		#else
 		int *jmpBuf;
-		#endif // AVMPLUS_LINUX
+		#endif // AVMPLUS_UNIX
 
 	};
 
@@ -234,7 +234,7 @@ namespace avmplus
 		GrowthGuard(GrowableBuffer* buffer);
 		virtual ~GrowthGuard();
 
-		#ifdef AVMPLUS_LINUX
+		#ifdef AVMPLUS_UNIX
 		virtual bool handleException(byte*);
 		#endif
 

@@ -105,6 +105,25 @@ static const int eint[] = {
 
 static const char *const pstring[] = {
   "",                                /* Dummy for value 0 */
+#ifdef AVMPLUS_PCRE
+  "", /* REG_ASSERT */
+  "", /* BADBR      */
+  "", /* BADPAT     */
+  "", /* BADRPT     */
+  "", /* EBRACE     */
+  "", /* EBRACK     */
+  "", /* ECOLLATE   */
+  "", /* ECTYPE     */
+  "", /* EESCAPE    */
+  "", /* EMPTY      */
+  "", /* EPAREN     */
+  "", /* ERANGE     */
+  "", /* ESIZE      */
+  "", /* ESPACE     */
+  "", /* ESUBREG    */
+  "", /* INVARG     */
+  ""  /* NOMATCH    */
+#else // AVMPLUS_PCRE
   "internal error",                  /* REG_ASSERT */
   "invalid repeat counts in {}",     /* BADBR      */
   "pattern error",                   /* BADPAT     */
@@ -122,6 +141,7 @@ static const char *const pstring[] = {
   "bad back reference",              /* ESUBREG    */
   "bad argument",                    /* INVARG     */
   "match failed"                     /* NOMATCH    */
+#endif // AVMPLUS_PCRE
 };
 
 

@@ -57,13 +57,6 @@ namespace avmplus
 		AvmAssert(traits()->sizeofInstance == sizeof(ClassClass));
 
 		createVanillaPrototype();
-#ifdef DEBUGGER
-		if(core()->allocationTracking)
-		{
-			// add ObjectClass and which predate me
-			addInstance(toplevel()->objectClass->atom());
-		}
-#endif
 	}
 
 	Atom ClassClass::construct(int /*argc*/, Atom* /*argv*/)

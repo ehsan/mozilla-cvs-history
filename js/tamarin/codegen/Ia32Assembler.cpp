@@ -987,44 +987,49 @@ namespace avmplus
 #endif
 
 #ifdef DEBUGGER
+	{ // scope ifdef
 		MOV (ECX, _env, ESP);
-
-		int adjust = 0;
+		
 		// store the return value on the stack if not a double.
+		int adjust = 0;
 		if (type != NUMBER_TYPE)
 		{
 			PUSH(EAX);
 			adjust = 4;
 		}
 
-#ifdef _MAC
-		// Align this call for MacOS X ABI
-		if (type != NUMBER_TYPE)
-		{
-			SUB(ESP, 4);
-			adjust += 4;
-		}
-#endif
-		LEA(EDX, adjust, ESP);    // callstack node addr
+		int alignAmt = 0;  // no alignment adjust by default
+	#ifdef AVMPLUS_CDECL
+		int argsPushed = 4 + 4;  // EDX + ECX
+	#else
+		int argsPushed = 4;
+	#endif 
+
+	#ifdef _MAC
+		// Align this call for MacOS X ABI		
+		int stackShouldBe = ( ( (adjust + argsPushed) + 4 ) + 15) & ~15;  // 4 for return addr
+		alignAmt =  stackShouldBe - argsPushed - adjust - 4;
+		if (alignAmt>0) 
+			{ SUB(ESP, alignAmt); }
+	#endif
+
+		LEA(EDX, adjust+alignAmt, ESP);    // callstack node addr
 		PUSH (EDX);	  
-
-#ifdef AVMPLUS_CDECL
+	#ifdef AVMPLUS_CDECL
 		PUSH(ECX);
-#endif
+	#else
+		argsPushed = 0;  // non-cdecl; callee pops them
+	#endif
 		thincall(ENVADDR(MethodEnv::debugExit));
-#ifdef _MAC
-		ADD(ESP, (type != NUMBER_TYPE) ? 12 : 8);
-#else
-#ifdef AVMPLUS_CDECL
-		ADD(ESP, 8);
-#endif
-#endif
+
+		adjust = argsPushed + alignAmt;
+		if (adjust>0) 
+			{ ADD(ESP, adjust); } 
 
 		if (type != NUMBER_TYPE)
-		{
-			POP(EAX);
-		}
-#endif
+			{ POP(EAX);	}
+	}
+#endif /* DEBUGGER */
 
 		if (type != NUMBER_TYPE)
 		{

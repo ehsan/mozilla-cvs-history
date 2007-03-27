@@ -77,6 +77,7 @@ namespace avmplus
 			max = 0;
 			data = NULL;
 			this->gc = _gc;
+			AvmAssert (_gc || kElementType == LIST_NonGCObjects);
 			ensureCapacity(_capacity);
 		}
 		~List()

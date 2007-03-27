@@ -202,6 +202,12 @@ namespace avmplus
 
 		if (method->flags & AbstractFunction::NEED_ACTIVATION)
 		{
+			// This can happen when the ABC has MethodInfo data but not MethodBody data
+			if (!method->activationTraits)
+			{
+				toplevel()->throwVerifyError(kCorruptABCError);
+			}
+
 			VTable *activation = core->newVTable(method->activationTraits, NULL, vtable->scope, vtable->abcEnv, toplevel());
 			activation->resolveSignatures();
 			setActivationOrMCTable(activation, kActivation);
@@ -243,7 +249,7 @@ namespace avmplus
 		AvmAssert(!frameTraits || localCount >= firstLocalAt);
 		if (frameTraits) memset(&frameTraits[firstLocalAt], 0, (localCount-firstLocalAt)*sizeof(Traits*));
 		if (callstack) callstack->initialize(this, method, framep, frameTraits, argc, ap, eip);
-		core->debugger->_debugMethod(this);
+		if (core->debugger) core->debugger->_debugMethod(this);
 
 		core->sampleCheck();
 	}
@@ -263,21 +269,21 @@ namespace avmplus
 		{
 			int line = core->callStack->linenum;
 			core->callStack->linenum = -1;
-			core->debugger->debugLine(line);
+			if (core->debugger) core->debugger->debugLine(line);
 		}
 	}
 
 	void MethodEnv::sendEnter(int /*argc*/, uint32 * /*ap*/)
 	{
 		Profiler *profiler = core()->profiler;
-		if (profiler->profilingDataWanted)
+		if (profiler->profilingDataWanted && !core()->sampler()->sampling)
 			profiler->sendFunctionEnter(method);
 	}
 
 	void MethodEnv::sendExit()
 	{
 		Profiler *profiler = core()->profiler;
-		if (profiler->profilingDataWanted)
+		if (profiler->profilingDataWanted && !core()->sampler()->sampling)
 			profiler->sendFunctionExit();
 	}
 #endif
@@ -716,12 +722,6 @@ namespace avmplus
 
 			o->setAtomProperty(core->internString(name)->atom(), sp[0]);
 		}
-#ifdef DEBUGGER
-		if( core->allocationTracking )
-		{
-			toplevel()->objectClass->addInstance(o->atom());
-		}
-#endif
 		return o;
     }
 
@@ -1014,13 +1014,6 @@ namespace avmplus
 		{
 			cc->setDelegate( toplevel->classClass->prototype );
 		}
-
-#ifdef DEBUGGER
-		if(toplevel->classClass && core->allocationTracking)
-		{
-			toplevel->classClass->addInstance(cc->atom());
-		}
-#endif
 
 		// Invoke the class init function.
 		Atom argv[1] = { cc->atom() };
@@ -1464,7 +1457,7 @@ namespace avmplus
 
 	Namespace* MethodEnv::internRtns(Atom nsAtom)
 	{
-		if ((nsAtom&7) != kNamespaceType)
+		if (((nsAtom&7) != kNamespaceType) || AvmCore::isNull(nsAtom))
 			toplevel()->throwTypeError(kIllegalNamespaceError);
 		return core()->internNamespace(AvmCore::atomToNamespace(nsAtom));
 	}

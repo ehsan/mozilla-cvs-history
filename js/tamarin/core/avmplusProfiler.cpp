@@ -41,40 +41,5 @@
 #ifdef DEBUGGER
 namespace avmplus
 {
-	ScriptObjectTable::ScriptObjectTable(AvmCore *core)
-	{
-		this->core = core;
-		table = new (core->GetGC()) Hashtable(core->GetGC());
-	}
-	
-	void ScriptObjectTable::addScriptObject(ScriptObject *object)
-	{
-		table->add(mask(object), (Atom)core->newStackTrace());
-	}
-
-	void ScriptObjectTable::deleteScriptObject(ScriptObject *object)
-	{
-		table->remove(mask(object));
-	}
-
-	bool ScriptObjectTable::nextObject(int& index,
-									   ScriptObject*& object,
-									   StackTrace*& stackTrace)
-	{
-		// Find next non-empty slot.
-		int numAtoms = table->getNumAtoms();
-		while (index < numAtoms) {
-			Atom atom = table->getAtoms()[index];
-			if (atom != Hashtable::EMPTY && atom != Hashtable::DELETED) {
-				object = unmask(table->getAtoms()[index]);
-				stackTrace = (StackTrace*) table->getAtoms()[index+1];
-				index += 2;
-				return true;
-			}
-			index += 2;
-		}
-
-		return false;
-	}
 }
 #endif

@@ -55,14 +55,33 @@
 
 // get alloca for CleanStack
 #ifdef WIN32
-#include "malloc.h"
-#else
-#include "alloca.h"
+#include <malloc.h>
 #endif
+
+#if defined(_MAC)
+#include <alloca.h>
+#endif
+
+#ifdef UNIX
+#ifdef HAVE_ALLOCA_H
+#include <alloca.h>
+#else // HAVE_ALLOCA_H
+#include <stdlib.h>
+#endif // HAVE_ALLOCA_H
+#endif // UNIX
 
 #if defined(_MAC) && (defined(MMGC_IA32) || defined(MMGC_AMD64))
 #include <pthread.h>
 #endif
+
+#ifdef HAVE_PTHREAD_H
+#include <pthread.h>
+#endif // HAVE_PTHREAD_H
+
+#ifdef HAVE_PTHREAD_NP_H
+#include <pthread_np.h>
+#endif // HAVE_PTHREAD_NP_H
+
 
 #if defined(_MSC_VER) && defined(_DEBUG)
 // we turn on exceptions in DEBUG builds
@@ -1397,7 +1416,7 @@ bail:
 		reaping = false;
 	}
 
-#ifdef AVMPLUS_LINUX
+#ifdef AVMPLUS_UNIX
 	pthread_key_t stackTopKey = 0;
 
 	uint32 GC::GetStackTop() const
@@ -1416,8 +1435,13 @@ bail:
 		void *s_base;
 		pthread_attr_t attr;
 		
+		pthread_attr_init(&attr);
 		// WARNING: stupid expensive function, hence the TLS
+#ifdef HAVE_PTHREAD_NP_H
+		int res = pthread_attr_get_np(pthread_self(),&attr);
+#else // HAVE_PTHREAD_NP_H
 		int res = pthread_getattr_np(pthread_self(),&attr);
+#endif // HAVE_PTHREAD_NP_H
 		GCAssert(res == 0);
 		
 		if(res)
@@ -1437,7 +1461,7 @@ bail:
 		return (uint32)stackTop;
 		
 	}
-#endif // AVMPLUS_LINUX
+#endif // AVMPLUS_UNIX
 //#define ENABLE_GC_LOG
 
 	#if defined(WIN32) && defined(ENABLE_GC_LOG)
@@ -2161,7 +2185,7 @@ bail:
 		QueryPerformanceCounter(&value);
 		return value.QuadPart;
 		#else
-		#ifndef AVMPLUS_LINUX // TODO_LINUX
+		#ifndef AVMPLUS_UNIX // TODO_LINUX
 		#ifndef MMGC_ARM
 		UnsignedWide microsecs;
 		::Microseconds(&microsecs);
@@ -2170,7 +2194,7 @@ bail:
 		memcpy(&retval, &microsecs, sizeof(retval));
 		return retval;
 		#endif //MMGC_ARM
-		#endif //AVMPLUS_LINUX
+		#endif //AVMPLUS_UNIX
 		#endif
 	}
 

@@ -251,9 +251,6 @@ namespace avmplus
 
 				// register "void"
 				addNamedTraits(core->publicNamespace, VOID_TYPE->name, VOID_TYPE);
-
-				// temporary: register "Void"
-				addNamedTraits(core->publicNamespace, core->constantString("Void"), VOID_TYPE);
 			}
 
 			// type information about class objects
@@ -297,7 +294,11 @@ namespace avmplus
 	Traits* AbcParser::parseTraits(Traits* base, Namespace* ns, Stringp name, AbstractFunction* script, int interfaceDelta, Namespace* protectedNamespace /*=NULL*/)
 	{
 		const byte* traits_pos = pos;
-		int nameCount = readU30(pos);
+		unsigned int nameCount = readU30(pos);
+
+		// Very generous check for nameCount being way too large.
+		if (nameCount > (unsigned int)(abcEnd - pos))
+			toplevel->throwVerifyError(kCorruptABCError);
 
 		#ifdef AVMPLUS_VERBOSE
 		if (pool->verbose)
@@ -340,7 +341,7 @@ namespace avmplus
 		
 		pool->allowEarlyBinding(base, earlySlotBinding);
 
-        for (int i=0; i < nameCount; i++)
+        for (unsigned int i=0; i < nameCount; i++)
         {
 			Multiname qn;
 			resolveQName(pos, qn);
@@ -363,7 +364,6 @@ namespace avmplus
             case TRAIT_Slot:
             case TRAIT_Const:
             case TRAIT_Class:
-			case TRAIT_Function:
 			{
                 uint32 slot_id = readU30(pos);
 				if (!earlySlotBinding) slot_id = 0;
@@ -374,6 +374,9 @@ namespace avmplus
 				}
 				else
 				{
+					if (slot_id > nameCount)
+						toplevel->throwVerifyError(kCorruptABCError);
+
 					// compiler assigned slot
 					if (slot_id > slotCount)
 						slotCount = slot_id;
@@ -436,8 +439,9 @@ namespace avmplus
 						slot_id, kind==TRAIT_Slot ? BIND_VAR : BIND_CONST);
 
 				}
-				else if (kind == TRAIT_Class)
+				else
 				{
+					AvmAssert(kind == TRAIT_Class);
 					// get the class type
 					int class_info = readU30(pos);
 					if (class_info >= classCount)
@@ -486,28 +490,6 @@ namespace avmplus
 					traits->defineSlot(name, ns, slot_id, BIND_CONST);
 
 				}
-				else
-				{
-					AvmAssert(kind == TRAIT_Function);
-					uint32 method_info = readU30(pos); // method_info
-
-					#ifdef AVMPLUS_VERBOSE
-					if (pool->verbose)
-					{
-						core->console << "            " << traitNames[kind]
-							<< " name=" << Multiname::format(core, ns, name)
-							<< " slot_id=" << slot_id
-							<< " method_info=" << method_info
-							<< "\n";
-					}
-					#endif
-
-					AbstractFunction* f = resolveMethodInfo(method_info);
-					f->makeIntoPrototypeFunction(toplevel);
-
-					// create binding
-					traits->defineSlot(name, ns, slot_id, BIND_VAR);
-				}
 	            break;
 			}
 			case TRAIT_Getter:
@@ -540,7 +522,7 @@ namespace avmplus
 				Stringp s3 = Multiname::format(core,ns,name);
 				Stringp s4 = core->concatStrings(s2,s3);
 				f->name = core->concatStrings(s1, s4);
-				//delete s1 - can't delete, it may bet the traits name string;
+				//delete s1 - can't delete, it may be the traits name string;
 				delete s2;
 				//delete s3 - can't delete, it may be the qname name string;
 				delete s4;
@@ -802,7 +784,7 @@ namespace avmplus
 					++pos; // Kind bytes for each default value
 				}
 
-				if (optional_count > param_count)
+				if (!optional_count || (optional_count > param_count))
 				{
 					// cannot have more optional params than total params
 					toplevel->throwVerifyError(kCorruptABCError);
@@ -1021,7 +1003,9 @@ namespace avmplus
 					readU30(pos); // type name
 					if (version != (46<<16|15))
 					{
-						readU30(pos); // variable name
+						uint32 name_index = readU30(pos); // variable name
+						if (name_index >= pool->constantMnCount)
+							toplevel->throwVerifyError(kCpoolIndexRangeError, core->toErrorString(name_index), core->toErrorString(pool->constantCount));
 					}
 					#endif
 				}

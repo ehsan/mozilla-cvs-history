@@ -86,7 +86,7 @@ static const char rep_max[] = { 0, 0, 0, 0, 1, 1 };
 
 
 
-#ifdef DEBUG
+#ifdef PCRE_DEBUG
 /*************************************************
 *        Debugging function to print chars       *
 *************************************************/
@@ -145,7 +145,7 @@ if (ES3_Compatible_Behavior)
 
 const uschar *p = md->start_subject + md->offset_vector[offset];
 
-#ifdef DEBUG
+#ifdef PCRE_DEBUG
 if (eptr >= md->end_subject)
   printf("matching subject <null>");
 else
@@ -588,7 +588,7 @@ for (;;)
       number = GET2(ecode, 2+LINK_SIZE);
     offset = number << 1;
 
-#ifdef DEBUG
+#ifdef PCRE_DEBUG
     printf("start bracket %d subject=", number);
     pchars(eptr, 16, TRUE, md);
     printf("\n");
@@ -1113,7 +1113,7 @@ for (;;)
         if (number > EXTRACT_BASIC_MAX) number = GET2(prev, 2+LINK_SIZE);
         offset = number << 1;
 
-#ifdef DEBUG
+#ifdef PCRE_DEBUG
         printf("end bracket %d", number);
         printf("\n");
 #endif
@@ -3654,7 +3654,7 @@ do
 
   end_subject = save_end_subject;
 
-#ifdef DEBUG  /* Sigh. Some compilers never learn. */
+#ifdef PCRE_DEBUG  /* Sigh. Some compilers never learn. */
   printf(">>>> Match against: ");
   pchars(start_match, end_subject - start_match, TRUE, &match_block);
   printf("\n");

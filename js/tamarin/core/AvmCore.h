@@ -92,6 +92,11 @@ const int kBufferPadding = 16;
 		 */
 		PrintWriter console;
 
+		/**
+		 * The GC used by this AVM instance
+		 */
+		MMgc::GC * const gc;
+
 		#ifdef DEBUGGER
 		/**
 		 * For debugger versions of the VM, this is a pointer to
@@ -99,25 +104,6 @@ const int kBufferPadding = 16;
 		 */
 		Debugger *debugger;
 		Profiler *profiler;
-		bool allocationTracking;
-		bool sampling;
-		// call startSampling in AvmCore ctor
-		bool autoStartSampling;
-
-		bool samplingNow;
-		int takeSample;
-		uint32 numSamples;
-		GrowableBuffer *samples;
-		byte *currentSample;
-		void sample();
-		void sampleCheck() { if(takeSample) sample(); }
-		void startSampling();
-		void stopSampling();
-		void clearSamples();
-
-		uintptr timerHandle;
-		Hashtable *fakeMethodInfos;
-		void initSampling();
 		#endif
 
 		void branchCheck(MethodEnv *env, bool interruptable, int go)
@@ -165,7 +151,7 @@ const int kBufferPadding = 16;
 		 * GCCallback functions 
 		 */
 		virtual void presweep();
-		virtual void postsweep() {}
+		virtual void postsweep();
 		
 		#ifdef AVMPLUS_VERBOSE
 		/**
@@ -1002,15 +988,12 @@ const int kBufferPadding = 16;
 		 */
 		StackTrace* newStackTrace();
 
-		StackTrace *getStackTrace();
-		StackTrace *getStackTrace(void/*StackTrace::Element*/ *e, int depth);
-		void rehashTraces(int newSize);
-		int findTrace(void/*StackTrace::Element*/ *e, int depth);
-		StackTrace **stackTraces;
-		uint32 numTraces;
-
-		/* used to charge primitive allocations (String and Namespace) */
-		static void chargeAllocation(Atom a);
+		/**
+		 Sampling profiler interface
+		 */
+		Sampler *sampler() { return &_sampler; }
+		void sampleCheck() { _sampler.sampleCheck(); }
+		bool sampling() { return _sampler.sampling; }
 
 		#ifdef _DEBUG
 		void dumpStackTrace();
@@ -1209,6 +1192,7 @@ const int kBufferPadding = 16;
 		/** search the namespace intern table */
 		int findNamespace(const Namespace *ns);
 
+	public:
 #ifdef DEBUGGER
 #if defined(MMGC_IA32) || defined(MMGC_IA64)
 		static inline uint32 FindOneBit(uint32 value)
@@ -1365,13 +1349,6 @@ const int kBufferPadding = 16;
 		Stringp formatAtomPtr(Atom atom);
 #endif
 
-#ifdef DEBUGGER
-	public:
-		int sizeInternedTables();
-#endif
-
-	// NOT MARKED.  These fields are at the end of core and are explicitly
-	// excluded from being traced in AvmCore::trace
 	private:
 		// hash set containing intern'ed strings
 		DRC(Stringp) * strings;
@@ -1391,6 +1368,11 @@ const int kBufferPadding = 16;
 			AvmCore *core;
 		};
 		GCInterface gcInterface;
+
+#ifdef DEBUGGER
+	private:
+		Sampler _sampler;
+#endif
 	};
 }
 

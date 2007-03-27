@@ -88,7 +88,7 @@ namespace avmplus
 		AvmAssert(AvmCore::isObject(key));
 		ScriptObject *obj = AvmCore::atomToScriptObject(key);
 		AvmAssert(obj->traits() != core()->traits.qName_itraits);
-		AvmAssert(GC::Size(obj) > sizeof(ScriptObject));
+		AvmAssert(MMgc::GC::Size(obj) > sizeof(ScriptObject));
 		(void)obj;
 
 		// FIXME: this doesn't work, need to convert back to an XMLObject
@@ -175,6 +175,15 @@ namespace avmplus
 		}
 
 		Hashtable *ht = getTable();
+
+		// this can happen if you break in debugger in a subclasses constructor before super
+		// has been called
+#ifdef DEBUGGER
+		if(!ht)
+		{
+			return 0;
+		}
+#endif // DEBUGGER
 
 		// Advance to first non-empty slot.
 		int numAtoms = ht->getNumAtoms();

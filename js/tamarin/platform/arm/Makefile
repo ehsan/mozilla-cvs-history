@@ -90,9 +90,9 @@ endif
 #****************************************************************************
 
 ifeq (YES, ${ARM_SKUNKWORKS})
-  DEFS := -DUNIX -DCYGWIN -DAVMPLUS_ARM -DMMGC_ARM -DDEBUGGER -DENABLE_COMPILER -DAVMPLUS_CDECL -DAVMPLUS_UCLINUX
+  DEFS := -DUNIX -DCYGWIN -DAVMPLUS_ARM -DMMGC_ARM -DDEBUGGER -DENABLE_COMPILER -DAVMPLUS_CDECL -DAVMPLUS_UNIX
 else
-  DEFS := -DUNIX -DAVMPLUS_IA32 -DDEBUGGER -DENABLE_COMPILER -DAVMPLUS_CDECL -DAVMPLUS_LINUX
+  DEFS := -DUNIX -DAVMPLUS_IA32 -DDEBUGGER -DENABLE_COMPILER -DAVMPLUS_CDECL -DAVMPLUS_UNIX
 endif
 
 CFLAGS   := ${CFLAGS} ${DEFS}
@@ -212,6 +212,7 @@ AVMPLUS_SRCS := ../../core/AbcEnv.cpp \
 	../../core/PrintWriter.cpp \
 	../../core/RegExpClass.cpp \
 	../../core/RegExpObject.cpp \
+	../../core/Sampler.cpp \
 	../../core/ScopeChain.cpp \
 	../../core/ScriptBuffer.cpp \
 	../../core/ScriptObject.cpp \

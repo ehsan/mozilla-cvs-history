@@ -115,6 +115,7 @@ namespace avmplus
 		Atom* withBase = NULL;
 
 		#ifdef DEBUGGER
+		env->invocationCount++;
 		CallStackNode callStackNode(env, info, framep, 0, argc, ap, 0 /* later changed to 'pc' */);
 		// don't allow entry into the debugger until we have setup the frame
 		#endif

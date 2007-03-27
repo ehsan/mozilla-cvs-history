@@ -86,7 +86,6 @@ namespace avmplus
 			TRAIT_Getter		= 0x02,
 			TRAIT_Setter		= 0x03,
 			TRAIT_Class			= 0x04,
-			TRAIT_Function		= 0x05,
 			TRAIT_Const			= 0x06,
 			TRAIT_mask			= 15
 		};

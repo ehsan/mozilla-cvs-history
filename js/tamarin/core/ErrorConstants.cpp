@@ -197,7 +197,7 @@ namespace avmplus
             {
                 /*1000,0*/ "The system is out of memory.",
                 /*1001,1*/ "The method %1 is not implemented.",
-                /*1002,2*/ "The precision argument must be between %2 and %3; %1 is invalid.",
+                /*1002,2*/ "Number.toPrecision has a range of 1 to 21. Number.toFixed and Number.toExponential have a range of 0 to 20. Specified value is not within expected range.",
                 /*1003,3*/ "The radix argument must be between 2 and 36; got %1.",
                 /*1004,4*/ "Method %1 was invoked on an incompatible object.",
                 /*1005,5*/ "Array index is not a positive integer (%1).",

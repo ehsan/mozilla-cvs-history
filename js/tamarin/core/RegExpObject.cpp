@@ -523,8 +523,23 @@ namespace avmplus
 			int n = 0;
 
 			ArrayObject* matchArray;
-			while ((matchArray = exec(subject, utf8Subject)) != NULL)
+			while (true)
 			{
+				int last = m_lastIndex;
+				int matchIndex = 0, matchLen = 0;
+				int startIndex = Utf16ToUtf8Index(subject, utf8Subject,	m_lastIndex);
+
+				matchArray = exec(subject,
+								  utf8Subject,
+								  startIndex,
+								  matchIndex,
+								  matchLen);
+				m_lastIndex = Utf8ToUtf16Index(subject,
+											   utf8Subject,
+											   matchIndex+matchLen);
+				
+				if ((matchArray == NULL) || (last == m_lastIndex))
+					break;
 				a->setUintProperty(n++, matchArray->getUintProperty(0));
 			}
 			

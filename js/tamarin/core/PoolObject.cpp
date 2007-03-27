@@ -630,53 +630,9 @@ namespace avmplus
 
 				break;
 			}
-
-			case TRAIT_Function:
-			{
-				// compute the slot
-				int useSlotId = AvmCore::readU30(pos);
-                if( !earlySlotBinding ) useSlotId = 0;
-				if (!useSlotId)
-					useSlotId = slot_id++;
-				else
-					useSlotId--;
-
-				// compute the type
-				uint32 method_info = AvmCore::readU30(pos);
-
-				AbstractFunction *f = getMethodInfo(method_info);
-
-				int slotOffset;
-				#ifdef AVMPLUS_64BIT
-				// 8-aligned, 8-byte field
-				if (offset&7)
-				{
-					padoffset = offset;
-					offset += 4;
-				}
-				slotOffset = offset;
-				offset += 8;
-				#else
-				// 4-aligned, 4-byte field
-				if (padoffset != -1)
-				{
-					slotOffset = padoffset;
-					padoffset = -1;
-				}
-				else
-				{
-					slotOffset = offset;
-					offset += 4;
-				}
-				#endif
-
-				traits->setSlotInfo(0, useSlotId, toplevel, f->declaringTraits, slotOffset, CPoolKind(0), gen);
-				if( tag & ATTR_metadata )
-				{
-					traits->setMethodMetadataPos(useSlotId, pos);
-				}
-				break;
-			}
+			default:
+				// unsupported traits type
+				toplevel->throwVerifyError(kUnsupportedTraitsKindError, core->toErrorString(kind));
 			}
 
 			// skip metadata

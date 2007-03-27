@@ -48,7 +48,7 @@ namespace avmshell
 	class Profiler : public avmplus::Profiler
 	{
 	public:
-		Profiler(MMgc::GC* gc) : avmplus::Profiler(gc) {}
+		Profiler(AvmCore*) {}
 		
 		void sendDebugFileUrl(UTF8String * /*url*/) {}
 		void sendLineTimestamp(int /*linenumber*/) {}
@@ -60,6 +60,12 @@ namespace avmshell
 		void deleteScriptObject(ScriptObject * /*scriptObject*/) {}
 		void sendHeapDump(String * /*heapDumpName*/) {}
 		int computeStringSize(String * /*myString*/) { return 0; }		
+
+		void sample(uint64 /*time*/, Stringp /*stackTrace*/) {}
+		void allocationSample(uint64 /*time*/, Stringp /*stackTrace*/, uint64 /*allocId*/, Stringp /*type*/) {}
+		void deallocationSample(uint64 /*time*/, uint64 /*id*/) {}
+		void getMembers() {}
+
 	};
 }
 #endif

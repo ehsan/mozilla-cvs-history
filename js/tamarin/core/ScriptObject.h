@@ -205,13 +205,11 @@ namespace avmplus
         ScriptObject* delegate;     // __proto__ in AS2, archetype in semantics
 		
 #ifdef DEBUGGER
-		DRCWB(GCHashtableScriptObject*) instances;
 	public:
-		void addInstance(Atom a);
-		void removeInstance(Atom a);
-		ScriptObject *getInstances();
 		ScriptObject *getSlotIterator();
 		uint32 size() const;
+		Stringp getTypeName() const;
+		virtual MethodEnv *getCallMethodEnv() { return NULL; }
 #endif
 	};
 }

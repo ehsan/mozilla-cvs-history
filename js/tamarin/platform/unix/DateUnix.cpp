@@ -39,9 +39,9 @@
 #include <sys/time.h>
 #include <math.h> 
 
-#ifdef AVMPLUS_LINUX
+#ifdef AVMPLUS_UNIX
 #include <time.h>
-#endif
+#endif // AVMPLUS_UNIX
 
 #include "avmplus.h"
 

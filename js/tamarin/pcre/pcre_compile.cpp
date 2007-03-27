@@ -155,6 +155,65 @@ static const int posix_class_maps[] = {
 are passed to the outside world. */
 
 static const char *error_texts[] = {
+#ifdef AVMPLUS_PCRE
+  "",
+  "",
+  "",
+  "",
+  "",
+  /* 5 */
+  "",
+  "",
+  "",
+  "",
+  "",
+  /* 10 */
+  "",
+  "",
+  "",
+  "",
+  "",
+  /* 15 */
+  "",
+  "",
+  "",
+  "",
+  "",
+  /* 20 */
+  "",
+  "",
+  "",
+  "",
+  "",
+  /* 25 */
+  "",
+  "",
+  "",
+  "",
+  "",
+  /* 30 */
+  "",
+  "",
+  "",
+  "",
+  "",
+  /* 35 */
+  "",
+  "",
+  "",
+  "",
+  "",
+  /* 40 */
+  "",
+  "",
+  "",
+  "",
+  "",
+  /* 45 */
+  "",
+  "",
+  "",
+#else // AVMPLUS_PCRE
   "no error",
   "\\ at end of pattern",
   "\\c at end of pattern",
@@ -212,6 +271,7 @@ static const char *error_texts[] = {
   "support for \\P, \\p, and \\X has not been compiled",
   "malformed \\P or \\p sequence",
   "unknown property name after \\P or \\p"
+#endif // AVMPLUS_PCRE
 };
 
 

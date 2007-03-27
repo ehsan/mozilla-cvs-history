@@ -258,7 +258,7 @@ namespace avmplus
 		Binding getOverride(Namespace* ns, Stringp name, int tag, const Toplevel *toplevel) const;
 
 		void resolveSignatures(const Toplevel* toplevel);
-		void initTables();
+		void initTables(const Toplevel* toplevel);
 		bool checkOverride(AbstractFunction* virt, AbstractFunction* over) const;
 
 		/**

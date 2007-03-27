@@ -112,7 +112,7 @@ namespace avmplus
 			"getter",//const int TRAIT_Getter			= 0x02;
 			"setter",//const int TRAIT_Setter			= 0x03;
 			"class",//const int TRAIT_Class			    = 0x04;
-			"function",//const int TRAIT_Function		= 0x05;
+			"",
 			"const",//const int TRAIT_Const             = 0x06;
 		};
 #endif // AVMPLUS_VERBOSE

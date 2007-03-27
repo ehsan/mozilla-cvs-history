@@ -145,6 +145,7 @@ namespace avmplus
 
 		void parseMultiname(Multiname& m, int index) const
 		{
+			AvmAssert (index >= 0 && index < int(constantMnCount));
 			Atom a = cpool_mn[index];
 			parseMultiname(atomToPos(a), m);
 		}

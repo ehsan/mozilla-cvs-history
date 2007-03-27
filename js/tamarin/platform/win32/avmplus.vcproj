@@ -424,6 +424,12 @@
 				RelativePath="..\..\core\RegExpObject.cpp">
 			</File>
 			<File
+				RelativePath="..\..\core\Sampler.cpp">
+			</File>
+			<File
+				RelativePath="..\..\core\Sampler.h">
+			</File>
+			<File
 				RelativePath="..\..\core\ScopeChain.cpp">
 			</File>
 			<File

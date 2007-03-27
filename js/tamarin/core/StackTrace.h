@@ -167,30 +167,16 @@ namespace avmplus
 		CallStackNode(){}
 	};
 	
-
-	class FakeAbstractFunction : public AbstractFunction
-	{
-	public:
-		void verify(Toplevel *) {}
-	};
-
+	// for sampling
 	class FakeCallStackNode : public CallStackNode
 	{
 	public:
 		FakeCallStackNode(AvmCore *core, const char *name);
 		~FakeCallStackNode();
-		void sampleCheck() { if(core) core->sampleCheck(); }
+		void sampleCheck() { if(core) core->sampler()->sampleCheck(); }
 	private:
 		AvmCore *core;
 	};
-
-#define SAMPLE_FRAME(_strp, _core) avmplus::FakeCallStackNode __fcsn((avmplus::AvmCore*)_core, _strp)
-#define SAMPLE_CHECK()  __fcsn.sampleCheck();
-
-#else
-
-#define SAMPLE_FRAME(_x, _s) 
-#define SAMPLE_CHECK()
 
 #endif /* DEBUGGER */
 }

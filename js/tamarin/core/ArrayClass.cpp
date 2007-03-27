@@ -1397,12 +1397,6 @@ namespace avmplus
 		VTable* ivtable = this->ivtable();
 		ArrayObject *a = new (core()->GetGC(), ivtable->getExtraSize()) 
 			ArrayObject(ivtable, prototype, capacity);
-#ifdef DEBUGGER
-		if( core()->allocationTracking )
-		{
-			toplevel()->arrayClass->addInstance(a->atom());
-		}
-#endif
 		return a;
 	}
 

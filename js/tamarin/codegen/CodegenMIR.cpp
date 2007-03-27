@@ -1941,6 +1941,16 @@ namespace avmplus
 		}
 
 		#ifdef DEBUGGER
+		if(core->sampling())
+		{
+			// FIXME: 64 bit integer math needed!
+			//OP* invocationCount = loadIns(MIR_ldop64, offsetof(MethodEnv, invocationCount), ldargsIns(_env));
+			//Ins(MIR_inc64, invocationCount);
+			//storeIns64(invocationCount, offsetof(MethodEnv, invocationCount), ldargsIns(_env));
+			OP* invocationCount = loadIns(MIR_ldop, offsetof(MethodEnv, invocationCount), ldargIns(_env));
+			OP *result = Ins(MIR_add, invocationCount, InsConst(1));
+			storeIns(result, offsetof(MethodEnv, invocationCount), ldargIns(_env));
+		}
 		#ifdef AVMPLUS_VERBOSE
 		if (verbose())
 			core->console << "    alloc CallStackNode\n";
@@ -2853,7 +2863,7 @@ namespace avmplus
 				saveState();
 				
 #ifdef DEBUGGER
-				if(core->sampling && targetpc < state->pc)
+				if(core->sampling() && targetpc < state->pc)
 				{
 					emitSampleCheck();
 				}
@@ -2955,7 +2965,7 @@ namespace avmplus
 				AvmAssert(t->linked);
 				int offset = t->getOffsets()[slot];
 				
-				if (pool->isBuiltin && !t->final)
+				if (t->pool->isBuiltin && !t->final)
 				{
 					// t's slots aren't locked in, so we have to adjust for the actual runtime
 					// traits->sizeofInstance.
@@ -4204,7 +4214,7 @@ namespace avmplus
 		#endif /* AVMPLUS_PROFILE */
 
 #ifdef DEBUGGER
-		if(core->sampling && target < state->pc)
+		if(core->sampling() && target < state->pc)
 		{
 			emitSampleCheck();
 		}
@@ -6103,6 +6113,8 @@ namespace avmplus
 	// preperation for two operands A and B and a result
 	void CodegenMIR::InsRegisterPrepAB(OP* insRes, RegInfo& regsA, OP* insA, Register& reqdA, RegInfo& regsB, OP* insB, Register& reqdB)
 	{
+		AvmAssert( !(reqdA != Unknown && reqdB != Unknown) );
+
 		/**
 		 * Each input may be in 1 of 4 possible states.  IN_REQ, IN_WRONG, IN_ANY, OUT
 		 * 
@@ -6121,17 +6133,6 @@ namespace avmplus
 		AvmAssert(insA != 0);
 		AvmAssert(insB != 0);
 
-		/*
-		 * Handle the special case where insA and insB are the same.
-		 * This happens when things like 2+2 are encountered.
-		 */
-		if (insA == insB && reqdB == Unknown) 
-		{
-			InsRegisterPrepA(insRes, regsA,   insA,   reqdA);
-			reqdB = reqdA;
-			return;
-		}
-
 		if (&regsA != &regsB)
 		{
 			// allocating from different sets of regs is easy
@@ -6142,6 +6143,20 @@ namespace avmplus
 
 		if (insA->lastUse <= insRes) insA->liveAcrossCall = 0;
 		if (insB->lastUse <= insRes) insB->liveAcrossCall = 0;
+
+		/*
+		 * Handle the special case where insA and insB are the same.
+		 * This happens when things like 2+2 are encountered.
+		 */
+		if (insA == insB) 
+		{
+			if (reqdB != Unknown)
+				reqdA = reqdB;
+
+			InsRegisterPrepA(insRes, regsA, insA, reqdA);
+			reqdB = reqdA;
+			return;
+		}
 
 		RegInfo& regs = regsA; // same as regsB
 
@@ -8953,11 +8968,17 @@ namespace avmplus
 						Register rLhs = Unknown;
 						InsRegisterPrepA(ip, fpregs, lhs, rLhs);
 						AvmAssert(rLhs == FST0);
+
 						AvmAssert(rhs->reg == Unknown);
+						if (rhs == lhs)
+						{
+							rhs->reg = rLhs;
+							spill(rhs);
+						}
+
 						AvmAssert(rhs->pos != InvalidPos);
 
 						FCOM(stackPos(rhs), framep);
-						// sets FPU status flags from compare
 					}
 
 					#endif

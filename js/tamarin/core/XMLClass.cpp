@@ -264,21 +264,37 @@ namespace avmplus
 				// check for multiple nodes where the first n-1 are PI/comment nodes and the 
 				// last one is an element node.  Just ignore the PI/comment nodes and return
 				// the element node.  (bug 148526).
+				// Will also now ignore any text nodes that just contain whitespace (leading
+				// or trailing) the one valid element node.  If multiple element nodes are found,
+				// that is a failing case as well. (bug 192355)
 				E4XNode *node = x->getNode();
-				E4XNode *lastNode = node->_getAt (node->_length() - 1);
-				if (lastNode->getClass() != E4XNode::kElement)
-					toplevel->throwTypeError(kXMLMarkupMustBeWellFormed);
+				E4XNode *validNode = NULL;
 
-				for (uint32 i = 0; i < node->_length() - 1; i++)
+				for (uint32 i = 0; i < node->_length(); i++)
 				{
-					if ((node->_getAt (i)->getClass() != E4XNode::kProcessingInstruction) &&
-						(node->_getAt (i)->getClass() != E4XNode::kComment))
+					E4XNode *n = node->_getAt (i);
+					if (n->getClass() == E4XNode::kElement)
+					{
+						if (validNode != NULL)
+							toplevel->throwTypeError(kXMLMarkupMustBeWellFormed);
 
-						toplevel->throwTypeError(kXMLMarkupMustBeWellFormed);
+						validNode = n;
+					}
+					else if (n->getClass() == E4XNode::kText)
+					{
+						if (!n->getValue()->isWhitespace())
+						{
+							toplevel->throwTypeError(kXMLMarkupMustBeWellFormed);
+						}
+					}
 				}
 
-				x->setNode( lastNode ); // discard parent node
-				lastNode->setParent (0);
+				// No valid nodes found
+				if (!validNode)
+					toplevel->throwTypeError(kXMLMarkupMustBeWellFormed);
+
+				x->setNode( validNode ); // discard parent node
+				validNode->setParent (0);
 			}
 			return x->atom();
 		}

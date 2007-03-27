@@ -38,7 +38,7 @@
 
 #include "avmshell.h"
 
-#if defined(DARWIN) || defined(AVMPLUS_LINUX)
+#if defined(DARWIN) || defined(AVMPLUS_UNIX)
 #include <sys/signal.h>
 #include <unistd.h>
 #endif
@@ -47,11 +47,11 @@
 #include <Mmsystem.h>
 #include "dbghelp.h"
 bool P4Available();
-#elif defined AVMPLUS_LINUX
+#elif defined AVMPLUS_UNIX
 bool P4Available();
 #endif
 
-static MMgc::FixedMalloc* fm;
+static MMgc::FixedMalloc* fm = NULL;
 
 #ifndef OVERRIDE_GLOBAL_NEW
 // Custom new and delete operators
@@ -427,7 +427,7 @@ namespace avmshell
 			debugger = debugCLI;
 
 			// Create the profiler
-			profiler = new Profiler(GetGC());
+			profiler = new (GetGC()) Profiler(this);
 			#endif
 
 			SystemClass::user_argc = argc-1;
@@ -488,7 +488,7 @@ namespace avmshell
 	{
 		TRY(this, kCatchAction_ReportAsError)
 		{
-			#if defined (WIN32) || defined(AVMPLUS_LINUX)
+			#if defined (WIN32) || defined(AVMPLUS_UNIX)
 			if (!P4Available()) {
 				sse2 = false;
 			}
@@ -674,7 +674,7 @@ namespace avmshell
 			debugger = debugCLI;
 
 			// Create the profiler
-			profiler = new Profiler(GetGC());
+			profiler = new (GetGC()) Profiler(this);
 
 			if (do_debugger)
 			{

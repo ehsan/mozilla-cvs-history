@@ -429,6 +429,23 @@
 			<File
 				RelativePath="..\..\codegen\CodegenMIR.cpp"
 				>
+				<FileConfiguration
+					Name="Release_Debugger|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Detect64BitPortabilityProblems="false"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug_Debugger|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
+						Detect64BitPortabilityProblems="false"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\coff.cpp"
@@ -481,6 +498,15 @@
 			<File
 				RelativePath="..\..\core\FrameState.cpp"
 				>
+				<FileConfiguration
+					Name="Debug_Debugger|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
+						Detect64BitPortabilityProblems="false"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\..\core\FunctionClass.cpp"
@@ -587,6 +613,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\core\Sampler.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\core\Sampler.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\core\ScopeChain.cpp"
 				>
 			</File>
@@ -633,6 +667,15 @@
 			<File
 				RelativePath="..\..\core\Verifier.cpp"
 				>
+				<FileConfiguration
+					Name="Debug_Debugger|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="2"
+						Detect64BitPortabilityProblems="false"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\..\core\VTable.cpp"

@@ -293,7 +293,7 @@ namespace avmplus
 //		if (getClass() & (kText | kCDATA | kComment | kProcessingInstruction | kAttribute))
 //			return; 
 		
-		if (ns->getPrefix() == undefinedAtom)
+		if (!ns || (ns->getPrefix() == undefinedAtom))
 			return;
 
 		Multiname m;

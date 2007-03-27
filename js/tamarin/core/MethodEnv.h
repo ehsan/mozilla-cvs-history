@@ -243,6 +243,7 @@ namespace avmplus
 		Atom astype(Atom atom, Traits* expected);
 		
 #ifdef DEBUGGER
+		uint64 invocationCount;
 		void debugEnter(int argc, uint32 *ap, 
 							   Traits**frameTraits, int localCount,
 							   CallStackNode* callstack,

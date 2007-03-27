@@ -48,8 +48,10 @@
 #include <unistd.h>
 #endif
 
-#ifdef AVMPLUS_LINUX
+#ifdef AVMPLUS_UNIX
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
 #include <signal.h>
 #endif
 
@@ -918,7 +920,7 @@ namespace avmplus
 	}	
 #endif // AVMPLUS_MACH_EXCEPTIONS
 
-#ifdef AVMPLUS_LINUX
+#ifdef AVMPLUS_UNIX
     static pthread_key_t guardKey = 0;
     static struct sigaction orig_sa;
 
@@ -935,7 +937,13 @@ namespace avmplus
 
         if (!handled)
         {
+#ifdef LINUX
             sigaction(SIGSEGV, &orig_sa, NULL);
+#elif defined(BSD)
+            sigaction(SIGBUS, &orig_sa, NULL);
+#else 
+#error unknown platform
+#endif
         }
     }
 
@@ -964,8 +972,13 @@ namespace avmplus
             sa.sa_sigaction = dispatchHandleException;
             sigemptyset(&sa.sa_mask);
             sa.sa_flags = SA_SIGINFO;
-
+#ifdef LINUX
             sigaction(SIGSEGV, &sa, &orig_sa);
+#elif defined(BSD)
+            sigaction(SIGBUS, &sa, &orig_sa);
+#else 
+#error unknown platform
+#endif
         }
         else
         {
@@ -997,7 +1010,13 @@ namespace avmplus
                 // null out the thread local and remove the signal
                 // handler.
                 pthread_setspecific(guardKey, NULL);
-                sigaction(SIGSEGV, &orig_sa, NULL);
+#ifdef LINUX
+	            sigaction(SIGSEGV, &orig_sa, NULL);
+#elif defined(BSD)
+	            sigaction(SIGBUS, &orig_sa, NULL);
+#else 
+#error unknown platform
+#endif
             }
         }
         else
@@ -1024,10 +1043,10 @@ namespace avmplus
             }
         }
     }
-#endif // AVMPLUS_LINUX
+#endif // AVMPLUS_UNIX
 
 	// BufferGuard
-	#ifdef AVMPLUS_LINUX
+	#ifdef AVMPLUS_UNIX
 	BufferGuard::BufferGuard(jmp_buf jmpBuf)
 	{
 		this->jmpBuf[0] = *jmpBuf;
@@ -1035,7 +1054,7 @@ namespace avmplus
 	BufferGuard::BufferGuard(int *jmpBuf)
 	{
 		this->jmpBuf = jmpBuf;
-	#endif // AVMPLUS_LINUX
+	#endif // AVMPLUS_UNIX
 		init();
 		if (jmpBuf) 
 			registerHandler();
@@ -1136,7 +1155,7 @@ namespace avmplus
 	
 #endif /* AVMPLUS_MACH_EXCEPTIONS */
 
-#ifdef AVMPLUS_LINUX
+#ifdef AVMPLUS_UNIX
     bool BufferGuard::handleException(byte *addr)
     {
 #ifdef _DEBUG
@@ -1144,7 +1163,7 @@ namespace avmplus
 #endif
         return false;
     }
-#endif // AVMPLUS_LINUX
+#endif // AVMPLUS_UNIX
 
 	// GrowthGuard
 	GrowthGuard::GrowthGuard(GrowableBuffer* buffer)
@@ -1193,7 +1212,7 @@ namespace avmplus
 
 #endif /* AVMPLUS_WIN32 */
 
-#ifdef AVMPLUS_LINUX
+#ifdef AVMPLUS_UNIX
     bool GrowthGuard::handleException(byte* addr)
     {
         GrowableBuffer* g = buffer;
@@ -1216,7 +1235,7 @@ namespace avmplus
 
         return result;
     }
-#endif /* AVMPLUS_LINUX */
+#endif /* AVMPLUS_UNIX */
 
 #endif /* FEATURE_BUFFER_GUARD */
 }

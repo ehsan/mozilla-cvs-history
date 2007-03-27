@@ -36,6 +36,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 
+
+
 #include "avmplus.h"
 
 using namespace MMgc;
@@ -43,37 +45,34 @@ using namespace MMgc;
 namespace avmplus
 {
 #ifdef DEBUGGER
-	AvmPlusScriptableObject::AvmPlusScriptableObject()
+	AvmPlusScriptableObject::AvmPlusScriptableObject(Atom typeOrVTable)
 	{
+		AvmCore *core = this->core();
 
-		AvmCore *core = this->core();		
-		if(core->allocationTracking && core->callStack)
-		{
-			StackTrace *st = core->getStackTrace();
-			// turn off allocation tracking while we're creating these strings
-			core->allocationTracking = false;
-			WB(GC::GetGC(this), this, &allocationStackTrace, st);
-			core->allocationTracking = true;
-			creationTimestamp = GC::GetPerformanceCounter();
+		Traits *traits;
+		if(typeOrVTable == kStringType)
+			traits = STRING_TYPE;
+		else if(typeOrVTable == kNamespaceType)
+			traits = NAMESPACE_TYPE;
+		else {
+			VTable *vt = (VTable*)typeOrVTable;
+			traits = vt->traits;
 		}
+			
+		if(core->sampling())
+		{
+			objId = core->sampler()->recordAllocationSample(this, traits);
+		}		
 	}
 
 	AvmPlusScriptableObject::~AvmPlusScriptableObject()
 	{
-		Atom me = Atom(this) | (allocationStackTrace&7);
-		if(creator)
-			creator->removeInstance(me);
-		creator = NULL;
-		WB(GC::GetGC(this), this, &allocationStackTrace, NULL);
-		creationTimestamp = 0;
-	}
-
-	Stringp AvmPlusScriptableObject::getAllocationTrace() const
-	{
-		StackTrace *st = (StackTrace*) (allocationStackTrace&~7);
-		if(st)
-			return st->format(core()); 
-		return NULL;
+		AvmCore *core = this->core();		
+		if(objId && core) // core should never be null except during tear down^
+		{
+			core->sampler()->recordDeallocationSample(objId);
+		}
+		objId = 0;
 	}
 #endif
 }
