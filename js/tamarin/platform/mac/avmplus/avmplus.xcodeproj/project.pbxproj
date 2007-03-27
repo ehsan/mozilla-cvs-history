@@ -195,6 +195,8 @@
 		8EE6F44F09AA541600DE11A0 /* pcre_xclass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8EE6F43E09AA541600DE11A0 /* pcre_xclass.cpp */; };
 		8EE6F45B09AA545E00DE11A0 /* pcre_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 8EE6F45909AA545E00DE11A0 /* pcre_internal.h */; };
 		8EE6F45C09AA545E00DE11A0 /* pcre.h in Headers */ = {isa = PBXBuildFile; fileRef = 8EE6F45A09AA545E00DE11A0 /* pcre.h */; };
+		942BC4350BB991690088A47F /* Sampler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 942BC4330BB991690088A47F /* Sampler.cpp */; };
+		942BC4360BB991690088A47F /* Sampler.h in Headers */ = {isa = PBXBuildFile; fileRef = 942BC4340BB991690088A47F /* Sampler.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -386,6 +388,8 @@
 		8EE6F43E09AA541600DE11A0 /* pcre_xclass.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = pcre_xclass.cpp; path = ../../../pcre/pcre_xclass.cpp; sourceTree = SOURCE_ROOT; };
 		8EE6F45909AA545E00DE11A0 /* pcre_internal.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = pcre_internal.h; path = ../../../pcre/pcre_internal.h; sourceTree = SOURCE_ROOT; };
 		8EE6F45A09AA545E00DE11A0 /* pcre.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = pcre.h; path = ../../../pcre/pcre.h; sourceTree = SOURCE_ROOT; };
+		942BC4330BB991690088A47F /* Sampler.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Sampler.cpp; path = ../../../core/Sampler.cpp; sourceTree = SOURCE_ROOT; };
+		942BC4340BB991690088A47F /* Sampler.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = Sampler.h; path = ../../../core/Sampler.h; sourceTree = SOURCE_ROOT; };
 		D2AAC046055464E500DB518D /* libavmplus.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libavmplus.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -435,6 +439,8 @@
 		1E607A9F09733787007D0E1E /* Core */ = {
 			isa = PBXGroup;
 			children = (
+				942BC4330BB991690088A47F /* Sampler.cpp */,
+				942BC4340BB991690088A47F /* Sampler.h */,
 				7CD864E50AC47805004C73CB /* AbcData.cpp */,
 				85125ADD0A5C648300502345 /* AvmPlusScriptableObject.cpp */,
 				85125ADE0A5C648300502345 /* AvmPlusScriptableObject.h */,
@@ -759,6 +765,7 @@
 				8EE6F45B09AA545E00DE11A0 /* pcre_internal.h in Headers */,
 				8EE6F45C09AA545E00DE11A0 /* pcre.h in Headers */,
 				85125AE00A5C648300502345 /* AvmPlusScriptableObject.h in Headers */,
+				942BC4360BB991690088A47F /* Sampler.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -788,9 +795,12 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			buildConfigurationList = 1DEB91EF08733DB70010E9CD /* Build configuration list for PBXProject "avmplus" */;
+			compatibilityVersion = "Xcode 2.4";
 			hasScannedForEncodings = 1;
 			mainGroup = 08FB7794FE84155DC02AAC07 /* avmplus */;
 			projectDirPath = "";
+			projectRoot = "";
+			shouldCheckCompatibility = 1;
 			targets = (
 				D2AAC045055464E500DB518D /* avmplus */,
 			);
@@ -898,6 +908,7 @@
 				8EE6F44F09AA541600DE11A0 /* pcre_xclass.cpp in Sources */,
 				85125ADF0A5C648300502345 /* AvmPlusScriptableObject.cpp in Sources */,
 				7CD864E60AC47805004C73CB /* AbcData.cpp in Sources */,
+				942BC4350BB991690088A47F /* Sampler.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
