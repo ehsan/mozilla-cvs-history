@@ -45,6 +45,7 @@
 #include "nsIMsgIdentity.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsIObserver.h"
+#include "nsFileSpec.h"
 
 /*
  * some platforms (like Windows and Mac) use a map file, because of
