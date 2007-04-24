@@ -166,7 +166,6 @@
             testSettings.isHandlingGOPHER = false;
             testSettings.isHandlingJPEG   = false;
             testSettings.isHandlingGIF    = false;
-            testSettings.isHandlingMNG    = false;
             testSettings.isHandlingPNG    = false;
             testSettings.isHandlingBMP    = false;
             testSettings.isHandlingICO    = false;
