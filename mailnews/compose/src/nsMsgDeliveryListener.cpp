@@ -107,7 +107,6 @@ nsMsgDeliveryListener::nsMsgDeliveryListener(nsMsgDeliveryCompletionCallback cal
   printf("CREATE nsMsgDeliveryListener: %x\n", this);
 #endif
 
-  mTempFileSpec = nsnull;
   mDeliveryType = delivType;
   mTagData = tagData;
   mCompletionCallback = callback;
@@ -120,8 +119,6 @@ nsMsgDeliveryListener::~nsMsgDeliveryListener()
 #if defined(DEBUG_ducarroz)
   printf("DISPOSE nsMsgDeliveryListener: %x\n", this);
 #endif
-
-  delete mTempFileSpec;
 }
 
 nsresult 

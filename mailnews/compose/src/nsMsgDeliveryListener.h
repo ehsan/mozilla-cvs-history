@@ -39,7 +39,6 @@
 #define _nsMsgDeliveryListener_H_
 
 #include "nsIUrlListener.h"
-#include "nsFileSpec.h"
 #include "nsMsgSend.h"
 #include "nsMsgSendLater.h"
 
@@ -81,7 +80,6 @@ public:
 private:
   // Private Information
   nsCOMPtr<nsISupports>           mTagData;
-  nsFileSpec                      *mTempFileSpec;
   nsMsgDeliveryType               mDeliveryType;
   nsCOMPtr<nsIMsgSend>            mMsgSendObj;
   nsMsgSendLater                  *mMsgSendLaterObj;
