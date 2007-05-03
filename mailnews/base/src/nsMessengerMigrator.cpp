@@ -534,9 +534,9 @@ nsMessengerMigrator::CreateLocalMailAccount(PRBool migrating)
 
   // create the server
   nsCOMPtr<nsIMsgIncomingServer> server;
-  rv = accountManager->CreateIncomingServer(LOCAL_MAIL_FAKE_USER_NAME,
-                                            mLocalFoldersHostname.get(),
-                            "none", getter_AddRefs(server));
+  rv = accountManager->CreateIncomingServer(NS_LITERAL_CSTRING(LOCAL_MAIL_FAKE_USER_NAME),
+                                            mLocalFoldersHostname,
+                                            NS_LITERAL_CSTRING("none"), getter_AddRefs(server));
   NS_ENSURE_SUCCESS(rv,rv);
 
   // we don't want "nobody at Local Folders" to show up in the
@@ -1177,9 +1177,9 @@ nsMessengerMigrator::MigrateLocalMailAccount()
   // create the server
   // "none" is the type we use for migrating 4.x "Local Mail"
   nsCOMPtr<nsIMsgIncomingServer> server;
-  rv = accountManager->CreateIncomingServer(LOCAL_MAIL_FAKE_USER_NAME,
-                            mLocalFoldersHostname.get(),
-                            "none", getter_AddRefs(server));
+  rv = accountManager->CreateIncomingServer(NS_LITERAL_CSTRING(LOCAL_MAIL_FAKE_USER_NAME),
+                            mLocalFoldersHostname,
+                            NS_LITERAL_CSTRING("none"), getter_AddRefs(server));
   NS_ENSURE_SUCCESS(rv,rv);
 
   // now upgrade all the prefs
@@ -1426,7 +1426,7 @@ nsMessengerMigrator::MigratePopAccount(nsIMsgIdentity *identity)
   //
   // create the server
   //
-  rv = accountManager->CreateIncomingServer(username.get(), hostname.get(), "pop3",
+  rv = accountManager->CreateIncomingServer(username, hostname, NS_LITERAL_CSTRING("pop3"),
                             getter_AddRefs(server));
   NS_ENSURE_SUCCESS(rv,rv);
 
@@ -1685,7 +1685,7 @@ nsMessengerMigrator::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
   // create the server
   //
   nsCOMPtr<nsIMsgIncomingServer> server;
-  rv = accountManager->CreateIncomingServer(username.get(), hostname.get(), "imap",
+  rv = accountManager->CreateIncomingServer(username, hostname, NS_LITERAL_CSTRING("imap"),
                             getter_AddRefs(server));
   NS_ENSURE_SUCCESS(rv,rv);
 
@@ -2127,7 +2127,7 @@ nsMessengerMigrator::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
     // create the server
 	nsCOMPtr<nsIMsgIncomingServer> server;
     // for news, username is always null
-    rv = accountManager->CreateIncomingServer(nsnull /* username */, hostname.get(), "nntp",
+    rv = accountManager->CreateIncomingServer(EmptyCString() /* username */, hostname, NS_LITERAL_CSTRING("nntp"),
                               getter_AddRefs(server));
     NS_ENSURE_SUCCESS(rv,rv);
 
