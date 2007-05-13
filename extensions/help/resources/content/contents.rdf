@@ -16,6 +16,13 @@
   <!-- Declare overlay points used in this package -->
   <RDF:Seq about="urn:mozilla:overlays">
     <RDF:li resource="chrome://communicator/content/utilityOverlay.xul"/>
+    <RDF:li resource="chrome://editor/content/EdAdvancedEdit.xul"/>
+    <RDF:li resource="chrome://editor/content/EdImageProps.xul"/>
+    <RDF:li resource="chrome://editor/content/EditorPublish.xul"/>
+    <RDF:li resource="chrome://editor/content/EditorPublishProgress.xul"/>
+    <RDF:li resource="chrome://editor/content/EditorPublishSettings.xul"/>
+    <RDF:li resource="chrome://editor/content/EdLinkProps.xul"/>
+    <RDF:li resource="chrome://editor/content/EdTableProps.xul"/>
     <RDF:li resource="chrome://pippki/content/certViewer.xul"/>
     <RDF:li resource="chrome://pippki/content/certManager.xul"/>
     <RDF:li resource="chrome://pippki/content/changepassword.xul"/>
@@ -54,6 +61,34 @@
   <!-- Define the local overlay file(s) for each overlay point -->
   <RDF:Seq about="chrome://communicator/content/utilityOverlay.xul">
     <RDF:li>chrome://help/content/helpMenuOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://editor/content/EdAdvancedEdit.xul">
+    <RDF:li>chrome://help/content/helpEditorOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://editor/content/EdImageProps.xul">
+    <RDF:li>chrome://help/content/helpEditorOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://editor/content/EditorPublish.xul">
+    <RDF:li>chrome://help/content/helpEditorOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://editor/content/EditorPublishProgress.xul">
+    <RDF:li>chrome://help/content/helpEditorOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://editor/content/EditorPublishSettings.xul">
+    <RDF:li>chrome://help/content/helpEditorOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://editor/content/EdLinkProps.xul">
+    <RDF:li>chrome://help/content/helpEditorOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://editor/content/EdTableProps.xul">
+    <RDF:li>chrome://help/content/helpEditorOverlay.xul</RDF:li>
   </RDF:Seq>
 
   <RDF:Seq about="chrome://pippki/content/certViewer.xul">
