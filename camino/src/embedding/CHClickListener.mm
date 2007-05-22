@@ -220,7 +220,7 @@ CHClickListener::MouseDown(nsIDOMEvent* aEvent)
   NSWindow* hostWindow = [event window];
   
   // get the frame location
-  nsIPresShell* presShell = doc->GetShellAt(0);
+  nsIPresShell* presShell = doc->GetPrimaryShell();
   if (!presShell)
     return NS_ERROR_FAILURE;
 
