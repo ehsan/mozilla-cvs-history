@@ -20,7 +20,6 @@
   <!-- overlay information -->
   <RDF:Seq about="urn:mozilla:overlays">
     <RDF:li resource="chrome://communicator/content/contentAreaContextOverlay.xul"/>
-    <RDF:li resource="chrome://communicator/content/pref/preftree.xul"/>
     <RDF:li resource="chrome://navigator/content/navigatorOverlay.xul"/>
   </RDF:Seq>
 
