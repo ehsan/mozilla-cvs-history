@@ -39,7 +39,6 @@
 #include "nsSmtpDelegateFactory.h"
 
 #include "nsCOMPtr.h"
-#include "nsXPIDLString.h"
 #include "nsString.h"
 #include "nsIServiceManager.h"
 
