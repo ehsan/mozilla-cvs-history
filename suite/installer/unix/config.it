@@ -1,7 +1,3 @@
-; XXX This is the Configuration file for Suite builds with MOZ_XUL_APP=1
-; set. For MOZ_XUL_APP=0 see xpinstall/packager/unix/config.it
-; Changes should be reflected in both files.
-
 ;-------------------------------------------------------------------------
 [General]
 ;-------------------------------------------------------------------------
