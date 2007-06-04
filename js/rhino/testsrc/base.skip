@@ -1,4 +1,5 @@
-# Rhino skip list
+# Rhino base skip list: these are tests that are always skipped for Rhino
+
 # These tests are skipped by Rhino either because a bug with a regression
 # test has yet to be fixed, or because the test is not applicable to Rhino.
 
