@@ -40,8 +40,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
-#include "nsXPIDLString.h"
-#include "nsCRT.h"
+#include "nsReadableUtils.h"
 
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsAbDirSearchListener, nsIAbDirectoryQueryResultListener)
@@ -86,11 +85,11 @@ NS_IMETHODIMP nsAbDirSearchListener::OnQueryItem(nsIAbDirectoryQueryResult* resu
     nsCOMPtr<nsIAbDirectoryQueryPropertyValue> property(do_QueryInterface(item, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsXPIDLCString name;
+    nsCString name;
     rv = property->GetName (getter_Copies (name));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (nsCRT::strcasecmp (name, "card:nsIAbCard") != 0)
+    if (!name.Equals("card:nsIAbCard", nsCaseInsensitiveCStringComparator()))
         return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsISupports> cardSupports;
