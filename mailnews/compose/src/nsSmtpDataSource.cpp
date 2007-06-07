@@ -39,7 +39,6 @@
 #include "nsEnumeratorUtils.h"
 #include "nsRDFCID.h"
 #include "nsIServiceManager.h"
-#include "nsCRT.h"
 
 #include "nsISmtpService.h"
 #include "nsISmtpServer.h"
