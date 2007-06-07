@@ -46,7 +46,6 @@
 #include "nsEnumeratorUtils.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
-#include "nsCRT.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIFileURL.h"
@@ -65,7 +64,7 @@
 #define FILE_SCHEME_LEN 7
 
 #ifdef XP_WIN
-#include <windows.h> 
+#include <windows.h>
 #endif
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -102,7 +101,7 @@ nsSoundDatasource::Init()
 	return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSoundDatasource::GetURI(char **aURI)
 {
   if ((*aURI = strdup("rdf:mailsounds")) == nsnull)
@@ -111,13 +110,13 @@ nsSoundDatasource::GetURI(char **aURI)
     return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSoundDatasource::GetSource(nsIRDFResource *property, nsIRDFNode *target, PRBool tv, nsIRDFResource **source)
 {
   NS_ENSURE_ARG_POINTER(property);
   NS_ENSURE_ARG_POINTER(target);
   NS_ENSURE_ARG_POINTER(source);
-  
+
   *source = nsnull;
   return NS_RDF_NO_VALUE;
 }
@@ -133,11 +132,11 @@ nsSoundDatasource::GetTarget(nsIRDFResource *source,
 	NS_ENSURE_ARG_POINTER(property);
   NS_ENSURE_ARG_POINTER(target);
   NS_ENSURE_ARG_POINTER(source);
-  
+
 	*target = nsnull;
 
 	// we only have positive assertions in the sound data source.
-	if (!tv) 
+	if (!tv)
     return NS_RDF_NO_VALUE;
 
   nsCString value;
@@ -156,8 +155,8 @@ nsSoundDatasource::GetTarget(nsIRDFResource *source,
     else
       rv = mRDFService->GetLiteral(NS_ConvertASCIItoUTF16(DEFAULT_SOUND_URL_NAME).get(), getter_AddRefs(name));
     NS_ENSURE_SUCCESS(rv,rv);
-    
-    if (!name) 
+
+    if (!name)
       return NS_RDF_NO_VALUE;
     else
       return name->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
@@ -166,8 +165,8 @@ nsSoundDatasource::GetTarget(nsIRDFResource *source,
     nsCOMPtr<nsIRDFLiteral> name;
     rv = mRDFService->GetLiteral(NS_ConvertASCIItoUTF16(value).get(), getter_AddRefs(name));
     NS_ENSURE_SUCCESS(rv,rv);
-    
-    if (!name) 
+
+    if (!name)
       return NS_RDF_NO_VALUE;
     else
       return name->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
@@ -197,7 +196,7 @@ BYTE * GetValueBytes( HKEY hKey, const char *pValueName)
 	DWORD	bufSz;
 	LPBYTE	pBytes = NULL;
 
-	err = ::RegQueryValueEx( hKey, pValueName, NULL, NULL, NULL, &bufSz); 
+	err = ::RegQueryValueEx( hKey, pValueName, NULL, NULL, NULL, &bufSz);
 	if (err == ERROR_SUCCESS) {
 		pBytes = new BYTE[bufSz];
 		err = ::RegQueryValueEx( hKey, pValueName, NULL, NULL, pBytes, &bufSz);
@@ -225,7 +224,7 @@ nsSoundDatasource::GetTargets(nsIRDFResource *source,
   *targets = nsnull;
 
 	// we only have positive assertions in the sound data source.
-	if (!tv) 
+	if (!tv)
     return NS_RDF_NO_VALUE;
 
   nsCString value;
@@ -248,7 +247,7 @@ nsSoundDatasource::GetTargets(nsIRDFResource *source,
 
 #ifdef XP_WIN
     nsCAutoString soundFolder;
-    
+
     HKEY sKey;
 	  if (::RegOpenKeyEx(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion", 0, KEY_QUERY_VALUE, &sKey) == ERROR_SUCCESS) {
 		  BYTE *pBytes = GetValueBytes( sKey, "MediaPath");
@@ -272,32 +271,32 @@ nsSoundDatasource::GetTargets(nsIRDFResource *source,
     if (dirEntries) {
       PRBool hasMore = PR_FALSE;
       PRInt32 dirCount = 0, fileCount = 0;
- 
+
       while (NS_SUCCEEDED(dirEntries->HasMoreElements(&hasMore)) && hasMore) {
         nsCOMPtr <nsISupports> nextItem;
         dirEntries->GetNext(getter_AddRefs(nextItem));
         nsCOMPtr <nsIFile> theFile = do_QueryInterface(nextItem);
-   
+
         PRBool isDirectory = PR_FALSE;
         theFile->IsDirectory(&isDirectory);
-   
+
         if (!isDirectory) {
           nsCOMPtr<nsIFileURL> theFileURL = do_CreateInstance(NS_STANDARDURL_CONTRACTID, &rv);
           NS_ENSURE_SUCCESS(rv,rv);
-          
+
           rv = theFileURL->SetFile(theFile);
           NS_ENSURE_SUCCESS(rv,rv);
-          
+
           nsCString theFileSpec;
           rv = theFileURL->GetSpec(theFileSpec);
           NS_ENSURE_SUCCESS(rv,rv);
-          
+
           // if it doesn't end with .wav, or it contains a %20, skip it.
           if (!strstr(theFileSpec.get(),"%20") && (theFileSpec.Length() > WAV_EXTENSION_LENGTH)) {
             if (strcmp(theFileSpec.get() + theFileSpec.Length() - WAV_EXTENSION_LENGTH, WAV_EXTENSION) == 0) {
               rv = mRDFService->GetResource(theFileSpec, getter_AddRefs(res));
               NS_ENSURE_SUCCESS(rv,rv);
-              
+
               rv = children->AppendElement(res);
               NS_ENSURE_SUCCESS(rv,rv);
             }
@@ -323,7 +322,7 @@ nsSoundDatasource::GetTargets(nsIRDFResource *source,
     }
 
     nsISimpleEnumerator* result = new nsArrayEnumerator(children);
-    if (!result) 
+    if (!result)
       return NS_ERROR_OUT_OF_MEMORY;
 
     NS_ADDREF(*targets = result);
@@ -335,9 +334,9 @@ nsSoundDatasource::GetTargets(nsIRDFResource *source,
     NS_ENSURE_SUCCESS(rv,rv);
 
     nsISimpleEnumerator* result = new nsSingletonEnumerator(name);
-    if (!result) 
+    if (!result)
       return NS_ERROR_OUT_OF_MEMORY;
-    
+
     NS_ADDREF(*targets = result);
     return NS_OK;
   }
@@ -356,9 +355,9 @@ nsSoundDatasource::GetTargets(nsIRDFResource *source,
     NS_ENSURE_SUCCESS(rv,rv);
 
     nsISimpleEnumerator* result = new nsSingletonEnumerator(name);
-    if (!result) 
+    if (!result)
       return NS_ERROR_OUT_OF_MEMORY;
-    
+
     NS_ADDREF(*targets = result);
     return NS_OK;
   }
@@ -420,7 +419,7 @@ nsSoundDatasource::HasAssertion(nsIRDFResource *source,
 	*hasAssertion = PR_FALSE;
 
   // we only have positive assertions in the sound data source.
-	if (!tv) 
+	if (!tv)
     return NS_OK;
 
 	if (property == kNC_Child.get()) {
@@ -443,17 +442,17 @@ nsSoundDatasource::HasAssertion(nsIRDFResource *source,
 }
 
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSoundDatasource::HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBool *result)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSoundDatasource::HasArcOut(nsIRDFResource *source, nsIRDFResource *aArc, PRBool *result)
 {
   nsresult rv = NS_OK;
-  
+
   if (aArc == kNC_Child.get()) {
     nsCString value;
     rv = source->GetValue(getter_Copies(value));
@@ -465,7 +464,7 @@ nsSoundDatasource::HasArcOut(nsIRDFResource *source, nsIRDFResource *aArc, PRBoo
     *result = PR_TRUE;
     return NS_OK;
   }
-  
+
   *result = PR_FALSE;
   return NS_OK;
 }
@@ -487,7 +486,7 @@ nsSoundDatasource::ArcLabelsOut(nsIRDFResource *source,
   nsresult rv = NS_OK;
 
   //return NS_NewEmptyEnumerator(labels);
-  
+
   nsCOMPtr<nsISupportsArray> array;
   rv = NS_NewISupportsArray(getter_AddRefs(array));
   NS_ENSURE_SUCCESS(rv,rv);
@@ -504,7 +503,7 @@ nsSoundDatasource::ArcLabelsOut(nsIRDFResource *source,
    array->AppendElement(kNC_Child);
 
   nsISimpleEnumerator* result = new nsArrayEnumerator(array);
-  if (!result) 
+  if (!result)
     return NS_ERROR_OUT_OF_MEMORY;
 
   NS_ADDREF(result);
@@ -543,7 +542,7 @@ nsSoundDatasource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 	return(NS_ERROR_NOT_IMPLEMENTED);
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSoundDatasource::GetSources(nsIRDFResource *aProperty, nsIRDFNode *aTarget, PRBool aTruthValue, nsISimpleEnumerator **_retval)
 {
   NS_ASSERTION(PR_FALSE, "Not implemented");
