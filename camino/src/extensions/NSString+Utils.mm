@@ -323,7 +323,7 @@
     // Essentially, we perform a binary search on the string length
     // which fits best into maxWidth.
 
-    float width;
+    float width = maxWidth;
     int lo = 0;
     int hi = [self length];
     int mid;
