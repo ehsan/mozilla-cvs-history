@@ -149,15 +149,10 @@ components/xpconnect.xpt
 ; 
 
 libgkgfx.so 
-libgtksuperwin.so
 libgtkxtbin.so 
 libgtkembedmoz.so 
-libxlibrgb.so
 libgfxpsshar.so
-components/libgfx_gtk.so
-components/libgfxps.so
-components/libgfxxprint.so
-components/libwidget_gtk.so
+components/libgkgfxthebes.so
 components/libwidget_gtk2.so
 components/widget.xpt
 components/gfx.xpt 
