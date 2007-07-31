@@ -525,8 +525,11 @@ calendarTaskView.prototype.getCalendarTaskAtRow = function( i )
 
 calendarTaskView.prototype.getRowOfCalendarTask = function( Task )
 {
+   if (!Task) {
+       return null;
+   }
    for (var i in gTaskArray) {
-      if (gTaskArray[i].hasSameIds(Task))
+      if (gTaskArray[i].hashId == Task.hashId)
          return i;
    }
    return null;

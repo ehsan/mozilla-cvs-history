@@ -193,7 +193,7 @@
             <body><![CDATA[
                 for (var i=0; i < this.childNodes.length; i++) {
                     var elem = this.childNodes[i];
-                    if (elem.todo.hasSameIds(aTodo)) {
+                    if (aTodo && (elem.todo.hashId == aTodo.hashId)) {
                         return;
                     }
                 }
@@ -213,7 +213,7 @@
                 // other properties of childNodes as well, which don't have .todo
                 for (var i=0; i < this.childNodes.length; i++) {
                     var elem = this.childNodes[i];
-                    if (elem.todo.hasSameIds(aTodo)) {
+                    if (aTodo && (elem.todo.hashId == aTodo.hashId)) {
                         this.removeChild(elem);
                     }
                 }
