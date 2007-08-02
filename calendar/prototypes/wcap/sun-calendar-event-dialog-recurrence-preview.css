@@ -35,61 +35,61 @@
  * ***** END LICENSE BLOCK ***** */
 
 .recurrence-calendar-mainbox {
-  min-width: 130px;
-  background-color: #ffffff;
-  border: 1px outset #ffffff;
-  padding: 0px;
+    min-width: 130px;
+    background-color: #FFFFFF;
+    border: 1px outset #FFFFFF;
+    padding: 0px;
 }
 
 .recurrence-calendar-month-box {
-  background-color: -moz-Dialog;
-  color: -moz-DialogText;
+    background-color: -moz-Dialog;
+    color: -moz-DialogText;
 }
 
 .recurrence-calendar-month-name {
-  font-family: Arial;
-  font-size: 12pt;
-  font-weight: bold;
-  color: #000000;
-  text-align: center;
-  padding: 0px 4px;
-  margin-top: 2px;
-  margin-bottom: 2px;
-  border: 1px solid -moz-Dialog;
+    font-family: Arial;
+    font-size: 12pt;
+    font-weight: bold;
+    color: #000000;
+    text-align: center;
+    padding: 0px 4px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+    border: 1px solid -moz-Dialog;
 }
 
 .recurrence-calendar-year-name {
-  font-family: Arial;
-  font-size: 12pt;
-  font-weight: bold;
-  color: #000000;
-  text-align: center;
-  padding: 0px 4px;
-  margin-left: 2px;
-  margin-top: 2px;
-  margin-bottom: 2px;
-  border: 1px solid -moz-Dialog;
+    font-family: Arial;
+    font-size: 12pt;
+    font-weight: bold;
+    color: #000000;
+    text-align: center;
+    padding: 0px 4px;
+    margin-left: 2px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+    border: 1px solid -moz-Dialog;
 }
 
 .recurrence-calendar-header {
-  font-family: Arial;
-  color: blue;
-  text-align: center;
-  padding-bottom: 2px;
+    font-family: Arial;
+    color: blue;
+    text-align: center;
+    padding-bottom: 2px;
 }
 
 .recurrence-calendar-day {
-  font-family: Arial;
-  color: #000000;
-  border: 1px solid transparent;
-  text-align: center;
+    font-family: Arial;
+    color: #000000;
+    border: 1px solid transparent;
+    text-align: center;
 }
 
 .recurrence-calendar-day[othermonth="true"] {
-  color: GrayText;
+    color: GrayText;
 }
 
 .recurrence-calendar-day[busy="true"] {
-  background-color: Highlight;
-  color: HighlightText;
+    background-color: Highlight;
+    color: HighlightText;
 }

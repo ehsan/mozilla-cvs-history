@@ -1,6 +1,5 @@
 <?xml version="1.0"?>
-<!--
-   - ***** BEGIN LICENSE BLOCK *****
+<!-- ***** BEGIN LICENSE BLOCK *****
    - Version: MPL 1.1/GPL 2.0/LGPL 2.1
    -
    - The contents of this file are subject to the Mozilla Public License Version
@@ -36,71 +35,68 @@
    - the provisions above, a recipient may use your version of this file under
    - the terms of any one of the MPL, the GPL or the LGPL.
    -
-   - ***** END LICENSE BLOCK *****
--->
+   - ***** END LICENSE BLOCK ***** -->
 
 <!DOCTYPE dialog [
-<!ENTITY % customizeToolbarDTD SYSTEM "chrome://global/locale/customizeToolbar.dtd">
-  %customizeToolbarDTD;
+  <!ENTITY % customizeToolbarDTD SYSTEM "chrome://global/locale/customizeToolbar.dtd"> %customizeToolbarDTD;
 ]>
 
-<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?> 
-<?xml-stylesheet href="chrome://global/content/customizeToolbar.css" type="text/css"?>
-<?xml-stylesheet href="chrome://global/skin/customizeToolbar.css" type="text/css"?>
-<?xml-stylesheet href="chrome://calendar/skin/sun-calendar-event-dialog.css" ?>
-<?xml-stylesheet href="chrome://messenger/skin/addressbook/addressbook.css" type="text/css"?> 
-<?xml-stylesheet href="chrome://messenger/skin/messengercompose/messengercompose.css" type="text/css"?> 
-<?xml-stylesheet href="chrome://messenger/skin/smime/msgCompSMIMEOverlay.css" type="text/css"?> 
-<?xml-stylesheet href="chrome://messenger/skin/primaryToolbar.css" type="text/css"?>
+<?xml-stylesheet type="text/css" href="chrome://communicator/skin/"?>
+<?xml-stylesheet type="text/css" href="chrome://global/content/customizeToolbar.css"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin/customizeToolbar.css"?>
+<?xml-stylesheet type="text/css" href="chrome://calendar/skin/sun-calendar-event-dialog.css" ?>
+<?xml-stylesheet type="text/css" href="chrome://messenger/skin/addressbook/addressbook.css"?>
+<?xml-stylesheet type="text/css" href="chrome://messenger/skin/messengercompose/messengercompose.css"?>
+<?xml-stylesheet type="text/css" href="chrome://messenger/skin/smime/msgCompSMIMEOverlay.css"?>
+<?xml-stylesheet type="text/css" href="chrome://messenger/skin/primaryToolbar.css"?>
 
 <dialog id="CustomizeToolbarWindow"
-
         title="&dialog.title;"
         onload="onLoad();"
         onunload="onUnload();"
         buttons="accept,cancel"
-	      ondialogaccept="return onAccept();"
+        ondialogaccept="return onAccept();"
         ondialogcancel="return onCancel();"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<script type="application/x-javascript" src="chrome://global/content/customizeToolbar.js"/>
-<script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
-<script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/customizeToolbar.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
 
-<stringbundle id="stringBundle" src="chrome://global/locale/customizeToolbar.properties"/>
+  <stringbundle id="stringBundle" src="chrome://global/locale/customizeToolbar.properties"/>
 
-<keyset>
-  <key id="cmd_close_sheet" keycode="VK_ESCAPE" oncommand="onCancel();" />
-  <key id="cmd_close_sheet" keycode="VK_RETURN" oncommand="onAccept();" />
-  <key id="cmd_close_sheet" keycode="VK_ENTER" oncommand="onAccept();" />
-</keyset>
+  <keyset>
+    <key id="cmd_close_sheet" keycode="VK_ESCAPE" oncommand="onCancel();" />
+    <key id="cmd_close_sheet" keycode="VK_RETURN" oncommand="onAccept();" />
+    <key id="cmd_close_sheet" keycode="VK_ENTER" oncommand="onAccept();" />
+  </keyset>
 
-<vbox id="main-box" flex="1" collapsed="true">
-  <description id="instructions">
-  &instructions.description;
-  </description>
+  <vbox id="main-box" flex="1" collapsed="true">
+    <description id="instructions">
+    &instructions.description;
+    </description>
 
-  <vbox flex="1" id="palette-box"
-        ondraggesture="gDraggingFromPalette = true; nsDragAndDrop.startDrag(event, dragStartObserver);"
-        ondragover="nsDragAndDrop.dragOver(event, paletteDNDObserver);"
-        ondragdrop="nsDragAndDrop.drop(event, paletteDNDObserver);"/>
+    <vbox flex="1"
+          id="palette-box"
+          ondraggesture="gDraggingFromPalette = true; nsDragAndDrop.startDrag(event, dragStartObserver);"
+          ondragover="nsDragAndDrop.dragOver(event, paletteDNDObserver);"
+          ondragdrop="nsDragAndDrop.drop(event, paletteDNDObserver);"/>
 
-  <box align="center">
-    <label value="&show.label;"/>
-    <menulist id="modelist" value="icons" oncommand="updateToolbarMode(this.value);">
-      <menupopup>
-        <menuitem value="full" label="&iconsAndText.label;"/>
-        <menuitem value="icons" label="&icons.label;"/>
-        <menuitem value="text" label="&text.label;"/>
-      </menupopup>
-    </menulist>
-    
-    <checkbox id="smallicons" oncommand="updateIconSize(this.checked);" label="&useSmallIcons.label;"/>
+    <box align="center">
+      <label value="&show.label;"/>
+      <menulist id="modelist" value="icons" oncommand="updateToolbarMode(this.value);">
+        <menupopup>
+          <menuitem value="full" label="&iconsAndText.label;"/>
+          <menuitem value="icons" label="&icons.label;"/>
+          <menuitem value="text" label="&text.label;"/>
+        </menupopup>
+      </menulist>
 
-    <button label="&restoreDefaultSet.label;" oncommand="restoreDefaultSet();"/>
-  </box>
+      <checkbox id="smallicons" oncommand="updateIconSize(this.checked);" label="&useSmallIcons.label;"/>
 
-  <separator class="groove"/>
-</vbox>
+      <button label="&restoreDefaultSet.label;" oncommand="restoreDefaultSet();"/>
+    </box>
 
+    <separator class="groove"/>
+  </vbox>
 </dialog>

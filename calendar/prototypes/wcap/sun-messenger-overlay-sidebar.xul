@@ -1,7 +1,5 @@
 <?xml version="1.0"?>
-
-<!--
-   - ***** BEGIN LICENSE BLOCK *****
+<!-- ***** BEGIN LICENSE BLOCK *****
    - Version: MPL 1.1/GPL 2.0/LGPL 2.1
    -
    - The contents of this file are subject to the Mozilla Public License Version
@@ -35,30 +33,25 @@
    - the provisions above, a recipient may use your version of this file under
    - the terms of any one of the MPL, the GPL or the LGPL.
    -
-   - ***** END LICENSE BLOCK *****
--->
+   - ***** END LICENSE BLOCK ***** -->
 
-<!DOCTYPE overlay SYSTEM "chrome://lightning/locale/sun-lightning.dtd" >
+<!DOCTYPE overlay SYSTEM "chrome://lightning/locale/sun-lightning.dtd">
 
 <?xml-stylesheet href="chrome://lightning/skin/sun-messenger-overlay-sidebar.css" type="text/css"?>
 
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/x-javascript" src="chrome://calendar/content/calendar-invitations-manager.js"/>
+  <script type="application/x-javascript" src="chrome://lightning/content/sun-messenger-overlay-sidebar.js"/>
 
-<script type="application/x-javascript" src="chrome://calendar/content/calendar-invitations-manager.js"/>
-<script type="application/x-javascript" src="chrome://lightning/content/sun-messenger-overlay-sidebar.js"/>
+  <script type="application/x-javascript">
+    var invitationsLabel = "&lightning.sidebar.invitations.label;";
+  </script>
 
-<script type="application/x-javascript" >
-  var invitationsLabel = "&lightning.sidebar.invitations.label;";
-</script>
-
-<vbox id="ltnSidebar">
-  <label id="invitations"
-         class="text-link calendar-invitations-sidebar-label"
-         value="&lightning.sidebar.invitations.label;"
-         onclick="openInvitationsDialog();"
-         hidden="true"/>
-</vbox>
-
+  <vbox id="ltnSidebar">
+    <label id="invitations"
+           class="text-link calendar-invitations-sidebar-label"
+           value="&lightning.sidebar.invitations.label;"
+           onclick="openInvitationsDialog();"
+           hidden="true"/>
+  </vbox>
 </overlay>
-
-<!-- -*- Mode: xml; sgml-ident-step: 2; indent-tabs-mode: nil; -*- -->
