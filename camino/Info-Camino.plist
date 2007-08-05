@@ -182,6 +182,8 @@
 			</array>
 		</dict>
 	</array>
+	<key>OSAScriptingDefinition</key>
+	<string>Camino.sdef</string>
 	<key>mozProfileDirName</key>
 	<string>Camino</string>
 </dict>
