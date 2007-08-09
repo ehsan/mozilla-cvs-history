@@ -102,11 +102,11 @@ resource 'STR#' (5001, "French") {
 		/* [5] */
 		"Enregistrer…",
 		/* [6] */
-		"Si vous acceptez les termes de la présen"
-		"te licence, cliquez sur « Accepter » afin "
-		"d'installer le logiciel. Si vous n'êtes "
-		"pas d'accord avec les termes de la licen"
-		"ce, cliquez sur « Refuser »."
+		"Vous êtes sur le point d’installer Camino.\n\n"
+		"Si vous acceptez les termes de la présente licence, "
+		"cliquez sur « Accepter » afin d’installer le logiciel. "
+		"Si vous n’êtes pas d’accord avec les termes de la licence, "
+		"cliquez sur « Refuser »."
 	}
 };
 
@@ -123,12 +123,11 @@ resource 'STR#' (5002, "German") {
 		/* [5] */
 		"Sichern…",
 		/* [6] */
-		"Klicken Sie in “Akzeptieren”, wenn Sie m"
-		"it den Bestimmungen des Software-Lizenzv"
-		"ertrags einverstanden sind. Falls nicht,"
-		" bitte “Ablehnen” anklicken. Sie können "
-		"die Software nur installieren, wenn Sie "
-		"“Akzeptieren” angeklickt haben."
+		"Klicken Sie auf „Akzeptieren“, wenn Sie mit den "
+		"Bestimmungen des Software-Lizenzvertrags einverstanden sind. "
+		"Falls nicht, klicken Sie bitte auf „Ablehnen“. "
+		"Die Software kann nur installiert werden, "
+		"wenn Sie den Software-Lizenzvertrag akzeptieren."
 	}
 };
 
@@ -145,10 +144,10 @@ resource 'STR#' (5003, "Italian") {
 		/* [5] */
 		"Registra…",
 		/* [6] */
-		"Se accetti le condizioni di questa licen"
-		"za, fai clic su “Accetto” per installare"
-		" il software. Altrimenti fai clic su “Ri"
-		"fiuto”."
+		"Stai per installare Camino. "
+		"Se accetti i termini di questa licenza, "
+		"fai clic su “Accetto” per installare il software. "
+		"Altrimenti fai clic su “Rifiuto”."
 	}
 };
 
@@ -350,33 +349,8 @@ data 'styl' (5000, "English") {
 };
 
 data 'TEXT' (5001, "French SLA") {
-	$"4365 2074 6578 7465 2065 7374 2075 6E65"            /* Ce texte est une */
-	$"2074 7261 6475 6374 696F 6E20 6F66 6669"            /*  traduction offi */
-	$"6369 6575 7365 2065 6E20 6672 616E 8D61"            /* cieuse en frança */
-	$"6973 2064 7520 636F 6E74 7261 7420 6465"            /* is du contrat de */
-	$"206C 6963 656E 6365 2064 D575 7469 6C69"            /*  licence d’utili */
-	$"7361 7469 6F6E 2064 7520 6C6F 6769 6369"            /* sation du logici */
-	$"656C 2043 414D 494E 4F2E 2043 6574 7465"            /* el CAMINO. Cette */
-	$"2074 7261 6475 6374 696F 6E20 6465 7320"            /*  traduction des  */
-	$"636F 6E64 6974 696F 6E73 2064 6520 6C69"            /* conditions de li */
-	$"6365 6E63 6520 6465 206C 6120 7072 8E73"            /* cence de la prés */
-	$"656E 7465 2063 6F70 6965 2064 6520 4341"            /* ente copie de CA */
-	$"4D49 4E4F 206E D561 2070 6173 2076 616C"            /* MINO n’a pas val */
-	$"6575 7220 6A75 7269 6469 7175 652C 2063"            /* eur juridique, c */
-	$"656C 6C65 2D63 6920 6573 7420 6CD5 6578"            /* elle-ci est l’ex */
-	$"636C 7573 6976 6974 8E20 6465 206C D56F"            /* clusivité de l’o */
-	$"7269 6769 6E61 6C20 656E 2061 6E67 6C61"            /* riginal en angla */
-	$"6973 2E20 546F 7574 6566 6F69 732C 206E"            /* is. Toutefois, n */
-	$"6F75 7320 6573 708E 726F 6E73 2071 7565"            /* ous espérons que */
-	$"2063 6574 7465 2074 7261 6475 6374 696F"            /*  cette traductio */
-	$"6E20 6169 6465 7261 206C 6573 2075 7469"            /* n aidera les uti */
-	$"6C69 7361 7465 7572 7320 6672 616E 636F"            /* lisateurs franco */
-	$"7068 6F6E 6573 2088 206D 6965 7578 2063"            /* phones à mieux c */
-	$"6F6D 7072 656E 6472 6520 6C65 2063 6F6E"            /* omprendre le con */
-	$"7472 6174 2064 6520 6C69 6365 6E63 6520"            /* trat de licence  */
-	$"64D5 7574 696C 6973 6174 696F 6E20 6475"            /* d’utilisation du */
-	$"206C 6F67 6963 6965 6C20 4341 4D49 4E4F"            /*  logiciel CAMINO */
-	$"2E0D 0D43 4F4E 5452 4154 2044 4520 4C49"            /* ...CONTRAT DE LI */
+	"Ce texte est une traduction officieuse en français du contrat de licence d’utilisation du logiciel CAMINO. Cette traduction des conditions de licence de la présente copie de CAMINO n’a pas de valeur juridique, celle-ci est l’exclusivité de l’original en anglais. Toutefois, nous espérons que cette traduction aidera les utilisateurs francophones à mieux comprendre le contrat de licence d’utilisation du logiciel CAMINO."
+	$"0D 0D43 4F4E 5452 4154 2044 4520 4C49"            /* ..CONTRAT DE LI */
 	$"4345 4E43 4520 44D5 5554 494C 4953 4154"            /* CENCE D’UTILISAT */
 	$"494F 4E20 4455 204C 4F47 4943 4945 4C20"            /* ION DU LOGICIEL  */
 	$"4341 4D49 4E4F 0D56 6572 7369 6F6E 2031"            /* CAMINO.Version 1 */
@@ -877,39 +851,14 @@ data 'TEXT' (5001, "French SLA") {
 
 data 'styl' (5001, "French SLA") {
 	$"0003 0000 0000 000F 000C 0400 0090 000C"            /* .............ê.. */
-	$"0000 0000 0000 0000 01A2 000F 000C 0400"            /* .........¢...... */
-	$"0190 000C 0000 0000 0000 0000 01D6 000F"            /* .ê...........÷.. */
+	$"0000 0000 0000 0000 01A5 000F 000C 0400"            /* .........¢...... */
+	$"0190 000C 0000 0000 0000 0000 01D9 000F"            /* .ê...........÷.. */
 	$"000C 0400 0090 000C 0000 0000 0000"                 /* .....ê........ */
 };
 
 data 'TEXT' (5002, "German SLA") {
-	$"4469 6573 2069 7374 2065 696E 6520 696E"            /* Dies ist eine in */
-	$"6F66 6669 7A69 656C 6C65 2086 6265 7273"            /* offizielle Übers */
-	$"6574 7A75 6E67 2064 6572 2043 414D 494E"            /* etzung der CAMIN */
-	$"4F20 4555 4C41 2069 6E73 2044 6575 7473"            /* O EULA ins Deuts */
-	$"6368 652E 2044 6965 2056 6572 7472 6167"            /* che. Die Vertrag */
-	$"7362 6564 696E 6775 6E67 656E 2066 9F72"            /* sbedingungen für */
-	$"2064 6965 7365 2043 414D 494E 4F20 4B6F"            /*  diese CAMINO Ko */
-	$"7069 6520 7369 6E64 2064 6172 696E 206E"            /* pie sind darin n */
-	$"6963 6874 2067 6573 6574 7A6C 6963 6820"            /* icht gesetzlich  */
-	$"6665 7374 6765 6C65 6774 2C20 669F 7220"            /* festgelegt, für  */
-	$"6569 6E65 2067 9F6C 7469 6765 2049 6E74"            /* eine gültige Int */
-	$"6572 7072 6574 6174 696F 6E20 6973 7420"            /* erpretation ist  */
-	$"6175 7373 6368 6C69 65A7 6C69 6368 2064"            /* ausschließlich d */
-	$"6965 206E 6163 6873 7465 6865 6E64 2061"            /* ie nachstehend a */
-	$"6E67 6566 9F68 7274 6520 656E 676C 6973"            /* ngeführte englis */
-	$"6368 6520 4555 4C41 2D4F 7269 6769 6E61"            /* che EULA-Origina */
-	$"6C76 6572 7369 6F6E 2068 6572 616E 7A75"            /* lversion heranzu */
-	$"7A69 6568 656E 2E20 5769 7220 686F 6666"            /* ziehen. Wir hoff */
-	$"656E 206A 6564 6F63 682C 2064 6173 7320"            /* en jedoch, dass  */
-	$"6469 6573 6520 8662 6572 7365 747A 756E"            /* diese Übersetzun */
-	$"6720 7A75 2065 696E 656D 2062 6573 7365"            /* g zu einem besse */
-	$"7265 6E20 5665 7273 748A 6E64 6E69 7320"            /* ren Verständnis  */
-	$"6465 7220 4341 4D49 4E4F 2045 554C 4120"            /* der CAMINO EULA  */
-	$"669F 7220 616C 6C65 2064 6575 7473 6368"            /* für alle deutsch */
-	$"2073 7072 6163 6869 6765 6E20 4E75 747A"            /*  sprachigen Nutz */
-	$"6572 2062 6569 7472 6167 656E 2077 6972"            /* er beitragen wir */
-	$"642E 0D0D 4341 4D49 4E4F 2045 4E44 4E55"            /* d...CAMINO ENDNU */
+	"Dies ist eine inoffizielle Übersetzung der CAMINO EULA ins Deutsche. Die Vertragsbedingungen für diese Kopie von CAMINO sind darin nicht gesetzlich festgelegt, für eine gültige Interpretation ist ausschließlich die nachstehend angeführte englische EULA-Originalversion heranzuziehen. Wir hoffen jedoch, dass diese Übersetzung zu einem besseren Verständnis der CAMINO EULA für alle deutschsprachigen Nutzer beitragen wird."
+	$"0D0D 4341 4D49 4E4F 2045 4E44 4E55"            /* ..CAMINO ENDNU */
 	$"545A 4552 2D4C 495A 454E 5A56 4552 4549"            /* TZER-LIZENZVEREI */
 	$"4E42 4152 554E 470D 5665 7273 696F 6E20"            /* NBARUNG.Version  */
 	$"312E 310D 0D45 494E 4520 5155 454C 4C2D"            /* 1.1..EINE QUELL- */
@@ -932,7 +881,7 @@ data 'TEXT' (5002, "German SLA") {
 	$"2076 6F6E 2043 414D 494E 4F20 756E 6420"            /*  von CAMINO und  */
 	$"6465 7220 6461 7A75 6765 689A 7269 6765"            /* der dazugehörige */
 	$"6E20 446F 6B75 6D65 6E74 6174 696F 6E20"            /* n Dokumentation  */
-	$"28E3 5072 6F64 756B 7422 2920 7769 7264"            /* („Produkt") wird */
+	$"28E3 5072 6F64 756B 74D2 2920 7769 7264"            /* („Produkt“) wird */
 	$"2049 686E 656E 207A 7520 6465 6E20 6665"            /*  Ihnen zu den fe */
 	$"7374 6765 6C65 6774 656E 2042 6564 696E"            /* stgelegten Bedin */
 	$"6775 6E67 656E 2069 6E20 6465 7220 6869"            /* gungen in der hi */
@@ -940,10 +889,10 @@ data 'TEXT' (5002, "German SLA") {
 	$"4341 4D49 4E4F 2045 4E44 4E55 545A 4552"            /* CAMINO ENDNUTZER */
 	$"2D20 4C49 5A45 4E5A 5645 5245 494E 4241"            /* - LIZENZVEREINBA */
 	$"5255 4E47 2028 E356 4552 4549 4E42 4152"            /* RUNG („VEREINBAR */
-	$"554E 4722 2920 6765 7374 6174 7465 742E"            /* UNG") gestattet. */
+	$"554E 47D2 2920 6765 7374 6174 7465 742E"            /* UNG“) gestattet. */
 	$"2044 5552 4348 2044 5286 434B 454E 2044"            /*  DURCH DRÜCKEN D */
 	$"4553 2053 594D 424F 4C53 20E3 4549 4E56"            /* ES SYMBOLS „EINV */
-	$"4552 5354 414E 4445 4E22 204F 4445 5220"            /* ERSTANDEN" ODER  */
+	$"4552 5354 414E 4445 4ED2 204F 4445 5220"            /* ERSTANDEN“ ODER  */
 	$"4455 5243 4820 494E 5354 414C 4C41 5449"            /* DURCH INSTALLATI */
 	$"4F4E 204F 4445 5220 4E55 545A 554E 4720"            /* ON ODER NUTZUNG  */
 	$"4445 5320 4341 4D49 4E4F 2042 524F 5753"            /* DES CAMINO BROWS */
@@ -959,7 +908,7 @@ data 'TEXT' (5002, "German SLA") {
 	$"454E 2045 524B 4C80 5245 4E2C 204B 4C49"            /* EN ERKLÄREN, KLI */
 	$"434B 454E 2053 4945 204E 4943 4854 2041"            /* CKEN SIE NICHT A */
 	$"5546 2044 4153 2053 594D 424F 4C20 E345"            /* UF DAS SYMBOL „E */
-	$"494E 5645 5253 5441 4E44 454E 2220 554E"            /* INVERSTANDEN" UN */
+	$"494E 5645 5253 5441 4E44 454E D220 554E"            /* INVERSTANDEN“ UN */
 	$"4420 494E 5354 414C 4C49 4552 454E 204F"            /* D INSTALLIEREN O */
 	$"4445 5220 4E55 545A 454E 2053 4945 2057"            /* DER NUTZEN SIE W */
 	$"4544 4552 2044 454E 2043 414D 494E 4F20"            /* EDER DEN CAMINO  */
@@ -1041,7 +990,7 @@ data 'TEXT' (5002, "German SLA") {
 	$"7572 6365 2D4C 697A 656E 7A65 6E20 287A"            /* urce-Lizenzen (z */
 	$"7573 616D 6D65 6E67 6566 6173 7374 20E3"            /* usammengefasst „ */
 	$"4F70 656E 2D53 6F75 7263 652D 4C69 7A65"            /* Open-Source-Lize */
-	$"6E7A 656E 2229 2066 6573 7467 6568 616C"            /* nzen") festgehal */
+	$"6E7A 656E D229 2066 6573 7467 6568 616C"            /* nzen“) festgehal */
 	$"7465 6E65 6E20 4265 7374 696D 6D75 6E67"            /* tenen Bestimmung */
 	$"656E 2061 7566 2068 7474 703A 2F2F 7777"            /* en auf http://ww */
 	$"772E 6D6F 7A69 6C6C 612E 6F72 6720 6572"            /* w.mozilla.org er */
@@ -1090,7 +1039,7 @@ data 'TEXT' (5002, "German SLA") {
 	$"554E 4753 4155 5353 4348 4C55 5353 2E20"            /* UNGSAUSSCHLUSS.  */
 	$"4441 5320 5052 4F44 554B 5420 5749 5244"            /* DAS PRODUKT WIRD */
 	$"2049 484E 454E 20E3 5749 4520 4245 5345"            /*  IHNEN „WIE BESE */
-	$"4845 4E22 2045 494E 5343 484C 4945 5353"            /* HEN" EINSCHLIESS */
+	$"4845 4ED2 2045 494E 5343 484C 4945 5353"            /* HEN“ EINSCHLIESS */
 	$"4C49 4348 2045 5645 4E54 5545 4C4C 2056"            /* LICH EVENTUELL V */
 	$"4F52 4841 4E44 454E 4552 2046 4548 4C45"            /* ORHANDENER FEHLE */
 	$"5220 5A55 5220 5645 5246 8647 554E 4720"            /* R ZUR VERFÜGUNG  */
@@ -1152,7 +1101,7 @@ data 'TEXT' (5002, "German SLA") {
 	$"4F4C 4C4D 8043 4854 4947 5445 2028 5A55"            /* OLLMÄCHTIGTE (ZU */
 	$"5341 4D4D 454E 4745 4641 5353 5420 4449"            /* SAMMENGEFASST DI */
 	$"4520 E34D 4F5A 494C 4C41 2047 5255 5050"            /* E „MOZILLA GRUPP */
-	$"4522 2920 4686 5220 4D49 5454 454C 4241"            /* E") FÜR MITTELBA */
+	$"45D2 2920 4686 5220 4D49 5454 454C 4241"            /* E“) FÜR MITTELBA */
 	$"5245 2C20 4B4F 4E4B 5245 5445 2C20 5A55"            /* RE, KONKRETE, ZU */
 	$"4680 4C4C 4947 2045 4E54 5354 414E 4445"            /* FÄLLIG ENTSTANDE */
 	$"4E45 2053 4348 8044 454E 2055 4E44 2046"            /* NE SCHÄDEN UND F */
@@ -1247,8 +1196,8 @@ data 'TEXT' (5002, "German SLA") {
 	$"756E 6465 7376 6572 6F72 646E 756E 6765"            /* undesverordnunge */
 	$"6E20 756E 6420 5665 7277 616C 7475 6E67"            /* n und Verwaltung */
 	$"7376 6F72 7363 6872 6966 7465 6E29 2032"            /* svorschriften) 2 */
-	$"2E31 3031 2075 6D20 2263 6F6D 6D65 7263"            /* .101 um "commerc */
-	$"6961 6C20 6974 656D 7322 2028 6765 7765"            /* ial items" (gewe */
+	$"2E31 3031 2075 6D20 E363 6F6D 6D65 7263"            /* .101 um „commerc */
+	$"6961 6C20 6974 656D 73D2 2028 6765 7765"            /* ial items“ (gewe */
 	$"7262 6C69 6368 6520 479F 7465 7229 2C20"            /* rbliche Güter),  */
 	$"6469 6520 7369 6368 206C 6175 7420 4465"            /* die sich laut De */
 	$"6669 6E69 7469 6F6E 2075 6E74 6572 2034"            /* finition unter 4 */
@@ -1256,11 +1205,11 @@ data 'TEXT' (5002, "German SLA") {
 	$"2853 6570 742E 2031 3939 3529 2062 7A77"            /* (Sept. 1995) bzw */
 	$"2E20 3438 2043 2E46 2E52 2E20 3232 372E"            /* . 48 C.F.R. 227. */
 	$"3732 3032 2028 4A75 6E69 2031 3939 3529"            /* 7202 (Juni 1995) */
-	$"2061 7573 20D2 636F 6D6D 6572 6369 616C"            /*  aus “commercial */
+	$"2061 7573 20E3 636F 6D6D 6572 6369 616C"            /*  aus „commercial */
 	$"2063 6F6D 7075 7465 7220 736F 6674 7761"            /*  computer softwa */
 	$"7265 D220 2867 6577 6572 626C 6963 6865"            /* re“ (gewerbliche */
 	$"2043 6F6D 7075 7465 7273 6F66 7477 6172"            /*  Computersoftwar */
-	$"6529 2075 6E64 2022 636F 6D6D 6572 6369"            /* e) und "commerci */
+	$"6529 2075 6E64 20E3 636F 6D6D 6572 6369"            /* e) und „commerci */
 	$"616C 2063 6F6D 7075 7465 7220 736F 6674"            /* al computer soft */
 	$"7761 7265 2064 6F63 756D 656E 7461 7469"            /* ware documentati */
 	$"6F6E D220 2844 6F6B 756D 656E 7461 7469"            /* on“ (Dokumentati */
@@ -1383,35 +1332,14 @@ data 'TEXT' (5002, "German SLA") {
 
 data 'styl' (5002, "German SLA") {
 	$"0003 0000 0000 000F 000C 0400 0090 000C"            /* .............ê.. */
-	$"0000 0000 0000 0000 01A4 000F 000C 0400"            /* .........§...... */
-	$"0190 000C 0000 0000 0000 0000 01C7 000F"            /* .ê...........«.. */
+	$"0000 0000 0000 0000 01A7 000F 000C 0400"            /* .........§...... */
+	$"0190 000C 0000 0000 0000 0000 01CA 000F"            /* .ê...........«.. */
 	$"000C 0400 0090 000C 0000 0000 0000"                 /* .....ê........ */
 };
 
 data 'TEXT' (5003, "Italian SLA") {
-	$"5175 6573 7461 208F 2075 6E61 2074 7261"            /* Questa è una tra */
-	$"6475 7A69 6F6E 6520 6E6F 6E20 7566 6669"            /* duzione non uffi */
-	$"6369 616C 6520 6469 2043 414D 494E 4F20"            /* ciale di CAMINO  */
-	$"4555 4C41 2069 6E20 6974 616C 6961 6E6F"            /* EULA in italiano */
-	$"2E20 4573 7361 206E 6F6E 2068 6120 7661"            /* . Essa non ha va */
-	$"6C6F 7265 206C 6567 616C 6520 7065 7220"            /* lore legale per  */
-	$"6166 6665 726D 6172 6520 6920 7465 726D"            /* affermare i term */
-	$"696E 6920 6465 6C6C 6120 6C69 6365 6E7A"            /* ini della licenz */
-	$"6120 6469 2071 7565 7374 6120 636F 7069"            /* a di questa copi */
-	$"6120 6469 2043 414D 494E 4F20 D020 736F"            /* a di CAMINO – so */
-	$"6C6F 2069 6C20 7465 7374 6F20 6F72 6967"            /* lo il testo orig */
-	$"696E 616C 6520 696E 676C 6573 6520 6469"            /* inale inglese di */
-	$"2045 554C 412C 2069 6E63 6C75 736F 2071"            /*  EULA, incluso q */
-	$"7569 2073 6F74 746F 2C20 6861 2076 616C"            /* ui sotto, ha val */
-	$"6F72 6520 6C65 6761 6C65 2E20 5475 7474"            /* ore legale. Tutt */
-	$"6176 6961 2C20 6369 2061 7567 7572 6961"            /* avia, ci auguria */
-	$"6D6F 2063 6865 2071 7565 7374 6120 7472"            /* mo che questa tr */
-	$"6164 757A 696F 6E65 2070 6F73 7361 2061"            /* aduzione possa a */
-	$"6975 7461 7265 206C 6520 7065 7273 6F6E"            /* iutare le person */
-	$"6520 6469 206C 696E 6775 6120 6974 616C"            /* e di lingua ital */
-	$"6961 6E61 2061 2063 6F6D 7072 656E 6465"            /* iana a comprende */
-	$"7265 206D 6567 6C69 6F20 4341 4D49 4E4F"            /* re meglio CAMINO */
-	$"2045 554C 412E 0D0D 4143 434F 5244 4F20"            /*  EULA...ACCORDO  */
+	"Questa è una traduzione non ufficiale in italiano dell’Accordo di Licenza per l’Utente Finale (EULA) di CAMINO. Essa non ha valore legale nel definire itermini di licenza di questa copia di CAMINO - solo il testo originale in inglese della EULA, qui incluso, ha valore legale. Tuttavia ci auguriamo chequesta traduzione possa aiutare le persone di lingua italiana a comprendere meglio la EULA di CAMINO."
+	$"0D0D 4143 434F 5244 4F20"            /*  ..ACCORDO  */
 	$"4449 204C 4943 454E 5A41 2053 4F46 5457"            /* DI LICENZA SOFTW */
 	$"4152 4520 5045 5220 4CD5 5554 454E 5445"            /* ARE PER L’UTENTE */
 	$"2046 494E 414C 4520 4449 2043 414D 494E"            /*  FINALE DI CAMIN */
@@ -1863,8 +1791,8 @@ data 'TEXT' (5003, "Italian SLA") {
 
 data 'styl' (5003, "Italian SLA") {
 	$"0003 0000 0000 000F 000C 0400 0090 000C"            /* .............ê.. */
-	$"0000 0000 0000 0000 0168 000F 000C 0400"            /* .........h...... */
-	$"0190 000C 0000 0000 0000 0000 01A1 000F"            /* .ê...........°.. */
+	$"0000 0000 0000 0000 0195 000F 000C 0400"            /* .........h...... */
+	$"0190 000C 0000 0000 0000 0000 01CE 000F"            /* .ê...........°.. */
 	$"000C 0400 0090 000C 0000 0000 0000"                 /* .....ê........ */
 };
 
