@@ -1,6 +1,5 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* vim: set shiftwidth=4 tabstop=8 autoindent cindent expandtab: */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -13,19 +12,18 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is nsStackFrameWin.h code, released
- * December 20, 2000.
+ * The Original Code is NS_WalkTheStack.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2003
+ * The Initial Developer of the Original Code is the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -36,11 +34,26 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef nsStackFrameUnix_h___
-#define nsStackFrameUnix_h___
 
-#include "stdio.h"
+/* API for getting a stack trace of the C/C++ stack on the current thread */
 
-void DumpStackToFile(FILE* out);
+#include "nsStackWalk.h"
+
+#if defined(_WIN32) && defined(_M_IX86) && !defined(WINCE) // WIN32 x86 stack walking code
+#include "nsStackFrameWin.cpp"
+
+// WIN32 x86 stack walking code
+// i386 or PPC Linux stackwalking code or Solaris
+#elif (defined(linux) && defined(__GNUC__) && (defined(__i386) || defined(PPC) || defined(__x86_64__))) || (defined(__sun) && (defined(__sparc) || defined(sparc) || defined(__i386) || defined(i386)))
+#include "nsStackFrameUnix.cpp"
+
+#else // unsupported platform.
+
+EXPORT_XPCOM_API(nsresult)
+NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
+             void *aClosure)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 #endif
