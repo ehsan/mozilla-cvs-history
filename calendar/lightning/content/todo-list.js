@@ -54,7 +54,7 @@ function editTodoItem(event)
 
 function newTodoItem(event)
 {
-    createTodoWithDialog(ltnSelectedCalendar());
+    createTodoWithDialog(getSelectedCalendar());
 }
 
 function deleteTodoItem(event)
