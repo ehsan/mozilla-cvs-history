@@ -523,7 +523,6 @@ var treeView =
             if (calendarEvent.startDate.isDate) {
                // display enddate is ical enddate - 1
                eventEndDate.day = eventEndDate.day - 1;
-               eventEndDate.normalize();
             }
             return formatUnifinderEventDateTime(eventEndDate);         
 
