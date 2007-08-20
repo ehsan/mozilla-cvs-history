@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -38,49 +37,45 @@
 
 #include "nsIVariant.idl"
 
-[scriptable, uuid(6586B48D-3FF6-4b82-B9F6-5B561D416E36)]
-interface calIWcapRequest : nsISupports
+[scriptable, uuid(B96C2997-7AAA-4619-AD48-B7EBD9236C93)]
+interface calIOperation : nsISupports
 {
     /**
-     * For easy testing for equality.
+     * Id for easy management of pending requests.
      */
-    readonly attribute unsigned long id;
-    
+    readonly attribute AUTF8String id;
+
     /**
      * Determines whether the request is pending, i.e. has not been completed.
      */
     readonly attribute boolean isPending;
-    
-    /**
-     * Determines whether the request has succeeded, i.e. it has successfully
-     * been completed.
-     * XXX todo: remove this and favor
-     * !request.isPending && Components.isSuccessCode(request.status) ?
-     */
-    readonly attribute boolean succeeded;
-    
+
     /**
      * Status of the request, e.g. NS_OK while pending or after successful
      * completion, or NS_ERROR_FAILED when failed.
      */
     readonly attribute nsIVariant status;
-    
+
+    /**
+     * Determines whether the request has succeeded, i.e. it has successfully
+     * been completed.
+     */
+    readonly attribute boolean success;
+
     /**
      * Cancels a pending request and changes status.
      */
-    void cancel(in nsIVariant status);
+    void cancel(in nsIVariant aStatus);
 };
 
-[scriptable, uuid(D0BC007F-D0B5-4352-A32A-8F7A9F55A713)]
-interface calIWcapRequestResultListener : nsISupports
+[scriptable, uuid(1FA39726-63D2-440c-A464-296D2822B9DA)]
+interface calIGenericOperationListener : nsISupports
 {
     /**
-     * Callback receiving results.
+     * Generic callback receiving result.
      *
-     * @param request object to track operation
-     * @param result request result or null in case of an error
+     * @param aOperation operation object
+     * @param aResult    result or null in case of an error
      */
-    void onRequestResult(in calIWcapRequest request,
-                         in nsIVariant result);
+    void onResult(in calIOperation aOperation, in nsIVariant aResult);
 };
-
