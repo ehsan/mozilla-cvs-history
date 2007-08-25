@@ -18,7 +18,7 @@ no warnings 'once';
 my $config = "config.pl";
 
 if (-r $config) {
-    my $return = do "config.pl";
+    my $return = do $config;
     exit_with_error("Couldn't parse configuration: $@") if $@;
     exit_with_error("Couldn't \"do\" configuration (read permissions?): $!") unless defined $return;
 } else {
@@ -108,12 +108,12 @@ if (-r $config) {
                 # right side of the substitution because of 'use strict;'
                 if ($row[3]) {
                     $row[3] =~ s/([0-9]{3})[ .-]?[0-9]{4}/(defined $1 ? $1 : '')."-****"/ge;
-                    $row[3] =~ s/\ ?(.+)?@(.+)?[.,](.+)?\ ?/(defined $1 ? $1 : '')."@****.".(defined $3 ? $3 : '')/ge;
+                    $row[3] =~ s/@([^.].+?)\./"@****."/ge;
                 }
 
                 if ($row[4]) {
                     $row[4] =~ s/([0-9]{3})[ .-]?[0-9]{4}/(defined $1 ? $1 : '')."-****"/ge;
-                    $row[4] =~ s/\ ?(.+)?@(.+)?[.,](.+)?\ ?/(defined $1 ? $1 : '')."@****.".(defined $3 ? $3 : '')/ge;
+                    $row[4] =~ s/@([^.].+?)\./"@****."/ge;
                 }
             }
             $csv->execute(@row);
