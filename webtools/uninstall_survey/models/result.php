@@ -167,8 +167,8 @@ class Result extends AppModel {
                 $_email_regex = '/@([^.].+?)\./';
                 $comments[$var]['Result'] = preg_replace($_email_regex,'@****.',$comments[$var]['Result']);
 
-                //$comments[$var]['Result']['comments'] = preg_replace($_email_regex,'$1@****.$3',$comments[$var]['Result']['comments']);
-                //$comments[$var]['Result']['intention_text'] = preg_replace($_email_regex,'$1@****.$3',$comments[$var]['Result']['intention_text']);
+                //$comments[$var]['Result']['comments'] = preg_replace($_email_regex,'@****.',$comments[$var]['Result']['comments']);
+                //$comments[$var]['Result']['intention_text'] = preg_replace($_email_regex,'@****.',$comments[$var]['Result']['intention_text']);
 
                 // Handle xxx-xxx-xxxx
                 $_phone_regex = '/([0-9]{3})[ .-]?[0-9]{4}/';
@@ -280,8 +280,8 @@ class Result extends AppModel {
                 $_email_regex = '/@([^.].+?)\./';
                 $newdata[$var] = preg_replace($_email_regex,'@****.',$newdata[$var]);
 
-                //$newdata[$var]['comments'] = preg_replace($_email_regex,'$1@****.$3',$newdata[$var]['comments']);
-                //$newdata[$var]['intention_other'] = preg_replace($_email_regex,'$1@****.$3',$newdata[$var]['intention_other']);
+                //$newdata[$var]['comments'] = preg_replace($_email_regex,'@****.',$newdata[$var]['comments']);
+                //$newdata[$var]['intention_other'] = preg_replace($_email_regex,'@****.',$newdata[$var]['intention_other']);
 
                 // Handle xxx-xxx-xxxx
                 $_phone_regex = '/([0-9]{3})[ .-]?[0-9]{4}/';
