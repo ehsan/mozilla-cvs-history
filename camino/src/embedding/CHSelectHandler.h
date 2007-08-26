@@ -20,6 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   David Hyatt <hyatt@mozilla.org> (Original Author)
+ *   Ian Leue <froodian@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,24 +37,29 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __CHClickListener_h__
-#define __CHClickListener_h__
+#ifndef CHSelectHandler_h_
+#define CHSelectHandler_h_
 
-//#include <Carbon/Carbon.h>
 #include <Cocoa/Cocoa.h>
 
 #include "nsIDOMMouseListener.h"
+#include "nsIDOMKeyListener.h"
 
-class CHClickListener :  public nsIDOMMouseListener
+// This class is a hack.  It listens to user mouse and key events so we know
+// when to build and show our native menus for <select> items
+class CHSelectHandler :  public nsIDOMMouseListener,
+                         public nsIDOMKeyListener
 {
 public:
-  CHClickListener();
-  virtual ~CHClickListener();
+  CHSelectHandler();
+  virtual ~CHSelectHandler();
 
   NS_DECL_ISUPPORTS
-  
-  // The DOM mouse listener interface.  We only care about clicks.
+
+  // DOM event listener interface.
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; };
+
+  // DOM mouse listener interface
   NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
   NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent) { return NS_OK; };
   NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent) { return NS_OK; };
@@ -60,8 +67,10 @@ public:
   NS_IMETHOD MouseOver(nsIDOMEvent* aMouseEvent) { return NS_OK; };
   NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent) { return NS_OK; };
 
-private:
-
+  // DOM key listener interface
+  NS_IMETHOD KeyDown(nsIDOMEvent* aKeyEvent);
+  NS_IMETHOD KeyUp(nsIDOMEvent* aKeyEvent) { return NS_OK; };
+  NS_IMETHOD KeyPress(nsIDOMEvent* aKeyEvent) { return NS_OK; };
 };
 
 

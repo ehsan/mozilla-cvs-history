@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   David Hyatt <hyatt@mozilla.org> (Original Author)
+ *   Ian Leue <froodian@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,11 +43,11 @@
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
-#include "CHClickListener.h"
-#include "nsIDOMEventTarget.h"
+#include "CHSelectHandler.h"
 #include "nsIContent.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMMouseEvent.h"
+#include "nsIDOMKeyEvent.h"
 #include "nsEmbedAPI.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentEvent.h"
@@ -66,22 +67,22 @@
   nsIDOMHTMLSelectElement* mSelectElt;
 }
 
--(id)initWithSelect:(nsIDOMHTMLSelectElement*)aSel;
--(IBAction)selectOption:(id)aSender;
+- (id)initWithSelect:(nsIDOMHTMLSelectElement *)aSel;
+- (IBAction)selectOption:(id)aSender;
 
 @end
 
 @implementation CHOptionSelector
 
--(id)initWithSelect:(nsIDOMHTMLSelectElement*)aSel
+- (id)initWithSelect:(nsIDOMHTMLSelectElement *)aSel
 {
-  if ( (self = [super init]) ) {
+  if ((self = [super init])) {
     mSelectElt = aSel;
   }
   return self;
 }
 
--(IBAction)selectOption:(id)aSender
+- (IBAction)selectOption:(id)aSender
 {
   nsIDOMHTMLOptionElement* optionElt = (nsIDOMHTMLOptionElement*)[[aSender representedObject] pointerValue];
   NS_ASSERTION(optionElt, "Missing option element");
@@ -106,18 +107,22 @@
 
 @end
 
-NS_IMPL_ISUPPORTS2(CHClickListener, nsIDOMMouseListener, nsIDOMEventListener)
+NS_IMPL_ISUPPORTS2(CHSelectHandler,
+                   nsIDOMMouseListener,
+                   nsIDOMKeyListener)
 
-CHClickListener::CHClickListener()
+nsresult ShowNativeMenuForSelect(nsIDOMHTMLSelectElement* sel);
+
+CHSelectHandler::CHSelectHandler()
 {
 }
 
-CHClickListener::~CHClickListener()
+CHSelectHandler::~CHSelectHandler()
 {
 }
 
 NS_IMETHODIMP
-CHClickListener::MouseDown(nsIDOMEvent* aEvent)
+CHSelectHandler::MouseDown(nsIDOMEvent* aEvent)
 {
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(aEvent));
   if (!mouseEvent) return NS_ERROR_FAILURE;
@@ -137,6 +142,37 @@ CHClickListener::MouseDown(nsIDOMEvent* aEvent)
   if (!sel)
     return NS_OK;
 
+  return ShowNativeMenuForSelect(sel);
+}
+
+NS_IMETHODIMP
+CHSelectHandler::KeyDown(nsIDOMEvent* aKeyEvent)
+{  
+  nsCOMPtr<nsIDOMKeyEvent> keyEvent(do_QueryInterface(aKeyEvent));
+  if (!keyEvent)
+    return NS_ERROR_FAILURE;
+
+  PRUint32 keyCode;
+  keyEvent->GetKeyCode(&keyCode);
+  // We only care about spaces
+  if (keyCode != nsIDOMKeyEvent::DOM_VK_SPACE)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMEventTarget> target;
+  keyEvent->GetTarget(getter_AddRefs(target));
+  if (!target)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMHTMLSelectElement> sel(do_QueryInterface(target));
+  if (!sel)
+    return NS_OK;
+
+  return ShowNativeMenuForSelect(sel);
+}
+
+nsresult
+ShowNativeMenuForSelect(nsIDOMHTMLSelectElement* sel)
+{
   PRInt32 size = 0;
   sel->GetSize(&size);
   PRBool multiple = PR_FALSE;
