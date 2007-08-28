@@ -41,7 +41,6 @@
 #import "NSString+Utils.h"
 
 #import "IconTabViewItem.h"
-#import "NSString+Utils.h"
 
 //
 // NSParagraphStyle has a line break mode which will automatically
