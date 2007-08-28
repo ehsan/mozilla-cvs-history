@@ -38,8 +38,8 @@
 
 #import <Cocoa/Cocoa.h>
 #import "RolloverTrackingCell.h"
-#import "BrowserTabViewItem.h"
 
+@class BrowserTabViewItem;
 @class RolloverImageButton;
 
 @interface TabButtonCell : RolloverTrackingCell
