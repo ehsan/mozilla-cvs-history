@@ -14,25 +14,39 @@ my $db = undef;
 
 sub ConnectToDatabase($) {
     my ($tree) = @_;
+    my $use_bonsai = $::global_treedata->{$tree}->{use_bonsai};
+    my $use_viewvc = $::global_treedata->{$tree}->{use_viewvc};
 
     if (!defined $db) {
-        my ($dsn);
-        my $viewvc_dbdriver = $::global_treedata->{$tree}->{viewvc_dbdriver}; 
-        my $viewvc_dbname = $::global_treedata->{$tree}->{viewvc_dbname}; 
-        my $viewvc_dbhost = $::global_treedata->{$tree}->{viewvc_dbhost}; 
-        my $viewvc_dbport = $::global_treedata->{$tree}->{viewvc_dbport}; 
-        my $viewvc_dbuser = $::global_treedata->{$tree}->{viewvc_dbuser}; 
-        my $viewvc_dbpasswd = $::global_treedata->{$tree}->{viewvc_dbpasswd}; 
+        my ($dsn, $dbdriver, $dbname, $dbhost, $dbport, $dbuser, $dbpasswd);
 
-        $dsn = "DBI:${viewvc_dbdriver}:database=${viewvc_dbname};";
-        $dsn .= "host=${viewvc_dbhost};"
-            if (defined($viewvc_dbhost) && "$viewvc_dbhost" ne "");
-        $dsn .= "port=${viewvc_dbport};" 
-            if (defined($viewvc_dbport) && "$viewvc_dbport" ne "");
+        if ($use_viewvc) {
+            $dbdriver = $::global_treedata->{$tree}->{viewvc_dbdriver}; 
+            $dbname = $::global_treedata->{$tree}->{viewvc_dbname}; 
+            $dbhost = $::global_treedata->{$tree}->{viewvc_dbhost}; 
+            $dbport = $::global_treedata->{$tree}->{viewvc_dbport}; 
+            $dbuser = $::global_treedata->{$tree}->{viewvc_dbuser}; 
+            $dbpasswd = $::global_treedata->{$tree}->{viewvc_dbpasswd};
+        } elsif ($use_bonsai) {
+            $dbdriver = $::global_treedata->{$tree}->{bonsai_dbdriver}; 
+            $dbname = $::global_treedata->{$tree}->{bonsai_dbname}; 
+            $dbhost = $::global_treedata->{$tree}->{bonsai_dbhost}; 
+            $dbport = $::global_treedata->{$tree}->{bonsai_dbport}; 
+            $dbuser = $::global_treedata->{$tree}->{bonsai_dbuser}; 
+            $dbpasswd = $::global_treedata->{$tree}->{bonsai_dbpasswd};
+        } else {
+            # Error
+            die("Cannot determine query system!");
+            return;
+        }
 
-#        DBI->trace(1, "/tmp/dbi.out");
+        $dsn = "DBI:${dbdriver}:database=${dbname};";
+        $dsn .= "host=${dbhost};"
+            if (defined($dbhost) && "$dbhost" ne "");
+        $dsn .= "port=${dbport};" 
+            if (defined($dbport) && "$dbport" ne "");
 
-        $db = DBI->connect($dsn, $viewvc_dbuser, $viewvc_dbpasswd)
+        $db = DBI->connect($dsn, $dbuser, $dbpasswd)
             || die "Can't connect to database server.";
     }
 }
@@ -130,6 +144,28 @@ sub query_checkins($) {
         $qstring .= " AND ci_when <= ?";
         push(@bind_values, &formatSqlTime($::query_date_max));
     }
+
+    if ($::query_branch_head) {
+        $qstring .= " AND branches.branch = ''";
+    } elsif ($::query_branch ne '') {
+        if ($::query_branchtype eq 'regexp') {
+            $qstring .= " AND branches.branch REGEXP ?";
+            push(@bind_values, $::query_branch);
+        } elsif ($::query_branchtype eq 'notregexp') {
+            if ($::query_branch eq 'HEAD') {
+                $qstring .= " AND branches.branch != ''";
+            } else {
+                $qstring .= " and not (branches.branch REGEXP ?)";
+                push(@bind_values, $::query_branch);
+            }
+        } else {
+            $qstring .=
+                " AND (branches.branch = ? OR branches.branch = ?)";
+            push(@bind_values, $::query_branch);
+            push(@bind_values, "T$::query_branch");
+        }
+    }    
+
 
 #    print "Query: $qstring\n";
 #    print "values: @bind_values\n";
