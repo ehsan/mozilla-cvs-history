@@ -69,6 +69,11 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
     list-style-image      : url("chrome://navigator/skin/back-hover.gif");
   }
 
+#back-button:hover:active
+  {
+    list-style-image      : url("chrome://navigator/skin/back-hover-active.gif");
+  }
+
 
 #forward-button 
   {
@@ -87,6 +92,11 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
     list-style-image      : url("chrome://navigator/skin/forward-hover.gif");
   }
 
+#forward-button:hover:active
+  {
+    list-style-image      : url("chrome://navigator/skin/forward-hover-active.gif");
+  }
+
 
 #stop-button 
   {
@@ -97,22 +107,32 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 #stop-button[disabled="true"]:hover,
 #stop-button[disabled="true"]:hover:active
   {
-	  list-style-image      : url("chrome://navigator/skin/stop-disabled.gif");
+    list-style-image      : url("chrome://navigator/skin/stop-disabled.gif");
   } 
 
 #stop-button:hover
   {
-	  list-style-image      : url("chrome://navigator/skin/stop-hover.gif");
+    list-style-image      : url("chrome://navigator/skin/stop-hover.gif");
+  } 
+
+#stop-button:hover:active
+  {
+    list-style-image      : url("chrome://navigator/skin/stop-hover-active.gif");
   } 
 
 #reload-button 
   {
-	  list-style-image      : url("chrome://navigator/skin/reload.gif");
+  list-style-image        : url("chrome://navigator/skin/reload.gif");
   }
 
 #reload-button:hover
   {
-	  list-style-image      : url("chrome://navigator/skin/reload-hover.gif");
+  list-style-image        : url("chrome://navigator/skin/reload-hover.gif");
+  }
+
+#reload-button:hover:active
+  {
+  list-style-image        : url("chrome://navigator/skin/reload-hover-active.gif");
   }
 
 #reload-button[disabled="true"],
