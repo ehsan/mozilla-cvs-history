@@ -21,11 +21,12 @@
  * Contributor(s): Garth Smedley <garths@oeone.com>
  *                 Mike Potter <mikep@oeone.com>
  *                 Chris Charabaruk <coldacid@meldstar.com>
- *						 Colin Phillips <colinp@oeone.com>
+ *                 Colin Phillips <colinp@oeone.com>
  *                 ArentJan Banck <ajbanck@planet.nl>
  *                 Curtis Jewell <csjewell@mail.freeshell.org>
  *                 Eric Belhaire <eric.belhaire@ief.u-psud.fr>
- *			          Mark Swaffer <swaff@fudo.org>
+ *                 Mark Swaffer <swaff@fudo.org>
+ *                 Michael Buettner <michael.buettner@sun.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -48,8 +49,8 @@
 *   improve this to make it usable in general.
 */
 
-const ToDoUnifinderTreeName = "unifinder-todo-tree";
-const kStatusOrder = ["NEEDS-ACTION", "IN-PROCESS", "COMPLETED", "CANCELLED"];
+var ToDoUnifinderTreeName = "unifinder-todo-tree";
+var kStatusOrder = ["NEEDS-ACTION", "IN-PROCESS", "COMPLETED", "CANCELLED"];
 
 var gTaskArray = new Array();
 
@@ -82,8 +83,9 @@ var unifinderToDoDataSourceObserver =
         toDoUnifinderRefresh();
     },
     onLoad: function() {
-        if (!this.mInBatch)
-            refreshEventTree();
+        if (!this.mInBatch) {
+            toDoUnifinderRefresh();
+        }
     },
     onAddItem: function(aItem) {
         if (aItem instanceof Components.interfaces.calITodo &&
@@ -127,6 +129,13 @@ var unifinderToDoDataSourceObserver =
 
 function prepareCalendarToDoUnifinder()
 {
+    const kSUNBIRD_ID = "{718e30fb-e89b-41dd-9da7-e25a45638b28}";
+    var appInfo = Components.classes["@mozilla.org/xre/app-info;1"]
+                            .getService(Components.interfaces.nsIXULAppInfo);
+    if (appInfo.ID == kSUNBIRD_ID) {
+        document.getElementById("todo-label").removeAttribute("collapsed");
+    }
+
     var ccalendar = getCompositeCalendar();
     ccalendar.addObserver(unifinderToDoDataSourceObserver);
     toDoUnifinderRefresh();
@@ -190,11 +199,14 @@ function toDoUnifinderRefresh()
    filter |= ccalendar.ITEM_FILTER_TYPE_TODO;
 
    ccalendar.getItems(filter, 0, null, null, refreshListener);
-   var deck = document.getElementById("view-deck")
+   var deck = document.getElementById("view-deck");
    for each (view in deck.childNodes) {
        view.showCompleted = !hideCompleted;
    }
-   deck.selectedPanel.goToDay(deck.selectedPanel.selectedDay);
+   var selectedDay = deck.selectedPanel.selectedDay;
+   if (selectedDay) {
+      deck.selectedPanel.goToDay(selectedDay);
+   }
 }
 
 function getToDoFromEvent( event )
@@ -692,4 +704,47 @@ function changeContextMenuForToDo(event)
       document.getElementById("is_editable").setAttribute("disabled", "true");
    }
 }
+ 
+function editToDo(task) {
+    if (!task)
+       return;
+ 
+    modifyEventWithDialog(getOccurrenceOrParent(task));
+}
 
+/**
+ *  Delete the current selected item with focus from the ToDo unifinder list
+ */
+function deleteToDoCommand(aDoNotConfirm)
+{
+   var selectedItems = new Array();
+   var tree = document.getElementById( ToDoUnifinderTreeName );
+   var start = new Object();
+   var end = new Object();
+   var numRanges = tree.view.selection.getRangeCount();
+   var t;
+   var v;
+   var toDoItem;
+   for (t = 0; t < numRanges; t++) {
+      tree.view.selection.getRangeAt(t, start, end);
+      for (v = start.value; v <= end.value; v++) {
+         toDoItem = tree.taskView.getCalendarTaskAtRow( v );
+         selectedItems.push( toDoItem );
+      }
+   }
+   calendarViewController.deleteOccurrences(selectedItems.length,
+                                            selectedItems,
+                                            false,
+                                            aDoNotConfirm);
+   tree.view.selection.clearSelection();
+}
+
+function toggleCompletedTasks() {
+    const kSUNBIRD_ID = "{718e30fb-e89b-41dd-9da7-e25a45638b28}";
+    var appInfo = Components.classes["@mozilla.org/xre/app-info;1"]
+                            .getService(Components.interfaces.nsIXULAppInfo);
+    if (appInfo.ID != kSUNBIRD_ID) {
+        agendaTreeView.refreshCalendarQuery();
+    }
+    toDoUnifinderRefresh();
+}
