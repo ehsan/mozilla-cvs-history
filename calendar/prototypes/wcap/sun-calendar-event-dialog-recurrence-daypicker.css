@@ -34,47 +34,47 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-.datepicker-weekday-mainbox {
+.daypicker-weekday-mainbox {
   background-color: #FFFFFF;
   border: 1px outset #FFFFFF;
   padding: 0px;
 }
 
-.datepicker-monthday-mainbox {
+.daypicker-monthday-mainbox {
   background-color: #FFFFFF;
   border: 1px outset #FFFFFF;
   padding: 0px;
 }
 
-.datepicker-box {
+.daypicker-box {
   font-family: Arial;
   border: 1px solid transparent;
   text-align: center;
   padding: 2px;
 }
 
-.datepicker-box:hover {
+.daypicker-box:hover {
   cursor: pointer;
   border: 1px solid Highlight;
 }
 
-.datepicker-box[selected="true"] {
+.daypicker-box[selected="true"] {
   background-color: Highlight;
   color: HighlightText;
 }
 
-.datepicker-box[othermonth="true"] {
+.daypicker-box[othermonth="true"] {
   font-family: Arial;
   border: 1px solid transparent;
   text-align: center;
   padding: 2px;
 }
 
-.datepicker-box[disabled="true"] {
+.daypicker-box[disabled="true"] {
   color: GrayText !important;
   border: 1px solid transparent;
   cursor: default;
 }
 
-.datepicker-row {
+.daypicker-row {
 }

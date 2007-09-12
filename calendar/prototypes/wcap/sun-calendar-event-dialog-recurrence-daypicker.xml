@@ -41,11 +41,11 @@
 
   <!--
   ########################################################################
-  ## datepicker-box
+  ## daypicker-box
   ########################################################################
   -->
 
-  <binding id="datepicker-box" extends="xul:text">
+  <binding id="daypicker-box" extends="xul:text">
     <handlers>
       <handler event="click" action="if (event.button == 0) this.calendar.dayClicked(this)"/>
     </handlers>
@@ -53,24 +53,24 @@
 
   <!--
   ########################################################################
-  ## datepicker-weekday
+  ## daypicker-weekday
   ########################################################################
   -->
 
-  <binding id="datepicker-weekday" extends="xul:box">
+  <binding id="daypicker-weekday" extends="xul:box">
     <resources>
-      <stylesheet src="chrome://calendar/content/sun-calendar-event-dialog-recurrence-datepicker.css"/>
+      <stylesheet src="chrome://calendar/content/sun-calendar-event-dialog-recurrence-daypicker.css"/>
     </resources>
 
     <content>
-      <xul:hbox anonid="mainbox" class="datepicker-weekday-mainbox" equalsize="always" flex="1">
-        <xul:text class="datepicker-box" flex="1"/>
-        <xul:text class="datepicker-box" flex="1"/>
-        <xul:text class="datepicker-box" flex="1"/>
-        <xul:text class="datepicker-box" flex="1"/>
-        <xul:text class="datepicker-box" flex="1"/>
-        <xul:text class="datepicker-box" flex="1"/>
-        <xul:text class="datepicker-box" flex="1"/>
+      <xul:hbox anonid="mainbox" class="daypicker-weekday-mainbox" equalsize="always" flex="1">
+        <xul:text class="daypicker-box" flex="1"/>
+        <xul:text class="daypicker-box" flex="1"/>
+        <xul:text class="daypicker-box" flex="1"/>
+        <xul:text class="daypicker-box" flex="1"/>
+        <xul:text class="daypicker-box" flex="1"/>
+        <xul:text class="daypicker-box" flex="1"/>
+        <xul:text class="daypicker-box" flex="1"/>
       </xul:hbox>
     </content>
 
@@ -171,61 +171,61 @@
 
   <!--
   ########################################################################
-  ## datepicker-monthday
+  ## daypicker-monthday
   ########################################################################
   -->
 
-  <binding id="datepicker-monthday" extends="xul:box">
+  <binding id="daypicker-monthday" extends="xul:box">
     <resources>
-      <stylesheet src="chrome://calendar/content/sun-calendar-event-dialog-recurrence-datepicker.css"/>
+      <stylesheet src="chrome://calendar/content/sun-calendar-event-dialog-recurrence-daypicker.css"/>
     </resources>
 
     <content>
-      <xul:vbox anonid="mainbox" class="datepicker-monthday-mainbox" equalsize="always" flex="1">
-        <xul:hbox class="datepicker-row" equalsize="always">
-          <xul:text class="datepicker-box" flex="1" value="1" xbl:inherits="disabled"/>
-          <xul:text class="datepicker-box" flex="1" value="2" xbl:inherits="disabled"/>
-          <xul:text class="datepicker-box" flex="1" value="3" xbl:inherits="disabled"/>
-          <xul:text class="datepicker-box" flex="1" value="4" xbl:inherits="disabled"/>
-          <xul:text class="datepicker-box" flex="1" value="5" xbl:inherits="disabled"/>
-          <xul:text class="datepicker-box" flex="1" value="6" xbl:inherits="disabled"/>
-          <xul:text class="datepicker-box" flex="1" value="7" xbl:inherits="disabled"/>
+      <xul:vbox anonid="mainbox" class="daypicker-monthday-mainbox" equalsize="always" flex="1">
+        <xul:hbox class="daypicker-row" equalsize="always">
+          <xul:text class="daypicker-box" flex="1" value="1" xbl:inherits="disabled"/>
+          <xul:text class="daypicker-box" flex="1" value="2" xbl:inherits="disabled"/>
+          <xul:text class="daypicker-box" flex="1" value="3" xbl:inherits="disabled"/>
+          <xul:text class="daypicker-box" flex="1" value="4" xbl:inherits="disabled"/>
+          <xul:text class="daypicker-box" flex="1" value="5" xbl:inherits="disabled"/>
+          <xul:text class="daypicker-box" flex="1" value="6" xbl:inherits="disabled"/>
+          <xul:text class="daypicker-box" flex="1" value="7" xbl:inherits="disabled"/>
         </xul:hbox>
-        <xul:hbox class="datepicker-row" equalsize="always">
-          <xul:text class="datepicker-box" flex="1" value="8" xbl:inherits="disabled"/>
-          <xul:text class="datepicker-box" flex="1" value="9" xbl:inherits="disabled"/>
-          <xul:text class="datepicker-box" flex="1" value="10" xbl:inherits="disabled"/>
-          <xul:text class="datepicker-box" flex="1" value="11" xbl:inherits="disabled"/>
-          <xul:text class="datepicker-box" flex="1" value="12" xbl:inherits="disabled"/>
-          <xul:text class="datepicker-box" flex="1" value="13" xbl:inherits="disabled"/>
-          <xul:text class="datepicker-box" flex="1" value="14" xbl:inherits="disabled"/>
+        <xul:hbox class="daypicker-row" equalsize="always">
+          <xul:text class="daypicker-box" flex="1" value="8" xbl:inherits="disabled"/>
+          <xul:text class="daypicker-box" flex="1" value="9" xbl:inherits="disabled"/>
+          <xul:text class="daypicker-box" flex="1" value="10" xbl:inherits="disabled"/>
+          <xul:text class="daypicker-box" flex="1" value="11" xbl:inherits="disabled"/>
+          <xul:text class="daypicker-box" flex="1" value="12" xbl:inherits="disabled"/>
+          <xul:text class="daypicker-box" flex="1" value="13" xbl:inherits="disabled"/>
+          <xul:text class="daypicker-box" flex="1" value="14" xbl:inherits="disabled"/>
         </xul:hbox>
-        <xul:hbox class="datepicker-row" equalsize="always">
-          <xul:text class="datepicker-box" flex="1" value="15" xbl:inherits="disabled"/>
-          <xul:text class="datepicker-box" flex="1" value="16" xbl:inherits="disabled"/>
-          <xul:text class="datepicker-box" flex="1" value="17" xbl:inherits="disabled"/>
-          <xul:text class="datepicker-box" flex="1" value="18" xbl:inherits="disabled"/>
-          <xul:text class="datepicker-box" flex="1" value="19" xbl:inherits="disabled"/>
-          <xul:text class="datepicker-box" flex="1" value="20" xbl:inherits="disabled"/>
-          <xul:text class="datepicker-box" flex="1" value="21" xbl:inherits="disabled"/>
+        <xul:hbox class="daypicker-row" equalsize="always">
+          <xul:text class="daypicker-box" flex="1" value="15" xbl:inherits="disabled"/>
+          <xul:text class="daypicker-box" flex="1" value="16" xbl:inherits="disabled"/>
+          <xul:text class="daypicker-box" flex="1" value="17" xbl:inherits="disabled"/>
+          <xul:text class="daypicker-box" flex="1" value="18" xbl:inherits="disabled"/>
+          <xul:text class="daypicker-box" flex="1" value="19" xbl:inherits="disabled"/>
+          <xul:text class="daypicker-box" flex="1" value="20" xbl:inherits="disabled"/>
+          <xul:text class="daypicker-box" flex="1" value="21" xbl:inherits="disabled"/>
         </xul:hbox>
-        <xul:hbox class="datepicker-row" equalsize="always">
-          <xul:text class="datepicker-box" flex="1" value="22" xbl:inherits="disabled"/>
-          <xul:text class="datepicker-box" flex="1" value="23" xbl:inherits="disabled"/>
-          <xul:text class="datepicker-box" flex="1" value="24" xbl:inherits="disabled"/>
-          <xul:text class="datepicker-box" flex="1" value="25" xbl:inherits="disabled"/>
-          <xul:text class="datepicker-box" flex="1" value="26" xbl:inherits="disabled"/>
-          <xul:text class="datepicker-box" flex="1" value="27" xbl:inherits="disabled"/>
-          <xul:text class="datepicker-box" flex="1" value="28" xbl:inherits="disabled"/>
+        <xul:hbox class="daypicker-row" equalsize="always">
+          <xul:text class="daypicker-box" flex="1" value="22" xbl:inherits="disabled"/>
+          <xul:text class="daypicker-box" flex="1" value="23" xbl:inherits="disabled"/>
+          <xul:text class="daypicker-box" flex="1" value="24" xbl:inherits="disabled"/>
+          <xul:text class="daypicker-box" flex="1" value="25" xbl:inherits="disabled"/>
+          <xul:text class="daypicker-box" flex="1" value="26" xbl:inherits="disabled"/>
+          <xul:text class="daypicker-box" flex="1" value="27" xbl:inherits="disabled"/>
+          <xul:text class="daypicker-box" flex="1" value="28" xbl:inherits="disabled"/>
         </xul:hbox>
-        <xul:hbox class="datepicker-row" equalsize="always">
-          <xul:text class="datepicker-box" flex="1" value="29" xbl:inherits="disabled"/>
-          <xul:text class="datepicker-box" flex="1" value="30" xbl:inherits="disabled"/>
-          <xul:text class="datepicker-box" flex="1" value="31" xbl:inherits="disabled"/>
-          <xul:text class="datepicker-box" flex="1" othermonth="true" xbl:inherits="disabled"/>
-          <xul:text class="datepicker-box" flex="1" othermonth="true" xbl:inherits="disabled"/>
-          <xul:text class="datepicker-box" flex="1" othermonth="true" xbl:inherits="disabled"/>
-          <xul:text class="datepicker-box" flex="1" othermonth="true" xbl:inherits="disabled"/>
+        <xul:hbox class="daypicker-row" equalsize="always">
+          <xul:text class="daypicker-box" flex="1" value="29" xbl:inherits="disabled"/>
+          <xul:text class="daypicker-box" flex="1" value="30" xbl:inherits="disabled"/>
+          <xul:text class="daypicker-box" flex="1" value="31" xbl:inherits="disabled"/>
+          <xul:text class="daypicker-box" flex="1" othermonth="true" xbl:inherits="disabled"/>
+          <xul:text class="daypicker-box" flex="1" othermonth="true" xbl:inherits="disabled"/>
+          <xul:text class="daypicker-box" flex="1" othermonth="true" xbl:inherits="disabled"/>
+          <xul:text class="daypicker-box" flex="1" othermonth="true" xbl:inherits="disabled"/>
         </xul:hbox>
       </xul:vbox>
     </content>
