@@ -60,8 +60,8 @@ void nsMsgKeyArray::SetArray(nsMsgKey* pData, int numElements, int numAllocated)
   NS_ASSERTION(numElements >= 0, "negative number of elements");
   NS_ASSERTION(numAllocated >= numElements, "num elements more than array size");
   
-  delete [] m_pData;			// delete previous array
-  m_pData = pData;			// set new array
-  m_nMaxSize = numAllocated;	// set size
-  m_nSize = numElements;		// set allocated length
+  delete [] m_pData;      // delete previous array
+  m_pData = pData;      // set new array
+  m_nMaxSize = numAllocated;  // set size
+  m_nSize = numElements;    // set allocated length
 }
