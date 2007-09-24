@@ -62,7 +62,7 @@
         <rows>
           <row align="center">
             <hbox pack="end">
-              <label id="bool-label"/>
+              <label id="bool-label" control="bool-list"/>
             </hbox>
             <menulist id="bool-list">
               <menupopup>
