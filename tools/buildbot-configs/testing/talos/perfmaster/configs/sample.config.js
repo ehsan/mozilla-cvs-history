@@ -3,14 +3,20 @@
 # The title of the report
 title: firefox_testing
 
+#csv_file: 'out.csv'
+results_server: 'graphs-stage.mozilla.org'
+results_link: '/bulk.cgi'
+
 # Path to Firefox to test
-firefox: C:\mozilla\testing\performance\firefox\firefox.exe
+firefox: firefox/firefox
 
 branch: testbranch
 
 buildid: testbuildid
 
-profile_path: base_profile\
+profile_path: base_profile
+
+init_url: getInfo.html
 
 # Preferences to set in the test (use "preferences : {}" for no prefs)
 preferences : 
@@ -37,7 +43,7 @@ preferences :
 extensions : {}
 
 #any directories whose contents need to be installed in the browser before running the tests
-# this assumes that the directories themselves already exist in the firefox path
+# this assumes that the directories themselves already exist in the firefox pat
 dirs:
   chrome : page_load_test/chrome
   components : page_load_test/components
@@ -48,7 +54,7 @@ env :
 # Tests to run
 #  url       : (REQUIRED) url to load into the given firefox browser
 #  url_mod   : (OPTIONAL) a bit of code to be evaled and added to the given url during each cycle of the test
-#  resolution: (REQUIRED) how long (in seconds) to pause between counter sampling
+#  resolution: (REQUIRED) how long (in seconds) to pause between counter samplig
 #  cycles    : (REQUIRED) how many times to run the test
 #  counters  : (REQUIRED) types of system activity to monitor during test run, can be empty 
 #            For possible values of counters argument on Windows, see
@@ -60,22 +66,24 @@ env :
 
 # to set up a new test it must have the correct configuration options and drop information in a standard format
 # the format is seen in the regular expressions in ttest.py
-# to see how the data passed from the browser is processed see send_to_graph and send_to_csv in run_tests.py
+# to see how the data passed from the browser is processed see send_to_graph anisend_to_csv in run_tests.py
 tests :
   ts :
     url : startup_test/startup_test.html?begin=
     url_mod : str(int(time.time()*1000))
     resolution : 1 
-    cycles : 20
-    counters : []
-  tp: 
-    url :  '-tp page_load_test/manifest.txt -tpchrome -tpformat tinderbox -tpcycles 5'
-    resolution : 1
-    cycles : 1
-    counters : ['Working Set', 'Private Bytes', '% Processor Time']
-#  tp_js: 
-#    url : '"http://localhost/page_load_test/framecycler.html?quit=1&cycles=5"'
+    cycles : 5
+    win_counters : []
+    unix_counters : []
+#  tp: 
+#    url :  '-tp page_load_test/manifest.txt -tpchrome -tpformat tinderbox -tpcycles 5'
 #    resolution : 1
 #    cycles : 1
-#    counters : ['Working Set', 'Private Bytes', '% Processor Time']
-  
+#    win_counters : ['Working Set', 'Private Bytes', '% Processor Time']
+#    unix_counters : ['RSS', 'Private Bytes']
+  tp_js: 
+    url : '"http://localhost/page_load_test/framecycler.html?quit=1&cycles=5"'
+    resolution : 1
+    cycles : 1
+    win_counters : ['Working Set', 'Private Bytes', '% Processor Time']
+    unix_counters: ['RSS', 'Private Bytes']
