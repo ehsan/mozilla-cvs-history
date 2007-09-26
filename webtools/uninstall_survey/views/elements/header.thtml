@@ -53,6 +53,7 @@
        echo $javascript->link('plotkit/Canvas.js');
        echo $javascript->link('plotkit/SweetCanvas.js');
       endif; ?>
+      <?php echo $javascript->link('__utm.js'); ?>
     </head>
     <body>
         <div id="header">
