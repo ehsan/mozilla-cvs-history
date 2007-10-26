@@ -138,7 +138,7 @@ static NSImage* gTabButtonDividerImage = nil;
     [gTabButtonDividerImage compositeToPoint:NSMakePoint(NSMaxX(rect), rect.origin.y) operation:NSCompositeSourceOver];
   }
   
-  NSPoint patternOrigin = [controlView convertPoint:NSMakePoint(0.0f, 0.0f) toView:nil];
+  NSPoint patternOrigin = [controlView convertPoint:NSMakePoint(0.0f, 0.0f) toView:[[controlView window] contentView]];
   NSWindow *window = [[mTabViewItem tabView] window];
   if ([mTabViewItem tabState] == NSSelectedTab) {
     // move things down a little, to give the impression of being pulled forward
