@@ -653,6 +653,10 @@ function observer_onModifyItem(newItem, oldItem)
 
 agendaTreeView.calendarObserver.onError = function(errno, msg) {};
 
+agendaTreeView.calendarObserver.onPropertyChanged = function(aCalendar, aName, aValue, aOldValue) {};
+
+agendaTreeView.calendarObserver.onPropertyDeleting = function(aCalendar, aName) {};
+
 agendaTreeView.calendarObserver.onCalendarAdded = 
 function agenda_calAdd(aCalendar) {
     this.agendaTreeView.refreshCalendarQuery();

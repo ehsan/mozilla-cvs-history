@@ -83,14 +83,6 @@ var sideBarCalendarManagerObserver = {
     },
 
     onCalendarDeleting: function cMO_onCalendarDeleting(aCalendar) {
-    },
-
-    onCalendarPrefChanged: function cMO_onCalendarPrefSet(aCalendar,
-                                                      aName,
-                                                      aValue) {
-    },
-
-    onCalendarPrefDeleting: function cMO_onCalendarPrefSet(aCalendar, aName) {
     }
 };
 
