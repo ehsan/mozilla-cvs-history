@@ -96,4 +96,35 @@
   return newImage;
 }
 
++ (NSImage*)dragImageWithIcon:(NSImage*)aIcon title:(NSString*)aTitle {
+  if (!aIcon || !aTitle)
+    return nil;
+
+  const float kTitleOffset = 2.0f;
+
+  NSDictionary* stringAttrs = [NSDictionary dictionaryWithObjectsAndKeys:
+         [[NSColor textColor] colorWithAlphaComponent:0.8], NSForegroundColorAttributeName,
+    [NSFont systemFontOfSize:[NSFont smallSystemFontSize]], NSFontAttributeName,
+                                                      nil];
+
+  // get the size of the new image we are creating
+  NSSize titleSize = [aTitle sizeWithAttributes:stringAttrs];
+  NSSize imageSize = NSMakeSize(titleSize.width + [aIcon size].width + kTitleOffset,
+                                titleSize.height > [aIcon size].height ? titleSize.height
+                                                                       : [aIcon size].height);
+
+  // create the image and lock drawing focus on it
+  NSImage* dragImage = [[[NSImage alloc] initWithSize:imageSize] autorelease];
+  [dragImage lockFocus];
+
+  // draw the image and title in image with translucency
+  NSRect imageRect = NSMakeRect(0, 0, [aIcon size].width, [aIcon size].height);
+  [aIcon drawAtPoint:NSMakePoint(0, 0) fromRect:imageRect operation:NSCompositeCopy fraction:0.8];
+
+  [aTitle drawAtPoint:NSMakePoint([aIcon size].width + kTitleOffset, 0.0) withAttributes:stringAttrs];
+
+  [dragImage unlockFocus];
+  return dragImage;
+}
+
 @end
