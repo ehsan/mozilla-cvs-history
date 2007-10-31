@@ -67,6 +67,6 @@ class nsIPref;
 
 - (void)clearPref: (const char*)prefName;
 
-- (NSString*)getLocalizedString:(NSString*)key;
+- (NSString*)localizedStringForKey:(NSString*)key;
 
 @end
