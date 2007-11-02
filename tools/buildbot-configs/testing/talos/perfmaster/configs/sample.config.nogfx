@@ -73,11 +73,11 @@ tests :
     url : startup_test/startup_test.html?begin=
     url_mod : str(int(time.time()*1000))
     resolution : 1 
-    cycles : 5
+    cycles : 20
     win_counters : []
     unix_counters : []
   tp: 
-    url :  '-tp page_load_test/manifest.txt -tpchrome -tpformat tinderbox -tpcycles 5'
+    url :  '-tp page_load_test/manifest.txt -tpchrome -tpformat tinderbox -tpcycles 20'
     resolution : 1
     cycles : 1
     win_counters : ['Working Set', 'Private Bytes', '% Processor Time']
@@ -89,13 +89,13 @@ tests :
 #    win_counters : ['Working Set', 'Private Bytes', '% Processor Time']
 #    unix_counters: ['RSS', 'Private Bytes']
   tdhtml:
-    url: '-tp page_load_test/dhtml/dhtml.manifest -tpchrome -tpformat tinderbox -tpcycles 5'
+    url: '-tp page_load_test/dhtml/dhtml.manifest -tpchrome -tpformat tinderbox -tpcycles 20'
     resolution : 1
     cycles : 1
     win_counters : []
     unix_counters : []
   tsvg:
-    url: '-tp page_load_test/svg/svg.manifest -tpchrome -tpformat tinderbox -tpcycles 5'
+    url: '-tp page_load_test/svg/svg.manifest -tpchrome -tpformat tinderbox -tpcycles 20'
     resolution : 1
     cycles : 1
     win_counters : []
