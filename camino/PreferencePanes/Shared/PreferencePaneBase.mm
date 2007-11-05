@@ -175,3 +175,15 @@
 }
 
 @end
+
+// Compatibility wrappers for third-party pref panes that use methods that we
+// have renamed or modified. Should not be used for any new development.
+@implementation PreferencePaneBase (LegacyCompatibility)
+
+- (NSString*)getLocalizedString:(NSString*)key
+{
+  return [self localizedStringForKey:key];
+}
+
+@end
+
