@@ -228,8 +228,7 @@ function saveDialog()
         if (rrules[0].length > 0)
             recurrenceInfo.deleteRecurrenceItem(rrules[0][0]);
     } else {
-        recurrenceInfo = createRecurrenceInfo();
-        recurrenceInfo.item = window.calendarEvent;
+        recurrenceInfo = createRecurrenceInfo(window.calendarEvent);
     }
 
     var recRule = createRecurrenceRule();
