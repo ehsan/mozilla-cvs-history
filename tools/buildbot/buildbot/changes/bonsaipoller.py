@@ -1,10 +1,10 @@
 import time
-from urllib import urlopen
-from xml.dom import minidom, Node
+from xml.dom import minidom
 
 from twisted.python import log, failure
-from twisted.internet import defer, reactor
+from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
+from twisted.web.client import getPage
 
 from buildbot.changes import base, changes
 
@@ -64,9 +64,16 @@ class FileNode:
 class BonsaiParser:
     """I parse the XML result from a bonsai cvsquery."""
 
-    def __init__(self, bonsaiQuery):
+    def __init__(self, data):
         try:
-            self.dom = minidom.parse(bonsaiQuery)
+        # this is a fix for non-ascii characters
+        # because bonsai does not give us an encoding to work with
+        # it impossible to be 100% sure what to decode it as but latin1 covers
+        # the broadest base
+            data = data.decode("latin1")
+            data = data.encode("ascii", "replace")
+            self.dom = minidom.parseString(data)
+            log.msg(data)
         except:
             raise InvalidResultError("Malformed XML in result")
 
@@ -93,8 +100,16 @@ class BonsaiParser:
                     pass
                 except InvalidResultError:
                     raise
-                nodes.append(CiNode(self._getLog(), self._getWho(),
-                                    self._getDate(), files))
+                cinode = CiNode(self._getLog(), self._getWho(),
+                                self._getDate(), files)
+                # hack around bonsai xml output bug for empty check-in comments
+                if not cinode.log and nodes and \
+                        not nodes[-1].log and \
+                        cinode.who == nodes[-1].who and \
+                        cinode.date == nodes[-1].date:
+                    nodes[-1].files += cinode.files
+                else:
+                    nodes.append(cinode)
 
         except NoMoreCiNodes:
             pass
@@ -139,7 +154,10 @@ class BonsaiParser:
         elif len(logs) > 1:
             raise InvalidResultError("Multiple logs present")
 
-        return logs[0].firstChild.data
+        # catch empty check-in comments
+        if logs[0].firstChild:
+            return logs[0].firstChild.data
+        return ''
 
     def _getWho(self):
         """Returns the e-mail address of the commiter"""
@@ -275,10 +293,9 @@ class BonsaiPoller(base.ChangeSource):
 
         self.lastPoll = time.time()
         # get the page, in XML format
-        return defer.maybeDeferred(urlopen, url)
+        return getPage(url, timeout=self.pollInterval)
 
     def _process_changes(self, query):
-        files = []
         try:
             bp = BonsaiParser(query)
             result = bp.getData()
@@ -289,8 +306,8 @@ class BonsaiPoller(base.ChangeSource):
             return
 
         for cinode in result.nodes:
-            for file in cinode.files:
-                files.append(file.filename+' (revision '+file.revision+')')
+            files = [file.filename + ' (revision '+file.revision+')'
+                     for file in cinode.files]
             c = changes.Change(who = cinode.who,
                                files = files,
                                comments = cinode.log,

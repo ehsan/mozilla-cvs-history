@@ -4,7 +4,6 @@ from twisted.trial import unittest
 from buildbot.changes.bonsaipoller import FileNode, CiNode, BonsaiResult, \
      BonsaiParser, BonsaiPoller, InvalidResultError, EmptyResult
 
-from StringIO import StringIO
 from copy import deepcopy
 import re
 
@@ -110,13 +109,44 @@ badResultMsgs = { 'badUnparsedResult':
     "BonsaiParser did not raise an exception when there was no <ci> tags"
 }
 
+noCheckinMsgResult = """\
+<?xml version="1.0"?>
+<queryResults>
+<ci who="johndoe@domain.tld" date="12345678">
+ <log></log>
+ <files>
+  <f rev="1.1">first/file.ext</f>
+ </files>
+</ci>
+<ci who="johndoe@domain.tld" date="12345678">
+ <log></log>
+ <files>
+  <f rev="1.2">second/file.ext</f>
+ </files>
+</ci>
+<ci who="johndoe@domain.tld" date="12345678">
+ <log></log>
+ <files>
+  <f rev="1.3">third/file.ext</f>
+ </files>
+</ci>
+</queryResults>
+"""
+
+noCheckinMsgRef = [dict(filename="first/file.ext",
+                     revision="1.1"),
+                dict(filename="second/file.ext",
+                     revision="1.2"),
+                dict(filename="third/file.ext",
+                     revision="1.3")]
+
 class FakeBonsaiPoller(BonsaiPoller):
     def __init__(self):
         BonsaiPoller.__init__(self, "fake url", "fake module", "fake branch")
 
 class TestBonsaiPoller(unittest.TestCase):
     def testFullyFormedResult(self):
-        br = BonsaiParser(StringIO(goodUnparsedResult))
+        br = BonsaiParser(goodUnparsedResult)
         result = br.getData()
         # make sure the result is a BonsaiResult
         self.failUnless(isinstance(result, BonsaiResult))
@@ -126,49 +156,49 @@ class TestBonsaiPoller(unittest.TestCase):
 
     def testBadUnparsedResult(self):
         try:
-            BonsaiParser(StringIO(badUnparsedResult))
+            BonsaiParser(badUnparsedResult)
             self.fail(badResultMsgs["badUnparsedResult"])
         except InvalidResultError:
             pass
 
     def testInvalidDateResult(self):
         try:
-            BonsaiParser(StringIO(invalidDateResult))
+            BonsaiParser(invalidDateResult)
             self.fail(badResultMsgs["invalidDateResult"])
         except InvalidResultError:
             pass
 
     def testMissingRevisionResult(self):
         try:
-            BonsaiParser(StringIO(missingRevisionResult))
+            BonsaiParser(missingRevisionResult)
             self.fail(badResultMsgs["missingRevisionResult"])
         except InvalidResultError:
             pass
 
     def testMissingFilenameResult(self):
         try:
-            BonsaiParser(StringIO(missingFilenameResult))
+            BonsaiParser(missingFilenameResult)
             self.fail(badResultMsgs["missingFilenameResult"])
         except InvalidResultError:
             pass
 
     def testDuplicateLogResult(self):
         try:
-            BonsaiParser(StringIO(duplicateLogResult))
+            BonsaiParser(duplicateLogResult)
             self.fail(badResultMsgs["duplicateLogResult"])
         except InvalidResultError:
             pass
 
     def testDuplicateFilesResult(self):
         try:
-            BonsaiParser(StringIO(duplicateFilesResult))
+            BonsaiParser(duplicateFilesResult)
             self.fail(badResultMsgs["duplicateFilesResult"])
         except InvalidResultError:
             pass
 
     def testMissingCiResult(self):
         try:
-            BonsaiParser(StringIO(missingCiResult))
+            BonsaiParser(missingCiResult)
             self.fail(badResultMsgs["missingCiResult"])
         except EmptyResult:
             pass
@@ -177,6 +207,19 @@ class TestBonsaiPoller(unittest.TestCase):
         "Make sure a change is not submitted if the BonsaiParser fails"
         poller = FakeBonsaiPoller()
         lastChangeBefore = poller.lastChange
-        poller._process_changes(StringIO(badUnparsedResult))
+        poller._process_changes(badUnparsedResult)
         # self.lastChange will not be updated if the change was not submitted
         self.failUnlessEqual(lastChangeBefore, poller.lastChange)
+
+    def testMergeEmptyLogMsg(self):
+        """Ensure that BonsaiPoller works around the bonsai xml output
+        issue when the check-in comment is empty"""
+        bp = BonsaiParser(noCheckinMsgResult)
+        result = bp.getData()
+        self.failUnlessEqual(len(result.nodes), 1)
+        self.failUnlessEqual(result.nodes[0].who, "johndoe@domain.tld")
+        self.failUnlessEqual(result.nodes[0].date, 12345678)
+        self.failUnlessEqual(result.nodes[0].log, "")
+        for file, ref in zip(result.nodes[0].files, noCheckinMsgRef):
+            self.failUnlessEqual(file.filename, ref['filename'])
+            self.failUnlessEqual(file.revision, ref['revision'])
