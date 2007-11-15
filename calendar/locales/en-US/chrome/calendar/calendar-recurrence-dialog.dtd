@@ -49,7 +49,7 @@
 
 <!ENTITY newevent.repeat.forever.label       "Repeat forever" >
 <!ENTITY newevent.repeat.for.label           "Repeat for" >
-<!ENTITY repeat.units.occurence.both         "occurrence(s)" >
+<!ENTITY repeat.units.occurrence.both        "occurrence(s)" >
 <!ENTITY newevent.repeat.until.label         "Repeat until" >
 
 <!-- Information messages -->
