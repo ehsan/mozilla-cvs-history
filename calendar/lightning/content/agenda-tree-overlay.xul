@@ -48,7 +48,8 @@
   <hbox>
     <spacer flex="1"/>
     <label value="&agenda.treeview.label;" control="agenda.treeview.menu"/>
-    <menulist id="agenda.treeview.menu" oncommand="agendaTreeView.updateFilter(this);">
+    <menulist id="agenda.treeview.menu" persist="value"
+              oncommand="agendaTreeView.updateFilter(this);">
       <menupopup>
         <menuitem label="&agenda.treeview.all.label;" value="all"/>
         <menuitem label="&agenda.treeview.events.label;" value="events"/>
