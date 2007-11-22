@@ -11,14 +11,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Calendar view code.
+ * The Original Code is Sun Microsystems code.
  *
- * The Initial Developer of the Original Code is
- *  Joey Minta <jminta@gmail.com>
- * Portions created by the Initial Developer are Copyright (C) 2005
+ * The Initial Developer of the Original Code is Sun Microsystems.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Michael Buettner <michael.buettner@sun.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,32 +34,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-
-calendar-decorated-base-view { 
-  -moz-binding: url(chrome://calendar/content/calendar-decorated-base.xml#calendar-decorated-base-view);
+.task-details-name {
+    font-weight: bold;
+    text-align: right;
+    background-color: transparent;
 }
 
-calendar-decorated-multiday-base-view {
-  -moz-binding: url(chrome://calendar/content/calendar-decorated-multiday-base-view.xml#calendar-decorated-multiday-base-view);
+.task-details-value {
+    text-align: left;
+    background-color: transparent;
 }
 
-calendar-navigation-buttons { 
-  -moz-binding: url(chrome://calendar/content/calendar-decorated-base.xml#calendar-navigation-buttons);
-}
-
-calendar-decorated-month-view { 
-  -moz-binding: url(chrome://calendar/content/calendar-decorated-month-view.xml#calendar-decorated-month-view);
-}
-
-calendar-decorated-day-view { 
-  -moz-binding: url(chrome://calendar/content/calendar-decorated-day-view.xml#calendar-decorated-day-view);
-}
-
-calendar-decorated-week-view { 
-  -moz-binding: url(chrome://calendar/content/calendar-decorated-week-view.xml#calendar-decorated-week-view);
-}
-
-calendar-decorated-multiweek-view { 
-  -moz-binding: url(chrome://calendar/content/calendar-decorated-multiweek-view.xml#calendar-decorated-multiweek-view);
+#calendar-task-tree > .calendar-task-tree > treechildren::-moz-tree-cell {
+    border-right: 1px dotted #AAA;
 }
