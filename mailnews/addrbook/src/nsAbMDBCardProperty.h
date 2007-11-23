@@ -40,7 +40,6 @@
 
 #include "nsIAbMDBCard.h"  
 #include "nsAbCardProperty.h"  
-#include "nsISupportsArray.h"
 #include "nsCOMPtr.h"
 #include "nsIAddrDatabase.h"
 
