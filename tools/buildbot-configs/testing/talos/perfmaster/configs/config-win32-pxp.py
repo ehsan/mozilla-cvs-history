@@ -90,7 +90,7 @@ TP_RESOLUTION = 1
 COUNTERS = ['Private Bytes', 'Working Set', '% Processor Time']
 
 """URL for the results server"""
-RESULTS_SERVER = 'graphs.mozilla.org'
+RESULTS_SERVER = 'graphs-stage.mozilla.org'
 RESULTS_LINK = '/bulk.cgi'
 
 """Enable/disable debugging output"""
