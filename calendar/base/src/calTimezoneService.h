@@ -50,18 +50,25 @@ class calTimezone : public calITimezone,
                     public cal::XpcomBase
 {
 public:
-    calTimezone(calIIcalComponent * component,
+    enum {
+        IS_FOREIGN   = 0,
+        IS_INTRINSIC = 1,
+        IS_UTC       = 2,
+        IS_FLOATING  = 4
+    };
+
+    calTimezone(int flags,
+                calIIcalComponent * component,
                 nsCString const& tzid,
-                PRBool isUTC = PR_FALSE,
-                PRBool isFloating = PR_FALSE,
                 nsCString const& latitude = nsCString(),
                 nsCString const& longitude = nsCString())
         : mComponent(component),
           mTzid(tzid),
           mLatitude(latitude),
           mLongitude(longitude),
-          mIsFloating(isFloating),
-          mIsUTC(isUTC) {}
+          mIsIntrinsic(flags & (IS_INTRINSIC | IS_UTC | IS_FLOATING)),
+          mIsFloating(flags & IS_FLOATING),
+          mIsUTC(flags & IS_UTC) {}
 
     NS_DECL_ISUPPORTS
     NS_DECL_CALITIMEZONE
@@ -71,6 +78,7 @@ private:
     nsCString const                   mTzid;
     nsCString const                   mLatitude;
     nsCString const                   mLongitude;
+    PRBool const                      mIsIntrinsic;
     PRBool const                      mIsFloating;
     PRBool const                      mIsUTC;
 };
