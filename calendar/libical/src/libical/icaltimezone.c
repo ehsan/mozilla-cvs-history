@@ -3,7 +3,7 @@
  FILE: icaltimezone.c
  CREATOR: Damon Chaplin 15 March 2001
 
- $Id: icaltimezone.c,v 1.37 2007/12/01 11:14:00 dothebart Exp $
+ $Id: icaltimezone.c,v 1.34 2002/11/04 00:01:21 acampi Exp $
  $Locker:  $
 
  (C) COPYRIGHT 2001, Damon Chaplin
@@ -305,7 +305,7 @@ icaltimezone_get_location_from_vtimezone (icalcomponent *component)
     prop = icalcomponent_get_first_property (component, ICAL_X_PROPERTY);
     while (prop) {
 	name = icalproperty_get_x_name (prop);
-	if (name && !strcasecmp (name, "X-LIC-LOCATION")) {
+	if (name && !strcmp (name, "X-LIC-LOCATION")) {
 	    location = icalproperty_get_x (prop);
 	    if (location)
 		return strdup (location);
@@ -1293,11 +1293,11 @@ icaltimezone_get_builtin_timezone	(const char *location)
     if (!location || !location[0])
 	return NULL;
 
-    if (!builtin_timezones)
-	icaltimezone_init_builtin_timezones ();
-
     if (!strcmp (location, "UTC"))
 	return &utc_timezone;
+
+    if (!builtin_timezones)
+	icaltimezone_init_builtin_timezones ();
 
     /* Do a simple binary search. */
     lower = middle = 0;
@@ -1475,19 +1475,11 @@ icaltimezone_parse_zone_tab		(void)
 	printf ("Found zone: %s %f %f\n",
 		location, zone.latitude, zone.longitude);
 #endif
-	free (zone.location);
     }
 
     fclose (fp);
 }
 
-void
-icaltimezone_release_zone_tab		(void)
-{
-    icalarray *mybuiltin_timezones = builtin_timezones;
-    builtin_timezones = NULL;
-    icalarray_free (mybuiltin_timezones);
-}
 
 /** Loads the builtin VTIMEZONE data for the given timezone. */
 static void
@@ -1652,9 +1644,9 @@ format_utc_offset			(int		 utc_offset,
   }
 
   if (seconds == 0)
-    snprintf (buffer, sizeof(buffer), "%s%02i%02i", sign, hours, minutes);
+    sprintf (buffer, "%s%02i%02i", sign, hours, minutes);
   else
-    snprintf (buffer, sizeof(buffer), "%s%02i%02i%02i", sign, hours, minutes, seconds);
+    sprintf (buffer, "%s%02i%02i%02i", sign, hours, minutes, seconds);
 }
 
 static char* get_zone_directory(void)

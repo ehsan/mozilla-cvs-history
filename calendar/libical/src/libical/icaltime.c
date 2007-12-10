@@ -3,7 +3,7 @@
   FILE: icaltime.c
   CREATOR: eric 02 June 2000
   
-  $Id: icaltime.c,v 1.68 2007/11/30 22:56:49 dothebart Exp $
+  $Id: icaltime.c,v 1.66 2003/02/17 15:19:14 acampi Exp $
   $Locker:  $
     
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -218,18 +218,18 @@ icaltime_from_timet_with_zone(const time_t tm, const int is_date,
     return tt;
 }
 
-/**	@brief Convenience constructor.
+/**	@brief Constructor.
  * 
- * Returns the current time in the given timezone, as an icaltimetype.
+ * Returns an icaltimetype representing the current time in the given timezone.
  */
 struct icaltimetype icaltime_current_time_with_zone(const icaltimezone *zone)
 {
     return icaltime_from_timet_with_zone (time (NULL), 0, zone);
 }
 
-/**	@brief Convenience constructor.
+/**	@brief Constructor.
  * 
- * Returns the current day as an icaltimetype, with is_date set.
+ * Returns an icaltimetype representing the current day.
  */
 struct icaltimetype icaltime_today(void)
 {
@@ -237,6 +237,12 @@ struct icaltimetype icaltime_today(void)
 }
 
 /**	@brief	Return the time as seconds past the UNIX epoch
+ *
+ *	While this function is not currently deprecated, it probably won't do
+ *	what you expect, unless you know what you're doing. In particular, you
+ *	should only pass an icaltime in UTC, since no conversion is done. Even
+ *	in that case, it's probably better to just use
+ *	icaltime_as_timet_with_zone().
  */
 time_t icaltime_as_timet(const struct icaltimetype tt)
 {
@@ -251,9 +257,14 @@ time_t icaltime_as_timet(const struct icaltimetype tt)
     /* Copy the icaltimetype to a struct tm. */
     memset (&stm, 0, sizeof (struct tm));
 
-    stm.tm_sec = tt.second;
-    stm.tm_min = tt.minute;
-    stm.tm_hour = tt.hour;
+    if (icaltime_is_date(tt)) {
+	stm.tm_sec = stm.tm_min = stm.tm_hour = 0;
+    } else {
+	stm.tm_sec = tt.second;
+	stm.tm_min = tt.minute;
+	stm.tm_hour = tt.hour;
+    }
+
     stm.tm_mday = tt.day;
     stm.tm_mon = tt.month-1;
     stm.tm_year = tt.year-1900;
@@ -265,11 +276,11 @@ time_t icaltime_as_timet(const struct icaltimetype tt)
 
 }
 
-/**	@brief	Return the time as seconds past the UNIX epoch, using the
+/**	Return the time as seconds past the UNIX epoch, using the
  *	given timezone.
  *
- *	This convenience method combines a call to icaltime_convert() with
- *	a call to icaltime_as_timet().
+ *	This convenience method combines a call to icaltime_convert_to_zone()
+ *	with a call to icaltime_as_timet().
  *	If the input timezone is null, no conversion is done; that is, the
  *	time is simply returned as time_t in its native timezone.
  */
@@ -292,9 +303,14 @@ time_t icaltime_as_timet_with_zone(const struct icaltimetype _tt,
     /* Copy the icaltimetype to a struct tm. */
     memset (&stm, 0, sizeof (struct tm));
 
-    stm.tm_sec = tt.second;
-    stm.tm_min = tt.minute;
-    stm.tm_hour = tt.hour;
+    if (icaltime_is_date(tt)) {
+	stm.tm_sec = stm.tm_min = stm.tm_hour = 0;
+    } else {
+	stm.tm_sec = tt.second;
+	stm.tm_min = tt.minute;
+	stm.tm_hour = tt.hour;
+    }
+
     stm.tm_mday = tt.day;
     stm.tm_mon = tt.month-1;
     stm.tm_year = tt.year-1900;
@@ -374,7 +390,7 @@ struct icaltimetype icaltime_from_string(const char* str)
 	tt.is_date = 0;
     } else if (size == 16) { /* UTC time, ends in 'Z'*/
 	if(str[15] != 'Z')
-	    goto errorlabel;
+	    goto FAIL;
 
 	tt.is_utc = 1;
 	tt.zone = icaltimezone_get_utc_timezone();
@@ -383,25 +399,25 @@ struct icaltimetype icaltime_from_string(const char* str)
 	tt.is_utc = 1;
 	tt.is_date = 1;
     } else { /* error */
-	goto errorlabel;
+	goto FAIL;
     }
 
     if(tt.is_date == 1){
 	if (sscanf(str,"%04d%02d%02d",&tt.year,&tt.month,&tt.day) < 3)
-	    goto errorlabel;
+	    goto FAIL;
     } else {
 	char tsep;
 	if (sscanf(str,"%04d%02d%02d%c%02d%02d%02d",&tt.year,&tt.month,&tt.day,
 	       &tsep,&tt.hour,&tt.minute,&tt.second) < 7)
-	    goto errorlabel;
+	    goto FAIL;
 
 	if(tsep != 'T')
-	    goto errorlabel;
+	    goto FAIL;
     }
 
     return tt;    
 
-errorlabel:
+FAIL:
     icalerror_set_errno(ICAL_MALFORMEDDATA_ERROR);
     return icaltime_null_time();
 }
@@ -455,11 +471,10 @@ int icaltime_day_of_week(const struct icaltimetype t){
 }
 
 /** Day of the year that the first day of the week (Sunday) is on.
- * 
- *  @todo Doesn't take into account different week start days. 
  */
-int icaltime_start_doy_of_week(const struct icaltimetype t){
+int icaltime_start_doy_week(const struct icaltimetype t, int fdow){
 	UTinstant jt;
+	int delta;
 
 	memset(&jt,0,sizeof(UTinstant));
 
@@ -473,7 +488,23 @@ int icaltime_start_doy_of_week(const struct icaltimetype t){
 	juldat(&jt);
 	caldat(&jt);
 
-	return jt.day_of_year - jt.weekday;
+	delta = jt.weekday - (fdow - 1);
+	if (delta < 0) delta += 7;
+	return jt.day_of_year - delta;
+}
+
+/** Day of the year that the first day of the week (Sunday) is on.
+ * 
+ *  @deprecated Doesn't take into account different week start days. 
+ */
+int icaltime_start_doy_of_week(const struct icaltimetype t){
+
+#ifndef NO_WARN_DEPRECATED
+    icalerror_warn("icaltime_start_doy_of_week() is DEPRECATED, use\
+	icaltime_start_doy_week() instead");
+#endif
+
+    return icaltime_start_doy_week(t, 1);
 }
 
 /** 
@@ -557,8 +588,7 @@ struct icaltimetype icaltime_from_day_of_year(const int _doy, const int _year)
 
 /**	@brief Constructor.
  *
- *	Return a null time, which indicates no time has been set.
- *	This time represents the beginning of the epoch.
+ *	Return a null time, which is guaranteed not to be equal to any other time.
  */
 struct icaltimetype icaltime_null_time(void)
 {
@@ -570,7 +600,7 @@ struct icaltimetype icaltime_null_time(void)
 
 /**	@brief Constructor.
  *
- *	Return a null date, which indicates no time has been set.
+ *	Return a null date.
  */
 struct icaltimetype icaltime_null_date(void)
 {
@@ -644,53 +674,58 @@ int icaltime_is_null_time(const struct icaltimetype t)
 
 int icaltime_compare(const struct icaltimetype a_in, const struct icaltimetype b_in) 
 {
+    int retval = 0;
     struct icaltimetype a, b;
 
     a = icaltime_convert_to_zone(a_in, icaltimezone_get_utc_timezone());
     b = icaltime_convert_to_zone(b_in, icaltimezone_get_utc_timezone());
 
     if (a.year > b.year)
-	return 1;
+	retval = 1;
     else if (a.year < b.year)
-	return -1;
+	retval = -1;
 
     else if (a.month > b.month)
-	return 1;
+	retval = 1;
     else if (a.month < b.month)
-	return -1;
+	retval = -1;
 
     else if (a.day > b.day)
-	return 1;
+	retval = 1;
     else if (a.day < b.day)
-	return -1;
+	retval = -1;
 
     /* if both are dates, we are done */
     if (a.is_date && b.is_date)
-	return 0;
+	return retval;
+
+    /* else, if we already found a difference, we are done */
+    else if (retval != 0)
+	return retval;
 
     /* else, if only one is a date (and we already know the date part is equal),
        then the other is greater */
     else if (b.is_date)
-	return 1;
+	retval = 1;
     else if (a.is_date)
-	return -1;
+	retval = -1;
 
     else if (a.hour > b.hour)
-	return 1;
+	retval = 1;
     else if (a.hour < b.hour)
-	return -1;
+	retval = -1;
 
     else if (a.minute > b.minute)
-	return 1;
+	retval = 1;
     else if (a.minute < b.minute)
-	return -1;
+	retval = -1;
 
     else if (a.second > b.second)
-	return 1;
+	retval = 1;
     else if (a.second < b.second)
-	return -1;
+	retval = -1;
 
-    return 0;
+    return retval;
 }
 
 /**
@@ -747,8 +782,12 @@ icaltime_adjust(struct icaltimetype *tt, const int days, const int hours,
 	const int minutes, const int seconds) {
 
     int second, minute, hour, day;
-    int minutes_overflow, hours_overflow, days_overflow, years_overflow;
+    int minutes_overflow, hours_overflow, days_overflow = 0, years_overflow;
     int days_in_month;
+
+    /* If we are passed a date make sure to ignore hour minute and second */
+    if (tt->is_date)
+	goto IS_DATE;
 
     /* Add on the seconds. */
     second = tt->second + seconds;
@@ -777,6 +816,7 @@ icaltime_adjust(struct icaltimetype *tt, const int days, const int hours,
 	days_overflow--;
     }
 
+IS_DATE:
     /* Normalize the month. We do this before handling the day since we may
        need to know what month it is to get the number of days in it.
        Note that months are 1 to 12, so we have to be a bit careful. */
