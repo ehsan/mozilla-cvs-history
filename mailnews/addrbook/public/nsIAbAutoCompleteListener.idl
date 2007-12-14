@@ -36,7 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-#include "nsrootidl.idl"
 
 [scriptable, uuid(CA2A6B08-3625-11d3-988E-001083010E9B)]
 interface nsIAbAutoCompleteListener : nsISupports {
