@@ -39,7 +39,7 @@
 
 #import <PreferencePaneBase.h>
 
-@interface OrgMozillaChimeraPreferenceNavigation : PreferencePaneBase
+@interface OrgMozillaCaminoPreferenceGeneral : PreferencePaneBase
 {
   IBOutlet NSTextField*   textFieldHomePage;
   

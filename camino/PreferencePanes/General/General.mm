@@ -46,11 +46,11 @@
 #import "AppListMenuFactory.h"
 #import "UserDefaults.h"
 
-#import "Navigation.h"
+#import "General.h"
 
 const int kDefaultExpireDays = 9;
 
-@interface OrgMozillaChimeraPreferenceNavigation(Private)
+@interface OrgMozillaCaminoPreferenceGeneral(Private)
 
 - (NSString*)currentHomePage;
 - (void)updateDefaultBrowserMenu;
@@ -59,7 +59,7 @@ const int kDefaultExpireDays = 9;
 
 @end
 
-@implementation OrgMozillaChimeraPreferenceNavigation
+@implementation OrgMozillaCaminoPreferenceGeneral
 
 - (id)initWithBundle:(NSBundle *)bundle
 {

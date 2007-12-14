@@ -24,7 +24,7 @@
                 runOpenDialogToSelectFeedViewer = id; 
                 warningCheckboxClicked = id; 
             }; 
-            CLASS = OrgMozillaChimeraPreferenceNavigation; 
+            CLASS = OrgMozillaCaminoPreferenceGeneral; 
             LANGUAGE = ObjC; 
             OUTLETS = {
                 checkboxAutoUpdate = NSButton; 
