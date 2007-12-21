@@ -42,6 +42,6 @@
 interface nsIPluglet : nsISupports {
   boolean hasPlugletForMimeType(in string aMimeType);
   void callPlugletMethod(in string methodName, 
-                         in PRUint32 inArgc,
-                         [array, size_is(inArgc)] in string inArgv);
+                         inout PRUint32 inArgc,
+                         [array, size_is(inArgc)] inout string inArgv);
 };
