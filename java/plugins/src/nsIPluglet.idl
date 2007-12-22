@@ -40,7 +40,6 @@
 
 [scriptable, uuid(482e1890-1fe5-11d5-9cf8-0060b0fbd8ac)]
 interface nsIPluglet : nsISupports {
-  boolean hasPlugletForMimeType(in string aMimeType);
   void callPlugletMethod(in string methodName, 
                          inout PRUint32 inArgc,
                          [array, size_is(inArgc)] inout string inArgv);
