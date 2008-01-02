@@ -41,7 +41,7 @@
 #include "nsIAddrBookSession.h"
 #include "nsISupports.h"
 #include "nsISupportsArray.h"
-#include "nsUInt32Array.h"
+#include "nsTArray.h"
 
 class nsAddrBookSession : public nsIAddrBookSession
 {
@@ -54,7 +54,7 @@ public:
   
 protected:
   nsCOMPtr <nsISupportsArray> mListeners;
-  nsUInt32Array mListenerNotifyFlags;
+  nsTArray<PRUint32> mListenerNotifyFlags;
 };
 
 #endif /* nsAddrBookSession_h__ */

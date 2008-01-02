@@ -70,7 +70,7 @@ NS_IMETHODIMP nsAddrBookSession::AddAddressBookListener(nsIAbListener *listener,
   else if (mListeners->IndexOf(listener) != -1)
     return NS_OK;
   mListeners->AppendElement(listener);
-  mListenerNotifyFlags.Add(notifyFlags);
+  mListenerNotifyFlags.AppendElement(notifyFlags);
   return NS_OK;
 }
 
@@ -84,7 +84,7 @@ NS_IMETHODIMP nsAddrBookSession::RemoveAddressBookListener(nsIAbListener * liste
   NS_ASSERTION(index >= 0, "removing non-existent listener");
   if (index >= 0)
   {
-    mListenerNotifyFlags.RemoveAt(index);
+    mListenerNotifyFlags.RemoveElementAt(index);
     mListeners->RemoveElement(listener);
   }
   return NS_OK;
