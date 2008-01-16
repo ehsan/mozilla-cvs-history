@@ -11,11 +11,10 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is OEone Calendar Code, released October 31st, 2001.
+# The Original Code is Mozilla Calendar Code.
 #
-# The Initial Developer of the Original Code is
-# OEone Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2001
+# The Initial Developer of the Original Code is OEone Corporation.
+# Portions created by the Initial Developer are Copyright (C) 2008
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s): Garth Smedley <garths@oeone.com>
@@ -42,52 +41,27 @@
 #
 # ***** END LICENSE BLOCK *****
 
-  <script type="application/x-javascript">
-    var confirmDeleteAllEvents = "&calendar.confirm.deleteallevents;";
-    var confirmDeleteEvent = "&calendar.confirm.deleteevent;";
-    var confirmDeleteUntitledEvent = "&calendar.confirm.deleteuntitledevent;";
-    var defaultCalendarFileName = "&calendar.file.default.name;";
-  </script>
+<script type="application/x-javascript">
+  var confirmDeleteAllEvents = "&calendar.confirm.deleteallevents;";
+  var confirmDeleteEvent = "&calendar.confirm.deleteevent;";
+  var confirmDeleteUntitledEvent = "&calendar.confirm.deleteuntitledevent;";
+  var defaultCalendarFileName = "&calendar.file.default.name;";
+</script>
 
 #ifdef XP_MACOSX
   <!-- Needed for Mac OS X "Window" menu -->
   <script type="application/x-javascript" src="chrome://calendar/content/hiddenWindow.js"/>
 #endif
 
-  <!-- NEEDED FOR MULTIPLE CALENDAR SUPPORT -->
-  <script type="application/x-javascript" src="chrome://calendar/content/calendar-management.js"/>
-
-  <!-- NEEDED FOR CLIPBOARD SUPPORT -->
-  <script type="application/x-javascript" src="chrome://calendar/content/clipboard.js"/>
-
-  <!-- NEEDED FOR IMPORT / EXPORT SUPPORT -->
-  <script type="application/x-javascript" src="chrome://calendar/content/import-export.js"/>
-
-  <!-- NEEDED FOR PUBLICATION SUPPORT -->
-  <script type="application/x-javascript" src="chrome://calendar/content/publish.js"/>
-
   <script type="application/x-javascript" src="chrome://calendar/content/calendar.js"/>
-  <script type="application/x-javascript" src="chrome://calendar/content/calendar-item-editing.js"/>
-  <script type="application/x-javascript" src="chrome://calendar/content/calUtils.js"/>
-  <script type="application/x-javascript" src="chrome://calendar/content/calendar-ui-utils.js"/>
   <script type="application/x-javascript" src="chrome://calendar/content/calendarWindow.js"/>
-  <script type="application/x-javascript" src="chrome://calendar/content/mouseoverPreviews.js"/>
   <script type="application/x-javascript" src="chrome://calendar/content/calendar-offline.js"/>
   <script type="application/x-javascript" src="chrome://calendar/content/calendar-unifinder.js"/>
   <script type="application/x-javascript" src="chrome://calendar/content/calendar-unifinder-todo.js"/>
-  <script type="application/x-javascript" src="chrome://calendar/content/calendar-views.js"/>
   <script type="application/x-javascript" src="chrome://calendar/content/migration.js"/>
-  <script type="application/x-javascript" src="chrome://calendar/content/calendar-creation.js"/>
-  <script type="application/x-javascript" src="chrome://calendar/content/calendar-dnd-listener.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
 
   <!-- NEEDED FOR APPLICATION SUPPORT -->
   <script type="application/x-javascript" src="chrome://calendar/content/applicationUtil.js"/>
   <script type="application/x-javascript" src="chrome://calendar/content/calApplicationUtils.js"/>
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
-
   <script type="application/x-javascript" src="chrome://global/content/printUtils.js"/>
-
-  <!-- NEEDED FOR MINIMONTH BUSY HIGHLIGHT -->
-  <script type="application/x-javascript" src="chrome://calendar/content/calendar-minimonth-busy.js"/>
-
