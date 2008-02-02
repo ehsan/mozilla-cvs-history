@@ -232,16 +232,19 @@ function loadDialog(item)
 
     /* Categories */
     try {
-        var categoriesString = getLocalizedPref("calendar.categories.names");
-        var categoriesList = categoriesString.split( "," );
+        var categoriesList = getPrefCategoriesArray();
 
         // insert the category already in the menulist so it doesn't get lost
-        var itemCategory = item.getProperty("CATEGORIES");
-        if (itemCategory) {
-            if (categoriesString.indexOf(itemCategory) == -1)
-                categoriesList[categoriesList.length] = itemCategory;
+        var itemProperty = item.getProperty("CATEGORIES");
+        if (itemProperty) {
+            var itemCategories = categoriesStringToArray(itemProperty);
+            for each (var itemCategory in itemCategories) {
+                if (!categoriesList.some(function(cat){ return cat == itemCategory; })){
+                    categoriesList.push(itemCategory);
+                }
+            }
         }
-        categoriesList.sort();
+        sortArrayByLocaleCollator(categoriesList);
 
         var oldMenulist = document.getElementById("item-categories");
         while (oldMenulist.hasChildNodes()) {
@@ -408,7 +411,7 @@ function saveDialog(item)
     var category = getElementValue("item-categories");
 
     if (category != "NONE") {
-       setItemProperty(item, "CATEGORIES", category);
+       setItemProperty(item, "CATEGORIES", categoriesArrayToString([category]));
     } else {
        item.deleteProperty("CATEGORIES");
     }
@@ -1178,8 +1181,7 @@ var gCategoriesPane = {
         var promptService = 
                  Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                            .getService(Components.interfaces.nsIPromptService);
-        var categoriesString = getLocalizedPref("calendar.categories.names");
-        var categoriesList = categoriesString.split( "," );
+        var categoriesList = getPrefCategoriesArray();
         for each (cat in categoriesList) {
             if (aName.toLowerCase() == cat.toLowerCase()) {
                 var repTitle = calGetString("calendar", "categoryReplaceTitle");
@@ -1200,9 +1202,9 @@ var gCategoriesPane = {
         }
 
         categoriesList.push(aName);
-        categoriesList.sort();
+        sortArrayByLocaleCollator(categoriesList);
 
-        setLocalizedPref("calendar.categories.names", categoriesList.join(','));
+        setPrefCategoriesFromArray(categoriesList);
 
         if (aColor) {
             var categoryNameFix = formatStringForCSSRule(aName);
