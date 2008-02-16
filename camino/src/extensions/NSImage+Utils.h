@@ -37,10 +37,7 @@
 
 #import <AppKit/NSImage.h>
 
-@interface NSImage (ImageAdditions)
-
-- (void) drawFlippedInRect:(NSRect) rect operation:(NSCompositingOperation) op fraction:(float) delta;
-- (void) drawFlippedInRect:(NSRect) rect operation:(NSCompositingOperation) op;
+@interface NSImage (CaminoImageUtils)
 
 // the origin is relative to the bottom, left of the window.
 - (void)drawTiledInRect:(NSRect)rect origin:(NSPoint)inOrigin operation:(NSCompositingOperation)inOperation;
