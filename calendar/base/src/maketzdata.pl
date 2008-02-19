@@ -43,7 +43,7 @@
 # produced from an Olson-format tz database via vzic.  Note that it
 # should be used on vzic output WITHOUT the --pure option.  The
 # libical distribution includes ics files generated with --pure,
-# which results in both huge files and various incompatability
+# which results in both huge files and various incompatibility
 # problems.
 #
 # vzic - http://dialspace.dial.pipex.com/prod/dialspace/town/pipexdsl/s/asbm26/vzic/
@@ -51,7 +51,7 @@
 #
 use File::Basename;
 
-$TZ_PREFIX = "/mozilla.org/20070129_1";
+$TZ_PREFIX = "/mozilla.org/20071231_1";
 
 if ($#ARGV != 1) {
   print "Usage: maketzdata.pl zones.tab tzdata.c\n";
