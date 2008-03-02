@@ -53,13 +53,13 @@ Install_MessageDownload=Setup will now download and install the following compon
 Install_Message0=Click Next to continue.
 
 Downloading_Title=Downloading
-Downloading_SubTitle=Downloading required components...
+Downloading_SubTitle=Downloading required components…
 Downloading_Blurb=Setup is downloading the files required to install $ProductName$.
 Downloading_FileName=Currently Downloading:
 Downloading_Time=Time Remaining:
 
 Installing_Title=Installing
-Installing_SubTitle=Installing $ProductName$...
+Installing_SubTitle=Installing $ProductName$…
 Installing_Blurb=Setup is installing application files. 
 Installing_Status=Preparing File:
 Installing_Component=Currently Installing:
@@ -72,7 +72,7 @@ Success_Launch=Launch %s now.
 
 Check_Message=Download of $ProductName$ was successful. $ProductNameInternal$ must be closed to proceed with installation. Click OK to exit $ProductNameInternal$ automatically and to begin installation.
 Check_FullMessage=$ProductNameInternal$ must be closed to proceed with installation. Click OK to exit $ProductNameInternal$ automatically and to begin installation.
-Check_Wait=Shutting down $ProductNameInternal$.  Please wait...
+Check_Wait=Shutting down $ProductNameInternal$.  Please wait…
 
 Component_XPCOM=Cross-Platform COM
 Component_Mail=$ProductName$
