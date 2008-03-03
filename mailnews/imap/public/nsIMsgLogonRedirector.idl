@@ -36,8 +36,8 @@ interface nsIMsgLogonRedirectionRequester : nsISupports
   void OnLogonRedirectionReply(in wstring pHost, in unsigned short pPort, in string pCookieData, in unsigned short pCookieSize);
 }; 
 
-/* this is the service we use to request a logon redirection */ 
-[scriptable, uuid(0c2e96ac-e0ae-11d3-a560-0060b0fc04b7)] 
+/* This is the service we use to request a logon redirection. */
+[scriptable, uuid(e0c72903-c956-4c2b-8bdf-3ffb95315967)]
 interface nsIMsgLogonRedirector : nsISupports 
 { 
   // RequiresPassword --> if the subsequent logon call still requires a password to succeed, then the
@@ -46,8 +46,8 @@ interface nsIMsgLogonRedirector : nsISupports
   // caching so the redirection requestor doesn't have to prompt for a password every time the requestor
   // wishes to log on.
   // aUserName --> the user name we wish to log in under...
-  boolean requiresPassword(in string aUserName, in string aRedirectorType);
-  void logon(in string userName, in string password, in string redirectorType, in nsIPrompt aPrompt, in nsIMsgLogonRedirectionRequester listener, in nsMsgLogonRedirectionServiceID aServiceID); 
+  boolean requiresPassword(in string aUserName);
+  void logon(in string userName, in string password, in nsIPrompt aPrompt, in nsIMsgLogonRedirectionRequester listener, in nsMsgLogonRedirectionServiceID aServiceID);
   void logoff(in string userName); /* might not need this one */ 
 }; 
 
