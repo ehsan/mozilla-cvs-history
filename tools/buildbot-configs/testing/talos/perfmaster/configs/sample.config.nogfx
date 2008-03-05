@@ -81,6 +81,7 @@ tests :
     url :  '-tp page_load_test/manifest.txt -tpchrome -tpformat tinderbox -tpcycles 10 -tptimeout 120000'
     resolution : 1
     cycles : 1
+    timeout : 9000
     win_counters : ['Working Set', 'Private Bytes', '% Processor Time']
     unix_counters : ['RSS', 'Private Bytes']
 #  tp_js: 
@@ -93,29 +94,34 @@ tests :
     url: '-tp page_load_test/dhtml/dhtml.manifest -tpchrome -tpformat tinderbox -tpcycles 5 -tptimeout 120000'
     resolution : 1
     cycles : 1
+    timeout : 900
     win_counters : []
     unix_counters : []
   tsvg:
     url: '-tp page_load_test/svg/svg.manifest -tpchrome -tpformat tinderbox -tpcycles 5 -tptimeout 120000'
     resolution : 1
     cycles : 1
+    timeout : 900
     win_counters : []
     unix_counters : []
   twinopen:
     url: startup_test/twinopen/winopen.xul?phase1=20
     resolution: 1
     cycles: 1
+    timeout : 300
     win_counters: []
     unix_counters: []
   tjss:
     url: '-tp page_load_test/jss/jss.manifest -tpchrome -tpformat tinderbox -tpcycles 1'
     resolution : 1
     cycles : 1
+    timeout : 1800
     win_counters : []
     unix_counters : []    
   tsspider:
     url: '-tp page_load_test/sunspider/sunspider.manifest -tpchrome -tpformat tinderbox -tpcycles 5'
     resolution : 1
     cycles : 1
+    timeout : 300
     win_counters : []
     unix_counters : []
