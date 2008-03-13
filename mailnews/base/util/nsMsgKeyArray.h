@@ -63,15 +63,6 @@ public:
   nsMsgKey GetKeyFromIndex(PRUint32 nIndex) {
     return(operator[](nIndex));
   }
-  nsMsgKey GetAt(PRUint32 nIndex) const {
-    return(operator[](nIndex));
-  }
-  void SetAt(PRUint32 nIndex, nsMsgKey key) {
-    nsUInt32Array::SetAt(nIndex, (PRUint32)key);
-  }
-  void SetAtGrow(PRUint32 nIndex, nsMsgKey key) {
-    nsUInt32Array::SetAtGrow(nIndex, (uint32)key);
-  }
   void InsertAt(PRUint32 nIndex, nsMsgKey key, int nCount = 1) {
     nsUInt32Array::InsertAt(nIndex, (PRUint32)key, nCount);
   }

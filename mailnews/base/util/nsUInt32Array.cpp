@@ -163,12 +163,6 @@ PRUint32 *nsUInt32Array::GetData()
   return m_pData;
 }
 
-void nsUInt32Array::SetAt(PRUint32 nIndex, PRUint32 newElement)
-{
-  NS_ASSERTION(nIndex < m_nSize, "array index out of bounds");
-  m_pData[nIndex] = newElement;
-}
-
 /////////////////////////////////////////////////////////////////////////////
 
 PRUint32 nsUInt32Array::Add(PRUint32 newElement)

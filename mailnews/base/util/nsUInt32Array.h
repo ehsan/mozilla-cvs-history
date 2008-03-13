@@ -69,9 +69,7 @@ public:
   
   // Accessor member functions
   PRUint32            &ElementAt(PRUint32 nIndex);
-  PRUint32             GetAt(PRUint32 nIndex) const;
   PRUint32            *GetData();
-  void               SetAt(PRUint32 nIndex, PRUint32 newElement);
   PRUint32           IndexOf(PRUint32 element);
   PRUint32           IndexOfSorted(PRUint32 element);
   
@@ -82,7 +80,6 @@ public:
   void               InsertAt(PRUint32 nStartIndex, const nsUInt32Array *pNewArray);
   void               RemoveAll();
   void               RemoveAt(PRUint32 nIndex, PRUint32 nCount = 1);
-  void               SetAtGrow(PRUint32 nIndex, PRUint32 newElement);
   PRBool             RemoveElement(PRUint32 element);
   // Sorting member functions
   void               QuickSort(int (* PR_CALLBACK compare) (const void *elem1, const void *elem2, void *) = NULL);
@@ -97,6 +94,8 @@ public:
   void               CopyArray(nsUInt32Array &oldA);
   
 protected:
+  PRUint32             GetAt(PRUint32 nIndex) const;
+  void               SetAtGrow(PRUint32 nIndex, PRUint32 newElement);
   // Member data
   PRUint32 m_nSize;
   PRUint32 m_nMaxSize;
