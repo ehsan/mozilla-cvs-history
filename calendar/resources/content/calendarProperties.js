@@ -47,30 +47,36 @@ var gCalendar;
 
 function loadCalendarPropertiesDialog()
 {
-   var args = window.arguments[0];
+    var args = window.arguments[0];
 
-   gCalendar = args.calendar;
+    gCalendar = args.calendar;
 
-   document.getElementById("calendar-name").value = gCalendar.name;
-   var calColor = gCalendar.getProperty('color');
-   if (calColor) {
+    document.getElementById("calendar-name").value = gCalendar.name;
+    var calColor = gCalendar.getProperty('color');
+    if (calColor) {
        document.getElementById("calendar-color").color = calColor;
-   }
-   document.getElementById("calendar-uri").value = gCalendar.uri.spec;
-   document.getElementById("read-only").checked = gCalendar.readOnly;
-   var suppressAlarms = gCalendar.getProperty('suppressAlarms');
-   document.getElementById("fire-alarms").checked = !suppressAlarms;
+    }
+    document.getElementById("calendar-uri").value = gCalendar.uri.spec;
+    document.getElementById("read-only").checked = gCalendar.readOnly;
 
-   // start focus on title
-   document.getElementById("calendar-name").focus();
+    // start focus on title
+    document.getElementById("calendar-name").focus();
 
-   // set up the cache field
-   var cacheBox = document.getElementById("cache");
-   var canCache = (gCalendar.getProperty("cache.supported") !== false);
-   cacheBox.disabled = !canCache;
-   cacheBox.checked = (canCache && gCalendar.getProperty("cache.enabled"));
+    // set up the cache field
+    var cacheBox = document.getElementById("cache");
+    var canCache = (gCalendar.getProperty("cache.supported") !== false);
+    cacheBox.disabled = !canCache;
+    cacheBox.checked = (canCache && gCalendar.getProperty("cache.enabled"));
 
-   sizeToContent();
+    // Set up the show alarms row and checkbox
+    var suppressAlarmsRow = document.getElementById("calendar-suppressAlarms-row");
+    var suppressAlarms = gCalendar.getProperty('suppressAlarms');
+    document.getElementById("fire-alarms").checked = !suppressAlarms;
+
+    suppressAlarmsRow.hidden =
+        (gCalendar.getProperty("capabilities.alarms.popup.supported") === false);
+
+    sizeToContent();
 }
 
 function onOKCommand()
