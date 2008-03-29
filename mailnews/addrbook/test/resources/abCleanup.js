@@ -10,23 +10,20 @@ var abs = [ kPABData.fileName,
 
 function cleanup()
 {
-  // If you've removed anything from a database in your test,
-  // be sure to clear any references to the removed objects
-  // and call gc() before you call this cleanup() function
-  // otherwise the forceClosed() call will remove mork objects
-  // underneath us and by the time GC happens things go screwy
+  // If you've removed anything from a database in your test, be sure to
+  // clear any references to the removed objects before you call this
+  // cleanup() function, otherwise the forceClosed() call will remove mork
+  // objects underneath us and by the time GC happens things go screwy
+  gc();
+
   try {
     // Get the top-level directory
-    var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-                        .getService(Components.interfaces.nsIRDFService);
-
-    var childNodes = rdf.GetResource("moz-abdirectory:///")
-                        .QueryInterface(Components.interfaces.nsIAbDirectory)
-                        .childNodes;
+    var directories = Components.classes["@mozilla.org/abmanager;1"]
+      .getService(Components.interfaces.nsIAbManager).directories;
 
     // and iterate through it, shutting down MDB databases where appropriate
-    while (childNodes.hasMoreElements()) {
-      var ab = childNodes.getNext();
+    while (directories.hasMoreElements()) {
+      var ab = directories.getNext();
       if (ab instanceof Components.interfaces.nsIAbMDBDirectory) {
         try {
           var database = ab.database;
