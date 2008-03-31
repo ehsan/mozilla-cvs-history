@@ -456,7 +456,7 @@ static const unsigned int kMaxTitleLength = 50;
       [menuItem setRepresentedObject:historyItem];
 
       [self insertItem:menuItem atIndex:(todayMenuIndex++)];
-      [self addCommandKeyAlternatesForMenuItem:menuItem];
+      todayMenuIndex += [self addCommandKeyAlternatesForMenuItem:menuItem];
     }
 
     [self insertItem:[NSMenuItem separatorItem] atIndex:todayMenuIndex];
