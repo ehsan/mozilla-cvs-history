@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Joe Hewitt <hewitt@netscape.com> (Original Author)
+ *   Stuart Morgan <stuart.morgan@alumni.case.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,11 +40,11 @@
 
 #import <AppKit/AppKit.h>
 
-
-@class HistoryDataSource;
 @class HistoryItem;
 
-@interface HistoryMenu : NSMenu
+// A class that builds and maintains a menu heirarchy parallel to some portion
+// of the history backend.
+@interface HistorySubmenu : NSMenu
 {
   HistoryItem*          mRootItem;               // root history item for this menu (retained)
   HistoryItem*          mAdditionalItemsParent;  // may also contain children of this item (retained)
@@ -67,7 +68,9 @@
 @end
 
 
-@interface GoMenu : HistoryMenu 
+// Encapsulates all of the logic of building, displaying, and handling the
+// top-level "History" menu.
+@interface TopLevelHistoryMenu : HistorySubmenu
 {
   IBOutlet NSMenuItem*  mItemBeforeHistoryItems; // the item after which we add history items.
   HistoryItem*          mTodayItem;              // the "Today" history group

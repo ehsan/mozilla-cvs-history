@@ -38,7 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#import "GoMenu.h"
+#import "HistoryMenu.h"
 
 #import "NSString+Utils.h"
 #import "NSMenu+Utils.h"
@@ -65,12 +65,12 @@ static const unsigned int kMaxTitleLength = 50;
 
 // this little class manages the singleton history data source, and takes
 // care of shutting it down at XPCOM shutdown time.
-@interface GoMenuHistoryDataSourceOwner : NSObject
+@interface HistoryMenuDataSourceOwner : NSObject
 {
   HistoryDataSource*    mHistoryDataSource;
 }
 
-+ (GoMenuHistoryDataSourceOwner*)sharedGoMenuHistoryDataSourceOwner;
++ (HistoryMenuDataSourceOwner*)sharedHistoryMenuDataSourceOwner;
 + (HistoryDataSource*)sharedHistoryDataSource;    // just a shortcut
 
 - (HistoryDataSource*)historyDataSource;
@@ -78,20 +78,20 @@ static const unsigned int kMaxTitleLength = 50;
 @end
 
 
-@implementation GoMenuHistoryDataSourceOwner
+@implementation HistoryMenuDataSourceOwner
 
-+ (GoMenuHistoryDataSourceOwner*)sharedGoMenuHistoryDataSourceOwner
++ (HistoryMenuDataSourceOwner*)sharedHistoryMenuDataSourceOwner
 {
-  static GoMenuHistoryDataSourceOwner* sHistoryOwner = nil;
+  static HistoryMenuDataSourceOwner* sHistoryOwner = nil;
   if (!sHistoryOwner)
-    sHistoryOwner = [[GoMenuHistoryDataSourceOwner alloc] init];
-  
+    sHistoryOwner = [[HistoryMenuDataSourceOwner alloc] init];
+
   return sHistoryOwner;
 }
 
 + (HistoryDataSource*)sharedHistoryDataSource
 {
-  return [[GoMenuHistoryDataSourceOwner sharedGoMenuHistoryDataSourceOwner] historyDataSource];
+  return [[HistoryMenuDataSourceOwner sharedHistoryMenuDataSourceOwner] historyDataSource];
 }
 
 - (id)init
@@ -130,12 +130,12 @@ static const unsigned int kMaxTitleLength = 50;
   return mHistoryDataSource;
 }
 
-@end // GoMenuHistoryDataSourceOwner
+@end // HistoryMenuDataSourceOwner
 
 
 #pragma mark -
 
-@interface HistoryMenu(Private)
+@interface HistorySubmenu(Private)
 
 - (NSString*)menuItemTitleForHistoryItem:(HistoryItem*)inItem;
 
@@ -152,7 +152,7 @@ static const unsigned int kMaxTitleLength = 50;
 
 #pragma mark -
 
-@implementation HistoryMenu
+@implementation HistorySubmenu
 
 - (NSString*)menuItemTitleForHistoryItem:(HistoryItem*)inItem
 {
@@ -179,7 +179,7 @@ static const unsigned int kMaxTitleLength = 50;
   [[NSNotificationCenter defaultCenter] addObserver:self
                                            selector:@selector(historyChanged:)
                                                name:kNotificationNameHistoryDataSourceChanged
-                                             object:[GoMenuHistoryDataSourceOwner sharedHistoryDataSource]];
+                                             object:[HistoryMenuDataSourceOwner sharedHistoryDataSource]];
 
   // register for menu display
   [[NSNotificationCenter defaultCenter] addObserver:self
@@ -222,7 +222,7 @@ static const unsigned int kMaxTitleLength = 50;
   // We could optimize by only changing single menu items if itemOnlyChanged is true. Normally this will also be a visit
   // date change, which we can ignore.
   //BOOL itemOnlyChanged = [[[inNotification userInfo] objectForKey:kNotificationHistoryDataSourceChangedUserInfoChangedItemOnly] boolValue];
-  
+
   // If rootChangedItem is nil, the whole history tree is being rebuilt.
   // We need to clear our root item, because it will become invalid. We'll set it again when we rebuild.
   if (!rootChangedItem) {
@@ -284,7 +284,7 @@ static const unsigned int kMaxTitleLength = 50;
                                      keyEquivalent:@""] autorelease];
       [newItem setImage:[curChild iconAllowingLoad:NO]];
 
-      HistoryMenu* newSubmenu = [[HistoryMenu alloc] initWithTitle:itemTitle];
+      HistorySubmenu* newSubmenu = [[HistorySubmenu alloc] initWithTitle:itemTitle];
       [newSubmenu setRootHistoryItem:curChild];
       [newItem setSubmenu:newSubmenu];
 
@@ -333,7 +333,7 @@ static const unsigned int kMaxTitleLength = 50;
   id repObject = [sender representedObject];
   if ([repObject isKindOfClass:[HistoryItem class]]) {
     NSString* itemURL = [repObject url];
-    
+
     // XXX share this logic with MainController and HistoryOutlineViewDelegate
     BrowserWindowController* bwc = [(MainController *)[NSApp delegate] mainWindowBrowserController];
     if (bwc) {
@@ -363,14 +363,14 @@ static const unsigned int kMaxTitleLength = 50;
 
 #pragma mark -
 
-@interface GoMenu(Private)
+@interface TopLevelHistoryMenu(Private)
 
 - (void)appLaunchFinished:(NSNotification*)inNotification;
 - (NSMenuItem*)todayMenuItem;
 
 @end
 
-@implementation GoMenu
+@implementation TopLevelHistoryMenu
 
 - (NSString*)menuItemTitleForHistoryItem:(HistoryItem*)inItem
 {
@@ -379,7 +379,7 @@ static const unsigned int kMaxTitleLength = 50;
   if ([inItem respondsToSelector:@selector(isTodayCategory)] &&
       [(HistoryDateCategoryItem*)inItem isTodayCategory])
   {
-    return NSLocalizedString(@"GoMenuEarlierToday", nil);
+    return NSLocalizedString(@"TopLevelHistoryMenuEarlierToday", nil);
   }
 
   return [super menuItemTitleForHistoryItem:inItem];
@@ -416,13 +416,13 @@ static const unsigned int kMaxTitleLength = 50;
   if (mAppLaunchDone) {
     // the root item is nil at launch, and if the history gets totally rebuilt
     if (!mRootItem) {
-      HistoryDataSource* dataSource = [GoMenuHistoryDataSourceOwner sharedHistoryDataSource];
+      HistoryDataSource* dataSource = [HistoryMenuDataSourceOwner sharedHistoryDataSource];
       [dataSource loadLazily];
-      
+
       mRootItem = [[dataSource rootItem] retain];
     }
   }
-  
+
   [super menuWillBeDisplayed];
 }
 
@@ -437,7 +437,7 @@ static const unsigned int kMaxTitleLength = 50;
 
   NSMenuItem* todayMenuItem = [self todayMenuItem];
   [mTodayItem autorelease];
-  mTodayItem = [[(HistoryMenu*)[todayMenuItem submenu] rootItem] retain];
+  mTodayItem = [[(HistorySubmenu*)[todayMenuItem submenu] rootItem] retain];
 
   // Promote the kMaxTodayItems most recent items into the top-level menu.
   unsigned int maxItems = std::min(kMaxTodayItems, [[mTodayItem children] count]);
@@ -463,9 +463,14 @@ static const unsigned int kMaxTitleLength = 50;
 
     // Prevent the "Earlier Today" menu from showing the promoted items,
     // and remove it if nothing is left.
-    [(HistoryMenu*)[todayMenuItem submenu] setNumLeadingItemsToIgnore:maxItems];
-    if ([[mTodayItem children] count] <= maxItems)
-      [self removeItem:todayMenuItem];
+    [(HistorySubmenu*)[todayMenuItem submenu] setNumLeadingItemsToIgnore:maxItems];
+    if ([[mTodayItem children] count] <= maxItems) {
+      int todayMenuIndex = [self indexOfItem:todayMenuItem];
+      [self removeItemAtIndex:todayMenuIndex];
+      // If that was the only day folder, we have an extra separator now.
+      if ([[self itemAtIndex:todayMenuIndex] isSeparatorItem])
+        [self removeItemAtIndex:todayMenuIndex];
+    }
   }
 }
 
@@ -475,7 +480,7 @@ static const unsigned int kMaxTitleLength = 50;
   NSMenuItem* menuItem;
   while ((menuItem = [menuEnumerator nextObject])) {
     if ([[menuItem submenu] respondsToSelector:@selector(rootItem)]) {
-      HistoryItem* historyItem = [(HistoryMenu*)[menuItem submenu] rootItem];
+      HistoryItem* historyItem = [(HistorySubmenu*)[menuItem submenu] rootItem];
       if ([historyItem respondsToSelector:@selector(isTodayCategory)] &&
           [(HistoryDateCategoryItem*)historyItem isTodayCategory])
       {
