@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Berend Cornelius <berend.cornelius@sun.com>
+ *   Philipp Kewisch <mozilla@kewis.ch>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -63,6 +64,30 @@ function initAgendaListbox() {
     this.tomorrow = new Synthetic(showTomorrowHeader, 1);
     this.soon = new Synthetic(showSoonHeader, 5);
     this.periods = [this.today, this.tomorrow, this.soon];
+
+    // Make sure the agenda listbox is unloaded
+    var self = this;
+    window.addEventListener("unload",
+                            function unload_agendaListbox() {
+                                self.uninit();
+                            },
+                            false);
+};
+
+agendaListbox.uninit =
+function uninit() {
+    if (this.calendar) {
+        this.calendar.removeObserver(this.calendarObserver);
+    }
+
+    for each (var period in this.periods) {
+        if (period.listItem) {
+            period.listItem.getCheckbox()
+                  .removeEventListener("CheckboxStateChange",
+                                       this.onCheckboxChange,
+                                       true);
+        }
+    }
 };
 
 agendaListbox.addPeriodListItem =
@@ -76,6 +101,7 @@ function addPeriodListItem(aPeriod, aItemId) {
 
 agendaListbox.removePeriodListItem =
 function removePeriodListItem(aPeriod) {
+    aPeriod.listItem.getCheckbox().removeEventListener("CheckboxStateChange", this.onCheckboxChange, true);
     if (aPeriod.listItem) {
         this.agendaListboxControl.removeChild(aPeriod.listItem);
         aPeriod.listItem = null;
@@ -454,6 +480,7 @@ function setupCalendar() {
         this.calendar = getCompositeCalendar();
     }
     if (this.calendar) {
+        // XXX This always gets called, does that happen on purpose?
         this.calendar.removeObserver(this.calendarObserver);
     }
     this.calendar.addObserver(this.calendarObserver);
