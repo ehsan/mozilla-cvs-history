@@ -39,7 +39,7 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
-<?xml-stylesheet href="chrome://calendar/content/datetimepickers/datetimepickers.css" ?>
+<?xml-stylesheet href="chrome://calendar/content/widgets/calendar-widget-bindings.css" ?>
 <?xml-stylesheet href="chrome://calendar/content/calendar-event-dialog.css" type="text/css"?>
 
 <!DOCTYPE dialog
