@@ -101,10 +101,12 @@ function addPeriodListItem(aPeriod, aItemId) {
 
 agendaListbox.removePeriodListItem =
 function removePeriodListItem(aPeriod) {
-    aPeriod.listItem.getCheckbox().removeEventListener("CheckboxStateChange", this.onCheckboxChange, true);
     if (aPeriod.listItem) {
-        this.agendaListboxControl.removeChild(aPeriod.listItem);
-        aPeriod.listItem = null;
+        aPeriod.listItem.getCheckbox().removeEventListener("CheckboxStateChange", this.onCheckboxChange, true);
+        if (aPeriod.listItem) {
+            this.agendaListboxControl.removeChild(aPeriod.listItem);
+            aPeriod.listItem = null;
+        }
     }
 }
 
@@ -205,7 +207,7 @@ function editSelectedItem(aEvent) {
     var listItem  = document.getElementById("agenda-listbox").selectedItem;
     if (listItem) {
         modifyEventWithDialog(getOccurrenceOrParent(listItem.getItem()));
-    }    
+    }
 }
 
 agendaListbox.findPeriodsForItem =
@@ -417,7 +419,7 @@ function createNewEvent(aEvent) {
         return;
     }
 
-    // Create new event for the date currently displayed in the agenda. Setting 
+    // Create new event for the date currently displayed in the agenda. Setting
     // isDate = true automatically makes the start time be the next full hour.
     var eventStart = this.today.start.clone();
     eventStart.isDate = true;

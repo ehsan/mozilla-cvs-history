@@ -46,7 +46,7 @@
            extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
     <resources>
       <stylesheet src="chrome://calendar/skin/widgets/calendar-widgets.css"/>
-    </resources>               
+    </resources>
     <content>
       <xul:treenode-checkbox class="agenda-checkbox" anonid="agenda-checkbox-widget"
                                                    flex="1"
