@@ -247,7 +247,7 @@
                     <menupopup>
                       <menuitem label="&priority.level.none;"   value="0"/>
                       <menuitem label="&priority.level.low;"    value="9"/>
-                      <menuitem label="&priority.level.medium;" value="5"/>
+                      <menuitem label="&priority.level.normal;" value="5"/>
                       <menuitem label="&priority.level.high;"   value="1"/>
                     </menupopup>
                   </menulist>
