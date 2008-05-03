@@ -53,14 +53,6 @@ calendar-attendee-item {
   color: grey;
 }
 
-label.label {
-  text-align: right;
-}
-
 .warning-text-class {
   color : red;
-}
-
-.checkbox-no-label > .checkbox-label-box {
-  display: none;
 }
