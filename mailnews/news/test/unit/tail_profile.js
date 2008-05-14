@@ -1,6 +1,2 @@
-function cleanup() {
-  gc();
-
-  if (profileDir.exists())
-    profileDir.remove(true);
-}
+// Import the global mailnews tear-down script
+do_import_script("mailnews/test/resources/mailCleanup.js");
