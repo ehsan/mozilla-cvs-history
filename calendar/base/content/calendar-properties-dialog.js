@@ -1,5 +1,4 @@
-/* -*- Mode: javascript; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * ***** BEGIN LICENSE BLOCK *****
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -15,7 +14,7 @@
  * The Original Code is Calendar Code.
  *
  * The Initial Developer of the Original Code is
- * Michiel van Leeuwen <mvl@exedo.nl>.
+ *   Michiel van Leeuwen <mvl@exedo.nl>.
  * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
@@ -38,18 +37,16 @@
  * ***** END LICENSE BLOCK ***** */
 
 /**
- * To open the window, use an object as argument.
- * This object needs two properties: calendar and onOk.
- * (where onOk can be null)
+ * The calendar to modify, is retrieved from window.arguments[0].calendar
  */
-
 var gCalendar;
 
-function loadCalendarPropertiesDialog()
-{
-    var args = window.arguments[0];
-
-    gCalendar = args.calendar;
+/**
+ * To open the window, use an object as argument. The object needs a 'calendar'
+ * attribute that passes the calendar in question.
+ */
+function onLoad() {
+    gCalendar = window.arguments[0].calendar;
 
     document.getElementById("calendar-name").value = gCalendar.name;
     var calColor = gCalendar.getProperty('color');
@@ -79,32 +76,25 @@ function loadCalendarPropertiesDialog()
     sizeToContent();
 }
 
-function onOKCommand()
-{
-   gCalendar.name = document.getElementById("calendar-name").value;
+/**
+ * Called when the dialog is accepted, to save settings
+ */
+function onAcceptDialog() {
+    // Save calendar name
+    gCalendar.name = document.getElementById("calendar-name").value;
 
-   var newUri = makeURL(document.getElementById("calendar-uri").value);
-   if (!newUri.equals(gCalendar.uri))
-       gCalendar.uri = newUri;
+    // Save calendar color
+    gCalendar.setProperty("color", document.getElementById("calendar-color").color);
 
-   gCalendar.setProperty('color', document.getElementById("calendar-color").color);
-   gCalendar.readOnly = document.getElementById("read-only").checked;
-   var fireAlarms = document.getElementById("fire-alarms").checked;
-   gCalendar.setProperty('suppressAlarms', !fireAlarms);
-   gCalendar.setProperty("cache.enabled", document.getElementById("cache").checked);
+    // Save readonly state
+    gCalendar.readOnly = document.getElementById("read-only").checked;
 
-   // tell standard dialog stuff to close the dialog
-   return true;
-}
+    // Save supressAlarms
+    gCalendar.setProperty("suppressAlarms", !document.getElementById("fire-alarms").checked);
 
-function checkURL() {
-    document.getElementById("calendar-properties-dialog")
-            .getButton("accept").removeAttribute("disabled");
-    try {
-        makeURL(document.getElementById("calendar-uri").value);
-    }
-    catch (ex) {
-        document.getElementById("calendar-properties-dialog")
-                .getButton("accept").setAttribute("disabled", true);
-    }
+    // Save cache options
+    gCalendar.setProperty("cache.enabled", document.getElementById("cache").checked);
+
+    // tell standard dialog stuff to close the dialog
+    return true;
 }
