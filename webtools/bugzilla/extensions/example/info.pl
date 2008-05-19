@@ -17,15 +17,25 @@
 # Everything Solved, Inc. All Rights Reserved.
 #
 # Contributor(s): Max Kanat-Alexander <mkanat@bugzilla.org>
+#                 Colin Ogilvie <colin.ogilvie@gmail.com>
 
-# This script does some code to return a version number. However,
-# most plugins will probably just want to return a raw string.
-# To do that, the only contents of the file should be the string
-# on a single line, like:
+# This script does some code to return a hash about the Extension.
+# You are required to return a hash containing the Extension version
+# You can optionaally add any other values to the hash too, as long as
+# they begin with an x_
 #
-# '1.2.3';
+# Eg:
+# {
+#   'version' => '0.1', # required
+#   'x_name'  => 'Example Extension'
+# }
 
 use strict;
 no warnings qw(void); # Avoid "useless use of a constant in void context"
 use Bugzilla::Constants;
-BUGZILLA_VERSION;
+
+{
+	'version' => BUGZILLA_VERSION,
+	'x_blah'  => 'Hello....',
+
+};
