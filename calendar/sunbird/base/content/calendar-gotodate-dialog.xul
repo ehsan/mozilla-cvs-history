@@ -19,7 +19,9 @@
    - Portions created by the Initial Developer are Copyright (C) 2001
    - the Initial Developer. All Rights Reserved.
    -
-   - Contributor(s): Mike Potter <mikep@oeone.com>
+   - Contributor(s):
+   -   Mike Potter <mikep@oeone.com>
+   -   Martin Schroeder <mschroeder@mozilla.x-home.org>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,47 +37,27 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<?xml-stylesheet type="text/css"
- href="chrome://global/skin/global.css" ?>
-<?xml-stylesheet type="text/css"
- href="chrome://calendar/content/datetimepickers/datetimepickers.css" ?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://calendar/content/datetimepickers/datetimepickers.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-
-<!-- CSS File with all styles specific to the dialog -->
-<?xml-stylesheet type="text/css"
- href="chrome://calendar/skin/dialogOverlay.css" ?>
-
-<!-- DTD File with all strings specific to the calendar -->
-<!DOCTYPE dialog 
-[
+<!DOCTYPE dialog [
   <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/global.dtd" > %dtd1;
   <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd2;
 ]>
 
-
-<dialog
-  id="calendar-date-dialog"
-  title="&calendar.flat.topbar.choosedate;"
-  onload="loadGoToDateDialog();"
-  buttons="accept,cancel"
-  ondialogaccept="return onOKCommand();"
-  ondialogcancel="return true;"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  xmlns:nc="http://home.netscape.com/NC-rdf#">
-
-  <!-- Javascript includes -->
-  <script type="application/x-javascript"
-   src="chrome://calendar/content/goToDateDialog.js"/>
-  <script type="application/x-javascript"
-   src="chrome://calendar/content/calUtils.js"/>
-
-  <keyset id="dialogKeys"/>
-
-  <!-- The dialog -->
-
-  <!-- dialog-box: from dialogOverlay.xul -->
-
+<!-- When opening calendar-gotodate-dialog.xul, you can supply an object argument
+     that contains following named keys:
+     * callback - function that should be called with datepicker value as argument
+                  when clicking OK button
+     * date (optional) - initially selected date in datepicker -->
+<dialog id="calendar-gotodate-dialog"
+        title="&calendar.flat.topbar.choosedate;"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="document.getElementById('datepicker').value = window.arguments[0].date || new Date();"
+        buttons="accept,cancel"
+        ondialogaccept="window.arguments[0].callback(document.getElementById('datepicker').value);"
+        ondialogcancel="return true;">
+  <script type="application/x-javascript" src="chrome://calendar/content/calUtils.js"/>
   <hbox align="center">
     <label control="datepicker">&calendar.flat.topbar.choosedate;</label>
     <datepicker id="datepicker"/>
