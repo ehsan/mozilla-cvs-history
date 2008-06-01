@@ -45,7 +45,7 @@ PL_strcasestr(const char *big, const char *little)
     if( ((const char *)0 == big) || ((const char *)0 == little) ) return (char *)0;
     if( ((char)0 == *big) || ((char)0 == *little) ) return (char *)0;
 
-    ll = PL_strlen(little);
+    ll = strlen(little);
 
     for( ; *big; big++ )
         /* obvious improvement available here */
@@ -64,8 +64,8 @@ PL_strcaserstr(const char *big, const char *little)
     if( ((const char *)0 == big) || ((const char *)0 == little) ) return (char *)0;
     if( ((char)0 == *big) || ((char)0 == *little) ) return (char *)0;
 
-    bl = PL_strlen(big);
-    ll = PL_strlen(little);
+    bl = strlen(big);
+    ll = strlen(little);
     if( bl < ll ) return (char *)0;
     p = &big[ bl - ll ];
 
@@ -85,7 +85,7 @@ PL_strncasestr(const char *big, const char *little, PRUint32 max)
     if( ((const char *)0 == big) || ((const char *)0 == little) ) return (char *)0;
     if( ((char)0 == *big) || ((char)0 == *little) ) return (char *)0;
 
-    ll = PL_strlen(little);
+    ll = strlen(little);
     if( ll > max ) return (char *)0;
     max -= ll;
     max++;
@@ -107,7 +107,7 @@ PL_strncaserstr(const char *big, const char *little, PRUint32 max)
     if( ((const char *)0 == big) || ((const char *)0 == little) ) return (char *)0;
     if( ((char)0 == *big) || ((char)0 == *little) ) return (char *)0;
 
-    ll = PL_strlen(little);
+    ll = strlen(little);
 
     for( p = big; max && *p; p++, max-- )
         ;
