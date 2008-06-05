@@ -14,8 +14,8 @@
  * The Original Code is Sun Microsystems code.
  *
  * The Initial Developer of the Original Code is
- * Sun Microsystems, Inc.
- * Portions created by the Initial Developer are Copyright (C) 2007
+ *   Sun Microsystems, Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -34,71 +34,27 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#if !defined(INCLUDED_CAL_TIMEZONESERVIC_H)
-#define INCLUDED_CAL_TIMEZONESERVIC_H
+#if !defined(INCLUDED_CAL_TIMEZONE_H)
+#define INCLUDED_CAL_TIMEZONE_H
 
 #include "nsCOMPtr.h"
-#include "calITimezoneProvider.h"
-#include "nsInterfaceHashtable.h"
+#include "calITimezone.h"
 #include "calUtils.h"
-
-extern "C" {
-#include "ical.h"
-}
 
 class calTimezone : public calITimezone,
                     public cal::XpcomBase
 {
 public:
-    enum {
-        IS_FOREIGN   = 0,
-        IS_INTRINSIC = 1,
-        IS_UTC       = 2,
-        IS_FLOATING  = 4
-    };
-
-    calTimezone(int flags,
-                calIIcalComponent * component,
-                nsCString const& tzid,
-                nsCString const& latitude = nsCString(),
-                nsCString const& longitude = nsCString())
-        : mComponent(component),
-          mTzid(tzid),
-          mLatitude(latitude),
-          mLongitude(longitude),
-          mIsIntrinsic(flags & (IS_INTRINSIC | IS_UTC | IS_FLOATING)),
-          mIsFloating(flags & IS_FLOATING),
-          mIsUTC(flags & IS_UTC) {}
+    calTimezone(nsCString const& tzid, calIIcalComponent * component)
+        : mTzid(tzid),
+          mIcalComponent(component) {}
 
     NS_DECL_ISUPPORTS
     NS_DECL_CALITIMEZONE
 
-private:
-    nsCOMPtr<calIIcalComponent> const mComponent;
+protected:
     nsCString const                   mTzid;
-    nsCString const                   mLatitude;
-    nsCString const                   mLongitude;
-    PRBool const                      mIsIntrinsic;
-    PRBool const                      mIsFloating;
-    PRBool const                      mIsUTC;
+    nsCOMPtr<calIIcalComponent> const mIcalComponent;
 };
 
-class calTimezoneService : public calITimezoneService,
-                           public cal::XpcomBase
-{
-public:
-    calTimezoneService();
-
-    NS_DECL_ISUPPORTS
-    NS_DECL_CALITIMEZONEPROVIDER
-    NS_DECL_CALITIMEZONESERVICE
-
-private:
-    nsresult LatestTzId(const nsACString& tzid, nsACString& _retval);
-
-    nsInterfaceHashtable<nsCStringHashKey, calITimezone> mTzHash;
-    nsCOMPtr<calITimezone> const mUTC;
-    nsCOMPtr<calITimezone> const mFloating;
-};
-
-#endif // INCLUDED_CAL_TIMEZONESERVIC_H
+#endif // INCLUDED_CAL_TIMEZONE_H
