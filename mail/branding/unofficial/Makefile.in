@@ -11,15 +11,15 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is the Mozilla build system.
+# The Original Code is Thunderbird unofficial branding.
 #
 # The Initial Developer of the Original Code is
-# the Mozilla Foundation <http://www.mozilla.org/>.
-# Portions created by the Initial Developer are Copyright (C) 2007
+# Mozilla Messaging
+# Portions created by the Initial Developer are Copyright (C) 2008
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Henrik Skupin <hskupin@gmail.com>
+#   Mark Banner <bugzilla@standard8.plus.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,32 +35,19 @@
 #
 # ***** END LICENSE BLOCK *****
 
-add_makefiles "
-mail/Makefile
-mail/app/Makefile
-mail/app/profile/Makefile
-mail/base/Makefile
-mail/branding/unofficial/Makefile
-mail/branding/unofficial/locales/Makefile
-mail/locales/Makefile
-mail/components/Makefile
-mail/components/compose/Makefile
-mail/components/addrbook/Makefile
-mail/components/preferences/Makefile
-mail/components/build/Makefile
-mail/components/shell/Makefile
-mail/components/shell/public/Makefile
-mail/components/phishing/Makefile
-mail/extensions/Makefile
-mail/extensions/smime/Makefile
-mail/installer/Makefile
-mail/installer/windows/Makefile
-mail/themes/Makefile
-mail/themes/pinstripe/mail/Makefile
-mail/themes/pinstripe/editor/Makefile
-mail/themes/pinstripe/Makefile
-mail/themes/qute/mail/Makefile
-mail/themes/qute/editor/Makefile
-mail/themes/qute/Makefile
-"
+# Branding Makefile
+#  - Currently just deals with locales, other items will be moved later into
+#    this directory.
 
+DEPTH = ../../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+DIRS = \
+	locales \
+	$(NULL)
+
+include $(topsrcdir)/config/rules.mk
