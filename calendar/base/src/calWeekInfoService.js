@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Berend Cornelius <berend.cornelius@sun.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,20 +36,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-function calWeekTitleService() {
+function calWeekInfoService() {
 }
 
-calWeekTitleService.prototype.QueryInterface =
+calWeekInfoService.prototype.QueryInterface =
 function QueryInterface(aIID) {
     if (!aIID.equals(Components.interfaces.nsISupports) &&
-        !aIID.equals(Components.interfaces.calIWeekTitleService)) {
+        !aIID.equals(Components.interfaces.calIWeekInfoService)) {
         throw Components.results.NS_ERROR_NO_INTERFACE;
     }
 
     return this;
 };
 
-calWeekTitleService.prototype.getWeekTitle =
+calWeekInfoService.prototype.getWeekTitle =
 function getWeekTitle(aDateTime) {
     /**
      * This implementation is based on the ISO 8601 standard.  
@@ -116,3 +117,43 @@ function getWeekTitle(aDateTime) {
     var weekNumber = Math.ceil(thisWeeksThursday/7);
     return weekNumber;
 };
+
+/**
+ * gets the first day of a week of a passed day under consideration 
+ * of the preference setting "calendar.week.start"
+ *
+ * @param aDate     a date time object
+ * @return          a dateTime-object denoting the first day of the week
+ */
+calWeekInfoService.prototype.getStartOfWeek =
+function getStartOfWeek(aDate) {
+    var date = aDate.startOfWeek.clone()
+    return adjustPrefWeekStart(date);
+};
+
+/**
+ * gets the last day of a week of a passed day under consideration 
+ * of the preference setting "calendar.week.start"
+ *
+ * @param aDate     a date time object
+ * @return          a dateTime-object denoting the first day of the week
+ */
+calWeekInfoService.prototype.getEndOfWeek =
+function getEndOfWeek(aDate) {
+    var date = aDate.endOfWeek.clone()
+    return adjustPrefWeekStart(date);
+};
+
+// helper function used by "getStartOfWeek()" and "getEndOfWeek()"
+function adjustPrefWeekStart(aDate){
+    // startOfWeek always returns a Sunday.  Adjust if the user
+    // chose a different day to start weeks on.
+    var weekStartOffset = getPrefSafe("calendar.week.start", 0);
+    if (weekStartOffset != 0) {
+        aDate.day += weekStartOffset;
+        if (aDate.weekday < weekStartOffset) {
+            aDate.day -= 7;
+        }
+    }
+    return aDate;
+}

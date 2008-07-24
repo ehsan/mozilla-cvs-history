@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Berend Cornelius <berend.cornelius@sun.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -46,8 +47,8 @@ interface calIDateTime;
  * generate week titles aimed at special cases (like weeknumbers for a
  * schoolyear)
  */
-[scriptable, uuid(6bcf8c57-f066-4eba-ab48-950c9fffd9ff)]
-interface calIWeekTitleService: nsISupports
+[scriptable, uuid(650fd33b-ebf4-46fa-b9ca-dd80b2451498)]
+interface calIWeekInfoService: nsISupports
 {
   /**
    * Return the week title. It's meant to be displayed.
@@ -62,4 +63,25 @@ interface calIWeekTitleService: nsISupports
    *            on sunday.
    */
   AString getWeekTitle (in calIDateTime dataTime);
+
+
+/**
+ * Gets the first day of a week of a passed day under consideration 
+ * of the preference setting "calendar.week.start"
+ *
+ * @param aDate     The dateTime to get get the start of the week for
+ * @return          A dateTime-object denoting the first day of the week
+ */
+calIDateTime getStartOfWeek( in calIDateTime dateTime );
+
+
+/**
+ * Gets the last day of a week of a passed day under consideration
+ * of the preference setting "calendar.week.start"
+ *
+ * @param aDate     The dateTime to get get the last day of the week for
+ * @return          A dateTime-object denoting the last day of the week
+ */
+calIDateTime getEndOfWeek( in calIDateTime dateTime );
+
 };
