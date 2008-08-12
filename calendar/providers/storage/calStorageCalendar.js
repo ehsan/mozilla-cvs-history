@@ -1463,15 +1463,15 @@ calStorageCalendar.prototype = {
             this.mDBTwo,
             "SELECT * FROM cal_attendees " +
             "WHERE item_id = :item_id AND cal_id = " + this.mCalId +
-            "AND recurrence_id IS NULL"
+            " AND recurrence_id IS NULL"
             );
 
         this.mSelectAttendeesForItemWithRecurrenceId = createStatement(
             this.mDBTwo,
             "SELECT * FROM cal_attendees " +
             "WHERE item_id = :item_id AND cal_id = " + this.mCalId +
-            "AND recurrence_id = :recurrence_id " +
-            "AND recurrence_id_tz = :recurrence_id_tz"
+            " AND recurrence_id = :recurrence_id" +
+            " AND recurrence_id_tz = :recurrence_id_tz"
             );
 
         this.mSelectPropertiesForItem = createStatement(
@@ -1484,15 +1484,15 @@ calStorageCalendar.prototype = {
             this.mDBTwo,
             "SELECT * FROM cal_properties " +
             "WHERE item_id = :item_id AND cal_id = " + this.mCalId +
-            "AND recurrence_id = :recurrence_id " +
-            "AND recurrence_id_tz = :recurrence_id_tz"
+            " AND recurrence_id = :recurrence_id" +
+            " AND recurrence_id_tz = :recurrence_id_tz"
             );
 
         this.mSelectRecurrenceForItem = createStatement(
             this.mDBTwo,
             "SELECT * FROM cal_recurrence " +
             "WHERE item_id = :item_id AND cal_id = " + this.mCalId +
-            "ORDER BY recur_index"
+            " ORDER BY recur_index"
             );
 
         this.mSelectAttachmentsForItem = createStatement(
