@@ -1,3 +1,5 @@
+from twisted.python import log
+
 from buildbot.process.factory import BuildFactory
 from buildbot.steps.shell import Compile, ShellCommand, WithProperties
 from buildbot.steps.source import Mercurial
@@ -129,7 +131,8 @@ class MercurialBuildFactory(BuildFactory):
         # but for other purposes we only need to know linux/win32/macosx
         # platform can be things like: linux, win32-debug, macosx-release, etc.
         self.mozconfig = 'configs/%s/%s/mozconfig' % (self.configSubDir,
-                                                      self.platform)
+                                                      platform)
+        log.msg("\n\n" + self.mozconfig + "\n\n")
         # we don't need the extra cruft in 'platform' anymore
         self.platform = platform.split('-')[0].replace('64', '')
         assert self.platform in ('linux', 'win32', 'macosx')
@@ -221,9 +224,7 @@ class MercurialBuildFactory(BuildFactory):
         )
         self.addStep(ShellCommand,
          # cp configs/mozilla2/$platform/mozconfig .mozconfig
-         command=['cp', 'configs/%s/%s/mozconfig' % (self.configSubDir,
-                                                     self.platform),
-                  '.mozconfig'],
+         command=['cp', self.mozconfig, '.mozconfig'],
          description=['copying', 'mozconfig'],
          descriptionDone=['copy', 'mozconfig'],
          haltOnFailure=True
