@@ -784,50 +784,50 @@ function commonUpdateReminder() {
 }
 
 function updateLink() {
-    var itemUrlString = (window.calendarItem || window.item).getProperty("URL");
+    var itemUrlString = (window.calendarItem || window.item).getProperty("URL") || "";
     var linkCommand = document.getElementById("cmd_toggle_link");
 
-    function hideOrShow(aBool, aDisable) {
+    function hideOrShow(aBool) {
         setElementValue("event-grid-link-row", !aBool && "true", "hidden");
         var separator = document.getElementById("event-grid-link-separator");
         if (separator) {
             // The separator is not there in the summary dialog
             setElementValue("event-grid-link-separator", !aBool && "true", "hidden");
         }
-
-        if (linkCommand) {
-            setElementValue(linkCommand, aDisable && "true", "disabled");
-        }
     }
 
-    if (linkCommand && linkCommand.getAttribute("checked") != "true") {
-        hideOrShow(false, false);
-    } else if (itemUrlString && itemUrlString.length) {
+    if (linkCommand) {
+        // Disable if there is no url
+        setElementValue(linkCommand,
+                        !itemUrlString.length && "true",
+                        "disabled");
+    }
+        
+    if ((linkCommand && linkCommand.getAttribute("checked") != "true") ||
+        !itemUrlString.length) {
+        // Hide if there is no url, or the menuitem was chosen so that the url
+        // should be hidden
+        hideOrShow(false);
+    } else {
         var handler, uri;
         try {
             uri = makeURL(itemUrlString);
             handler = getIOService().getProtocolHandler(uri.scheme);
         } catch (e) {
             // No protocol handler for the given protocol, or invalid uri
-            hideOrShow(false, true);
+            hideOrShow(false);
             return;
         }
 
-        if (calInstanceOf(handler, Components.interfaces.nsIExternalProtocolHandler)) {
-            // Only show if there is an external app for this scheme
-            hideOrShow(handler.externalAppExistsForScheme(uri.scheme));
-        } else {
-            // Internal protocol handler, show it
-            hideOrShow(true);
-        }
-
+        // Only show if its either an internal protcol handler, or its external
+        // and there is an external app for the scheme
+        hideOrShow(!calInstanceOf(handler, Components.interfaces.nsIExternalProtocolHandler) ||
+                   handler.externalAppExistsForScheme(uri.scheme));
 
         setTimeout(function() {
           // HACK the url-link doesn't crop when setting the value in onLoad
           setElementValue("url-link", itemUrlString);
           setElementValue("url-link", itemUrlString, "href");
         }, 0);
-    } else {
-        hideOrShow(false, true);
     }
 }
