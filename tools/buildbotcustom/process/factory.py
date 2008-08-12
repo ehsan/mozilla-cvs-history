@@ -337,7 +337,7 @@ class MercurialBuildFactory(BuildFactory):
                   '--depth=15 --use-address /dev/null sdleak.log '
                   '> sdleak.tree']
         )
-        if self.platform not in ('macosx', 'linux'):
+        if self.platform in ('macosx', 'linux'):
             self.addStep(ShellCommand,
              env=self.env,
              workdir='.',
