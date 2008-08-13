@@ -284,7 +284,8 @@ calItipEmailTransport.prototype = {
                                             mailFile,
                                             true  /* deleteSendFileOnCompletion */,
                                             false /* digest_p */,
-                                            Components.interfaces.nsIMsgSend.nsMsgDeliverNow,
+                                            (getIOService().offline ? Components.interfaces.nsIMsgSend.nsMsgQueueForLater
+                                                                    : Components.interfaces.nsIMsgSend.nsMsgDeliverNow),
                                             null  /* nsIMsgDBHdr msgToReplace */,
                                             null  /* nsIMsgSendListener aListener */,
                                             null  /* nsIMsgStatusFeedback aStatusFeedback */,
