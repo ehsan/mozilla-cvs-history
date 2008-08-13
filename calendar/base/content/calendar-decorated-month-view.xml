@@ -158,10 +158,10 @@
                     viewElement.displayDaysOff = !this.mWorkdaysOnly;
 
                     aDate = aDate.getInTimezone(viewElement.timezone);
-                    viewElement.showDate(aDate);
                     var toolTips = calGetStringArray("calendar",
                                                       ["oneMonthBack", "gotoToday", "oneMonthForward"]);
                     this.setDateRange(aDate.startOfMonth, aDate.endOfMonth, toolTips);
+                    viewElement.showDate(aDate);
                 ]]></body>
             </method>
             <method name="getRangeDescription">
