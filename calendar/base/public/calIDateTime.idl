@@ -239,8 +239,14 @@ interface calIDateTime : nsISupports
   // Some helper getters for calculating useful ranges
   //
 
-  // Return the day of the week of the given time. Sunday is 1
+  /**
+   * Returns SUNDAY of the given datetime object's week.
+   */
   readonly attribute calIDateTime startOfWeek;
+
+  /**
+   * Returns SATURDAY of the datetime object's week.
+   */
   readonly attribute calIDateTime endOfWeek;
 
   // the start/end of the current object's month

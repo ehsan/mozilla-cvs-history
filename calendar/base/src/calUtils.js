@@ -180,6 +180,24 @@ function getFreeBusyService() {
     return getFreeBusyService.mObject;
 }
 
+/* Shortcut to week info service */
+function getWeekInfoService() {
+    if (getWeekInfoService.mObject === undefined) {
+        getWeekInfoService.mObject = Components.classes["@mozilla.org/calendar/weekinfo-service;1"]
+                                               .getService(Components.interfaces.calIWeekInfoService);
+    }
+    return getWeekInfoService.mObject;
+}
+
+/* Shortcut to date formatter service */
+function getDateFormatter() {
+    if (getDateFormatter.mObject === undefined) {
+        getDateFormatter.mObject = Components.classes["@mozilla.org/calendar/datetime-formatter;1"]
+                                             .getService(Components.interfaces.calIDateTimeFormatter);
+    }
+    return getDateFormatter.mObject;
+}
+
 /// @return the UTC timezone.
 function UTC() {
     if (UTC.mObject === undefined) {
@@ -1789,25 +1807,6 @@ function compareItemContent(aFirstItem, aSecondItem) {
     var firstIcalString = hashItem(aFirstItem);
     var secondIcalString = hashItem(aSecondItem);
     return (firstIcalString == secondIcalString);
-}
-
-var gWeekInfo = null;
-function getWeekInfoService() {
-    if (!gWeekInfo) {
-        gWeekInfo = Components.classes["@mozilla.org/calendar/weekinfo-service;1"]
-                   .getService(Components.interfaces.calIWeekInfoService);
-    }
-    return gWeekInfo;
-}
-
-
-var gDateFormatter = null;
-function getDateFormatter() {
-    if (!gDateFormatter) {
-        gDateFormatter = Components.classes["@mozilla.org/calendar/datetime-formatter;1"]
-                            .getService(Components.interfaces.calIDateTimeFormatter);
-    }
-    return gDateFormatter;
 }
 
 /**

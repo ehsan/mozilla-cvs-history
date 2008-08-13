@@ -131,7 +131,7 @@ interface calIDateTimeFormatter : nsISupports
      *      A String describing the interval in a legible form
      */
     AUTF8String formatInterval(in calIDateTime aStartDate,
-                                  in calIDateTime aEndDate);
+                               in calIDateTime aEndDate);
 
     /**
      * Get the month name

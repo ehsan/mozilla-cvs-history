@@ -1058,23 +1058,7 @@
       <method name="showDate">
         <parameter name="aDate"/>
         <body><![CDATA[
-          aDate = aDate.getInTimezone(this.mTimezone);
-
-          // We might need to do some adjusting here to make sure we still
-          // display whole month even with alternative week-start days
-          var startDate = aDate.startOfMonth;
-          var endDate = aDate.endOfMonth;
-          if (startDate.weekday < this.mWeekStartOffset) {
-            // Go back one week to make sure we display this day
-            startDate.day -= 7;
-          }
-
-          if (endDate.weekday < this.mWeekStartOffset) {
-            // Go back one week so we don't display any extra days
-            endDate.day -= 7;
-          }
-
-          this.setDateRange(startDate, endDate);
+          this.setDateRange(aDate.startOfMonth, aDate.endOfMonth);
           this.selectedDay = aDate;
         ]]></body>
       </method>
@@ -1083,12 +1067,8 @@
         <parameter name="aStartDate"/>
         <parameter name="aEndDate"/>
         <body><![CDATA[
-          if (this.mTimezone != aStartDate.timezone) {
-            aStartDate = aStartDate.getInTimezone(this.mTimezone);
-            aEndDate = aEndDate.getInTimezone(this.mTimezone);
-          }
-          this.mStartDate = getWeekInfoService().getStartOfWeek(aStartDate)
-          this.mEndDate = getWeekInfoService().getEndOfWeek(aEndDate);
+          this.mStartDate = getWeekInfoService().getStartOfWeek(aStartDate.getInTimezone(this.mTimezone))
+          this.mEndDate = getWeekInfoService().getEndOfWeek(aEndDate.getInTimezone(this.mTimezone));
           this.refresh();
         ]]></body>
       </method>
@@ -1231,8 +1211,9 @@
             this.mSelectedDayBox.box.selected = false;
           }
 
-          if (!this.mStartDate || !this.mEndDate)
-            throw NS_ERROR_FAILURE;
+          if (!this.mStartDate || !this.mEndDate) {
+            throw Components.results.NS_ERROR_FAILURE;
+          }
 
           // Days that are not in the main month on display are displayed with
           // a gray background.  Unless the month actually starts on a Sunday,
