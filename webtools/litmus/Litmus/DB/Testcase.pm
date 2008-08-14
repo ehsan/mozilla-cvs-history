@@ -314,7 +314,7 @@ sub getNewTestcases() {
   __PACKAGE__->set_sql(NewTestcases => qq{
 				          SELECT tc.testcase_id, tc.summary, tc.creation_date, tc.last_updated, u.email
                                           FROM testcases tc, users u
-                                          WHERE tccreation_date>=?
+                                          WHERE tc.creation_date>=?
                                           AND tc.author_id=u.user_id
                                           ORDER BY tc.creation_date DESC
                                           LIMIT $match_limit
