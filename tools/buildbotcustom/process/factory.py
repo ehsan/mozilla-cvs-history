@@ -94,7 +94,7 @@ class MercurialBuildFactory(BuildFactory):
                  updatePlatform=None, downloadBaseURL=None, ausUser=None,
                  ausHost=None, nightly=False, leakTest=False, codesighs=True,
                  uploadPackages=True, uploadSymbols=True, dependToDated=True,
-                 **kwargs):
+                 createSnippet=False, **kwargs):
         BuildFactory.__init__(self, **kwargs)
         self.env = env
         self.objdir = objdir
@@ -120,6 +120,7 @@ class MercurialBuildFactory(BuildFactory):
         self.uploadPackages = uploadPackages
         self.uploadSymbols = uploadSymbols
         self.dependToDated = dependToDated
+        self.createSnippet = createSnippet
 
         if self.uploadPackages:
             assert stageServer and stageUsername and stageSshKey
@@ -171,7 +172,8 @@ class MercurialBuildFactory(BuildFactory):
         if self.codesighs:
             self.addCodesighsSteps()
         if self.nightly:
-            self.addUpdateSteps()
+            if self.createSnippet:
+                self.addUpdateSteps()
             if self.uploadSymbols:
                 self.addSymbolsSteps()
         self.addCleanupSteps()
