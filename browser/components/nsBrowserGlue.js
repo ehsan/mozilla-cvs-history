@@ -797,3 +797,4 @@ BrowserGlue.prototype = {
 function NSGetModule(aCompMgr, aFileSpec) {
   return XPCOMUtils.generateModule([BrowserGlue]);
 }
+
