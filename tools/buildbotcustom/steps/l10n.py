@@ -189,7 +189,8 @@ class RepackFactory(buildbot.util.ComparableMixin):
             steps.append(ShellCommand(command=['mkdir', '-p', 'l10n', 'obj/dist'],
                                       flunkOnFailure=False))
             steps.append(Compile(command=['../configure', '--enable-application=browser',
-                                          '--disable-compile-environment'],
+                                          '--disable-compile-environment',
+                                          '--with-l10n-base=../l10n'],
                                  workdir='build/obj',
                                  haltOnFailure=True))
             steps.append(ShellCommand(command=['wget', '-O',
