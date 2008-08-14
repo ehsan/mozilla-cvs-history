@@ -93,7 +93,8 @@ class MercurialBuildFactory(BuildFactory):
                  stageBasePath=None, ausBaseUploadDir=None,
                  updatePlatform=None, downloadBaseURL=None, ausUser=None,
                  ausHost=None, nightly=False, leakTest=False, codesighs=True,
-                 uploadPackages=True, dependToDated=True, **kwargs):
+                 uploadPackages=True, uploadSymbols=True, dependToDated=True,
+                 **kwargs):
         BuildFactory.__init__(self, **kwargs)
         self.env = env
         self.objdir = objdir
@@ -117,6 +118,7 @@ class MercurialBuildFactory(BuildFactory):
         self.leakTest = leakTest
         self.codesighs = codesighs
         self.uploadPackages = uploadPackages
+        self.uploadSymbols = uploadSymbols
         self.dependToDated = dependToDated
 
         if self.uploadPackages:
@@ -170,7 +172,8 @@ class MercurialBuildFactory(BuildFactory):
             self.addCodesighsSteps()
         if self.nightly:
             self.addUpdateSteps()
-            self.addSymbolsSteps()
+            if self.uploadSymbols:
+                self.addSymbolsSteps()
         self.addCleanupSteps()
 
     def addBuildSteps(self):
