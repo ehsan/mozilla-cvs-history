@@ -377,7 +377,7 @@ calDavCalendar.prototype = {
         aItem.generation = 1;
 
         var httpchannel = calPrepHttpChannel(itemUri,
-                                             aItem.icalString,
+                                             this.getSerializedItem(aItem),
                                              "text/calendar; charset=utf-8",
                                              this);
 
