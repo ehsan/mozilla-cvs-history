@@ -142,7 +142,8 @@ class RepackFactory(buildbot.util.ComparableMixin):
                      'localesRepoURL',
                      'repackLocation',
                      'mainBranch',
-                     'localesBranch']
+                     'localesBranch',
+                     'extraConfigureArgs']
 
     # This dummy attribute exists so that buildbot configuration can succeed
     steps = ()
@@ -150,7 +151,7 @@ class RepackFactory(buildbot.util.ComparableMixin):
     repackFile = 'firefox-3.1a2pre.en-US.linux-i686.tar.bz2'
 
     def __init__(self, mainRepoURL, localesRepoURL, repackLocation,
-                 mainBranch, localesBranch):
+                 mainBranch, localesBranch, extraConfigureArgs=[]):
         """
         @param mainRepoURL: the repoURL to check out the main codebase
         @param localesRepoURL: the repoURL pattern to check out localized
@@ -162,6 +163,8 @@ class RepackFactory(buildbot.util.ComparableMixin):
         @param localesBranch:  the branch name used for Changes to
                                localizations. These Changes must have a .locale
                                property.
+        @param extraConfigureArgs: any extra configure arguments specific to
+                               this build
         """
         
         self.mainRepoURL = mainRepoURL
@@ -169,6 +172,7 @@ class RepackFactory(buildbot.util.ComparableMixin):
         self.repackLocation = repackLocation
         self.mainBranch = mainBranch
         self.localesBranch = localesBranch
+        self.extraConfigureArgs = extraConfigureArgs
 
     def newBuild(self, requests):
         """Create a list of steps to build these possibly coalesced requests.
@@ -188,9 +192,13 @@ class RepackFactory(buildbot.util.ComparableMixin):
                                       flunkOnFailure=False))
             steps.append(ShellCommand(command=['mkdir', '-p', 'l10n', 'obj/dist'],
                                       flunkOnFailure=False))
-            steps.append(Compile(command=['../configure', '--enable-application=browser',
+
+            configureArgs = ['../configure', '--enable-application=browser',
                                           '--disable-compile-environment',
-                                          '--with-l10n-base=../l10n'],
+                                          '--with-l10n-base=../l10n']
+            configureArgs.extend(self.extraConfigureArgs)
+
+            steps.append(Compile(command=configureArgs,
                                  workdir='build/obj',
                                  haltOnFailure=True))
             steps.append(ShellCommand(command=['wget', '-O',
