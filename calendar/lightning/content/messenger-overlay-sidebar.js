@@ -754,3 +754,39 @@ document.getElementById("displayDeck").
     addEventListener("select", LtnObserveDisplayDeckChange, true);
 
 document.addEventListener("load", ltnOnLoad, true);
+
+/**
+ * Sets up the message pane context menu. Even though the actual context menu
+ * is in messenger-overlay-toolbar.xul, this needs to be in a file that
+ * directly overlays messenger.xul or the functions will not be defined.
+ */
+function calSetupMsgPaneContext() {
+    var hasSelection = (GetFirstSelectedMessage() != null);
+
+    // Disable the convert menu altogether
+    setElementValue("messagePaneContext-calendar-convert-menu",
+                    !hasSelection && "true",
+                    "hidden");
+
+    return calSetupMsgPaneContext.tbSetupMsgPaneContext();
+}
+calSetupMsgPaneContext.tbSetupMsgPaneContext = fillMessagePaneContextMenu;
+var fillMessagePaneContextMenu = calSetupMsgPaneContext;
+
+/**
+ * Sets up the thread pane context menu. Even though the actual context menu
+ * is in messenger-overlay-toolbar.xul, this needs to be in a file that
+ * directly overlays messenger.xul or the functions will not be defined.
+ */
+function calSetupThreadPaneContext() {
+    var hasSelection = (GetFirstSelectedMessage() != null);
+
+    // Disable the convert menu altogether
+    setElementValue("threadPaneContext-calendar-convert-menu",
+                    !hasSelection && "true",
+                    "disabled");
+
+    return calSetupThreadPaneContext.tbSetupThreadPaneContext();
+}
+calSetupThreadPaneContext.tbSetupThreadPaneContext = fillThreadPaneContextMenu;
+var fillThreadPaneContextMenu = calSetupThreadPaneContext;
