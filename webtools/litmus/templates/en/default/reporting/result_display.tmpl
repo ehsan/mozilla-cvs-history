@@ -234,7 +234,8 @@ You must log in before you can leave comments.
     [% ELSE %]
 Anonymous
     [% END %]
- [% comment.submission_time.strftime("%Y-%m-%d %T %Z") | html %] -------</em></p>
+  at  [% comment.submission_time | html %] -------</em></p>
+
 
 <p>[% comment.comment | html %]</p>
 

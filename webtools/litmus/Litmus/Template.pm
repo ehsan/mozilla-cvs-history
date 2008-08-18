@@ -157,7 +157,7 @@ sub create {
             html => sub {
                 my ($data) = @_;
                 my $filtered = &Template::Filters::html_filter($data);
-                $filtered =~ s/(bug)\s+(\d+)/<a target=\'external_link\' href=\'${Litmus::Config::local_bug_url}\'$2\'>$1 $2<\/a>/ig; 
+                $filtered =~ s/(bug)\s+(\d+)/<a target=\'external_link\' href=\'${Litmus::Config::local_bug_url}$2\'>$1 $2<\/a>/ig; 
                 $filtered =~ s/(testcase|test)\s+(\d+)/<a target=\'external_link\' href=\'show_test.cgi?id=$2\'>$1 $2<\/a>/ig;
 
                 return $filtered;
