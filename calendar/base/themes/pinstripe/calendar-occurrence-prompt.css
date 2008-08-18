@@ -62,12 +62,13 @@
   border-bottom: 2px groove ThreeDFace;
 }
 
-#accept-buttons-box > button {
+.occurrence-accept-buttons {
+  list-style-image: url(chrome://calendar/skin/calendar-occurrence-prompt.png);
   margin: 10px 0px;
 }
 
-.occurrence-accept-buttons {
-  list-style-image: url(chrome://calendar/skin/calendar-occurrence-prompt.png);
+.occurrence-accept-buttons > .button-box > .button-text {
+  margin: 0 3px !important;
 }
 
 #accept-buttons-box[action="edit"] > #accept-occurrence-button {
