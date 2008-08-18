@@ -26,6 +26,7 @@ import os
 from os import path, chmod
 from time import localtime, strftime
 import re
+from urlparse import urljoin
 
 from twisted.python import log
 from twisted.internet import reactor
@@ -286,7 +287,7 @@ class MozillaTryServerHgClone(Mercurial):
     def startVC(self, branch, revision, patch):
         branch = self.getProperty('branch')
         if branch != 'PATCH_TRY' and branch != 'HG_TRY':
-            self.repourl = self.baseURL + '/' + branch
+            self.repourl = urljoin(self.baseURL, branch)
         else:
             self.repourl = self.getProperty('mozillaRepoPath')
 
