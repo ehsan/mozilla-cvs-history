@@ -359,7 +359,7 @@ function loadDialog(item) {
         var itemProp = item.getProperty("X-MOZ-SEND-INVITATIONS");
         sendInvitesCheckbox.checked = (item.calendar.getProperty("imip.identity") &&
                                        ((itemProp === null)
-                                        ? getPrefSafe("calendar.itip.sendemail", true)
+                                        ? getPrefSafe("calendar.itip.notify", true)
                                         : (itemProp == "TRUE")));
     }
 
@@ -1892,8 +1892,7 @@ function saveItem() {
         if (sendInvitesCheckbox.disabled || document.getElementById("event-grid-attendee-row-2").collapsed) {
             item.deleteProperty("X-MOZ-SEND-INVITATIONS");
         } else {
-            setItemProperty(item, "X-MOZ-SEND-INVITATIONS",
-                            sendInvitesCheckbox.checked ? "TRUE" : "FALSE");
+            item.setProperty("X-MOZ-SEND-INVITATIONS", sendInvitesCheckbox.checked ? "TRUE" : "FALSE");
         }
     }
 

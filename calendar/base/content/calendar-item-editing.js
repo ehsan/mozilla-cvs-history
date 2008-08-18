@@ -486,7 +486,7 @@ function checkAndSendItipMessage(aItem, aOpType, aOriginalItem) {
     }
 
     if (aOpType == Components.interfaces.calIOperationListener.DELETE) {
-        calSendItipMessage(aItem, "CANCEL", aItem.getAttendees({}));
+        calSendItipMessage(transport, aItem, "CANCEL", aItem.getAttendees({}));
         return;
     } // else ADD, MODIFY:
 
@@ -501,6 +501,7 @@ function checkAndSendItipMessage(aItem, aOpType, aOriginalItem) {
         // has this been a PARTSTAT change?
         var origInvitedAttendee = (aOriginalItem && aOriginalItem.getAttendeeById(invitedAttendee.id));
         if (aItem.organizer &&
+            (aItem.organizer.id.toLowerCase() != invitedAttendee.id.toLowerCase()) && // don't send response to yourself
             (!origInvitedAttendee ||
              (origInvitedAttendee.participationStatus != invitedAttendee.participationStatus))) {
 
@@ -572,7 +573,7 @@ function checkAndSendItipMessage(aItem, aOpType, aOriginalItem) {
         }
 
         if (recipients.length > 0) {
-            calSendItipMessage(requestItem, "REQUEST", recipients, autoResponse);
+            calSendItipMessage(transport, requestItem, "REQUEST", recipients, autoResponse);
             autoResponse = true; // don't ask again
         }
     }
@@ -584,11 +585,11 @@ function checkAndSendItipMessage(aItem, aOpType, aOriginalItem) {
         for each (var att in canceledAttendees) {
             cancelItem.addAttendee(att);
         }
-        calSendItipMessage(cancelItem, "CANCEL", canceledAttendees, autoResponse);
+        calSendItipMessage(transport, cancelItem, "CANCEL", canceledAttendees, autoResponse);
     }
 }
 
-function calSendItipMessage(aItem, aMethod, aRecipientsList, autoResponse) {
+function calSendItipMessage(aTransport, aItem, aMethod, aRecipientsList, autoResponse) {
     if (aRecipientsList.length == 0) {
         return;
     }
@@ -597,8 +598,6 @@ function calSendItipMessage(aItem, aMethod, aRecipientsList, autoResponse) {
         return; // provider will handle that
     }
 
-    var transport = aItem.calendar.getProperty("itip.transport")
-                                  .QueryInterface(Components.interfaces.calIItipTransport);
     var itipItem = Components.classes["@mozilla.org/calendar/itip-item;1"]
                              .createInstance(Components.interfaces.calIItipItem);
 
@@ -635,17 +634,16 @@ function calSendItipMessage(aItem, aMethod, aRecipientsList, autoResponse) {
     }
 
     var summary = (item.getProperty("SUMMARY") || "");
-    var subject = calGetString("lightning",
-                               subjectStringId,
-                               [summary],
-                               "lightning");
-    var body = calGetString("lightning",
-                            bodyStringId,
-                            [item.organizer ? item.organizer.toString() : "", summary],
-                            "lightning");
-
+    var subject = (isSunbird() ? "" : calGetString("lightning",
+                                                   subjectStringId,
+                                                   [summary],
+                                                   "lightning"));
+    var body = (isSunbird() ? "" : calGetString("lightning",
+                                                bodyStringId,
+                                                [item.organizer ? item.organizer.toString() : "", summary],
+                                                "lightning"));
     // Send it!
-    transport.sendItems(aRecipientsList.length, aRecipientsList, subject, body, itipItem);
+    aTransport.sendItems(aRecipientsList.length, aRecipientsList, subject, body, itipItem);
 }
 
 function calGetSerializedItem(aItem) {

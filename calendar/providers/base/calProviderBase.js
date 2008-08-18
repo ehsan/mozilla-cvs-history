@@ -285,22 +285,10 @@ calProviderBase.prototype = {
     getProperty: function cPB_getProperty(aName) {
         switch (aName) {
             case "itip.transport": { // itip/imip default:
-                var identity = this.getProperty("imip.identity");
-                return ((!isSunbird() && identity) // assure an identity is configured for the calendar
+                // assure an identity is configured for the calendar
+                return ((!isSunbird() && this.getProperty("imip.identity"))
                         ? Components.classes["@mozilla.org/calendar/itip-transport;1?type=email"]
                                     .getService(Components.interfaces.calIItipTransport)
-                        : null);
-            }
-            case "organizerId": { // itip/imip default: derived out of imip.identity
-                var identity = this.getProperty("imip.identity");
-                return (identity
-                        ? ("mailto:" + identity.QueryInterface(Components.interfaces.nsIMsgIdentity).email)
-                        : null);
-            }
-            case "organizerCN": { // itip/imip default: derived out of imip.identity
-                var identity = this.getProperty("imip.identity");
-                return (identity
-                        ? identity.QueryInterface(Components.interfaces.nsIMsgIdentity).fullName
                         : null);
             }
             // temporary hack to get the uncached calendar instance:
@@ -322,6 +310,18 @@ calProviderBase.prototype = {
                         ret = outAccount.value;
                     }
                     break;
+                }
+                case "organizerId": { // itip/imip default: derived out of imip.identity
+                    var identity = this.getProperty("imip.identity");
+                    ret = (identity
+                           ? ("mailto:" + identity.QueryInterface(Components.interfaces.nsIMsgIdentity).email)
+                           : null);
+                }
+                case "organizerCN": { // itip/imip default: derived out of imip.identity
+                    var identity = this.getProperty("imip.identity");
+                    ret = (identity
+                           ? identity.QueryInterface(Components.interfaces.nsIMsgIdentity).fullName
+                           : null);
                 }
             }
             if ((ret === null) &&
@@ -373,6 +373,8 @@ calProviderBase.prototype = {
                 case "imip.identity.key": // invalidate identity and account object if key is set:
                     delete this.mProperties["imip.identity"];
                     delete this.mProperties["imip.account"];
+                    delete this.mProperties["organizerId"];
+                    delete this.mProperties["organizerCN"];
                     break;
             }
             if (!this.transientProperties &&
@@ -428,7 +430,7 @@ calProviderBase.prototype = {
 
     // calISchedulingSupport: Implementation corresponding to our iTIP/iMIP support
     isInvitation: function cPB_isInvitation(aItem) {
-        var id = this.itip_getIdentity();
+        var id = this.getProperty("organizerId");
         if (id) {
             var org = aItem.organizer;
             if (!org || (org.id.toLowerCase() == id.toLowerCase())) {
@@ -440,19 +442,11 @@ calProviderBase.prototype = {
     },
 
     getInvitedAttendee: function cPB_getInvitedAttendee(aItem) {
-        var id = this.itip_getIdentity();
+        var id = this.getProperty("organizerId");
         return (id ? aItem.getAttendeeById(id) : null);
     },
 
     canNotify: function cPB_canNotify(aMethod, aItem) {
-        return false; // use iMIP for all
-    },
-
-    itip_getIdentity: function cPB_itip_getIdentity() {
-        var identity = this.getProperty("imip.identity");
-        if (identity) {
-            var identity = ("mailto:" + identity.QueryInterface(Components.interfaces.nsIMsgIdentity).email);
-        }
-        return identity;
+        return false; // use outbound iTIP for all
     }
 };

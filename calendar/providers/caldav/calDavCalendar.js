@@ -59,7 +59,8 @@ function calDavCalendar() {
     this.mInBoxUrl = null;
     this.mOutBoxUrl = null;
     this.mHaveScheduling = false;
-    this.mMailToUrl = null;
+    this.mCalendarUserAddress = null;
+    this.mSenderAddress = null;
     this.mHrefIndex = [];
     this.mAuthScheme = null;
     this.mAuthRealm = null;
@@ -71,15 +72,9 @@ function calDavCalendar() {
 
 // some shorthand
 const calICalendar = Components.interfaces.calICalendar;
-const nsISupportsCString = Components.interfaces.nsISupportsCString;
 const calIErrors = Components.interfaces.calIErrors;
 const calIFreeBusyInterval = Components.interfaces.calIFreeBusyInterval;
 const calICalDavCalendar = Components.interfaces.calICalDavCalendar;
-const calIDateTime = Components.interfaces.calIDateTime;
-
-// END_OF_TIME needs to be the max value a PRTime can be
-const START_OF_TIME = -0x7fffffffffffffff;
-const END_OF_TIME = 0x7fffffffffffffff;
 
 // used in checking calendar URI for (Cal)DAV-ness
 const kDavResourceTypeNone = 0;
@@ -102,6 +97,7 @@ calDavCalendar.prototype = {
                                  Components.interfaces.nsIInterfaceRequestor,
                                  Components.interfaces.calIFreeBusyProvider,
                                  Components.interfaces.nsIChannelEventSink,
+                                 Components.interfaces.calIItipTransport,
                                  calICalDavCalendar]);
     },
 
@@ -145,9 +141,10 @@ calDavCalendar.prototype = {
 
     mPrincipalsNS: null,
 
-    mHaveScheduling: false,
-
-    mMailToUrl: null,
+    mCalendarUserAddress: null,
+    get calendarUserAddress() {
+        return this.mCalendarUserAddress;
+    },
 
     get canRefresh() {
         return true;
@@ -167,7 +164,7 @@ calDavCalendar.prototype = {
         return aUri;
     },
 
-    get mCalendarUri() {
+    get calendarUri() {
         calUri = this.mUri.clone();
         var parts = calUri.spec.split('?');
         if (parts.length > 1) {
@@ -194,8 +191,19 @@ calDavCalendar.prototype = {
     },
 
     mOutBoxUrl:  null,
+    get outBoxUrl() {
+        return this.mOutBoxUrl;
+    },
 
     mInBoxUrl: null,
+    get inBoxUrl() {
+        return this.mInBoxUrl;
+    },
+
+    mHaveScheduling: false,
+    get hasScheduling() {
+        return this.mHaveScheduling;
+    },
 
     mAuthScheme: null,
 
@@ -212,15 +220,15 @@ calDavCalendar.prototype = {
     },
 
     makeUri: function caldav_makeUri(aInsertString) {
-        var spec = this.mCalendarUri.spec + aInsertString;
+        var spec = this.calendarUri.spec + aInsertString;
         if (this.mUriParams) {
             return spec + this.mUriParams;
         }
-        return spec;
+        return makeURL(spec);
     },
 
     get mLocationPath() {
-        return decodeURIComponent(this.mCalendarUri.path);
+        return decodeURIComponent(this.calendarUri.path);
     },
 
     getItemLocationPath: function caldavGILP(aItem) {
@@ -235,9 +243,19 @@ calDavCalendar.prototype = {
         }
     },
 
-    // XXX todo: in general we want to do CalDAV scheduling, but for servers
-    //           that don't support it, we want Itip
-    // sendItipInvitations is now used from calProviderBase.
+    getProperty: function caldav_getProperty(aName) {
+        if (this.hasScheduling) {
+            switch (aName) {
+                case "organizerId":
+                    return this.calendarUserAddress;
+                case "organizerCN":
+                    return null; // xxx todo
+                case "itip.transport":
+                    return this.QueryInterface(Components.interfaces.calIItipTransport);
+            }
+        } // else use outbound email-based iTIP (from calProviderBase.js)
+        return this.__proto__.__proto__.getProperty.apply(this, arguments);
+    },
 
     promptOverwrite: function caldavPO(aMethod, aItem, aListener, aOldItem) {
         var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
@@ -270,7 +288,7 @@ calDavCalendar.prototype = {
             if (aMethod == CALDAV_MODIFY_ITEM) {
                 this.doModifyItem(aItem, aOldItem, aListener, true);
             } else {
-                this.doDeleteItem(aItem, aListener, true);
+                this.doDeleteItem(aItem, aListener, true, false, null);
             }
         } else {
             this.getUpdatedItem(aItem, aListener);
@@ -283,28 +301,26 @@ calDavCalendar.prototype = {
     mHrefIndex: null,
 
     /**
-     * addItem(); required by calICalendar.idl
+     * addItem()
      * we actually use doAdoptItem()
      *
      * @param aItem       item to add
      * @param aListener   listener for method completion
      */
-
     addItem: function caldavAI(aItem, aListener) {
         var newItem = aItem.clone();
         return this.doAdoptItem(newItem, aListener, false);
     },
 
     /**
-     * adooptItem(); required by calICalendar.idl
+     * adoptItem()
      * we actually use doAdoptItem()
      *
      * @param aItem       item to check
      * @param aListener   listener for method completion
      */
     adoptItem: function caldavAtI(aItem, aListener) {
-        var newItem = aItem.clone();
-        return this.doAdoptItem(newItem, aListener, false);
+        return this.doAdoptItem(aItem, aListener, false);
     },
 
     /**
@@ -329,8 +345,7 @@ calDavCalendar.prototype = {
         }
 
         var locationPath = this.getItemLocationPath(aItem);
-        var itemUri = this.mCalendarUri.clone();
-        itemUri.spec = this.makeUri(locationPath);
+        var itemUri = this.makeUri(locationPath);
         LOG("CalDAV: itemUri.spec = " + itemUri.spec);
 
         var addListener = {};
@@ -359,7 +374,7 @@ calDavCalendar.prototype = {
 
                 var retVal = Components.results.NS_OK;
                 // Some CalDAV servers will modify items on PUT (add X-props,
-                // change location, etc) so we'd best re-fetch in order to know
+                // for instance) so we'd best re-fetch in order to know
                 // the current state of the item
                 // Observers will be notified in getUpdatedItem()
                 thisCalendar.getUpdatedItem(aItem, aListener);
@@ -420,6 +435,12 @@ calDavCalendar.prototype = {
             return;
         }
 
+        var wasInBoxItem = false;
+        if (this.mItemInfoCache[aNewItem.id].isInBoxItem) {
+            aIgnoreEtag = true;
+            wasInBoxItem = true;
+        }
+
         var newItem_ = aNewItem;
         aNewItem = aNewItem.parentItem.clone();
         if (newItem_.parentItem != newItem_) {
@@ -427,16 +448,15 @@ calDavCalendar.prototype = {
         }
         aNewItem.generation += 1;
 
-        var eventUri = this.mCalendarUri.clone();
-        eventUri.spec = this.makeUri(this.mItemInfoCache[aNewItem.id].locationPath);
+        var eventUri = this.makeUri(this.mItemInfoCache[aNewItem.id].locationPath);
 
-        var modListener = {};
         var thisCalendar = this;
 
         var modifiedItemICS = this.getSerializedItem(aNewItem);
 
+        var modListener = {};
         modListener.onStreamComplete = function(aLoader, aContext, aStatus,
-                                             aResultLength, aResult) {
+                                                aResultLength, aResult) {
             // 200 = HTTP "OK"
             // 204 = HTTP "No Content"
             //
@@ -447,14 +467,20 @@ calDavCalendar.prototype = {
                 status = Components.interfaces.calIErrors.DAV_PUT_ERROR;
             }
 
-            if (status == 204 || status == 200) {
+            // We should not accept a 201 status here indefinitely: it indicates a server error 
+            // of some kind that we want to know about. It's convenient to accept it for now
+            // since a number of server impls don't get this right yet.
+            if (status == 204 || status == 201 || status == 200) {
                 LOG("CalDAV: Item modified successfully.");
                 var retVal = Components.results.NS_OK;
                 // Some CalDAV servers will modify items on PUT (add X-props,
-                // change location, etc) so we'd best re-fetch in order to know
+                // for instance) so we'd best re-fetch in order to know
                 // the current state of the item
                 // Observers will be notified in getUpdatedItem()
                 thisCalendar.getUpdatedItem(aNewItem, aListener);
+                if (wasInBoxItem) {
+                    thisCalendar.doDeleteItem(aNewItem, null, true, true, null);
+                }
             } else if (status == 412) {
                 thisCalendar.promptOverwrite(CALDAV_MODIFY_ITEM, aNewItem,
                                              aListener, aOldItem);
@@ -502,8 +528,9 @@ calDavCalendar.prototype = {
      * @param aItem       item to delete
      * @param aListener   listener for method completion
      * @param aIgnoreEtag ignore item etag
-     */
-    doDeleteItem: function caldavDDI(aItem, aListener, aIgnoreEtag) {
+     * @param aFromInBox  delete from inbox rather than calendar
+     * @param aUri        uri of item to delete     */
+    doDeleteItem: function caldavDDI(aItem, aListener, aIgnoreEtag, aFromInBox, aUri) {
 
         if (aItem.id == null) {
             this.notifyOperationComplete(aListener,
@@ -514,8 +541,14 @@ calDavCalendar.prototype = {
             return;
         }
 
-        var eventUri = this.mCalendarUri.clone();
-        eventUri.spec = this.makeUri(this.mItemInfoCache[aItem.id].locationPath);
+        var eventUri;
+        if (aUri) {
+            eventUri = aUri;
+        } else if (aFromInBox || this.mItemInfoCache[aItem.id].isInBoxItem) {
+            eventUri = makeURL(this.mInBoxUrl.spec + this.mItemInfoCache[aItem.id].locationPath);
+        } else {
+            eventUri = this.makeUri(this.mItemInfoCache[aItem.id].locationPath);
+        }
 
         var delListener = {};
         var thisCalendar = this;
@@ -533,11 +566,13 @@ calDavCalendar.prototype = {
             // 204 = HTTP "No content"
             //
             if (status == 204 || status == 200) {
-                thisCalendar.mMemoryCalendar.deleteItem(aItem, aListener);
-                delete thisCalendar.mHrefIndex[eventUri.path];
-                delete thisCalendar.mItemInfoCache[aItem.id];
-                LOG("CalDAV: Item deleted successfully.");
-                var retVal = Components.results.NS_OK;
+                if (!aFromInBox) {
+                    thisCalendar.mMemoryCalendar.deleteItem(aItem, aListener);
+                    delete thisCalendar.mHrefIndex[eventUri.path];
+                    delete thisCalendar.mItemInfoCache[aItem.id];
+                    LOG("CalDAV: Item deleted successfully.");
+                    var retVal = Components.results.NS_OK;
+                }
             } else if (status == 412) {
                 // item has either been modified or deleted by someone else
                 // check to see which
@@ -600,9 +635,8 @@ calDavCalendar.prototype = {
             return;
         }
 
-        var itemUri = this.mCalendarUri.clone();
         var locationPath = this.getItemLocationPath(aItem);
-        itemUri.spec = this.makeUri(locationPath);
+        var itemUri = this.makeUri(locationPath);
 
         var C = new Namespace("C", "urn:ietf:params:xml:ns:caldav");
         var D = new Namespace("D", "DAV:");
@@ -620,7 +654,8 @@ calDavCalendar.prototype = {
             LOG("CalDAV: send: " + multigetQueryXml.toXMLString());
         }
 
-        this.getCalendarData(xmlHeader + multigetQueryXml.toXMLString(),
+        this.getCalendarData(this.calendarUri,
+                             xmlHeader + multigetQueryXml.toXMLString(),
                              aItem,
                              aListener);
 
@@ -668,7 +703,7 @@ calDavCalendar.prototype = {
         if (this.verboseLogging()) {
             LOG("CalDAV: send: " + queryXml);
         }
-        var httpchannel = calPrepHttpChannel(this.mCalendarUri,
+        var httpchannel = calPrepHttpChannel(this.calendarUri,
                                              queryXml,
                                              "text/xml; charset=utf-8",
                                              this);
@@ -676,10 +711,8 @@ calDavCalendar.prototype = {
         httpchannel.requestMethod = "PROPFIND";
 
         var streamListener = {};
-
         streamListener.onStreamComplete =
-            function checkDavResourceType_oSC(aLoader, aContext, aStatus,
-                                         aResultLength, aResult) {
+            function safeRefresh_oSC(aLoader, aContext, aStatus, aResultLength, aResult) {
             try {
                 LOG("CalDAV: Status " + aContext.responseStatus +
                     " checking ctag for calendar " + thisCalendar.name);
@@ -786,6 +819,7 @@ calDavCalendar.prototype = {
         refreshEvent.queryStatuses = [];
         refreshEvent.itemsNeedFetching = [];
         refreshEvent.itemsReported = [];
+        refreshEvent.uri = this.calendarUri;
 
         return refreshEvent;
 
@@ -874,16 +908,10 @@ calDavCalendar.prototype = {
                 var resourcePath = thisCalendar.ensurePath(href);
                 aRefreshEvent.itemsReported.push(resourcePath.toString());
 
-                if (thisCalendar.mHrefIndex[resourcePath]) {
-                    var itemuid = thisCalendar.mHrefIndex[resourcePath];
-                    if (etag != thisCalendar.mItemInfoCache[itemuid].etag) {
-                        // we don't have a current copy in cache; fetch the item
-                        aRefreshEvent.itemsNeedFetching.push(resourcePath);
-                    }
-                } else {
+                var itemuid = thisCalendar.mHrefIndex[resourcePath];
+                if (!itemuid || etag != thisCalendar.mItemInfoCache[itemuid].etag) {
                     aRefreshEvent.itemsNeedFetching.push(resourcePath);
                 }
-
             }
 
             aRefreshEvent.queryStatuses.push(responseStatus);
@@ -904,15 +932,20 @@ calDavCalendar.prototype = {
                 }
                 // if an item has been deleted from the server, delete it here too
                 for (var path in  thisCalendar.mHrefIndex) {
-                    if (aRefreshEvent.itemsReported.indexOf(path) < 0) {
+                    if (aRefreshEvent.itemsReported.indexOf(path) < 0 &&
+                        path.indexOf(aRefreshEvent.uri.path) == 0) {
 
                         var getItemListener = {};
                         getItemListener.onGetResult = function caldav_gUIs_oGR(aCalendar,
                             aStatus, aItemType, aDetail, aCount, aItems) {
                             var itemToDelete = aItems[0];
-                            delete thisCalendar.mItemInfoCache[itemToDelete.id];
-                            thisCalendar.mMemoryCalendar.deleteItem(itemToDelete,
-                                                                     getItemListener);
+
+                            var wasInBoxItem = thisCalendar.mItemInfoCache[itemToDelete.id].isInBoxItem;
+                            if ((wasInBoxItem && thisCalendar.isInBox(aRefreshEvent.uri.spec)) ||
+                                (wasInBoxItem === false && !thisCalendar.isInBox(aRefreshEvent.uri.spec))) {
+                                delete thisCalendar.mItemInfoCache[itemToDelete.id];
+                                thisCalendar.mMemoryCalendar.deleteItem(itemToDelete, getItemListener);
+                            }
                             delete thisCalendar.mHrefIndex[path];
                             needsRefresh = true;
                         }
@@ -930,6 +963,11 @@ calDavCalendar.prototype = {
                     if (needsRefresh) {
                         thisCalendar.mObservers.notify("onLoad", [thisCalendar]);
                     }
+                    // but do poll the inbox;
+                    if (thisCalendar.hasScheduling &&
+                        !thisCalendar.isInBox(aRefreshEvent.uri.spec)) {
+                        thisCalendar.pollInBox();
+                    }
                     return;
                 }
 
@@ -943,7 +981,10 @@ calDavCalendar.prototype = {
 
                 var multigetQueryString = xmlHeader +
                                           multigetQueryXml.toXMLString();
-                thisCalendar.getCalendarData(multigetQueryString, null, null);
+                thisCalendar.getCalendarData(aRefreshEvent.uri,
+                                             multigetQueryString,
+                                             null,
+                                             null);
 
                 if (thisCalendar.mAuthScheme == "Digest" &&
                     thisCalendar.firstInRealm()) {
@@ -959,10 +1000,7 @@ calDavCalendar.prototype = {
             LOG("CalDAV: send: " + queryString);
         }
 
-        // construct the resource we want to search against
-        var calendarDirUri = this.mCalendarUri.clone();
-        calendarDirUri.spec = this.makeUri('');
-        var httpchannel = calPrepHttpChannel(calendarDirUri,
+        var httpchannel = calPrepHttpChannel(aRefreshEvent.uri,
                                              queryString,
                                              "text/xml; charset=utf-8",
                                              this);
@@ -972,7 +1010,7 @@ calDavCalendar.prototype = {
         calSendHttpRequest(streamLoader, httpchannel, etagListener);
     },
 
-    getCalendarData: function caldav_gCD(aQuery, aItem, aListener) {
+    getCalendarData: function caldav_gCD(aUri, aQuery, aItem, aListener) {
 
         var thisCalendar = this;
         var caldataListener = {};
@@ -1025,20 +1063,33 @@ calDavCalendar.prototype = {
                 parser.parseString(calData, null);
                 // with CalDAV there really should only be one item here
                 var items = parser.getItems({});
-
+                var propertiesList = parser.getProperties({});
+                var method;
+                for each (var prop in propertiesList) {
+                    if (prop.propertyName == "METHOD") {
+                        method = prop.value;
+                        break;
+                    }
+                }
+                var isReply = (method == "REPLY");
                 var item = items[0];
                 if (!item) {
-                    if (aListener) {
-                        this.notifyOperationComplete(aListener,
-                                                     Components.results.NS_ERROR_FAILURE,
-                                                     Components.interfaces.calIOperationListener.GET,
-                                                     null,
-                                                     "failed to retrieve item");
-                    }
+                    this.notifyOperationComplete(aListener,
+                                                 Components.results.NS_ERROR_FAILURE,
+                                                 Components.interfaces.calIOperationListener.GET,
+                                                 null,
+                                                 "failed to retrieve item");
                     return;
                 }
+
                 item.calendar = thisCalendar.superCalendar;
-                var locationPath = decodeURIComponent(resourcePath).substr(thisCalendar.mLocationPath.length);
+                if (isReply && thisCalendar.isInBox(aUri.spec)) {
+                    thisCalendar.processItipReply(item, resourcePath);
+                    return;
+                }
+
+                var pathLength = decodeURIComponent(aUri.path).length;
+                var locationPath = decodeURIComponent(resourcePath).substr(pathLength);
                 if (!thisCalendar.mItemInfoCache[item.id]) {
                        thisCalendar.mItemInfoCache[item.id] = {};
                        thisCalendar.mItemInfoCache[item.id].isNew = true;
@@ -1046,6 +1097,7 @@ calDavCalendar.prototype = {
                     thisCalendar.mItemInfoCache[item.id].isNew = false;
                 }
                 thisCalendar.mItemInfoCache[item.id].locationPath = locationPath;
+                thisCalendar.mItemInfoCache[item.id].isInBoxItem = thisCalendar.isInBox(aUri.spec);
 
                 var hrefPath = thisCalendar.ensurePath(href);
                 thisCalendar.mHrefIndex[hrefPath] = item.id;
@@ -1054,11 +1106,10 @@ calDavCalendar.prototype = {
                 if (thisCalendar.mItemInfoCache[item.id].isNew) {
                     thisCalendar.mMemoryCalendar.adoptItem(item, aListener);
                 } else {
-                    thisCalendar.mMemoryCalendar.modifyItem(item, null,
-                                                            aListener);
+                    thisCalendar.mMemoryCalendar.modifyItem(item, null, aListener);
                 }
             }
-            LOG("refresh completed with status " + responseStatus);
+            LOG("refresh completed with status " + responseStatus + " at " + aUri.spec);
             thisCalendar.mObservers.notify("onLoad", [thisCalendar]);
             thisCalendar.mFirstRefreshDone = true;
             while (thisCalendar.mQueuedQueries.length) {
@@ -1066,15 +1117,17 @@ calDavCalendar.prototype = {
                 thisCalendar.mMemoryCalendar.getItems
                             .apply(thisCalendar.mMemoryCalendar, query);
             }
+            if (thisCalendar.hasScheduling &&
+                !thisCalendar.isInBox(aUri.spec)) {
+                thisCalendar.pollInBox();
+            }
         };
 
         if (this.verboseLogging()) {
             LOG("CalDAV: send: " + aQuery);
         }
-        // construct the resource we want to search against
-        var calendarDirUri = this.mCalendarUri.clone();
-        calendarDirUri.spec = this.makeUri('');
-        var httpchannel = calPrepHttpChannel(calendarDirUri,
+
+        var httpchannel = calPrepHttpChannel(aUri,
                                              aQuery,
                                              "text/xml; charset=utf-8",
                                              this);
@@ -1115,7 +1168,7 @@ calDavCalendar.prototype = {
         if (this.verboseLogging()) {
             LOG("CalDAV: send: " + queryXml);
         }
-        var httpchannel = calPrepHttpChannel(this.mCalendarUri,
+        var httpchannel = calPrepHttpChannel(this.calendarUri,
                                              queryXml,
                                              "text/xml; charset=utf-8",
                                              this);
@@ -1125,8 +1178,7 @@ calDavCalendar.prototype = {
         var streamListener = {};
 
         streamListener.onStreamComplete =
-            function checkDavResourceType_oSC(aLoader, aContext, aStatus,
-                                         aResultLength, aResult) {
+            function checkDavResourceType_oSC(aLoader, aContext, aStatus, aResultLength, aResult) {
             try {
                 LOG("CalDAV: Status " + aContext.responseStatus +
                     " on initial PROPFIND for calendar " + thisCalendar.name);
@@ -1388,7 +1440,7 @@ calDavCalendar.prototype = {
 
         var pns = aNameSpaceList.pop();
 
-        var nsUrl = this.mCalendarUri.clone();
+        var nsUrl = this.calendarUri.clone();
         nsUrl.path = pns;
 
         var nsUri = makeURL(nsUrl.spec);
@@ -1422,7 +1474,7 @@ calDavCalendar.prototype = {
             } else if (thisCalendar.verboseLogging()) {
                 LOG("CalDAV: recv: " + str);
             }
-            thisCalendar.mMailToUrl = thisCalendar.mCalendarUri.spec;
+            thisCalendar.mCalendarUserAddress = thisCalendar.calendarUri.spec;
 
             if (str.substr(0,6) == "<?xml ") {
                     str = str.substring(str.indexOf('<', 2));
@@ -1455,7 +1507,7 @@ calDavCalendar.prototype = {
                 }
                 for (var j = 0; j < addrHrefs.*.length(); j++) {
                     if (addrHrefs[j].substr(0,7).toLowerCase() == "mailto:") {
-                        thisCalendar.mMailToUrl = addrHrefs[j];
+                        thisCalendar.mCalendarUserAddress = addrHrefs[j].toString();
                     }
                 }
                 var ibUrl = thisCalendar.mUri.clone();
@@ -1476,7 +1528,7 @@ calDavCalendar.prototype = {
                 thisCalendar.mOutBoxUrl = obUrl;
             }
 
-            if (!thisCalendar.mMailToUrl || !thisCalendar.mInBoxUrl || !thisCalendar.mOutBoxUrl) {
+            if (!thisCalendar.calendarUserAddress || !thisCalendar.mInBoxUrl || !thisCalendar.mOutBoxUrl) {
                 if (aNameSpaceList.length) {
                     thisCalendar.checkPrincipalsNameSpace(aNameSpaceList);
                 } else {
@@ -1499,7 +1551,7 @@ calDavCalendar.prototype = {
     getFreeBusyIntervals: function caldav_getFreeBusyIntervals(
         aCalId, aRangeStart, aRangeEnd, aBusyTypes, aListener) {
 
-        if (!this.mHaveScheduling || !this.mOutBoxUrl || !this.mMailToUrl) {
+        if (!this.hasScheduling || !this.mOutBoxUrl || !this.mMailToUrl) {
             LOG("CalDAV: Server does not support scheduling; freebusy query not possible");
             return;
         }
@@ -1521,10 +1573,9 @@ calDavCalendar.prototype = {
         }
         mailto_aCalId = aCalIdParts.join(":");
 
-        var outBoxUri = this.mOutBoxUrl.clone();
         var thisCalendar = this;
 
-        var organizer = this.mMailToUrl;
+        var organizer = this.calendarUserAddress;
 
         var dtstamp = now().getInTimezone(UTC()).icalString;
         var dtstart = aRangeStart.getInTimezone(UTC()).icalString;
@@ -1541,7 +1592,7 @@ calDavCalendar.prototype = {
         fbQuery += "DTSTART:" + dtstart + "\n";
         fbQuery += "DTEND:" + dtend + "\n";
         fbQuery += "UID:" + uuid + "\n";
-        var attendee = "ATTENDEE;PARTSTAT=NEEDS-ACTION;RSVP=TRUE;ROLE=REQ-PARTICIPANT;CUTYPE=INDIVIDUAL;CN=" + mailto_aCalId + "\n";
+        var attendee = "ATTENDEE;PARTSTAT=NEEDS-ACTION;ROLE=REQ-PARTICIPANT;CUTYPE=INDIVIDUAL;CN=" + mailto_aCalId + "\n";
         var attendeeFolded = this.foldLine(attendee);
         fbQuery += attendeeFolded;
         fbQuery += "END:VFREEBUSY\n";
@@ -1552,7 +1603,7 @@ calDavCalendar.prototype = {
             LOG("CalDAV: send: " + fbQuery);
         }
 
-        var httpchannel = calPrepHttpChannel(outBoxUri,
+        var httpchannel = calPrepHttpChannel(this.outBoxUrl,
                                              fbQuery,
                                              "text/calendar; charset=utf-8",
                                              this);
@@ -1574,12 +1625,8 @@ calDavCalendar.prototype = {
 
             if (aContext.responseStatus == 200) {
                 var periodsToReturn = [];
-                var CalPeriod = new Components.
-                                    Constructor("@mozilla.org/calendar/period;1",
-                                               "calIPeriod");
-                var CalDateTime = new Components.
-                                      Constructor("@mozilla.org/calendar/datetime;1",
-                                                "calIDateTime");
+                var CalPeriod = new Components.Constructor("@mozilla.org/calendar/period;1",
+                                                           "calIPeriod");
                 var fbTypeMap = {};
                 fbTypeMap["FREE"] = calIFreeBusyInterval.FREE;
                 fbTypeMap["BUSY"] = calIFreeBusyInterval.BUSY;
@@ -1614,9 +1661,9 @@ calDavCalendar.prototype = {
                         var ranges = descDat[1].split(",");
                         for (var j = 0; j < ranges.length; j++) {
                             var parts = ranges[j].split("/");
-                            var begin = new CalDateTime();
+                            var begin = createDateTime();
                             begin.icalString = parts[0];
-                            var end = new CalDateTime();
+                            var end = createDateTime();
                             end.icalString = parts[1];
                             interval = new calFreeBusyInterval(aCalId,
                                                                fbType,
@@ -1627,7 +1674,7 @@ calDavCalendar.prototype = {
                     }
                     if (lines[i].substr(0,7) == "DTSTART") {
                         var dts = lines[i].split(":")[1];
-                        var replyRangeStart = new CalDateTime();
+                        var replyRangeStart = createDateTime();
                         replyRangeStart.icalString = dts;
                         if (aRangeStart.compare(replyRangeStart) == -1) {
                             interval = new calFreeBusyInterval(aCalId,
@@ -1639,7 +1686,7 @@ calDavCalendar.prototype = {
                     }
                     if (lines[i].substr(0,5) == "DTEND") {
                         var dte = lines[i].split(":")[1];
-                        var replyRangeEnd = new CalDateTime();
+                        var replyRangeEnd = createDateTime();
                         replyRangeEnd.icalString = dte;
                         if (aRangeEnd.compare(replyRangeEnd) == 1) {
                             interval = new calFreeBusyInterval(aCalId,
@@ -1680,6 +1727,206 @@ calDavCalendar.prototype = {
             return bogusUri.path;
         }
         return aString;
+    },
+
+    isInBox: function caldav_isInBox(aString) {
+        if (!this.hasScheduling) {
+            return false;
+        }
+        if (aString.indexOf(this.mInBoxUrl.spec) == 0) {
+            return true;
+        }
+        return false;
+    },
+
+    /**
+     * Query contents of scheduling inbox
+     *
+     */
+    pollInBox: function caldav_pollInBox() {
+        // if we have more than one calendar in this CalDAV account, we want
+        // only one of them to be checking the inbox.
+        if (!this.firstInRealm()) {
+            return;
+        }
+
+        var itemTypes = new Array("VEVENT", "VTODO");
+        var typesCount = itemTypes.length;
+        var refreshEvent = {};
+        refreshEvent.itemTypes = itemTypes;
+        refreshEvent.typesCount = typesCount;
+        refreshEvent.queryStatuses = [];
+        refreshEvent.itemsNeedFetching = [];
+        refreshEvent.itemsReported = [];
+        refreshEvent.uri = this.mInBoxUrl;
+
+        this.getUpdatedItems(refreshEvent);
+    },
+
+    //
+    // take calISchedulingSupport interface base implementation (calProviderBase.js)
+    //
+
+    processItipReply: function caldav_processItipReply(aItem, aPath) {
+        // modify partstat for in-calendar item
+        // delete item from inbox
+        var thisCalendar = this;
+
+        var path = this.mItemInfoCache[aItem.id].locationPath;
+        if (!path) {
+            return;
+        }
+
+        var getItemListener = {};
+        getItemListener.onOperationComplete = function caldav_gUIs_oOC(aCalendar,
+                                                                       aStatus,
+                                                                       aOperationType,
+                                                                       aId,
+                                                                       aDetail) {
+        };
+        getItemListener.onGetResult = function caldav_pIR_oGR(aCalendar,
+                                                              aStatus,
+                                                              aItemType,
+                                                              aDetail,
+                                                              aCount,
+                                                              aItems) {
+            var itemToUpdate = aItems[0];
+            if (aItem.recurrenceId && itemToUpdate.recurrenceInfo) {
+                itemToUpdate = itemToUpdate.recurrenceInfo.getOccurrenceFor(aItem.recurrenceId);
+            }
+            var newItem = itemToUpdate.clone();
+
+            for each (var attendee in aItem.getAttendees({})) {
+                var att = newItem.getAttendeeById(attendee.id);
+                if (att) {
+                    newItem.removeAttendee(att);
+                    att = att.clone();
+                    att.participationStatus = attendee.participationStatus;
+                    newItem.addAttendee(att);
+                }
+            }
+            thisCalendar.doModifyItem(newItem, itemToUpdate.parentItem /* related to bug 396182 */,
+                                      modListener, true);
+        };
+
+        var modListener = {};
+        modListener.onOperationComplete = function caldav_pIR_moOC(aCalendar,
+                                                                   aStatus,
+                                                                   aOperationType,
+                                                                   aItemId,
+                                                                   aDetail) {
+            LOG("CalDAV: status " + aStatus + " while processing iTIP REPLY");
+            // don't delete the REPLY item from inbox unless modifying the master
+            // item was successful
+            if (aStatus == 0) { // aStatus undocumented; 0 seems to indicate no error
+                var delUri = thisCalendar.calendarUri.clone();
+                delUri.path = aPath;
+                thisCalendar.doDeleteItem(aItem, null, true, true, delUri);
+            }
+        };
+
+        thisCalendar.mMemoryCalendar.getItem(aItem.id, getItemListener);
+    },
+
+    //
+    // calIItipTransport interface
+    //
+
+    get defaultIdentity() {
+        return this.calendarUserAddress;
+    },
+
+    get scheme() {
+        return null;
+    },
+
+    mSenderAddress: null,
+    get senderAddress() {
+        return this.mSenderAddress || this.calendarUserAddress;
+    },
+    set senderAddress(aString) {
+        return (this.mSenderAddress = aString);
+    },
+
+    simpleSendResponse: function caldav_simpleSendResponse(itipItem) {
+        var item = itipItem.getItemList({})[0];
+        // Get my participation status
+        var attendee = item.getAttendeeById(this.calendarUserAddress);
+        if (!attendee) {
+            return;
+        }
+        var myPartStat = attendee.participationStatus;
+        // work around BUG 351589, the below just removes RSVP:
+        itipItem.setAttendeeStatus(attendee.id, myPartStat);
+
+        this.sendItems(1, [item.organizer], "", "", itipItem);
+    },
+
+    sendItems: function caldav_sendItems(aCount, aRecipients, aSubject, aBody, aItipItem) {
+
+        for each (var item in aItipItem.getItemList({})) {
+
+            var serializer = Components.classes["@mozilla.org/calendar/ics-serializer;1"]
+                                       .createInstance(Components.interfaces.calIIcsSerializer);
+            serializer.addItems([item], 1);
+            var methodProp = getIcsService().createIcalProperty("METHOD");
+            methodProp.value = aItipItem.responseMethod;
+            serializer.addProperty(methodProp);
+            var uploadData = serializer.serializeToString();
+
+            var httpchannel = calPrepHttpChannel(this.outBoxUrl,
+                                                 uploadData,
+                                                 "text/calendar; charset=utf-8",
+                                                 this);
+            httpchannel.requestMethod = "POST";
+            httpchannel.setRequestHeader("Originator", this.calendarUserAddress, false);
+            for each (var recipient in aRecipients) {
+                // Houston, we may have a problem.
+                // What if some recipients are non-server users? Does the server send out iMIP in that case?
+                // For now, the CU has to decide whether she wants iMIP to be sent out or (knows that
+                // all attendees are server users) and we will switch up front in calendar-item-editing whether
+                // we use iMIP or server's outbox only (using X-MOZ-USE-IMIP).
+                httpchannel.setRequestHeader("Recipient", recipient.id, true);
+            }
+
+            var this_ = this;
+            var streamListener = {
+                onStreamComplete: function caldav_sendItems_oSC(aLoader, aContext, aStatus,
+                                                                aResultLength, aResult) {
+                    var status;
+                    try {
+                        status = aContext.responseStatus;
+                    } catch (ex) {
+                        status = Components.interfaces.calIErrors.DAV_POST_ERROR;
+                        LOG("CalDAV: no response status when sending iTIP.");
+                    }
+
+                    if (status != 200) {
+                        Components.utils.reportError("Sending iITIP failed with status " + status);
+                    }
+
+                    var str = convertByteArray(aResult, aResultLength, "UTF-8", false);
+                    if (str) {
+                        if (this_.verboseLogging()) {
+                            LOG("CalDAV: recv: " + str);
+                        }
+                    } else {
+                        LOG("CalDAV: Failed to parse iTIP response.");
+                    }
+                }
+            };
+            if (this.verboseLogging()) {
+                LOG("CalDAV: send: " + uploadData);
+            }
+            var streamLoader = createStreamLoader();
+            calSendHttpRequest(streamLoader, httpchannel, streamListener);
+        }
+    },
+
+    checkForInvitations: function caldav_CFI(searchStart) {
+        // CalDAV calendars do this with pollInBox()
+        throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+
     },
 
      verboseLogging: function caldav_verboseLogging() {
