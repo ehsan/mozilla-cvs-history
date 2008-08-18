@@ -484,7 +484,7 @@ function removeCalendarCommandController() {
     top.controllers.removeController(calendarController);
 }
 
-function adaptModificationMenuItem(aMenuItemId, aItems, aItemType){
+function adaptModificationMenuItem(aMenuItemId, aItemType) {
     var menuItem = document.getElementById(aMenuItemId);
     if (menuItem) {
         menuItem.setAttribute("label", calGetString("calendar", "delete" + aItemType + "Label"));
@@ -495,16 +495,21 @@ function adaptModificationMenuItem(aMenuItemId, aItems, aItemType){
 function setupContextItemType(event, items) {
     if (items.some(isEvent) && items.some(isToDo)) {
         event.target.setAttribute("type", "mixed");
-        adaptModificationMenuItem("calendar-item-context-menu-delete-menuitem", items, "Item");
+        adaptModificationMenuItem("calendar-item-context-menu-delete-menuitem", "Item");
     } else if (items.length && isEvent(items[0])) {
         event.target.setAttribute("type", "event");
-        adaptModificationMenuItem("calendar-item-context-menu-delete-menuitem", items, "Event");
+        adaptModificationMenuItem("calendar-item-context-menu-delete-menuitem", "Event");
     } else if (items.length && isToDo(items[0])) {
         event.target.setAttribute("type", "todo");
-        adaptModificationMenuItem("calendar-item-context-menu-delete-menuitem", items, "Task");
+        //XXX Workaround added in bug 448771 because of string freeze (removal in bug 450391)
+        var menuItem = document.getElementById("calendar-item-context-menu-delete-menuitem");
+        if (menuItem) {
+            menuItem.setAttribute("label", calGetString("calendar", "deleteTaskLabel"));
+            menuItem.setAttribute("accesskey", calGetString("calendar", "deletetaskAccesskey"));
+        }
     } else {
         event.target.removeAttribute("type");
-        adaptModificationMenuItem("calendar-item-context-menu-delete-menuitem", items, "Item");
+        adaptModificationMenuItem("calendar-item-context-menu-delete-menuitem", "Item");
     }
     return true;
 }
