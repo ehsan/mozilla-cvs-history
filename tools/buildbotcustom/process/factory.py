@@ -16,7 +16,7 @@ reload(buildbotcustom.steps.updates)
 
 from buildbotcustom.steps.misc import SetMozillaBuildProperties
 from buildbotcustom.steps.test import AliveTest, CompareBloatLogs, \
-  CompareLeakLogs, Codesighs
+  CompareLeakLogs, Codesighs, GraphServerPost
 from buildbotcustom.steps.transfer import MozillaStageUpload
 from buildbotcustom.steps.updates import CreateCompleteUpdateSnippet
 
@@ -93,8 +93,9 @@ class MercurialBuildFactory(BuildFactory):
                  stageBasePath=None, ausBaseUploadDir=None,
                  updatePlatform=None, downloadBaseURL=None, ausUser=None,
                  ausHost=None, nightly=False, leakTest=False, codesighs=True,
-                 uploadPackages=True, uploadSymbols=True, dependToDated=True,
-                 createSnippet=False, **kwargs):
+                 graphServer=None, graphSelector=None, graphBranch=None,
+                 baseName=None, uploadPackages=True, uploadSymbols=True,
+                 dependToDated=True, createSnippet=False, **kwargs):
         BuildFactory.__init__(self, **kwargs)
         self.env = env
         self.objdir = objdir
@@ -117,6 +118,10 @@ class MercurialBuildFactory(BuildFactory):
         self.nightly = nightly
         self.leakTest = leakTest
         self.codesighs = codesighs
+        self.graphServer = graphServer
+        self.graphSelector = graphSelector
+        self.graphBranch = graphBranch
+        self.baseName = baseName
         self.uploadPackages = uploadPackages
         self.uploadSymbols = uploadSymbols
         self.dependToDated = dependToDated
@@ -290,6 +295,12 @@ class MercurialBuildFactory(BuildFactory):
          bloatLog='../bloat.log',
          env=self.env,
         )
+        self.addStep(GraphServerPost,
+         server=self.graphServer,
+         selector=self.graphSelector,
+         branch=self.graphBranch,
+         resultsname=self.baseName
+        )
         self.addStep(AliveTest,
          env=self.env,
          workdir='build/%s/_leaktest' % self.objdir,
@@ -328,6 +339,12 @@ class MercurialBuildFactory(BuildFactory):
          platform=self.platform,
          env=self.env,
          testname='current'
+        )
+        self.addStep(GraphServerPost,
+         server=self.graphServer,
+         selector=self.graphSelector,
+         branch=self.graphBranch,
+         resultsname=self.baseName
         )
         self.addStep(CompareLeakLogs,
          mallocLog='../malloc.log.old',
@@ -432,6 +449,12 @@ class MercurialBuildFactory(BuildFactory):
          platform=self.platform,
          env=self.env
         )
+        self.addStep(GraphServerPost,
+         server=self.graphServer,
+         selector=self.graphSelector,
+         branch=self.graphBranch,
+         resultsname=self.baseName
+        )
         self.addStep(ShellCommand,
          command=['cat', '../codesize-auto-diff.log']
         )
@@ -454,6 +477,12 @@ class MercurialBuildFactory(BuildFactory):
          platform=self.platform,
          type='base',
          env=self.env
+        )
+        self.addStep(GraphServerPost,
+         server=self.graphServer,
+         selector=self.graphSelector,
+         branch=self.graphBranch,
+         resultsname=self.baseName
         )
         self.addStep(ShellCommand,
          command=['cat', '../codesize-base-diff.log']
