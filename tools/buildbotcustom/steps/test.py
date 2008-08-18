@@ -22,15 +22,20 @@
 #   Ben Hearsum <bhearsum@mozilla.com>
 #   Rob Campbell <rcampbell@mozilla.com>
 #   Chris Cooper <coop@mozilla.com>
+#   Alice Nodelman <anodelman@mozilla.com>
 # ***** END LICENSE BLOCK *****
 
 from buildbot.steps.shell import ShellCommand
-from buildbot.status.builder import FAILURE
+from buildbot.status.builder import FAILURE, SUCCESS
+from buildbot.process.buildstep import BuildStep
 
+import urllib #for conntacting the graph server
+from time import strptime, strftime, localtime, mktime
 import re
 import os
 import signal
 from os import path
+import string
 
 class AliveTest(ShellCommand):
     name = "alive test"
@@ -157,6 +162,9 @@ class CompareBloatLogs(ShellCommand):
                                     formatBytes(leaks,3)
                                     )
         summary += tinderLink
+
+        self.build.setProperty('testresults', [("RLk", "refcnt_leaks", formatBytes(leaks,3))])
+
         self.addCompleteLog(leaksAbbr + ":" + formatBytes(leaks,3),
                             summary)
 
@@ -228,6 +236,8 @@ class CompareLeakLogs(ShellCommand):
         mh = formatBytes(self.leakStats['new']['mhs'],3)
         a =  formatCount(self.leakStats['new']['allocs'],3)
 
+        self.build.setProperty('testresults', [("Lk", "trace_malloc_leaks", lk), ("MH", "trace_malloc_maxheap", mh), ("A", "trace_malloc_allocs", a)])
+
         slug = "Lk: %s, MH: %s, A: %s" % (lk, mh, a)
         logText = ""
         if self.testname.startswith("current"):
@@ -278,8 +288,12 @@ class Codesighs(ShellCommand):
                     diff = diffData
 
         z = 'Z'
+        zLong = "codesighs"
         if self.type == 'base':
             z = 'mZ'
+            zLong = "codesighs_embed"
+
+        self.build.setProperty('testresults', [(z, zLong, bytes)])
 
         slug = '%s:%s' % (z, bytes)
         summary = 'TinderboxPrint:%s\n' % slug
@@ -289,3 +303,31 @@ class Codesighs(ShellCommand):
             slug = '%sdiff' % z
             summary = 'TinderboxPrint:%s:%s\n' % (slug, diff)
             self.addCompleteLog(slug, summary)
+
+class GraphServerPost(BuildStep):
+    def __init__(self, server, selector, branch, resultsname):
+        BuildStep.__init__(self)
+        self.server = server
+        self.graphurl = "http://%s/%s/collect.cgi" % (server, selector,)
+        self.branch = branch
+        self.resultsname = resultsname.replace(' ', '_')
+
+    def start(self):
+        self.changes = self.build.allChanges()
+        self.timestamp = int(self.step_status.build.getTimes()[0])
+        self.buildid = strftime("%Y%m%d%H%M", localtime(self.timestamp))
+        self.testresults = self.build.getProperty('testresults')
+        summary = ''
+        for res in self.testresults:
+            testname, testlongname, testval = res
+            params = urllib.urlencode({'branchid': self.buildid, 'value': testval.strip(string.letters), 'testname': testlongname, 'tbox' : self.resultsname, 'type' : "continuous", 'time' : self.timestamp, 'branch' : self.branch})
+            request = urllib.urlopen(self.graphurl, params)
+            ret = request.read()
+            lines = ret.split('\n')
+            summary = summary + ret + '\n'
+            for line in lines:
+                 if line.find("RETURN:") > -1:
+                      summary = summary + 'TinderboxPrint: <a title = "%s" href = "http://%s/%s">%s:%s</a>\n' % (testlongname, self.server, line.rsplit(":")[3], testname, testval) 
+
+        self.addCompleteLog('sending to graph server', summary)
+        self.finished(SUCCESS)
