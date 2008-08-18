@@ -4035,11 +4035,15 @@ nsTextFrame::PaintTextWithSelectionColors(gfxContext* aCtx,
                    &aDirtyRect, &aProvider, &advance);
     if (hyphenWidth) {
       // Draw the hyphen
-      gfxFloat hyphenBaselineX = aFramePt.x + xOffset + mTextRun->GetDirection()*advance;
+
       // Get a reference rendering context because aCtx might not have the
       // reference matrix currently set
       gfxTextRunCache::AutoTextRun hyphenTextRun(GetHyphenTextRun(mTextRun, nsnull, this));
       if (hyphenTextRun.get()) {
+        // For right-to-left text runs, the soft-hyphen is positioned at the left
+        // of the text, minus its own width
+        gfxFloat hyphenBaselineX = aFramePt.x + xOffset + mTextRun->GetDirection()*advance -
+          (mTextRun->IsRightToLeft() ? hyphenWidth : 0);
         hyphenTextRun->Draw(aCtx, gfxPoint(hyphenBaselineX, aTextBaselinePt.y),
                             0, hyphenTextRun->GetLength(), &aDirtyRect, nsnull, nsnull);
       }
@@ -4210,11 +4214,14 @@ nsTextFrame::PaintText(nsIRenderingContext* aRenderingContext, nsPoint aPt,
                  ComputeTransformedLength(provider),
                  &dirtyRect, &provider, needAdvanceWidth);
   if (GetStateBits() & TEXT_HYPHEN_BREAK) {
-    gfxFloat hyphenBaselineX = textBaselinePt.x + mTextRun->GetDirection()*advanceWidth;
     // Don't use ctx as the context, because we need a reference context here,
     // ctx may be transformed.
     gfxTextRunCache::AutoTextRun hyphenTextRun(GetHyphenTextRun(mTextRun, nsnull, this));
     if (hyphenTextRun.get()) {
+        // For right-to-left text runs, the soft-hyphen is positioned at the left
+        // of the text, minus its own width
+        gfxFloat hyphenBaselineX = textBaselinePt.x + mTextRun->GetDirection()*advanceWidth -
+          (mTextRun->IsRightToLeft() ? hyphenTextRun->GetAdvanceWidth(0, hyphenTextRun->GetLength(), nsnull) : 0);
       hyphenTextRun->Draw(ctx, gfxPoint(hyphenBaselineX, textBaselinePt.y),
                           0, hyphenTextRun->GetLength(), &dirtyRect, nsnull, nsnull);
     }
