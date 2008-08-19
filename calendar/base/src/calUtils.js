@@ -55,9 +55,13 @@ function createTodo() {
 }
 
 /* Returns a clean new calIDateTime */
-function createDateTime() {
-    return Components.classes["@mozilla.org/calendar/datetime;1"].
-           createInstance(Components.interfaces.calIDateTime);
+function createDateTime(aIcalString) {
+    var dt = Components.classes["@mozilla.org/calendar/datetime;1"]
+                       .createInstance(Components.interfaces.calIDateTime);
+    if (aIcalString) {
+        dt.icalString = aIcalString;
+    }
+    return dt;
 }
 
 /* Returns a clean new calIDuration */

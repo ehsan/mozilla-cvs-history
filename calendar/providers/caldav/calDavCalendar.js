@@ -55,7 +55,6 @@ function calDavCalendar() {
     this.mItemInfoCache = {};
     this.mDisabled = false;
     this.mCalHomeSet = null;
-    this.mPrincipalsNS = null;
     this.mInBoxUrl = null;
     this.mOutBoxUrl = null;
     this.mHaveScheduling = false;
@@ -130,6 +129,16 @@ calDavCalendar.prototype = {
         throw NS_ERROR_NOT_IMPLEMENTED;
     },
 
+
+    get supportedItemTypes caldav_get_supportedItemTypes() {
+        if (this.mUri.host == "www.google.com") {
+            // XXX Special casing for Google, since they don't support sending
+            // VTODO queries, even though they should return an empty set, yuck!
+            return ["VEVENT"];
+        }
+        return ["VEVENT", "VTODO"];
+    },
+
     //
     // calICalendar interface
     //
@@ -138,8 +147,6 @@ calDavCalendar.prototype = {
     get type() { return "caldav"; },
 
     mDisabled: false,
-
-    mPrincipalsNS: null,
 
     mCalendarUserAddress: null,
     get calendarUserAddress() {
@@ -252,6 +259,10 @@ calDavCalendar.prototype = {
                     return null; // xxx todo
                 case "itip.transport":
                     return this.QueryInterface(Components.interfaces.calIItipTransport);
+                case "capabilities.tasks.supported":
+                    return (this.supportedItemTypes.indexOf("VTODO") > -1);
+                case "capabilities.events.supported":
+                    return (this.supportedItemTypes.indexOf("VEVENT") > -1);
             }
         } // else use outbound email-based iTIP (from calProviderBase.js)
         return this.__proto__.__proto__.getProperty.apply(this, arguments);
@@ -361,15 +372,12 @@ calDavCalendar.prototype = {
             }
             if (thisCalendar.verboseLogging()) {
                 var str = convertByteArray(aResult, aResultLength);
-                if (!str) {
-                    LOG("CalDAV: empty or unparseable response on add");
-                } else {
-                    LOG("CalDAV: recv: " + str);
-                }
+                LOG("CalDAV: recv: " + (str || ""));
             }
             // 201 = HTTP "Created"
+            // 204 = HTTP "No Content"
             //
-            if (status == 201) {
+            if (status == 201 || status == 204) {
                 LOG("CalDAV: Item added successfully");
 
                 var retVal = Components.results.NS_OK;
@@ -811,7 +819,7 @@ calDavCalendar.prototype = {
 
     prepRefresh: function caldav_safeRefresh() {
 
-        var itemTypes = new Array("VEVENT", "VTODO");
+        var itemTypes = this.supportedItemTypes;
         var typesCount = itemTypes.length;
         var refreshEvent = {};
         refreshEvent.itemTypes = itemTypes;
@@ -931,7 +939,7 @@ calDavCalendar.prototype = {
                     return;
                 }
                 // if an item has been deleted from the server, delete it here too
-                for (var path in  thisCalendar.mHrefIndex) {
+                for (var path in thisCalendar.mHrefIndex) {
                     if (aRefreshEvent.itemsReported.indexOf(path) < 0 &&
                         path.indexOf(aRefreshEvent.uri.path) == 0) {
 
@@ -1289,6 +1297,25 @@ calDavCalendar.prototype = {
      */
     checkServerCaps: function caldav_checkServerCaps() {
 
+        // XXX Google doesn't support the OPTIONS query, so we don't even have
+        // to try. Lets hope they do so soon, so we can get rid of this! To
+        // avoid needing further workarounds, we just set the outbox and inbox
+        // urls here and return.
+        if (this.calendarUri.host == "www.google.com") {
+            this.mHaveScheduling = true;
+            var spec = this.calendarUri.spec;
+            this.mInBoxUrl = makeURL(spec.replace(/\/events\/$/, "/inbox/"));
+            this.mOutBoxUrl = makeURL(spec.replace(/\/events\/$/, "/outbox/")); 
+            var userEmail = this.calendarUri.path
+                                .replace(/\/calendar\/dav\/([^\/]+)\/.*/i, "$1");
+            this.mCalendarUserAddress = "mailto:" + decodeURIComponent(userEmail.toLowerCase());
+                                                          
+
+            getFreeBusyService().addProvider(this);
+            this.refresh();
+            return;
+        }
+
         var homeSet = this.mCalHomeSet.clone();
         var thisCalendar = this;
 
@@ -1315,7 +1342,10 @@ calDavCalendar.prototype = {
             }
 
 
-            if (dav.indexOf("calendar-schedule") != -1) {
+            if (dav && dav.indexOf("calendar-schedule") != -1) {
+                if (thisCalendar.verboseLogging()) {
+                    LOG("CalDAV: Server generally supports calendar-schedule");
+                }
                 thisCalendar.mHaveScheduling = true;
                 // XXX - we really shouldn't register with the fb service
                 // if another calendar with the same principal-URL has already
@@ -1345,10 +1375,10 @@ calDavCalendar.prototype = {
                     <D:prop>
                       <D:principal-collection-set/>
                     </D:prop>
-                  </D:propfind>
+                  </D:propfind>;
 
         if (this.verboseLogging()) {
-            LOG("CalDAV: send: " + queryXml);
+            LOG("CalDAV: send: " + homeSet.spec + "\n"  + queryXml);
         }
         var httpchannel = calPrepHttpChannel(homeSet,
                                              queryXml,
@@ -1428,11 +1458,10 @@ calDavCalendar.prototype = {
                 </D:prop>
             </D:principal-property-search>;
 
-        if (this.verboseLogging()) {
-            LOG("CalDAV: send: " + queryXml);
-        }
-
         if (!aNameSpaceList.length) {
+            if (this.verboseLogging()) {
+                LOG("CalDAV: principal namespace list empty, server does not support scheduling");
+            }
             this.mHaveScheduling = false;
             this.mInBoxUrl = null;
             this.mOutBoxUrl = null;
@@ -1447,6 +1476,11 @@ calDavCalendar.prototype = {
         if (nsUrl.spec.charAt(nsUrl.spec.length-1) == "/") {
             nsUrl.spec = nsUrl.spec.substr(0, nsUrl.spec.length -1);
         }
+
+        if (this.verboseLogging()) {
+            LOG("CalDAV: send: " + nsUri.spec + "\n" + queryXml);
+        }
+
 
         var httpchannel = calPrepHttpChannel(nsUri, queryXml,
                                              "text/xml; charset=utf-8",
@@ -1480,9 +1514,10 @@ calDavCalendar.prototype = {
                     str = str.substring(str.indexOf('<', 2));
             }
             var multistatus = new XML(str);
+            var multistatusLength = multistatus.*.length();
 
-            for (var i = 0; i < multistatus.*.length(); i++) {
-                var response = new XML(multistatus.*[i]);
+            for (var i = 0; i < multistatusLength; i++) {
+                var response = multistatus.*[i];
 
                 var responseCHS = response..C::["calendar-home-set"]..D::href[0];
                 if (!responseCHS) {
@@ -1495,8 +1530,12 @@ calDavCalendar.prototype = {
                     }
                 } catch (ex) {}
 
-                if (responseCHS  != thisCalendar.mCalHomeSet.path &&
-                    responseCHS != thisCalendar.mCalHomeSet.spec) {
+                if (multistatusLength > 1 &&
+                    (responseCHS != thisCalendar.mCalHomeSet.path ||
+                    responseCHS != thisCalendar.mCalHomeSet.spec)) {
+                    // If there are multiple home sets, then we need to match
+                    // the home url. If there is only one, we can assume its the
+                    // correct one, even if the home set doesn't quite match.
                     continue;
                 }
                 var addrHrefs =
@@ -1532,6 +1571,9 @@ calDavCalendar.prototype = {
                 if (aNameSpaceList.length) {
                     thisCalendar.checkPrincipalsNameSpace(aNameSpaceList);
                 } else {
+                    if (thisCalendar.verboseLogging()) {
+                        LOG("CalDAV: principal namespace list empty, server does not support scheduling");
+                    }
                     thisCalendar.mHaveScheduling = false;
                     thisCalendar.refresh();
                 }
@@ -1592,7 +1634,7 @@ calDavCalendar.prototype = {
         fbQuery += "DTSTART:" + dtstart + "\n";
         fbQuery += "DTEND:" + dtend + "\n";
         fbQuery += "UID:" + uuid + "\n";
-        var attendee = "ATTENDEE;PARTSTAT=NEEDS-ACTION;ROLE=REQ-PARTICIPANT;CUTYPE=INDIVIDUAL;CN=" + mailto_aCalId + "\n";
+        var attendee = "ATTENDEE;PARTSTAT=NEEDS-ACTION;ROLE=REQ-PARTICIPANT;CUTYPE=INDIVIDUAL:" + mailto_aCalId + "\n";
         var attendeeFolded = this.foldLine(attendee);
         fbQuery += attendeeFolded;
         fbQuery += "END:VFREEBUSY\n";
@@ -1600,7 +1642,8 @@ calDavCalendar.prototype = {
         // RFC 2445 is specific about how lines end...
         fbQuery = fbQuery.replace(/\n/g, "\r\n");
         if (this.verboseLogging()) {
-            LOG("CalDAV: send: " + fbQuery);
+            LOG("CalDAV: send (Originator=" + organizer +
+                    ",Recipient=" + mailto_aCalId + "): " + fbQuery);
         }
 
         var httpchannel = calPrepHttpChannel(this.outBoxUrl,
@@ -1661,10 +1704,16 @@ calDavCalendar.prototype = {
                         var ranges = descDat[1].split(",");
                         for (var j = 0; j < ranges.length; j++) {
                             var parts = ranges[j].split("/");
-                            var begin = createDateTime();
-                            begin.icalString = parts[0];
-                            var end = createDateTime();
-                            end.icalString = parts[1];
+                            var begin = createDateTime(parts[0]);
+                            var end;
+                            if (parts[1].charAt(0) == "P") {
+                                // This is a duration
+                                end = begin.clone();
+                                end.addDuration(createDuration(parts[1]))
+                            } else {
+                                // This is a date string
+                                end = createDateTime(parts[1]);
+                            }
                             interval = new calFreeBusyInterval(aCalId,
                                                                fbType,
                                                                begin,
@@ -1674,8 +1723,7 @@ calDavCalendar.prototype = {
                     }
                     if (lines[i].substr(0,7) == "DTSTART") {
                         var dts = lines[i].split(":")[1];
-                        var replyRangeStart = createDateTime();
-                        replyRangeStart.icalString = dts;
+                        var replyRangeStart = createDateTime(dts);
                         if (aRangeStart.compare(replyRangeStart) == -1) {
                             interval = new calFreeBusyInterval(aCalId,
                                                                calIFreeBusyInterval.UNKNOWN,
@@ -1686,8 +1734,7 @@ calDavCalendar.prototype = {
                     }
                     if (lines[i].substr(0,5) == "DTEND") {
                         var dte = lines[i].split(":")[1];
-                        var replyRangeEnd = createDateTime();
-                        replyRangeEnd.icalString = dte;
+                        var replyRangeEnd = createDateTime(dte);
                         if (aRangeEnd.compare(replyRangeEnd) == 1) {
                             interval = new calFreeBusyInterval(aCalId,
                                                                calIFreeBusyInterval.UNKNOWN,
@@ -1750,7 +1797,7 @@ calDavCalendar.prototype = {
             return;
         }
 
-        var itemTypes = new Array("VEVENT", "VTODO");
+        var itemTypes = this.supportedItemTypes;
         var typesCount = itemTypes.length;
         var refreshEvent = {};
         refreshEvent.itemTypes = itemTypes;
