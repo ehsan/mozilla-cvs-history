@@ -438,6 +438,12 @@ static CertificatesWindowController* gCertificatesWindowController;
   NSTableColumn* validityColumn = [mCertsOutlineView tableColumnWithIdentifier:@"attributedShortValidityString"];
   [[validityColumn dataCell] setWraps:NO];
 
+  NSDateFormatter* dateFormatter = [[[NSDateFormatter alloc] init] autorelease];
+  [dateFormatter setFormatterBehavior:NSDateFormatterBehavior10_4];
+  [dateFormatter setDateStyle:NSDateFormatterShortStyle];
+  [dateFormatter setTimeStyle:NSDateFormatterNoStyle];
+  [[[mCertsOutlineView tableColumnWithIdentifier:@"expiresDate"] dataCell] setFormatter:dateFormatter];
+
   [self reloadCertData];
 }
 
