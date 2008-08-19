@@ -235,7 +235,9 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
                                                 protocol:protocol
                                       authenticationType:kSecAuthenticationTypeHTMLForm];
 
-  if (item && [item password] && ![[item password] isEqualToString:@" "])
+  // Check the password before we return to force an auth check up front; if
+  // auth is denied, we don't want to return it.
+  if (item && [item password])
     return item;
 
   item = [self findLegacyKeychainEntryForHost:host port:port];
@@ -306,6 +308,8 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
   KeychainItem* item;
   NSEnumerator* keychainEnumerator = [keychainItems objectEnumerator];
   while ((item = [keychainEnumerator nextObject])) {
+    if ([item isNonEntry])
+      continue;
     if ([item authenticationType] == kSecAuthenticationTypeHTMLForm ||
         [item authenticationType] == kSecAuthenticationTypeHTTPDigest) {
       [returnItems addObject:item];
@@ -421,8 +425,10 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
   // Finally, just arbitrarily pick the first one that looks plausible.
   keychainEnumerator = [newKeychainItems objectEnumerator];
   while ((item = [keychainEnumerator nextObject])) {
-    if ([[item password] isEqualToString:@" "])
+    if ([item isNonEntry])
       continue;
+    // Check the password to trigger an auth now, so we don't return an item
+    // that we can't access when we try to use it.
     if ([item password])
       return item;
   }

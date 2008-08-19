@@ -100,6 +100,11 @@
 - (NSString*)label;
 - (void)setLabel:(NSString*)label;
 
+// Returns YES if this represents a marker from another browser to prevent
+// password saving, rather than actual account info (e.g., Safari's
+// "Passwords not saved" items).
+- (BOOL)isNonEntry;
+
 - (void)removeFromKeychain;
 
 @end

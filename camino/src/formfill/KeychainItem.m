@@ -44,6 +44,8 @@
 // Once we are 10.5+, we can just use kSecLabelItemAttr instead.
 static const unsigned int kRawKeychainLabelIndex = 7;
 
+static NSString* sPasswordsNotSavedMarkerAccount = nil;
+
 @interface KeychainItem(Private)
 + (NSString*)labelForHost:(NSString*)host username:(NSString*)username;
 - (KeychainItem*)initWithRef:(SecKeychainItemRef)ref;
@@ -57,6 +59,12 @@ static const unsigned int kRawKeychainLabelIndex = 7;
 @end
 
 @implementation KeychainItem
+
++ (void)initialize
+{
+  if (!sPasswordsNotSavedMarkerAccount)
+    sPasswordsNotSavedMarkerAccount = [[NSString alloc] initWithFormat:@"Passwords%Cnot%Csaved", 0xA0, 0xA0];
+}
 
 + (KeychainItem*)keychainItemForHost:(NSString*)host
                             username:(NSString*)username
@@ -553,6 +561,16 @@ static const unsigned int kRawKeychainLabelIndex = 7;
   attrList.attr = &attr;
   return SecKeychainItemModifyAttributesAndData(mKeychainItemRef, &attrList,
                                                 0, NULL);
+}
+
+- (BOOL)isNonEntry
+{
+  // In theory, this would just be a check for kSecNegativeItemAttr. In practice
+  // nobody seems to actually use that, so we have to use more fragile methods.
+  // We don't use the password partly because browsers don't agree on that
+  // (Safari uses " ", OmniWeb uses ""), and partly because this lets us
+  // determine whether to ignore it without triggering an auth dialog.
+  return ([[self username] isEqualToString:sPasswordsNotSavedMarkerAccount]);
 }
 
 - (void)removeFromKeychain
