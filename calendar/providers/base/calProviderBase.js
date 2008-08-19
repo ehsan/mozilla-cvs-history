@@ -316,12 +316,14 @@ calProviderBase.prototype = {
                     ret = (identity
                            ? ("mailto:" + identity.QueryInterface(Components.interfaces.nsIMsgIdentity).email)
                            : null);
+                    break;
                 }
                 case "organizerCN": { // itip/imip default: derived out of imip.identity
                     var identity = this.getProperty("imip.identity");
                     ret = (identity
                            ? identity.QueryInterface(Components.interfaces.nsIMsgIdentity).fullName
                            : null);
+                    break;
                 }
             }
             if ((ret === null) &&
