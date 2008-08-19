@@ -41,6 +41,30 @@ var gViewsPane = {
         this.updateViewEndMenu(document.getElementById("daystarthour").value);
         this.updateViewStartMenu(document.getElementById("dayendhour").value);
         this.updateViewWorkDayCheckboxes(document.getElementById("weekstarts").value);
+        this.initializeViewStartEndMenus();
+    },
+
+    initializeViewStartEndMenus: function() {
+        var labelIdStart;
+        var labelIdEnd;
+        var timeFormatter = Components.classes["@mozilla.org/intl/scriptabledateformat;1"]
+                                      .getService(Components.interfaces.nsIScriptableDateFormat);
+        // 1 to 23 instead of 0 to 24 to keep midnight & noon as the localized strings
+        for (var theHour = 1; theHour <= 23; theHour++) {
+            var time = timeFormatter.FormatTime("", Components.interfaces.nsIScriptableDateFormat
+                                    .timeFormatNoSeconds, theHour, 0, 0);
+
+            labelIdStart = "timeStart" + theHour;
+            labelIdEnd = "timeEnd" + theHour;
+            // This if block to keep Noon as the localized string, instead of as a number.
+            if (theHour != 12) {
+                document.getElementById(labelIdStart).setAttribute("label", time);
+                document.getElementById(labelIdEnd).setAttribute("label", time);
+            }
+        }
+        // Deselect and reselect to update visible item title
+        updateSelectedLabel("daystarthour");
+        updateSelectedLabel("dayendhour");
     },
 
     updateViewEndMenu: function prefUpdateViewEnd(aStartValue) {

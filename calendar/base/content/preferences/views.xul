@@ -54,6 +54,8 @@
     <vbox id="calPreferencesBoxViews">
         <script type="application/x-javascript"
                 src="chrome://calendar/content/preferences/views.js"/>
+        <script type="application/x-javascript"
+                src="chrome://calendar/content/calendar-ui-utils.js"/>
 
         <preferences>
             <preference id="calendar.week.start"
@@ -192,30 +194,30 @@
                                   oncommand="gViewsPane.updateViewEndMenu(this.value);"
                                   preference="calendar.view.daystarthour">
                             <menupopup id="daystarthourpopup">
-                                <menuitem label="&time.midnight;" value="0"/>
-                                <menuitem label="&time.1;"        value="1"/>
-                                <menuitem label="&time.2;"        value="2"/>
-                                <menuitem label="&time.3;"        value="3"/>
-                                <menuitem label="&time.4;"        value="4"/>
-                                <menuitem label="&time.5;"        value="5"/>
-                                <menuitem label="&time.6;"        value="6"/>
-                                <menuitem label="&time.7;"        value="7"/>
-                                <menuitem label="&time.8;"        value="8"/>
-                                <menuitem label="&time.9;"        value="9"/>
-                                <menuitem label="&time.10;"       value="10"/>
-                                <menuitem label="&time.11;"       value="11"/>
-                                <menuitem label="&time.noon;"     value="12"/>
-                                <menuitem label="&time.13;"       value="13"/>
-                                <menuitem label="&time.14;"       value="14"/>
-                                <menuitem label="&time.15;"       value="15"/>
-                                <menuitem label="&time.16;"       value="16"/>
-                                <menuitem label="&time.17;"       value="17"/>
-                                <menuitem label="&time.18;"       value="18"/>
-                                <menuitem label="&time.19;"       value="19"/>
-                                <menuitem label="&time.20;"       value="20"/>
-                                <menuitem label="&time.21;"       value="21"/>
-                                <menuitem label="&time.22;"       value="22"/>
-                                <menuitem label="&time.23;"       value="23"/>
+                                <menuitem id="timeStart0" label="&time.midnight;" value="0"/>
+                                <menuitem id="timeStart1"                         value="1"/>
+                                <menuitem id="timeStart2"                         value="2"/>
+                                <menuitem id="timeStart3"                         value="3"/>
+                                <menuitem id="timeStart4"                         value="4"/>
+                                <menuitem id="timeStart5"                         value="5"/>
+                                <menuitem id="timeStart6"                         value="6"/>
+                                <menuitem id="timeStart7"                         value="7"/>
+                                <menuitem id="timeStart8"                         value="8"/>
+                                <menuitem id="timeStart9"                         value="9"/>
+                                <menuitem id="timeStart10"                        value="10"/>
+                                <menuitem id="timeStart11"                        value="11"/>
+                                <menuitem id="timeStart12" label="&time.noon;"    value="12"/>
+                                <menuitem id="timeStart13"                        value="13"/>
+                                <menuitem id="timeStart14"                        value="14"/>
+                                <menuitem id="timeStart15"                        value="15"/>
+                                <menuitem id="timeStart16"                        value="16"/>
+                                <menuitem id="timeStart17"                        value="17"/>
+                                <menuitem id="timeStart18"                        value="18"/>
+                                <menuitem id="timeStart19"                        value="19"/>
+                                <menuitem id="timeStart20"                        value="20"/>
+                                <menuitem id="timeStart21"                        value="21"/>
+                                <menuitem id="timeStart22"                        value="22"/>
+                                <menuitem id="timeStart23"                        value="23"/>
                             </menupopup>
                         </menulist>
                         <hbox align="center" pack="center">
@@ -262,30 +264,30 @@
                                   oncommand="gViewsPane.updateViewStartMenu(this.value);"
                                   preference="calendar.view.dayendhour">
                             <menupopup id="dayendhourpopup">
-                                <menuitem label="&time.1;"        value="1"/>
-                                <menuitem label="&time.2;"        value="2"/>
-                                <menuitem label="&time.3;"        value="3"/>
-                                <menuitem label="&time.4;"        value="4"/>
-                                <menuitem label="&time.5;"        value="5"/>
-                                <menuitem label="&time.6;"        value="6"/>
-                                <menuitem label="&time.7;"        value="7"/>
-                                <menuitem label="&time.8;"        value="8"/>
-                                <menuitem label="&time.9;"        value="9"/>
-                                <menuitem label="&time.10;"       value="10"/>
-                                <menuitem label="&time.11;"       value="11"/>
-                                <menuitem label="&time.noon;"     value="12"/>
-                                <menuitem label="&time.13;"       value="13"/>
-                                <menuitem label="&time.14;"       value="14"/>
-                                <menuitem label="&time.15;"       value="15"/>
-                                <menuitem label="&time.16;"       value="16"/>
-                                <menuitem label="&time.17;"       value="17"/>
-                                <menuitem label="&time.18;"       value="18"/>
-                                <menuitem label="&time.19;"       value="19"/>
-                                <menuitem label="&time.20;"       value="20"/>
-                                <menuitem label="&time.21;"       value="21"/>
-                                <menuitem label="&time.22;"       value="22"/>
-                                <menuitem label="&time.23;"       value="23"/>
-                                <menuitem label="&time.midnight;" value="24"/>
+                                <menuitem id="timeEnd1"                          value="1"/>
+                                <menuitem id="timeEnd2"                          value="2"/>
+                                <menuitem id="timeEnd3"                          value="3"/>
+                                <menuitem id="timeEnd4"                          value="4"/>
+                                <menuitem id="timeEnd5"                          value="5"/>
+                                <menuitem id="timeEnd6"                          value="6"/>
+                                <menuitem id="timeEnd7"                          value="7"/>
+                                <menuitem id="timeEnd8"                          value="8"/>
+                                <menuitem id="timeEnd9"                          value="9"/>
+                                <menuitem id="timeEnd10"                         value="10"/>
+                                <menuitem id="timeEnd11"                         value="11"/>
+                                <menuitem id="timeEnd12" label="&time.noon;"     value="12"/>
+                                <menuitem id="timeEnd13"                         value="13"/>
+                                <menuitem id="timeEnd14"                         value="14"/>
+                                <menuitem id="timeEnd15"                         value="15"/>
+                                <menuitem id="timeEnd16"                         value="16"/>
+                                <menuitem id="timeEnd17"                         value="17"/>
+                                <menuitem id="timeEnd18"                         value="18"/>
+                                <menuitem id="timeEnd19"                         value="19"/>
+                                <menuitem id="timeEnd20"                         value="20"/>
+                                <menuitem id="timeEnd21"                         value="21"/>
+                                <menuitem id="timeEnd22"                         value="22"/>
+                                <menuitem id="timeEnd23"                         value="23"/>
+                                <menuitem id="timeEnd24" label="&time.midnight;" value="24"/>
                             </menupopup>
                         </menulist>
                     </row>

@@ -54,10 +54,7 @@ var gCalendarGeneralPane = {
                 .setAttribute("label", labelShort + ": " + dateFormattedShort);
 
         // deselect and reselect to update visible item title
-        var dateFormatMenuList = document.getElementById("dateformat");
-        var selectedIndex = dateFormatMenuList.selectedIndex;
-        dateFormatMenuList.selectedIndex = -1;
-        dateFormatMenuList.selectedIndex = selectedIndex;
+        updateSelectedLabel("dateformat");
     },
 
     autoRefreshPrefChanged: function() {
