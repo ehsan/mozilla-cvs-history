@@ -62,7 +62,8 @@ enum {
 
 - (id)init;   // designated initializer
 - (id)initWithIdentifier:(NSString*)inIdentifier; // will get used for special folders
-- (NSMutableArray *)childArray;
+
+- (NSArray *)children;
 - (NSArray *)childURLs;
 - (NSArray *)allChildBookmarks;
 
@@ -80,7 +81,6 @@ enum {
 - (BOOL)isSmartFolder;
 - (BOOL)isDockMenu;
 
-- (void)setChildArray:(NSMutableArray *)aChildArray; //should be private?
 - (void)setIsGroup:(BOOL)aGroupFlag;
 - (void)setIsRoot:(BOOL)aFlag;
 - (void)setIsToolbar:(BOOL)aFlag;

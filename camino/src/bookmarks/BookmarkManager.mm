@@ -97,6 +97,7 @@ enum {
 
 - (void)loadBookmarksThreadEntry:(id)inObject;
 - (void)loadBookmarks;
+- (void)setBookmarkRoot:(BookmarkFolder *)rootFolder;
 - (void)setPathToBookmarkFile:(NSString *)aString;
 - (void)setupSmartCollections;
 - (void)delayedStartupItems;
@@ -253,7 +254,7 @@ static BookmarkManager* gBookmarkManager = nil;
   [mLastUsedFolder release];
 
   [mUndoManager release];
-  [mRootBookmarks release];
+  [mBookmarkRoot release];
   [mPathToBookmarkFile release];
   [mMetadataPath release];
   [mSmartFolderManager release];
@@ -304,7 +305,7 @@ static BookmarkManager* gBookmarkManager = nil;
 
     [root setIsRoot:YES];
     [root setTitle:NSLocalizedString(@"BookmarksRootName", nil)];
-    [self setRootBookmarks:root];
+    [self setBookmarkRoot:root];
     [root release];
 
     BOOL bookmarksReadOK = [self readBookmarks];
@@ -325,7 +326,7 @@ static BookmarkManager* gBookmarkManager = nil;
     }
 
     // make sure that the root folder has the special flag
-    [[self rootBookmarks] setIsRoot:YES];
+    [[self bookmarkRoot] setIsRoot:YES];
 
     // setup special folders
     [self setupSmartCollections];
@@ -363,7 +364,7 @@ static BookmarkManager* gBookmarkManager = nil;
   [mSmartFolderManager postStartupInitialization:self];
   [[self toolbarFolder] refreshIcon];
 
-  NSArray* allBookmarks = [[self rootBookmarks] allChildBookmarks];
+  NSArray* allBookmarks = [[self bookmarkRoot] allChildBookmarks];
 
   NSEnumerator* bmEnum = [allBookmarks objectEnumerator];
   Bookmark* thisBM;
@@ -432,24 +433,24 @@ static BookmarkManager* gBookmarkManager = nil;
   BookmarkFolder* historyBMFolder = [[BookmarkFolder alloc] initWithIdentifier:kHistoryFolderIdentifier];
   [historyBMFolder setTitle:NSLocalizedString(@"History", nil)];
   [historyBMFolder setIsSmartFolder:YES];
-  [mRootBookmarks insertChild:historyBMFolder atIndex:(collectionIndex++) isMove:NO];
+  [mBookmarkRoot insertChild:historyBMFolder atIndex:(collectionIndex++) isMove:NO];
   [historyBMFolder release];
 
   // note: we retain smart folders, so they persist even if turned off and on
   mTop10Container = [[BookmarkFolder alloc] initWithIdentifier:kTop10BookmarksFolderIdentifier];
   [mTop10Container setTitle:NSLocalizedString(@"Top Ten List", nil)];
   [mTop10Container setIsSmartFolder:YES];
-  [mRootBookmarks insertChild:mTop10Container atIndex:(collectionIndex++) isMove:NO];
+  [mBookmarkRoot insertChild:mTop10Container atIndex:(collectionIndex++) isMove:NO];
 
   mRendezvousContainer = [[BookmarkFolder alloc] initWithIdentifier:kRendezvousFolderIdentifier];
   [mRendezvousContainer setTitle:NSLocalizedString(@"Rendezvous", nil)];
   [mRendezvousContainer setIsSmartFolder:YES];
-  [mRootBookmarks insertChild:mRendezvousContainer atIndex:(collectionIndex++) isMove:NO];
+  [mBookmarkRoot insertChild:mRendezvousContainer atIndex:(collectionIndex++) isMove:NO];
 
   mAddressBookContainer = [[BookmarkFolder alloc] initWithIdentifier:kAddressBookFolderIdentifier];
   [mAddressBookContainer setTitle:NSLocalizedString(@"Address Book", nil)];
   [mAddressBookContainer setIsSmartFolder:YES];
-  [mRootBookmarks insertChild:mAddressBookContainer atIndex:(collectionIndex++) isMove:NO];
+  [mBookmarkRoot insertChild:mAddressBookContainer atIndex:(collectionIndex++) isMove:NO];
 
   // set pretty icons
   [[self historyFolder]       setIcon:[NSImage imageNamed:@"history_icon"]];
@@ -464,14 +465,14 @@ static BookmarkManager* gBookmarkManager = nil;
 // Getter/Setter methods
 //
 
-- (BookmarkFolder *)rootBookmarks
+- (BookmarkFolder *)bookmarkRoot
 {
-  return mRootBookmarks;
+  return mBookmarkRoot;
 }
 
 - (BookmarkFolder *)dockMenuFolder
 {
-  BookmarkFolder *folder = [self findDockMenuFolderInFolder:[self rootBookmarks]];
+  BookmarkFolder *folder = [self findDockMenuFolderInFolder:[self bookmarkRoot]];
   if (folder)
     return folder;
   else
@@ -480,7 +481,7 @@ static BookmarkManager* gBookmarkManager = nil;
 
 - (BookmarkFolder *)findDockMenuFolderInFolder:(BookmarkFolder *)aFolder
 {
-  NSEnumerator *enumerator = [[aFolder childArray] objectEnumerator];
+  NSEnumerator *enumerator = [[aFolder children] objectEnumerator];
   id aKid;
   BookmarkFolder *foundFolder = nil;
   while ((!foundFolder) && (aKid = [enumerator nextObject])) {
@@ -496,7 +497,7 @@ static BookmarkManager* gBookmarkManager = nil;
 
 - (BookmarkFolder*)rootBookmarkFolderWithIdentifier:(NSString*)inIdentifier
 {
-  NSArray* rootFolders = [[self rootBookmarks] childArray];
+  NSArray* rootFolders = [[self bookmarkRoot] children];
   unsigned int numFolders = [rootFolders count];
   for (unsigned int i = 0; i < numFolders; i++) {
     id curItem = [rootFolders objectAtIndex:i];
@@ -568,7 +569,7 @@ static BookmarkManager* gBookmarkManager = nil;
 
 - (BOOL)isUserCollection:(BookmarkFolder *)inFolder
 {
-  return ([inFolder parent] == mRootBookmarks) &&
+  return ([inFolder parent] == mBookmarkRoot) &&
          ([[inFolder identifier] length] == 0);   // all our special folders have identifiers
 }
 
@@ -584,12 +585,12 @@ static BookmarkManager* gBookmarkManager = nil;
 
 - (unsigned)indexOfContainer:(BookmarkFolder*)inFolder
 {
-  return [mRootBookmarks indexOfObject:inFolder];
+  return [mBookmarkRoot indexOfObject:inFolder];
 }
 
 - (BookmarkFolder*)containerAtIndex:(unsigned)inIndex
 {
-  return [mRootBookmarks objectAtIndex:inIndex];
+  return [mBookmarkRoot objectAtIndex:inIndex];
 }
 
 - (BookmarkFolder *)rendezvousFolder
@@ -618,7 +619,7 @@ static BookmarkManager* gBookmarkManager = nil;
 
 - (BookmarkItem*)itemWithUUID:(NSString*)uuid
 {
-  return [mRootBookmarks itemWithUUID:uuid];
+  return [mBookmarkRoot itemWithUUID:uuid];
 }
 
 // only the main thread can get the undo manager.
@@ -638,12 +639,12 @@ static BookmarkManager* gBookmarkManager = nil;
   mPathToBookmarkFile = aString;
 }
 
-- (void)setRootBookmarks:(BookmarkFolder *)anArray
+- (void)setBookmarkRoot:(BookmarkFolder *)rootFolder
 {
-  if (anArray != mRootBookmarks) {
-    [anArray retain];
-    [mRootBookmarks release];
-    mRootBookmarks = anArray;
+  if (rootFolder != mBookmarkRoot) {
+    [rootFolder retain];
+    [mBookmarkRoot release];
+    mBookmarkRoot = rootFolder;
   }
 }
 
@@ -656,7 +657,7 @@ static BookmarkManager* gBookmarkManager = nil;
 - (void)clearAllVisits
 {
   // XXX this will fire a lot of changed notifications.
-  NSEnumerator* bookmarksEnum = [[self rootBookmarks] objectEnumerator];
+  NSEnumerator* bookmarksEnum = [[self bookmarkRoot] objectEnumerator];
   BookmarkItem* curItem;
   while ((curItem = [bookmarksEnum nextObject])) {
     if ([curItem isKindOfClass:[Bookmark class]])
@@ -680,7 +681,7 @@ static BookmarkManager* gBookmarkManager = nil;
       firstWord = shortcut;
       secondWord = @"";
     }
-    resolvedArray = [[self rootBookmarks] resolveShortcut:firstWord withArgs:secondWord];
+    resolvedArray = [[self bookmarkRoot] resolveShortcut:firstWord withArgs:secondWord];
   }
   return resolvedArray;
 }
@@ -689,7 +690,7 @@ static BookmarkManager* gBookmarkManager = nil;
 - (NSArray *)searchBookmarksContainer:(BookmarkFolder*)container forString:(NSString *)searchString inFieldWithTag:(int)tag
 {
   if ((searchString) && [searchString length] > 0) {
-    BookmarkFolder* searchContainer = container ? container : [self rootBookmarks];
+    BookmarkFolder* searchContainer = container ? container : [self bookmarkRoot];
     return [searchContainer bookmarksWithString:searchString inFieldWithTag:tag];
   }
   return nil;
@@ -709,11 +710,11 @@ static BookmarkManager* gBookmarkManager = nil;
     if ([aBookmark isKindOfClass:[BookmarkFolder class]]) {
       if (aBookmark == parent)
         return NO;
-      if ((parent == [self rootBookmarks]) && [(BookmarkFolder *)aBookmark isGroup])
+      if ((parent == [self bookmarkRoot]) && [(BookmarkFolder *)aBookmark isGroup])
         return NO;
     }
     else if ([aBookmark isKindOfClass:[Bookmark class]]) {
-      if (parent == [self rootBookmarks])
+      if (parent == [self bookmarkRoot])
         return NO;
     }
     if ([parent isChildOfItem:aBookmark])
@@ -1237,7 +1238,7 @@ static BookmarkManager* gBookmarkManager = nil;
   // XXX if we quit while this thread is still running, we'll end up with incomplete metadata
   // on disk, but it will get rebuilt on the next launch.
 
-  NSArray* allBookmarkItems = [mRootBookmarks allChildBookmarks];
+  NSArray* allBookmarkItems = [mBookmarkRoot allChildBookmarks];
 
   // build up the path and ensure the folders are present along the way. Removes the
   // previous version entirely.
@@ -1370,14 +1371,14 @@ static BookmarkManager* gBookmarkManager = nil;
 
 - (BOOL)readCaminoPListBookmarks:(NSDictionary *)plist
 {
-  if (![[self rootBookmarks] readNativeDictionary:plist])
+  if (![[self bookmarkRoot] readNativeDictionary:plist])
     return NO;    // read failed
 
   // find the menu and toolbar folders
   BookmarkFolder* menuFolder = nil;
   BookmarkFolder* toolbarFolder = nil;
 
-  NSEnumerator* rootFoldersEnum = [[[self rootBookmarks] childArray] objectEnumerator];
+  NSEnumerator* rootFoldersEnum = [[[self bookmarkRoot] children] objectEnumerator];
   id curChild;
   while ((curChild = [rootFoldersEnum nextObject])) {
     if ([curChild isKindOfClass:[BookmarkFolder class]]) {
@@ -1399,14 +1400,14 @@ static BookmarkManager* gBookmarkManager = nil;
   if (!menuFolder) {
     menuFolder = [[[BookmarkFolder alloc] initWithIdentifier:kBookmarksMenuFolderIdentifier] autorelease];
     [menuFolder setTitle:NSLocalizedString(@"Bookmark Menu", nil)];
-    [[self rootBookmarks] insertChild:menuFolder atIndex:kBookmarkMenuContainerIndex isMove:NO];
+    [[self bookmarkRoot] insertChild:menuFolder atIndex:kBookmarkMenuContainerIndex isMove:NO];
   }
 
   if (!toolbarFolder) {
     toolbarFolder = [[[BookmarkFolder alloc] initWithIdentifier:kBookmarksToolbarFolderIdentifier] autorelease];
     [toolbarFolder setTitle:NSLocalizedString(@"Bookmark Toolbar", nil)];
     [toolbarFolder setIsToolbar:YES];
-    [[self rootBookmarks] insertChild:toolbarFolder atIndex:kToolbarContainerIndex isMove:NO];
+    [[self bookmarkRoot] insertChild:toolbarFolder atIndex:kToolbarContainerIndex isMove:NO];
   }
 
   return YES;
@@ -1414,14 +1415,14 @@ static BookmarkManager* gBookmarkManager = nil;
 
 - (BOOL)readSafariPListBookmarks:(NSDictionary *)plist
 {
-  BOOL readOK = [[self rootBookmarks] readSafariDictionary:plist];
+  BOOL readOK = [[self bookmarkRoot] readSafariDictionary:plist];
   if (!readOK) return NO;
 
   // find the menu and toolbar folders
   BookmarkFolder* menuFolder = nil;
   BookmarkFolder* toolbarFolder = nil;
 
-  NSEnumerator* rootFoldersEnum = [[[self rootBookmarks] childArray] objectEnumerator];
+  NSEnumerator* rootFoldersEnum = [[[self bookmarkRoot] children] objectEnumerator];
   id curChild;
   while ((curChild = [rootFoldersEnum nextObject])) {
     if ([curChild isKindOfClass:[BookmarkFolder class]]) {
@@ -1446,14 +1447,14 @@ static BookmarkManager* gBookmarkManager = nil;
   if (!menuFolder) {
     menuFolder = [[[BookmarkFolder alloc] initWithIdentifier:kBookmarksMenuFolderIdentifier] autorelease];
     [menuFolder setTitle:NSLocalizedString(@"Bookmark Menu", nil)];
-    [[self rootBookmarks] insertChild:menuFolder atIndex:kBookmarkMenuContainerIndex isMove:NO];
+    [[self bookmarkRoot] insertChild:menuFolder atIndex:kBookmarkMenuContainerIndex isMove:NO];
   }
 
   if (!toolbarFolder) {
     toolbarFolder = [[[BookmarkFolder alloc] initWithIdentifier:kBookmarksToolbarFolderIdentifier] autorelease];
     [toolbarFolder setTitle:NSLocalizedString(@"Bookmark Toolbar", nil)];
     [toolbarFolder setIsToolbar:YES];
-    [[self rootBookmarks] insertChild:toolbarFolder atIndex:kToolbarContainerIndex isMove:NO];
+    [[self bookmarkRoot] insertChild:toolbarFolder atIndex:kToolbarContainerIndex isMove:NO];
   }
 
   return YES;
@@ -1544,7 +1545,7 @@ static BookmarkManager* gBookmarkManager = nil;
   BOOL success = [[aDict objectForKey:kBookmarkImportStatusIndentifier] boolValue];
   NSArray *fileArray = [aDict objectForKey:kBookmarkImportPathIndentifier];
   int currentIndex = [[aDict objectForKey:kBookmarkImportNewFolderIndexIdentifier] intValue];
-  BookmarkFolder *rootFolder = [self rootBookmarks];
+  BookmarkFolder *rootFolder = [self bookmarkRoot];
   BookmarkFolder *importFolder = [aDict objectForKey:kBookmarkImportNewFolderIdentifier];
   if (success || ((currentIndex - [fileArray count]) > 0)) {
     NSUndoManager *undoManager = [self undoManager];
@@ -1911,14 +1912,14 @@ static BookmarkManager* gBookmarkManager = nil;
 
 - (void)writeHTMLFile:(NSString *)pathToFile
 {
-  NSData *htmlData = [[[self rootBookmarks] writeHTML:0] dataUsingEncoding:NSUTF8StringEncoding];
+  NSData *htmlData = [[[self bookmarkRoot] writeHTML:0] dataUsingEncoding:NSUTF8StringEncoding];
   if (![htmlData writeToFile:[pathToFile stringByStandardizingPath] atomically:YES])
     NSLog(@"writeHTML: Failed to write file %@", pathToFile);
 }
 
 - (void)writeSafariFile:(NSString *)pathToFile
 {
-  NSDictionary* dict = [[self rootBookmarks] writeSafariDictionary];
+  NSDictionary* dict = [[self bookmarkRoot] writeSafariDictionary];
   if (![dict writeToFile:[pathToFile stringByStandardizingPath] atomically:YES])
     NSLog(@"writeSafariFile: Failed to write file %@", pathToFile);
 }
@@ -1941,11 +1942,11 @@ static BookmarkManager* gBookmarkManager = nil;
     return;
   }
 
-  BookmarkFolder* rootBookmarks = [self rootBookmarks];
-  if (!rootBookmarks)
+  BookmarkFolder* bookmarkRoot = [self bookmarkRoot];
+  if (!bookmarkRoot)
     return;   // we never read anything
 
-  NSDictionary* dict = [rootBookmarks writeNativeDictionary];
+  NSDictionary* dict = [bookmarkRoot writeNativeDictionary];
   if (!dict) {
     NSLog(@"writePropertyListFile: writeNativeDictionary returned nil dictionary");
     return;

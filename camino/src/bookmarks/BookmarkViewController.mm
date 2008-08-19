@@ -205,7 +205,7 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
   [mItemToReveal release];
   [mExpandedStates release];
   [mActiveRootCollection release];
-  [mRootBookmarks release];
+  [mBookmarkRoot release];
   [mSearchResultArray release];
 
   [mHistoryDataSource release];
@@ -345,12 +345,12 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
 //
 - (void)ensureBookmarks
 {
-  if (!mRootBookmarks) {
-    BookmarkFolder* manager = [[BookmarkManager sharedBookmarkManager] rootBookmarks];
+  if (!mBookmarkRoot) {
+    BookmarkFolder* manager = [[BookmarkManager sharedBookmarkManager] bookmarkRoot];
     if (![manager count])     // not initialized yet, try again later (from start notifiation)
       return;
 
-    mRootBookmarks = [manager retain];
+    mBookmarkRoot = [manager retain];
 
     [mContainersTableView setTarget:self];
     [mContainersTableView setDeleteAction:@selector(deleteCollection:)];
@@ -382,7 +382,7 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
 
 - (IBAction)addCollection:(id)aSender
 {
-  BookmarkFolder *aFolder = [mRootBookmarks addBookmarkFolder];
+  BookmarkFolder *aFolder = [mBookmarkRoot addBookmarkFolder];
   [aFolder setTitle:NSLocalizedString(@"NewBookmarkFolder", nil)];
   [self selectContainerFolder:aFolder];
   int newFolderIndex = [[BookmarkManager sharedBookmarkManager] indexOfContainer:aFolder];
@@ -423,7 +423,7 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
     return;
 
   [self selectContainerFolder:[manager containerAtIndex:index - 1]];
-  [[manager rootBookmarks] deleteChild:selectedContainer];
+  [[manager bookmarkRoot] deleteChild:selectedContainer];
 }
 
 - (IBAction)deleteBookmarks:(id)aSender
@@ -867,7 +867,7 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
   else {
     // walk up to the child of the root, which should be a container
     id curParent = item;
-    while (curParent && [curParent respondsToSelector:@selector(parent)] && (BookmarkFolder*)[curParent parent] != [bmManager rootBookmarks])
+    while (curParent && [curParent respondsToSelector:@selector(parent)] && (BookmarkFolder*)[curParent parent] != [bmManager bookmarkRoot])
       curParent = [curParent parent];
 
     if (curParent)
@@ -1137,7 +1137,7 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
 //
 - (int)containerCount
 {
-  return [mRootBookmarks count];
+  return [mBookmarkRoot count];
 }
 
 - (void)selectContainerFolder:(BookmarkFolder*)inFolder
@@ -1204,7 +1204,7 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
 - (BookmarkFolder*)selectedContainerFolder
 {
   int selectedRow = [mContainersTableView selectedRow];
-  id selectedItem = [mRootBookmarks objectAtIndex:selectedRow];
+  id selectedItem = [mBookmarkRoot objectAtIndex:selectedRow];
   if ([selectedItem isKindOfClass:[BookmarkFolder class]])
     return (BookmarkFolder*)selectedItem;
 
@@ -1213,14 +1213,14 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
 
 - (void)selectLastContainer
 {
-  BookmarkFolder* lastContainer = [[[[BookmarkManager sharedBookmarkManager] rootBookmarks] childArray] lastObject];
+  BookmarkFolder* lastContainer = [[[[BookmarkManager sharedBookmarkManager] bookmarkRoot] children] lastObject];
   [self selectContainerFolder:lastContainer];
 }
 
 - (int)numberOfRowsInTableView:(NSTableView *)tableView
 {
   if (tableView == mContainersTableView)
-    return [mRootBookmarks count];
+    return [mBookmarkRoot count];
 
   return 0;
 }
@@ -1230,7 +1230,7 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
   id item = nil;
 
   if (tableView == mContainersTableView)
-    item = [mRootBookmarks objectAtIndex:row];
+    item = [mBookmarkRoot objectAtIndex:row];
 
   return [item valueForKey:[tableColumn identifier]];
 }
@@ -1238,7 +1238,7 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
 - (void)tableView:(NSTableView *)inTableView willDisplayCell:(id)inCell forTableColumn:(NSTableColumn *)inTableColumn row:(int)inRowIndex
 {
   if (inTableView == mContainersTableView) {
-    BookmarkFolder *aFolder = [mRootBookmarks objectAtIndex:inRowIndex];
+    BookmarkFolder *aFolder = [mBookmarkRoot objectAtIndex:inRowIndex];
     [inCell setImage:[aFolder icon]];
   }
 }
@@ -1246,7 +1246,7 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
 - (BOOL)tableView:(NSTableView *)aTableView shouldEditTableColumn:(NSTableColumn *)aTableColumn row:(int)rowIndex
 {
   if (aTableView == mContainersTableView) {
-    BookmarkFolder* aFolder = [mRootBookmarks objectAtIndex:rowIndex];
+    BookmarkFolder* aFolder = [mBookmarkRoot objectAtIndex:rowIndex];
     return [[BookmarkManager sharedBookmarkManager] isUserCollection:aFolder];
   }
   return NO;
@@ -1255,7 +1255,7 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
 - (void)tableView:(NSTableView *)tableView setObjectValue:(id)object forTableColumn:(NSTableColumn *)tableColumn row:(int)row
 {
   if (tableView == mContainersTableView) {
-    BookmarkFolder *aFolder = [mRootBookmarks objectAtIndex:row];
+    BookmarkFolder *aFolder = [mBookmarkRoot objectAtIndex:row];
     [aFolder setTitle:object];
   }
 }
@@ -1273,7 +1273,7 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
   id curRow;
   while ((curRow = [enumerator nextObject])) {
     int rowVal = [curRow intValue];
-    BookmarkFolder* collectionFolder = [mRootBookmarks objectAtIndex:rowVal];
+    BookmarkFolder* collectionFolder = [mBookmarkRoot objectAtIndex:rowVal];
     if ([manager isUserCollection:collectionFolder])
       [itemArray addObject:collectionFolder];
   }
@@ -1302,7 +1302,7 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
     BookmarkFolder* dropFolder = nil;
 
     if (op == NSTableViewDropOn) {
-      BookmarkFolder* destFolder = [mRootBookmarks objectAtIndex:row];
+      BookmarkFolder* destFolder = [mBookmarkRoot objectAtIndex:row];
       // only use this if it's a modifiable folder
       if (![destFolder isSmartFolder])
         dropFolder = destFolder;
@@ -1312,7 +1312,7 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
       // folder is the address book folder)
       int firstUserCollectionRow = [manager indexOfContainer:[manager addressBookFolder]] + 1;
       if (row >= firstUserCollectionRow)
-        dropFolder = mRootBookmarks;
+        dropFolder = mBookmarkRoot;
     }
 
     if (dropFolder) {
@@ -1323,7 +1323,7 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
         return (isOK) ? dragOp : NSDragOperationNone;
       }
       else if ([[info draggingPasteboard] containsURLData]) {
-        return (dropFolder == mRootBookmarks) ? NSDragOperationNone : dragOp;
+        return (dropFolder == mBookmarkRoot) ? NSDragOperationNone : dragOp;
       }
     }
   }
@@ -1339,9 +1339,9 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
   BookmarkFolder *dropFolder;
   int dropLocation = row;
   if (op == NSTableViewDropAbove)
-    dropFolder = mRootBookmarks;
+    dropFolder = mBookmarkRoot;
   else {
-    dropFolder = [mRootBookmarks objectAtIndex:row];
+    dropFolder = [mBookmarkRoot objectAtIndex:row];
     dropLocation = [dropFolder count];
   }
   BOOL result = [self doDrop:info intoFolder:dropFolder index:dropLocation];
@@ -1362,7 +1362,7 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
   if (aTableView == mContainersTableView) {
     NSMenu* contextMenu = [[[aTableView menu] copy] autorelease];
     if ([aTableView numberOfSelectedRows] > 0) {
-      BookmarkFolder* aFolder = [mRootBookmarks objectAtIndex:rowIndex];
+      BookmarkFolder* aFolder = [mBookmarkRoot objectAtIndex:rowIndex];
 
       // Create and add the "Use as Dock Menu" menu item for every collection but history
       if (aFolder != [[BookmarkManager sharedBookmarkManager] historyFolder]) {
@@ -1869,7 +1869,7 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
 - (void)bookmarkAdded:(NSNotification *)note
 {
   BookmarkItem* addedItem = [note object];
-  if ((addedItem == [[BookmarkManager sharedBookmarkManager] rootBookmarks])) {
+  if ((addedItem == [[BookmarkManager sharedBookmarkManager] bookmarkRoot])) {
     [mContainersTableView reloadData];
     BookmarkFolder* updatedFolder = [[note userInfo] objectForKey:BookmarkFolderChildKey];
     [self selectContainerFolder:updatedFolder];
@@ -1891,7 +1891,7 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
     mItemToReveal = nil;
   }
 
-  if ((removedItem == [[BookmarkManager sharedBookmarkManager] rootBookmarks])) {
+  if ((removedItem == [[BookmarkManager sharedBookmarkManager] bookmarkRoot])) {
     [mContainersTableView reloadData];
     return;
   }
@@ -1985,7 +1985,7 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
       else if ((containerId = [selectedContainerInfo objectForKey:kBookmarksSelectedContainerUUIDKey])) {
         theFolder = (BookmarkFolder*)[bookmarkManager itemWithUUID:containerId];
         // make sure it's (still) a container
-        if ([theFolder parent] != [bookmarkManager rootBookmarks])
+        if ([theFolder parent] != [bookmarkManager bookmarkRoot])
           theFolder = nil;
       }
       if (theFolder)

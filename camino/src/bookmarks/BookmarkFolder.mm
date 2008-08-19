@@ -164,7 +164,7 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
     return mCurFolder;
   }
 
-  NSArray* curFolderChildren = [mCurFolder childArray];
+  NSArray* curFolderChildren = [mCurFolder children];
   BookmarkItem* curChild = [curFolderChildren safeObjectAtIndex:mCurChildIndex];
   if (curChild) {
     [self setupNextForItem:curChild];
@@ -238,7 +238,7 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
   [folderCopy setSpecialFlag:folderFlags];
   // don't copy the identifier, since it should be unique
 
-  NSEnumerator *enumerator = [[self childArray] objectEnumerator];
+  NSEnumerator *enumerator = [[self children] objectEnumerator];
   id anItem, aCopiedItem;
   // head fake the undomanager
   NSUndoManager *undoManager = [[BookmarkManager sharedBookmarkManager] undoManager];
@@ -289,7 +289,7 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
 // get/set properties
 //
 
-- (NSMutableArray *)childArray
+- (NSArray *)children
 {
   return mChildArray;
 }
@@ -298,7 +298,7 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
 - (NSArray *)childURLs
 {
   NSMutableArray *urlArray = [NSMutableArray arrayWithCapacity:[self count]];
-  NSEnumerator *enumerator = [[self childArray] objectEnumerator];
+  NSEnumerator *enumerator = [[self children] objectEnumerator];
   id anItem;
   while ((anItem = [enumerator nextObject])) {
     if ([anItem isKindOfClass:[Bookmark class]] && ![(Bookmark *)anItem isSeparator])
@@ -369,17 +369,6 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
 - (unsigned)specialFlag
 {
   return mSpecialFlag;
-}
-
-
-// world of hurt if you use this incorrectly.
-- (void)setChildArray:(NSMutableArray *)aChildArray
-{
-  if (aChildArray != mChildArray) {
-    [aChildArray retain];
-    [mChildArray release]; //trashes everything the bookmark contained
-    mChildArray = aChildArray;
-  }
 }
 
 - (void)setIsGroup:(BOOL)aBool
@@ -516,7 +505,7 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
 - (void)insertIntoSmartFolderChild:(BookmarkItem *)aItem
 {
   if ([self isSmartFolder]) {
-    [[self childArray] addObject:aItem];
+    [mChildArray addObject:aItem];
     [self itemAddedNote:aItem atIndex:([self count] - 1)];
   }
 }
@@ -524,7 +513,7 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
 - (void)insertIntoSmartFolderChild:(BookmarkItem *)aItem atIndex:(unsigned)inIndex
 {
   if ([self isSmartFolder]) {
-    [[self childArray] insertObject:aItem atIndex:inIndex];
+    [mChildArray insertObject:aItem atIndex:inIndex];
     [self itemAddedNote:aItem atIndex:inIndex];
   }
 }
@@ -532,8 +521,8 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
 - (void)deleteFromSmartFolderChildAtIndex:(unsigned)index
 {
   if ([self isSmartFolder]) {
-    BookmarkItem *item = [[[self childArray] objectAtIndex:index] retain];
-    [[self childArray] removeObjectAtIndex:index];
+    BookmarkItem *item = [[mChildArray objectAtIndex:index] retain];
+    [mChildArray removeObjectAtIndex:index];
     [self itemRemovedNote:[item autorelease]];
   }
 }
@@ -729,7 +718,7 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
     return self;
 
   // see if our kids match
-  NSEnumerator *enumerator = [[self childArray] objectEnumerator];
+  NSEnumerator *enumerator = [[self children] objectEnumerator];
   id childItem;
   while ((childItem = [enumerator nextObject])) {
     if ([childItem isKindOfClass:[Bookmark class]]) {
@@ -837,7 +826,7 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
 - (BOOL)deleteChild:(BookmarkItem *)aChild
 {
   BOOL itsDead = NO;
-  if ([[self childArray] indexOfObjectIdenticalTo:aChild] != NSNotFound) {
+  if ([[self children] indexOfObjectIdenticalTo:aChild] != NSNotFound) {
     if ([aChild isKindOfClass:[Bookmark class]])
       itsDead = [self deleteBookmark:(Bookmark *)aChild];
     else if ([aChild isKindOfClass:[BookmarkFolder class]])
@@ -845,7 +834,7 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
   }
   else {
     //with current setup, shouldn't ever hit this code path.
-    NSEnumerator *enumerator = [[self childArray] objectEnumerator];
+    NSEnumerator *enumerator = [[self children] objectEnumerator];
     id anObject;
     while (!itsDead && (anObject = [enumerator nextObject])) {
       if ([anObject isKindOfClass:[BookmarkFolder class]])
@@ -859,11 +848,11 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
 {
   NSUndoManager* undoManager = [[BookmarkManager sharedBookmarkManager] undoManager];
   //record undo
-  [[undoManager prepareWithInvocationTarget:self] insertChild:aChild atIndex:[[self childArray] indexOfObjectIdenticalTo:aChild] isMove:NO];
+  [[undoManager prepareWithInvocationTarget:self] insertChild:aChild atIndex:[[self children] indexOfObjectIdenticalTo:aChild] isMove:NO];
 
   [aChild setParent:nil];
   [[aChild retain] autorelease];   // let it live for the notifications (don't rely on undo manager to keep it alive)
-  [[self childArray] removeObject:aChild];
+  [mChildArray removeObject:aChild];
 
   if (![undoManager isUndoing] && ![self isSmartFolder]) {
     if ([aChild isSeparator])
@@ -891,14 +880,14 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
     [aChild deleteChild:[aChild objectAtIndex:--numChildren]];
 
   // record undo
-  [[undoManager prepareWithInvocationTarget:self] insertChild:aChild atIndex:[[self childArray] indexOfObjectIdenticalTo:aChild] isMove:NO];
+  [[undoManager prepareWithInvocationTarget:self] insertChild:aChild atIndex:[[self children] indexOfObjectIdenticalTo:aChild] isMove:NO];
   [undoManager endUndoGrouping];
 
   if([aChild isDockMenu])
     [aChild setIsDockMenu:NO];
   [aChild setParent:nil];
   [[aChild retain] autorelease];   // let it live for the notifications (don't rely on undo manager to keep it alive)
-  [[self childArray] removeObject:aChild];
+  [mChildArray removeObject:aChild];
 
   if (![undoManager isUndoing])
     [undoManager setActionName:NSLocalizedString(@"Delete Folder", nil)];
@@ -992,7 +981,7 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
     return urlArray;
   }
   // see if it's one of our kids
-  NSEnumerator* enumerator = [[self childArray] objectEnumerator];
+  NSEnumerator* enumerator = [[self children] objectEnumerator];
   id aKid;
   while ((aKid = [enumerator nextObject])) {
     if ([aKid isKindOfClass:[Bookmark class]]) {
@@ -1033,7 +1022,7 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
   NSMutableArray *matchingBookmarks = [NSMutableArray array];
 
   // see if our kids match
-  NSEnumerator *enumerator = [[self childArray] objectEnumerator];
+  NSEnumerator *enumerator = [[self children] objectEnumerator];
   id childItem;
   while ((childItem = [enumerator nextObject])) {
     if ([childItem isKindOfClass:[Bookmark class]]) {

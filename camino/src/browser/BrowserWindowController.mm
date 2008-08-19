@@ -4789,7 +4789,7 @@ public:
   if (![mPersonalToolbar isVisible])
     return NO;
 
-  NSArray* bookmarkBarChildren   = [[[BookmarkManager sharedBookmarkManager] toolbarFolder] childArray];
+  NSArray* bookmarkBarChildren   = [[[BookmarkManager sharedBookmarkManager] toolbarFolder] children];
   unsigned int bookmarkBarCount = [bookmarkBarChildren count];
   unsigned int i;
   int loadableItemIndex = -1;

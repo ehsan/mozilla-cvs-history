@@ -151,7 +151,7 @@ const long kOpenInTabsTag = 0xBEEF;
     // remove everything after the "before" item
     [self removeItemsAfterItem:mItemBeforeCustomItems];
 
-    NSEnumerator* childEnum = [[mFolder childArray] objectEnumerator];
+    NSEnumerator* childEnum = [[mFolder children] objectEnumerator];
     BookmarkItem* curItem;
     while ((curItem = [childEnum nextObject])) {
       [self appendBookmarkItem:curItem buildingSubmenus:includeSubmenus];

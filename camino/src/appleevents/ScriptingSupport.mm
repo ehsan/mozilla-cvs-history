@@ -91,16 +91,16 @@
 - (NSArray *)folderItemsWithClass:(Class)theClass;
 - (NSArray *)childBookmarks;
 - (NSArray *)childFolders;
-- (void)insertInChildArray:(BookmarkItem *)aItem atIndex:(unsigned)aIndex;
+- (void)insertInChildren:(BookmarkItem *)aItem atIndex:(unsigned)aIndex;
 - (void)insertInChildFolders:(BookmarkFolder *)aItem atIndex:(unsigned)aIndex;
 - (void)insertInChildBookmarks:(Bookmark *)aItem atIndex:(unsigned)aIndex;
-- (void)insertInChildArray:(BookmarkItem *)aItem;
+- (void)insertInChildren:(BookmarkItem *)aItem;
 - (void)insertInChildFolders:(BookmarkFolder *)aItem;
 - (void)insertInChildBookmarks:(Bookmark *)aItem;
-- (void)removeFromChildArrayAtIndex:(unsigned)aIndex;
+- (void)removeFromChildrenAtIndex:(unsigned)aIndex;
 - (void)removeFromChildFoldersAtIndex:(unsigned)aIndex;
 - (void)removeFromChildBookmarksAtIndex:(unsigned)aIndex;
-- (void)replaceInChildArray:(BookmarkItem *)aItem atIndex:(unsigned)aIndex;
+- (void)replaceInChildren:(BookmarkItem *)aItem atIndex:(unsigned)aIndex;
 - (void)replaceInChildFolders:(BookmarkFolder *)aItem atIndex:(unsigned)aIndex;
 - (void)replaceInChildBookmarks:(Bookmark *)aItem atIndex:(unsigned)aIndex;
 - (NSArray *)indicesOfObjectsByEvaluatingObjectSpecifier:(NSScriptObjectSpecifier *)specifier;
@@ -195,7 +195,7 @@
 - (NSArray *)bookmarkCollections
 {
   // Get the top-level folders, then filter out special folders.
-  NSArray *array = [[BookmarkManager sharedBookmarkManager] valueForKeyPath:@"rootBookmarks.childArray"];
+  NSArray *array = [[BookmarkManager sharedBookmarkManager] valueForKeyPath:@"bookmarkRoot.children"];
   NSMutableArray *collections = [NSMutableArray array];
   NSEnumerator *e = [array objectEnumerator];
   id eachFolder;
@@ -210,34 +210,34 @@
 // NSScriptKeyValueCoding protocol support.
 // These methods are called through Scripting-KVC by NSObject's implementation of the
 // NSScriptKeyValueCoding informal protocol.  See BookmarkFolder(ScriptingSupport) for more
-// information.  These methods pass the buck to the rootBookmarks folder, which actually
+// information.  These methods pass the buck to the bookmarkRoot folder, which actually
 // manages "application's bookmark folders", after making sure we're not touching the
 // special collections at the top of the list.
 
-// Offset for bookmarkCollections within rootBookmarks' childFolders.
+// Offset for bookmarkCollections within bookmarkRoot's childFolders.
 - (unsigned)_bookmarkCollectionsOffset
 {
-  return [[[[BookmarkManager sharedBookmarkManager] rootBookmarks] childArray] count] - [[self bookmarkCollections] count];
+  return [[[[BookmarkManager sharedBookmarkManager] bookmarkRoot] children] count] - [[self bookmarkCollections] count];
 }
 
 - (void)insertInBookmarkCollections:(BookmarkFolder *)aItem atIndex:(unsigned)aIndex
 {
-  [[[BookmarkManager sharedBookmarkManager] rootBookmarks] insertInChildFolders:aItem atIndex:[self _bookmarkCollectionsOffset]+aIndex];
+  [[[BookmarkManager sharedBookmarkManager] bookmarkRoot] insertInChildFolders:aItem atIndex:[self _bookmarkCollectionsOffset]+aIndex];
 }
 
 - (void)insertInBookmarkCollections:(BookmarkFolder *)aItem
 {
-  [[[BookmarkManager sharedBookmarkManager] rootBookmarks] insertInChildFolders:aItem];
+  [[[BookmarkManager sharedBookmarkManager] bookmarkRoot] insertInChildFolders:aItem];
 }
 
 - (void)removeFromBookmarkCollectionsAtIndex:(unsigned)aIndex
 {
-  [[[BookmarkManager sharedBookmarkManager] rootBookmarks] removeFromChildFoldersAtIndex:[self _bookmarkCollectionsOffset]+aIndex];
+  [[[BookmarkManager sharedBookmarkManager] bookmarkRoot] removeFromChildFoldersAtIndex:[self _bookmarkCollectionsOffset]+aIndex];
 }
 
 - (void)replaceInBookmarkCollections:(BookmarkFolder *)aItem atIndex:(unsigned)aIndex
 {
-  [[[BookmarkManager sharedBookmarkManager] rootBookmarks] replaceInChildFolders:aItem atIndex:[self _bookmarkCollectionsOffset]+aIndex];
+  [[[BookmarkManager sharedBookmarkManager] bookmarkRoot] replaceInChildFolders:aItem atIndex:[self _bookmarkCollectionsOffset]+aIndex];
 }
 
 @end
@@ -423,7 +423,7 @@
 
 - (NSArray *)folderItemsWithClass:(Class)theClass
 {
-  NSEnumerator* childEnum = [[self childArray] objectEnumerator];
+  NSEnumerator* childEnum = [[self children] objectEnumerator];
   NSMutableArray *result = [NSMutableArray array];
   id curItem;
   while ((curItem = [childEnum nextObject])) {
@@ -464,15 +464,15 @@
 // NSScriptKeyValueCoding protocol support.
 // These methods are called through Scripting-KVC by NSObject's implementation of the
 // NSScriptKeyValueCoding informal protocol.  We handle three keys here:
-// - childArray
+// - children
 // - childFolders
 // - childBookmarks
 // 
 // Note that the childFolders and childBookmarks collections are filtered
-// from the childArray.  They contain all the folders/bookmarks (respectively)
-// of childArray in the order they appear there.  Indexes when dealing with these
+// from the children.  They contain all the folders/bookmarks (respectively)
+// of |children| in the order they appear there.  Indexes when dealing with these
 // collections refer to the filtered collection, not to the original index in
-// childArray.
+// |children|.
 
 // Returns false and sets a script error if contents shouldn't be modified by scripting.
 - (BOOL)shouldModifyContentsByScripting
@@ -488,7 +488,7 @@
 // -insertIn<key>:atIndex:
 // Used to create children with a location specifier.
 
-- (void)insertInChildArray:(BookmarkItem *)aItem atIndex:(unsigned)aIndex
+- (void)insertInChildren:(BookmarkItem *)aItem atIndex:(unsigned)aIndex
 {
   // Bail if we shouldn't be modified.
   if (![self shouldModifyContentsByScripting]) return;
@@ -497,7 +497,7 @@
 }
 
 // These two methods currently treat the incoming index as an index into the filtered array of
-// folders or bookmarks, and find a place to put the new item in the full childArray so they come
+// folders or bookmarks, and find a place to put the new item in the full |children| so they come
 // out at the right index of the applicable filtered array.  This may or may not be desired by
 // scripters, depending on the reference form used.
 
@@ -511,11 +511,11 @@
   unsigned realIndex;
   if (aIndex < [folderArray count]) {
     aFolder = [folderArray objectAtIndex:aIndex];
-    realIndex = [[self childArray] indexOfObject:aFolder];
+    realIndex = [[self children] indexOfObject:aFolder];
   }
   else {
     aFolder = [folderArray lastObject];
-    realIndex = 1 + [[self childArray] indexOfObject:aFolder];
+    realIndex = 1 + [[self children] indexOfObject:aFolder];
   }
   [self insertChild:aItem atIndex:realIndex isMove:NO];
 }
@@ -530,11 +530,11 @@
   unsigned realIndex;
   if (aIndex < [bookmarkArray count])  {
     aBookmark = [bookmarkArray objectAtIndex:aIndex];
-    realIndex = [[self childArray] indexOfObject:aBookmark];
+    realIndex = [[self children] indexOfObject:aBookmark];
   }
   else {
     aBookmark = [bookmarkArray lastObject];
-    realIndex = 1 + [[self childArray] indexOfObject:aBookmark];
+    realIndex = 1 + [[self children] indexOfObject:aBookmark];
   }
   [self insertChild:aItem atIndex:realIndex isMove:NO];
 }
@@ -542,10 +542,10 @@
 
 // -insertIn<key>:
 // Used to create children without a location specifier.
-// Adds to end of entire childArray in all cases, since inserting after last bookmark/folder
+// Adds to end of entire |children| in all cases, since inserting after last bookmark/folder
 // isn't particularly useful.
 
-- (void)insertInChildArray:(BookmarkItem *)aItem
+- (void)insertInChildren:(BookmarkItem *)aItem
 {
   // Bail if we shouldn't be modified.
   if (![self shouldModifyContentsByScripting]) return;
@@ -558,7 +558,7 @@
   // Bail if we shouldn't be modified.
   if (![self shouldModifyContentsByScripting]) return;
   
-  [self insertInChildArray:aItem];
+  [self insertInChildren:aItem];
 }
 
 - (void)insertInChildBookmarks:(Bookmark *)aItem
@@ -566,19 +566,19 @@
   // Bail if we shouldn't be modified.
   if (![self shouldModifyContentsByScripting]) return;
   
-  [self insertInChildArray:aItem];
+  [self insertInChildren:aItem];
 }
 
 
 // -removeFrom<Key>AtIndex:
 // Removes the object at the specified index from the collection.
 
-- (void)removeFromChildArrayAtIndex:(unsigned)aIndex
+- (void)removeFromChildrenAtIndex:(unsigned)aIndex
 {
   // Bail if we shouldn't be modified.
   if (![self shouldModifyContentsByScripting]) return;
   
-  BookmarkItem* aKid = [[self childArray] objectAtIndex:aIndex];
+  BookmarkItem* aKid = [[self children] objectAtIndex:aIndex];
   [self deleteChild:aKid];
 }
 
@@ -604,12 +604,12 @@
 // -replaceIn<Key>:atIndex:
 // Replaces the object at the specified index in the collection.
 
-- (void)replaceInChildArray:(BookmarkItem *)aItem atIndex:(unsigned)aIndex
+- (void)replaceInChildren:(BookmarkItem *)aItem atIndex:(unsigned)aIndex
 {
   // Bail if we shouldn't be modified.
   if (![self shouldModifyContentsByScripting]) return;
   
-  [self removeFromChildArrayAtIndex:aIndex];
+  [self removeFromChildrenAtIndex:aIndex];
   [self insertChild:aItem atIndex:aIndex isMove:NO];
 }
 
@@ -661,12 +661,12 @@
 {
   NSString *key = [relSpec key];
   if ([key isEqualToString:@"childBookmarks"] ||
-      [key isEqualToString:@"childArray"] ||
+      [key isEqualToString:@"children"] ||
       [key isEqualToString:@"childFolders"])
   {
     NSScriptObjectSpecifier *baseSpec = [relSpec baseSpecifier];
     NSString *baseKey = [baseSpec key];
-    NSArray *children = [self childArray];
+    NSArray *children = [self children];
     NSRelativePosition relPos = [relSpec relativePosition];
     if (baseSpec == nil)
       return nil;
@@ -675,7 +675,7 @@
       return [NSArray array];
 
     if ([baseKey isEqualToString:@"childBookmarks"] ||
-        [baseKey isEqualToString:@"childArray"] ||
+        [baseKey isEqualToString:@"children"] ||
         [baseKey isEqualToString:@"childFolders"])
     {
       unsigned baseIndex;
@@ -702,7 +702,7 @@
         return nil;
 
       NSMutableArray *result = [NSMutableArray array];
-      BOOL keyIsArray = [key isEqualToString:@"childArray"];
+      BOOL keyIsArray = [key isEqualToString:@"children"];
       NSArray *relKeyObjects = (keyIsArray ? nil : [self valueForKey:key]);
       id curObj;
       unsigned curKeyIndex, childrenCount = [children count];
@@ -740,14 +740,14 @@
 {
   NSString *key = [rangeSpec key];
   if ([key isEqualToString:@"childBookmarks"] ||
-      [key isEqualToString:@"childArray"] ||
+      [key isEqualToString:@"children"] ||
       [key isEqualToString:@"childFolders"])
   {
     NSScriptObjectSpecifier *startSpec = [rangeSpec startSpecifier];
     NSScriptObjectSpecifier *endSpec = [rangeSpec endSpecifier];
     NSString *startKey = [startSpec key];
     NSString *endKey = [endSpec key];
-    NSArray *children = [self childArray];
+    NSArray *children = [self children];
 
     if ((startSpec == nil) && (endSpec == nil))
       return nil;
@@ -755,8 +755,8 @@
       return [NSArray array];
 
     if ((!startSpec || [startKey isEqualToString:@"childBookmarks"] ||
-         [startKey isEqualToString:@"childArray"] || [startKey isEqualToString:@"childFolders"]) &&
-        (!endSpec || [endKey isEqualToString:@"childBookmarks"] || [endKey isEqualToString:@"childArray"] ||
+         [startKey isEqualToString:@"children"] || [startKey isEqualToString:@"childFolders"]) &&
+        (!endSpec || [endKey isEqualToString:@"childBookmarks"] || [endKey isEqualToString:@"children"] ||
          [endKey isEqualToString:@"childFolders"]))
     {
       unsigned startIndex;
@@ -803,7 +803,7 @@
       }
 
       NSMutableArray *result = [NSMutableArray array];
-      BOOL keyIsArray = [key isEqual:@"childArray"];
+      BOOL keyIsArray = [key isEqual:@"children"];
       NSArray *rangeKeyObjects = (keyIsArray ? nil : [self valueForKey:key]);
       id curObj;
       unsigned curKeyIndex, i;

@@ -105,7 +105,7 @@ static NSDictionary* PrimaryBookmarkItem(NSArray* inItems) {
     // Remember the last bookmark folder used in the dialog's popup menu
     NSString* uuid = [[NSUserDefaults standardUserDefaults] objectForKey:USER_DEFAULTS_LAST_SELECTED_BM_FOLDER];
     if (uuid && ![uuid isEqualToString:@""]) {
-      BookmarkFolder* foundFolder = (BookmarkFolder*)[[[BookmarkManager sharedBookmarkManager] rootBookmarks] itemWithUUID:uuid];
+      BookmarkFolder* foundFolder = (BookmarkFolder*)[[[BookmarkManager sharedBookmarkManager] bookmarkRoot] itemWithUUID:uuid];
       if (foundFolder)
         [self setDefaultParentFolder:foundFolder andIndex:-1];
     }
@@ -234,7 +234,7 @@ static NSDictionary* PrimaryBookmarkItem(NSArray* inItems) {
 {
   BookmarkManager* bookmarkManager = [BookmarkManager sharedBookmarkManager];
   [mParentFolderPopup removeAllItems];
-  [[bookmarkManager rootBookmarks] buildFlatFolderList:[mParentFolderPopup menu] depth:1];
+  [[bookmarkManager bookmarkRoot] buildFlatFolderList:[mParentFolderPopup menu] depth:1];
 
   BookmarkFolder* initialFolder = mInitialParentFolder;
   if (!initialFolder)

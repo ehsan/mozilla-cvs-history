@@ -126,7 +126,7 @@ const unsigned kNumTop10Items = 10;   // well, 10, duh!
   BookmarkManager *manager = [BookmarkManager sharedBookmarkManager];
   BookmarkItem* curItem;
 
-  // We don't use rootBookmarks, because that will include the top10 folder,
+  // We don't use bookmarkRoot, because that will include the top10 folder,
   // so we do the menu and toolbar folders manually. This also allows us to
   // skip Rendezvous and Address Book folders, for which we don't store
   // visit counts anyway. However, we will skip any other custom bookmark
@@ -150,7 +150,7 @@ const unsigned kNumTop10Items = 10;   // well, 10, duh!
   if ([newItemURL hasPrefix:@"about:"])
     return;
 
-  NSMutableArray* top10ItemsArray = [mTop10Folder childArray];
+  NSArray* top10ItemsArray = [mTop10Folder children];
   unsigned curIndex   = [top10ItemsArray indexOfObjectIdenticalTo:aBookmark];
   unsigned visitCount = [aBookmark numberOfVisits];
 
@@ -185,7 +185,7 @@ const unsigned kNumTop10Items = 10;   // well, 10, duh!
                                       undoable:NO];
 
     // We may have a duplicate URL now; check, and if so remove the worse one.
-    top10ItemsArray = [mTop10Folder childArray];
+    top10ItemsArray = [mTop10Folder children];
     unsigned int numItems = [top10ItemsArray count];
     BOOL foundMatch = NO;
     for (unsigned int i = 0; i < numItems; i++) {
@@ -201,7 +201,7 @@ const unsigned kNumTop10Items = 10;   // well, 10, duh!
       }
     }
 
-    top10ItemsArray = [mTop10Folder childArray];
+    top10ItemsArray = [mTop10Folder children];
     if ([top10ItemsArray count] > kNumTop10Items)
       [mTop10Folder deleteFromSmartFolderChildAtIndex:[top10ItemsArray count] - 1];
   }
@@ -293,7 +293,7 @@ static int SortByProtocolAndName(NSDictionary* item1, NSDictionary* item2, void 
   if ([client isKindOfClass:[Bookmark class]]) {
     // I'm not sure why we have to check to see that the client is a child
     // of the rendezvous folder. Maybe just see if it's a RendezvousBookmark?
-    NSEnumerator* enumerator = [[mRendezvousFolder childArray] objectEnumerator];
+    NSEnumerator* enumerator = [[mRendezvousFolder children] objectEnumerator];
     Bookmark *curChild;
     while ((curChild = [enumerator nextObject])) {
       if (curChild == client) {

@@ -244,7 +244,7 @@
                                                                                                       behind:nil
                                                                                                  allowPopups:NO];
     BookmarkViewController*  bmController = [windowController bookmarkViewController];
-    BookmarkFolder *rootFolder = [[BookmarkManager sharedBookmarkManager] rootBookmarks];
+    BookmarkFolder *rootFolder = [[BookmarkManager sharedBookmarkManager] bookmarkRoot];
     BookmarkFolder *newFolder = [rootFolder objectAtIndex:([rootFolder count] - 1)];
     [bmController setItemToRevealOnLoad:newFolder];
   }

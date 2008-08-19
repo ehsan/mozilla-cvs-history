@@ -388,21 +388,6 @@ NSString* const SafariURLStringKey = @"URLString";
   return mTitle ? mTitle : @"";
 }
 
-- (id)savedItemDescription
-{
-  return mDescription ? mDescription : @"";
-}
-
-- (id)savedShortcut
-{
-  return mShortcut ? mShortcut : @"";
-}
-
-- (id)savedUUID
-{
-  return mUUID ? mUUID : @"";
-}
-
 #pragma mark -
 
 // sorting

@@ -276,7 +276,7 @@
 		<class name="bookmark folder" code="BMFl" plural="bookmark folders" inherits="bookmark item">
 			<cocoa class="BookmarkFolder"/>
 			<element description="Children of the bookmark folder." type="bookmark item" access="r">
-				<cocoa key="childArray"/>
+				<cocoa key="children"/>
 			</element>
 			<element description="Folder children of the bookmark folder." type="bookmark folder" access="r">
 				<cocoa key="childFolders"/>

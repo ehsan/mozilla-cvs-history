@@ -144,7 +144,7 @@ enum
   NSMutableDictionary*    mExpandedStates;
 
   BookmarkFolder*         mActiveRootCollection;
-  BookmarkFolder*         mRootBookmarks;
+  BookmarkFolder*         mBookmarkRoot;
   NSArray*                mSearchResultArray;
   int                     mSearchTag;
   int                     mOpenActionFlag;

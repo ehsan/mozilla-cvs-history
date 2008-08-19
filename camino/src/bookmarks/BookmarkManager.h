@@ -58,7 +58,7 @@ const int kBookmarksContextMenuArrangeSeparatorTag = 100;
 
 @interface BookmarkManager : NSObject <BookmarksClient>
 {
-  BookmarkFolder*                 mRootBookmarks;           // root bookmark object
+  BookmarkFolder*                 mBookmarkRoot;           // root bookmark object
   KindaSmartFolderManager*        mSmartFolderManager;      // brains behind 4 smart folders
   NSUndoManager*                  mUndoManager;             // handles deletes, adds of bookmarks
   BookmarkImportDlgController*    mImportDlgController;
@@ -100,7 +100,7 @@ const int kBookmarksContextMenuArrangeSeparatorTag = 100;
 + (NSArray*)bookmarkURLsFromSerializableArray:(NSArray*)bmArray;
 
 // Getters/Setters
-- (BookmarkFolder *)rootBookmarks;
+- (BookmarkFolder *)bookmarkRoot;
 - (BookmarkFolder *)toolbarFolder;
 - (BookmarkFolder *)bookmarkMenuFolder;
 - (BookmarkFolder *)dockMenuFolder;
@@ -133,7 +133,6 @@ const int kBookmarksContextMenuArrangeSeparatorTag = 100;
 
 - (BookmarkItem*)itemWithUUID:(NSString*)uuid;
 - (NSUndoManager *)undoManager;
-- (void)setRootBookmarks:(BookmarkFolder *)anArray;
 
 // clear visit count on all bookmarks
 - (void)clearAllVisits;

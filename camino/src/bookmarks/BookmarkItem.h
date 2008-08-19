@@ -139,9 +139,6 @@ enum
 
 // methods used for saving to files; are guaranteed never to return nil
 - (id)savedTitle;
-- (id)savedItemDescription;    // don't use "description"
-- (id)savedShortcut;
-- (id)savedUUID;    // does not generate a new UUID if UUID is not set
 
 // sorting
 
