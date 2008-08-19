@@ -515,7 +515,7 @@ function checkAndSendItipMessage(aItem, aOpType, aOriginalItem) {
             itipItem.targetCalendar = aItem.calendar;
             itipItem.autoResponse = Components.interfaces.calIItipItem.USER;
             itipItem.responseMethod = "REPLY";
-            transport.simpleSendResponse(itipItem);
+            transport.sendItems(1, [aItem.organizer], itipItem);
         }
         return;
     }
@@ -617,33 +617,8 @@ function calSendItipMessage(aTransport, aItem, aMethod, aRecipientsList, autoRes
     // XXX I don't know whether the below are used at all, since we don't use the itip processor
     itipItem.isSend = true;
 
-    // Get ourselves some default text - when we handle organizer properly
-    // We'll need a way to configure the Common Name attribute and we should
-    // use it here rather than the email address
-    var subjectStringId = "";
-    var bodyStringId = "";
-    switch (aMethod) {
-        case 'REQUEST':
-            subjectStringId = "itipRequestSubject";
-            bodyStringId = "itipRequestBody";
-            break;
-        case 'CANCEL':
-            subjectStringId = "itipCancelSubject";
-            bodyStringId = "itipCancelBody";
-            break;
-    }
-
-    var summary = (item.getProperty("SUMMARY") || "");
-    var subject = (isSunbird() ? "" : calGetString("lightning",
-                                                   subjectStringId,
-                                                   [summary],
-                                                   "lightning"));
-    var body = (isSunbird() ? "" : calGetString("lightning",
-                                                bodyStringId,
-                                                [item.organizer ? item.organizer.toString() : "", summary],
-                                                "lightning"));
     // Send it!
-    aTransport.sendItems(aRecipientsList.length, aRecipientsList, subject, body, itipItem);
+    aTransport.sendItems(aRecipientsList.length, aRecipientsList, itipItem);
 }
 
 function calGetSerializedItem(aItem) {

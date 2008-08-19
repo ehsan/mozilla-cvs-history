@@ -77,12 +77,6 @@ interface calIItipTransport : nsISupports
     readonly attribute AUTF8String type;
 
     /**
-     * Pass the transport an itipItem and have it figure out what to do with
-     * it based on the itipItem's methods.
-     */
-    void simpleSendResponse(in calIItipItem item);
-
-    /**
      * Sends a calIItipItem to the recipients using the specified title and
      * alternative representation. If a calIItipItem is attached, then an ICS
      * representation of those objects are generated and attached to the email.
@@ -90,25 +84,9 @@ interface calIItipTransport : nsISupports
      * text/calendar mime part.
      * @param count             size of recipient array
      * @param recipientArray    array of recipients
-     * @param title             title of the exchange
-     * @param altrep            an alternative representation (usually text)
-                                in case the recipient cannot handle the
-                                text/calendar mime-type
      * @param calIItipItem      set of calIItems encapsulated as calIItipItems
      */
     void sendItems(in PRUint32 count,
                    [array, size_is(count)] in calIAttendee recipientArray,
-                   in AUTF8String title,
-                   in AUTF8String altrep,
                    in calIItipItem item);
-
-    /**
-     * Checks the configured transport for any incoming messages with
-     * text/calendar mime parts (invitations) that are more recent than the
-     * specified date.  It returns a calIItipItem object containing the found
-     * items
-     * @param  searchStart   Defines on what date to start the search.
-     * @return calIItipItem  The items it finds in a calIItipItem object.
-     */
-    calIItipItem checkForInvitations(in calIDateTime searchStart);
 };

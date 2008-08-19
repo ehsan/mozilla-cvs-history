@@ -149,7 +149,7 @@ calItipProcessor.prototype = {
         if (recvMethod != respMethod) {
             // XXX discuss: does it make sense to check targetCalendar.canNotify(respMethod, ...) here?
             //              _isExistingItem will store the item
-            this._getTransport(targetCalendar).simpleSendResponse(respItipItem);
+            this._getTransport(targetCalendar).sendItems(1, [calItem.organizer], respItipItem);
         }
     },
 

@@ -284,13 +284,8 @@ calProviderBase.prototype = {
     // nsIVariant getProperty(in AUTF8String aName);
     getProperty: function cPB_getProperty(aName) {
         switch (aName) {
-            case "itip.transport": { // itip/imip default:
-                // assure an identity is configured for the calendar
-                return ((!isSunbird() && this.getProperty("imip.identity"))
-                        ? Components.classes["@mozilla.org/calendar/itip-transport;1?type=email"]
-                                    .getService(Components.interfaces.calIItipTransport)
-                        : null);
-            }
+            case "itip.transport": // itip/imip default:
+                return calGetImipTransport(this);
             // temporary hack to get the uncached calendar instance:
             case "cache.uncachedCalendar":
                 return this;

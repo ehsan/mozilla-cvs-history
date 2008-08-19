@@ -209,7 +209,7 @@ var calWcapCalendarModule = { // nsIModule:
         if (!this.m_scriptsLoaded) {
             // loading extra scripts from ../js:
             const scripts = ["calUtils.js", "calAuthUtils.js",
-                             "calProviderUtils.js", "calProviderBase.js",
+                             "calProviderUtils.js", "calProviderBase.js", "calProviderUtils.js",
                              "calWcapUtils.js", "calWcapErrors.js",
                              "calWcapRequest.js", "calWcapSession.js",
                              "calWcapCalendar.js", "calWcapCalendarItems.js"];

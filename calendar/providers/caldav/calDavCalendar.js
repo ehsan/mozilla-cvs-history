@@ -1551,7 +1551,7 @@ calDavCalendar.prototype = {
     getFreeBusyIntervals: function caldav_getFreeBusyIntervals(
         aCalId, aRangeStart, aRangeEnd, aBusyTypes, aListener) {
 
-        if (!this.hasScheduling || !this.mOutBoxUrl || !this.mMailToUrl) {
+        if (!this.hasScheduling || !this.outBoxUrl || !this.calendarUserAddress) {
             LOG("CalDAV: Server does not support scheduling; freebusy query not possible");
             return;
         }
@@ -1772,11 +1772,6 @@ calDavCalendar.prototype = {
         // delete item from inbox
         var thisCalendar = this;
 
-        var path = this.mItemInfoCache[aItem.id].locationPath;
-        if (!path) {
-            return;
-        }
-
         var getItemListener = {};
         getItemListener.onOperationComplete = function caldav_gUIs_oOC(aCalendar,
                                                                        aStatus,
@@ -1837,7 +1832,7 @@ calDavCalendar.prototype = {
     },
 
     get scheme() {
-        return null;
+        return "mailto";
     },
 
     mSenderAddress: null,
@@ -1848,21 +1843,17 @@ calDavCalendar.prototype = {
         return (this.mSenderAddress = aString);
     },
 
-    simpleSendResponse: function caldav_simpleSendResponse(itipItem) {
-        var item = itipItem.getItemList({})[0];
-        // Get my participation status
-        var attendee = item.getAttendeeById(this.calendarUserAddress);
-        if (!attendee) {
-            return;
+    sendItems: function caldav_sendItems(aCount, aRecipients, aItipItem) {
+
+        if (aItipItem.responseMethod == "REPLY") {
+            // Get my participation status
+            var attendee = aItipItem.getItemList({})[0].getAttendeeById(this.calendarUserAddress);
+            if (!attendee) {
+                return;
+            }
+            // work around BUG 351589, the below just removes RSVP:
+            aItipItem.setAttendeeStatus(attendee.id, attendee.participationStatus);
         }
-        var myPartStat = attendee.participationStatus;
-        // work around BUG 351589, the below just removes RSVP:
-        itipItem.setAttendeeStatus(attendee.id, myPartStat);
-
-        this.sendItems(1, [item.organizer], "", "", itipItem);
-    },
-
-    sendItems: function caldav_sendItems(aCount, aRecipients, aSubject, aBody, aItipItem) {
 
         for each (var item in aItipItem.getItemList({})) {
 
@@ -1881,15 +1872,10 @@ calDavCalendar.prototype = {
             httpchannel.requestMethod = "POST";
             httpchannel.setRequestHeader("Originator", this.calendarUserAddress, false);
             for each (var recipient in aRecipients) {
-                // Houston, we may have a problem.
-                // What if some recipients are non-server users? Does the server send out iMIP in that case?
-                // For now, the CU has to decide whether she wants iMIP to be sent out or (knows that
-                // all attendees are server users) and we will switch up front in calendar-item-editing whether
-                // we use iMIP or server's outbox only (using X-MOZ-USE-IMIP).
                 httpchannel.setRequestHeader("Recipient", recipient.id, true);
             }
 
-            var this_ = this;
+            var thisCalendar = this;
             var streamListener = {
                 onStreamComplete: function caldav_sendItems_oSC(aLoader, aContext, aStatus,
                                                                 aResultLength, aResult) {
@@ -1907,14 +1893,54 @@ calDavCalendar.prototype = {
 
                     var str = convertByteArray(aResult, aResultLength, "UTF-8", false);
                     if (str) {
-                        if (this_.verboseLogging()) {
+                        if (thisCalendar.verboseLogging()) {
                             LOG("CalDAV: recv: " + str);
                         }
                     } else {
                         LOG("CalDAV: Failed to parse iTIP response.");
                     }
+                    if (str.substr(0,6) == "<?xml ") {
+                        str = str.substring(str.indexOf('<', 2));
+                    }
+
+                    var C = new Namespace("C", "urn:ietf:params:xml:ns:caldav");
+                    var D = new Namespace("D", "DAV:");
+                    var responseXML = new XML(str);
+
+                    var remainingAttendees = [];
+                    for (var i = 0; i < responseXML.*.length(); i++) {
+                        var response = new XML(responseXML.*[i]);
+                        var recip = response..C::recipient..D::href;
+                        var status = response..C::["request-status"];
+                        if (status.substr(0, 1) != "2") {
+                            if (thisCalendar.verboseLogging()) {
+                                LOG("CalDAV: failed delivery to " + recip);
+                            }
+                            for each (var att in aRecipients) {
+                                if (att.id.toLowerCase() == recip.toLowerCase()) {
+                                    remainingAttendees.push(att);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (remainingAttendees.length) {
+                        // try to fall back to email delivery if CalDAV-sched
+                        // didn't work
+                        var imipTransport = calGetImipTransport(thisCalendar);
+                        if (imipTransport) {
+                            if (thisCalendar.verboseLogging()) {
+                                LOG("CalDAV: sending email to " + remainingAttendees.length + " recipients");
+                            }
+                            imipTransport.sendItems(remainingAttendees.length, remainingAttendees, aItipItem);
+                        } else {
+                            LOG("CalDAV: no fallback to iTIP/iMIP transport.");
+                        }
+                    }
                 }
             };
+
             if (this.verboseLogging()) {
                 LOG("CalDAV: send: " + uploadData);
             }
@@ -1923,15 +1949,9 @@ calDavCalendar.prototype = {
         }
     },
 
-    checkForInvitations: function caldav_CFI(searchStart) {
-        // CalDAV calendars do this with pollInBox()
-        throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-
+    verboseLogging: function caldav_verboseLogging() {
+        return getPrefSafe("calendar.debug.log.verbose", false);
     },
-
-     verboseLogging: function caldav_verboseLogging() {
-         return getPrefSafe("calendar.debug.log.verbose", false);
-     },
 
     getSerializedItem: function caldav_getSerializedItem(aItem) {
         var serializer = Components.classes["@mozilla.org/calendar/ics-serializer;1"]

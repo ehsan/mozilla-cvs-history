@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Philipp Kewisch <mozilla@kewis.ch>
+ *   Daniel Boelzle <daniel.boelzle@sun.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -176,3 +177,14 @@ calFreeBusyInterval.prototype = {
     interval: null,
     freeBusyType: Components.interfaces.calIFreeBusyInterval.UNKNOWN
 };
+
+/**
+ * Gets the iTIP/iMIP transport if the passed calendar has configured email.
+ */
+function calGetImipTransport(aCalendar) {
+    // assure an identity is configured for the calendar
+    return ((!isSunbird() && aCalendar.getProperty("imip.identity"))
+            ? Components.classes["@mozilla.org/calendar/itip-transport;1?type=email"]
+                        .getService(Components.interfaces.calIItipTransport)
+            : null);
+}

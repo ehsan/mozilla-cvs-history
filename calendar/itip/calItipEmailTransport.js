@@ -93,59 +93,73 @@ calItipEmailTransport.prototype = {
         return "email";
     },
 
-    /**
-     * Pass the transport an itipItem and have it figure out what to do with
-     * it based on the itipItem's methods.
-     */
-    simpleSendResponse: function cietSSR(itipItem) {
-        var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"].
-                  getService(Components.interfaces.nsIStringBundleService);
-        var sb = sbs.createBundle("chrome://lightning/locale/lightning.properties");
-
-        var item = itipItem.getItemList({})[0];
-        // Get my participation status
-        var att = (calInstanceOf(itipItem.targetCalendar, Components.interfaces.calISchedulingSupport)
-                   ? itipItem.targetCalendar.getInvitedAttendee(item) : null);
-        if (!att && itipItem.identity) {
-            att = item.getAttendeeById("mailto:" + itipItem.identity);
-        }
-        if (!att) { // should not happen anymore
-            return;
-        }
-
-        // work around BUG 351589, the below just removes RSVP:
-        itipItem.setAttendeeStatus(att.id, att.participationStatus);
-        var myPartStat = att.participationStatus;
-        var name = att.toString();
-
-        var summary = (item.getProperty("SUMMARY") || "");
-        var subj = sb.formatStringFromName("itipReplySubject", [summary], 1);
-
-        // Generate proper body from my participation status
-        var body = sb.formatStringFromName((myPartStat == "DECLINED")
-                                           ? "itipReplyBodyDecline"
-                                           : "itipReplyBodyAccept",
-                                           [name], 1);
-
-        var recipients = [item.organizer];
-
-        this.sendItems(recipients.length, recipients, subj, body, itipItem);
-    },
-
-    sendItems: function cietSI(aCount, aRecipients, aSubject, aBody, aItem) {
-        LOG("sendItems: Sending Email...");
+    sendItems: function cietSI(aCount, aRecipients, aItipItem) {
         if (this.mHasXpcomMail) {
-            this._sendXpcomMail(aRecipients, aSubject, aBody, aItem);
+            LOG("sendItems: Sending Email...");
+
+            var item = aItipItem.getItemList({})[0];
+
+            // Get ourselves some default text - when we handle organizer properly
+            // We'll need a way to configure the Common Name attribute and we should
+            // use it here rather than the email address
+
+            var summary = (item.getProperty("SUMMARY") || "");
+            var aSubject = "";
+            var aBody = "";
+            switch (aItipItem.responseMethod) {
+                case 'REQUEST':
+                    aSubject = calGetString("lightning",
+                                            "itipRequestSubject",
+                                            [summary],
+                                            "lightning");
+                    aBody = calGetString("lightning",
+                                         "itipRequestBody",
+                                         [item.organizer ? item.organizer.toString() : "", summary],
+                                         "lightning");
+                    break;
+                case 'CANCEL':
+                    aSubject = calGetString("lightning",
+                                            "itipCancelSubject",
+                                            [summary],
+                                            "lightning");
+                    aBody = calGetString("lightning",
+                                         "itipCancelBody",
+                                         [item.organizer ? item.organizer.toString() : "", summary],
+                                         "lightning");
+                    break;
+                case 'REPLY': {
+                    // Get my participation status
+                    var att = (calInstanceOf(aItipItem.targetCalendar, Components.interfaces.calISchedulingSupport)
+                               ? aItipItem.targetCalendar.getInvitedAttendee(item) : null);
+                    if (!att && aItipItem.identity) {
+                        att = item.getAttendeeById("mailto:" + aItipItem.identity);
+                    }
+                    if (!att) { // should not happen anymore
+                        return;
+                    }
+
+                    // work around BUG 351589, the below just removes RSVP:
+                    aItipItem.setAttendeeStatus(att.id, att.participationStatus);
+                    var myPartStat = att.participationStatus;
+                    var name = att.toString();
+
+                    // Generate proper body from my participation status
+                    aSubject = calGetString("lightning",
+                                            "itipReplySubject",
+                                            [summary],
+                                            "lightning");
+                    aBody = calGetString("lightning",
+                                         (myPartStat == "DECLINED") ? "itipReplyBodyDecline"
+                                                                    : "itipReplyBodyAccept",
+                                         [name],
+                                         "lightning");
+                    break;
+                }
+            }
+
+            this._sendXpcomMail(aRecipients, aSubject, aBody, aItipItem);
         } else {
             // Sunbird case: Call user's default mailer on system.
-            throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-        }
-    },
-
-    checkForInvitations: function cietCFI(searchStart) {
-        // We only need to do trigger a check for incoming invitations if we
-        // are not Thunderbird.
-        if (!this.mHasXpcomMail) {
             throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
         }
     },
