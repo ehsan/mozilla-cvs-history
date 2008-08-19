@@ -470,7 +470,6 @@
                  observes="calendar_edit_calendar_command"/>
     </menupopup>
   </popupset>
-  <tooltip id="itemTooltip" noautohide="true"/>
 
 </window>
 

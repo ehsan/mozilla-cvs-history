@@ -173,14 +173,17 @@ function deleteToDoCommand(aEvent, aDoNotConfirm) {
                                              aDoNotConfirm);
 }
 
-function getSelectedTasks(aEvent) {
-    var taskTree = null;
+function getTaskTree() {
     var currentMode = document.getElementById("modeBroadcaster").getAttribute("mode");
     if (currentMode == "task") {
-        taskTree = document.getElementById("calendar-task-tree");
+        return document.getElementById("calendar-task-tree");
     } else {
-        taskTree = document.getElementById("unifinder-todo-tree");
+        return document.getElementById("unifinder-todo-tree");
     }
+}
+
+function getSelectedTasks(aEvent) {
+    var taskTree = getTaskTree();
     if (taskTree != null) {
         return taskTree.selectedTasks;
     }

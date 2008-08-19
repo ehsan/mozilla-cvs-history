@@ -137,6 +137,18 @@
   </keyset>
 
   <popupset id="calendar-popupset">
+    <!-- Tooltips -->
+    <tooltip id="eventTreeTooltip"
+             onpopupshowing="return showToolTip(this, unifinderTreeView.getItemFromEvent(event))"
+             noautohide="true"/>
+
+    <tooltip id="taskTreeTooltip"
+             onpopupshowing="return showToolTip(this, getTaskTree().getTaskFromEvent(event))"
+             noautohide="true"/>
+
+    <tooltip id="itemTooltip"
+             noautohide="true"/>
+
     <!-- CALENDAR ITEM CONTEXT MENU -->
     <popup id="calendar-item-context-menu" onpopupshowing="return setupContextItemType(event, currentView().getSelectedItems({}));">
       <menuitem id="calendar-item-context-menu-modify-menuitem"

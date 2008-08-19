@@ -63,50 +63,31 @@ function onMouseOverItem( occurrenceBoxMouseEvent )
 {
   if ("occurrence" in occurrenceBoxMouseEvent.currentTarget) {
     // occurrence of repeating event or todo
-    var occurrence = occurrenceBoxMouseEvent.currentTarget.occurrence;
+      var occurrence = occurrenceBoxMouseEvent.currentTarget.occurrence;
+      const toolTip = document.getElementById("itemTooltip");
+      return showToolTip(toolTip, occurrence);
+  }
+  return false;
+}
 
-    const toolTip = document.getElementById("itemTooltip");
-
+function showToolTip(aToolTip, aItem) {
+    if (aItem.hashId == aToolTip.cachedHashId) {
+        // We've already set up things for this occurrence, no need to do it
+        // again.
+        return true;
+    }
     var holderBox;
-    if (isEvent(occurrence)) {
-      holderBox = getPreviewForEvent(occurrence);
-    } else if (isToDo(occurrence)) {
-      holderBox = getPreviewForTask(occurrence);
+    if (isEvent(aItem)) {
+        holderBox = getPreviewForEvent(aItem);
+    } else if (isToDo(aItem)) {
+        holderBox = getPreviewForTask(aItem);
     }
     if (holderBox) {
-      setToolTipContent(toolTip, holderBox);
-      return true;
-    } 
-  }
-  return false;
-}
-
-/** For all instances of an event, as displayed by unifinder. **/
-function onMouseOverEventTree( toolTip, mouseEvent )
-{
-  var item = unifinderTreeView.getItemFromEvent(mouseEvent);
-  if (isEvent(item)) {
-    var holderBox = getPreviewForEvent(item);
-    if (holderBox) {
-      setToolTipContent(toolTip, holderBox);
-      return true;
-    } 
-  }
-  return false;
-}
-
-/** For all instances of a task, as displayed by unifinderToDo. **/
-function onMouseOverTaskTree( toolTip, mouseEvent )
-{
-  var item = getToDoFromEvent( mouseEvent );
-  if (isToDo(item)) {
-    var holderBox = getPreviewForTask(item);
-    if (holderBox) {
-      setToolTipContent(toolTip, holderBox);
-      return true;
+        setToolTipContent(aToolTip, holderBox);
+        aToolTip.cachedHashId = aItem.hashId;
+        return true;
     }
-  }
-  return false;
+    return false;
 }
 
 /**
@@ -156,7 +137,7 @@ function getPreviewForTask( toDoItem )
     boxInitializeHeaderGrid(vbox);
 
     var hasHeader = false;
-         
+
     if (toDoItem.title)
     {
       boxAppendLabeledText(vbox, "tooltipTitle", toDoItem.title);
@@ -169,18 +150,18 @@ function getPreviewForTask( toDoItem )
       boxAppendLabeledText(vbox, "tooltipLocation", location);
       hasHeader = true;
     }
-   
+
     if (toDoItem.entryDate && toDoItem.entryDate.isValid)
     {
       boxAppendLabeledDateTime(vbox, "tooltipStart", toDoItem.entryDate);
       hasHeader = true;
     }
-   
+
     if (toDoItem.dueDate && toDoItem.dueDate.isValid)
     {
       boxAppendLabeledDateTime(vbox, "tooltipDue", toDoItem.dueDate);
       hasHeader = true;
-    }   
+    }
 
     if (toDoItem.priority && toDoItem.priority != 0)
     {
@@ -214,9 +195,9 @@ function getPreviewForTask( toDoItem )
     {
       if (toDoItem.completedDate == null) {
         boxAppendLabeledText(vbox, "tooltipPercent", "100%");
-      } else { 
+      } else {
         boxAppendLabeledDateTime(vbox, "tooltipCompleted", toDoItem.completedDate);
-      } 
+      }
       hasHeader = true;
     }
 
@@ -231,7 +212,7 @@ function getPreviewForTask( toDoItem )
     }
 
     return ( vbox );
-  } 
+  }
   else
   {
     return null;
@@ -300,7 +281,7 @@ function getEventStatusString(calendarEvent)
       return calGetString('calendar', "statusConfirmed");
     case "CANCELLED":
       return calGetString('calendar', "statusCancelled");
-     default: 
+     default:
         return "";
   }
 }
@@ -319,7 +300,7 @@ function getToDoStatusString(iCalToDo)
       return calGetString('calendar', "statusCancelled");
     case "COMPLETED":
       return calGetString('calendar', "statusCompleted");
-     default: 
+     default:
         return "";
   }
 }
@@ -411,7 +392,7 @@ function boxAppendLabeledText(box, labelProperty, textString)
 {
   var labelText = calGetString('calendar', labelProperty);
   var rows = box.getElementsByTagNameNS(box.namespaceURI, "rows")[0];
-  { 
+  {
     var row = document.createElement("row");
     {
       row.appendChild(createTooltipHeaderLabel(labelText));

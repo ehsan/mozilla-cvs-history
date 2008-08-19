@@ -65,8 +65,3 @@ function toDoUnifinderRefresh() {
     tree.showCompleted = showCompleted;
     tree.refresh();
 }
-
-function getToDoFromEvent(event) {
-   return document.getElementById(
-      "unifinder-todo-tree").getTaskFromEvent(event);
-}
