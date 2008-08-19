@@ -625,7 +625,8 @@ function getLastCalendarView() {
 }
 
 /**
- *  Deletes items currently selected in the view.
+ *  Deletes items currently selected in the view 
+ *  and clears selection.
  */
 function deleteSelectedEvents() {
     var selectedItems = currentView().getSelectedItems({});
@@ -633,6 +634,8 @@ function deleteSelectedEvents() {
                                              selectedItems,
                                              false,
                                              false);
+    // clear selection
+    currentView().setSelectedItems(0, [], true);
 }
 
 /**

@@ -366,10 +366,14 @@ function unifinderKeyPress(aEvent) {
         case 13:
             // Enter, edit the event
             editSelectedEvents();
+            aEvent.stopPropagation();
+            aEvent.preventDefault();
             break;
         case kKE.DOM_VK_BACK_SPACE:
         case kKE.DOM_VK_DELETE:
             deleteSelectedEvents();
+            aEvent.stopPropagation();
+            aEvent.preventDefault();
             break;
     }
 }
