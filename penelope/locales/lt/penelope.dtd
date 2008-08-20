@@ -1,0 +1,161 @@
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - Contributor(s):
+   -   Gintautas Grigas <grigas@ktl.mii.lt>
+   -   Tatjana Jevsikova <tatjanaj@julius.ktl.mii.lt>
+   -   Rimas Kudelis <rq@akl.lt>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<!-- Mailbox/Transfer items -->
+<!ENTITY mailboxmenu.label "Dėžutė">
+<!ENTITY mailboxmenu.accesskey "D">
+<!ENTITY transfermenu.label "Perkelti į">
+<!ENTITY transfermenu.accesskey "P">
+<!ENTITY fileHereMenu.label "Šis aplankas">
+
+<!-- Mailbox columns -->
+<!ENTITY penelope.tags.label "Gairės">
+<!ENTITY penelope.who.label  "Autorius">
+<!ENTITY penelope.who.accesskey "A">
+
+<!-- Pref panel -->
+<!ENTITY penelope.useShortcuts.label "Naudoti sparčiuosius klavišus:">
+<!ENTITY penelope.shortcutsRadio0.label "Įprastus „Penelope“">
+<!ENTITY penelope.shortcutsRadio0.accesskey "P">
+<!ENTITY penelope.shortcutsRadio1.label "Įprastus „Thunderbird“">
+<!ENTITY penelope.shortcutsRadio1.accesskey "T">
+<!ENTITY penelope.uiStyle.label "Išvaizda:">
+<!ENTITY penelope.uiStyleRadio0.label "3 polangiai (MDI stilius)">
+<!ENTITY penelope.uiStyleRadio0.accesskey "3">
+<!ENTITY penelope.uiStyleRadio1.label "2 polangiai („Mac“ stilius)">
+<!ENTITY penelope.uiStyleRadio1.accesskey "2">
+<!ENTITY penelope.prefpane.label "Penelope">
+
+<!-- Message items -->
+<!ENTITY penelope.change.label "Pakeisti">
+<!ENTITY penelope.labelMenu.label "Gaires">
+<!ENTITY penelope.labelMenu.accesskey "G">
+<!ENTITY penelope.junk.label "Žymėti kaip šlamštą">
+<!ENTITY penelope.junk.accesskey "š">
+<!ENTITY penelope.notJunk.label "Žymėti kaip ne šlamštą">
+<!ENTITY penelope.notJunk.accesskey "š">
+<!ENTITY penelope.delete.label "Pašalinti">
+<!ENTITY penelope.delete.accesskey "a">
+<!ENTITY penelope.redirect.label "Peradresuoti">
+<!ENTITY penelope.sendAgain.label "Pakartotinai siųsti">
+<!ENTITY penelope.sendAgain.accesskey "s">
+
+<!-- Recipient items -->
+<!ENTITY newMessageTo.label "Rašyti laišką">
+<!ENTITY newMessageTo.accesskey "R">
+<!ENTITY forwardMessageTo.label "Persiųsti laišką">
+<!ENTITY forwardMessageTo.accesskey "P">
+<!ENTITY redirectMessageTo.label "Peradresuoti laišką">
+<!ENTITY redirectMessageTo.accesskey "a">
+<!ENTITY noQuickRecipients.label "Sparčiųjų adresatų nėra">
+
+<!-- Message status items -->
+<!ENTITY status.label "Būsena">
+<!ENTITY statusUnread.label "Neskaitytas">
+<!ENTITY statusUnread.accesskey "N">
+<!ENTITY statusRead.label "Skaitytas">
+<!ENTITY statusRead.accesskey "S">
+<!ENTITY statusReplied.label "Atsakytas">
+<!ENTITY statusReplied.accesskey "A">
+<!ENTITY statusForwarded.label "Persiųstas">
+<!ENTITY statusForwarded.accesskey "P">
+<!ENTITY statusRedirected.label "Peradresuotas">
+<!ENTITY statusRedirected.accesskey "d">
+<!ENTITY statusSent.label "Išsiųstas">
+<!ENTITY statusSent.accesskey "I">
+<!ENTITY statusUnsent.label "Neišsiųstas">
+<!ENTITY statusUnsent.accesskey "e">
+
+<!-- Tools items-->
+<!ENTITY addToAddrBook.label "Sukurti kortelę adresų knygoje…">
+<!ENTITY addToAddrBook.accesskey "k">
+
+<!-- Help items-->
+<!ENTITY keybindingTips.label "Spartieji klavišai">
+
+<!-- Toolbar butons -->
+<!ENTITY inButton.label "Gauti">
+<!ENTITY inButton.tooltip "Atverti gautų laiškų aplanką">
+<!ENTITY outButton.label "Siunčiami">
+<!ENTITY outButton.tooltip "Atverti siunčiamų laiškų aplanką">
+<!ENTITY helpButton.label "Žinynas">
+<!ENTITY helpButton.tooltip "Programos žinynas">
+<!ENTITY closeButton.label "Užverti">
+<!ENTITY closeButton.tooltip "Užverti šį langą">
+<!ENTITY saveAsButton.label "Įrašyti kaip">
+<!ENTITY saveAsButton.tooltip "Įrašyti kaip failą">
+<!ENTITY undoButton.label "Atšaukti">
+<!ENTITY undoButton.tooltip "Atšaukti paskutinį įvykdytą veiksmą">
+<!ENTITY redoButton.label "Atstatyti">
+<!ENTITY redoButton.tooltip "Atstatyti paskutinį atšauktą veiksmą">
+<!ENTITY redirectButton.label "Peradresuoti">
+<!ENTITY redirectButton.tooltip "Peradresuoti pažymėtą laišką">
+<!ENTITY sendAgainButton.label "Siųsti vėl">
+<!ENTITY sendAgainButton.tooltip "Pažymėtą laišką panaudoti kaip juodraštį">
+<!ENTITY sendUnsentButton.label "Siųsti neišsiųstus">
+<!ENTITY sendUnsentButton.tooltip "Išsiųsti neišsiųstus laiškus">
+<!ENTITY subscribeButton.label "Prenumeruoti">
+<!ENTITY subscribeButton.tooltip "Atverti prenumeruojamų aplankų sąrašą">
+<!ENTITY emptyTrashButton.label "Išvalyti šiukšlinę">
+<!ENTITY emptyTrashButton.tooltip "Pašalinti visus šiukšlinėje esančius laiškus">
+<!ENTITY offlineButton.label "Atsijungti">
+<!ENTITY offlineButton.tooltip "Prisijungti arba atsijungti nuo tinklo">
+<!ENTITY printSetupButton.label "Puslapio nuostatos">
+<!ENTITY printSetupButton.tooltip "Keisti puslapio nuostatas">
+<!ENTITY nextPlainButton.label "Tolesnis">
+<!ENTITY nextPlainButton.tooltip "Pereiti prie tolesnio laiško">
+<!ENTITY nextUnreadButton.label "Tolesnis neskaitytas">
+<!ENTITY nextUnreadButton.tooltip "Pereiti prie tolesnio neskaityto laiško">
+<!ENTITY nextStarredButton.label "Tolesnis pažymėtas">
+<!ENTITY nextStarredButton.tooltip "Pereiti prie tolesnio žvaigždute pažymėto laiško">
+<!ENTITY nextUnreadThreadButton.label "Tolesnė neskaityta gija">
+<!ENTITY nextUnreadThreadButton.tooltip "Pereiti prie tolesnės gijos, turinčios neskaitytų laiškų">
+<!ENTITY prevPlainButton.label "Ankstesnis">
+<!ENTITY prevPlainButton.tooltip "Pereiti prie ankstesnio laiško">
+<!ENTITY prevUnreadButton.label "Ankstesnis neskaitytas">
+<!ENTITY prevUnreadButton.tooltip "Pereiti prie ankstesnio neskaityto laiško">
+<!ENTITY prevStarredButton.label "Ankstesnis pažymėtas">
+<!ENTITY prevStarredButton.tooltip "Pereiti prie ankstesnio žvaigždute pažymėto laiško">
+<!ENTITY prefsButton.label "Nuostatos">
+<!ENTITY prefsButton.tooltip "Atverti programos nuostatas">
+<!ENTITY sendLaterButton.label "Išsiųsti vėliau">
+<!ENTITY sendLaterButton.tooltip "Įrašyti laišką į siunčiamų laiškų aplanką">
+<!ENTITY quitButton.label "Baigti darbą">
+<!ENTITY quitButton.tooltip "Baigti programos darbą">
+<!ENTITY rewrapButton.label "Laužyti eilutes">
+<!ENTITY rewrapButton.tooltip "Iš naujo laužyti laiško eilutes">
+<!ENTITY findButton.label "Ieškoti">
+<!ENTITY findButton.tooltip "Ieškoti teksto">
+<!ENTITY findNextButton.label "Ieškoti toliau">
+<!ENTITY findNextButton.tooltip "Ieškoti tolesnio pasikartojimo">
+<!ENTITY findPrevButton.label "Ieškoti ankstesnio">
+<!ENTITY findPrevButton.tooltip "Ieškoti ankstesnio pasikartojimo">
