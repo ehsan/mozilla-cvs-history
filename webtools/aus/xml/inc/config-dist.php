@@ -102,7 +102,7 @@ $productBranchVersions = array(
         '0.8*'    =>  'branch',
         '0.9*'    =>  'branch',
         '0.6a1'   =>  'trunk'
-    )
+    )  // Add this for tests: 'Synthetic'   => array('1.5.0.*' => '1.5.0.x')
 );
 
 // Config for memcache.
@@ -124,12 +124,44 @@ $memcache_config = array(
     )
 );
 
-// Array that defines which %OS_VERSION% values are no longer supported.
-// For incoming URIs containing these as their platformVersion, no updates
-// will be offered.
+/*
+ * Array that defines which %OS_VERSION% values are no longer supported.
+ * For incoming URIs containing these as their platformVersion, no updates
+ * will be offered.  As of bug 418129, this has to be branch-specific and aware
+ * of whether or not an update is major.  Use of this array is in
+ * inc/patch.class.php.  
+ *
+ * Array format has changed, and is considered to be:
+
+ * array(
+ *      $Product => array(
+ *          $Version => array(
+ *              $OS_VERSION
+ *          )
+ *      )
+ *  )
+ *
+ * $Product is the product name (Firefox, Thunderbird, etc. - %PRODUCT%).
+ *
+ * $Version is the client version in the URL (%VERSION%).
+ *
+ * $OS_VERSION is used in a string match (existence anywhere in passed
+ * %OS_VERSION% triggers blocklisting of that OS).
+ */
 $unsupportedPlatforms = array(
-    'Windows 3.1 Professional Edition XP Limited Edition with Batteries (tm)',
-    'CareBears 1.0',
-    'Windows_98'
+    'Firefox'     =>  array( // Change to Synthetic for tests
+        '2.0*' => array( // Change to 1.0* for tests
+            'Darwin 6',
+            'Darwin 7',
+            'Windows_95',
+            'Windows_98',
+            'Windows_NT 4',
+            'GTK 2.0',
+            'GTK 2.2',
+            'GTK 2.4',
+            'GTK 2.6',
+            'GTK 2.8'
+        )
+    )
 );
 ?>

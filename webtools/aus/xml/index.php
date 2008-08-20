@@ -136,21 +136,16 @@ if ($_cached_xml) {
                 break;
             }
 
-            // Check to see if the %OS_VERSION% value passed in the URI is in our no-longer-supported
-            // array which is set in our config.
-            if (!empty($clean['platformVersion']) && !empty($unsupportedPlatforms) && is_array($unsupportedPlatforms) && in_array($clean['platformVersion'], $unsupportedPlatforms)) {
-
-                // If the passed OS_VERSION is in our array of unsupportedPlatforms, break the switch() and skip to the end.
-                //
-                // The default behavior is "no updates", so essentially the client would get an empty XML doc.
-                break;
-            }
-
         /*
          * This is for the second revision of the URI schema, with %CHANNEL% added.
          * /update2/1/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/update.xml
          */
         case 1:
+
+            // Set a default for platformVersion.
+            if (empty($clean['platformVersion'])) {
+                $clean['platformVersion'] = null;
+            }
 
             // Check for a set channel.
             $clean['channel'] = isset($path[6]) ? trim($path[6]) : null;
@@ -201,7 +196,7 @@ if ($_cached_xml) {
              }
 
             // If we have valid patchLine(s), set up our output.
-            if ($xml->hasPatchLine()) {
+            if ($xml->hasPatchLine() && $completePatch->isSupported($completePatch->updateType, $clean['product'], $clean['version'], $clean['platformVersion'], $unsupportedPlatforms)) {
                 $xml->startUpdate($update);
                 $xml->drawPatchLines();
                 $xml->endUpdate();

@@ -459,5 +459,36 @@ class Patch extends AUS_Object {
         // Doing so means no updates for the nightly channel.
         return false;
     }
+
+    /**
+     * Determine if the current update should be blocked because of its
+     * OS_VERSION.
+     *
+     * @param string updateType type of update (major|minor)
+     * @param string product name of the product
+     * @param string version product version
+     * @param string os OS_VERSION
+     * @param array unsupportedPlatforms - array of unsupported platforms
+     * @return boolean
+     */
+    function isSupported($updateType, $product, $version, $os, $unsupportedPlatforms) {
+
+        // If it's not a major update, we're not blocking platforms.
+        if ($updateType == 'minor' || empty($unsupportedPlatforms[$product])) {
+            return true;
+        }
+
+        foreach ($unsupportedPlatforms[$product] as $versionPattern => $badPlatforms) {
+            if ($version == $versionPattern || preg_match('/^'. str_replace('\\*', '.*', preg_quote($versionPattern, '/')) .'$/', $version)) {
+                foreach ($badPlatforms as $badPlatform) {
+                    if (strpos($os, $badPlatform) !== false) {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
 }
 ?>
