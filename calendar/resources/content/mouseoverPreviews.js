@@ -72,11 +72,6 @@ function onMouseOverItem( occurrenceBoxMouseEvent )
 
 function showToolTip(aToolTip, aItem) {
     if (aItem) {
-        if (aItem.hashId == aToolTip.cachedHashId) {
-            // We've already set up things for this occurrence, no need to do it
-            // again.
-            return true;
-        }
         var holderBox;
         if (isEvent(aItem)) {
             holderBox = getPreviewForEvent(aItem);
@@ -85,7 +80,6 @@ function showToolTip(aToolTip, aItem) {
         }
         if (holderBox) {
             setToolTipContent(aToolTip, holderBox);
-            aToolTip.cachedHashId = aItem.hashId;
             return true;
         }
     }
