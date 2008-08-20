@@ -762,9 +762,12 @@ calDavCalendar.prototype = {
                         + thisCalendar.name);
                 }
                 // we may still need to refesh other cals in this authrealm
-                if (thisCalendar.mAuthScheme == "Digest" &&
-                    thisCalendar.firstInRealm()) {
-                    thisCalendar.refreshOtherCals();
+                // and we should poll the inbox
+                if (thisCalendar.firstInRealm()) {
+                    thisCalendar.pollInBox();
+                    if (thisCalendar.mAuthScheme == "Digest") {
+                        thisCalendar.refreshOtherCals();
+                    }
                 }
             }
         };
