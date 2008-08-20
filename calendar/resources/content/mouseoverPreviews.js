@@ -71,21 +71,23 @@ function onMouseOverItem( occurrenceBoxMouseEvent )
 }
 
 function showToolTip(aToolTip, aItem) {
-    if (aItem.hashId == aToolTip.cachedHashId) {
-        // We've already set up things for this occurrence, no need to do it
-        // again.
-        return true;
-    }
-    var holderBox;
-    if (isEvent(aItem)) {
-        holderBox = getPreviewForEvent(aItem);
-    } else if (isToDo(aItem)) {
-        holderBox = getPreviewForTask(aItem);
-    }
-    if (holderBox) {
-        setToolTipContent(aToolTip, holderBox);
-        aToolTip.cachedHashId = aItem.hashId;
-        return true;
+    if (aItem) {
+        if (aItem.hashId == aToolTip.cachedHashId) {
+            // We've already set up things for this occurrence, no need to do it
+            // again.
+            return true;
+        }
+        var holderBox;
+        if (isEvent(aItem)) {
+            holderBox = getPreviewForEvent(aItem);
+        } else if (isToDo(aItem)) {
+            holderBox = getPreviewForTask(aItem);
+        }
+        if (holderBox) {
+            setToolTipContent(aToolTip, holderBox);
+            aToolTip.cachedHashId = aItem.hashId;
+            return true;
+        }
     }
     return false;
 }
