@@ -737,6 +737,18 @@ agendaListbox.calendarObserver.onPropertyChanged = function(aCalendar, aName, aV
         case "disabled":
             this.agendaListbox.refreshCalendarQuery();
             break;
+        case "color":
+            for (var node = agendaListbox.agendaListboxControl.firstChild;
+                 node;
+                 node = node.nextSibling) {
+                // Change color on all nodes that don't do so themselves, which
+                // is currently only he agenda-richlist-item
+                if (node.localName != "agenda-richlist-item") {
+                    continue;
+                }
+                node.refreshColor();
+            }
+            break;
     }
 };
 
