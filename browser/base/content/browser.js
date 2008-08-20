@@ -962,8 +962,6 @@ function delayedStartup()
   else
     focusElement(content);
 
-  SetPageProxyState("invalid");
-
   var navToolbox = getNavToolbox();
   navToolbox.customizeDone = BrowserToolboxCustomizeDone;
   navToolbox.customizeChange = BrowserToolboxCustomizeChange;
