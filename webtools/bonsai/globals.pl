@@ -1275,7 +1275,7 @@ sub MarkUpText {
      $bugsmatch = 2
           unless ($bugsmatch =~ /^\+?\d+$/);
      $bugsmatch =~ s/\D*(\d+).*/$1/;
-     eval ('$text =~ s((\d{' . $bugsmatch . ',}))(' . $bugsrpl . ')g;');
+     eval ('$text =~ s(\b(\d{' . $bugsmatch . ',})\b)(' . $bugsrpl . ')g;');
 
      return $text;
 }
