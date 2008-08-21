@@ -58,6 +58,7 @@ function calDavCalendar() {
     this.mInBoxUrl = null;
     this.mOutBoxUrl = null;
     this.mHaveScheduling = false;
+    this.mShouldPollInbox = true;
     this.mCalendarUserAddress = null;
     this.mSenderAddress = null;
     this.mHrefIndex = [];
@@ -208,6 +209,7 @@ calDavCalendar.prototype = {
     },
 
     mHaveScheduling: false,
+    mShouldPollInbox: true,
     get hasScheduling() {
         return this.mHaveScheduling;
     },
@@ -475,7 +477,7 @@ calDavCalendar.prototype = {
                 status = Components.interfaces.calIErrors.DAV_PUT_ERROR;
             }
 
-            // We should not accept a 201 status here indefinitely: it indicates a server error 
+            // We should not accept a 201 status here indefinitely: it indicates a server error
             // of some kind that we want to know about. It's convenient to accept it for now
             // since a number of server impls don't get this right yet.
             if (status == 204 || status == 201 || status == 200) {
@@ -486,7 +488,9 @@ calDavCalendar.prototype = {
                 // the current state of the item
                 // Observers will be notified in getUpdatedItem()
                 thisCalendar.getUpdatedItem(aNewItem, aListener);
-                if (wasInBoxItem) {
+                // SOGo has calendarUri == inboxUri so we need to be careful
+                // about deletions
+                if (wasInBoxItem && this.mShouldPollInbox) {
                     thisCalendar.doDeleteItem(aNewItem, null, true, true, null);
                 }
             } else if (status == 412) {
@@ -1308,11 +1312,11 @@ calDavCalendar.prototype = {
             this.mHaveScheduling = true;
             var spec = this.calendarUri.spec;
             this.mInBoxUrl = makeURL(spec.replace(/\/events\/$/, "/inbox/"));
-            this.mOutBoxUrl = makeURL(spec.replace(/\/events\/$/, "/outbox/")); 
+            this.mOutBoxUrl = makeURL(spec.replace(/\/events\/$/, "/outbox/"));
             var userEmail = this.calendarUri.path
                                 .replace(/\/calendar\/dav\/([^\/]+)\/.*/i, "$1");
             this.mCalendarUserAddress = "mailto:" + decodeURIComponent(userEmail.toLowerCase());
-                                                          
+            this.mShouldPollInbox = false;
 
             getFreeBusyService().addProvider(this);
             this.refresh();
@@ -1560,6 +1564,12 @@ calDavCalendar.prototype = {
                 }
                 ibUrl.path = thisCalendar.ensurePath(ibPath);
                 thisCalendar.mInBoxUrl = ibUrl;
+                if (thisCalendar.calendarUri.spec == ibUrl.spec) {
+                    // If the inbox matches the calendar uri (i.e SOGo), then we
+                    // don't need to poll the inbox.
+                    thisCalendar.mShouldPollInbox = false;
+                }
+
                 var obUrl = thisCalendar.mUri.clone();
                 var obPath =
                     response..C::["schedule-outbox-URL"]..D::href[0];
@@ -1794,9 +1804,10 @@ calDavCalendar.prototype = {
      *
      */
     pollInBox: function caldav_pollInBox() {
-        // if we have more than one calendar in this CalDAV account, we want
-        // only one of them to be checking the inbox.
-        if (!this.firstInRealm()) {
+        // If polling the inbox was switched off, no need to poll the inbox.
+        // Also, if we have more than one calendar in this CalDAV account, we
+        // want only one of them to be checking the inbox.
+        if (!this.mShouldPollInbox || !this.firstInRealm()) {
             return;
         }
 
