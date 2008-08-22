@@ -173,9 +173,18 @@ nsCOMPtr<calITimezone> detectTimezone(icaltimetype const& icalt,
                 return tz;
             }
             NS_ASSERTION(tz, "no timezone found, falling back to floating!");
+            logMissingTimezone(tzid);
         }
     }
     return floating();
+}
+
+void logMissingTimezone(char const* tzid) {
+    // xxx todo: needs l10n
+    nsString msg(NS_LITERAL_STRING("Timezone \""));
+    msg += NS_ConvertUTF8toUTF16(tzid);
+    msg += NS_LITERAL_STRING("\" not found, falling back to floating!");
+    logError(msg.get());
 }
 
 icaltimezone * getIcalTimezone(calITimezone * tz) {

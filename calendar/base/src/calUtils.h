@@ -157,6 +157,11 @@ nsCOMPtr<calITimezone> detectTimezone(icaltimetype const& icalt,
                                       calITimezoneProvider * tzProvider);
 
 /**
+ * Logs a missing timezone into the js console.
+ */
+void logMissingTimezone(char const* tzid);
+
+/**
  * Common base class for XPCOM object implementations:
  * - disallows public deletion (virtual protected dtor)
  * - disallows copy semantics (no assignment, no copy ctor)

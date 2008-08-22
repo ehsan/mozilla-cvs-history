@@ -451,6 +451,8 @@ nsresult calIcalProperty::getDatetime_(calIcalComponent * parent,
             // correct itt which would else appear floating:
             itt.zone = cal::getIcalTimezone(tz);
             itt.is_utc = 0;
+        } else {
+            cal::logMissingTimezone(tzid_);
         }
     }
     *dtp = new calDateTime(&itt, tz);
