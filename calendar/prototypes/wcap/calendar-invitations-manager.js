@@ -343,6 +343,10 @@ InvitationsManager.prototype = {
     },
 
     validateItem: function IM_validateItem(item) {
+        if (item.calendar instanceof Components.interfaces.calISchedulingSupport &&
+            !item.calendar.isInvitation(item)) {
+            return false; // exclude if organizer has invited himself
+        }
         var participationStatus = this.getParticipationStatus(item);
         var start = item[calGetStartDateProp(item)] || item[calGetEndDateProp(item)];
         return (participationStatus == "NEEDS-ACTION" &&

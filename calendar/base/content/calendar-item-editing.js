@@ -479,17 +479,6 @@ function checkAndSendItipMessage(aItem, aOpType, aOriginalItem) {
     }
     transport = transport.QueryInterface(Components.interfaces.calIItipTransport);
 
-    if ((transport.type == "email") &&
-        (aItem.getProperty("X-MOZ-SEND-INVITATIONS") != "TRUE")) { // Only send invitations/cancellations
-                                                                   // if the user checked the checkbox
-        return;
-    }
-
-    if (aOpType == Components.interfaces.calIOperationListener.DELETE) {
-        calSendItipMessage(transport, aItem, "CANCEL", aItem.getAttendees({}));
-        return;
-    } // else ADD, MODIFY:
-
     var invitedAttendee = ((calInstanceOf(aItem.calendar, Components.interfaces.calISchedulingSupport) &&
                             aItem.calendar.isInvitation(aItem))
                            ? aItem.calendar.getInvitedAttendee(aItem) : null);
@@ -498,10 +487,17 @@ function checkAndSendItipMessage(aItem, aOpType, aOriginalItem) {
             return; // provider does that
         }
 
-        // has this been a PARTSTAT change?
         var origInvitedAttendee = (aOriginalItem && aOriginalItem.getAttendeeById(invitedAttendee.id));
+
+        if (aOpType == Components.interfaces.calIOperationListener.DELETE) {
+            // in case the attendee has just deleted the item, we want to send out a DECLINED REPLY:
+            origInvitedAttendee = invitedAttendee;
+            invitedAttendee = invitedAttendee.clone();
+            invitedAttendee.participationStatus = "DECLINED";
+        }
+
+        // has this been a PARTSTAT change?
         if (aItem.organizer &&
-            (aItem.organizer.id.toLowerCase() != invitedAttendee.id.toLowerCase()) && // don't send response to yourself
             (!origInvitedAttendee ||
              (origInvitedAttendee.participationStatus != invitedAttendee.participationStatus))) {
 
@@ -519,6 +515,16 @@ function checkAndSendItipMessage(aItem, aOpType, aOriginalItem) {
         }
         return;
     }
+
+    if (aItem.getProperty("X-MOZ-SEND-INVITATIONS") != "TRUE") { // Only send invitations/cancellations
+                                                                 // if the user checked the checkbox
+        return;
+    }
+
+    if (aOpType == Components.interfaces.calIOperationListener.DELETE) {
+        calSendItipMessage(transport, aItem, "CANCEL", aItem.getAttendees({}));
+        return;
+    } // else ADD, MODIFY:
 
     var originalAtt = (aOriginalItem ? aOriginalItem.getAttendees({}) : []);
     var itemAtt = aItem.getAttendees({});

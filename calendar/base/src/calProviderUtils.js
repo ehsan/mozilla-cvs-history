@@ -183,7 +183,7 @@ calFreeBusyInterval.prototype = {
  */
 function calGetImipTransport(aCalendar) {
     // assure an identity is configured for the calendar
-    return ((!isSunbird() && aCalendar.getProperty("imip.identity"))
+    return (aCalendar.getProperty("imip.identity")
             ? Components.classes["@mozilla.org/calendar/itip-transport;1?type=email"]
                         .getService(Components.interfaces.calIItipTransport)
             : null);
