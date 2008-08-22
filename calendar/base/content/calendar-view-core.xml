@@ -249,8 +249,8 @@
 
           // Invitation
           if (item.calendar instanceof Components.interfaces.calISchedulingSupport &&
-              item.calendar.isInvitation(item)) { 
-              this.setAttribute("invitation", "true");
+              item.calendar.isInvitation(item)) {
+              this.setAttribute("invitation-status", item.calendar.getInvitedAttendee(item).participationStatus);
           }
         ]]></body>
       </method>

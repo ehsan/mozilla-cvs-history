@@ -575,3 +575,22 @@ description.tooltipBody {
 #calendar-item-context-menu[type="mixed"] .todo-only {
     display: none;
 }
+
+calendar-event-box[invitation-status="NEEDS-ACTION"],
+calendar-editable-item[invitation-status="NEEDS-ACTION"],
+calendar-month-day-box-item[invitation-status="NEEDS-ACTION"] {
+    border: 2px dotted black;
+    opacity: 0.6;
+}
+
+calendar-event-box[invitation-status="TENTATIVE"],
+calendar-editable-item[invitation-status="TENTATIVE"],
+calendar-month-day-box-item[invitation-status="TENTATIVE"] {
+    opacity: 0.6;
+}
+
+calendar-event-box[invitation-status="DECLINED"],
+calendar-editable-item[invitation-status="DECLINED"],
+calendar-month-day-box-item[invitation-status="DECLINED"] {
+    opacity: 0.3;
+}
