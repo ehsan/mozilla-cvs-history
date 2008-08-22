@@ -491,9 +491,12 @@ calItemBase.prototype = {
     },
 
     getAttachments: function cIB_getAttachments(aCount) {
+        if (!this.mAttachments && this.mIsProxy && this.mParentItem) {
+            this.mAttachments = this.mParentItem.getAttachments(aCount);
+        }
         if (this.mAttachments) {
             aCount.value = this.mAttachments.length;
-            return this.mAttachments.concat([]);
+            return this.mAttachments.concat([]); // clone
         } else {
             aCount.value = 0;
             return [];
