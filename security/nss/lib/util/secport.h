@@ -37,7 +37,7 @@
 /*
  * secport.h - portability interfaces for security libraries
  *
- * $Id: secport.h,v 1.15 2008/02/14 18:41:38 wtc%google.com Exp $
+ * $Id: secport.h,v 1.16 2008/08/22 01:33:05 wtc%google.com Exp $
  */
 
 #ifndef _SECPORT_H_
@@ -46,15 +46,9 @@
 #include "utilrename.h"
 
 /*
- * define XP_MAC, XP_WIN, XP_BEOS, or XP_UNIX, in case they are not defined
+ * define XP_WIN, XP_BEOS, or XP_UNIX, in case they are not defined
  * by anyone else
  */
-#ifdef macintosh
-# ifndef XP_MAC
-# define XP_MAC 1
-# endif
-#endif
-
 #ifdef _WINDOWS
 # ifndef XP_WIN
 # define XP_WIN
@@ -89,9 +83,6 @@
 #if defined(_WIN32_WCE)
 #include <windef.h>
 #include <types.h>
-#elif defined( XP_MAC ) 
-#include <types.h>
-#include <time.h> /* for time_t below */
 #else
 #include <sys/types.h>
 #endif
