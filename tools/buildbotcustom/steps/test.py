@@ -26,7 +26,7 @@
 # ***** END LICENSE BLOCK *****
 
 from buildbot.steps.shell import ShellCommand
-from buildbot.status.builder import FAILURE, SUCCESS
+from buildbot.status.builder import FAILURE, SUCCESS, WARNINGS
 from buildbot.process.buildstep import BuildStep
 
 import urllib #for conntacting the graph server
