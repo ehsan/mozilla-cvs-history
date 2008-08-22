@@ -105,3 +105,16 @@ function modifyRelations(event, oldRel) {
     do_check_eq(rel.relType, allRel[0].relType);
 
     // remove one relation
+    event.removeRelation(rel);
+
+    do_check_eq(event.getRelations({}).length, oldRel.length - 1);
+
+    // add one relation and remove all relations
+
+    event.addRelation(oldRel[0]);
+
+    event.removeAllRelations();
+
+    do_check_eq(event.getRelations({}), 0);
+
+}
