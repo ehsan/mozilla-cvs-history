@@ -1,5 +1,15 @@
 = Litmus Installation Instructions =
 
+== Server Requirements ==
+
+We're using RHEL4/5 here at Mozilla, but any setup that will give you Apache+mod_perl+MySQL should be able to do the job.
+
+Specifically, you'll need:
+* Apache 2
+* MySQL 5 (4 should also work)
+* mod_perl 2 (optional)
+* sendmail (optional): for sending report via email
+
 == Required Perl Modules ==
 
 Apache::DBI - if mod_perl is being used
@@ -17,7 +27,9 @@ File::Find
 Getopt::Long
 HTML::StripScripts
 HTML::StripScripts::Parser
-JSON
+JSON (version>=2)
+JSON::XS
+JSON::PP
 Sys::Hostname
 Template 
 Test::Harness
@@ -62,8 +74,9 @@ get at it. Have fun!
 To get yourself an administrator account, you'll need to load up Litmus in your 
 web browser and follow the link to create a new account. You'll have been 
 lucky enough to score user id number 2 (#1 is reserved for the anonymous 
-web-tester account, generally unused now). Grant yourself admin rights by loading 
-up mysql, connecting to your Litmus database, and running the following command:
+web-tester account, generally unused now). Grant yourself admin rights by 
+loading up mysql, connecting to your Litmus database, and running the 
+following command:
 
  mysql -u litmus -p litmus
  mysql> insert into user_group_map values ('2', '1');
