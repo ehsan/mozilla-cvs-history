@@ -576,13 +576,11 @@ function ItemToXMLEntry(aItem, aAuthorEmail, aAuthorName) {
     // categories
     // Google does not support categories natively, but allows us to store data
     // as an "extendedProperty", so we do here
-    var categories = aItem.getProperty("CATEGORIES");
-    if (categories) {
-        var gdCategories = <gd:extendedProperty xmlns:gd={gd}/>;
-        gdCategories.@name = "X-MOZ-CATEGORIES";
-        gdCategories.@value = categories;
-        entry.gd::extendedProperty += gdCategories;
-    }
+    var categories = aItem.getCategories({});
+    var gdCategories = <gd:extendedProperty xmlns:gd={gd}/>;
+    gdCategories.@name = "X-MOZ-CATEGORIES";
+    gdCategories.@value = categoriesArrayToString(categories);
+    entry.gd::extendedProperty += gdCategories;
 
     // gd:recurrence
     if (aItem.recurrenceInfo) {
@@ -674,13 +672,21 @@ function relevantFieldsMatch(a, b) {
 
     // Properties
     const kPROPERTIES = ["DESCRIPTION", "TRANSP", "X-GOOGLE-EDITURL",
-                         "LOCATION", "CATEGORIES", "X-MOZ-SNOOZE-TIME"];
+                         "LOCATION", "X-MOZ-SNOOZE-TIME"];
 
     for each (var p in kPROPERTIES) {
         // null and an empty string should be handled as non-relevant
         if ((a.getProperty(p) || "") != (b.getProperty(p) || "")) {
             return false;
         }
+    }
+
+    // categories
+    var aCat = a.getCategories({});
+    var bCat = b.getCategories({});
+    if ((aCat.length != bCat.length) ||
+        aCat.some(function notIn(cat) { return (bCat.indexOf(cat) == -1); })) {
+        return false;
     }
 
     // attendees and organzier
@@ -1094,11 +1100,8 @@ function XMLEntryToItem(aXMLEntry, aTimezone, aCalendar, aReferenceItem) {
         var gdCategories = aXMLEntry.gd::extendedProperty
                                     .(@name == "X-MOZ-CATEGORIES")
                                     .@value.toString();
-        if (gdCategories) {
-            item.setProperty("CATEGORIES", gdCategories);
-        } else {
-            item.deleteProperty("CATEGORIES");
-        }
+        var categories = categoriesStringToArray(gdCategories);
+        item.setCategories(categories.length, categories);
 
         // published
         item.setProperty("CREATED", fromRFC3339(aXMLEntry.published,

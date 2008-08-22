@@ -285,13 +285,9 @@ function appendCategoryItems(aItem, aCategoryMenuList, aCommand) {
 
     // insert the category already in the menulist so it doesn't get lost
     if (aItem) {
-        var itemProperty = aItem.getProperty("CATEGORIES");
-        if (itemProperty) {
-            var itemCategories = categoriesStringToArray(itemProperty);
-            for each (var itemCategory in itemCategories) {
-                if (!categoriesList.some(function(cat){ return cat == itemCategory; })){
-                    categoriesList.push(itemCategory);
-                }
+        for each (var itemCategory in aItem.getCategories({})) {
+            if (!categoriesList.some(function(cat){ return cat == itemCategory; })){
+                categoriesList.push(itemCategory);
             }
         }
         sortArrayByLocaleCollator(categoriesList);
@@ -398,11 +394,11 @@ function checkRadioControl(aParent, aValue) {
 function setCategory(aItem, aMenuElement) {
     // Category
     var category = getElementValue(aMenuElement);
-
-    if (category != "NONE") {
-       setItemProperty(aItem, "CATEGORIES", categoriesArrayToString([category]));
+    // xxx todo: what about category "NONE"?
+    if (category == "NONE") {
+        aItem.setCategories(0, []);
     } else {
-       aItem.deleteProperty("CATEGORIES");
+        aItem.setCategories(1, [category]);
     }
 }
 

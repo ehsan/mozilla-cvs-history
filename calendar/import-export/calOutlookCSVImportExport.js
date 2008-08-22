@@ -378,7 +378,8 @@ function csv_importFromStream(aStream, aCount) {
                 if ("categoriesIndex" in args) {
                     txt = parseTextField(eventFields[args.categoriesIndex])
                     if (txt) {
-                        event.setProperty("CATEGORIES", txt);
+                        var categories = categoriesStringToArray(txt);
+                        event.setCategories(categories.length, categories);
                     }
                 }
                 if ("locationIndex" in args) {
@@ -528,7 +529,7 @@ function csv_exportToStream(aStream, aCount, aItems) {
             line.push("");
             line.push("");
         }
-        line.push(txtString(item.getProperty("CATEGORIES")));
+        line.push(txtString(categoriesArrayToString(item.getCategories({})))); // xxx todo: what's the correct way to encode ',' in csv?, how are multi-values expressed?
         line.push(txtString(item.getProperty("DESCRIPTION")));
         line.push(txtString(item.getProperty("LOCATION")));
         line.push((item.privacy=="PRIVATE") ? localeEn.valueTrue : localeEn.valueFalse);

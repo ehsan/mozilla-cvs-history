@@ -128,9 +128,9 @@ var taskDetailsView = {
                         break;
                 }
             }
-            var category = item.getProperty("CATEGORIES");
-            if (displayElement("calendar-task-details-category-row", category && category.length)) {
-                document.getElementById("calendar-task-details-category").value = category;
+            var categories = item.getCategories({});
+            if (displayElement("calendar-task-details-category-row", categories.length > 0)) {
+                document.getElementById("calendar-task-details-category").value = categories.join(", ");
             }
             document.getElementById("task-start-row").Item = item;
             document.getElementById("task-due-row").Item = item;

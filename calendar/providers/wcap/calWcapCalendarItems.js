@@ -453,11 +453,21 @@ function calWcapCalendar_storeItem(bAddItem, item, oldItem, request) {
         if (!oldItem || val != oldItem.title) {
             params += ("&summary=" + encodeURIComponent(val));
         }
-        // xxx todo: missing relatedTos= in cal api
-        val = diffProperty(item, oldItem, "CATEGORIES");
-        if (val !== null) { // xxx todo: check whether ;-separated:
-            params += ("&categories=" + encodeURIComponent( val.replace(/,/g, ";") ));
+
+        params += "&categories=";
+        var categories = item.getCategories({});
+        if (categories.length > 0) {
+            function encodeCategories(cats) {
+                cats = cats.concat([]);
+                cats.sort();
+                return cats.join(";");
+            }
+            var catParam = encodeCategories(categories);
+            if (!oldItem || catParam != encodeCategories(oldItem.getCategories({}))) {
+                params += catParam;
+            }
         }
+
         val = diffProperty(item, oldItem, "DESCRIPTION");
         if (val !== null) {
             params += ("&desc=" + encodeURIComponent(val));

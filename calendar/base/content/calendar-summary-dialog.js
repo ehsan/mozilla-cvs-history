@@ -112,10 +112,10 @@ function onLoad() {
         document.getElementById("item-location").value = location;
     }
 
-    var category = item.getProperty("CATEGORIES");
-    if (category && category.length) {
+    var categories = item.getCategories({});
+    if (categories.length > 0) {
         document.getElementById("category-row").removeAttribute("hidden");
-        document.getElementById("item-category").value = category;
+        document.getElementById("item-category").value = categories.join(", "); // TODO l10n-unfriendly
     }
 
     var organizer = item.organizer;

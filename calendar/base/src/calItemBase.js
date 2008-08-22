@@ -279,6 +279,10 @@ calItemBase.prototype = {
             m.mRelations = this.mRelations.concat([]);
         }
 
+        if (this.mCategories) {
+            m.mCategories = this.mCategories.concat([]);
+        }
+
         // Clone any alarm info that exists, set it to null if it doesn't
         if (this.alarmOffset) {
             m.alarmOffset = this.alarmOffset.clone();
@@ -591,6 +595,23 @@ calItemBase.prototype = {
         this.mOrganizer = v;
     },
 
+    getCategories: function cib_getCategories(aCount) {
+        if (!this.mCategories && this.mIsProxy && this.mParentItem) {
+            this.mCategories = this.mParentItem.getCategories(aCount);
+        }
+        if (this.mCategories) {
+            aCount.value = this.mCategories.length;
+            return this.mCategories.concat([]); // clone
+        } else {
+            aCount.value = 0;
+            return [];
+        }
+    },
+
+    setCategories: function cib_setCategories(aCount, aCategories) {
+        this.mCategories = aCategories.concat([]);
+    },
+
     /* MEMBER_ATTR(mIcalString, "", icalString), */
     get icalString() {
         throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
@@ -617,6 +638,7 @@ calItemBase.prototype = {
         "RDATE": true,
         "ATTENDEE": true,
         "ATTACH": true,
+        "CATEGORIES": true,
         "ORGANIZER": true,
         "RECURRENCE-ID": true
     },
@@ -688,6 +710,13 @@ calItemBase.prototype = {
             org.icalProperty = orgprop;
             org.isOrganizer = true;
             this.mOrganizer = org;
+        }
+
+        this.mCategories = [];
+        for (var catprop = icalcomp.getFirstProperty("CATEGORIES");
+             catprop;
+             catprop = icalcomp.getNextProperty("CATEGORIES")) {
+            this.mCategories.push(catprop.value);
         }
 
         // find recurrence properties
@@ -824,6 +853,12 @@ calItemBase.prototype = {
             for (i in ritems) {
                 icalcomp.addProperty(ritems[i].icalProperty);
             }
+        }
+
+        for each (var cat in this.getCategories({})) {
+            var catprop = getIcsService().createIcalProperty("CATEGORIES");
+            catprop.value = cat;
+            icalcomp.addProperty(catprop);
         }
 
         if (this.alarmOffset) {

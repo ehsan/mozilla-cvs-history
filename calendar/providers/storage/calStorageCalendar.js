@@ -1874,9 +1874,18 @@ calStorageCalendar.prototype = {
             while (selectItem.step()) {
                 row = selectItem.row;
                 var name = row.key;
-                if (name != "DURATION") {
-                    // for events DTEND/DUE is enforced by calEvent/calTodo, so suppress DURATION:
-                    item.setProperty(name, row.value);
+                switch (name) {
+                    case "DURATION":
+                        // for events DTEND/DUE is enforced by calEvent/calTodo, so suppress DURATION:
+                        break;
+                    case "CATEGORIES": {
+                        var cats = categoriesStringToArray(row.value);
+                        item.setCategories(cats.length, cats);
+                        break;
+                    }
+                    default:
+                        item.setProperty(name, row.value);
+                        break;
                 }
             }
             selectItem.reset();
@@ -2249,40 +2258,43 @@ calStorageCalendar.prototype = {
         return 0;
     },
 
+    writeProperty: function stor_writeProperty(item, propName, propValue) {
+        var pp = this.mInsertProperty.params;
+        pp.key = propName;
+        if (calInstanceOf(propValue, Components.interfaces.calIDateTime)) {
+            pp.value = propValue.nativeTime;
+        } else {
+            try {
+                pp.value = propValue;
+            } catch (e) {
+                // The storage service throws an NS_ERROR_ILLEGAL_VALUE in
+                // case pval is something complex (i.e not a string or
+                // number). Swallow this error, leaving the value empty.
+                if (e.result != Components.results.NS_ERROR_ILLEGAL_VALUE) {
+                    throw e;
+                }
+            }
+        }
+        pp.item_id = item.id;
+        this.setDateParamHelper(pp, "recurrence_id", item.recurrenceId);
+        this.mInsertProperty.execute();
+        this.mInsertProperty.reset();
+    },
     writeProperties: function (item, olditem) {
         var ret = 0;
         var propEnumerator = item.propertyEnumerator;
         while (propEnumerator.hasMoreElements()) {
             ret = CAL_ITEM_FLAG_HAS_PROPERTIES;
-
             var prop = propEnumerator.getNext().QueryInterface(Components.interfaces.nsIProperty);
-
             if (item.isPropertyPromoted(prop.name))
                 continue;
+            this.writeProperty(item, prop.name, prop.value);
+        }
 
-            var pp = this.mInsertProperty.params;
-
-            pp.key = prop.name;
-            var pval = prop.value;
-            if (calInstanceOf(pval, Components.interfaces.calIDateTime)) {
-                pp.value = pval.nativeTime;
-            } else {
-                try {
-                    pp.value = pval;
-                } catch (e) {
-                    // The storage service throws an NS_ERROR_ILLEGAL_VALUE in
-                    // case pval is something complex (i.e not a string or
-                    // number). Swallow this error, leaving the value empty.
-                    if (e.result != Components.results.NS_ERROR_ILLEGAL_VALUE) {
-                        throw e;
-                    }
-                }
-            }
-            pp.item_id = item.id;
-            this.setDateParamHelper(pp, "recurrence_id", item.recurrenceId);
-
-            this.mInsertProperty.execute();
-            this.mInsertProperty.reset();
+        var cats = item.getCategories({});
+        if (cats.length > 0) {
+            ret = CAL_ITEM_FLAG_HAS_PROPERTIES;
+            this.writeProperty(item, "CATEGORIES", categoriesArrayToString(cats));
         }
 
         return ret;

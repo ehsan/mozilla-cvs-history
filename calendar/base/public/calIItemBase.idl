@@ -268,6 +268,22 @@ interface calIItemBase : nsISupports
   void removeAllAttachments();
 
   //
+  // Categories
+  //
+
+  /**
+   * Gets the array of categories this item belongs to.
+   */
+  void getCategories(out PRUint32 aCount,
+                     [array, size_is(aCount), retval] out wstring aCategories);
+
+  /**
+   * Sets the array of categories this item belongs to.
+   */
+  void setCategories(in PRUint32 aCount,
+                     [array, size_is(aCount)] in wstring aCategories);
+
+  //
   // Relations
   //
 

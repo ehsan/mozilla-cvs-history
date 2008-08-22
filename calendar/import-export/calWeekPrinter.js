@@ -260,9 +260,12 @@ function weekPrint_getDayTable(aDate, aItems) {
         var pb2 = Components.classes["@mozilla.org/preferences-service;1"]
                             .getService(Components.interfaces.nsIPrefBranch2);
         var catColor;
-        try {
-            catColor = pb2.getCharPref("calendar.category.color."+item.getProperty("CATEGORIES").toLowerCase());
-        } catch(ex) {}
+        for each (var cat in item.getCategories({})) {
+            try {
+                catColor = pb2.getCharPref("calendar.category.color." + cat.toLowerCase());
+                break; // take first matching
+            } catch(ex) {}
+        }
 
         var style = 'font-size: 11px; background-color: ' + calColor + ';';
         style += ' color: ' + getContrastingTextColor(calColor);

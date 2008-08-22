@@ -185,9 +185,8 @@
         <body><![CDATA[
           var item = this.mOccurrence;          
           this.setAttribute("item-calendar", item.calendar.uri.spec);
-          var categoriesProperty = item.getProperty("CATEGORIES");
-          if (categoriesProperty) {
-            var categoriesArray = categoriesStringToArray(categoriesProperty);
+          var categoriesArray = item.getCategories({});
+          if (categoriesArray.length > 0) {
             var cssClassesArray = categoriesArray.map(formatStringForCSSRule);
             this.setAttribute("categories", cssClassesArray.join(" "));
           }

@@ -406,7 +406,7 @@
               }
 
               // Task categories
-              var categories = categoriesStringToArray(item.getProperty("CATEGORIES"));
+              var categories = item.getCategories({});
               categories.map(formatStringForCSSRule)
                         .map(getAtomFromService)
                         .forEach(aProps.AppendElement, aProps);
@@ -480,7 +480,7 @@
                   case "calendar-task-tree-col-percentcomplete":
                       return (task.percentComplete > 0 ? task.percentComplete + "%" : "");
                   case "calendar-task-tree-col-categories":
-                      return task.getProperty("CATEGORIES");
+                      return task.getCategories({}).join(", "); // TODO l10n-unfriendly
                   case "calendar-task-tree-col-location":
                       return task.getProperty("LOCATION");
                   case "calendar-task-tree-col-status":
@@ -1121,8 +1121,14 @@
                       return compareDate(a.completedDate, b.completedDate) * modifier;
                   case "calendar-task-tree-col-percentcomplete":
                       return compareNumber(a.percentComplete, b.percentComplete) * modifier;
-                  case "calendar-task-tree-col-categories":
-                      return compareString(a.getProperty("CATEGORIES"), b.getProperty("CATEGORIES")) * modifier;
+                  case "calendar-task-tree-col-categories": {
+                      function getCompStr(item) {
+                          var cats = item.getCategories({});
+                          cats.sort();
+                          return cats.join("");
+                      }
+                      return compareString(getCompStr(a), getCompStr(b)) * modifier;
+                  }
                   case "calendar-task-tree-col-location":
                       return compareString(a.getProperty("LOCATION"), b.getProperty("LOCATION")) * modifier;
                   case "calendar-task-tree-col-status":
