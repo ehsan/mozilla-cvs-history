@@ -84,15 +84,16 @@ InvitationsManager.prototype = {
     mTimer: null,
 
     scheduleInvitationsUpdate: function IM_scheduleInvitationsUpdate(firstDelay,
-                                                                     repeatDelay,
                                                                      operationListener) {
         this.cancelInvitationsUpdate();
 
         var self = this;
         this.mTimer = setTimeout(function startInvitationsTimer() {
-            self.mTimer = setInterval(function repeatingInvitationsTimer() {
-                self.getInvitations(operationListener);
-            }, repeatDelay);
+            if (getPrefSafe("calendar.invitations.autorefresh.enabled", true)) {
+                self.mTimer = setInterval(function repeatingInvitationsTimer() {
+                    self.getInvitations(operationListener);
+                    }, getPrefSafe("calendar.invitations.autorefresh.timeout", 3) * 60000);
+            }
             self.getInvitations(operationListener);
         }, firstDelay);
     },

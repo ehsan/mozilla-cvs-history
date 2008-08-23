@@ -211,7 +211,7 @@ function ltnOnLoad(event) {
     window.addEventListener("unload", ltnFinish, false);
 
     // Set up invitations manager
-    scheduleInvitationsUpdate(FIRST_DELAY_STARTUP, REPEAT_DELAY);
+    scheduleInvitationsUpdate(FIRST_DELAY_STARTUP);
     getCalendarManager().addObserver(gInvitationsCalendarManagerObserver);
 
     var filter = document.getElementById("task-tree-filtergroup");
@@ -671,7 +671,6 @@ const FIRST_DELAY_STARTUP = 100;
 const FIRST_DELAY_RESCHEDULE = 100;
 const FIRST_DELAY_REGISTER = 10000;
 const FIRST_DELAY_UNREGISTER = 0;
-const REPEAT_DELAY = 180000;
 
 var gInvitationsOperationListener = {
     mCount: 0,
@@ -709,29 +708,26 @@ var gInvitationsCalendarManagerObserver = {
     mSideBar: this,
 
     onCalendarRegistered: function cMO_onCalendarRegistered(aCalendar) {
-        this.mSideBar.rescheduleInvitationsUpdate(FIRST_DELAY_REGISTER,
-                                                  REPEAT_DELAY);
+        this.mSideBar.rescheduleInvitationsUpdate(FIRST_DELAY_REGISTER);
     },
 
     onCalendarUnregistering: function cMO_onCalendarUnregistering(aCalendar) {
-        this.mSideBar.rescheduleInvitationsUpdate(FIRST_DELAY_UNREGISTER,
-                                                  REPEAT_DELAY);
+        this.mSideBar.rescheduleInvitationsUpdate(FIRST_DELAY_UNREGISTER);
     },
 
     onCalendarDeleting: function cMO_onCalendarDeleting(aCalendar) {
     }
 };
 
-function scheduleInvitationsUpdate(firstDelay, repeatDelay) {
+function scheduleInvitationsUpdate(firstDelay) {
     gInvitationsCalendarManagerObserver.mCount = 0;
     getInvitationsManager().scheduleInvitationsUpdate(firstDelay,
-                                                      repeatDelay,
                                                       gInvitationsOperationListener);
 }
 
-function rescheduleInvitationsUpdate(firstDelay, repeatDelay) {
+function rescheduleInvitationsUpdate(firstDelay) {
     getInvitationsManager().cancelInvitationsUpdate();
-    scheduleInvitationsUpdate(firstDelay, repeatDelay);
+    scheduleInvitationsUpdate(firstDelay);
 }
 
 function openInvitationsDialog() {
@@ -740,8 +736,7 @@ function openInvitationsDialog() {
     getInvitationsManager().openInvitationsDialog(
         gInvitationsOperationListener,
         function oiD_callback() {
-            scheduleInvitationsUpdate(FIRST_DELAY_RESCHEDULE,
-                                      REPEAT_DELAY);
+            scheduleInvitationsUpdate(FIRST_DELAY_RESCHEDULE);
         });
 }
 

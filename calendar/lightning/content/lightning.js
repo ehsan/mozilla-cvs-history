@@ -69,6 +69,10 @@ pref("calendar.alarms.todoalarmunit", "minutes");
 pref("calendar.autorefresh.enabled", true);
 pref("calendar.autorefresh.timeout", 30);
 
+// open invitations autorefresh settings
+pref("calendar.invitations.autorefresh.enabled", true);
+pref("calendar.invitations.autorefresh.timeout", 3);
+
 // iTIP compatibility send mode
 // 0 -- Outlook 2003 and following with text/plain and application/ics (default)
 // 1 -- all Outlook, but no text/plain nor application/ics
