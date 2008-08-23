@@ -994,6 +994,7 @@ function openNewMessage() {
                             .getService(Components.interfaces.nsIMsgComposeService);
     msgComposeService.OpenComposeWindow(null,
                                         null,
+                                        null,
                                         Components.interfaces.nsIMsgCompType.New,
                                         Components.interfaces.nsIMsgCompFormat.Default,
                                         null,
