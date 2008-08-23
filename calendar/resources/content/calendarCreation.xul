@@ -94,8 +94,14 @@
                 </row>
                 <row align="center">
                     <label value="&calendarproperties.location.label;" control="calendar-uri"/>
+                    <!--  Due to bug 128066, dropping urls here doesn't trigger
+                          events. To work around, we use the dragexit handler,
+                          which is triggered. Unfortunately, the more logical
+                          choice of dragdrop doesn't work here either.-->
                     <textbox id="calendar-uri"
-                             required="true" oninput="checkRequired();" />
+                             required="true"
+                             oninput="checkRequired();"
+                             ondragexit="checkRequired()"/>
                 </row>
                 <!--
                 <description>&locationpage.login.description;</description>
