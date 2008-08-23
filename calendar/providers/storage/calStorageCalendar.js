@@ -1229,7 +1229,8 @@ calStorageCalendar.prototype = {
                 throw e;
             }
         }
-        if (oldVersion < 13) {
+
+        if (oldVersion < 14) {
             this.mDB.beginTransaction();
             try {
                 this.mDB.createTable("cal_relations", sqlTables.cal_relations);
