@@ -297,7 +297,6 @@ class MozillaMochitest(ShellCommandReportTimeout):
     descriptionDone = ["mochitest complete"]
     command = ["python",
                "runtests.py",
-               "--appname=../../../dist/bin/firefox",
                "--autorun",
                "--console-level=INFO",
                "--close-when-done"]
@@ -340,7 +339,6 @@ class MozillaMochitest(ShellCommandReportTimeout):
 class MozillaWin32Mochitest(MozillaMochitest):
     command = ["python",
                "runtests.py",
-               "--appname=..\\..\\..\\dist\\bin\\firefox.exe",
                "--autorun",
                "--console-level=INFO",
                "--close-when-done"]
@@ -348,7 +346,6 @@ class MozillaWin32Mochitest(MozillaMochitest):
 class MozillaOSXMochitest(MozillaMochitest):
     command = ["python",
                "runtests.py",
-               "--appname=../../../dist/Minefield.app/Contents/MacOS/firefox",
                "--autorun",
                "--console-level=INFO",
                "--close-when-done"]
@@ -360,7 +357,6 @@ class MozillaMochichrome(ShellCommandReportTimeout):
     descriptionDone = ["mochichrome complete"]
     command = ["python",
               "runtests.py",
-              "--appname=../../../dist/bin/firefox",
               "--chrome",
               "--autorun",
               "--console-level=INFO",
@@ -405,7 +401,6 @@ class MozillaMochichrome(ShellCommandReportTimeout):
 class MozillaWin32Mochichrome(MozillaMochichrome):
    command = ["python",
               "runtests.py",
-              "--appname=..\\..\\..\\dist\\bin\\firefox.exe",
               "--chrome",
               "--autorun",
               "--console-level=INFO",
@@ -414,7 +409,6 @@ class MozillaWin32Mochichrome(MozillaMochichrome):
 class MozillaOSXMochichrome(MozillaMochichrome):
    command = ["python",
               "runtests.py",
-              "--appname=../../../dist/Minefield.app/Contents/MacOS/firefox",
               "--chrome",
               "--autorun",
               "--console-level=INFO",
@@ -488,7 +482,6 @@ class MozillaA11YTest(MozillaMochichrome):
     descriptionDone = ["a11y test complete"]
     command = ["python",
                "runtests.py",
-               "--appname=../../../dist/bin/firefox",
                "--console-level=INFO",
                "--autorun",
                "--a11y", 
