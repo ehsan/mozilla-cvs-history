@@ -57,7 +57,7 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMPopupBlockedEvent.h"
 #include "nsIDOMBarProp.h"
-#include "nsIDomNSEvent.h"
+#include "nsIDOMNSEvent.h"
 
 // XPCOM and String includes
 #include "nsIInterfaceRequestorUtils.h"
