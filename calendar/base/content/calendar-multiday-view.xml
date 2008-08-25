@@ -216,45 +216,31 @@
     -->
   <binding id="calendar-event-gripbar">
      <content>
-      <xul:box anonid="thebox" flex="1" pack="center">
-        <xul:image xbl:inherits="class"/>
-      </xul:box>
+       <xul:box anonid="thebox"
+                flex="1"
+                pack="center"
+                xbl:inherits="align=whichside">
+         <xul:image xbl:inherits="class"/>
+       </xul:box>
      </content>
 
     <implementation>
-      <!-- public -->
-      <field name="eventElement">null</field>
-
       <property name="parentorient">
         <getter><![CDATA[
           return this.getAttribute("parentorient");
         ]]></getter>
         <setter><![CDATA[
-           this.setAttribute("parentorient", val);
-           var thebox = document.getAnonymousElementByAttribute(this, "anonid", "thebox");
-           if (val == "vertical")
-              thebox.setAttribute("orient", "horizontal");
-           else
-              thebox.setAttribute("orient", "vertical");
-           return val;
+          var thebox = document.getAnonymousElementByAttribute(this, "anonid", "thebox");
+          this.setAttribute("parentorient", val);
+          thebox.setAttribute("orient", getOtherOrientation(val));
+          return val;
         ]]></setter>
       </property>
 
       <!-- private -->
-      <field name="mSide">top</field>
-
-      <field name="mResizing">false</field>
-      <field name="mSizeStartX">0</field>
-      <field name="mSizeStartY">0</field>
-
       <constructor><![CDATA[
-        if (this.getAttribute("side") == "top")
-            this.mSide = "top";
-        else if (this.getAttribute("side") == "bottom")
-            this.mSide = "bottom";
         this.parentorient = this.getAttribute("parentorient");
       ]]></constructor>
-
     </implementation>
 
     <handlers>
@@ -804,7 +790,6 @@
                       if (chunk.event) {
                           var chunkBox = createXULElement("calendar-event-box");
                           var durMinutes = duration.inSeconds / 60;
-                          chunkBox.setAttribute("style", "min-width: 1px; min-height: 1px;");
                           var size = Math.max(durMinutes * this.mPixPerMin, minSize);
                           if (orient == "vertical") {
                               chunkBox.setAttribute("height", size);
@@ -1093,11 +1078,11 @@
         <parameter name="aItem"/>
         <body><![CDATA[
           var item = aItem.clone();
-          var start = item.startDate || aItem.entryDate;
+          var start = item.startDate || item.entryDate;
           if (!compareObjects(start.timezone, this.mTimezone)) {
               start = start.getInTimezone(this.mTimezone);
           }
-          var end = item.endDate || aItem.dueDate
+          var end = item.endDate || item.dueDate
           if (!compareObjects(end.timezone, this.mTimezone)) {
               end = end.getInTimezone(this.mTimezone);
           }
@@ -1973,6 +1958,7 @@
                          class="calendar-event-box-container"
                          flex="1"
                          xbl:inherits="context,parentorient=orient,readonly,flashing,alarm,allday,priority,progress,status,calendar,categories">
+                <xul:image flex="1" class="calendar-event-box-gradient"/>
                 <xul:vbox class="calendar-event-details">
                   <xul:description anonid="event-name" class="calendar-event-details-core" flex="1"/>
                   <xul:textbox anonid="event-name-textbox"
@@ -1981,15 +1967,15 @@
                                hidden="true"
                                wrap="true"/>
                 </xul:vbox>
-                <xul:image width="1px" class="calendar-event-box-gradient"/>
                 <xul:hbox pack="end">
-                    <xul:vbox pack="start">
-                      <xul:image anonid="alarm-image"
-                                 class="alarm-image"
-                                 xbl:inherits="flashing"
-                                 hidden="true"/>
-                    </xul:vbox>
-                </xul:hbox>
+                  <xul:hbox align="start">
+                    <xul:image anonid="alarm-image"
+                               class="alarm-image"
+                               xbl:inherits="flashing"
+                               hidden="true"/>
+                   </xul:hbox>
+                   <xul:calendar-category-box anonid="category-box" xbl:inherits="categories" pack="end"/>
+                 </xul:hbox>
                 <xul:box xbl:inherits="orient" flex="1">
                   <xul:calendar-event-gripbar anonid="gripbar1"
                                               class="calendar-event-box-grippy-top"
@@ -2005,7 +1991,6 @@
                      not be resizable using the gripbars. If you want to insert
                      additional elements, do so above the box with the gripbars. -->
               </xul:stack>
-              <xul:calendar-category-box anonid="category-box" xbl:inherits="categories"/>
             </xul:box>
           </xul:box>
       </xul:box>
@@ -3055,7 +3040,7 @@
               if (this.getAttribute("orient") != aVal)
                   needsreorient = true;
           }
-
+          
           if (aAttr == "context" || aAttr == "item-context")
               needsrelayout = true;
 
