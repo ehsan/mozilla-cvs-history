@@ -1186,7 +1186,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   // Determine if we need to repaint our border, background or outline
-  CheckInvalidateSizeChange(aPresContext, aMetrics, aReflowState);
+  CheckInvalidateSizeChange(aMetrics);
 
   FinishAndStoreOverflow(&aMetrics);
 
