@@ -1626,34 +1626,33 @@ calDavCalendar.prototype = {
             && aCalIdParts[0] != "https" ) {
             return;
         }
-        mailto_aCalId = aCalIdParts.join(":");
+        var mailto_aCalId = aCalIdParts.join(":");
 
         var thisCalendar = this;
 
         var organizer = this.calendarUserAddress;
 
-        var dtstamp = now().getInTimezone(UTC()).icalString;
-        var dtstart = aRangeStart.getInTimezone(UTC()).icalString;
-        var dtend = aRangeEnd.getInTimezone(UTC()).icalString;
-        var uuid = getUUID();
-
-        var fbQuery = "BEGIN:VCALENDAR\n";
-        fbQuery += "VERSION:" + calGetProductVersion() + "\n";
-        fbQuery += "PRODID:-" + calGetProductId() + "\n";
-        fbQuery += "METHOD:REQUEST\n";
-        fbQuery += "BEGIN:VFREEBUSY\n";
-        fbQuery += "DTSTAMP:" + dtstamp + "\n";
-        fbQuery += "ORGANIZER:" + organizer + "\n";
-        fbQuery += "DTSTART:" + dtstart + "\n";
-        fbQuery += "DTEND:" + dtend + "\n";
-        fbQuery += "UID:" + uuid + "\n";
-        var attendee = "ATTENDEE;PARTSTAT=NEEDS-ACTION;ROLE=REQ-PARTICIPANT;CUTYPE=INDIVIDUAL:" + mailto_aCalId + "\n";
-        var attendeeFolded = this.foldLine(attendee);
-        fbQuery += attendeeFolded;
-        fbQuery += "END:VFREEBUSY\n";
-        fbQuery += "END:VCALENDAR\n";
-        // RFC 2445 is specific about how lines end...
-        fbQuery = fbQuery.replace(/\n/g, "\r\n");
+        var fbQuery = getIcsService().createIcalComponent("VCALENDAR");
+        calSetProdidVersion(fbQuery);
+        var prop = getIcsService().createIcalProperty("METHOD");
+        prop.value = "REQUEST";
+        fbQuery.addProperty(prop);
+        var fbComp = getIcsService().createIcalComponent("VFREEBUSY");
+        fbComp.stampTime = now().getInTimezone(UTC());
+        prop = getIcsService().createIcalProperty("ORGANIZER");
+        prop.value = organizer;
+        fbComp.addProperty(prop);
+        fbComp.startTime = aRangeStart.getInTimezone(UTC());
+        fbComp.endTime = aRangeEnd.getInTimezone(UTC());
+        fbComp.uid = getUUID();
+        prop = getIcsService().createIcalProperty("ATTENDEE");
+        prop.setParameter("PARTSTAT", "NEEDS-ACTION");
+        prop.setParameter("ROLE", "REQ-PARTICIPANT");
+        prop.setParameter("CUTYPE", "INDIVIDUAL");
+        prop.value = mailto_aCalId;
+        fbComp.addProperty(prop);
+        fbQuery.addSubcomponent(fbComp);
+        fbQuery = fbQuery.serializeToICS();
         if (this.verboseLogging()) {
             LOG("CalDAV: send (Originator=" + organizer +
                     ",Recipient=" + mailto_aCalId + "): " + fbQuery);
@@ -1694,8 +1693,6 @@ calDavCalendar.prototype = {
                 if (str.substr(0,6) == "<?xml ") {
                     str = str.substring(str.indexOf('<', 2));
                 }
-                str = str.replace(/\n\ /g, "");
-                str = str.replace(/\r/g, "");
 
                 var response = new XML(str);
                 var status = response..C::response..C::["request-status"];
@@ -1706,21 +1703,43 @@ calDavCalendar.prototype = {
                 if (status.substr(0,3) != "2.0") {
                     LOG("CalDAV: Got status " + status + " in response to freebusy query");
                 }
-                var interval;
+
                 var caldata = response..C::response..C::["calendar-data"];
-                var lines = caldata.split("\n");
-                for (var i = 0; i < lines.length; i++) {
-                    if (lines[i].substr(0,8) == "FREEBUSY") {
-                        var descDat = lines[i].split(":");
-                        var fbName = descDat[0].split("=")[1];
-                        var fbType = fbTypeMap[fbName];
-                        var ranges = descDat[1].split(",");
-                        for (var j = 0; j < ranges.length; j++) {
-                            var parts = ranges[j].split("/");
+                try {
+                    function iterFunc(fbComp) {
+                        var interval;
+
+                        var replyRangeStart = fbComp.startTime;
+                        if (replyRangeStart && (aRangeStart.compare(replyRangeStart) == -1)) {
+                            interval = new calFreeBusyInterval(aCalId,
+                                                               calIFreeBusyInterval.UNKNOWN,
+                                                               aRangeStart,
+                                                               replyRangeStart);
+                            periodsToReturn.push(interval);
+                        }
+                        var replyRangeEnd = fbComp.endTime;
+                        if (replyRangeEnd && (aRangeEnd.compare(replyRangeEnd) == 1)) {
+                            interval = new calFreeBusyInterval(aCalId,
+                                                               calIFreeBusyInterval.UNKNOWN,
+                                                               replyRangeEnd,
+                                                               aRangeEnd);
+                            periodsToReturn.push(interval);
+                        }
+
+                        for (var fbProp = fbComp.getFirstProperty("FREEBUSY");
+                             fbProp;
+                             fbProp = fbComp.getNextProperty("FREEBUSY")) {
+
+                            var fbType = fbProp.getParameter("FBTYPE");
+                            if (fbType) {
+                                fbType = fbTypeMap[fbType];
+                            } else {
+                                fbType = calIFreeBusyInterval.UNKNOWN;
+                            }
+                            var parts = fbProp.value.split("/");
                             var begin = createDateTime(parts[0]);
                             var end;
-                            if (parts[1].charAt(0) == "P") {
-                                // This is a duration
+                            if (parts[1].charAt(0) == "P") { // this is a duration
                                 end = begin.clone();
                                 end.addDuration(createDuration(parts[1]))
                             } else {
@@ -1734,29 +1753,11 @@ calDavCalendar.prototype = {
                             periodsToReturn.push(interval);
                         }
                     }
-                    if (lines[i].substr(0,7) == "DTSTART") {
-                        var dts = lines[i].split(":")[1];
-                        var replyRangeStart = createDateTime(dts);
-                        if (aRangeStart.compare(replyRangeStart) == -1) {
-                            interval = new calFreeBusyInterval(aCalId,
-                                                               calIFreeBusyInterval.UNKNOWN,
-                                                               aRangeStart,
-                                                               replyRangeStart);
-                            periodsToReturn.push(interval);
-                        }
-                    }
-                    if (lines[i].substr(0,5) == "DTEND") {
-                        var dte = lines[i].split(":")[1];
-                        var replyRangeEnd = createDateTime(dte);
-                        if (aRangeEnd.compare(replyRangeEnd) == 1) {
-                            interval = new calFreeBusyInterval(aCalId,
-                                                               calIFreeBusyInterval.UNKNOWN,
-                                                               replyRangeEnd,
-                                                               aRangeEnd);
-                            periodsToReturn.push(interval);
-                        }
-                    }
+                    calIterateIcalComponent(getIcsService().parseICS(caldata, null), iterFunc);
+                } catch (exc) {
+                    LOG("Error parsing free-busy info.");
                 }
+
                 aListener.onResult(null, periodsToReturn);
             } else {
                 LOG("CalDAV: Received status " + aContext.responseStatus + " from freebusy query");
@@ -1766,19 +1767,6 @@ calDavCalendar.prototype = {
 
         var streamLoader = createStreamLoader();
         calSendHttpRequest(streamLoader, httpchannel, streamListener);
-    },
-
-    /**
-     * RFC 2445 line folding
-     */
-    foldLine: function caldav_foldLine(aString) {
-        var parts = [];
-        while (aString.length) {
-            var part = aString.substr(0,72);
-            parts.push(part);
-            aString = aString.substr(72);
-        }
-        return parts.join("\n ");
     },
 
     ensurePath: function caldav_ensurePath(aString) {
@@ -1949,7 +1937,7 @@ calDavCalendar.prototype = {
                     }
 
                     if (status != 200) {
-                        Components.utils.reportError("Sending iITIP failed with status " + status);
+                        LOG("Sending iITIP failed with status " + status);
                     }
 
                     var str = convertByteArray(aResult, aResultLength, "UTF-8", false);
