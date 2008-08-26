@@ -101,9 +101,8 @@
             if (showsToday) {
                 this.kCheckbox.label = this.getAttribute("title");
             } else {
-                if (synthetic.end.day == (synthetic.start.day + 1)) {
-                    var label = getDateFormatter().formatDate(synthetic.start);
-                    this.kCheckbox.label = label;
+                if (synthetic.duration == 1) {
+                    this.kCheckbox.label = getDateFormatter().formatDate(synthetic.start);
                 } else {
                     this.kCheckbox.label = getDateFormatter().formatInterval(synthetic.start, synthetic.end);
                 }
