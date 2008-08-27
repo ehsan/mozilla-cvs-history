@@ -217,6 +217,7 @@ bin\components\nsHelperAppDlg.js
 bin\components\nsDownloadManagerUI.js
 bin\components\nsProxyAutoConfig.js
 bin\components\nsExtensionManager.js
+bin\components\nsBadCertHandler.js
 #ifndef MOZILLA_1_8_BRANCH
 bin\components\nsBlocklistService.js
 bin\components\nsLoginInfo.js
