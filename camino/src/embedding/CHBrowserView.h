@@ -214,6 +214,7 @@ typedef enum {
 - (NSString*)pageTitle;
 - (NSDate*)pageLastModifiedDate;
 - (BOOL)isTextBasedContent;
+- (BOOL)isImageBasedContent;
 
 // nsIWebBrowserSetup methods
 - (void)setProperty:(unsigned int)property toValue:(unsigned int)value;
@@ -258,6 +259,14 @@ typedef enum {
 - (BOOL)canMakeTextBigger;
 - (BOOL)canMakeTextSmaller;
 - (BOOL)isTextDefaultSize;
+
+- (void)makePageBigger;
+- (void)makePageSmaller;
+- (void)makePageDefaultSize;
+
+- (BOOL)canMakePageBigger;
+- (BOOL)canMakePageSmaller;
+- (BOOL)isPageDefaultSize;
 
 - (void)pageUp;
 - (void)pageDown;

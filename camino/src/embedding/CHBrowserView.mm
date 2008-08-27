@@ -145,13 +145,19 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 #define MIN_TEXT_ZOOM 0.01f
 #define MAX_TEXT_ZOOM 20.0f
 
+#define PAGE_ZOOM_INCREMENT 0.25f
+#define DEFAULT_PAGE_ZOOM 1.0f
+#define MIN_PAGE_ZOOM 0.25f
+#define MAX_PAGE_ZOOM 5.0f
 
 @interface CHBrowserView(Private)
 
 - (id<CHBrowserContainer>)browserContainer;
 - (nsIContentViewer*)contentViewer;		// addrefs return value
 - (float)textZoom;
+- (float)pageZoom;
 - (void)incrementTextZoom:(float)increment min:(float)min max:(float)max;
+- (void)incrementPageZoom:(float)increment min:(float)min max:(float)max;
 - (nsIDocShell*)docShell;    // does NOT addref
 - (NSString*)selectedText;
 - (already_AddRefed<nsIDOMWindow>)focussedDOMWindow;
@@ -1154,6 +1160,26 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   return NO;
 }
 
+- (BOOL)isImageBasedContent
+{
+  nsCOMPtr<nsIDOMWindow> domWindow = [self contentWindow];
+  
+  nsCOMPtr<nsIDOMDocument> domDocument;
+  domWindow->GetDocument(getter_AddRefs(domDocument));
+  if (!domDocument)
+    return NO;
+  
+  nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(domDocument));
+  if (!nsDoc)
+    return NO;
+  
+  nsAutoString contentType;
+  nsDoc->GetContentType(contentType);
+  
+  NSString* mimeType = [NSString stringWith_nsAString:contentType];
+  return [mimeType hasPrefix:@"image/"];
+}
+
 -(IBAction)cut:(id)aSender
 {
   nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(_webBrowser));
@@ -1276,6 +1302,41 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 - (BOOL)isTextDefaultSize
 {
   return (fabsf([self textZoom] - DEFAULT_TEXT_ZOOM) < .001);
+}
+
+- (void)makePageBigger
+{
+  [self incrementPageZoom:PAGE_ZOOM_INCREMENT min:MIN_PAGE_ZOOM max:MAX_PAGE_ZOOM];
+}
+
+- (void)makePageSmaller
+{
+  [self incrementPageZoom:-PAGE_ZOOM_INCREMENT min:MIN_PAGE_ZOOM max:MAX_PAGE_ZOOM];
+}
+
+- (void)makePageDefaultSize
+{
+  nsCOMPtr<nsIContentViewer> contentViewer = dont_AddRef([self contentViewer]);
+  nsCOMPtr<nsIMarkupDocumentViewer> markupViewer(do_QueryInterface(contentViewer));
+  if (!markupViewer)
+    return;
+  
+  markupViewer->SetFullZoom(DEFAULT_PAGE_ZOOM);
+}
+
+- (BOOL)canMakePageBigger
+{
+  return [self pageZoom] < MAX_PAGE_ZOOM;
+}
+
+- (BOOL)canMakePageSmaller
+{
+  return [self pageZoom] > MIN_PAGE_ZOOM;
+}
+
+- (BOOL)isPageDefaultSize
+{
+  return (fabsf([self pageZoom] - DEFAULT_PAGE_ZOOM) < .001);
 }
 
 - (void)pageUp
@@ -1520,6 +1581,37 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   markupViewer->SetTextZoom(zoom);
 }
 
+- (float)pageZoom
+{
+  nsCOMPtr<nsIContentViewer> contentViewer = dont_AddRef([self contentViewer]);
+  nsCOMPtr<nsIMarkupDocumentViewer> markupViewer(do_QueryInterface(contentViewer));
+  if (!markupViewer)
+    return DEFAULT_PAGE_ZOOM;
+  
+  float zoom;
+  markupViewer->GetFullZoom(&zoom);
+  return zoom;
+}
+
+- (void)incrementPageZoom:(float)increment min:(float)min max:(float)max
+{
+  nsCOMPtr<nsIContentViewer> contentViewer = dont_AddRef([self contentViewer]);
+  nsCOMPtr<nsIMarkupDocumentViewer> markupViewer(do_QueryInterface(contentViewer));
+  if (!markupViewer)
+    return;
+  
+  float zoom;
+  markupViewer->GetFullZoom(&zoom);
+  zoom += increment;
+  
+  if (zoom < min)
+    zoom = min;
+  
+  if (zoom > max)
+    zoom = max;
+  
+  markupViewer->SetFullZoom(zoom);
+}
 
 #pragma mark -
 

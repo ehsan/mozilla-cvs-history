@@ -983,6 +983,10 @@
 		82CE28C0073661F600B4DE07 /* EditorOverride.css in Copy Gecko Resources */ = {isa = PBXBuildFile; fileRef = 82CE28BD073661E300B4DE07 /* EditorOverride.css */; };
 		82CE28C7073662B400B4DE07 /* composer.xpt in Copy Component XPTs */ = {isa = PBXBuildFile; fileRef = 82CE28C40736625800B4DE07 /* composer.xpt */; };
 		82CE28CB0736634A00B4DE07 /* txmgr.xpt in Copy Component XPTs */ = {isa = PBXBuildFile; fileRef = 82CE28C80736633900B4DE07 /* txmgr.xpt */; };
+		B3128A110E5D14C8009F0595 /* pageBigger.tiff in Resources */ = {isa = PBXBuildFile; fileRef = B3757F860E5D0FE70006EDF1 /* pageBigger.tiff */; };
+		B3128A120E5D14C8009F0595 /* pageBigger.tiff in Resources */ = {isa = PBXBuildFile; fileRef = B3757F860E5D0FE70006EDF1 /* pageBigger.tiff */; };
+		B3128A130E5D14CD009F0595 /* pageSmaller.tiff in Resources */ = {isa = PBXBuildFile; fileRef = B3757F870E5D0FE70006EDF1 /* pageSmaller.tiff */; };
+		B3128A140E5D14CE009F0595 /* pageSmaller.tiff in Resources */ = {isa = PBXBuildFile; fileRef = B3757F870E5D0FE70006EDF1 /* pageSmaller.tiff */; };
 		C79573880D35314D0028A773 /* XMLSearchPluginParser.mm in Sources */ = {isa = PBXBuildFile; fileRef = C79573840D35314D0028A773 /* XMLSearchPluginParser.mm */; };
 		C795738A0D35314D0028A773 /* OpenSearchParser.mm in Sources */ = {isa = PBXBuildFile; fileRef = C79573860D35314D0028A773 /* OpenSearchParser.mm */; };
 		C795738C0D35314D0028A773 /* XMLSearchPluginParser.mm in Sources */ = {isa = PBXBuildFile; fileRef = C79573840D35314D0028A773 /* XMLSearchPluginParser.mm */; };
@@ -1149,14 +1153,14 @@
 			isa = PBXContainerItemProxy;
 			containerPortal = 7B64B7BA0CCFD9F50098406C /* Sparkle.xcodeproj */;
 			proxyType = 2;
-			remoteGlobalIDString = DAAEFC960DA571DF0051E0D0 /* relaunch */;
+			remoteGlobalIDString = DAAEFC960DA571DF0051E0D0;
 			remoteInfo = "relaunch tool";
 		};
 		0080C7C70E2E4CBE006AFD32 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 7B64B7BA0CCFD9F50098406C /* Sparkle.xcodeproj */;
 			proxyType = 2;
-			remoteGlobalIDString = 612279D90DB5470200AB99EA /* Sparkle Unit Tests.octest */;
+			remoteGlobalIDString = 612279D90DB5470200AB99EA;
 			remoteInfo = "Sparkle Unit Tests";
 		};
 		7B0B576C0D4A4EE0003BC853 /* PBXContainerItemProxy */ = {
@@ -2528,6 +2532,8 @@
 		A7D88E6A0465D9F800A80196 /* suitetypeaheadfind.xpt */ = {isa = PBXFileReference; lastKnownFileType = file; name = suitetypeaheadfind.xpt; path = ../extensions/typeaheadfind/public/_xpidlgen/suitetypeaheadfind.xpt; sourceTree = SOURCE_ROOT; };
 		A7E5D960041A07C900A967F8 /* libi18n.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libi18n.a; path = ../intl/build/libi18n.a; sourceTree = SOURCE_ROOT; };
 		A7FD31C90466004E00A80196 /* libsuitetypeaheadfind.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsuitetypeaheadfind.a; path = ../extensions/typeaheadfind/src/libsuitetypeaheadfind.a; sourceTree = SOURCE_ROOT; };
+		B3757F860E5D0FE70006EDF1 /* pageBigger.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = pageBigger.tiff; path = resources/images/toolbar/pageBigger.tiff; sourceTree = "<group>"; };
+		B3757F870E5D0FE70006EDF1 /* pageSmaller.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = pageSmaller.tiff; path = resources/images/toolbar/pageSmaller.tiff; sourceTree = "<group>"; };
 		C79573840D35314D0028A773 /* XMLSearchPluginParser.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = XMLSearchPluginParser.mm; path = src/websearch/XMLSearchPluginParser.mm; sourceTree = "<group>"; };
 		C79573850D35314D0028A773 /* XMLSearchPluginParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = XMLSearchPluginParser.h; path = src/websearch/XMLSearchPluginParser.h; sourceTree = "<group>"; };
 		C79573860D35314D0028A773 /* OpenSearchParser.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = OpenSearchParser.mm; path = src/websearch/OpenSearchParser.mm; sourceTree = "<group>"; };
@@ -4177,6 +4183,8 @@
 				DE8C61FE0AB67CDA00078871 /* hidemanager.tiff */,
 				3FBDC8DF0827C44B00D7F8E0 /* autofill.tiff */,
 				3FEBB43B089DA88B00BD8373 /* history.tiff */,
+				B3757F860E5D0FE70006EDF1 /* pageBigger.tiff */,
+				B3757F870E5D0FE70006EDF1 /* pageSmaller.tiff */,
 			);
 			name = "Toolbar-Browser";
 			sourceTree = "<group>";
@@ -5091,6 +5099,8 @@
 				C7FF53760D35286800194776 /* WebSearchEngines.plist in Resources */,
 				00BBBF1F0D6A149900C2D916 /* FindBarTextured.nib in Resources */,
 				00BBBFE80D70A6E400C2D916 /* tab_loading.tiff in Resources */,
+				B3128A110E5D14C8009F0595 /* pageBigger.tiff in Resources */,
+				B3128A130E5D14CD009F0595 /* pageSmaller.tiff in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5283,6 +5293,8 @@
 				C7FF53770D35286800194776 /* WebSearchEngines.plist in Resources */,
 				00BBBF1E0D6A149900C2D916 /* FindBarTextured.nib in Resources */,
 				00BBBFE70D70A6E400C2D916 /* tab_loading.tiff in Resources */,
+				B3128A120E5D14C8009F0595 /* pageBigger.tiff in Resources */,
+				B3128A140E5D14CE009F0595 /* pageSmaller.tiff in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

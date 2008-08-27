@@ -131,12 +131,20 @@ static const int kEscapeKeyCode = 53;
       if ([[NSApp mainMenu] performKeyEquivalent:theEvent])
         return YES;
 
-      if ([windowController canMakeTextBigger])
-       [windowController makeTextBigger:nil];
-     else
-       NSBeep();
-     handled = YES;
-   }
+      if ([theEvent modifierFlags] & NSAlternateKeyMask) {
+        if ([windowController canMakeTextBigger])
+          [windowController makeTextBigger:nil];
+        else
+          NSBeep();
+      }
+      else {
+        if ([windowController canMakePageBigger])
+          [windowController makePageBigger:nil];
+        else
+          NSBeep();
+      }
+      handled = YES;
+    }
   } else if (keyChar >= '1' && keyChar <= '9') {
     if (([theEvent modifierFlags] & standardModifierKeys) == NSCommandKeyMask) {
       // If someone assigns one of these shortcuts to a menu, we want that to win.

@@ -144,6 +144,9 @@ typedef enum EBookmarkOpenBehavior
 - (IBAction)makeTextBigger:(id)aSender;
 - (IBAction)makeTextDefaultSize:(id)aSender;
 - (IBAction)makeTextSmaller:(id)aSender;
+- (IBAction)makePageBigger:(id)aSender;
+- (IBAction)makePageDefaultSize:(id)aSender;
+- (IBAction)makePageSmaller:(id)aSender;
 - (IBAction)viewPageSource:(id)aSender;
 - (IBAction)reloadWithCharset:(id)aSender;
 - (IBAction)toggleAutoCharsetDetection:(id)aSender;

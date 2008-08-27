@@ -1,16 +1,104 @@
 {
     IBClasses = (
         {
+            CLASS = AutoCompleteTextField; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {mLockIconContextMenu = NSMenu; mProxyIcon = PageProxyIcon; }; 
+            SUPERCLASS = NSTextField; 
+        }, 
+        {
             CLASS = BookmarkMenu; 
             LANGUAGE = ObjC; 
             OUTLETS = {mItemBeforeCustomItems = NSMenuItem; }; 
             SUPERCLASS = NSMenu; 
         }, 
-        {CLASS = BookmarkMenuBuilder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
         {
-            CLASS = BrowserToolbarController; 
+            ACTIONS = {delete = id; }; 
+            CLASS = BookmarkOutlineView; 
             LANGUAGE = ObjC; 
-            SUPERCLASS = ToolbarController; 
+            SUPERCLASS = ExtendedOutlineView; 
+        }, 
+        {
+            ACTIONS = {addFolder = id; }; 
+            CLASS = BookmarkToolbar; 
+            LANGUAGE = ObjC; 
+            SUPERCLASS = NSView; 
+        }, 
+        {
+            ACTIONS = {
+                addBookmarkFolder = id; 
+                addBookmarkSeparator = id; 
+                addCollection = id; 
+                arrange = id; 
+                copy = id; 
+                copyURLs = id; 
+                cut = id; 
+                delete = id; 
+                deleteBookmarks = id; 
+                openBookmark = id; 
+                openBookmarkInNewTab = id; 
+                openBookmarkInNewWindow = id; 
+                openBookmarksInTabsInNewWindow = id; 
+                paste = id; 
+                quicksearchPopupChanged = id; 
+                revealBookmark = id; 
+                searchStringChanged = id; 
+                showBookmarkInfo = id; 
+                toggleIsDockMenuFolder = id; 
+            }; 
+            CLASS = BookmarkViewController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                mActionButton = NSButton; 
+                mActionMenuBookmarks = NSMenu; 
+                mActionMenuHistory = NSMenu; 
+                mAddButton = NSButton; 
+                mAddCollectionButton = NSButton; 
+                mBookmarksEditingView = BookmarksEditingView; 
+                mBookmarksHostView = NSView; 
+                mBookmarksOutlineView = BookmarkOutlineView; 
+                mContainersSplit = NSSplitView; 
+                mContainersTableView = ExtendedTableView; 
+                mHistoryHostView = NSView; 
+                mHistoryOutlineView = ExtendedOutlineView; 
+                mHistoryOutlineViewDelegate = HistoryOutlineViewDelegate; 
+                mOutlinerHostView = NSView; 
+                mQuickSearchMenuBookmarks = NSMenu; 
+                mQuickSearchMenuHistory = NSMenu; 
+                mSearchField = NSSearchField; 
+                mSortButton = NSButton; 
+                mSortMenuBookmarks = NSMenu; 
+                mSortMenuHistory = NSMenu; 
+            }; 
+            SUPERCLASS = NSObject; 
+        }, 
+        {
+            CLASS = BookmarksEditingView; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {mDelegate = id; }; 
+            SUPERCLASS = NSView; 
+        }, 
+        {
+            CLASS = BrowserContentView; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                mBookmarksToolbar = BookmarkToolbar; 
+                mBrowserContainerView = NSView; 
+                mStatusBar = NSView; 
+            }; 
+            SUPERCLASS = NSView; 
+        }, 
+        {
+            CLASS = BrowserTabBarView; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {mTabView = BrowserTabView; }; 
+            SUPERCLASS = NSView; 
+        }, 
+        {
+            CLASS = BrowserTabView; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {mTabBar = BrowserTabBarView; }; 
+            SUPERCLASS = NSTabView; 
         }, 
         {
             ACTIONS = {
@@ -34,6 +122,7 @@
                 copyLinkLocation = id; 
                 endLocationSheet = id; 
                 endSearchSheet = id; 
+                findSearchEngines = id; 
                 forward = id; 
                 frameToNewTab = id; 
                 frameToNewWindow = id; 
@@ -41,11 +130,15 @@
                 getInfo = id; 
                 goToLocationFromToolbarURLField = id; 
                 home = id; 
+                makePageBigger = id; 
+                makePageDefaultSize = id; 
+                makePageSmaller = id; 
                 makeTextBigger = id; 
                 makeTextDefaultSize = id; 
                 makeTextSmaller = id; 
                 manageBookmarks = id; 
                 manageHistory = id; 
+                manageSearchEngines = id; 
                 moveTabToNewWindow = id; 
                 newTab = id; 
                 nextTab = id; 
@@ -58,7 +151,7 @@
                 reload = id; 
                 reloadAllTabs = id; 
                 reloadSendersTab = id; 
-                reloadWithNewCharset = id; 
+                reloadWithNewCharset = NSString; 
                 saveFrameAs = id; 
                 saveImageAs = id; 
                 saveLinkAs = id; 
@@ -72,6 +165,7 @@
                 showSiteCertificate = id; 
                 stop = id; 
                 toggleStatusBar = id; 
+                toggleTabThumbnailView = id; 
                 viewOnlyThisImage = id; 
                 viewPageSource = id; 
                 viewSource = id; 
@@ -110,6 +204,29 @@
         }, 
         {
             ACTIONS = {
+                copy = id; 
+                cut = id; 
+                delete = id; 
+                paste = id; 
+                redo = id; 
+                reloadWithNewCharset = NSString; 
+                selectAll = id; 
+                undo = id; 
+            }; 
+            CLASS = CHBrowserView; 
+            LANGUAGE = ObjC; 
+            SUPERCLASS = NSView; 
+        }, 
+        {
+            ACTIONS = {copy = id; cut = id; delete = id; paste = id; }; 
+            CLASS = ExtendedOutlineView; 
+            LANGUAGE = ObjC; 
+            SUPERCLASS = NSOutlineView; 
+        }, 
+        {CLASS = ExtendedSplitView; LANGUAGE = ObjC; SUPERCLASS = NSSplitView; }, 
+        {CLASS = ExtendedTableView; LANGUAGE = ObjC; SUPERCLASS = NSTableView; }, 
+        {
+            ACTIONS = {
                 addBookmark = id; 
                 addBookmarkFolder = id; 
                 addBookmarkSeparator = id; 
@@ -125,6 +242,30 @@
             }; 
             CLASS = FirstResponder; 
             LANGUAGE = ObjC; 
+            SUPERCLASS = NSObject; 
+        }, 
+        {
+            ACTIONS = {
+                copyURLs = id; 
+                deleteHistoryItems = id; 
+                groupByDate = id; 
+                groupBySite = id; 
+                openHistoryItem = id; 
+                openHistoryItemInNewTab = id; 
+                openHistoryItemInNewWindow = id; 
+                openHistoryItemsInTabsInNewWindow = id; 
+                setNoGrouping = id; 
+                sortAscending = id; 
+                sortBy = id; 
+                sortDescending = id; 
+            }; 
+            CLASS = HistoryOutlineViewDelegate; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                mBookmarksViewController = BookmarkViewController; 
+                mHistoryOutlineView = ExtendedOutlineView; 
+                mHistorySortMenu = NSMenu; 
+            }; 
             SUPERCLASS = NSObject; 
         }, 
         {CLASS = HistorySubmenu; LANGUAGE = ObjC; SUPERCLASS = NSMenu; }, 
@@ -150,6 +291,9 @@
                 importBookmarks = id; 
                 infoLink = id; 
                 keyboardShortcutsLink = id; 
+                makePageBigger = id; 
+                makePageDefaultSize = id; 
+                makePageSmaller = id; 
                 makeTextBigger = id; 
                 makeTextDefaultSize = id; 
                 makeTextSmaller = id; 
@@ -205,25 +349,17 @@
             }; 
             SUPERCLASS = NSObject; 
         }, 
-        {
-            ACTIONS = {load = id; }; 
-            CLASS = MyBrowserView; 
-            LANGUAGE = ObjC; 
-            OUTLETS = {progress = id; progressSuper = id; status = id; urlbar = id; }; 
-            SUPERCLASS = NSView; 
-        }, 
+        {CLASS = NSMenu; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {CLASS = NSMenuItem; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
         {CLASS = NSObject; LANGUAGE = ObjC; }, 
+        {CLASS = NSSplitView; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
+        {CLASS = NSString; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {CLASS = NSView; LANGUAGE = ObjC; SUPERCLASS = NSResponder; }, 
+        {CLASS = PageProxyIcon; LANGUAGE = ObjC; SUPERCLASS = NSImageView; }, 
         {
             ACTIONS = {checkForUpdates = id; }; 
             CLASS = SUUpdater; 
             LANGUAGE = ObjC; 
-            SUPERCLASS = NSObject; 
-        }, 
-        {CLASS = ThrobberHandler; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
-        {
-            CLASS = ToolbarController; 
-            LANGUAGE = ObjC; 
-            OUTLETS = {mBrowserView = id; mWindow = id; }; 
             SUPERCLASS = NSObject; 
         }, 
         {
@@ -231,7 +367,8 @@
             LANGUAGE = ObjC; 
             OUTLETS = {mItemBeforeHistoryItems = NSMenuItem; }; 
             SUPERCLASS = HistorySubmenu; 
-        }
+        }, 
+        {CLASS = WebSearchField; LANGUAGE = ObjC; SUPERCLASS = NSSearchField; }
     ); 
     IBVersion = 1; 
 }

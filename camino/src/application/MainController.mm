@@ -1454,6 +1454,21 @@ NSString* const kPreviousSessionTerminatedNormallyKey = @"PreviousSessionTermina
   [[self mainWindowBrowserController] makeTextSmaller:aSender];
 }
 
+- (IBAction)makePageBigger:(id)aSender
+{
+  [[self mainWindowBrowserController] makePageBigger:aSender];
+}
+
+- (IBAction)makePageDefaultSize:(id)aSender
+{
+  [[self mainWindowBrowserController] makePageDefaultSize:aSender];
+}
+
+- (IBAction)makePageSmaller:(id)aSender
+{
+  [[self mainWindowBrowserController] makePageSmaller:aSender];
+}
+
 - (IBAction)viewPageSource:(id)aSender
 {
   [[self mainWindowBrowserController] viewPageSource:aSender];  // top-level page, not focussed frame
@@ -1774,6 +1789,9 @@ NSString* const kPreviousSessionTerminatedNormallyKey = @"PreviousSessionTermina
       action == @selector(makeTextBigger:) ||
       action == @selector(makeTextSmaller:) ||
       action == @selector(makeTextDefaultSize:) ||
+      action == @selector(makePageBigger:) ||
+      action == @selector(makePageSmaller:) ||
+      action == @selector(makePageDefaultSize:) ||
       action == @selector(viewPageSource:) ||
       action == @selector(sendURL:) ||
       action == @selector(printDocument:) ||

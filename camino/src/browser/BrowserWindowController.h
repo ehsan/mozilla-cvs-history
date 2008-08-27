@@ -250,6 +250,13 @@ typedef enum  {
 - (IBAction)makeTextSmaller:(id)aSender;
 - (IBAction)makeTextDefaultSize:(id)aSender;
 
+- (BOOL)canMakePageBigger;
+- (BOOL)canMakePageSmaller;
+- (BOOL)canMakePageDefaultSize;
+- (IBAction)makePageBigger:(id)aSender;
+- (IBAction)makePageSmaller:(id)aSender;
+- (IBAction)makePageDefaultSize:(id)aSender;
+
 - (IBAction)getInfo:(id)sender;
 
 - (BOOL)shouldShowBookmarkToolbar;

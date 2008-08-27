@@ -157,6 +157,8 @@ static NSString* const ViewSourceToolbarItemIdentifier  = @"View Source Toolbar 
 static NSString* const BookmarkToolbarItemIdentifier    = @"Bookmark Toolbar Item";
 static NSString* const TextBiggerToolbarItemIdentifier  = @"Text Bigger Toolbar Item";
 static NSString* const TextSmallerToolbarItemIdentifier = @"Text Smaller Toolbar Item";
+static NSString* const PageBiggerToolbarItemIdentifier  = @"Page Bigger Toolbar Item";
+static NSString* const PageSmallerToolbarItemIdentifier = @"Page Smaller Toolbar Item";
 static NSString* const NewTabToolbarItemIdentifier      = @"New Tab Toolbar Item";
 static NSString* const CloseTabToolbarItemIdentifier    = @"Close Tab Toolbar Item";
 static NSString* const SendURLToolbarItemIdentifier     = @"Send URL Toolbar Item";
@@ -1224,6 +1226,8 @@ public:
                                                         CloseTabToolbarItemIdentifier,
                                                         TextBiggerToolbarItemIdentifier,
                                                         TextSmallerToolbarItemIdentifier,
+                                                        PageBiggerToolbarItemIdentifier,
+                                                        PageSmallerToolbarItemIdentifier,
                                                         SendURLToolbarItemIdentifier,
                                                         NSToolbarCustomizeToolbarItemIdentifier,
                                                         NSToolbarFlexibleSpaceItemIdentifier,
@@ -1465,6 +1469,22 @@ public:
     [toolbarItem setImage:[NSImage imageNamed:@"textSmaller"]];
     [toolbarItem setTarget:self];
     [toolbarItem setAction:@selector(makeTextSmaller:)];
+  }
+  else if ([itemIdent isEqual:PageBiggerToolbarItemIdentifier]) {
+    [toolbarItem setLabel:NSLocalizedString(@"BigPage", nil)];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"BigPage", nil)];
+    [toolbarItem setToolTip:NSLocalizedString(@"BigPageToolTip", nil)];
+    [toolbarItem setImage:[NSImage imageNamed:@"pageBigger"]];
+    [toolbarItem setTarget:self];
+    [toolbarItem setAction:@selector(makePageBigger:)];
+  }
+  else if ([itemIdent isEqual:PageSmallerToolbarItemIdentifier]) {
+    [toolbarItem setLabel:NSLocalizedString(@"SmallPage", nil)];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"SmallPage", nil)];
+    [toolbarItem setToolTip:NSLocalizedString(@"SmallPageToolTip", nil)];
+    [toolbarItem setImage:[NSImage imageNamed:@"pageSmaller"]];
+    [toolbarItem setTarget:self];
+    [toolbarItem setAction:@selector(makePageSmaller:)];
   }
   else if ([itemIdent isEqual:NewTabToolbarItemIdentifier]) {
     [toolbarItem setLabel:NSLocalizedString(@"NewTab", nil)];
@@ -1780,6 +1800,12 @@ public:
     return [self canMakeTextSmaller];
   if (action == @selector(makeTextDefaultSize:))
     return [self canMakeTextDefaultSize];
+  if (action == @selector(makePageBigger:))
+    return [self canMakePageBigger];
+  if (action == @selector(makePageSmaller:))
+    return [self canMakePageSmaller];
+  if (action == @selector(makePageDefaultSize:))
+    return [self canMakePageDefaultSize];
   if (action == @selector(find:)) {
     return ([self bookmarkManagerIsVisible] ||
             [[[self browserWrapper] browserView] isTextBasedContent]);
@@ -3804,6 +3830,48 @@ public:
 - (IBAction)makeTextDefaultSize:(id)aSender
 {
   [[mBrowserView browserView] makeTextDefaultSize];
+}
+
+- (BOOL)canMakePageBigger
+{
+  BrowserWrapper* wrapper = [self browserWrapper];
+  return (![wrapper isEmpty] &&
+          ![self bookmarkManagerIsVisible] &&
+          ([[wrapper browserView] isTextBasedContent] || [[wrapper browserView] isImageBasedContent]) &&
+          [[wrapper browserView] canMakePageBigger]);
+}
+
+- (BOOL)canMakePageSmaller
+{
+  BrowserWrapper* wrapper = [self browserWrapper];
+  return (![wrapper isEmpty] &&
+          ![self bookmarkManagerIsVisible] &&
+          ([[wrapper browserView] isTextBasedContent] || [[wrapper browserView] isImageBasedContent]) &&
+          [[wrapper browserView] canMakePageSmaller]);
+}
+
+- (BOOL)canMakePageDefaultSize
+{
+  BrowserWrapper* wrapper = [self browserWrapper];
+  return (![wrapper isEmpty] &&
+          ![self bookmarkManagerIsVisible] &&
+          ([[wrapper browserView] isTextBasedContent] || [[wrapper browserView] isImageBasedContent]) &&
+          ![[wrapper browserView] isPageDefaultSize]);
+}
+
+- (IBAction)makePageBigger:(id)aSender
+{
+  [[mBrowserView browserView] makePageBigger];
+}
+
+- (IBAction)makePageSmaller:(id)aSender
+{
+  [[mBrowserView browserView] makePageSmaller];
+}
+
+- (IBAction)makePageDefaultSize:(id)aSender
+{
+  [[mBrowserView browserView] makePageDefaultSize];
 }
 
 - (IBAction)getInfo:(id)sender

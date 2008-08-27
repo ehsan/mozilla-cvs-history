@@ -199,6 +199,8 @@
 "Hide Bookmarks" = "Hide Bookmarks";
 "BigText" = "Bigger Text";
 "SmallText" = "Smaller Text";
+"BigPage" = "Zoom In";
+"SmallPage" = "Zoom Out";
 "NewTab" = "New Tab";
 "CloseTab" = "Close Tab";
 "SendLink" = "Email Location";
@@ -233,6 +235,8 @@
 "BookmarkToolTip" = "Add this page to your bookmarks";
 "BigTextToolTip" = "Enlarge the text on this page";
 "SmallTextToolTip" = "Shrink the text on this page";
+"BigPageToolTip" = "Enlarge the content on this page";
+"SmallPageToolTip" = "Shrink the content on this page";
 "NewTabToolTip" = "Create a new tab";
 "CloseTabToolTip" = "Close this tab";
 "SendLinkToolTip" = "Open a new message in your mail program with the location of this page";
