@@ -54,10 +54,10 @@
 #include "nsIRunnable.h"
 #include "nsIChannelClassifier.h"
 
-class nsAsyncInstantiateEvent;
-class AutoNotifier;
-class AutoFallback;
-class AutoSetInstantiatingToFalse;
+struct nsAsyncInstantiateEvent;
+class  AutoNotifier;
+class  AutoFallback;
+class  AutoSetInstantiatingToFalse;
 
 /**
  * INVARIANTS OF THIS CLASS
