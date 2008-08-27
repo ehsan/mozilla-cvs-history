@@ -516,8 +516,8 @@ calendar-event-box[orient="horizontal"] .calendar-event-box-grippy-bottom {
     visibility: hidden;
 }
 
-calendar-event-box[readOnly="true"]:hover .calendar-event-box-grippy-top,
-calendar-event-box[readOnly="true"]:hover .calendar-event-box-grippy-bottom {
+calendar-event-box[readonly="true"]:hover .calendar-event-box-grippy-top,
+calendar-event-box[readonly="true"]:hover .calendar-event-box-grippy-bottom {
     visibility: hidden;
     cursor: auto;
 }
