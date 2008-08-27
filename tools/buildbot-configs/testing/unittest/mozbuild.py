@@ -1,10 +1,11 @@
 # -*- Python -*-
 
-from buildbot.process import step
-from buildbot.process.step import ShellCommand
+from buildbot import steps
+from buildbot.steps.shell import ShellCommand
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, HEADER
 import re
 import os
+import copy
 
 MozillaEnvironments = { }
 
@@ -78,58 +79,59 @@ MozillaEnvironments['mozbuild'] = {
     "MOZ_AIRBAG": '1',
     "MOZ_CRASHREPORTER_NO_REPORT": '1',
     "XPCOM_DEBUG_BREAK": 'warn',
-    "VCVARS": 'C:\\Program Files\\Microsoft Visual Studio 8\\VC\\bin\\vcvars32.bat',
+    "VCVARS": 'D:\\msvs8\\VC\\bin\\vcvars32.bat',
     "MOZ_MSVCVERSION": '8',
-    "MOZILLABUILD": 'C:\\mozilla-build',
-    "MOZILLABUILDDRIVE": 'C:',
+    "MOZILLABUILD": 'D:\\mozilla-build',
+    "MOZILLABUILDDRIVE": 'D:',
     "MOZILLABUILDPATH": '\\mozilla-build\\',
-    "MOZ_TOOLS": 'C:\\mozilla-build\\moztools',
+    "MOZ_TOOLS": 'D:\\mozilla-build\\moztools',
     "CVS_RSH": 'ssh',
-    "VSINSTALLDIR": 'C:\\Program Files\\Microsoft Visual Studio 8',
-    "VCINSTALLDIR": 'C:\\Program Files\\Microsoft Visual Studio 8\\VC',
+    "VSINSTALLDIR": 'D:\\msvs8',
+    "VCINSTALLDIR": 'D:\\msvs8\\VC',
     "FrameworkDir": 'C:\\WINDOWS\\Microsoft.NET\\Framework',
     "FrameworkVersion": 'v2.0.50727',
-    "FrameworkSDKDir": 'C:\\Program Files\\Microsoft Visual Studio 8\\SDK\\v2.0',
-    "MSVCDir": 'C:\\Program Files\\Microsoft Visual Studio 8\\VC',
-    "DevEnvDir": "C:\\Program Files\\Microsoft Visual Studio 8\\Common7\\IDE",
-    "PATH": 'C:\\mozilla-build\\msys\\local\\bin;' + \
-            'C:\\mozilla-build\\wget;' + \
-            'C:\\mozilla-build\\7zip;' + \
-            'C:\\mozilla-build\\blat261\\full;' + \
-            'C:\\mozilla-build\\svn-win32-1.4.2\\bin;' + \
-            'C:\\mozilla-build\\upx203w;' + \
-            'C:\\mozilla-build\\xemacs\\XEmacs-21.4.19\\i586-pc-win32;' + \
-            'C:\\mozilla-build\\info-zip;' + \
-            'C:\\mozilla-build\\nsis-2.22;' + \
+    "FrameworkSDKDir": 'D:\\msvs8\\SDK\\v2.0',
+    "MSVCDir": 'D:\\msvs8\\VC',
+    "DevEnvDir": "D:\\msvs8\\Common7\\IDE",
+    "PATH": 'D:\\mozilla-build\\msys\\local\\bin;' + \
+            'D:\\mozilla-build\\wget;' + \
+            'D:\\mozilla-build\\7zip;' + \
+            'D:\\mozilla-build\\blat261\\full;' + \
+            'D:\\mozilla-build\\svn-win32-1.4.2\\bin;' + \
+            'D:\\mozilla-build\\upx203w;' + \
+            'D:\\mozilla-build\\xemacs\\XEmacs-21.4.19\\i586-pc-win32;' + \
+            'D:\\mozilla-build\\info-zip;' + \
+            'D:\\mozilla-build\\nsis-2.22;' + \
             '.;' + \
-            'C:\\mozilla-build\\msys\\bin;' + \
-            'C:\\Python24;' + \
-            'C:\\Python24\\Scripts;' + \
-            'C:\\Program Files\\Microsoft SDKs\\Windows\\v6.0\\bin;' + \
-            'C:\\Program Files\\Microsoft Visual Studio 8\\Common7\\IDE;' + \
-            'C:\\Program Files\\Microsoft Visual Studio 8\\VC\\BIN;' + \
-            'C:\\Program Files\\Microsoft Visual Studio 8\\Common7\\Tools;' + \
-            'C:\\Program Files\\Microsoft Visual Studio 8\\Common7\\Tools\\bin;' + \
-            'C:\\Program Files\\Microsoft Visual Studio 8\\VC\\PlatformSDK\\bin;' + \
-            'C:\\Program Files\\Microsoft Visual Studio 8\\SDK\\v2.0\\bin;' + \
+            'D:\\mozilla-build\\msys\\bin;' + \
+            'D:\\mozilla-build\\python25;' + \
+            'D:\\mozilla-build\\python25\\Scripts;' + \
+            'D:\\sdks\\v6.0\\Bin;' + \
+            'D:\\msvs8\\Common7\\IDE;' + \
+            'D:\\msvs8\\VC\\BIN;' + \
+            'D:\\msvs8\\Common7\\Tools;' + \
+            'D:\\msvs8\\Common7\\Tools\\bin;' + \
+            'D:\\msvs8\\VC\\PlatformSDK\\bin;' + \
+            'D:\\msvs8\\SDK\\v2.0\\bin;' + \
             'C:\\WINDOWS\\Microsoft.NET\\Framework\\v2.0.50727;' + \
-            'C:\\Program Files\\Microsoft Visual Studio 8\\VC\\VCPackages;' + \
+            'D:\\msvs8\\VC\\VCPackages;' + \
             'C:\\WINDOWS\\System32;' + \
             'C:\\WINDOWS;' + \
             'C:\\WINDOWS\\System32\\Wbem;' + \
-            'C:\\mozilla-build\\moztools\\bin;',
-    "INCLUDE": 'C:\\Program Files\\Microsoft SDKs\\Windows\\v6.0\\include;' + \
-               'C:\\Program Files\\Microsoft SDKs\\Windows\\v6.0\\include\\atl;' + \
-               'C:\\Program Files\\Microsoft Visual Studio 8\\VC\\ATLMFC\\INCLUDE;' + \
-               'C:\\Program Files\\Microsoft Visual Studio 8\\VC\\INCLUDE;' + \
-               'C:\\Program Files\\Microsoft Visual Studio 8\\VC\\PlatformSDK\\include;' + \
-               'C:\\Program Files\\Microsoft Visual Studio 8\\SDK\\v2.0\\include;' + \
+            'D:\\mozilla-build\\moztools\\bin;',
+    "INCLUDE": 'D:\\sdks\\v6.0\\Include;' + \
+               'D:\\sdks\\v6.0\\Include\\atl;' + \
+               'D:\\sdks\\v6.0\\VC\\INCLUDE;' + \
+               'D:\\msvs8\\VC\\ATLMFC\\INCLUDE;' + \
+               'D:\\msvs8\\VC\\INCLUDE;' + \
+               'D:\\msvs8\\VC\\PlatformSDK\\include;' + \
+               'D:\\msvs8\\SDK\\v2.0\\include;' + \
                '%INCLUDE%',
-    "LIB": 'C:\\Program Files\\Microsoft SDKs\\Windows\\v6.0\\lib;' + \
-           'C:\\Program Files\\Microsoft Visual Studio 8\\VC\\ATLMFC\\LIB;' + \
-           'C:\\Program Files\\Microsoft Visual Studio 8\\VC\\LIB;' + \
-           'C:\\Program Files\\Microsoft Visual Studio 8\\VC\\PlatformSDK\\lib;' + \
-           'C:\\Program Files\\Microsoft Visual Studio 8\\SDK\\v2.0\\lib;',
+    "LIB": 'D:\\sdks\\v6.0\\Lib;' + \
+           'D:\\msvs8\\VC\\ATLMFC\\LIB;' + \
+           'D:\\msvs8\\VC\\LIB;' + \
+           'D:\\msvs8\\VC\\PlatformSDK\\lib;' + \
+           'D:\\msvs8\\SDK\\v2.0\\lib;',
     "LIBPATH": 'C:\\WINDOWS\\Microsoft.NET\\Framework\\v2.0.50727;' + \
                'C:\\Program Files\\Microsoft Visual Studio 8\\VC\\ATLMFC\\LIB'
 }
@@ -478,8 +480,8 @@ class MozillaMochitest(ShellCommandReportTimeout):
     warnOnFailure = True
     description = ["mochitest"]
     descriptionDone = ["mochitest complete"]
-    command = ["perl",
-               "runtests.pl",
+    command = ["python",
+               "runtests.py",
                "--appname=../../../dist/bin/firefox",
                "--autorun",
                "--console-level=INFO",
@@ -518,11 +520,16 @@ class MozillaMochitest(ShellCommandReportTimeout):
         return SUCCESS
 
 class MozillaWin32Mochitest(MozillaMochitest):
-    command = ['perl runtests.pl --appname=..\\..\\..\\dist\\bin\\firefox.exe --autorun --console-level=INFO --close-when-done']
+    command = ["python",
+               "runtests.py",
+               "--appname=..\\..\\..\\dist\\bin\\firefox.exe",
+               "--autorun",
+               "--console-level=INFO",
+               "--close-when-done"]
 
 class MozillaOSXMochitest(MozillaMochitest):
-    command = ["perl",
-               "runtests.pl",
+    command = ["python",
+               "runtests.py",
                "--appname=../../../dist/Minefield.app/Contents/MacOS/firefox",
                "--autorun",
                "--console-level=INFO",
@@ -533,8 +540,8 @@ class MozillaMochichrome(ShellCommandReportTimeout):
     warnOnFailure = True
     description = ["mochichrome"]
     descriptionDone = ["mochichrome complete"]
-    command = ["perl",
-              "runtests.pl",
+    command = ["python",
+              "runtests.py",
               "--appname=../../../dist/bin/firefox",
               "--chrome",
               "--autorun",
@@ -573,11 +580,17 @@ class MozillaMochichrome(ShellCommandReportTimeout):
     
 
 class MozillaWin32Mochichrome(MozillaMochichrome):
-   command = ['perl runtests.pl --appname=..\\..\\..\\dist\\bin\\firefox.exe --chrome --autorun --console-level=INFO --close-when-done']
+   command = ["python",
+              "runtests.py",
+              "--appname=..\\..\\..\\dist\\bin\\firefox.exe",
+              "--chrome",
+              "--autorun",
+              "--console-level=INFO",
+              "--close-when-done"]
 
 class MozillaOSXMochichrome(MozillaMochichrome):
-   command = ["perl",
-              "runtests.pl",
+   command = ["python",
+              "runtests.py",
               "--appname=../../../dist/Minefield.app/Contents/MacOS/firefox",
               "--chrome",
               "--autorun",
@@ -589,8 +602,8 @@ class MozillaBrowserChromeTest(ShellCommandReportTimeout):
     warnOnFailure = True
     description = ["browser chrome test"]
     descriptionDone = ["browser chrome test complete"]
-    command = ["perl",
-               "runtests.pl",
+    command = ["python",
+               "runtests.py",
                "--appname=../../../dist/bin/firefox",
                "--autorun",
                "--browser-chrome", 
@@ -625,11 +638,16 @@ class MozillaBrowserChromeTest(ShellCommandReportTimeout):
         return SUCCESS
     
 class MozillaWin32BrowserChromeTest(MozillaBrowserChromeTest):
-    command = ['perl runtests.pl --appname=../../../dist/bin/firefox.exe --autorun --browser-chrome --close-when-done']
+    command = ["python", 
+               "runtests.py",
+               "--appname=../../../dist/bin/firefox.exe",
+               "--autorun",
+               "--browser-chrome",
+               "--close-when-done"]
 
 class MozillaOSXBrowserChromeTest(MozillaBrowserChromeTest):
-    command = ["perl",
-               "runtests.pl",
+    command = ["python",
+               "runtests.py",
                "--appname=../../../dist/Minefield.app/Contents/MacOS/firefox",
                "--autorun",
                "--browser-chrome",
