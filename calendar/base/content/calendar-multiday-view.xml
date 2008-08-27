@@ -1959,7 +1959,7 @@
                          flex="1"
                          xbl:inherits="context,parentorient=orient,readonly,flashing,alarm,allday,priority,progress,status,calendar,categories">
                 <xul:image flex="1" class="calendar-event-box-gradient"/>
-                <xul:vbox class="calendar-event-details">
+                <xul:vbox class="calendar-event-details" anonid="calendar-event-details">
                   <xul:description anonid="event-name" class="calendar-event-details-core" flex="1"/>
                   <xul:textbox anonid="event-name-textbox"
                                class="plain calendar-event-details-core calendar-event-name-textbox"
@@ -2037,7 +2037,8 @@
         <body><![CDATA[
           if (this.getAttribute("orient") == "vertical") {
               var minHeight = getOptimalMinimumHeight(this.eventNameLabel) + 
-                          getSummarizedStyleValues(document.getAnonymousElementByAttribute(this, "anonid", "eventbox"), ["margin-bottom", "margin-top", "border-bottom-width", "border-top-width"]);
+                          getSummarizedStyleValues(document.getAnonymousElementByAttribute(this, "anonid", "calendar-event-details"), ["margin-bottom", "margin-top"]) +
+                          getSummarizedStyleValues(this, ["border-bottom-width", "border-top-width"]);
               this.setAttribute("minheight", minHeight);
               this.setAttribute("minwidth", "1");
               return minHeight;
