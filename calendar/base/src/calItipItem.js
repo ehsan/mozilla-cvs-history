@@ -179,6 +179,20 @@ calItipItem.prototype = {
         this.mItemList = parser.getItems({});
         this.mPropertiesList = parser.getProperties({});
 
+        // User specific alarms as well as X-MOZ- properties are irrelevant w.r.t. iTIP messages,
+        // should not be sent out and should not be relevant for incoming messages,
+        // so clean them out:
+        for each (var item in this.mItemList) {
+            item.alarmOffset = null;
+            var propEnum = item.propertyEnumerator;
+            while (propEnum.hasMoreElements()) {
+                var prop = propEnum.getNext().QueryInterface(Components.interfaces.nsIProperty);
+                if (prop.name.substr(0, "X-MOZ-".length) == "X-MOZ-") {
+                    item.deleteProperty(prop.name);
+                }
+            }
+        }
+
         // We set both methods now for safety's sake. It's the ItipProcessor's
         // responsibility to properly ascertain what the correct response
         // method is (using user feedback, prefs, etc.) for the given
@@ -188,6 +202,7 @@ calItipItem.prototype = {
         for each (var prop in this.mPropertiesList) {
             if (prop.propertyName == "METHOD") {
                 method = prop.value;
+                break;
             }
         }
         this.mReceivedMethod = method;
