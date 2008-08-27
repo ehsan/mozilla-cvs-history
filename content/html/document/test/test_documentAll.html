@@ -15,14 +15,7 @@ Tests for document.all
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=448904">Mozilla Bug 448904</a>
 <p id="display">
 </p>
-<div id="content" style="display: none">
-  <a id="id1">A</a>
-  <a id="id2">B</a>
-  <a id="id2">C</a>
-  <a id="id3">D</a>
-  <a id="id3">E</a>
-  <a id="id3">F</a>
-</div>
+<div id="content" style="display: none"><a id="id1">A</a><a id="id2">B</a><a id="id2">C</a><a id="id3">D</a><a id="id3">E</a><a id="id3">F</a></div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
@@ -31,13 +24,13 @@ p = document.getElementById("content");
 // Test that several elements with the same id or name behave correctly
 function testNumSame() {
   is(document.all.id0, null, "no ids");
-  is(document.all.id1, p.children[0], "one id");
-  is(document.all.id2[0], p.children[1], "two ids");
-  is(document.all.id2[1], p.children[2], "two ids");
+  is(document.all.id1, p.childNodes[0], "one id");
+  is(document.all.id2[0], p.childNodes[1], "two ids");
+  is(document.all.id2[1], p.childNodes[2], "two ids");
   is(document.all.id2.length, 2, "two length");
-  is(document.all.id3[0], p.children[3], "three ids");
-  is(document.all.id3[1], p.children[4], "three ids");
-  is(document.all.id3[2], p.children[5], "three ids");
+  is(document.all.id3[0], p.childNodes[3], "three ids");
+  is(document.all.id3[1], p.childNodes[4], "three ids");
+  is(document.all.id3[2], p.childNodes[5], "three ids");
   is(document.all.id3.length, 3, "three length");
 }
 testNumSame();
@@ -48,7 +41,7 @@ testNumSame();
 // Test that dynamic changes behave properly
 
 // Add two elements and check that they are added to the correct lists
-child = Array.prototype.slice.call(p.children);
+child = Array.prototype.slice.call(p.childNodes);
 child[6] = document.createElement("a");
 child[6].id = "id0";
 p.appendChild(child[6]);
