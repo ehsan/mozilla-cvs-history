@@ -325,3 +325,46 @@ ifdef MOZ_CRASHREPORTER
 libs:: $(addprefix $(LOCALE_SRCDIR)/,crashreporter/crashreporter-override.ini)
 	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)
 endif
+
+
+#These make targets call prepare-repackages by setting different UPLOAD_DIR
+prepare-upload-latest-%:
+	@$(MAKE) prepare-repackages-$* UPLOAD_DIR=$(DIST)/upload/latest
+
+prepare-upload-dated-%:
+	@$(MAKE) prepare-repackages-$* UPLOAD_DIR=$(DIST)/upload/`date "+%Y-%m-%d-%H"`-$(MOZ_PKG_APPNAME)$(MOZ_APP_VERSION)-l10n
+
+#Each platform uploads their xpi files to different folders
+ifeq (Linux, $(OS_ARCH))
+XPI_DESTINATION = linux-xpi
+else ifeq (Darwin, $(OS_ARCH))
+XPI_DESTINATION = mac-xpi
+else ifeq (WINNT, $(OS_ARCH))
+XPI_DESTINATION = windows-xpi
+else
+XPI_DESTINATION = $(error Unsupported platform)
+endif
+
+# This target will generate a UPLOAD_DIR folder with 
+# l10n repackages in the way that we offer l10n nightlies 
+#  1) ./ the binary 
+#  2) ./{linux,mac,windows}-xpi/locale.xpi 
+prepare-repackages-%:
+ifndef UPLOAD_DIR
+	$(error UPLOAD_DIR not defined)
+endif
+	$(NSINSTALL) -D $(UPLOAD_DIR)
+	$(NSINSTALL) -D $(UPLOAD_DIR)/$(XPI_DESTINATION)
+# Move the langpack
+	mv $(DIST)/install/firefox-$(MOZ_APP_VERSION).$*.langpack.xpi \
+	   $(UPLOAD_DIR)/$(XPI_DESTINATION)/$*.xpi
+# Move the repackage
+	mv $(DIST)/firefox-$(MOZ_APP_VERSION).$*.* \
+	   $(UPLOAD_DIR)/.
+# Move the windows installer
+ifeq (WINNT, $(OS_ARCH))
+	mv $(DIST)/install/sea/firefox-$(MOZ_APP_VERSION).$*.win32.installer.exe \
+	   $(UPLOAD_DIR)/.
+endif
+# Set the permissions that the folders will have in ftp once uploaded
+	chmod -vR 775 $(UPLOAD_DIR)
