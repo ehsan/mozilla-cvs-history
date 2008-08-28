@@ -48,6 +48,7 @@
      mCurIndex: 0,
      mInitialized: false,
      mProps: null,
+     mCalendars: {},
 
     QueryInterface: function cStObs_QueryInterface(aIID) {
         return doQueryInterface(this, null, aIID, [Components.interfaces.calIStatusObserver])
@@ -81,6 +82,7 @@
                 Components.utils.reportError("StatusObserver has not been initialized!");
                 return;
              }
+             this.mCalendars = {};
              this.mCurIndex = 0;
              if (aCalendarCount) {
                  this.mCalendarCount = this.mCalendarCount + aCalendarCount;
@@ -127,11 +129,14 @@
          }
          if (this.spinning != Components.interfaces.calIStatusObserver.NO_PROGRESS) {
              if (this.spinning == Components.interfaces.calIStatusObserver.DETERMINED_PROGRESS) {
-                 this.mStatusBar.value = (parseInt(this.mStatusBar.value) + this.mCalendarStep);
-                 this.mCurIndex++;
-                 var curStatus = this.mProps.formatStringFromName("gettingCalendarInfoDetail",
-                          [this.mCurIndex, this.mCalendarCount], 2);
-                 this.showStatusString(curStatus);
+                 if (this.mCalendars[aCalendar.id] == null) {
+                     this.mCalendars[aCalendar.id] = true;
+                     this.mStatusBar.value = (parseInt(this.mStatusBar.value) + this.mCalendarStep);
+                     this.mCurIndex++;
+                     var curStatus = this.mProps.formatStringFromName("gettingCalendarInfoDetail",
+                              [this.mCurIndex, this.mCalendarCount], 2);
+                     this.showStatusString(curStatus);
+                 }
              }
              // it may be possible that the throbber has been disabled by another
              // completed operation
