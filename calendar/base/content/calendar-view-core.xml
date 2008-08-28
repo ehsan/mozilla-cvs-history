@@ -218,10 +218,6 @@
               this.setAttribute("progress", getProgressAtom(item));
           }
 
-          if (!isCalendarWritable(item.calendar)) {
-              this.setAttribute("readonly", "true");
-          }
-
           if (this.calendarView &&
               item.hashId in this.calendarView.mFlashingEvents) {
               this.setAttribute("flashing", "true");
@@ -250,6 +246,9 @@
           if (item.calendar instanceof Components.interfaces.calISchedulingSupport &&
               item.calendar.isInvitation(item)) {
               this.setAttribute("invitation-status", item.calendar.getInvitedAttendee(item).participationStatus);
+              this.setAttribute("readonly", "true");
+          } else if (!isCalendarWritable(item.calendar)) {
+              this.setAttribute("readonly", "true");
           }
         ]]></body>
       </method>
