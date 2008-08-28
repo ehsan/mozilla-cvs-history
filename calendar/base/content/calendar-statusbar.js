@@ -129,7 +129,7 @@
          }
          if (this.spinning != Components.interfaces.calIStatusObserver.NO_PROGRESS) {
              if (this.spinning == Components.interfaces.calIStatusObserver.DETERMINED_PROGRESS) {
-                 if (this.mCalendars[aCalendar.id] == null) {
+                 if (!this.mCalendars[aCalendar.id] || this.mCalendars[aCalendar.id] === undefined) {
                      this.mCalendars[aCalendar.id] = true;
                      this.mStatusBar.value = (parseInt(this.mStatusBar.value) + this.mCalendarStep);
                      this.mCurIndex++;
