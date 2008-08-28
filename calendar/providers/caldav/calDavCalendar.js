@@ -490,7 +490,7 @@ calDavCalendar.prototype = {
                 thisCalendar.getUpdatedItem(aNewItem, aListener);
                 // SOGo has calendarUri == inboxUri so we need to be careful
                 // about deletions
-                if (wasInBoxItem && this.mShouldPollInbox) {
+                if (wasInBoxItem && thisCalendar.mShouldPollInbox) {
                     thisCalendar.doDeleteItem(aNewItem, null, true, true, null);
                 }
             } else if (status == 412) {
