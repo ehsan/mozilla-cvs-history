@@ -679,10 +679,8 @@
 
   <binding id="calendar-month-view-column-header">
     <content>
-      <xul:hbox flex="1">
-        <xul:spacer flex="1"/>
-        <xul:label anonid="label" crop="right" class="calendar-month-view-column-header-label" />
-        <xul:spacer flex="1"/>
+      <xul:hbox class="calendar-month-view-column-header-container" flex="1" pack="center">
+        <xul:label anonid="label" crop="end" class="calendar-month-view-column-header-label"/>
       </xul:hbox>
     </content>
 
@@ -715,7 +713,7 @@
   <binding id="calendar-month-view">
     <content>
       <xul:vbox flex="1">
-        <xul:hbox anonid="headerbox" equalsize="always"/>
+        <xul:hbox class="headerbox-container" anonid="headerbox" equalsize="always"/>
 
         <xul:grid anonid="monthgrid" flex="1">
           <xul:columns anonid="monthgridcolumns" equalsize="always">
