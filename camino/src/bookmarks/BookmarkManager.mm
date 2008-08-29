@@ -669,6 +669,9 @@ static BookmarkManager* gBookmarkManager = nil;
 - (NSArray *)resolveBookmarksShortcut:(NSString *)shortcut
 {
   NSArray *resolvedArray = nil;
+  // Remove any leading or trailing whitespace since we can't trust input
+  // and we don't support spaces as part of shortcuts anyway
+  shortcut = [shortcut stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
   if ([shortcut length] > 0) {
     NSRange spaceRange = [shortcut rangeOfString:@" "];
     NSString *firstWord = nil;
