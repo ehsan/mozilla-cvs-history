@@ -47,9 +47,6 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-# XXX dirty, clean up:
-DIRS = ../timezones
-
 run_for_effects := $(shell if ! test -d $(DIST); then $(NSINSTALL) -D $(DIST); fi; if ! test -d $(DIST)/branding; then $(NSINSTALL) -D $(DIST)/branding; fi)
 _ABS_DIST := $(shell cd $(DIST) && pwd)
 
@@ -126,14 +123,9 @@ endif
 	$(CYGWIN_WRAPPER) 7z x -ol10n-stage $(WIN32_INSTALLER_IN)
 	$(RM) -r l10n-stage/localized
 	$(RM) l10n-stage/setup.exe
-	$(RM) -r l10n-stage/nonlocalized/extensions/calendar-timezones@mozilla.org/chrome
 	$(RM) -rf $(DIST)/xpi-stage/locale-$(AB_CD)
-	$(RM) -rf $(DIST)/xpi-stage/calendar-timezones
 	$(MAKE) libs-$(AB_CD)
-	$(MAKE) -C ../timezones libs-$(AB_CD)
 	mv $(DIST)/xpi-stage/locale-$(AB_CD) l10n-stage/localized
-	mv $(DIST)/xpi-stage/calendar-timezones/chrome l10n-stage/nonlocalized/extensions/calendar-timezones@mozilla.org
-	mv $(DIST)/xpi-stage/calendar-timezones/chrome.manifest l10n-stage/nonlocalized/extensions/calendar-timezones@mozilla.org
 	$(MAKE) -C ../installer/windows CONFIG_DIR=l10ngen l10ngen/setup.exe l10ngen/7zSD.sfx
 	cp ../installer/windows/l10ngen/setup.exe l10n-stage
 	$(NSINSTALL) -D l10n-stage/localized/uninstall
@@ -168,15 +160,11 @@ repackage-zip: $(ZIP_IN)
 	  $(STAGEDIST)/chrome/calendar-en-US.jar \
 	  $(STAGEDIST)/chrome/calendar-en-US.manifest \
 	  $(STAGEDIST)/defaults/pref/sunbird-l10n.js
-	$(RM) -rf $(STAGEDIST)/extensions/calendar-timezones@mozilla.org/chrome
-	$(RM) $(STAGEDIST)/extensions/calendar-timezones@mozilla.org/chrome.manifest
 	$(RM) -r $(STAGEDIST)/defaults/profile \
 	  $(STAGEDIST)/chrome/en-US \
 	  $(STAGEDIST)/chrome/calendar-en-US
 	$(RM) -rf $(DIST)/xpi-stage/locale-$(AB_CD)
-	$(RM) -rf $(DIST)/xpi-stage/calendar-timezones
 	$(MAKE) libs-$(AB_CD)
-	$(MAKE) -C ../timezones libs-$(AB_CD)
 ifeq (WINNT,$(OS_ARCH))
 	$(RM) -r $(STAGEDIST)/uninstall
 	$(NSINSTALL) -D $(STAGEDIST)/uninstall
@@ -185,8 +173,6 @@ endif
 	$(RM) -r $(DIST)/xpi-stage/locale-$(AB_CD)/chrome/$(AB_CD)
 	cd $(DIST)/xpi-stage/locale-$(AB_CD) && \
 	  tar $(TAR_CREATE_FLAGS) - * | ( cd $(STAGEDIST) && tar -xf - )
-	cd $(DIST)/xpi-stage/calendar-timezones && \
-	  tar $(TAR_CREATE_FLAGS) - * | ( cd $(STAGEDIST)/extensions/calendar-timezones@mozilla.org && tar -xf - )
 ifneq (en,$(AB))
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 	mv $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/Resources/en.lproj $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/Resources/$(AB).lproj
