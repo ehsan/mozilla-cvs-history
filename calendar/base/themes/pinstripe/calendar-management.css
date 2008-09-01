@@ -57,21 +57,20 @@
 
 #calendar-list-tree-widget > treechildren::-moz-tree-cell(calendar-list-tree-color) {
     margin: 1px;
-    padding: 0;
 }
 
 #calendar-list-tree-widget > treechildren::-moz-tree-cell(calendar-list-tree-calendar) {
     -moz-margin-start: 1px;
 }
 
-#calendar-list-tree-widget > treechildren::-moz-tree-image(calendar-list-tree-color, readOnly, black) {
-    list-style-image: url(chrome://calendar/skin/calendar-readOnly.png);
-    -moz-image-region: rect(0, 10px, 10px, 0);
+#calendar-list-tree-widget > treechildren::-moz-tree-image(calendar-list-tree-status, readonly) {
+    list-style-image: url(chrome://calendar/skin/calendar-status.png);
+    -moz-image-region: rect(0px, 14px, 14px, 0px);
 }
 
-#calendar-list-tree-widget > treechildren::-moz-tree-image(calendar-list-tree-color, readOnly, white) {
-    list-style-image: url(chrome://calendar/skin/calendar-readOnly.png);
-    -moz-image-region: rect(0, 20px, 10px, 10px);
+#calendar-list-tree-widget > treechildren::-moz-tree-image(calendar-list-tree-status, readfailed) {
+    list-style-image: url(chrome://calendar/skin/calendar-status.png);
+    -moz-image-region: rect(0px, 28px, 14px, 14px);
 }
 
 #calendar-list-tree-widget {

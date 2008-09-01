@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Michiel van Leeuwen <mvl@exedo.nl>
  *   Joey Minta <jminta@gmail.com>
+ *   Berend Cornelius <berend.cornelius@sun.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -379,9 +380,14 @@ var calendarListTreeView = {
         var fgColorProp = getContrastingTextColor(color || "a8c2e1");
         aProps.AppendElement(getAtomFromService(fgColorProp));
 
-        // Set up the readonly symbol
-        if (calendar.readOnly) {
-            aProps.AppendElement(getAtomFromService("readOnly"));
+        var currentStatus = calendar.getProperty("currentStatus");
+        if (!Components.isSuccessCode(currentStatus)){
+            aProps.AppendElement(getAtomFromService("readfailed"));
+        // 'readfailed' is supposed to "win" over 'readonly', meaning that 
+        // if reading from a calendar fails there is no further need to also display
+        // information about 'readonly' status
+        } else if (calendar.readOnly) {
+            aProps.AppendElement(getAtomFromService("readonly"));
         }
 
         // Set up the disabled state
@@ -441,7 +447,7 @@ var calendarListTreeView = {
         switch (aCol.id) {
             case "calendar-list-tree-checkbox":
                 return composite.getCalendar(calendar.uri) ? "true" : "false";
-            case "calendar-list-tree-color":
+            case "calendar-list-tree-status":
                 // The value of this cell shows the calendar readonly state
                 return (calendar.readOnly ? "true" : "false");
         }
@@ -479,13 +485,6 @@ var calendarListTreeView = {
                     composite.addCalendar(calendar);
                 }
                 break;
-            case "calendar-list-tree-color":
-                // Clicking on the color should toggle the readonly state,
-                // unless we are disabled.
-                if (!calendar.getProperty("disabled")) {
-                    calendar.readOnly = !calendar.readOnly;
-                }
-                break;
         }
         this.treebox.invalidateRow(aRow);
     },
@@ -506,7 +505,7 @@ var calendarListTreeView = {
                     composite.removeCalendar(calendar);
                 }
                 break;
-            case "calendar-list-tree-color":
+            case "calendar-list-tree-status":
                 calendar.readOnly = (aValue == "true");
                 break;
             default:
@@ -694,13 +693,6 @@ var calendarManagerCompositeObserver = {
                                                       aName,
                                                       aValue,
                                                       aOldValue) {
-        if (aName == "currentStatus") {
-            if (Components.isSuccessCode(aValue)) {
-                // TODO insert 'Successful' - image implementation here
-            } else {
-                // TODO insert 'unsuccessful' - image implementation here                
-            }
-        }                          
     },
     
     onPropertyDeleting: function cMO_onPropertyDeleting(aCalendar,
@@ -819,8 +811,7 @@ var calendarManagerObserver = {
                 calendarListUpdateColor(aCalendar);
                 // Fall through, update item in any case
             case "name":
-                calendarListTreeView.updateCalendar(aCalendar);
-                break;
+            case "currentStatus":
             case "readOnly":
             case "disabled":
                 calendarListTreeView.updateCalendar(aCalendar);

@@ -120,7 +120,7 @@ calendar.jar:
 #expand    skin/classic/calendar/calendar-task-tree.css  (themes/__THEME__/calendar-task-tree.css)
 #expand    skin/classic/calendar/calendar-task-view.css  (themes/__THEME__/calendar-task-view.css)
 #expand    skin/classic/calendar/widgets/minimonth.css      (themes/__THEME__/widgets/minimonth.css)
-    skin/classic/calendar/calendar-readOnly.png  (themes/common/calendar-readOnly.png)
+    skin/classic/calendar/calendar-status.png  (themes/common/calendar-status.png)
     skin/classic/calendar/event-grippy-bottom.png  (themes/common/event-grippy-bottom.png)
     skin/classic/calendar/event-grippy-left.png  (themes/common/event-grippy-left.png)
     skin/classic/calendar/event-grippy-right.png (themes/common/event-grippy-right.png)
