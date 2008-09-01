@@ -57,8 +57,6 @@ function calDavCalendar() {
     this.mCalHomeSet = null;
     this.mInBoxUrl = null;
     this.mOutBoxUrl = null;
-    this.mHaveScheduling = false;
-    this.mShouldPollInbox = true;
     this.mCalendarUserAddress = null;
     this.mSenderAddress = null;
     this.mHrefIndex = [];
@@ -212,6 +210,9 @@ calDavCalendar.prototype = {
     mShouldPollInbox: true,
     get hasScheduling() {
         return this.mHaveScheduling;
+    },
+    set hasScheduling(value) {
+        return (this.mHaveScheduling = (getPrefSafe("calendar.caldav.sched.enabled", false) && value));
     },
 
     mAuthScheme: null,
@@ -1099,7 +1100,9 @@ calDavCalendar.prototype = {
 
                 item.calendar = thisCalendar.superCalendar;
                 if (isReply && thisCalendar.isInBox(aUri.spec)) {
-                    thisCalendar.processItipReply(item, resourcePath);
+                    if (thisCalendar.hasScheduling) {
+                        thisCalendar.processItipReply(item, resourcePath);
+                    }
                     return;
                 }
 
@@ -1309,7 +1312,7 @@ calDavCalendar.prototype = {
         // avoid needing further workarounds, we just set the outbox and inbox
         // urls here and return.
         if (this.calendarUri.host == "www.google.com") {
-            this.mHaveScheduling = true;
+            this.hasScheduling = true;
             var spec = this.calendarUri.spec;
             this.mInBoxUrl = makeURL(spec.replace(/\/events\/$/, "/inbox/"));
             this.mOutBoxUrl = makeURL(spec.replace(/\/events\/$/, "/outbox/"));
@@ -1353,7 +1356,7 @@ calDavCalendar.prototype = {
                 if (thisCalendar.verboseLogging()) {
                     LOG("CalDAV: Server generally supports calendar-schedule");
                 }
-                thisCalendar.mHaveScheduling = true;
+                thisCalendar.hasScheduling = true;
                 // XXX - we really shouldn't register with the fb service
                 // if another calendar with the same principal-URL has already
                 // done so
@@ -1469,7 +1472,7 @@ calDavCalendar.prototype = {
             if (this.verboseLogging()) {
                 LOG("CalDAV: principal namespace list empty, server does not support scheduling");
             }
-            this.mHaveScheduling = false;
+            this.hasScheduling = false;
             this.mInBoxUrl = null;
             this.mOutBoxUrl = null;
         }
@@ -1503,7 +1506,7 @@ calDavCalendar.prototype = {
             if (aContext.responseStatus != 207) {
                 LOG("CalDAV: Bad response to in/outbox query, status " +
                     aContext.responseStatus);
-                thisCalendar.mHaveScheduling = false;
+                thisCalendar.hasScheduling = false;
                 thisCalendar.mInBoxUrl = null;
                 thisCalendar.mOutBoxUrl = null;
                 thisCalendar.refresh();
@@ -1587,7 +1590,7 @@ calDavCalendar.prototype = {
                     if (thisCalendar.verboseLogging()) {
                         LOG("CalDAV: principal namespace list empty, server does not support scheduling");
                     }
-                    thisCalendar.mHaveScheduling = false;
+                    thisCalendar.hasScheduling = false;
                     thisCalendar.refresh();
                 }
             } else {
@@ -1606,7 +1609,9 @@ calDavCalendar.prototype = {
     getFreeBusyIntervals: function caldav_getFreeBusyIntervals(
         aCalId, aRangeStart, aRangeEnd, aBusyTypes, aListener) {
 
-        if (!this.hasScheduling || !this.outBoxUrl || !this.calendarUserAddress) {
+        // We explicitly don't check for hasScheduling here to allow free-busy queries
+        // even in case sched is turned off.
+        if (!this.outBoxUrl || !this.calendarUserAddress) {
             LOG("CalDAV: Server does not support scheduling; freebusy query not possible");
             return;
         }
@@ -1614,6 +1619,16 @@ calDavCalendar.prototype = {
         if (!this.firstInRealm()) {
             // don't spam every known outbox with freebusy queries
             return;
+        }
+
+        if (!this.hasScheduling) {
+            // We tweak the organizer lookup here: If scheduling is turned off, then the
+            // configured email takes place being the organizerId for scheduling which need
+            // not match against the calendar-user-address:
+            var orgId = this.getProperty("organizerId");
+            if (orgId && orgId.toLowerCase() == aCalId.toLowerCase()) {
+                aCalId = this.calendarUserAddress; // continue with calendar-user-address
+            }
         }
 
         // the caller prepends MAILTO: to calid strings containing @
@@ -1795,7 +1810,7 @@ calDavCalendar.prototype = {
         // If polling the inbox was switched off, no need to poll the inbox.
         // Also, if we have more than one calendar in this CalDAV account, we
         // want only one of them to be checking the inbox.
-        if (!this.mShouldPollInbox || !this.firstInRealm()) {
+        if (!this.hasScheduling || !this.mShouldPollInbox || !this.firstInRealm()) {
             return;
         }
 

@@ -82,6 +82,9 @@ pref("calendar.itip.compatSendMode", 0);
 // whether "notify" is checked by default when creating new events/todos with attendees
 pref("calendar.itip.notify", true);
 
+// whether CalDAV (experimental) scheduling is enabled or not.
+pref("calendar.caldav.sched.enabled", false);
+
 // 0=Sunday, 1=Monday, 2=Tuesday, etc.  One day we might want to move this to
 // a locale specific file.
 pref("calendar.week.start", 0);
