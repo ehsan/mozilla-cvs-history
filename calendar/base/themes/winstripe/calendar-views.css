@@ -605,6 +605,12 @@ description.tooltipBody {
     display: none;
 }
 
+calendar-event-box,
+calendar-editable-item,
+calendar-month-day-box-item {
+    opacity: 0.99;
+}
+
 calendar-event-box[invitation-status="NEEDS-ACTION"],
 calendar-editable-item[invitation-status="NEEDS-ACTION"],
 calendar-month-day-box-item[invitation-status="NEEDS-ACTION"] {
