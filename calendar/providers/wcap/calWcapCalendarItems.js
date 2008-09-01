@@ -1340,10 +1340,7 @@ function calWcapCalendar_getItems(itemFilter, maxResults, rangeStart, rangeEnd, 
                     listener.onGetResult(this_.superCalendar, NS_OK, calIItemBase, "getItems()", items.length, items);
                 }
             },
-            stringToIcal,
-            (itemFilter & calIWcapCalendar.ITEM_FILTER_BY_ALARM_RANGE)
-            ? "fetchcomponents_by_alarmrange" : "fetchcomponents_by_range",
-            params, calIWcapCalendar.AC_COMP_READ);
+            stringToIcal, "fetchcomponents_by_range", params, calIWcapCalendar.AC_COMP_READ);
     } catch (exc) {
         request.execRespFunc(exc);
     }

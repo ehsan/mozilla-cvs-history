@@ -142,6 +142,9 @@ interface calICalendar : nsISupports
    *   [nsresult] currentStatus      The current error status of the calendar (transient).
    *
    *   [calIItipTransport] itip.transport    If the provider implements a custom calIItipTransport (transient)
+   *   [boolean] itip.disableRevisionChecks  If true, the iTIP handling code disables revision checks
+   *                                            against SEQUENCE and DTSTAMP, and will never reject an
+   *                                            iTIP message as outdated
    *   [nsIMsgIdentity] imip.identity        If provided, this is the email identity used for
    *                                           scheduling purposes
    *   [nsIMsgAccount] imip.account          If provided, this is the email account used for

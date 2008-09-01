@@ -248,7 +248,8 @@ function processReplyMsg() {
 
         onGetResult: function ogr(aCalendar, aStatus, aItemType, aDetail, aCount, aItems) {
             for each (var item in aItems) {
-                if (itipItemDate.compare(item.stampTime) > 0) {
+                if (aCalendar.getProperty("itip.disableRevisionChecks") ||
+                    itipItemDate.compare(item.stampTime) > 0) {
                     gCalItemsArrayFound.push(aItems[0]);
                 }
             }
@@ -603,7 +604,6 @@ function processRequestMsg() {
     // According to the specification, we have to determine if the event ID
     // already exists on the calendar of the user - that means we have to search
     // them all. :-(
-    var isUpdate = 0;
     var existingItemSequence = -1;
 
     var compCal = createItipCompositeCalendar();
@@ -641,7 +641,12 @@ function processRequestMsg() {
                     itemList[0].hasProperty("X-MICROSOFT-CDO-APPT-SEQUENCE")) {
                     existingSequence = aItems[0].getProperty("X-MICROSOFT-CDO-APPT-SEQUENCE");
                 }
-                displayRequestMethod(newSequence, existingSequence);
+
+                if (aCalendar.getProperty("itip.disableRevisionChecks")) {
+                    displayRequestMethod(1, 0); // force to be an update
+                } else {
+                    displayRequestMethod(newSequence, existingSequence);
+                }
             }
         }
     };
