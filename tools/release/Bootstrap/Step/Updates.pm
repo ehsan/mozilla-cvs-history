@@ -415,6 +415,9 @@ sub Push {
                   $ausUser . '@' . $ausServer,
                   '/home/cltbld/bin/backupsnip', $pushDir . '-test'],
       logFile => $pushLog,
+      # the 2.x -> 3.x major update generated a *lot* of snippets
+      # backupsnip now takes significantly more time to run
+      timeout => 7200
     );
     # Push test channels live
     $this->Shell(
