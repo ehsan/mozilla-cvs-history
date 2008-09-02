@@ -563,22 +563,20 @@ var calendarListTreeView = {
         composite.defaultCalendar = getSelectedCalendar();
     },
 
-    onMouseMove: function cLTV_onMouseMove(event) {
-        var row = this.treebox.getRowAt(event.clientX, event.clientY);
-        if (row > -1) {
-            var calendar = this.mCalendarList[row];
-            var treeChildren = document.getElementById("calendar-treechildren");
-            var tooltipText = null;
+    onTooltipShowing: function cLTV_onTooltipShowing(event) {
+        var calendar = this.getCalendarFromEvent(event);
+        var tooltipText = false;
+        if (calendar) {
             var currentStatus = calendar.getProperty("currentStatus");
             if (!Components.isSuccessCode(currentStatus)){
                 tooltipText = calGetString("calendar", "tooltipCalendarDisabled", [calendar.name]);
             } else if (calendar.readOnly) {
                 tooltipText = calGetString("calendar", "tooltipCalendarReadOnly", [calendar.name]);
             }
-            if (tooltipText != null) {
-                treeChildren.setAttribute("tooltiptext", tooltipText);
-            }
+
         }
+        setElementValue("calendar-list-tooltip", tooltipText, "label");
+        return (tooltipText != false);
     },
 
     setupContextMenu: function cLTV_setupContextMenu(event) {

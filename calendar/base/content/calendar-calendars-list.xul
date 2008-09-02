@@ -78,6 +78,8 @@
                 accesskey="&calendar.context.properties.accesskey;"
                 observes="calendar_edit_calendar_command"/>
     </popup>
+    <tooltip id="calendar-list-tooltip"
+             onpopupshowing="return calendarListTreeView.onTooltipShowing(event)"/>
   </popupset>
 
   <tree id="calendar-list-tree-widget"
@@ -86,7 +88,6 @@
         onkeypress="calendarListTreeView.onKeyPress(event);"
         ondblclick="calendarListTreeView.onDoubleClick(event);"
         onselect="calendarListTreeView.onSelect(event);"
-        onmousemove="calendarListTreeView.onMouseMove(event);"
         context="list-calendars-context-menu">
       <treecols id="calendar-treecols" hideheader="true">
           <treecol id="calendar-list-tree-checkbox"
@@ -105,6 +106,6 @@
                    hideheader="true"
                    width="18"/>
         </treecols>
-     <treechildren id="calendar-treechildren"/>
+     <treechildren id="calendar-treechildren" tooltip="calendar-list-tooltip"/>
    </tree>
 </overlay>
