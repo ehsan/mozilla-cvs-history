@@ -21,6 +21,7 @@
    -
    - Contributor(s):
    -   Daniel Boelzle <daniel.boelzle@sun.com>
+   -   Philipp Kewisch <mozilla@kewis.ch>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -56,10 +57,13 @@
       <label value="&lightning.calendarproperties.email.label;"
              control="email-identity-menulist"
              disable-with-calendar="true"/>
-      <menulist id="email-identity-menulist"
-                disable-with-calendar="true">
-        <menupopup id="email-identity-menupopup"/>
-      </menulist>
+      <box>
+        <menulist id="email-identity-menulist"
+                  disable-with-calendar="true">
+          <menupopup id="email-identity-menupopup"/>
+        </menulist>
+        <label id="email-identity-label"/>
+      </box>
     </row>
   </rows>
 

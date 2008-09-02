@@ -105,6 +105,7 @@ calendar.jar:
 #expand    skin/classic/calendar/calendar-toolbar.css   (themes/__THEME__/calendar-toolbar.css)
 #expand    skin/classic/calendar/today-pane.css         (themes/__THEME__/today-pane.css)
 #expand    skin/classic/calendar/widgets/calendar-widgets.css   (themes/__THEME__/widgets/calendar-widgets.css)
+#expand    skin/classic/calendar/calendar-creation-wizard.css (themes/__THEME__/calendar-creation-wizard.css)
 #expand    skin/classic/calendar/calendar-event-dialog.css (themes/__THEME__/calendar-event-dialog.css)
 #expand    skin/classic/calendar/calendar-occurrence-prompt.css (themes/__THEME__/calendar-occurrence-prompt.css)
 #expand    skin/classic/calendar/calendar-occurrence-prompt.png (themes/__THEME__/calendar-occurrence-prompt.png)

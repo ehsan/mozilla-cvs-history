@@ -410,8 +410,14 @@ function getMsgRecipient() {
  * Call the calendar picker
  */
 function getTargetCalendar() {
+    function filterCalendars(c) {
+        // Only consider calendars that are writable and have a transport.
+        return isCalendarWritable(c) &&
+               c.getProperty("itip.transport") != null;
+    }
+
     var calendarToReturn;
-    var calendars = getCalendarManager().getCalendars({}).filter(isCalendarWritable);
+    var calendars = getCalendarManager().getCalendars({}).filter(filterCalendars);
     // XXXNeed an error message if there is no writable calendar
 
     // try to further limit down the list to those calendars that are configured to a matching attendee;

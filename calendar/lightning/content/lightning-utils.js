@@ -72,21 +72,46 @@ function ltnGetString(aBundleName, aStringName, aParams) {
 // shared by lightning-calendar-properties.js and lightning-calendar-creation.js:
 function ltnInitMailIdentitiesRow() {
     if (gCalendar) {
-        uncollapseElement("calendar-email-identity-row"); // in case user steps back and firth in wizard on different types
-        var menuPopup = document.getElementById("email-identity-menupopup");
-        addMenuItem(menuPopup, ltnGetString("lightning", "imipNoIdentity"), "none");
-        var identities = getAccountManager().allIdentities;
-        for (var i = 0; i <  identities.Count(); ++i) {
-            var identity = identities.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgIdentity);
-            addMenuItem(menuPopup, identity.identityName, identity.key);
-        }
-        try {
-            var sel = gCalendar.getProperty("imip.identity");
-            if (sel) {
-                sel = sel.QueryInterface(Components.interfaces.nsIMsgIdentity);
+        // in case user steps back and firth in wizard on different types
+        uncollapseElement("calendar-email-identity-row");
+        var hasTransport = (gCalendar.getProperty("itip.transport") != null);
+
+        setElementValue("email-identity-menulist",
+                        !hasTransport && "true",
+                        "hidden");
+        setElementValue("email-identity-label",
+                        hasTransport && "true",
+                        "hidden");
+
+        if (gCalendar.getProperty("itip.transport")) {
+            var menuPopup = document.getElementById("email-identity-menupopup");
+            addMenuItem(menuPopup, ltnGetString("lightning", "imipNoIdentity"), "none");
+            var identities = getAccountManager().allIdentities;
+            for (var i = 0; i <  identities.Count(); ++i) {
+                var identity = identities.GetElementAt(i)
+                                         .QueryInterface(Components.interfaces.nsIMsgIdentity);
+                addMenuItem(menuPopup, identity.identityName, identity.key);
             }
-            menuListSelectItem("email-identity-menulist", sel ? sel.key : "none");
-        } catch (exc) {
+            try {
+                var sel = gCalendar.getProperty("imip.identity");
+                if (sel) {
+                    sel = sel.QueryInterface(Components.interfaces.nsIMsgIdentity);
+                }
+                menuListSelectItem("email-identity-menulist", sel ? sel.key : "none");
+            } catch (exc) {
+            }
+        } else {
+            // No transport, therefore we can just show the label with the
+            // organizerId and common name. Use an attendee object so we don't
+            // have to duplicate code to compose the string.
+            var organizer = createAttendee();
+            organizer.id = gCalendar.getProperty("organizerId");
+            organizer.commonName = gCalendar.getProperty("organizerCN");
+            if (organizer.id) {
+                setElementValue("email-identity-label", organizer.toString());
+            } else {
+                collapseElement("calendar-email-identity-row");
+            }
         }
     } else {
         collapseElement("calendar-email-identity-row");

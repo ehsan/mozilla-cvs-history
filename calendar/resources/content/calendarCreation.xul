@@ -40,6 +40,7 @@
 
 <!-- Style sheets -->
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://calendar/skin/calendar-creation-wizard.css" type="text/css"?>
 
 <!DOCTYPE dialog 
 [

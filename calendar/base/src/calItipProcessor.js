@@ -425,16 +425,20 @@ calItipProcessor.prototype = {
 
     /**
      * Centralized location for obtaining the proper transport. If a calendar is
-     * specified, the transport is taken from the provider. If the provider
-     * does not specify a transport, or no calendar is specified, the default
-     * email transport is returned.
+     * specified, the transport is taken from the provider. Otherwise, the
+     * default email transport is returned.
+     *
+     * Its ok to assume there is an itip.transport here, since if it would
+     * return null (i.e imip is disabled) then we never get here, since the
+     * respective calendar will not be available as a target calendar.
      */
     _getTransport: function cipGT(aCalendar) {
-        var ret = (aCalendar && aCalendar.getProperty("itip.transport"));
-        if (!ret) {
-            ret = Components.classes["@mozilla.org/calendar/itip-transport;1?type=email"]
-                            .getService(Components.interfaces.calIItipTransport);
+        if (aCalendar) {
+            return aCalendar.getProperty("itip.transport")
+                            .QueryInterface(Components.interfaces.calIItipTransport);
+        } else {
+            return Components.classes["@mozilla.org/calendar/itip-transport;1?type=email"]
+                             .getService(Components.interfaces.calIItipTransport);
         }
-        return ret.QueryInterface(Components.interfaces.calIItipTransport);
     }
 }

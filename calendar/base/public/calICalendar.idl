@@ -142,6 +142,10 @@ interface calICalendar : nsISupports
    *   [nsresult] currentStatus      The current error status of the calendar (transient).
    *
    *   [calIItipTransport] itip.transport    If the provider implements a custom calIItipTransport (transient)
+   *                                           If null, then Email Scheduling will effectively be
+   *                                           disabled. This means for example, the calendar will
+   *                                           not show up in the list of calendars to store an
+   *                                           invitation in.
    *   [boolean] itip.disableRevisionChecks  If true, the iTIP handling code disables revision checks
    *                                            against SEQUENCE and DTSTAMP, and will never reject an
    *                                            iTIP message as outdated
