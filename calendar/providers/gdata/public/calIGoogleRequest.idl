@@ -49,11 +49,11 @@ interface nsIVariant;
 [scriptable, uuid(53a3438a-21bc-4a0f-b813-77a8b4f19282)]
 interface calIGoogleRequest : calIOperation {
 
-    const unsigned long LOGIN = 1;
-    const unsigned long GET = 2;
-    const unsigned long ADD = 3;
-    const unsigned long MODIFY = 4;
-    const unsigned long DELETE = 5;
+    const unsigned long LOGIN = 0;
+    const unsigned long ADD = 1;
+    const unsigned long MODIFY = 2;
+    const unsigned long DELETE = 3;
+    const unsigned long GET = 4;
 
     /**
      * The type of request. Must be one of the above constants.

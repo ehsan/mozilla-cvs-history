@@ -258,7 +258,7 @@ calGoogleCalendar.prototype = {
                 return ["DEFAULT", "PUBLIC", "PRIVATE"];
             case "organizerId":
                 if (this.mSession) {
-                    return this.session.userName;
+                    return "mailto:" + this.session.userName;
                 }
                 break;
             case "organizerCN":
@@ -266,6 +266,11 @@ calGoogleCalendar.prototype = {
                     return this.session.fullName;
                 }
                 break;
+            case "itip.transport":
+                // If we explicitly return null here, then these calendars will
+                // not be included in the list of calendars to accept
+                // invitations to and imip will effectively be disabled.
+                return null;
         }
 
         return this.__proto__.__proto__.getProperty.apply(this, arguments);
@@ -294,13 +299,6 @@ calGoogleCalendar.prototype = {
 
             // Add the calendar to the item, for later use.
             aItem.calendar = this.superCalendar;
-
-            // When adding items, the google user is the organizer.
-            var organizer = createAttendee();
-            organizer.isOrganizer = true;
-            organizer.commonName = this.mSession.fullName;
-            organizer.id = "mailto:" + this.mSession.userName;
-            aItem.organizer = organizer;
 
             var request = new calGoogleRequest(this);
             var xmlEntry = ItemToXMLEntry(aItem,
@@ -736,13 +734,10 @@ calGoogleCalendar.prototype = {
             // tags. We need to make sure we have a session for that.
             this.ensureSession();
 
-            // Get the item entry by id. Parse both normal ids and those that
-            // contain "@google.com". If both are not found, check for
-            // X-MOZ-SYNCID.
+            // Get the item entry by id.
             var itemEntry = xml.entry.(id.substring(id.lastIndexOf('/') + 1) == aOperation.itemId ||
-                                       gCal::uid.@value == aOperation.itemId ||
-                                       gd::extendedProperty.(@name == "X-MOZ-SYNCID").@value == aOperation.itemId);
-            if (itemEntry.length() == 0) {
+                                       gCal::uid.@value == aOperation.itemId);
+            if (!itemEntry || !itemEntry.length()) {
                 // Item wasn't found. Skip onGetResult and just complete. Not
                 // finding an item isn't a user-important error, it may be a
                 // wanted case. (i.e itip)
@@ -858,17 +853,14 @@ calGoogleCalendar.prototype = {
                 var item = XMLEntryToItem(entry, timezone, this.superCalendar);
                 item.calendar = this.superCalendar;
 
-                // If the item is not an invitation and invitations are wanted
-                // or vice versa, then continue.
-                if (wantInvitations != this.isInvitation(item)) {
-                    continue;
-                }
-
                 if (wantInvitations) {
-                    // If the user is not an attendee, or has already accepted
-                    // then this is also not an invitation.
-                    var att = item.getAttendeeById("MAILTO:" + this.session.userName);
-                    if (!att || att.participationStatus != "NEEDS-ACTION") {
+                    // If invitations are wanted and this is not an invitation,
+                    // or if the user is not an attendee, or has already accepted
+                    // then this is not an invitation.
+                    var att = item.getAttendeeById("mailto:" + this.session.userName);
+                    if (!this.isInvitation(item) ||
+                        !att ||
+                        att.participationStatus != "NEEDS-ACTION") {
                         continue;
                     }
                 }
@@ -1218,33 +1210,11 @@ calGoogleCalendar.prototype = {
     },
 
     /**
-     * Implement calISchedulingSupport
+     * Implement calISchedulingSupport. Most is taken care of by the base
+     * provider, but we want to advertise that we will always take care of
+     * notifications.
      */
-    isInvitation: function cGC_isInvitation(aItem) {
-        if (!aItem.organizer) {
-            // If there is no organizer, we have no way to tell.
-            return false;
-        }
-        // The item is an invitation if the organizer is not the current
-        // session's user and listed as an attendee.
-        return ((aItem.organizer.id.toLowerCase() != "mailto:" + this.session.userName.toLowerCase()) &&
-                (this.getInvitedAttendee(aItem) !== null));
-    },
-
-    getInvitedAttendee: function cGC_getInvitedAttendee(aItem) {
-        // The invited attendee must always be the session user.
-        return aItem.getAttendeeById("MAILTO:" + this.session.userName);
-    },
-
     canNotify: function cGC_canNotify(aMethod, aItem) {
-        // XXX needs further refinement
-        switch (aMethod) {
-            case "REQUEST":
-            case "CANCEL":
-            case "REPLY":
-                 return true;
-            default:
-                return false;
-        }
+        return true;
     }
 };

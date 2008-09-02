@@ -170,12 +170,10 @@ calGoogleSession.prototype = {
     /**
      * attribute AUTF8String fullName
      *
-     * The user's full name, usually retrieved from the XML <author> fields. If
-     * unset, this will return the userName attribute.
+     * The user's full name, usually retrieved from the XML <author> fields.
      */
     get fullName cGS_getFullName() {
-        return (this.mGoogleFullName ? this.mGoogleFullName :
-                this.userName);
+        return this.mGoogleFullName;
     },
     set fullName cGS_setFullName(v) {
         return this.mGoogleFullName = v;

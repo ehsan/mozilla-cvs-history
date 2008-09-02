@@ -63,11 +63,11 @@ calGoogleRequest.prototype = {
     mStatus: Components.results.NS_OK,
 
     /* Constants */
-    LOGIN: 1,
-    GET: 2,
-    ADD: 3,
-    MODIFY: 4,
-    DELETE: 5,
+    LOGIN: 0,
+    ADD: 1,
+    MODIFY: 2,
+    DELETE: 3,
+    GET: 4,
 
     /* Simple Attributes */
     method: "GET",
