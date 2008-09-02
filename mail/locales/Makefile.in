@@ -253,10 +253,10 @@ else
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 	$(NSINSTALL) -D $(FINAL_TARGET)/updater.app/Contents/MacOS
 	cat $< $(srcdir)/updater_append.ini | \
-	  sed -e "s/%AB_CD%/$(AB_CD)/" | > $(FINAL_TARGET)/updater.app/Contents/MacOS/updater.ini
+	  sed -e "s/%AB_CD%/$(AB_CD)/" > $(FINAL_TARGET)/updater.app/Contents/MacOS/updater.ini
 else
 	cat $< $(srcdir)/updater_append.ini | \
-	  sed -e "s/%AB_CD%/$(AB_CD)/" | > $(FINAL_TARGET)/updater.ini
+	  sed -e "s/%AB_CD%/$(AB_CD)/" > $(FINAL_TARGET)/updater.ini
 endif
 endif
 endif
