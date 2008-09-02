@@ -38,6 +38,7 @@
 
 #import "NSPasteboard+Utils.h"
 #import "NSURL+Utils.h"
+#import "NSString+Utils.h"
 
 NSString* const kCorePasteboardFlavorType_url  = @"CorePasteboardFlavorType 0x75726C20"; // 'url '  url
 NSString* const kCorePasteboardFlavorType_urln = @"CorePasteboardFlavorType 0x75726C6E"; // 'urln'  title
@@ -45,6 +46,27 @@ NSString* const kCorePasteboardFlavorType_urld = @"CorePasteboardFlavorType 0x75
 
 NSString* const kCaminoBookmarkListPBoardType = @"MozBookmarkType"; // list of Camino bookmark UIDs
 NSString* const kWebURLsWithTitlesPboardType  = @"WebURLsWithTitlesPboardType"; // Safari-compatible URL + title arrays
+
+@interface NSPasteboard(ChimeraPasteboardURLUtilsPrivate)
+
+- (NSString*)cleanedStringWithPasteboardString:(NSString*)aString;
+
+@end
+
+@implementation NSPasteboard(ChimeraPasteboardURLUtilsPrivate)
+
+//
+// Utility method to ensure strings we're using in |containsURLData|
+// and |getURLs:andTitles| are free of internal control characters
+// and leading/trailing whitespace
+//
+- (NSString*)cleanedStringWithPasteboardString:(NSString*)aString
+{
+  NSString* cleanString = [aString stringByRemovingCharactersInSet:[NSCharacterSet controlCharacterSet]];
+  return [cleanString stringByTrimmingWhitespace];
+}
+
+@end
 
 @implementation NSPasteboard(ChimeraPasteboardURLUtils)
 
@@ -207,9 +229,11 @@ NSString* const kWebURLsWithTitlesPboardType  = @"WebURLsWithTitlesPboardType"; 
       title = [self stringForType:NSStringPboardType];
     *outTitles = [NSArray arrayWithObject:(title ? title : @"")];
   } else if ([types containsObject:NSStringPboardType]) {
-    NSURL* testURL = [NSURL URLWithString:[self stringForType:NSStringPboardType]];
-    if (testURL) {
-      *outUrls = [NSArray arrayWithObject:[self stringForType:NSStringPboardType]];
+    NSString* potentialURLString = [self cleanedStringWithPasteboardString:[self stringForType:NSStringPboardType]];
+    NSURL* testURL = [NSURL URLWithString:potentialURLString];
+    // Bookmarklets, whose URLs start with "javascript:", won't pass the NSURL test.
+    if ((testURL) || [potentialURLString hasCaseInsensitivePrefix:@"javascript:"]) {
+      *outUrls = [NSArray arrayWithObject:potentialURLString];
       NSString* title = nil;
       if ([types containsObject:kCorePasteboardFlavorType_urld])
         title = [self stringForType:kCorePasteboardFlavorType_urld];
@@ -245,13 +269,16 @@ NSString* const kWebURLsWithTitlesPboardType  = @"WebURLsWithTitlesPboardType"; 
     return YES;
   
   if ([types containsObject:NSStringPboardType]) {
+    // Trim whitespace off the ends and newlines out of the middle so we don't reject otherwise-valid URLs;
+    // we'll do another cleaning when we set the URLs and titles later, so this is safe.
+    NSString* potentialURLString = [self cleanedStringWithPasteboardString:[self stringForType:NSStringPboardType]];
     // NSURL will return nil for invalid url strings (containing spaces, returns etc),
     // but will return a url otherwise.
-    NSURL* testURL = [NSURL URLWithString:[self stringForType:NSStringPboardType]];
-    return (testURL != nil);
+    NSURL* testURL = [NSURL URLWithString:potentialURLString];
+    // one more test to do -- bookmarklets won't be valid NSURLs but will start with "javascript:"
+    return ((testURL != nil) || [potentialURLString hasCaseInsensitivePrefix:@"javascript:"]);
   }
   
   return NO;
 }
 @end
-

@@ -52,6 +52,7 @@ typedef enum
 + (NSString*)stringWithUUID;
 
 - (BOOL)isEqualToStringIgnoringCase:(NSString*)inString;
+- (BOOL)hasCaseInsensitivePrefix:(NSString*)inString;
 - (NSString *)stringByRemovingCharactersInSet:(NSCharacterSet*)characterSet;
 - (NSString *)stringByReplacingCharactersInSet:(NSCharacterSet*)characterSet withString:(NSString*)string;
 - (NSString *)stringByTruncatingTo:(unsigned int)maxCharacters at:(ETruncationType)truncationType;

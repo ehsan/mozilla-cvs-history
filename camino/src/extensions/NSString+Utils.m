@@ -70,6 +70,13 @@
   return ([self compare:inString options:NSCaseInsensitiveSearch] == NSOrderedSame);
 }
 
+- (BOOL)hasCaseInsensitivePrefix:(NSString*)inString
+{
+  if ([self length] < [inString length])
+    return NO;
+  return ([self compare:inString options:NSCaseInsensitiveSearch range:NSMakeRange(0, [inString length])] == NSOrderedSame);
+}
+
 - (NSString *)stringByRemovingCharactersInSet:(NSCharacterSet*)characterSet
 {
   NSScanner*       cleanerScanner = [NSScanner scannerWithString:self];
