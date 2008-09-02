@@ -93,6 +93,8 @@
 {
   NSScanner*       cleanerScanner = [NSScanner scannerWithString:self];
   NSMutableString* cleanString    = [NSMutableString stringWithCapacity:[self length]];
+  // Make sure we don't skip whitespace, which NSScanner does by default
+  [cleanerScanner setCharactersToBeSkipped:[NSCharacterSet characterSetWithCharactersInString:@""]];
 
   while (![cleanerScanner isAtEnd])
   {

@@ -264,6 +264,7 @@ public:
   NSUndoManager *mUndoManager; //we handle our own undo to avoid stomping on bookmark undo
 }
 - (id)initWithFrame:(NSRect)bounds defaultFont:(NSFont*)defaultFont;
+- (NSString*)cleanPastedText:(NSString*)aString;
 @end
 
 @implementation AutoCompleteTextFieldEditor
@@ -284,6 +285,36 @@ public:
   [super dealloc];
 }
 
+-(NSString*)cleanPastedText:(NSString*)aString
+{
+  NSMutableCharacterSet* workingSet;
+  NSCharacterSet* illegalAndControlCharacterSet;
+  NSCharacterSet* whitespaceIllegalAndControlCharacterSet;
+  NSString* cleanString;
+
+  workingSet = [[NSMutableCharacterSet alloc] init];
+  [workingSet formUnionWithCharacterSet:[NSCharacterSet illegalCharacterSet]];
+  [workingSet formUnionWithCharacterSet:[NSCharacterSet controlCharacterSet]];
+  illegalAndControlCharacterSet = [[workingSet copy] autorelease];
+
+  [workingSet formUnionWithCharacterSet:[NSCharacterSet whitespaceCharacterSet]];
+
+  whitespaceIllegalAndControlCharacterSet = [[workingSet copy] autorelease];
+  [workingSet release];
+
+  // We assume anything containing "://" is a URL and eat spaces. Otherwise it's not a URL,
+  // so replace illegals/control characters with spaces and leave existing spaces alone
+  // (for instance, in a bookmarklet).
+  if ([aString rangeOfString:@"://"].location != NSNotFound)
+    cleanString = [aString stringByRemovingCharactersInSet:whitespaceIllegalAndControlCharacterSet];
+  else {
+    cleanString = [aString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    cleanString = [cleanString stringByReplacingCharactersInSet:illegalAndControlCharacterSet withString:@" "];
+  }
+
+  return cleanString;
+}
+
 -(void)paste:(id)sender
 {
   NSPasteboard *pboard = [NSPasteboard generalPasteboard];
@@ -292,7 +323,7 @@ public:
   while ((aType = [dataTypes nextObject])) {
     if ([aType isEqualToString:NSStringPboardType]) {
       NSString *oldText = [pboard stringForType:NSStringPboardType];
-      NSString *newText = [oldText stringByRemovingCharactersInSet:[NSCharacterSet controlCharacterSet]];
+      NSString *newText = [self cleanPastedText:oldText];
       NSRange aRange = [self selectedRange];
       if ([self shouldChangeTextInRange:aRange replacementString:newText]) {
         [[self textStorage] replaceCharactersInRange:aRange withString:newText];
@@ -346,7 +377,7 @@ public:
   else if ([[pboard types] containsObject:NSStringPboardType]) {
     dragString = [pboard stringForType:NSStringPboardType];
     // Clean the string on the off chance it has line breaks, etc.
-    dragString = [dragString stringByRemovingCharactersInSet:[NSCharacterSet controlCharacterSet]];
+    dragString = [self cleanPastedText:dragString];
   }
   [self setString:dragString];
   return YES;
