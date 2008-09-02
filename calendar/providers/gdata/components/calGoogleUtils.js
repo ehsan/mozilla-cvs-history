@@ -490,20 +490,7 @@ function ItemToXMLEntry(aItem, aAuthorEmail, aAuthorName) {
             alarmOffset.addDuration(duration);
         }
 
-        // Google only accepts certain alarm values. Snap to them. See
-        // http://code.google.com/p/google-gdata/issues/detail?id=55
-        const alarmValues = [ 300, 600, 900, 1200, 1500, 1800, 2700, 3600, 7200,
-                            10800, 86400, 172800, 604800 ];
-        var discreteValue = alarmValues[alarmValues.length - 1] / 60;
-
-        for (var i = 0; i < alarmValues.length; i++) {
-            if (-aItem.alarmOffset.inSeconds <= alarmValues[i]) {
-                discreteValue = alarmValues[i] / 60;
-                break;
-            }
-        }
-
-        gdReminder.@minutes = discreteValue;
+        gdReminder.@minutes = -aItem.alarmOffset.inSeconds / 60;
         gdReminder.@method = "alert";
 
         if (aItem.recurrenceInfo) {
@@ -527,9 +514,9 @@ function ItemToXMLEntry(aItem, aAuthorEmail, aAuthorName) {
     gdAlarmLastAck.@value = toRFC3339(aItem.alarmLastAck);
     entry.gd::extendedProperty += gdAlarmLastAck;
 
-    // XXX Google now supports multiple alarms, but since the valid alarms are
-    // restricted to discrete values, using a normal alarm to snooze is pretty
-    // pointless.
+    // XXX While Google now supports multiple alarms and alarm values, we still
+    // need to fix bug 353492 first so we can better take care of finding out
+    // what alarm is used for snoozing.
 
     // gd:extendedProperty (snooze time)
     var gdAlarmSnoozeTime = <gd:extendedProperty xmlns:gd={gd}/>;
