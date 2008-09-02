@@ -352,10 +352,20 @@ calendar-month-day-box {
 .calendar-month-day-box-current-month {
     background-color: #FFFFFF;
 }
-
-.calendar-month-day-box-day-off,
+.calendar-month-day-box-current-month .calendar-month-day-box-date-label {
+    background-color: #F7F7F7;
+}
+.calendar-month-day-box-day-off {
+    background-color: #EFEFEF;
+}
+.calendar-month-day-box-day-off .calendar-month-day-box-date-label {
+    background-color: #E7E7E7;
+}
 .calendar-month-day-box-other-month {
-    background-color: #F0F0F0;
+    background-color: #DFDFDF;
+}
+.calendar-month-day-box-other-month .calendar-month-day-box-date-label {
+    background-color: #D7D7D7;
 }
 
 .calendar-month-day-box-current-month[relation="today"],
@@ -365,6 +375,10 @@ calendar-month-day-box {
     background-color: #dfeaf4;
 }
 
+.calendar-month-day-box-date-label[relation="today"] {
+    background-color: #d7e2ec;
+}
+
 .calendar-month-day-box-current-month[selected="true"],
 .calendar-month-day-box-day-off[selected="true"],
 .calendar-month-day-box-other-month[selected="true"] {
@@ -372,14 +386,13 @@ calendar-month-day-box {
 }
 
 .calendar-month-day-box-date-label[selected="true"] {
-    background-color: #ffe79c;
+    background-color: #f7e093;
     font-weight: bold;
 }
 
 .calendar-month-day-box-date-label {
     color: #616163;
     font-size: 0.9em;
-    background-color: #F0F0F0;
     text-align: right;
     margin: 0px;
     padding-top: 1px;
