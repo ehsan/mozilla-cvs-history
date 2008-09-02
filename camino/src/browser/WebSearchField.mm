@@ -319,7 +319,7 @@ static const int kSearchPluginRelatedItemsTag = 102;
 - (BOOL)isPartialStringValid:(NSString *)partialString newEditingString:(NSString **)newString errorDescription:(NSString **)error
 {
   if ([partialString rangeOfCharacterFromSet:[NSCharacterSet controlCharacterSet]].location != NSNotFound) {
-    *newString = [partialString stringByRemovingCharactersInSet:[NSCharacterSet controlCharacterSet]];
+    *newString = [partialString stringByReplacingCharactersInSet:[NSCharacterSet controlCharacterSet] withString:@" "];
     return NO;
   }
   return YES;
