@@ -4,8 +4,8 @@ import os.path
 from twisted.python import log
 
 from buildbot.process.factory import BuildFactory
-from buildbot.steps.shell import Compile, ShellCommand, WithProperties, \
-  SetProperty
+from buildbot.steps.shell import Compile, ShellCommand, WithProperties#, \
+#  SetProperty
 from buildbot.steps.source import Mercurial
 from buildbot.steps.transfer import FileDownload
 
