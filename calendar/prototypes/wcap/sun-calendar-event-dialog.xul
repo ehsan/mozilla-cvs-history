@@ -745,7 +745,7 @@
                     <datetimepicker id="todo-entrydate"
                                     class="todo-only"
                                     disable-on-readonly="true"
-                                    onchange="dateTimeControls2State(true);"/>
+                                    onchange="dateTimeControls2State(false);"/>
                     <label id="timezone-starttime"
                            class="text-link"
                            collapsed="true"
