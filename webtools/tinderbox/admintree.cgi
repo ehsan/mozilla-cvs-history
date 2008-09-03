@@ -219,12 +219,15 @@ print "
 <TR>
 <TD>Query system:</TD>
 <TD><SELECT NAME=query SIZE=1>
-<OPTION VALUE=\"\" SELECTED=\"SELECTED\">(none)</OPTION>
-";
+<OPTION VALUE=\"\"";
+print " SELECTED=\"SELECTED\"" if ($treedata->{query} eq '');
+print ">(none)</OPTION>\n";
 
 &tb_load_queryconfig();
 foreach my $query_system (@::QueryList) {
-  print "<OPTION VALUE=\"$query_system\">$query_system</OPTION>\n";
+  print "<OPTION VALUE=\"$query_system\"";
+  print " SELECTED=\"SELECTED\"" if ($treedata->{query} eq $query_system);
+  print ">$query_system</OPTION>\n";
 }
 
 print "</SELECT></TD>
