@@ -1,7 +1,11 @@
+from datetime import datetime
+import os.path
+
 from twisted.python import log
 
 from buildbot.process.factory import BuildFactory
-from buildbot.steps.shell import Compile, ShellCommand, WithProperties
+from buildbot.steps.shell import Compile, ShellCommand, WithProperties, \
+  SetProperty
 from buildbot.steps.source import Mercurial
 from buildbot.steps.transfer import FileDownload
 
@@ -549,4 +553,221 @@ class MercurialBuildFactory(BuildFactory):
              command=['find', '-E', '.', '-iregex',
                       '.*\.(i|s|mii|ii)$', '-exec', 'rm', '{}', ';'],
              workdir='build/%s' % self.objdir
+            )
+
+
+
+class ReleaseTaggingFactory(BuildFactory):
+    def __init__(self, repositories, buildToolsRepo, productName, appName,
+                 appVersion, milestone, baseTag, buildNumber):
+        """Repositories looks like this:
+            repositories[name]['revision']: changeset# or tag
+            repositories[name]['relbranchOverride']: branch name
+            repositories[name]['bumpFiles']: [filesToBump]
+           eg:
+            repositories['http://hg.mozilla.org/mozilla-central']['revision']:
+              d6a0a4fca081
+            repositories['http://hg.mozilla.org/mozilla-central']['relbranchOverride']:
+              GECKO191_20080828_RELBRANCH
+            repositories['http://hg.mozilla.org/mozilla-central']['bumpFiles']:
+              ['client.mk', 'browser/config/version.txt',
+               'browser/app/module.ver', 'config/milestone.txt']
+            relbranchOverride is typically used in two situations:
+             1) During a respin (buildNumber > 1) when the "release" branch has
+                already been created (during build1). In cases like this all
+                repositories should have the relbranch specified
+             2) During non-Firefox builds. Because Seamonkey, Thunderbird, etc.
+                are releases off of the same platform code as Firefox, the
+                "release branch" will already exist in mozilla-central but not
+                comm-central, mobile-browser, domi, etc. In cases like this,
+                mozilla-central and l10n should be specified with a
+                relbranchOverride and the other source repositories should NOT
+                specify one.
+           buildToolsRepo: This is the repository containing the version-bump.pl
+                           script. Typically, this is:
+                            http://hg.mozilla.org/build/tools
+           productName: The name of the actual *product* being shipped.
+                        Examples include: firefox, thunderbird, seamonkey.
+                        This is only used for the automated check-in message
+                        the version bump generates.
+           appName: The "application" name (NOT product name). Examples:
+                    browser, suite, mailnews. It is used in version bumping
+                    code and assumed to be a subdirectory of the source
+                    repository being bumped. Eg, for Firefox, appName should be
+                    'browser', which is a subdirectory of 'mozilla-central'.
+                    For Thunderbird, it would be 'mailnews', a subdirectory
+                    of 'comm-central'.
+           appVersion: The current version number of the application being
+                       built. Eg, 3.0.2 for Firefox, 2.0 for Seamonkey, etc.
+                       This is different than the platform version. See below.
+           milestone: The current version of *Gecko*. This is generally
+                      along the lines of: 1.8.1.14, 1.9.0.2, etc.
+           baseTag: The prefix to use for BUILD/RELEASE tags. It will be 
+                    post-fixed with _BUILD$buildNumber and _RELEASE. Generally,
+                    this is something like: FIREFOX_3_0_2.
+           buildNumber: The current build number. If this is the first time
+                        attempting a release this is 1. Other times it may be
+                        higher. It is used for post-fixing tags and some
+                        internal logic.
+        """
+        BuildFactory.__init__(self)
+
+        # extremely basic validation, to catch really dumb configurations
+        assert len(repositories) > 0, \
+          'You must provide at least one repository.'
+        assert buildToolsRepo, 'You must provide a build tools repository ' \
+          '(eg. http://hg.mozilla.org/build/tools).'
+        assert productName, 'You must provide a product name (eg. firefox).'
+        assert appName, 'You must provide an application name (eg. browser).'
+        assert appVersion, \
+          'You must provide an application version (eg. 3.0.2).'
+        assert milestone, 'You must provide a milestone (eg. 1.9.0.2).'
+        assert baseTag, 'You must provide a baseTag (eg. FIREFOX_3_0_2).'
+        assert buildNumber, 'You must provide a buildNumber.'
+
+        # if we're doing a respin we already have a relbranch created
+        if buildNumber > 1:
+            for repo in repositories:
+                assert repositories[repo]['relbranchOverride'], \
+                  'No relbranchOverride specified for ' + repo + \
+                  '. You must provide a relbranchOverride when buildNumber > 2'
+
+        # now, down to work
+        buildTag = '%s_BUILD%s' % (baseTag, str(buildNumber))
+        releaseTag = '%s_RELEASE' % baseTag
+
+        # the only tool we use here is the version bump script. we don't do
+        # any bumping when buildNumber > 1, so we don't need them in that case
+        if buildNumber == 1:
+            self.addStep(ShellCommand,
+             command=['hg', 'clone', buildToolsRepo, 'tools'],
+             workdir='.',
+             description=['clone', 'build tools'],
+             haltOnFailure=1
+            )
+
+        for repo in sorted(repositories.keys()):
+            # we need to handle http(s):// and ssh:// URLs here.
+            repoName = repo.rstrip('/').split('/')[-1]
+            pushRepo = repo
+            if pushRepo.startswith('http'):
+                pushRepo = pushRepo.replace('http', 'ssh')
+
+            repoRevision = repositories[repo]['revision']
+            bumpFiles = repositories[repo]['bumpFiles']
+
+            relbranchName = ''
+            relbranchOverride = repositories[repo]['relbranchOverride']
+            # generally, this is specified for Firefox respins and non-Firefox
+            # builds (where mozilla-central has been bumped and branched
+            # but not, eg, comm-central).
+            if relbranchOverride:
+                relbranchName = relbranchOverride
+            else:
+                # generate the release branch name, which is based on the
+                # version and the current date.
+                # looks like: GECKO191_20080728_RELBRANCH
+                relbranchName = 'GECKO%s_%s_RELBRANCH' % (
+                  milestone.replace('.', ''), datetime.now().strftime('%Y%m%d'))
+                
+
+            # For l10n we never bump any files, so this will never get
+            # overridden. For source repos, we will do a version bump in build1
+            # which we commit, and set this property again, so we tag
+            # the right revision. For build2, we don't version bump, and this
+            # will not get overridden
+            self.addStep(SetProperty,
+             command=['echo', repoRevision],
+             property='%s-revision' % repoName,
+             workdir='.',
+             haltOnFailure=True
+            )
+            # 'hg clone -r' breaks in the respin case because the cloned
+            # repository will not have ANY changesets from the release branch
+            # and 'hg up -C' will fail
+            self.addStep(ShellCommand,
+             command=['hg', 'clone', repo, repoName],
+             workdir='.',
+             description=['clone %s' % repoName],
+             haltOnFailure=True
+            )
+            self.addStep(ShellCommand,
+             command=['hg', 'up', '-r',
+                      WithProperties('%s', '%s-revision' % repoName)],
+             workdir=repoName,
+             haltOnFailure=True
+            )
+            # for build1 we need to create a branch
+            if buildNumber == 1 and not relbranchOverride:
+                # remember:
+                # 'branch' in Mercurial does not actually create a new branch,
+                # it switches the "current" branch to the one of the given name.
+                # when buildNumber == 1 this will end up creating a new branch
+                # when we commit version bumps and tags.
+                # note: we don't actually have to switch to the release branch
+                # to create tags, but it seems like a more sensible place to
+                # have those commits
+                self.addStep(ShellCommand,
+                 command=['hg', 'branch', relbranchName],
+                 workdir=repoName,
+                 description=['branch %s' % repoName],
+                 haltOnFailure=True
+                )
+            # if buildNumber > 1 we need to switch to it with 'hg up -C'
+            else:
+                self.addStep(ShellCommand,
+                 command=['hg', 'up', '-C', relbranchName],
+                 workdir=repoName,
+                 description=['switch to', relbranchName],
+                 haltOnFailure=True
+                )
+            # we don't need to do any version bumping if this is a respin
+            if buildNumber == 1 and len(bumpFiles) > 0:
+                command = ['perl', 'tools/release/version-bump.pl',
+                           '-w', repoName, '-t', releaseTag, '-a', appName,
+                           '-v', appVersion, '-m', milestone]
+                command.extend(bumpFiles)
+                self.addStep(ShellCommand,
+                 command=command,
+                 workdir='.',
+                 description=['bump %s' % repoName],
+                 haltOnFailure=True
+                )
+                self.addStep(ShellCommand,
+                 command=['hg', 'diff'],
+                 workdir=repoName
+                )
+                self.addStep(ShellCommand,
+                 command=['hg', 'commit', '-m',
+                          'Automated checkin: version bump remove "pre" ' + \
+                          ' from version number for ' + productName + ' ' + \
+                          appVersion + ' release on ' + relbranchName],
+                 workdir=repoName,
+                 description=['commit %s' % repoName],
+                 haltOnFailure=True
+                )
+                self.addStep(SetProperty,
+                 command=['hg', 'identify', '-i'],
+                 property='%s-revision' % repoName,
+                 workdir=repoName,
+                 haltOnFailure=True
+                )
+            for tag in (buildTag, releaseTag):
+                self.addStep(ShellCommand,
+                 command=['hg', 'tag', '-f', '-r',
+                          WithProperties('%s', '%s-revision' % repoName),
+                          tag],
+                 workdir=repoName,
+                 description=['tag %s' % repoName],
+                 haltOnFailure=True
+                )
+            self.addStep(ShellCommand,
+             command=['hg', 'out', pushRepo],
+             workdir=repoName,
+            )
+            self.addStep(ShellCommand,
+             command=['hg', 'push', '-f', pushRepo],
+             workdir=repoName,
+             description=['push %s' % repoName],
+             haltOnFailure=True
             )
