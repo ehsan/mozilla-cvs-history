@@ -105,7 +105,19 @@
           <treecol id="calendar-list-tree-status"
                    hideheader="true"
                    width="18"/>
+          <treecol id="calendar-list-tree-scrollbar-spacer"
+                   fixed="true"
+                   hideheader="true">
+            <!-- This is a very elegant workaround to make sure the last column
+                 is not covered by the scrollbar in case of an overflow. This
+                 treecol needs to be here last, so if you decide to insert
+                 columns please do so before this treecol -->
+            <slider id="calendar-list-tree-scrollbar-slider" orient="vertical"/>
+          </treecol>
         </treecols>
-     <treechildren id="calendar-treechildren" tooltip="calendar-list-tooltip"/>
+     <treechildren id="calendar-treechildren"
+                   tooltip="calendar-list-tooltip"
+                   onoverflow="document.getElementById('calendar-list-tree-scrollbar-spacer').collapsed = false;"
+                   onunderflow="document.getElementById('calendar-list-tree-scrollbar-spacer').collapsed = true;"/>
    </tree>
 </overlay>
