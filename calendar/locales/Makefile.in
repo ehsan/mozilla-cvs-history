@@ -45,7 +45,9 @@ relativesrcdir  = calendar/locales
 
 include $(DEPTH)/config/autoconf.mk
 
+ifeq ($(AB_CD),)
 DIRS = ../timezones
+endif
 
 include $(topsrcdir)/config/config.mk
 
@@ -129,7 +131,7 @@ endif
 	$(RM) -rf $(DIST)/xpi-stage/locale-$(AB_CD)
 	$(RM) -rf $(DIST)/xpi-stage/calendar-timezones
 	$(MAKE) libs-$(AB_CD)
-	$(MAKE) -C ../timezones libs-$(AB_CD)
+	$(MAKE) -C ../timezones libs
 	mv $(DIST)/xpi-stage/locale-$(AB_CD) l10n-stage/localized
 	mv $(DIST)/xpi-stage/calendar-timezones/chrome l10n-stage/nonlocalized/extensions/calendar-timezones@mozilla.org
 	mv $(DIST)/xpi-stage/calendar-timezones/chrome.manifest l10n-stage/nonlocalized/extensions/calendar-timezones@mozilla.org
@@ -175,7 +177,7 @@ repackage-zip: $(ZIP_IN)
 	$(RM) -rf $(DIST)/xpi-stage/locale-$(AB_CD)
 	$(RM) -rf $(DIST)/xpi-stage/calendar-timezones
 	$(MAKE) libs-$(AB_CD)
-	$(MAKE) -C ../timezones libs-$(AB_CD)
+	$(MAKE) -C ../timezones libs
 ifeq (WINNT,$(OS_ARCH))
 	$(RM) -r $(STAGEDIST)/uninstall
 	$(NSINSTALL) -D $(STAGEDIST)/uninstall

@@ -67,7 +67,9 @@ XPI_PKGNAME = calendar-timezones
 STRIP_XPI = 1
 
 PREF_JS_EXPORTS = $(srcdir)/defaults/preferences.js
+ifeq ($(AB_CD),)
 DIRS = locales
+endif
 
 ifdef MOZ_SUNBIRD
 # install as a global extension in dist/bin/extensions/
@@ -110,6 +112,8 @@ ifneq ($(strip $(locales_to_build)),)
 # The l10n directory is checked out and contains supported locales, start building our locales
 
 libs:: $(addprefix libs-,$(locales_to_build))
+	$(MAKE) -C locales libs AB_CD=en-US XPI_NAME=calendar-timezones USE_EXTENSION_MANIFEST=1 NO_JAR_AUTO_REG=1
+
 libs-%:
 	@echo - locales to build -- $(locales_to_build)
 	$(MAKE) -C locales libs AB_CD=$* XPI_NAME=calendar-timezones USE_EXTENSION_MANIFEST=1 NO_JAR_AUTO_REG=1
