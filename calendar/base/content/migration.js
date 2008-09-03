@@ -544,60 +544,34 @@ var gDataMigrator = {
      * stored there.
      */
     checkEvolution: function gdm_evolution() {
-        LOG("Checking for evolution data");
-
         function evoMigrate(aDataDir, aCallback) {
-            aDataDir.append("Sources");
-            var dirs = aDataDir.directoryEntries;
-            var calManager = getCalendarManager();
-
             var i = 1;
-            while(dirs.hasMoreElements()) {
+            function evoDataMigrate(dataStore) {
+                LOG("Migrating evolution data file in " + dataStore.path);
+                if (dataStore.exists()) {
+                    var cal = gDataMigrator.importICSToStorage(dataStore);
+                    cal.name = "Evolution " + (i++);
+                }
+                return dataStore.exists();
+            }
+
+            var calManager = getCalendarManager();
+            var dirs = aDataDir.directoryEntries;
+            while (dirs.hasMoreElements()) {
                 var dataDir = dirs.getNext().QueryInterface(Components.interfaces.nsIFile);
                 var dataStore = dataDir.clone();
                 dataStore.append("calendar.ics");
-                if (!dataStore.exists()) {
-                    continue;
-                }
-
-                var cal = gDataMigrator.importICSToStorage(dataStore);
-                //XXX
-                cal.name = "Evolution"+i;
-                i++;
+                evoDataMigrate(dataStore);
             }
+
             aCallback();
         }
 
-        var profileDir = this.dirService.get("ProfD", Components.interfaces.nsILocalFile);
-        var evoSpec = profileDir.path;
-        var evoFile;
-        if (!this.mIsLightning) {
-            var diverge = evoSpec.indexOf(".mozilla");
-            if (diverge == -1) {
-                return [];
-            }
-            evoSpec = evoSpec.substr(0, diverge);
-            evoFile = Components.classes["@mozilla.org/file/local;1"]
-                       .createInstance(Components.interfaces.nsILocalFile);
-            evoFile.initWithPath(evoSpec);
-        } else {
-            var diverge = evoSpec.indexOf(".thunderbird");
-            if (diverge == -1) {
-                return [];
-            }
-            evoSpec = evoSpec.substr(0, diverge);
-            evoFile = Components.classes["@mozilla.org/file/local;1"]
-                       .createInstance(Components.interfaces.nsILocalFile);
-            evoFile.initWithPath(evoSpec);
-        }
-        evoFile.append(".evolution");
-        evoFile.append("calendar");
-        evoFile.append("local");
-        evoFile.append("system");
-        if (evoFile.exists()) {
-            return [new dataMigrator("Evolution", evoMigrate, [evoFile])];
-        }
-        return [];
+        var evoDir = this.dirService.get("Home", Components.interfaces.nsILocalFile);
+        evoDir.append(".evolution");
+        evoDir.append("calendar");
+        evoDir.append("local");
+        return (evoDir.exists() ? [new dataMigrator("Evolution", evoMigrate, [evoDir])] : []);
     },
 
     importICSToStorage: function migrateIcsStorage(icsFile) {
