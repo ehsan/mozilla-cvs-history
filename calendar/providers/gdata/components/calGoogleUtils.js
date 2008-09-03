@@ -358,7 +358,14 @@ function passwordManagerRemove(aUsername) {
  */
 function ItemToXMLEntry(aItem, aAuthorEmail, aAuthorName) {
 
+    var selfIsOrganizer = (aItem.organizer.id == "mailto:" + aAuthorEmail);
+
     function addExtendedProperty(aName, aValue) {
+        if (!selfIsOrganizer) {
+            // We can't set extended properties if we are not the organizer,
+            // discard.
+            return;
+        }
         var gdExtendedProp = <gd:extendedProperty xmlns:gd={gd}/>;
         gdExtendedProp.@name = aName;
         gdExtendedProp.@value = aValue || "";
@@ -486,7 +493,7 @@ function ItemToXMLEntry(aItem, aAuthorEmail, aAuthorName) {
     entry.gd::when.@endTime = toRFC3339(aItem.endDate);
 
     // gd:reminder
-    if (aItem.alarmOffset) {
+    if (aItem.alarmOffset && selfIsOrganizer) {
         var gdReminder = <gd:reminder xmlns:gd={gd}/>;
         var alarmOffset = aItem.alarmOffset.clone();
 
@@ -505,6 +512,9 @@ function ItemToXMLEntry(aItem, aAuthorEmail, aAuthorName) {
             // Otherwise, its a child of the gd:when element
             entry.gd::when.gd::reminder += gdReminder;
         }
+    } else if (aItem.alarmOffset) {
+        // We need to reset this so the item gets returned correctly.
+        aItem.alarmOffset = null;
     }
 
     // saved alarms
@@ -834,6 +844,12 @@ function XMLEntryToItem(aXMLEntry, aTimezone, aCalendar, aReferenceItem) {
          * @param reminderTags      The tagset to parse.
          */
         function parseReminders(reminderTags) {
+            if (aXMLEntry.gd::who.(@rel.substring(33) == "event.organizer")
+                         .@email.toString() != aCalendar.session.userName) {
+                // We are not the organizer, so its not smart to set alarms on
+                // this event.
+                return;
+            }
             var lastAlarm;
             var otherAlarms = [];
             // Go through all reminder tags given and pick the best alarm.

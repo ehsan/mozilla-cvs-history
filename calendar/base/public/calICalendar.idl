@@ -170,6 +170,7 @@ interface calICalendar : nsISupports
    *   capabilities.events.supported       Supports tasks
    *   capabilities.tasks.supported        Supports events
    *   capabilities.alarms.popup.supported Supports popup alarms
+   *   capabilities.alarms.oninviations.supported Supports alarms on inviations.
    *   capabilities.timezones.floating.supported Supports local time
    *   capabilities.timezones.UTC.supported      Supports UTC/GMT timezone
    *

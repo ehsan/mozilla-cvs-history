@@ -96,7 +96,10 @@ function onLoad() {
 
     // show reminder if this item is *not* readonly.
     // this case happens for example if this is an invitation.
-    if (!window.readOnly) {
+    var calendar = window.arguments[0].calendarEvent.calendar;
+    var supportsReminders =
+        (calendar.getProperty("capabilities.alarms.oninvitations.supported") !== false);
+    if (!window.readOnly && supportsReminders) {
         document.getElementById("reminder-row").removeAttribute("hidden");
         loadReminder(window.item);
         updateReminderDetails();

@@ -253,6 +253,7 @@ calGoogleCalendar.prototype = {
             case "capabilities.attachments.supported":
             case "capabilities.priority.supported":
             case "capabilities.tasks.supported":
+            case "capabilities.alarms.oninvitations.supported":
                 return false;
             case "capabilities.privacy.values":
                 return ["DEFAULT", "PUBLIC", "PRIVATE"];
