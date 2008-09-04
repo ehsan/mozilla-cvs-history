@@ -43,7 +43,8 @@ class nsIAutoCompleteResults;
 
 @interface AutoCompleteDataSource : NSObject
 {
-  NSImage*      mIconImage;     // owned
+  NSImage*      mGenericSiteIcon;     // owned
+  NSImage*      mGenericFileIcon;     // owned
   NSString*     mErrorMessage;  // owned
 
   nsIAutoCompleteResults* mResults;   // owned

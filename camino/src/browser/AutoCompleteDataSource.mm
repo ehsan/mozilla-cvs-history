@@ -41,6 +41,7 @@
 
 #import <AppKit/AppKit.h>
 #import "AutoCompleteDataSource.h"
+#import "SiteIconProvider.h"
 
 #include "nsString.h"
 #include "nsCRT.h"
@@ -54,7 +55,8 @@
 {
   if ((self = [super init])) {
     mResults = nil;
-    mIconImage = [[NSImage imageNamed:@"globe_ico"] retain];
+    mGenericSiteIcon = [[NSImage imageNamed:@"globe_ico"] retain];
+    mGenericFileIcon = [[NSImage imageNamed:@"smallDocument"] retain];
   }
   return self;
 }
@@ -62,7 +64,8 @@
 -(void)dealloc
 {
   NS_IF_RELEASE(mResults);
-  [mIconImage release];
+  [mGenericSiteIcon release];
+  [mGenericFileIcon release];
   [mErrorMessage release];
   [super dealloc];
 }
@@ -110,10 +113,7 @@
 
 - (id) resultForRow:(int)aRow columnIdentifier:(NSString *)aColumnIdentifier
 {
-  if ([aColumnIdentifier isEqualToString:@"icon"])
-    return mIconImage;
-
-  NSString* result = @"";
+  id result = [aColumnIdentifier isEqualToString:@"icon"] ? (id)mGenericSiteIcon : (id)@"";
   
   if (!mResults)
     return result;
@@ -134,6 +134,16 @@
     nsAutoString titleStr;
     item->GetTitle(titleStr);
     result = [NSString stringWith_nsAString:titleStr];
+  } else if ([aColumnIdentifier isEqualToString:@"icon"]) {
+    nsCAutoString url;
+    item->GetURL(url);
+    NSString* urlString = [NSString stringWith_nsACString:url];
+    NSImage* cachedFavicon = [[SiteIconProvider sharedFavoriteIconProvider] favoriteIconForPage:urlString];
+    if (cachedFavicon) {
+      result = cachedFavicon;
+    } else if ([urlString hasPrefix:@"file://"]) {
+      result = mGenericFileIcon;
+    }
   }
 
   return result;
