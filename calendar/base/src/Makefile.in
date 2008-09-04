@@ -56,6 +56,11 @@ else
 USE_STATIC_LIBS = 1 # This links against the static CRT on Windows
 endif
 
+# for changes that should only be triggered on the comm-central trunk
+ifdef COMM_BUILD
+DEFINES += -DCOMM_BUILD
+endif
+
 REQUIRES = xpcom \
 	   js \
 	   xpconnect \
