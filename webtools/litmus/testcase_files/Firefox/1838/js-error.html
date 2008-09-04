@@ -1,0 +1,26 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>simple JS error</title>
+<!-- script type="text/javascript">
+function showModified() {
+	var dateSpan = document.getElementById("modDate");
+	var dateNode = document.createTextNode(document.lastModified);
+	dateSpan.appendChild(dateNode);
+}
+</script -->
+</head>
+
+<body onload="showModified()">
+
+<p>This page should cause an error in the JavaScript console. The <code>&lt;body&gt;</code> <code>onload</code> handler calls a JS function named <code>showModified()</code> which doesn't exist (okay, it's just commented out, nearly the same thing). You should see the following error in the JS console:</p>
+
+<p><code>Error: showModified is not defined</code></p>
+
+
+<!-- Last modified:&nbsp;<span id="modDate"></span>.<br / -->
+&copy; 2004 Sarah Liberman<br />
+
+</body>
+</html>
