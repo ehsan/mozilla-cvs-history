@@ -199,7 +199,7 @@ calAttendee.prototype = {
     set id(aId) {
         this.modify();
         // RFC 1738 para 2.1 says we should be using lowercase mailto: urls
-        return (this.mId = aId.replace(/^mailto:/i, "mailto:"));
+        return (this.mId = (aId ? aId.replace(/^mailto:/i, "mailto:") : null));
     },
 
     toString: function calAttendee_toString() {

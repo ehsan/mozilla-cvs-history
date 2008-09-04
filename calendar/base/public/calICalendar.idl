@@ -151,6 +151,11 @@ interface calICalendar : nsISupports
    *                                            iTIP message as outdated
    *   [nsIMsgIdentity] imip.identity        If provided, this is the email identity used for
    *                                           scheduling purposes
+   *   [boolean] imip.identity.disabled      If true, this calendar doesn't support switching imip
+   *                                           identities. This for example means that the
+   *                                           dropdown of identities will not be shown in the
+   *                                           calendar properties dialog. (transient)
+   *                                           scheduling purposes
    *   [nsIMsgAccount] imip.account          If provided, this is the email account used for
    *                                           scheduling purposes
    *   [string] imip.identity.key            If provided, this is the email internal identity key used to

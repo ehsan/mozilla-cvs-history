@@ -272,6 +272,10 @@ calGoogleCalendar.prototype = {
                 // not be included in the list of calendars to accept
                 // invitations to and imip will effectively be disabled.
                 return null;
+            case "imip.identity.disabled":
+                // Disabling this hides the picker for identities in the new
+                // calendar wizard and calendar properties dialog.
+                return true;
         }
 
         return this.__proto__.__proto__.getProperty.apply(this, arguments);

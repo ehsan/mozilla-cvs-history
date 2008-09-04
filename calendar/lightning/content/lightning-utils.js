@@ -71,62 +71,54 @@ function ltnGetString(aBundleName, aStringName, aParams) {
 
 // shared by lightning-calendar-properties.js and lightning-calendar-creation.js:
 function ltnInitMailIdentitiesRow() {
-    if (gCalendar) {
-        // in case user steps back and firth in wizard on different types
-        uncollapseElement("calendar-email-identity-row");
-        var hasTransport = (gCalendar.getProperty("itip.transport") != null);
-
-        setElementValue("email-identity-menulist",
-                        !hasTransport && "true",
-                        "hidden");
-        setElementValue("email-identity-label",
-                        hasTransport && "true",
-                        "hidden");
-
-        if (gCalendar.getProperty("itip.transport")) {
-            var menuPopup = document.getElementById("email-identity-menupopup");
-            addMenuItem(menuPopup, ltnGetString("lightning", "imipNoIdentity"), "none");
-            var identities = getAccountManager().allIdentities;
-            for (var i = 0; i <  identities.Count(); ++i) {
-                var identity = identities.GetElementAt(i)
-                                         .QueryInterface(Components.interfaces.nsIMsgIdentity);
-                addMenuItem(menuPopup, identity.identityName, identity.key);
-            }
-            try {
-                var sel = gCalendar.getProperty("imip.identity");
-                if (sel) {
-                    sel = sel.QueryInterface(Components.interfaces.nsIMsgIdentity);
-                }
-                menuListSelectItem("email-identity-menulist", sel ? sel.key : "none");
-            } catch (exc) {
-            }
-        } else {
-            // No transport, therefore we can just show the label with the
-            // organizerId and common name. Use an attendee object so we don't
-            // have to duplicate code to compose the string.
-            var organizer = createAttendee();
-            organizer.id = gCalendar.getProperty("organizerId");
-            organizer.commonName = gCalendar.getProperty("organizerCN");
-            if (organizer.id) {
-                setElementValue("email-identity-label", organizer.toString());
-            } else {
-                collapseElement("calendar-email-identity-row");
-            }
-        }
-    } else {
+    if (!gCalendar) {
         collapseElement("calendar-email-identity-row");
+    }
+
+    var imipIdentityDisabled = gCalendar.getProperty("imip.identity.disabled");
+    setElementValue("calendar-email-identity-row",
+                    imipIdentityDisabled && "true",
+                    "collapsed");
+
+    if (imipIdentityDisabled) {
+        // If the imip identity is disabled, we don't have to set up the
+        // menulist.
+        return;
+    }
+
+    // If there is no transport but also no organizer id, then the
+    // provider has not statically configured an organizer id. This is
+    // basically what happens when "None" is selected. Also, if there is
+    // a transport, 
+    var menuPopup = document.getElementById("email-identity-menupopup");
+    addMenuItem(menuPopup, ltnGetString("lightning", "imipNoIdentity"), "none");
+    var identities = getAccountManager().allIdentities;
+    for (var i = 0; i <  identities.Count(); ++i) {
+        var identity = identities.GetElementAt(i)
+                                 .QueryInterface(Components.interfaces.nsIMsgIdentity);
+        addMenuItem(menuPopup, identity.identityName, identity.key);
+    }
+    try {
+        var sel = gCalendar.getProperty("imip.identity");
+        if (sel) {
+            sel = sel.QueryInterface(Components.interfaces.nsIMsgIdentity);
+        }
+        menuListSelectItem("email-identity-menulist", sel ? sel.key : "none");
+    } catch (exc) {
     }
 }
 
 function ltnSaveMailIdentitySelection() {
-    if (gCalendar) {
-        var sel = "none";
-        var selItem = document.getElementById("email-identity-menulist").selectedItem;
-        if (selItem) {
-            sel = selItem.getAttribute("value");
-        }
-        // no imip.identity.key will default to the default account/identity, whereas
-        // an empty key indicates no imip; that identity will not be found
-        gCalendar.setProperty("imip.identity.key", sel == "none" ? "" : sel);
+    if (!gCalendar) {
+        return;
     }
+    var sel = "none";
+    var imipIdentityDisabled = gCalendar.getProperty("imip.identity.disabled");
+    var selItem = document.getElementById("email-identity-menulist").selectedItem;
+    if (!imipIdentityDisabled && selItem) {
+        sel = selItem.getAttribute("value");
+    }
+    // no imip.identity.key will default to the default account/identity, whereas
+    // an empty key indicates no imip; that identity will not be found
+    gCalendar.setProperty("imip.identity.key", sel == "none" ? "" : sel);
 }

@@ -117,7 +117,7 @@ function calProviderBase() {
 calProviderBase.mTransientProperties = {};
 ["cache.uncachedCalendar", "currentStatus",
  "itip.transport", "imip.identity", "imip.account",
- "organizerId", "organizerCN"].forEach(
+ "imip.identity.disabled", "organizerId", "organizerCN"].forEach(
     function(prop) {
         calProviderBase.mTransientProperties[prop] = true;
     });

@@ -56,13 +56,9 @@
          insertafter="customize-suppressAlarms-row">
       <label value="&lightning.calendarproperties.email.label;"
              control="email-identity-menulist"/>
-      <box>
-        <menulist id="email-identity-menulist">
-          <menupopup id="email-identity-menupopup"/>
-        </menulist>
-        <label id="email-identity-label"/>
-      </box>
+      <menulist id="email-identity-menulist">
+        <menupopup id="email-identity-menupopup"/>
+      </menulist>
     </row>
   </rows>
-
 </overlay>
