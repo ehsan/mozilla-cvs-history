@@ -77,6 +77,7 @@
 
     // Create the text column (only one).
     NSTableColumn* column = [[[NSTableColumn alloc] initWithIdentifier:@"usernames"] autorelease];
+    [column setEditable:NO];
     [mTableView addTableColumn:column];
 
     // Hide the table header.

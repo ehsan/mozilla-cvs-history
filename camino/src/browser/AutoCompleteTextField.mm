@@ -383,6 +383,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
     [column setWidth:[mProxyIcon frame].origin.x + [mProxyIcon frame].size.width];
     dataCell = [[[NSImageCell alloc] initImageCell:nil] autorelease];
     [column setDataCell:dataCell];
+    [column setEditable:NO];
     [mTableView addTableColumn: column];
   }
   
@@ -408,9 +409,11 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 
   // create the text columns
   column = [[[NSTableColumn alloc] initWithIdentifier:@"col1"] autorelease];
+  [column setEditable:NO];
   [mTableView addTableColumn: column];
   column = [[[NSTableColumn alloc] initWithIdentifier:@"col2"] autorelease];
   [[column dataCell] setTextColor:[NSColor darkGrayColor]];
+  [column setEditable:NO];
   [mTableView addTableColumn: column];
 
   // hide the table header
