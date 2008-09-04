@@ -88,23 +88,22 @@ function onLoad() {
    onload = "onLoad()"
 %]
 
-<p>This is Hendrix - the mozilla.org system for leaving quick feedback on and suggestions for our products. </p>
+<p style="text-align: center; color: darkred">
+<b>Please accept our thanks, but do not expect a response to feedback sumitted here.</b></p>
 
 <fieldset>
   <legend>Other Options</legend>
   <ul>
-  <li><b>Need help or support?</b> 
+  <li><b>Need support?</b> 
       <a href="http://www.mozilla.org/support/">Go here</a>
-  <li><b>Broken website in Firefox?</b> 
-      Pull down the Help menu and select "Report Broken Web Site"
+  <li><b>Broken website?</b> 
+      Pull down the Help menu in Firefox and select "Report Broken Web Site"
   <li><b>Specific and detailed bug report?</b> 
       <a href="https://bugzilla.mozilla.org/enter_bug.cgi">Go here</a>
   </ul>
 </fieldset>
 
-<p>
-Information from this form will be published to a newsgroup or mailing list so project contributors can read it. <b>Do not submit private information.</b> Your email address will be obfuscated to make life difficult for spammers.
-</p>
+<br>
 
 <form id="feedback-form" method="POST">
   <table id="feedback-table">
@@ -147,7 +146,7 @@ Information from this form will be published to a newsgroup or mailing list so p
     </tr>
     <tr>
       <td class="label">
-        Detailed Comments: 
+        Detailed Feedback: 
       </td>
       <td class="widget">
         <textarea id="comments" name="comments" wrap="hard" cols="72"
@@ -183,6 +182,8 @@ Information from this form will be published to a newsgroup or mailing list so p
   <input type="hidden" name="action" value="submit"/>  
 </form>
 
-<p>Due to the number of suggestions and comments that are received, you should not expect a direct response. But your views are important to us, so please do let us know what you think.</p>
+<p>
+Information submitted here will be publicly-readable. <b>Do not submit private information.</b> Your email address will be obfuscated to make life difficult for spammers.
+</p>
 
 [% PROCESS footer.html.tmpl %]

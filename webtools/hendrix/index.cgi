@@ -44,7 +44,7 @@ my $STATIC_CAPTCHA_RESULT = "7";
 my %product_destination_map = (
 	"Firefox"                       => "mozilla.feedback.firefox",
 	"Firefox Release Candidate"     => "mozilla.feedback.firefox.prerelease",
-	"Gran Paradiso"                 => "mozilla.feedback.firefox.prerelease",
+	"Shiretoko"                     => "mozilla.feedback.firefox.prerelease",
 	"Minefield"                     => "mozilla.feedback",
 	"Thunderbird"                   => "mozilla.feedback.thunderbird",
 	"Thunderbird Release Candidate" => "mozilla.feedback.thunderbird.prerelease",
@@ -60,7 +60,7 @@ my %product_destination_map = (
 # List of products to show on the main Hendrix page (in order)
 my @products_list = (
 	"Firefox", "Firefox Release Candidate", "Thunderbird", 
-  "Thunderbird Release Candidate", "Gran Paradiso", "Minefield", 
+  "Thunderbird Release Candidate", "Shiretoko", "Minefield", 
   "Camino", "SeaMonkey", "Mozilla Suite", "Sunbird", 
 	"Developer Center", "Other"
 );
