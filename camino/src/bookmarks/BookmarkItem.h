@@ -135,7 +135,6 @@ enum
 - (void)removeBookmarksMetadataFromPath:(NSString*)inPath;
 - (NSDictionary *)writeNativeDictionary;
 - (NSDictionary *)writeSafariDictionary;
-- (NSString *)writeHTML:(unsigned)aPad;
 
 // methods used for saving to files; are guaranteed never to return nil
 - (id)savedTitle;

@@ -60,6 +60,7 @@ enum {
   NSString*       mIdentifier;    // only non-nil for "special" collection folders. not saved (yet)
 }
 
++ (id)bookmarkFolderWithTitle:(NSString*)title;
 - (id)init;   // designated initializer
 - (id)initWithIdentifier:(NSString*)inIdentifier; // will get used for special folders
 

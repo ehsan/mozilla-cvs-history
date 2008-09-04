@@ -65,6 +65,8 @@
 #import "MainController.h"
 #import "SiteIconProvider.h"
 
+#import "HTMLBookmarkConverter.h"
+
 NSString* const kBookmarkManagerStartedNotification = @"BookmarkManagerStartedNotification";
 
 // root bookmark folder identifiers (must be unique!)
@@ -1493,6 +1495,9 @@ static BookmarkManager* gBookmarkManager = nil;
     if (!importFolder)
       importFolder = [[BookmarkFolder alloc] init];
 
+    // TODO: Once Opera and Plist importing have been moved to the new style,
+    // reorganize this loop not to have importFolder and eliminate the
+    // intermediate import*File:intoFolder: methods.
     NSString *extension = [[pathToFile pathExtension] lowercaseString];
     if ([extension isEqualToString:@""]) // we'll go out on a limb here
       success = [self readOperaFile:pathToFile intoFolder:importFolder];
@@ -1624,200 +1629,18 @@ static BookmarkManager* gBookmarkManager = nil;
 
 - (BOOL)importHTMLFile:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder
 {
-  // get file as NSString
-  NSString* fileAsString = [self decodedTextFile:pathToFile];
-  if (!fileAsString) {
-    NSLog(@"couldn't read file. bailing out");
+  BookmarkItem* importRoot = [[HTMLBookmarkConverter htmlBookmarkConverter] bookmarksFromFile:pathToFile];
+  if (!importRoot)
     return NO;
-  }
-  // Set up to scan the bookmark file
-  NSScanner *fileScanner = [[NSScanner alloc] initWithString:fileAsString];
-  [fileScanner setCharactersToBeSkipped:nil];
-  BOOL isNetscape = YES;
-  // See if it's a netscape/IE style bookmark file, or omniweb
-  NSRange aRange = [fileAsString rangeOfString:@"<!DOCTYPE NETSCAPE-Bookmark-file-1>" options:NSCaseInsensitiveSearch];
-  if (aRange.location != NSNotFound) {
-    // netscape/IE setup - start after Title attribute
-    [fileScanner scanUpToString:@"</TITLE>" intoString:NULL];
-    [fileScanner setScanLocation:([fileScanner scanLocation] + 7)];
+  if ([importRoot isKindOfClass:[BookmarkFolder class]]) {
+    NSEnumerator* importEnumerator = [[(BookmarkFolder*)importRoot children] objectEnumerator];
+    BookmarkItem* item;
+    while ((item = [importEnumerator nextObject]))
+      [aFolder appendChild:item];
   }
   else {
-    isNetscape = NO;
-    aRange = [fileAsString rangeOfString:@"<bookmarkInfo" options:NSCaseInsensitiveSearch];
-    if (aRange.location != NSNotFound)
-      // omniweb setup - start at <bookmarkInfo
-      [fileScanner scanUpToString:@"<bookmarkInfo" intoString:NULL];
-    else {
-      NSLog(@"Unrecognized style of Bookmark File. Read fails.");
-      [fileScanner release];
-      return NO;
-    }
+    [aFolder appendChild:importRoot];
   }
-  BookmarkFolder *currentArray = aFolder;
-  BookmarkItem *currentItem = nil;
-  NSScanner *tokenScanner = nil;
-  NSString *tokenTag = nil, *tokenString = nil, *tempItem = nil;
-  unsigned long scanIndex = 0;
-  NSRange tempRange, keyRange;
-  BOOL justSetTitle = NO;
-  // Scan through file.  As we find a token, do something useful with it.
-  while (![fileScanner isAtEnd]) {
-    [fileScanner scanUpToString:@"<" intoString:&tokenString];
-    scanIndex = [fileScanner scanLocation];
-    if ((scanIndex + 3) < [fileAsString length]) {
-      tokenTag = [[NSString alloc] initWithString:[[fileAsString substringWithRange:NSMakeRange(scanIndex, 3)] uppercaseString]];
-      // now we pick out if it's something we want to save.
-      // check in a "most likely thing first" order
-      if ([tokenTag isEqualToString:@"<DT "]) {
-        [fileScanner setScanLocation:(scanIndex + 1)];
-      }
-      else if ([tokenTag isEqualToString:@"<P>"]) {
-        [fileScanner setScanLocation:(scanIndex + 1)];
-      }
-      else if ([tokenTag isEqualToString:@"<A "]) {
-        // adding a new bookmark to end of currentArray.
-        [fileScanner scanUpToString:@"</A>" intoString:&tokenString];  // fileScanner contains <A HREF="[URL]">[TITLE]</A>
-        tokenScanner = [[NSScanner alloc] initWithString:tokenString];
-        [tokenScanner scanUpToString:@"href=\"" intoString:nil];  // tokenScanner now contains HREF="[URL]">[TITLE]
-        // check for a menu spacer, which will look like this: HREF="">&lt;Menu Spacer&gt; (bug 309008)
-        if (![tokenScanner isAtEnd] && [[tokenString substringFromIndex:([tokenScanner scanLocation] + 8)] isEqualToString:@"&lt;Menu Spacer&gt;"])  {
-          currentItem = [Bookmark separator];
-          [currentArray appendChild:currentItem];
-          [tokenScanner release];
-          [tokenTag release];
-          [fileScanner setScanLocation:([fileScanner scanLocation] + 1)];
-          continue;
-        }
-        if (![tokenScanner isAtEnd]) {
-          [tokenScanner setScanLocation:([tokenScanner scanLocation] + 6)];
-          [tokenScanner scanUpToString:@"\"" intoString:&tempItem];
-          if ([tokenScanner isAtEnd]) {
-            // we scanned up to the </A> but didn't find a " character ending the HREF. This is probably
-            // because we're scanning a bookmarklet that contains an embedded <A></A> so we're in the
-            // middle of the string. Just bail and don't import this bookmark. The parser should be able
-            // to recover on its own once it gets to the next "<A" token.
-            [tokenScanner release];
-            [tokenTag release];
-            [fileScanner setScanLocation:([fileScanner scanLocation] + 1)];
-            continue;
-          }
-          NSString* url = [tempItem stringByRemovingAmpEscapes];
-          NSString* title = nil;
-          [tokenScanner scanUpToString:@">" intoString:&tempItem];
-          if (![tokenScanner isAtEnd]) {     // protect against malformed files
-            title = [[tokenString substringFromIndex:([tokenScanner scanLocation] + 1)] stringByRemovingAmpEscapes];
-            justSetTitle = YES;
-          }
-          currentItem = [Bookmark bookmarkWithTitle:title
-                                                url:url
-                                          lastVisit:nil];
-          [currentArray appendChild:currentItem];
-          // see if we had a shortcut
-          if (isNetscape) {
-            tempRange = [tempItem rangeOfString:@"SHORTCUTURL=\"" options:NSCaseInsensitiveSearch];
-            if (tempRange.location != NSNotFound) {
-              // throw everything to next " into shortcut. A malformed bookmark might not have a closing " which
-              // will throw things out of whack slightly, but it's better than crashing.
-              keyRange = [tempItem rangeOfString:@"\"" options:0 range:NSMakeRange(tempRange.location + tempRange.length, [tempItem length] - (tempRange.location + tempRange.length))];
-              if (keyRange.location != NSNotFound)
-                [currentItem setShortcut:[tempItem substringWithRange:NSMakeRange(tempRange.location + tempRange.length, keyRange.location - (tempRange.location + tempRange.length))]];
-            }
-          }
-        }
-        [tokenScanner release];
-        [fileScanner setScanLocation:([fileScanner scanLocation] + 1)];
-      }
-      else if ([tokenTag isEqualToString:@"<DD"]) {
-        // add a description to current item
-        [fileScanner scanUpToString:@">" intoString:NULL];
-        [fileScanner setScanLocation:([fileScanner scanLocation] + 1)];
-        [fileScanner scanUpToString:@"<" intoString:&tokenString];
-        [currentItem setItemDescription:[tokenString stringByRemovingAmpEscapes]];
-        justSetTitle = NO;
-      }
-      else if ([tokenTag isEqualToString:@"<H3"]) {
-        [fileScanner scanUpToString:@"</H3>" intoString:&tokenString];
-        currentItem = [currentArray addBookmarkFolder];
-        currentArray = (BookmarkFolder *)currentItem;
-        tokenScanner = [[NSScanner alloc] initWithString:tokenString];
-        if (isNetscape) {
-          [tokenScanner scanUpToString:@">" intoString:&tempItem];
-          [currentItem setTitle:[[tokenString substringFromIndex:([tokenScanner scanLocation] + 1)] stringByRemovingAmpEscapes]];
-          // check for group
-          tempRange = [tempItem rangeOfString:@"FOLDER_GROUP=\"true\"" options:NSCaseInsensitiveSearch];
-          if (tempRange.location != NSNotFound)
-            [(BookmarkFolder *)currentItem setIsGroup:YES];
-        }
-        else {
-          // have to do this in chunks to handle omniweb 5
-          [tokenScanner scanUpToString:@"<a" intoString:NULL];
-          [tokenScanner scanUpToString:@">" intoString:NULL];
-          [tokenScanner setScanLocation:([tokenScanner scanLocation] + 1)];
-          [tokenScanner scanUpToString:@"</a>" intoString:&tempItem];
-          [currentItem setTitle:[tempItem stringByRemovingAmpEscapes]];
-        }
-        [tokenScanner release];
-        [fileScanner setScanLocation:([fileScanner scanLocation] + 1)];
-      }
-      else if ([tokenTag isEqualToString:@"<DL"]) {
-        [fileScanner setScanLocation:(scanIndex + 1)];
-      }
-      else if ([tokenTag isEqualToString:@"</D"]) {
-        // note that we only scan for the first two characters of a tag
-        // that is why this tag is "</D" and not "</DL"
-        currentArray = (BookmarkFolder *)[currentArray parent];
-        [fileScanner setScanLocation:(scanIndex + 1)];
-      }
-      else if ([tokenTag isEqualToString:@"<H1"]) {
-        [fileScanner scanUpToString:@">" intoString:NULL];
-        [fileScanner scanUpToString:@"</H1>" intoString:NULL];
-        [fileScanner setScanLocation:([fileScanner scanLocation] + 1)];
-      }
-      else if ([tokenTag isEqualToString:@"<BO"]) {
-        //omniweb bookmark marker, no doubt
-        [fileScanner scanUpToString:@">" intoString:NULL];
-        [fileScanner setScanLocation:([fileScanner scanLocation] + 1)];
-      }
-      else if ([tokenTag isEqualToString:@"</A"]) {
-        // some smartass has a description with </A in its title. Probably uses </H's, too.  Dork.
-        // It will be just what was added, so append to string of last key.
-        // This this can only happen on older Camino html exports.
-        tempItem = [NSString stringWithString:[@"<" stringByAppendingString:[tokenString stringByRemovingAmpEscapes]]];
-        if (justSetTitle)
-          [currentItem setTitle:[[currentItem title] stringByAppendingString:tempItem]];
-        else
-          [currentItem setItemDescription:[[currentItem itemDescription] stringByAppendingString:tempItem]];
-        [fileScanner setScanLocation:(scanIndex + 1)];
-      }
-      else if ([tokenTag isEqualToString:@"</H"]) {
-        // if it's not html, we'll include in previous text string
-        tempItem = [[NSString alloc] initWithString:[fileAsString substringWithRange:NSMakeRange(scanIndex, 1)]];
-        if (([tempItem isEqualToString:@"</HT"]) || ([tempItem isEqualToString:@"</ht"]))
-          [fileScanner scanUpToString:@">" intoString:NULL];
-        else {
-          [tempItem release];
-          tempItem = [[NSString alloc] initWithString:[@"<" stringByAppendingString:[tokenString stringByRemovingAmpEscapes]]];
-          if (justSetTitle)
-            [currentItem setTitle:[[currentItem title] stringByAppendingString:tempItem]];
-          else
-            [currentItem setItemDescription:[[currentItem itemDescription] stringByAppendingString:tempItem]];
-          [fileScanner setScanLocation:([fileScanner scanLocation] + 1)];
-        }
-        [tempItem release];
-      }
-      // Firefox menu separator
-      else if ([tokenTag isEqualToString:@"<HR"]) {
-        currentItem = [Bookmark separator];
-        [currentArray appendChild:currentItem];
-        [fileScanner setScanLocation:(scanIndex + 1)];
-      }
-      else { //beats me.  just close the tag out and continue.
-        [fileScanner scanUpToString:@">" intoString:NULL];
-      }
-      [tokenTag release];
-    }
-  }
-  [fileScanner release];
   return YES;
 }
 
@@ -1915,9 +1738,8 @@ static BookmarkManager* gBookmarkManager = nil;
 
 - (void)writeHTMLFile:(NSString *)pathToFile
 {
-  NSData *htmlData = [[[self bookmarkRoot] writeHTML:0] dataUsingEncoding:NSUTF8StringEncoding];
-  if (![htmlData writeToFile:[pathToFile stringByStandardizingPath] atomically:YES])
-    NSLog(@"writeHTML: Failed to write file %@", pathToFile);
+  [[HTMLBookmarkConverter htmlBookmarkConverter] writeBookmarks:[self bookmarkRoot]
+                                                        toFile:pathToFile];
 }
 
 - (void)writeSafariFile:(NSString *)pathToFile

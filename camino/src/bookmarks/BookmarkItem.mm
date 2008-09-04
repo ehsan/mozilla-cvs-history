@@ -378,11 +378,6 @@ NSString* const SafariURLStringKey = @"URLString";
   return [NSDictionary dictionary];
 }
 
-- (NSString *)writeHTML:(unsigned)aPad
-{
-  return @"";
-}
-
 - (id)savedTitle
 {
   return mTitle ? mTitle : @"";

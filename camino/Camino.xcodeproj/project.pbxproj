@@ -225,6 +225,8 @@
 		3312BF460C84C35C000E6965 /* arrowd.gif in Copy Gecko Resources */ = {isa = PBXBuildFile; fileRef = 3312BF350C84C2B4000E6965 /* arrowd.gif */; };
 		3316F44A0D11F1900025ED19 /* TabButtonView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3316F4480D11F1900025ED19 /* TabButtonView.mm */; };
 		3316F44C0D11F1900025ED19 /* TabButtonView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3316F4480D11F1900025ED19 /* TabButtonView.mm */; };
+		336234480E6BC2FB00DD5373 /* HTMLBookmarkConverter.m in Sources */ = {isa = PBXBuildFile; fileRef = 336234470E6BC2FB00DD5373 /* HTMLBookmarkConverter.m */; };
+		336234490E6BC2FB00DD5373 /* HTMLBookmarkConverter.m in Sources */ = {isa = PBXBuildFile; fileRef = 336234470E6BC2FB00DD5373 /* HTMLBookmarkConverter.m */; };
 		337F2BA50CA200D100572F7D /* ContentDispatchChooser.mm in Sources */ = {isa = PBXBuildFile; fileRef = 337F2BA30CA200D100572F7D /* ContentDispatchChooser.mm */; };
 		337F2BA70CA200D100572F7D /* ContentDispatchChooser.mm in Sources */ = {isa = PBXBuildFile; fileRef = 337F2BA30CA200D100572F7D /* ContentDispatchChooser.mm */; };
 		33819AD70D938A3B00CA9F52 /* GeckoPrefConstants.mm in Sources */ = {isa = PBXBuildFile; fileRef = 33819AD30D938A2D00CA9F52 /* GeckoPrefConstants.mm */; };
@@ -2341,6 +2343,8 @@
 		335639120C84DBDA00DC4D06 /* CertificatesWindowController.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = CertificatesWindowController.h; path = src/security/CertificatesWindowController.h; sourceTree = "<group>"; };
 		335639130C84DBDA00DC4D06 /* CertificateView.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = CertificateView.h; path = src/security/CertificateView.h; sourceTree = "<group>"; };
 		335639140C84DBDA00DC4D06 /* ViewCertificateDialogController.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ViewCertificateDialogController.h; path = src/security/ViewCertificateDialogController.h; sourceTree = "<group>"; };
+		336234460E6BC2FB00DD5373 /* HTMLBookmarkConverter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HTMLBookmarkConverter.h; path = src/bookmarks/HTMLBookmarkConverter.h; sourceTree = "<group>"; };
+		336234470E6BC2FB00DD5373 /* HTMLBookmarkConverter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = HTMLBookmarkConverter.m; path = src/bookmarks/HTMLBookmarkConverter.m; sourceTree = "<group>"; };
 		337F2BA20CA200D100572F7D /* ContentDispatchChooser.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ContentDispatchChooser.h; path = src/browser/ContentDispatchChooser.h; sourceTree = "<group>"; };
 		337F2BA30CA200D100572F7D /* ContentDispatchChooser.mm */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.objcpp; name = ContentDispatchChooser.mm; path = src/browser/ContentDispatchChooser.mm; sourceTree = "<group>"; };
 		33819AD20D938A2D00CA9F52 /* GeckoPrefConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GeckoPrefConstants.h; path = src/preferences/GeckoPrefConstants.h; sourceTree = "<group>"; };
@@ -3729,6 +3733,15 @@
 			name = "Backend Components";
 			sourceTree = "<group>";
 		};
+		336234450E6BC2C700DD5373 /* Import and Export */ = {
+			isa = PBXGroup;
+			children = (
+				336234460E6BC2FB00DD5373 /* HTMLBookmarkConverter.h */,
+				336234470E6BC2FB00DD5373 /* HTMLBookmarkConverter.m */,
+			);
+			name = "Import and Export";
+			sourceTree = "<group>";
+		};
 		3FBDC7D608252CD600D7F8E0 /* Form Fill */ = {
 			isa = PBXGroup;
 			children = (
@@ -4448,6 +4461,7 @@
 				3FB2BA8D0545EA80002B9691 /* BookmarksClient.h */,
 				335639B10C84E60D00DC4D06 /* UI */,
 				335639AF0C84E59700DC4D06 /* Backend */,
+				336234450E6BC2C700DD5373 /* Import and Export */,
 			);
 			name = Bookmarks;
 			sourceTree = "<group>";
@@ -5536,6 +5550,7 @@
 				001D4A270D75B0B100464BE4 /* MoveCommand.mm in Sources */,
 				33819AD70D938A3B00CA9F52 /* GeckoPrefConstants.mm in Sources */,
 				0095FACA0D9C99880039B3D8 /* CHBrowserView+Spelling.mm in Sources */,
+				336234490E6BC2FB00DD5373 /* HTMLBookmarkConverter.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5717,6 +5732,7 @@
 				001D4A260D75B0B100464BE4 /* MoveCommand.mm in Sources */,
 				33819AD80D938A3B00CA9F52 /* GeckoPrefConstants.mm in Sources */,
 				0095FAC90D9C99880039B3D8 /* CHBrowserView+Spelling.mm in Sources */,
+				336234480E6BC2FB00DD5373 /* HTMLBookmarkConverter.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

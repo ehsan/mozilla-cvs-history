@@ -210,6 +210,13 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
 
 @implementation BookmarkFolder
 
++ (id)bookmarkFolderWithTitle:(NSString*)title
+{
+  BookmarkFolder* folder = [[[self alloc] init] autorelease];
+  [folder setTitle:title];
+  return folder;
+}
+
 - (id)init
 {
   if ((self = [super init])) {
@@ -1269,8 +1276,8 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
     NSString *SafariProxyType = @"WebBookmarkTypeProxy";
     if ([[BookmarkManager sharedBookmarkManager] rendezvousFolder] == self) {
       return [NSDictionary dictionaryWithObjectsAndKeys:
-        @"Rendezvous", BMTitleKey,
-        @"Rendezvous Bookmark Proxy Identifier", SafariProxyKey,
+        @"Bonjour", BMTitleKey,
+        @"Bonjour Bookmark Proxy Identifier", SafariProxyKey,
         SafariProxyType, SafariTypeKey,
         [self UUID], SafariUUIDKey,
         nil];
@@ -1293,48 +1300,6 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
     }
   }
   return nil;
-}
-
-- (NSString *)writeHTML:(unsigned)aPad
-{
-  id item = nil;
-  NSString* htmlString = nil;
-
-  NSMutableString *padString = [NSMutableString string];
-  for (unsigned i = 0; i < aPad; i++)
-    [padString insertString:@"    " atIndex:0];
-
-  // Normal folders
-  if ((![self isToolbar] && ![self isRoot] && ![self isSmartFolder])) {
-    NSString *formatString;
-    if ([self isGroup])
-      formatString = @"%@<DT><H3 FOLDER_GROUP=\"true\">%@</H3>\n%@<DL><p>\n";
-    else
-      formatString = @"%@<DT><H3>%@</H3>\n%@<DL><p>\n";
-    htmlString = [NSString stringWithFormat:formatString, padString, [mTitle stringByAddingAmpEscapes], padString];
-  }
-  // Toolbar Folder
-  else if ([self isToolbar])
-    htmlString = [NSString stringWithFormat:@"%@<DT><H3 PERSONAL_TOOLBAR_FOLDER=\"true\">%@</H3>\n%@<DL><p>\n",
-      padString,
-      [mTitle stringByAddingAmpEscapes],
-      padString];
-  // Root Folder
-  else if ([self isRoot])
-    htmlString = [NSString stringWithFormat:@"%@\n%@\n%@\n%@\n\n<DL><p>\n",
-      @"<!DOCTYPE NETSCAPE-Bookmark-file-1>",
-      @"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=UTF-8\">",
-      @"<TITLE>Bookmarks</TITLE>",
-      @"<H1>Bookmarks</H1>"];
-   // Folder-Not-Appearing-In-This-File Folder (ie, smart folders)
-   else if ([self isSmartFolder])
-     return @"";
-
-  NSEnumerator* enumerator = [mChildArray objectEnumerator];
-  //get chillins first
-  while ((item = [enumerator nextObject]))
-    htmlString = [htmlString stringByAppendingString:[item writeHTML:(aPad + 1)]];
-  return [htmlString stringByAppendingString:[NSString stringWithFormat:@"%@</DL><p>\n", padString]];
 }
 
 @end
