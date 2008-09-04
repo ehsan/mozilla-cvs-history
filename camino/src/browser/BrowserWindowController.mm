@@ -76,6 +76,7 @@
 #import "DraggableImageAndTextCell.h"
 #import "MVPreferencesController.h"
 #import "ViewCertificateDialogController.h"
+#import "BrowserSecurityDialogs.h"
 #import "ExtendedSplitView.h"
 #import "WebSearchField.h"
 #import "wallet.h"
@@ -2179,6 +2180,33 @@ public:
     [feedServController showFeedWillOpenDialog:[self window]  feedURI:[sender representedObject]];
   else
     [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:[sender representedObject]]];
+}
+
+- (void)addCertificateOverrideForSite:(NSString*)uri
+{
+  NSURL* url = [NSURL URLWithString:uri];
+  if (!url) {
+    NSBeep();
+    return;
+  }
+
+  // Retain the controller across the lifetime of the sheet; it's released
+  // in certOverride:finishedWithResult:
+  InvalidCertOverrideDialogController* certDialogController =
+    [[[BrowserSecurityUIProvider sharedBrowserSecurityUIProvider] invalidCertOverrideDialogController] retain];
+  if (certDialogController)
+    [certDialogController showWithSourceURL:url parentWindow:[self window] delegate:self];
+  else
+    NSBeep();
+}
+
+- (void)certOverride:(InvalidCertOverrideDialogController*)certDialogController
+  finishedWithResult:(BOOL)didAddOverride
+{
+  [certDialogController release];
+
+  if (didAddOverride)
+    [self reload:self];
 }
 
 - (void)showSecurityState:(unsigned long)state

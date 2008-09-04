@@ -41,12 +41,11 @@
 class nsIX509Cert;
 
 @class DownloadCACertDialogController;
-@class MismatchedCertDomainDialogController;
-@class UnknownCertIssuerDialogController;
-@class ExpiredCertDialogController;
+@class InvalidCertOverrideDialogController;
 @class CreatePasswordDialogController;
 @class GenKeyPairDialogController;
 @class ChooseCertDialogController;
+@class AutoSizingTextField;
 
 @interface BrowserSecurityUIProvider : NSObject
 {
@@ -57,9 +56,7 @@ class nsIX509Cert;
 
 // these dialog controllers are autoreleased. You should retain them while running the dialog.
 - (DownloadCACertDialogController*)downloadCACertDialogController;
-- (MismatchedCertDomainDialogController*)mismatchedCertDomainDialogController;
-- (UnknownCertIssuerDialogController*)unknownCertIssuerDialogController;
-- (ExpiredCertDialogController*)expiredCertDialogController;
+- (InvalidCertOverrideDialogController*)invalidCertOverrideDialogController;
 - (CreatePasswordDialogController*)createPasswordDialogController;
 - (GenKeyPairDialogController*)genKeyPairDialogController;
 - (ChooseCertDialogController*)chooseCertDialogController;
@@ -95,47 +92,30 @@ class nsIX509Cert;
 @end
 
 
-// this is really a misnomer. it's shown when a site presents a certificate
-// that is invalid or untrusted.
-@interface UnknownCertIssuerDialogController : CertificateDialogController
-{
-  IBOutlet NSTextField*       mTitleField;
-  IBOutlet NSTextField*       mMessageField;
-}
+// informal protocol implemented by delegates of InvalidCertOverrideDialogController
+@interface NSObject(InvalidCertOverrideDelegate)
 
-- (IBAction)onAcceptOneTime:(id)sender;
-- (IBAction)onAcceptAlways:(id)sender;
-- (IBAction)onStop:(id)sender;
+- (void)certOverride:(InvalidCertOverrideDialogController*)certDialogController
+  finishedWithResult:(BOOL)didAddOverride;
 
 @end
 
-
-@interface ExpiredCertDialogController : CertificateDialogController
+@interface InvalidCertOverrideDialogController : CertificateDialogController
 {
-  IBOutlet NSTextField*       mTitleField;
-  IBOutlet NSTextField*       mMessageField;
+  IBOutlet NSTextField*         mTitleField;
+  IBOutlet AutoSizingTextField* mMessageField;
+  NSString*                     mSourceHost;
+  int                           mSourcePort;
+  int                           mCertFailureFlags;
+  id                            mDelegate;      // weak
 }
 
-- (IBAction)onOK:(id)sender;
+// Shows an override dialog, then calls certOverride:finishedWithResult: on |delegate|
+- (void)showWithSourceURL:(NSURL*)url parentWindow:(NSWindow*)parent delegate:(id)delegate;
+
+- (IBAction)onTrust:(id)sender;
 - (IBAction)onCancel:(id)sender;
 
-
-@end
-
-@interface MismatchedCertDomainDialogController : CertificateDialogController
-{
-  IBOutlet NSTextField*       mMessageField;
-
-  NSString*                   mTargetURL;   // retained
-}
-
-- (IBAction)onOK:(id)sender;
-- (IBAction)onCancel:(id)sender;
-
-- (IBAction)viewCertificate:(id)sender;
-
-- (void)setCertificateItem:(CertificateItem*)inCert;
-- (void)setTargetURL:(NSString*)inTargetURL;
 
 @end
 

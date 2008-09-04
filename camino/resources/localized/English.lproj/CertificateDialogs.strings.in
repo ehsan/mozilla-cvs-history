@@ -95,16 +95,14 @@
 "CACertExistsMsg" = "Certificate Authority certificate has already been installed.";
 "CACertExistsDetail" = "You already have a certificate for this Certificate Authority, so there is no need to install it again.";
 
-/* Domain mismatch dialog */
-"DomainMistmatchMsgFormat" = "You have attempted to establish a connection with “%@”. However, the security certificate presented belongs to “%@”. It is possible, though unlikely, that someone may be trying to intercept your communication with this website.";
+/* Bad cert dialog */
+"InvalidCertTitleFormat" = "Add a security exception for “%@”?";
+"InvalidCertMessageFormat" = "The certificate for “%@” could not be verified; are you sure you want to trust it?";
+"MismatchedCertMessageFormat" = "This certificate is only valid for “%1$@”; are you sure you want to trust it for “%2$@”?";
+"ExpiredCertMessageFormat" = "The certificate for “%@” has expired; are you sure you want to trust it?";
 
-/* Unverifed cert dialog */
-"UnverifiedCertTitleFormat" = "Unable to verify the identity of “%@” as a trusted site";
-"UnverifiedCertMessageFormat" = "The certificate presented by this site could not be verified because its Certificate Authority is untrusted, the certificate is incomplete, or the site you are connecting is not %@.";
-
-/* Expired cert dialog */
-"ExpiredCertTitleFormat" = "The certificate for “%@” has expired";
-"ExpiredCertMessageFormat" = "The certificate for “%@” expired on “%@”, and is therefore invalid. Connecting to this site could put your personal information at risk.";
+"CertOverrideInfoMissingTitle" = "Certificate not found";
+"CertOverrideInfoMissingMessageFormat" = "The certificate information for “%@” could not be found. Please reload the page, then try adding the exception again.";
 
 /* Cert escrow dialog */
 "EscrowDialogTitleFormat" = "Allow Certificate Authority “%@” to store your private key?";

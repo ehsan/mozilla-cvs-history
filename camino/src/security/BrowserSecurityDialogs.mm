@@ -38,18 +38,25 @@
 
 #import "NSImage+Utils.h"
 #import "NSString+Utils.h"
+#import "NSString+Gecko.h"
 
 #import "nsCOMPtr.h"
 #import "nsString.h"
 
 #import "nsIX509Cert.h"
+#import "nsIRecentBadCertsService.h"
+#import "nsISSLStatus.h"
+#import "nsICertOverrideService.h"
+#import "nsServiceManagerUtils.h"
 
-
+#import "AutoSizingTextField.h"
 #import "CertificateItem.h"
 #import "CertificateView.h"
 #import "ViewCertificateDialogController.h"
 #import "BrowserSecurityDialogs.h"
 
+
+static const int kDefaultHTTPSPort = 443;
 
 #pragma mark BrowserSecurityUIProvider
 #pragma mark -
@@ -94,21 +101,9 @@ static BrowserSecurityUIProvider* gBrowserSecurityUIProvider;
   return [dialogController autorelease];
 }
 
-- (MismatchedCertDomainDialogController*)mismatchedCertDomainDialogController
+- (InvalidCertOverrideDialogController*)invalidCertOverrideDialogController
 {
-  MismatchedCertDomainDialogController* dialogController = [[MismatchedCertDomainDialogController alloc] initWithWindowNibName:@"MismatchedCertDomainDialog"];
-  return [dialogController autorelease];
-}
-
-- (UnknownCertIssuerDialogController*)unknownCertIssuerDialogController
-{
-  UnknownCertIssuerDialogController* dialogController = [[UnknownCertIssuerDialogController alloc] initWithWindowNibName:@"UnknownCertIssuerDialog"];
-  return [dialogController autorelease];
-}
-
-- (ExpiredCertDialogController*)expiredCertDialogController
-{
-  ExpiredCertDialogController* dialogController = [[ExpiredCertDialogController alloc] initWithWindowNibName:@"ExpiredCertDialog"];
+  InvalidCertOverrideDialogController* dialogController = [[InvalidCertOverrideDialogController alloc] initWithWindowNibName:@"InvalidCertOverrideDialog"];
   return [dialogController autorelease];
 }
 
@@ -219,162 +214,168 @@ static BrowserSecurityUIProvider* gBrowserSecurityUIProvider;
 
 @end
 
-#pragma mark -
-#pragma mark UnknownCertIssuerDialogController
-#pragma mark -
-
-
-@implementation UnknownCertIssuerDialogController
-
-- (IBAction)onAcceptOneTime:(id)sender
-{
-  [NSApp stopModalWithCode:NSAlertDefaultReturn];
-  [[self window] orderOut:nil];
-}
-
-- (IBAction)onAcceptAlways:(id)sender
-{
-  [NSApp stopModalWithCode:NSAlertOtherReturn];
-  [[self window] orderOut:nil];
-}
-
-- (IBAction)onStop:(id)sender
-{
-  [NSApp stopModalWithCode:NSAlertAlternateReturn];
-  [[self window] orderOut:nil];
-}
-
-- (void)setCertificateItem:(CertificateItem*)inCert
-{
-  [self window];    // ensure window visible
-
-  NSString* titleFormat = NSLocalizedStringFromTable(@"UnverifiedCertTitleFormat", @"CertificateDialogs", @"");
-  NSString* title = [NSString stringWithFormat:titleFormat, [inCert commonName]];
-  [mTitleField setStringValue:title];
-
-  NSString* msgFormat = NSLocalizedStringFromTable(@"UnverifiedCertMessageFormat", @"CertificateDialogs", @"");
-  NSString* msg = [NSString stringWithFormat:msgFormat, [inCert commonName]];
-  [mMessageField setStringValue:msg];
-
-  [mCertificateView setDetailsInitiallyExpanded:NO];
-  [mCertificateView setTrustInitiallyExpanded:NO];
-
-  [super setCertificateItem:inCert];
-}
-
-@end
 
 #pragma mark -
-#pragma mark ExpiredCertDialogController
+#pragma mark InvalidCertOverrideDialogController
 #pragma mark -
 
-@implementation ExpiredCertDialogController
+static int kInvalidCertAddOverride = 1;
+static int kInvalidCertCancelOverride = 0;
 
-- (IBAction)onOK:(id)sender
-{
-  [NSApp stopModalWithCode:NSAlertDefaultReturn];
-  [[self window] orderOut:nil];
-}
+@implementation InvalidCertOverrideDialogController
 
-- (IBAction)onCancel:(id)sender
-{
-  [NSApp stopModalWithCode:NSAlertAlternateReturn];
-  [[self window] orderOut:nil];
-}
+- (void)dealloc {
+  [mSourceHost release];
 
-- (void)setCertificateItem:(CertificateItem*)inCert
-{
-  [self window];    // ensure window visible
-
-  NSString* titleFormat = NSLocalizedStringFromTable(@"ExpiredCertTitleFormat", @"CertificateDialogs", @"");
-  NSString* title = [NSString stringWithFormat:titleFormat, [inCert commonName]];
-  [mTitleField setStringValue:title];
-
-  NSString* msgFormat = NSLocalizedStringFromTable(@"ExpiredCertMessageFormat", @"CertificateDialogs", @"");
-  NSString* msg = [NSString stringWithFormat:msgFormat, [inCert commonName], [inCert expiresString]];
-  [mMessageField setStringValue:msg];
-
-  [mCertificateView setDetailsInitiallyExpanded:NO];
-  [mCertificateView setTrustInitiallyExpanded:NO];
-
-  [super setCertificateItem:inCert];
-}
-
-- (void)windowDidLoad
-{
-  [mIcon setImage:[BrowserSecurityUIProvider lockBadgedApplicationIcon]];
-}
-
-@end
-
-#pragma mark -
-#pragma mark MismatchedCertDomainDialogController
-#pragma mark -
-
-@implementation MismatchedCertDomainDialogController
-
-- (void)dealloc
-{
-  [mTargetURL release];
   [super dealloc];
 }
 
-- (IBAction)onOK:(id)sender
+- (IBAction)onTrust:(id)sender
 {
-  [NSApp stopModalWithCode:NSAlertDefaultReturn];
-  [[self window] orderOut:nil];
+  [NSApp endSheet:[self window] returnCode:kInvalidCertAddOverride];
 }
 
 - (IBAction)onCancel:(id)sender
 {
-  [NSApp stopModalWithCode:NSAlertAlternateReturn];
-  [[self window] orderOut:nil];
+  [NSApp endSheet:[self window] returnCode:kInvalidCertCancelOverride];
 }
 
-- (IBAction)viewCertificate:(id)sender
-{
-//  [ViewCertificateDialogController runModalCertificateWindowWithCertificateItem:mCertItem
-//                                                       certTypeForTrustSettings:nsIX509Cert::SERVER_CERT];
+// Loads the recent bad cert for the current host+post into the certificate
+// view, and stores its failure flags in mCertFailureFlags.
+// Also return the cert for convenience.
+//
+// mSourceHost and mSourcePort must be set before calling this method. 
+- (CertificateItem*)loadRecentBadCert {
+  nsCOMPtr<nsIRecentBadCertsService> badCertService = do_GetService(NS_RECENTBADCERTS_CONTRACTID);
+  if (badCertService) {
+    nsAutoString hostAndPort;
+    [[NSString stringWithFormat:@"%@:%d", mSourceHost, mSourcePort] assignTo_nsAString:hostAndPort];
+    nsCOMPtr<nsISSLStatus> certStatus;
+    badCertService->GetRecentBadCert(hostAndPort, getter_AddRefs(certStatus));
+    if (certStatus) {
+      mCertFailureFlags = 0;
+      PRBool isDomainMismatch, isInvalidTime, isUntrusted;
+      certStatus->GetIsDomainMismatch(&isDomainMismatch);
+      certStatus->GetIsNotValidAtThisTime(&isInvalidTime);
+      certStatus->GetIsUntrusted(&isUntrusted);
+      if (isUntrusted)
+        mCertFailureFlags |= nsICertOverrideService::ERROR_UNTRUSTED;
+      if (isDomainMismatch)
+        mCertFailureFlags |= nsICertOverrideService::ERROR_MISMATCH;
+      if (isInvalidTime)
+        mCertFailureFlags |= nsICertOverrideService::ERROR_TIME;
+
+      nsCOMPtr<nsICertOverrideService> certOverrideService = do_GetService(NS_CERTOVERRIDE_CONTRACTID);
+      if (certOverrideService) {
+        nsCOMPtr<nsIX509Cert> cert;
+        certStatus->GetServerCert(getter_AddRefs(cert));
+        if (cert) {
+          CertificateItem* certItem = [CertificateItem certificateItemWithCert:cert];
+          [self setCertificateItem:certItem];
+          return certItem;
+        }
+      }
+    }
+  }
+  return nil;
 }
 
-- (void)updateDialog
+- (void)showWithSourceURL:(NSURL*)url parentWindow:(NSWindow*)parent delegate:(id)delegate
 {
-  CertificateItem* certItem = [mCertificateView certificateItem];
-  if (!certItem) return;
-
-  NSString* msgFormat = NSLocalizedStringFromTable(@"DomainMistmatchMsgFormat", @"CertificateDialogs", @"");
-  NSString* msg = [NSString stringWithFormat:msgFormat, mTargetURL, [certItem commonName]];
-  [mMessageField setStringValue:msg];
-}
-
-- (void)windowDidLoad
-{
-  [mIcon setImage:[BrowserSecurityUIProvider lockBadgedApplicationIcon]];
-  [self updateDialog];
-}
-
-- (void)setCertificateItem:(CertificateItem*)inCert
-{
-  [self window];
   [mCertificateView setDetailsInitiallyExpanded:NO];
-  [mCertificateView setTrustInitiallyExpanded:NO];
-  [mCertificateView setCertificateItem:inCert];
-  [mCertificateView setDelegate:self];
-  [self updateDialog];
+  [mCertificateView setTrustInitiallyExpanded:YES];
+
+  mDelegate = delegate;
+
+  mSourceHost = [[url host] retain];
+  mSourcePort = [[url port] intValue];
+  if (mSourcePort == 0)
+    mSourcePort = kDefaultHTTPSPort;
+
+  CertificateItem* certItem = [self loadRecentBadCert];
+
+  // If we didn't find the cert, we are probably in the unlikely case where a
+  // user has opened so many different sites with cert problems before trying to
+  // add an exception for the first that they've blown out the cache. Rather
+  // than adding special recovery for a rare case, just tell them to try again.
+  if (!certItem) {
+    NSString* titleString = NSLocalizedStringFromTable(@"CertOverrideInfoMissingTitle", @"CertificateDialogs", nil);
+    NSString* messageFormat = NSLocalizedStringFromTable(@"CertOverrideInfoMissingMessageFormat", @"CertificateDialogs", nil);
+    NSAlert* alert = [[[NSAlert alloc] init] autorelease];
+    [alert setAlertStyle:NSInformationalAlertStyle];
+    [alert setMessageText:titleString];
+    [alert setInformativeText:[NSString stringWithFormat:messageFormat, mSourceHost]];
+    [alert beginSheetModalForWindow:parent
+                      modalDelegate:self
+                     didEndSelector:@selector(alertDidEnd:returnCode:contextInfo:)
+                        contextInfo:nil];
+    return;
+  }
+
+  NSString* titleFormat = NSLocalizedStringFromTable(@"InvalidCertTitleFormat", @"CertificateDialogs", nil);
+  [mTitleField setStringValue:[NSString stringWithFormat:titleFormat, mSourceHost]];
+
+  // Rather than overwhelm the user with information, just pick the most
+  // important problem to tell them about.
+  NSString* problemDescription = nil;
+  if (mCertFailureFlags & nsICertOverrideService::ERROR_UNTRUSTED) {
+    NSString* messageFormat = NSLocalizedStringFromTable(@"InvalidCertMessageFormat", @"CertificateDialogs", nil);
+    problemDescription = [NSString stringWithFormat:messageFormat, mSourceHost];
+  }
+  else if (mCertFailureFlags & nsICertOverrideService::ERROR_MISMATCH) {
+    NSString* messageFormat = NSLocalizedStringFromTable(@"MismatchedCertMessageFormat", @"CertificateDialogs", nil);
+    problemDescription = [NSString stringWithFormat:messageFormat, [certItem commonName], mSourceHost];
+  } else {
+    NSString* messageFormat = NSLocalizedStringFromTable(@"InvalidCertMessageFormat", @"CertificateDialogs", nil);
+    problemDescription = [NSString stringWithFormat:messageFormat, mSourceHost];
+  }
+  float nibMessageHeight = NSHeight([mMessageField frame]);
+  [mMessageField setStringValue:problemDescription];
+
+  // Adjust the the sheet and other controls to account for the message change.
+  float heightChange = NSHeight([mMessageField frame]) - nibMessageHeight;
+  NSView* scrollView = mCertificateView;
+  do {
+    scrollView = [scrollView superview];
+  } while (![scrollView isKindOfClass:[NSScrollView class]]);
+  NSRect certScrollViewFrame = [scrollView frame];
+  certScrollViewFrame.size.height -= heightChange;
+  [scrollView setFrame:certScrollViewFrame];
+  NSRect sheetFrame = [[self window] frame];
+  sheetFrame.size.height += heightChange;
+  [[self window] setFrame:sheetFrame display:NO];
+
+  [NSApp beginSheet:[self window]
+     modalForWindow:parent
+      modalDelegate:self
+     didEndSelector:@selector(sheetDidEnd:returnCode:contextInfo:)
+        contextInfo:nil];
 }
 
-- (void)setTargetURL:(NSString*)inTargetURL
+- (void)alertDidEnd:(NSWindow *)sheet returnCode:(int)returnCode contextInfo:(void *)contextInfo
 {
-  [mTargetURL autorelease];
-  mTargetURL = [inTargetURL retain];
+  if ([mDelegate respondsToSelector:@selector(certOverride:finishedWithResult:)])
+    [mDelegate certOverride:self finishedWithResult:NO];
 }
 
-// CertificateViewDelegate method
-- (void)certificateView:(CertificateView*)certView showIssuerCertificate:(CertificateItem*)issuerCert
+- (void)sheetDidEnd:(NSWindow *)sheet returnCode:(int)returnCode contextInfo:(void *)contextInfo
 {
-  // if we are modal, then this must also be modal
-  [ViewCertificateDialogController runModalCertificateWindowWithCertificateItem:issuerCert
-                                                       certTypeForTrustSettings:nsIX509Cert::CA_CERT];
+  [[self window] orderOut:self];
+  BOOL addedOverride = NO;
+  if (returnCode == kInvalidCertAddOverride) {
+    nsCOMPtr<nsICertOverrideService> certOverrideService = do_GetService(NS_CERTOVERRIDE_CONTRACTID);
+    if (certOverrideService) {
+      nsCOMPtr<nsIX509Cert> cert = [[mCertificateView certificateItem] cert];
+      if (cert) {
+        certOverrideService->RememberValidityOverride(nsDependentCString([mSourceHost UTF8String]),
+                                                      mSourcePort, cert, mCertFailureFlags, PR_FALSE);
+        addedOverride = YES;
+      }
+    }
+  }
+
+  if ([mDelegate respondsToSelector:@selector(certOverride:finishedWithResult:)])
+    [mDelegate certOverride:self finishedWithResult:addedOverride];
 }
 
 @end

@@ -74,6 +74,8 @@ class nsIArray;
 - (void)showBlockedPopups:(nsIArray*)blockedSites whitelistingSource:(BOOL)shouldWhitelist;
 - (void)blacklistPopupsFromURL:(NSString*)inURL;
 
+- (void)addCertificateOverrideForSite:(NSString*)url;
+
 - (BOOL)userChangedLocationField;
 
 - (void)contentViewChangedTo:(NSView*)inView forURL:(NSString*)inURL;

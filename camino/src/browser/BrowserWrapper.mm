@@ -899,6 +899,8 @@ enum StatusPriority {
 // if the command was sent from an error page overlay.
 - (void)performCommandForXULElementWithID:(NSString*)elementIdentifier onPage:(NSString*)pageURI
 {
+  if ([elementIdentifier isEqualToString:@"exceptionDialogButton"])
+    [mDelegate addCertificateOverrideForSite:[self currentURI]];
 }
 
 - (BOOL)performKeyEquivalent:(NSEvent*)theEvent
