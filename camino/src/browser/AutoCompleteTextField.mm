@@ -530,6 +530,11 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   [mProxyIcon setImage:aImage];
 }
 
+- (void) resetCursorRects
+{
+  [self addCursorRect:[[self cell] drawingRectForBounds:[self bounds]] cursor:[NSCursor IBeamCursor]];
+}
+
 -(id) fieldEditor
 {
   return [[self window] fieldEditor:NO forObject:self];
