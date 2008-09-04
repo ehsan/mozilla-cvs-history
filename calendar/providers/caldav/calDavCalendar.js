@@ -1541,7 +1541,7 @@ calDavCalendar.prototype = {
                 } catch (ex) {}
 
                 if (multistatusLength > 1 &&
-                    (responseCHS != thisCalendar.mCalHomeSet.path ||
+                    (responseCHS != thisCalendar.mCalHomeSet.path &&
                     responseCHS != thisCalendar.mCalHomeSet.spec)) {
                     // If there are multiple home sets, then we need to match
                     // the home url. If there is only one, we can assume its the
