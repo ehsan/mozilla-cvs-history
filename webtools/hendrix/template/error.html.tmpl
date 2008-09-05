@@ -32,8 +32,8 @@
 [% SWITCH error %]
   [% CASE "bad_parameters" %]
     <p class="error">
-      You need to fill in all the required fields - name, product, summary 
-      and your actual feedback.
+      You need to fill in all the required fields - name, product, summary, 
+      your actual feedback and the humanness check.
     </p>
   
     <p>Please press Back and fill in the missing field(s).</p>
@@ -50,17 +50,16 @@
       [% message FILTER html %]
     </pre>
 
-  [% CASE "like_spam" %]
-    <p class="error">
-      Sorry, your message looks like some spam we've been receiving. Please
-      press Back, change the Summary to something else and try again.
-    </p>
-
   [% CASE "captcha_error" %]
     <p class="error">
-      Sorry, you didn't correctly calculate the sum. We ask you to answer
-      this question to prevent
-      spammers using our form. Please press Back, check your maths and try again.
+      I'm afraid you didn't pass the Humanness Check. Please don't
+      take it personally, but press Back and try again.<br>
+      <br>
+      <small>Error info: 
+        <pre>
+          [% info %]
+        </pre>
+      </small>
     </p>
 
   [% CASE "rbl_hit" %]

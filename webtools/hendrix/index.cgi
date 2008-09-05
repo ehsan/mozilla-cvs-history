@@ -34,13 +34,19 @@ use Template;
 use CGI;
 use Email::Send;
 use Net::RBLClient;
+use Captcha::reCAPTCHA;
 
 # use CGI::Carp qw(fatalsToBrowser);
 
-# Configuration
-my $STATIC_CAPTCHA_RESULT = "7";
+# If you are using Hendrix on your site, you'll need new API keys.
+# Get them at http://recaptcha.net/api/getkey . If these variables contain
+# keys, they won't work for you anyway.
+my $RECAPTCHA_PUBLIC  = "6LckBgMAAAAAAHlkAGWVrdc3gorusTVlLjixmeFh";
+my $RECAPTCHA_PRIVATE = "6LckBgMAAAAAACSa3zXC9K3_TU2KaDsLyt9UXSW2";
 
 # Map products to destination
+# When updating these two lists, don't forget the browser detection code in
+# index.html.tmpl.
 my %product_destination_map = (
 	"Firefox"                       => "mozilla.feedback.firefox",
 	"Firefox Release Candidate"     => "mozilla.feedback.firefox.prerelease",
@@ -96,8 +102,10 @@ my $form = $cgi->Vars;
 my $vars;
 $vars->{'form'} = $form;
 $vars->{'products'} = \@products_list;
+$vars->{'default_product'} = $form->{'product'};
 $vars->{'stylesheet'} = $skin;
 $vars->{'referer'} = $::ENV{'HTTP_REFERER'};
+$vars->{'recaptcha_public_key'} = $RECAPTCHA_PUBLIC;
 
 my $template = Template->new({
     INCLUDE_PATH => ["template"],
@@ -117,12 +125,7 @@ if (!$action) {
     $template->process("index.html.tmpl", $vars)
       || die("Template process failed: " . $template->error() . "\n");
 }
-elsif ($action eq "submit") {
-    if (defined($form->{'captcha'}) && 
-       ($form->{'captcha'} ne $STATIC_CAPTCHA_RESULT)) {
-      throwError("captcha_error");
-    }
-
+elsif ($action eq "submit") {  
     # Check the poster's IP against some blacklists
     $rbl->lookup($::ENV{REMOTE_ADDR});
     my %rbl_results = $rbl->txt_hash();
@@ -131,6 +134,27 @@ elsif ($action eq "submit") {
       throwError("rbl_hit");
     }
 
+    # Check the CAPTCHA
+    # throwError("captcha_error");
+    # XXX Currently we allow posting if CAPTCHA is not present. This is
+    # a temporary measure so we don't have to have a flag day to update
+    # all the different places which feed into Hendrix. We can then come
+    # back and change this to throw an error for a bogus CAPTCHA.
+    if ($form->{'recaptcha_response_field'} ||
+        $form->{'recaptcha_challenge_field'}) 
+    {
+      my $c = Captcha::reCAPTCHA->new;
+
+      my $result = $c->check_answer($RECAPTCHA_PRIVATE, 
+                                    $ENV{'REMOTE_ADDR'},
+                                    $form->{'recaptcha_challenge_field'}, 
+                                    $form->{'recaptcha_response_field'});
+
+      if (!$result->{is_valid}) {
+        throwError("captcha_error", $result->{error});
+      }
+    }
+    
     # Format the parameters and send to the newsgroup.
     
     # Check for compulsory parameters
@@ -159,11 +183,11 @@ elsif ($action eq "submit") {
     my $success = $sender->send($theMsg);
 
     # Give user feedback on success/failure
+    throwError("cant_post") if (!$success);
+    
     $vars->{'headers'} = $headers;
     $vars->{'message'} = $message;
 
-    throwError("cant_post") if (!$success);
-    
     print "Content-Type: text/html\n\n";
     $template->process("submit-successful.html.tmpl", $vars)
       || die("Template process failed: " . $template->error() . "\n");
@@ -193,8 +217,9 @@ sub removeNewlinesFilter {
 }
 
 sub throwError {
-    my ($error) = @_;
+    my ($error, $info) = @_;
     $vars->{'error'} = $error;
+    $vars->{'info'} = $info || "";
     
     print "Content-Type: text/html\n\n";
     $template->process("error.html.tmpl", $vars)

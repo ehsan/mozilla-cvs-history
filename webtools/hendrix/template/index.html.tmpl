@@ -24,7 +24,7 @@
   # ***** END LICENSE BLOCK ***** %]
   
 [% script = BLOCK %]
-var ids = ["name", "subject", "comments"];
+var ids = ["name", "subject", "comments", "recaptcha_response_field"];
 
 function checkSubmitEnable() {
   /* To enable the button, all fields must have a value */
@@ -46,9 +46,9 @@ function browserDetect() {
   var matches = [
     { regexp: /SeaMonkey/, product: "SeaMonkey" },
     { regexp: /Camino/, product: "Camino" },
-    { regexp: /\/3\.0[ab]\d+([^p]|$)/, product: "Gran Paradiso" },
+    { regexp: /\/3\.1[ab]\d+([^p]|$)/, product: "Shiretoko" },
     { regexp: /Minefield/, product: "Minefield" },
-    { regexp: /GranParadiso/, product: "Gran Paradiso" },
+    { regexp: /Shiretoko/, product: "Shiretoko" },
   ];
   
   var defaultProduct = "[% form.product FILTER remove('"') %]";
@@ -88,8 +88,8 @@ function onLoad() {
    onload = "onLoad()"
 %]
 
-<p style="text-align: center; color: darkred">
-<b>Please accept our thanks, but do not expect a response to feedback sumitted here.</b></p>
+<p>This system is for feedback on Firefox, Thunderbird and other Mozilla
+projects.</p>
 
 <fieldset>
   <legend>Other Options</legend>
@@ -97,13 +97,14 @@ function onLoad() {
   <li><b>Need support?</b> 
       <a href="http://www.mozilla.org/support/">Go here</a>
   <li><b>Broken website?</b> 
-      Pull down the Help menu in Firefox and select "Report Broken Web Site"
+      Visit it, then select <tt>Help | Report Broken Web Site...</tt> from the browser menu
   <li><b>Specific and detailed bug report?</b> 
       <a href="https://bugzilla.mozilla.org/enter_bug.cgi">Go here</a>
   </ul>
 </fieldset>
 
-<br>
+<p style="text-align: center; color: darkred">
+<b>Please accept our thanks, but do not expect a response to feedback submitted here.</b></p>
 
 <form id="feedback-form" method="POST">
   <table id="feedback-table">
@@ -129,7 +130,9 @@ function onLoad() {
         <select id="product" name="product">
           [% FOREACH product = products %]
             [% NEXT IF product == "Other" %]
-            <option name="[% product %]">[% product %]</option>
+            <option name="[% product %]"
+            [% " selected='selected'" IF product == default_product %]
+            >[% product %]</option>
           [% END %]
           <option name="Other">Other (please state)</option>
         </select>
@@ -155,11 +158,23 @@ function onLoad() {
     </tr>
     <tr>
       <td class="label">
-        What is 1 + 6?: 
+        Humanness Check: 
       </td>
       <td class="widget">
-        <input id="captcha" name="captcha" type="text"
-               size="2" value=""/>
+      
+<script type="text/javascript"
+   src="http://api.recaptcha.net/challenge?k=[% recaptcha_public_key %]">
+</script>
+
+<noscript>
+   <iframe src="http://api.recaptcha.net/noscript?k=[% recaptcha_public_key %]"
+       height="300" width="500" frameborder="0"></iframe><br>
+   <textarea name="recaptcha_challenge_field" rows="3" cols="40">
+   </textarea>
+   <input type="hidden" name="recaptcha_response_field" 
+       value="manual_challenge">
+</noscript>
+
       </td>
     </tr>
     <tr>
