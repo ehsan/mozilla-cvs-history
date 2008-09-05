@@ -79,9 +79,9 @@ $RegxpcomTest             = 0;
 #$EmbedCodesizeTest        = 0;  # mZ, require mozilla/tools/codesigns
 #$MailBloatTest            = 0;
 #$EmbedTest                = 0;  # Assumes you wanted $BuildEmbed=1
-$LayoutPerformanceTest    = 0;  # Tp
+$LayoutPerformanceTest    = 1;  # Tp
 #$LayoutPerformanceLocalTest   = 0;  # Tp2
-$DHTMLPerformanceTest     = 0;  # Tdhtml
+$DHTMLPerformanceTest     = 1;  # Tdhtml
 #$QATest                   = 0;  
 #$XULWindowOpenTest        = 0;  # Txul
 $StartupPerformanceTest   = 1;  # Ts
@@ -94,7 +94,7 @@ $StartupPerformanceTest   = 1;  # Ts
                                 # aviary directory structure?
 
 $TestsPhoneHome           = 1;  # Should test report back to server?
-#$GraphNameOverride        = ''; # Override name built from ::hostname() and $BuildTag
+$GraphNameOverride        = 'cb-xserve01.mozilla.com'; # Override name built from ::hostname() and $BuildTag
 
 # $results_server
 #----------------------------------------------------------------------------
