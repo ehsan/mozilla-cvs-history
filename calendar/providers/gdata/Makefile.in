@@ -52,6 +52,7 @@ STRIP_XPI = 1
 CALENDAR_VERSION := $(shell cat $(topsrcdir)/calendar/sunbird/config/version.txt)
 DEFINES += -DAB_CD=$(AB_CD) \
            -DCALENDAR_VERSION=$(CALENDAR_VERSION) \
+           -DCOMM_BUILD=$(COMM_BUILD) \
            $(NULL)
 
 PREF_JS_EXPORTS = $(srcdir)/defaults/preferences.js
