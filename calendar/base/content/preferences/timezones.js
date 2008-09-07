@@ -58,7 +58,7 @@ var gTimezonesPane = {
             }
         }
         // the display names need to be sorted
-        displayNames.sort();
+        displayNames.sort(String.localeCompare);
         for (var i = 0; i < displayNames.length; ++i) {
             var displayName = displayNames[i];
             addMenuItem(tzMenuPopup, displayName, tzids[displayName]);
