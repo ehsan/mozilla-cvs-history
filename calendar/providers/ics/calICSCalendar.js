@@ -134,8 +134,6 @@ calICSCalendar.prototype = {
         } else {
             this.mHooks = new dummyHooks();
         }
-
-        this.refresh();
     },
 
     getProperty: function calICSCalendar_getProperty(aName) {
@@ -144,6 +142,22 @@ calICSCalendar.prototype = {
                 return (!this.uri.schemeIs("file"));
         }
         return this.__proto__.__proto__.getProperty.apply(this, arguments);
+    },
+
+    setProperty: function calICSCalendar_setProperty(aName, aValue) {
+        switch (aName) {
+            case "disabled": {
+                var oldVal = this.getProperty(aName);
+                this.__proto__.__proto__.setProperty.apply(this, arguments);
+                if (oldVal && !aValue && this.canRefresh) {
+                    this.refresh();
+                }
+                break;
+            }
+            default:
+                this.__proto__.__proto__.setProperty.apply(this, arguments);
+                break;
+        }
     },
 
     refresh: function calICSCalendar_refresh() {

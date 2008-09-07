@@ -119,7 +119,9 @@ function calCachedCalendar(uncachedCalendar) {
             mCalendar: this,
             notify: function(timer) {
                 LOG("[calCachedCalendar] replay timer");
-                this.mCalendar.refresh();
+                if (!this.mCalendar.getProperty("disabled")) {
+                    this.mCalendar.refresh();
+                }
             }
         };
         this.mReplayTimer = Components.classes["@mozilla.org/timer;1"]
@@ -129,8 +131,10 @@ function calCachedCalendar(uncachedCalendar) {
                                            Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
     }
 
-    // Take care of the inital synchronization
-    this.refresh();
+    if (!this.getProperty("disabled")) {
+        // Take care of the inital synchronization
+        this.refresh();
+    }
 }
 calCachedCalendar.prototype = {
     QueryInterface: function cCC_QueryInterface(aIID) {

@@ -723,6 +723,10 @@ calCalendarManager.prototype = {
                         this.mReadonlyCalendarCount++;
                     }
                     this.mCalendarCount++;
+
+                    if (!cal.getProperty("disabled") && cal.canRefresh) {
+                        cal.refresh();
+                    }
                 } catch (exc) {
                     Components.utils.reportError(
                         "Can't create calendar for " + caldata.id +
