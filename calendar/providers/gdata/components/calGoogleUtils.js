@@ -358,7 +358,7 @@ function passwordManagerRemove(aUsername) {
  */
 function ItemToXMLEntry(aItem, aAuthorEmail, aAuthorName) {
 
-    var selfIsOrganizer = (aItem.organizer.id == "mailto:" + aAuthorEmail);
+    var selfIsOrganizer = (!aItem.organizer || aItem.organizer.id == "mailto:" + aAuthorEmail);
 
     function addExtendedProperty(aName, aValue) {
         if (!selfIsOrganizer) {
