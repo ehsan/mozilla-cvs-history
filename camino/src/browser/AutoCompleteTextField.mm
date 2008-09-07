@@ -732,11 +732,13 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
       [self addSubview:mFeedIcon];
     }
     [self positionFeedIcon];
+    [self setNeedsDisplay:YES];
   }
   else if ([mFeedIcon superview]) {
     // hiding the icon. We don't have to do anything more than remove it from view.
     [[self cell] calcControlViewSizeForFeedIcon:NO];
     [mFeedIcon removeFromSuperview];
+    [self setNeedsDisplay:YES];
   }
 }
 
@@ -883,6 +885,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
     // feed icon to the left hand side of the secure icon.
     if ([[self cell] isFeedIconDisplayed])
       [self positionFeedIcon];
+    [self setNeedsDisplay:YES];
   }
   else if (!inShouldDisplay && [mLock superview]) {
     // hiding the icon. We don't have to do anything more than remove it from view.
@@ -891,6 +894,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
     
     if ([[self cell] isFeedIconDisplayed])
       [self positionFeedIcon];
+    [self setNeedsDisplay:YES];
   }
 }
 
