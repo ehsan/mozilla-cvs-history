@@ -774,7 +774,8 @@ function getRecurrenceIdFromEntry(aXMLEntry, aTimezone) {
  *
  * @param aXMLEntry         The xml data of the item
  * @param aTimezone         The timezone the event is most likely in
- * @param aCalendar         The calendar this item will belong to.
+ * @param aCalendar         The calendar this item will belong to. This needs to
+ *                              be a calIGoogleCalendar instance.
  * @param aReferenceItem    The item to apply the information from the xml to.
  *                              If null, a new item will be used.
  * @return                  The calIEvent with the item data.
@@ -1005,7 +1006,7 @@ function XMLEntryToItem(aXMLEntry, aTimezone, aCalendar, aReferenceItem) {
             if (excItem.status == "CANCELED") {
                 item.recurrenceInfo.removeOccurrenceAt(excItem.recurrenceId);
             } else {
-                excItem.calendar = aCalendar;
+                excItem.calendar = aCalendar.superCalendar;
                 item.recurrenceInfo.modifyException(excItem, true);
             }
         }

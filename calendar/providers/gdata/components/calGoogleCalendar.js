@@ -855,7 +855,7 @@ calGoogleCalendar.prototype = {
                 }
 
 
-                var item = XMLEntryToItem(entry, timezone, this.superCalendar);
+                var item = XMLEntryToItem(entry, timezone, this);
                 item.calendar = this.superCalendar;
 
                 if (wantInvitations) {
@@ -964,7 +964,7 @@ calGoogleCalendar.prototype = {
             // Parse the Item with the given timezone
             var item = XMLEntryToItem(xml,
                                       timezone,
-                                      this.superCalendar,
+                                      this,
                                       aReferenceItem);
 
             LOGitem(item);
@@ -1139,7 +1139,7 @@ calGoogleCalendar.prototype = {
                 // such.
                 var item = XMLEntryToItem(entry,
                                           timezone,
-                                          this.superCalendar,
+                                          this,
                                           (recurrenceId && referenceItem ? null : referenceItem));
                 item.calendar = this.superCalendar;
 
