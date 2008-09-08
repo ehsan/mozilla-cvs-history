@@ -561,7 +561,7 @@ sub CreatePartialPatches {
                          getcwd() . '/' . $from_path . ',' . getcwd() . '/'
                          . $to_path . ',' . getcwd() . '/' . 
                          $partial_pathname . ',' . 
-                         Data::Dumper::Dumper($forcedUpdateList);
+                         join('|', @{$forcedUpdateList}) . "\n";
                     } else {
                     my $start_time = time();
 
