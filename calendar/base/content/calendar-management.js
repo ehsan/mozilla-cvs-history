@@ -160,6 +160,7 @@ function unloadCalendarManager() {
 
     branch.removeObserver("calendar.", calendarManagerObserver);
     composite.removeObserver(calendarManagerCompositeObserver);
+    composite.setStatusObserver(null, null);
     calMgr.removeObserver(calendarManagerObserver);
 }
 

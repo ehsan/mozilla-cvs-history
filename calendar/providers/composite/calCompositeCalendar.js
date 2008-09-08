@@ -463,7 +463,9 @@ calCompositeCalendar.prototype = {
 
     setStatusObserver: function(aStatusObserver, aWindow){
         this.mStatusObserver = aStatusObserver;
-        this.mStatusObserver.initialize(aWindow);
+        if (this.mStatusObserver) {
+            this.mStatusObserver.initialize(aWindow);
+        }
     }
 };
 
