@@ -841,40 +841,6 @@ calMgrCalendarObserver.prototype = {
                                  Components.interfaces.calIObserver]);
     },
 
-    // nsIWindowMediatorListener:
-    onCloseWindow: function(aXulWindow) {
-        try {
-            var aDOMWindow = aXulWindow.docShell
-                .QueryInterface(
-                    Components.interfaces.nsIInterfaceRequestor)
-                .getInterface(
-                    Components.interfaces.nsIDOMWindow);
-            var args = aDOMWindow.arguments[0]
-                .QueryInterface(
-                    Components.interfaces.nsIDialogParamBlock);
-
-            // remove the message that has been shown from
-            // the list of all announced messages.
-            this.announcedMessages = this.announcedMessages.filter(
-                function(announcedMessage) {
-                    return !equalMessage(announcedMessage, args);
-                });
-
-            // if the list is now empty we can safely remove the listener
-            if (!this.announcedMessages.length) {
-                var windowMediator = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                                     .getService(Components.interfaces.nsIWindowMediator);
-                windowMediator.removeListener(this);
-            }
-
-        } catch (e) {
-            Components.utils.reportError(e);
-        }
-    },
-
-    onOpenWindow: function(aXulWindow) {},
-    onWindowTitleChange: function(aXulWindow,aNewTitle) {},
-
     // calIObserver:
     onStartBatch: function() {},
     onEndBatch: function() {},
@@ -957,47 +923,76 @@ calMgrCalendarObserver.prototype = {
                 message = aMessage;
          }
  
-        var showMessageBox = (aErrNo == calIErrors.MODIFICATION_FAILED);
                 
         paramBlock.SetString(0, errMsg);
         paramBlock.SetString(1, errCode);
         paramBlock.SetString(2, message);
 
-        if (showMessageBox) {
-            var wWatcher = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                                  .getService(Components.interfaces.nsIWindowWatcher);
-            wWatcher.openWindow(null,
-                             "chrome://calendar/content/calErrorPrompt.xul",
-                             "_blank",
-                             "chrome,dialog=yes,alwaysRaised=yes",
-                             paramBlock);
-        }            
-
-        // silently don't do anything if this message already has
-        // been announed without being acknowledged.
-        if (this.announcedMessages.some(
-            function(element, index, array) {
-                return equalMessage(paramBlock, element);
-            })) {
-            return;
-        }
-
-        // if no message has been announced, i.e. no window has been
-        // raised, we need to install the appropriate listener now.
-        if (!this.announcedMessages.length) {
-            Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                      .getService(Components.interfaces.nsIWindowMediator)
-                      .addListener(this);
-        }
-
-        // this message hasn't been announced recently, remember the
-        // details of the message for future reference.
-        this.announcedMessages.push(paramBlock);
-
         this.storedReadOnly = this.calendar.readOnly;
         var errorCode = calGetString("calendar","errorCode", [errCode]);
         var errorDescription = calGetString("calendar","errorDescription", [message]);
         var summary = errMsg + " " + errorCode + ". " + errorDescription;
-        WARN(summary);
+
+        // Log warnings in error console.
+        // Report serious errors in both error console and in prompt window.
+        var isSerious = (aErrNo == calIErrors.MODIFICATION_FAILED);
+        if (!isSerious) {
+            WARN(summary);
+        } else {
+            // Write error to console.
+            Components.utils.reportError(summary);
+
+            // silently don't do anything if this message already has
+            // been announced without being acknowledged.
+            if (this.announcedMessages.some(
+                function(element, index, array) {
+                    return equalMessage(paramBlock, element);
+                })) {
+                return;
+            }
+
+            // this message hasn't been announced recently, remember the
+            // details of the message for future reference.
+            this.announcedMessages.push(paramBlock);
+
+            // Display in prompt window.
+            var wWatcher = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                                  .getService(Components.interfaces.nsIWindowWatcher);
+            var promptWindow =
+                wWatcher.openWindow
+                    (null, "chrome://calendar/content/calErrorPrompt.xul",
+                     "_blank", "chrome,dialog=yes,alwaysRaised=yes",
+                     paramBlock);
+            // Will remove paramBlock from announced messages when
+            // promptWindow is closed.  (Closing fires unloaded event, but
+            // promptWindow is also unloaded [to clean it?] before loading, 
+            // so wait for detected load event before detecting unload event
+            // that signifies user closed this prompt window.)
+            var observer = this;
+            function awaitLoad(event) {
+                // #2 loaded, remove load listener
+                promptWindow.removeEventListener("load", awaitLoad, false);
+                function awaitUnload(event) {
+                    // #4 unloaded (user closed prompt window),
+                    // remove paramBlock and unload listener.
+                    try {
+                        // remove the message that has been shown from
+                        // the list of all announced messages.
+                        observer.announcedMessages =
+                            observer.announcedMessages.filter(function(msg) {
+                                return !equalMessage(msg, paramBlock);
+                            });
+                        promptWindow.removeEventListener("unload", awaitUnload,
+                                                         false);
+                    } catch (e) {
+                        Components.utils.reportError(e);
+                    }
+                }
+                // #3 add unload listener (wait for user to close promptWindow)
+                promptWindow.addEventListener("unload", awaitUnload, false);
+            }
+            // #1 add load listener
+            promptWindow.addEventListener("load", awaitLoad, false);
+        }
     }
 }
