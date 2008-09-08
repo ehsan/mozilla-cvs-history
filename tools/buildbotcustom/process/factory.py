@@ -168,23 +168,22 @@ class MercurialBuildFactory(BuildFactory):
         #   addLeakTestSteps()
         #  nightly builds (clobber)
         #   addBuildSteps()
+        #   addSymbolSteps()
         #   addUploadSteps()
         #   addUpdateSteps()
-        #   addSymbolSteps()
         #  for everything:
         #   addCleanupSteps()
         self.addBuildSteps()
         if self.leakTest:
             self.addLeakTestSteps()
-        if self.uploadPackages:
-            self.addUploadSteps()
         if self.codesighs:
             self.addCodesighsSteps()
-        if self.nightly:
-            if self.createSnippet:
-                self.addUpdateSteps()
-            if self.uploadSymbols:
-                self.addSymbolsSteps()
+        if self.uploadSymbols:
+            self.addSymbolsSteps()
+        if self.uploadPackages:
+            self.addUploadSteps()
+        if self.createSnippet:
+            self.addUpdateSteps()
         self.addCleanupSteps()
 
     def addBuildSteps(self):
