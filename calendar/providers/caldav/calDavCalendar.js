@@ -208,12 +208,13 @@ calDavCalendar.prototype = {
 
     mHaveScheduling: false,
     mShouldPollInbox: true,
-    get hasScheduling() {
+    get hasScheduling() { // Whether to use inbox/outbox scheduling
         return this.mHaveScheduling;
     },
     set hasScheduling(value) {
         return (this.mHaveScheduling = (getPrefSafe("calendar.caldav.sched.enabled", false) && value));
     },
+    hasAutoScheduling: false, // Whether server automatically takes care of scheduling
 
     mAuthScheme: null,
 
@@ -254,20 +255,26 @@ calDavCalendar.prototype = {
     },
 
     getProperty: function caldav_getProperty(aName) {
-        if (this.hasScheduling) {
-            switch (aName) {
-                case "organizerId":
+        switch (aName) {
+            case "organizerId":
+                if (this.calendarUserAddress) {
                     return this.calendarUserAddress;
-                case "organizerCN":
-                    return null; // xxx todo
-                case "itip.transport":
+                } // else use configured email identity
+                break;
+            case "organizerCN":
+                return null; // xxx todo
+            case "itip.transport":
+                if (this.hasAutoScheduling) {
+                    return null;
+                } else if (this.hasScheduling) {
                     return this.QueryInterface(Components.interfaces.calIItipTransport);
-                case "capabilities.tasks.supported":
-                    return (this.supportedItemTypes.indexOf("VTODO") > -1);
-                case "capabilities.events.supported":
-                    return (this.supportedItemTypes.indexOf("VEVENT") > -1);
-            }
-        } // else use outbound email-based iTIP (from calProviderBase.js)
+                } // else use outbound email-based iTIP (from calProviderBase.js)
+                break;
+            case "capabilities.tasks.supported":
+                return (this.supportedItemTypes.indexOf("VTODO") > -1);
+            case "capabilities.events.supported":
+                return (this.supportedItemTypes.indexOf("VEVENT") > -1);
+        }
         return this.__proto__.__proto__.getProperty.apply(this, arguments);
     },
 
@@ -1355,12 +1362,20 @@ calDavCalendar.prototype = {
                 LOG("CalDAV: Error getting DAV header, status " + aContext.responseStatus);
             }
 
-
-            if (dav && dav.indexOf("calendar-schedule") != -1) {
+            if (dav && dav.indexOf("calendar-auto-schedule") != -1) {
+                if (thisCalendar.verboseLogging()) {
+                    LOG("CalDAV: Server supports calendar-auto-schedule");
+                }
+                thisCalendar.hasAutoScheduling = true;
+                // leave outbound inbox/outbox scheduling off
+            } else if (dav && dav.indexOf("calendar-schedule") != -1) {
                 if (thisCalendar.verboseLogging()) {
                     LOG("CalDAV: Server generally supports calendar-schedule");
                 }
                 thisCalendar.hasScheduling = true;
+            }
+
+            if (this.hasAutoScheduling || this.hasScheduling) {
                 // XXX - we really shouldn't register with the fb service
                 // if another calendar with the same principal-URL has already
                 // done so
@@ -1625,14 +1640,12 @@ calDavCalendar.prototype = {
             return;
         }
 
-        if (!this.hasScheduling) {
-            // We tweak the organizer lookup here: If scheduling is turned off, then the
-            // configured email takes place being the organizerId for scheduling which need
-            // not match against the calendar-user-address:
-            var orgId = this.getProperty("organizerId");
-            if (orgId && orgId.toLowerCase() == aCalId.toLowerCase()) {
-                aCalId = this.calendarUserAddress; // continue with calendar-user-address
-            }
+        // We tweak the organizer lookup here: If e.g. scheduling is turned off, then the
+        // configured email takes place being the organizerId for scheduling which need
+        // not match against the calendar-user-address:
+        var orgId = this.getProperty("organizerId");
+        if (orgId && orgId.toLowerCase() == aCalId.toLowerCase()) {
+            aCalId = this.calendarUserAddress; // continue with calendar-user-address
         }
 
         // the caller prepends MAILTO: to calid strings containing @
@@ -1891,6 +1904,13 @@ calDavCalendar.prototype = {
         thisCalendar.mMemoryCalendar.getItem(aItem.id, getItemListener);
     },
 
+    canNotify: function caldav_canNotify(aMethod, aItem) {
+        if (this.hasAutoScheduling) { // auto-sched takes precedence
+            return true;
+        }
+        return false; // use outbound iTIP for all
+    },
+
     //
     // calIItipTransport interface
     //
@@ -2017,8 +2037,12 @@ calDavCalendar.prototype = {
         }
     },
 
+    mVerboseLogging: undefined,
     verboseLogging: function caldav_verboseLogging() {
-        return getPrefSafe("calendar.debug.log.verbose", false);
+        if (this.mVerboseLogging === undefined) {
+            this.mVerboseLogging = getPrefSafe("calendar.debug.log.verbose", false);
+        }
+        return this.mVerboseLogging;
     },
 
     getSerializedItem: function caldav_getSerializedItem(aItem) {
