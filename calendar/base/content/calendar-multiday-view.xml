@@ -863,24 +863,33 @@
            */
           var blobs = new Array();
           var currentBlob = new Array();
-
           function sortByStart(a, b) {
+              function assureFloating(aDateTime) {
+                  if (aDateTime.timezone.isFloating) {
+                      aDateTime = aDateTime.getInTimezone(self.mTimezone);
+                  }
+                  return aDateTime;
+              }
               // If you pass in tasks without both entry and due dates, I will
               // kill you
               var aStart = a.event.startDate || a.event.entryDate;
+              aStart = assureFloating(aStart);
               var bStart = b.event.startDate || b.event.entryDate;
+              bStart = assureFloating(bStart);
               var startComparison = aStart.compare(bStart);
               if (startComparison != 0) {
                   return startComparison;
               } else {
                   var aEnd = a.event.endDate || a.event.dueDate;
+                  aEnd = assureFloating(aEnd);
                   var bEnd = b.event.endDate || b.event.dueDate;
+                  bEnd = assureFloating(bEnd);
                   // If the items start at the same time, return the longer one
                   // first
                   return bEnd.compare(aEnd);
               }
           }
-
+          var self = this;
           this.mEvents.sort(sortByStart);
 
           // The end time of the last ending event in the entire blob
