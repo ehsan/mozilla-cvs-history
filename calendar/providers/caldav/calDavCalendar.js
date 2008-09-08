@@ -889,11 +889,10 @@ calDavCalendar.prototype = {
 
         var etagListener = {};
 
-        var responseStatus;
-
         etagListener.onStreamComplete =
             function getUpdatedItems_oSC(aLoader, aContext, aStatus,
                                          aResultLength, aResult) {
+            var responseStatus;
             try {
                 LOG("CalDAV: Status " + aContext.responseStatus +
                     " on getetag for calendar " + thisCalendar.name);
@@ -910,23 +909,28 @@ calDavCalendar.prototype = {
                 LOG("CalDAV: recv: " + str);
             }
 
-            if (str.substr(0,6) == "<?xml ") {
-                 str = str.substring(str.indexOf('<', 2));
-            }
-            var multistatus = new XML(str);
-            for (var i = 0; i < multistatus.*.length(); i++) {
-                var response = new XML(multistatus.*[i]);
-                var etag = response..D::["getetag"];
-                if (etag.length() == 0) {
-                    continue;
-                }
-                var href = response..D::["href"];
-                var resourcePath = thisCalendar.ensurePath(href);
-                aRefreshEvent.itemsReported.push(resourcePath.toString());
+            if (responseStatus == 207) {
+                // We only need to parse 207's, anything else is probably a
+                // server error (i.e 50x).
 
-                var itemuid = thisCalendar.mHrefIndex[resourcePath];
-                if (!itemuid || etag != thisCalendar.mItemInfoCache[itemuid].etag) {
-                    aRefreshEvent.itemsNeedFetching.push(resourcePath);
+                if (str.substr(0,6) == "<?xml ") {
+                     str = str.substring(str.indexOf('<', 2));
+                }
+                var multistatus = new XML(str);
+                for (var i = 0; i < multistatus.*.length(); i++) {
+                    var response = new XML(multistatus.*[i]);
+                    var etag = response..D::["getetag"];
+                    if (etag.length() == 0) {
+                        continue;
+                    }
+                    var href = response..D::["href"];
+                    var resourcePath = thisCalendar.ensurePath(href);
+                    aRefreshEvent.itemsReported.push(resourcePath.toString());
+
+                    var itemuid = thisCalendar.mHrefIndex[resourcePath];
+                    if (!itemuid || etag != thisCalendar.mItemInfoCache[itemuid].etag) {
+                        aRefreshEvent.itemsNeedFetching.push(resourcePath);
+                    }
                 }
             }
 
