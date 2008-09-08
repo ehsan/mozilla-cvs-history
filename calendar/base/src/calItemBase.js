@@ -415,10 +415,10 @@ calItemBase.prototype = {
         } else {
             this.modify();
         }
-        if (aValue === null) {
-            this.deleteProperty(aName);
-        } else {
+        if (aValue) {
             this.mProperties.setProperty(aName.toUpperCase(), aValue);
+        } else {
+            this.deleteProperty(aName);
         }
     },
 
