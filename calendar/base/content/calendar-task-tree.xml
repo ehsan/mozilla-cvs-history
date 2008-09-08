@@ -391,9 +391,11 @@
               }
               aProps.AppendElement(getAtomFromService(getProgressAtom(item)));
 
-              // Add calendar name atom
-              var calendarAtom = "calendar-" + formatStringForCSSRule(item.calendar.name);
-              aProps.AppendElement(getAtomFromService(calendarAtom));
+              // Add calendar name and id atom
+              var calendarNameAtom = "calendar-" + formatStringForCSSRule(item.calendar.name);
+              var calendarIdAtom = "calendarid-" +  item.calendar.id;
+              aProps.AppendElement(getAtomFromService(calendarNameAtom));
+              aProps.AppendElement(getAtomFromService(calendarIdAtom));
 
               // Add item status atom
               if (item.status) {
