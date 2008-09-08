@@ -2511,7 +2511,16 @@ calStorageCalendar.prototype = {
         this.mDeleteMetaData(id);
         var sp = this.mInsertMetaData.params;
         sp.item_id = id;
-        sp.value = value;
+        try { 
+            sp.value = value;
+        } catch (e) {
+            // The storage service throws an NS_ERROR_ILLEGAL_VALUE in
+            // case pval is something complex (i.e not a string or
+            // number). Swallow this error, leaving the value empty.
+            if (e.result != Components.results.NS_ERROR_ILLEGAL_VALUE) {
+                throw e;
+            }
+        }
         this.mInsertMetaData.execute();
         this.mInsertMetaData.reset();
     },
