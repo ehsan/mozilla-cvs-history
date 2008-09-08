@@ -508,33 +508,58 @@
         -->
       <method name="addDropShadows">
         <body><![CDATA[
-          // Only allow one set of drop-boxes
-          if (this.monthView.mDropShadows) {
-              return;
           }
-
-          this.monthView.mDropShadows = [];
-          var shadowStart = this.mDate.clone();
-          shadowStart.day -= this.monthView.mShadowIndex;
-          for (var i = 0; i < this.monthView.mShadowLength; i++) {
-              var dropbox =  document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "box");
-              dropbox.setAttribute("dropbox", "true");
-              dropbox.setAttribute("flex", "1");
-
-              var box = this.monthView.findBoxForDate(shadowStart);
-              if (!box) {
-                  // Dragging to the end of a view
-                  shadowStart.day += 1;
-                  continue;
-              }
-              box.box.dayitems.insertBefore(dropbox, box.box.dayitems.firstChild);
-              this.monthView.mDropShadows.push(dropbox);
-
-              shadowStart.day += 1;
-          }
+#ifdef XP_UNIX
+         var self = this;
+         setTimeout(function addDropShadows2() { self.addDropShadows2(); }, 10);
+#else
+         this.addDropShadows2();
+#endif
+          
         ]]></body>
       </method>
+        
+      <method name="addDropShadows2">
+        <body><![CDATA[
+              // Only allow one set of drop-boxes
+              if (this.monthView.mDropShadows) {
+                  return;
+              }
+
+              this.monthView.mDropShadows = [];
+              var shadowStart = this.mDate.clone();
+              shadowStart.day -= this.monthView.mShadowIndex;
+              for (var i = 0; i < this.monthView.mShadowLength; i++) {
+                  var dropbox =  document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "box");
+                  dropbox.setAttribute("dropbox", "true");
+                  dropbox.setAttribute("flex", "1");
+
+                  var box = this.monthView.findBoxForDate(shadowStart);
+                  if (!box) {
+                      // Dragging to the end of a view
+                      shadowStart.day += 1;
+                      continue;
+                  }
+                  box.box.dayitems.insertBefore(dropbox, box.box.dayitems.firstChild);
+                  this.monthView.mDropShadows.push(dropbox);
+
+                  shadowStart.day += 1;
+              }
+        ]]></body>
+      </method>
+      
       <method name="removeDropShadows">
+        <body><![CDATA[
+#ifdef XP_UNIX
+         var self = this;
+         setTimeout(function removeDropShadows2() { self.removeDropShadows2(); }, 10);
+#else
+         this.removeDropShadows2();
+#endif
+        ]]></body>
+      </method>
+      
+      <method name="removeDropShadows2">
         <body><![CDATA[
           if (!this.monthView.mDropShadows) {
               return;
