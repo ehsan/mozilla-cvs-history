@@ -53,6 +53,13 @@ typedef enum
 
 - (BOOL)isEqualToStringIgnoringCase:(NSString*)inString;
 - (BOOL)hasCaseInsensitivePrefix:(NSString*)inString;
+
+// Some URIs can contain spaces and still work, even though they aren't valid per RFC2396.
+// This method allows us to account for those URIs.
+- (BOOL)isLooselyValidatedURI;
+
+// Uses a combination of strict NSURL validity checking and our own loose validation
+- (BOOL)isValidURI;
 - (NSString *)stringByRemovingCharactersInSet:(NSCharacterSet*)characterSet;
 - (NSString *)stringByReplacingCharactersInSet:(NSCharacterSet*)characterSet withString:(NSString*)string;
 - (NSString *)stringByTruncatingTo:(unsigned int)maxCharacters at:(ETruncationType)truncationType;

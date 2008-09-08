@@ -305,10 +305,10 @@ public:
 
   // We assume anything containing "://" is a URL and eat spaces. Otherwise it's not a URL,
   // so replace illegals/control characters with spaces and leave existing spaces alone
-  // (for instance, in a bookmarklet).
-  if ([aString rangeOfString:@"://"].location != NSNotFound)
+  // (for instance, in a |javascript:| or |data:| URI).
+  if (([aString rangeOfString:@"://"].location != NSNotFound) && !([aString isLooselyValidatedURI])) {
     cleanString = [aString stringByRemovingCharactersInSet:whitespaceIllegalAndControlCharacterSet];
-  else {
+  } else {
     cleanString = [aString stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
     cleanString = [cleanString stringByReplacingCharactersInSet:illegalAndControlCharacterSet withString:@" "];
   }

@@ -77,6 +77,30 @@
   return ([self compare:inString options:NSCaseInsensitiveSearch range:NSMakeRange(0, [inString length])] == NSOrderedSame);
 }
 
+- (BOOL)isLooselyValidatedURI
+{
+  return ([self hasCaseInsensitivePrefix:@"javascript:"] || [self hasCaseInsensitivePrefix:@"data:"]);
+}
+
+//
+// Utility method to ensure validity of URI strings.
+// NSURL is used to validate most of them, but the NSURL test may fail
+// for |javascript:| and |data:| URIs because they often contain
+// invalid characters such as spaces.
+//
+- (BOOL)isValidURI
+{
+  // This will only return a non-nil object for valid, well-formed URI strings
+  NSURL* testURL = [NSURL URLWithString:self];
+
+  // |javascript:| and |data:| URIs might not have passed the test,
+  // but spaces will work OK, so evaluate them separately.
+  if ((testURL) || [self isLooselyValidatedURI]) {
+    return YES;
+  }
+  return NO;
+}
+
 - (NSString *)stringByRemovingCharactersInSet:(NSCharacterSet*)characterSet
 {
   NSScanner*       cleanerScanner = [NSScanner scannerWithString:self];

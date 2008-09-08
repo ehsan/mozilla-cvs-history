@@ -230,9 +230,7 @@ NSString* const kWebURLsWithTitlesPboardType  = @"WebURLsWithTitlesPboardType"; 
     *outTitles = [NSArray arrayWithObject:(title ? title : @"")];
   } else if ([types containsObject:NSStringPboardType]) {
     NSString* potentialURLString = [self cleanedStringWithPasteboardString:[self stringForType:NSStringPboardType]];
-    NSURL* testURL = [NSURL URLWithString:potentialURLString];
-    // Bookmarklets, whose URLs start with "javascript:", won't pass the NSURL test.
-    if ((testURL) || [potentialURLString hasCaseInsensitivePrefix:@"javascript:"]) {
+    if ([potentialURLString isValidURI]) {
       *outUrls = [NSArray arrayWithObject:potentialURLString];
       NSString* title = nil;
       if ([types containsObject:kCorePasteboardFlavorType_urld])
@@ -272,11 +270,7 @@ NSString* const kWebURLsWithTitlesPboardType  = @"WebURLsWithTitlesPboardType"; 
     // Trim whitespace off the ends and newlines out of the middle so we don't reject otherwise-valid URLs;
     // we'll do another cleaning when we set the URLs and titles later, so this is safe.
     NSString* potentialURLString = [self cleanedStringWithPasteboardString:[self stringForType:NSStringPboardType]];
-    // NSURL will return nil for invalid url strings (containing spaces, returns etc),
-    // but will return a url otherwise.
-    NSURL* testURL = [NSURL URLWithString:potentialURLString];
-    // one more test to do -- bookmarklets won't be valid NSURLs but will start with "javascript:"
-    return ((testURL != nil) || [potentialURLString hasCaseInsensitivePrefix:@"javascript:"]);
+    return [potentialURLString isValidURI];
   }
   
   return NO;
