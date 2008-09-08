@@ -58,6 +58,7 @@
 - (void)saveFontNamePrefsForRegion:(NSDictionary*)regionDict forFontType:(NSString*)fontType;
 - (void)saveFontSizePrefsForRegion:(NSDictionary*)entryDict;
 - (void)saveDefaultFontTypePrefForRegion:(NSDictionary*)entryDict;
+- (void)saveAllFontPrefsForRegion:(NSDictionary*)regionDict;
 
 - (BOOL)useMyFontsPref;
 - (void)setUseMyFontsPref:(BOOL)checkboxState;
@@ -143,15 +144,20 @@
 
 - (void)mainViewDidLoad
 {
+  // should save and restore this
+  [[NSColorPanel sharedColorPanel] setContinuous:NO];
+
+  [self setupFontRegionPopup];
+}
+
+- (void)willSelect
+{
   BOOL gotPref;
   [mUnderlineLinksCheckbox setState:
       [self getBooleanPref:kGeckoPrefUnderlineLinks withSuccess:&gotPref]];
   [mUseMyColorsCheckbox setState:
       ![self getBooleanPref:kGeckoPrefUsePageColors withSuccess:&gotPref]];
 
-  // should save and restore this
-  [[NSColorPanel sharedColorPanel] setContinuous:NO];
-  
   [mBackgroundColorWell     setColor:[self getColorPref:kGeckoPrefPageBackgroundColor  withSuccess:&gotPref]];
   [mTextColorWell           setColor:[self getColorPref:kGeckoPrefPageForegroundColor  withSuccess:&gotPref]];
   [mUnvisitedLinksColorWell setColor:[self getColorPref:kGeckoPrefLinkColor            withSuccess:&gotPref]];
@@ -159,11 +165,11 @@
   
   [mUseMyFontsCheckbox setState:[self useMyFontsPref]];
 
-  [self setupFontRegionPopup];
+  [self loadFontPrefs];
   [self updateFontPreviews];
 }
 
-- (void)willUnselect
+- (void)didUnselect
 {
   // time to save stuff
   [self saveFontPrefs];
@@ -320,13 +326,7 @@
 
   for (unsigned int i = 0; i < [mRegionMappingTable count]; i++) {
     NSMutableDictionary	*regionDict = [mRegionMappingTable objectAtIndex:i];
-
-    [self saveFontNamePrefsForRegion:regionDict forFontType:@"serif"];
-    [self saveFontNamePrefsForRegion:regionDict forFontType:@"sans-serif"];
-    [self saveFontNamePrefsForRegion:regionDict forFontType:@"monospace"];
-    
-    [self saveDefaultFontTypePrefForRegion:regionDict];
-    [self saveFontSizePrefsForRegion:regionDict];
+    [self saveAllFontPrefsForRegion:regionDict];
   }
 }
 
@@ -461,6 +461,16 @@
     [self setPref:[prefName UTF8String] toString:value];
   else
     [self clearPref:[prefName UTF8String]];
+}
+
+- (void)saveAllFontPrefsForRegion:(NSDictionary*)regionDict
+{
+  [self saveFontNamePrefsForRegion:regionDict forFontType:@"serif"];
+  [self saveFontNamePrefsForRegion:regionDict forFontType:@"sans-serif"];
+  [self saveFontNamePrefsForRegion:regionDict forFontType:@"monospace"];
+    
+  [self saveDefaultFontTypePrefForRegion:regionDict];
+  [self saveFontSizePrefsForRegion:regionDict];
 }
 
 // The exposed "Use My Fonts" pref has reverse logic from the internal pref 
@@ -713,6 +723,9 @@ const int kDefaultFontSansSerifTag = 1;
   [mAdvancedFontsDialog orderOut:self];
   [NSApp endSheet:mAdvancedFontsDialog];
 
+  // apply the changes for the current region
+  [self saveAllFontPrefsForRegion:regionDict];
+
   [self updateFontPreviews];
 
   if (mFontPanelWasVisible)
@@ -926,16 +939,19 @@ const int kMissingFontPopupItemTag = 9999;
   if ([mAdvancedFontsDialog isVisible])
     return;
   
-  if (mFontButtonForEditor == mChooseProportionalFontButton)
-  {
+  NSDictionary* regionDict = [self settingsForCurrentRegion];
+
+  if (mFontButtonForEditor == mChooseProportionalFontButton) {
     NSString* fontType = [self defaultProportionalFontTypeForCurrentRegion];
     [self updateFontSampleOfType:fontType];
+    [self saveFontNamePrefsForRegion:regionDict forFontType:fontType];
   }
-  else if (mFontButtonForEditor == mChooseMonospaceFontButton)
-  {
+  else if (mFontButtonForEditor == mChooseMonospaceFontButton) {
     [self updateFontSampleOfType:@"monospace"];
+    [self saveFontNamePrefsForRegion:regionDict forFontType:@"monospace"];
   }
   
+  [self saveFontSizePrefsForRegion:regionDict];
 }
 
 - (BOOL)fontManager:(id)theFontManager willIncludeFont:(NSString *)fontName
