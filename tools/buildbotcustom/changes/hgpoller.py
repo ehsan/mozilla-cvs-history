@@ -9,6 +9,41 @@ from twisted.web.client import getPage
 
 from buildbot.changes import base, changes
 
+class ThrottleGetPage(object):
+    """A helper class which can limit the number of simultaneous calls to
+    getPage"""
+
+    def __init__(self, limit, timeout=120):
+        """
+        @param limit   The number of simultaneous connections allowed
+        @param timeout A timeout passed to the underlying getPage method
+        """
+        self.limit = limit
+        self.timeout = timeout
+
+        # This will be a list of (url, deferred)
+        self.list = []
+
+    def getPage(self, url):
+        d = defer.Deferred()
+        d.addBoth(self._finish)
+        self.list.append((url, d))
+        self._go()
+        return d
+
+    def _finish(self, r):
+        self.limit += 1
+        self._go()
+        return r
+
+    def _go(self):
+        if len(self.list) and self.limit > 0:
+            url, d = self.list.pop(0)
+            getd = getPage(url, timeout=self.timeout)
+            getd.chainDeferred(d)
+            self.limit -= 1
+
+pollThrottler = ThrottleGetPage(4)
 
 # From pyiso8601 module,
 #  http://code.google.com/p/pyiso8601/source/browse/trunk/iso8601/iso8601.py
@@ -252,7 +287,7 @@ class HgPoller(base.ChangeSource, BaseHgPoller):
     def getData(self):
         url = self._make_url()
         log.msg("Polling Hg server at %s" % url)
-        return getPage(url)
+        return pollThrottler.getPage(url)
 
     def processData(self, query):
         change_list = _parse_changes(query, self.lastChange)
@@ -285,7 +320,7 @@ class HgLocalePoller(BaseHgPoller):
 
     def getData(self):
         log.msg("Polling l10n Hg server at %s" % self.url)
-        return getPage(self.url)
+        return pollThrottler.getPage(self.url)
 
     def processData(self, query):
         change_list = _parse_changes(query, self.lastChange)
@@ -353,7 +388,7 @@ class HgAllLocalesPoller(base.ChangeSource, BaseHgPoller):
 
     def getData(self):
         log.msg("Polling all-locales at %s" % self.allLocalesURL)
-        return getPage(self.allLocalesURL)
+        return pollThrottler.getPage(self.allLocalesURL)
 
     def getLocalePoller(self, locale):
         if locale not in self.localePollers:
