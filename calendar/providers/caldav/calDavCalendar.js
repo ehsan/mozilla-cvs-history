@@ -59,6 +59,7 @@ function calDavCalendar() {
     this.mInBoxUrl = null;
     this.mOutBoxUrl = null;
     this.mCalendarUserAddress = null;
+    this.mPrincipalUrl = null;
     this.mSenderAddress = null;
     this.mHrefIndex = {};
     this.mAuthScheme = null;
@@ -232,8 +233,13 @@ calDavCalendar.prototype = {
         return this.mCalendarUserAddress;
     },
 
+    mPrincipalUrl: null,
+    get principalUrl() {
+        return this.mPrincipalUrl;
+    },
+
     get canRefresh() {
-        // A cached calendar doesn't need to be refreshed. 
+        // A cached calendar doesn't need to be refreshed.
         return !this.isCached;
     },
 
@@ -905,7 +911,7 @@ calDavCalendar.prototype = {
                 continue;
             }
             // XXX We should probably expose the inner calendar via an
-            // interface, but for now use wrappedJSObject. 
+            // interface, but for now use wrappedJSObject.
             var calendar = calendars[i].wrappedJSObject;
             if (calendar.mCachedCalendar) {
                 calendar = calendar.mCachedCalendar;
@@ -1286,7 +1292,7 @@ calDavCalendar.prototype = {
                 thisCalendar.superCalendar.endBatch();
                 if (aChangeLogListener)
                     aChangeLogListener.onResult({ status: Components.results.NS_OK },
-                                                Components.results.NS_OK); 
+                                                Components.results.NS_OK);
             } else {
                 thisCalendar.mObservers.notify("onLoad", [thisCalendar]);
             }
@@ -1344,6 +1350,7 @@ calDavCalendar.prototype = {
         var queryXml = <D:propfind xmlns:D="DAV:" xmlns:CS={CS}>
                         <D:prop>
                             <D:resourcetype/>
+                            <D:owner/>
                             <CS:getctag/>
                         </D:prop>
                         </D:propfind>;
@@ -1420,6 +1427,9 @@ calDavCalendar.prototype = {
                 }
             }
 
+            // check if owner is specified; might save some work
+            thisCalendar.mPrincipalUrl = multistatus..D::["owner"]..D::href;
+
             var resourceTypeXml = multistatus..D::["resourcetype"];
             if (resourceTypeXml.length == 0) {
                 resourceType = kDavResourceTypeNone;
@@ -1428,6 +1438,13 @@ calDavCalendar.prototype = {
             } else if (resourceTypeXml.toString().indexOf("collection") != -1) {
                 resourceType = kDavResourceTypeCollection;
             }
+
+            // specialcasing so as not to break older SOGo revs. Remove when
+            // versions with fixed principal-URL PROPFIND bug are out there
+            if (resourceTypeXml.toString().indexOf("groupdav") != -1) {
+                thisCalendar.mPrincipalUrl = null;
+            }
+            // end of SOGo specialcasing
 
             if ((resourceType == null || resourceType == kDavResourceTypeNone) &&
                 !thisCalendar.mDisabled) {
@@ -1481,29 +1498,6 @@ calDavCalendar.prototype = {
      */
     checkServerCaps: function caldav_checkServerCaps(aChangeLogListener) {
 
-        // XXX Google doesn't support the OPTIONS query, so we don't even have
-        // to try. Lets hope they do so soon, so we can get rid of this! To
-        // avoid needing further workarounds, we just set the outbox and inbox
-        // urls here and return.
-        if (this.calendarUri.host == "www.google.com") {
-            this.hasScheduling = true;
-            var spec = this.calendarUri.spec;
-            this.mInBoxUrl = makeURL(spec.replace(/\/events\/$/, "/inbox/"));
-            this.mOutBoxUrl = makeURL(spec.replace(/\/events\/$/, "/outbox/"));
-            var userEmail = this.calendarUri.path
-                                .replace(/\/calendar\/dav\/([^\/]+)\/.*/i, "$1");
-            this.mCalendarUserAddress = "mailto:" + decodeURIComponent(userEmail.toLowerCase());
-            this.mShouldPollInbox = false;
-
-            getFreeBusyService().addProvider(this);
-            if (this.isCached) {
-                this.safeRefresh(aChangeLogListener);
-            } else {
-                this.refresh();
-            }
-            return;
-        }
-
         var homeSet = this.mCalHomeSet.clone();
         var thisCalendar = this;
 
@@ -1521,14 +1515,21 @@ calDavCalendar.prototype = {
                                          aResultLength, aResult) {
             var dav;
             try {
-                var dav = aContext.getResponseHeader("DAV");
+                dav = aContext.getResponseHeader("DAV");
                 if (thisCalendar.verboseLogging()) {
                     LOG("CalDAV: DAV header: " + dav);
                 }
             } catch (ex) {
                 LOG("CalDAV: Error getting DAV header, status " + aContext.responseStatus);
             }
-
+            // Google does not yet support OPTIONS but does support scheduling
+            // so we'll spoof the DAV header until Google gets fixed
+            if (thisCalendar.calendarUri.host == "www.google.com") {
+                dav="calendar-schedule";
+                // Google also reports an inbox URL distinct from the calendar
+                // URL but a) doesn't use it and b) 405s on etag queries to it
+                thisCalendar.mShouldPollInbox=false;
+            }
             if (dav && dav.indexOf("calendar-auto-schedule") != -1) {
                 if (thisCalendar.verboseLogging()) {
                     LOG("CalDAV: Server supports calendar-auto-schedule");
@@ -1547,7 +1548,12 @@ calDavCalendar.prototype = {
                 // if another calendar with the same principal-URL has already
                 // done so
                 getFreeBusyService().addProvider(thisCalendar);
-                thisCalendar.findPrincipalNS(aChangeLogListener);
+                if (thisCalendar.principalUrl) {
+                    thisCalendar.checkPrincipalsNameSpace([thisCalendar.principalUrl],
+                                                          aChangeLogListener);
+                } else {
+                    thisCalendar.findPrincipalNS(aChangeLogListener);
+                }
             } else {
                 LOG("CalDAV: Server does not support CalDAV scheduling.");
                 if (thisCalendar.isCached) {
@@ -1641,7 +1647,23 @@ calDavCalendar.prototype = {
         var D = new Namespace("D", "DAV:");
         default xml namespace = C;
 
-        var queryXml = <D:principal-property-search xmlns:D="DAV:"
+        var queryXml;
+        var queryMethod;
+        var queryDepth;;
+        if (this.mPrincipalUrl) {
+            queryXml = <D:propfind xmlns:D="DAV:"
+                xmlns:C="urn:ietf:params:xml:ns:caldav">
+                <D:prop>
+                    <C:calendar-home-set/>
+                    <C:calendar-user-address-set/>
+                    <C:schedule-inbox-URL/>
+                    <C:schedule-outbox-URL/>
+                </D:prop>
+            </D:propfind>;
+            queryMethod = "PROPFIND";
+            queryDepth = 0;
+        } else {
+            queryXml = <D:principal-property-search xmlns:D="DAV:"
                 xmlns:C="urn:ietf:params:xml:ns:caldav">
             <D:property-search>
                 <D:prop>
@@ -1656,7 +1678,8 @@ calDavCalendar.prototype = {
                     <C:schedule-outbox-URL/>
                 </D:prop>
             </D:principal-property-search>;
-
+            queryMethod = "REPORT";
+        }
         if (!aNameSpaceList.length) {
             if (this.verboseLogging()) {
                 LOG("CalDAV: principal namespace list empty, server does not support scheduling");
@@ -1677,7 +1700,7 @@ calDavCalendar.prototype = {
         }
 
         if (this.verboseLogging()) {
-            LOG("CalDAV: send: " + nsUri.spec + "\n" + queryXml);
+            LOG("CalDAV: send: " + queryMethod + " " + nsUri.spec + "\n" + queryXml);
         }
 
 
@@ -1685,7 +1708,10 @@ calDavCalendar.prototype = {
                                              "text/xml; charset=utf-8",
                                              this);
 
-        httpchannel.requestMethod = "REPORT";
+        httpchannel.requestMethod = queryMethod;
+        if (queryDepth == 0) {
+            httpchannel.setRequestHeader("Depth", "0", false);
+        }
 
         var streamListener = {};
 
