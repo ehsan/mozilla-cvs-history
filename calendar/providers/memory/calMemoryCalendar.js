@@ -246,26 +246,38 @@ calMemoryCalendar.prototype = {
 
     // void deleteItem( in calIItemBase aItem, in calIOperationListener aListener );
     deleteItem: function (aItem, aListener) {
-        if (this.readOnly) 
-            throw Components.interfaces.calIErrors.CAL_IS_READONLY;
-        if (aItem.id == null || this.mItems[aItem.id] == null) {
+        if (this.readOnly) {
+            this.notifyOperationComplete(aListener,
+                                         Components.interfaces.calIErrors.CAL_IS_READONLY,
+                                         Components.interfaces.calIOperationListener.DELETE,
+                                         aItem.id,
+                                         "Calendar is readonly");
+            return;
+        }
+        if (aItem.id == null) {
             this.notifyOperationComplete(aListener,
                                          Components.results.NS_ERROR_FAILURE,
                                          Components.interfaces.calIOperationListener.DELETE,
                                          aItem.id,
-                                         "ID is null or is from different calendar in deleteItem");
+                                         "ID is null in deleteItem");
             return;
         }
 
-        var oldItem = this.mItems[aItem.id];
-        if (oldItem.generation != aItem.generation) {
-            this.notifyOperationComplete(aListener,
-                                         Components.results.NS_ERROR_FAILURE,
-                                         Components.interfaces.calIOperationListener.DELETE,
-                                         aItem.id,
-                                         "generation mismatch in deleteItem");
-            return;
+        var oldItem;
+        if (this.relaxedMode) {
+            oldItem = aItem;
+        } else {
+            oldItem = this.mItems[aItem.id];
+            if (oldItem.generation != aItem.generation) {
+                this.notifyOperationComplete(aListener,
+                                             Components.results.NS_ERROR_FAILURE,
+                                             Components.interfaces.calIOperationListener.DELETE,
+                                             aItem.id,
+                                             "generation mismatch in deleteItem");
+                return;
+            }
         }
+            
 
         delete this.mItems[aItem.id];
         this.mMetaData.deleteProperty(aItem.id);
