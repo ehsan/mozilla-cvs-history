@@ -46,6 +46,7 @@
 #import "AutoCompleteTextField.h"
 #import "BrowserWindowController.h"
 #import "BrowserTabViewItem.h"
+#import "NSString+Utils.h"
 
 
 // This file adds scripting support to various classes.
@@ -305,12 +306,11 @@
 // This method lets "tab's URL" be a read/write property.
 - (void)setCurrentURI:(NSString *)newURI
 {
-  // Don't allow javascript: or data: URLs for security reasons.
-  NSString *scheme = [[[NSURL URLWithString:newURI] scheme] lowercaseString];
-  if ([scheme isEqualToString:@"javascript"] ||
-      [scheme isEqualToString:@"data"]) {
+  // Don't allow setting URLs that can run in the context of the existing page.
+  if ([newURI isPotentiallyDangerousURI]) {
+    NSString *scheme = [[[newURI componentsSeparatedByString:@":"] objectAtIndex:0] lowercaseString];
     [[NSScriptCommand currentCommand] setScriptErrorNumber:NSArgumentsWrongScriptError];
-    [[NSScriptCommand currentCommand] setScriptErrorString:[NSString stringWithFormat:@"Can't set URL of tab to a '%@:' URL.", scheme]];
+    [[NSScriptCommand currentCommand] setScriptErrorString:[NSString stringWithFormat:@"Can't set URL of tab to a '%@:' URI.", scheme]];
     return;
   }
 

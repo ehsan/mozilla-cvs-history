@@ -82,12 +82,11 @@
   return ([self hasCaseInsensitivePrefix:@"javascript:"] || [self hasCaseInsensitivePrefix:@"data:"]);
 }
 
-//
-// Utility method to ensure validity of URI strings.
-// NSURL is used to validate most of them, but the NSURL test may fail
-// for |javascript:| and |data:| URIs because they often contain
-// invalid characters such as spaces.
-//
+- (BOOL)isPotentiallyDangerousURI
+{
+  return ([self hasCaseInsensitivePrefix:@"javascript:"] || [self hasCaseInsensitivePrefix:@"data:"]);
+}
+
 - (BOOL)isValidURI
 {
   // This will only return a non-nil object for valid, well-formed URI strings
