@@ -556,7 +556,19 @@ class MercurialBuildFactory(BuildFactory):
 
 
 
-class ReleaseTaggingFactory(BuildFactory):
+class ReleaseFactory(BuildFactory):
+    def getPushRepo(repo):
+        for proto in ('https', 'http'):
+             if repo.startswith(proto):
+                 return repo.replace(proto, 'ssh')
+        return repo
+
+    def getRepoName(repo):
+        return repo.rstrip('/').split('/')[-1]
+
+
+
+class ReleaseTaggingFactory(ReleaseFactory):
     def __init__(self, repositories, buildToolsRepo, productName, appName,
                  appVersion, milestone, baseTag, buildNumber):
         """Repositories looks like this:
@@ -647,10 +659,8 @@ class ReleaseTaggingFactory(BuildFactory):
 
         for repo in sorted(repositories.keys()):
             # we need to handle http(s):// and ssh:// URLs here.
-            repoName = repo.rstrip('/').split('/')[-1]
-            pushRepo = repo
-            if pushRepo.startswith('http'):
-                pushRepo = pushRepo.replace('http', 'ssh')
+            repoName = self.getRepoName(repo)
+            pushRepo = self.getPushRepo(repo)
 
             repoRevision = repositories[repo]['revision']
             bumpFiles = repositories[repo]['bumpFiles']
@@ -770,3 +780,46 @@ class ReleaseTaggingFactory(BuildFactory):
              description=['push %s' % repoName],
              haltOnFailure=True
             )
+
+
+
+class SingleSourceFactory(ReleaseFactory):
+    def __init__(self, repository, productName, appVersion, baseTag):
+        BuildFactory.__init__(self)
+        repoName = self.getRepoName(repository)
+        pushRepo = self.getPushRepo(repository)
+        releaseTag = '%s_RELEASE' % (baseTag)
+        bundleFile = '../%s-%s.bundle' % (productName, appVersion)
+        sourceTarball = '%s-%s-source.tar.bz2' % (productName, appVersion)
+
+        self.addStep(ShellCommand,
+         command=['hg', 'clone', repository, repoName],
+         workdir='.',
+         description=['clone %s' % repoName],
+         haltOnFailure=True
+        )
+        self.addStep(ShellCommand,
+         command=['hg', 'up', '-r', releaseTag],
+         workdir=repoName,
+         description=['update to', releaseTag],
+         haltOnFailure=True
+        )
+        self.addStep(ShellCommand,
+         command=['hg', 'bundle', '--base', '0', '-r', releaseTag, bundleFile],
+         workdir=repoName,
+         description=['create bundle'],
+         haltOnFailure=True
+        )
+        self.addStep(ShellCommand,
+         command=['rm', '-rf', '.hg'],
+         workdir=repoName,
+         description=['delete metadata'],
+         haltOnFailure=True
+        )
+        self.addStep(ShellCommand,
+         command=['tar', '-cjf', sourceTarball, repoName],
+         workdir='.',
+         description=['create tarball'],
+         haltOnFailure=True
+        )
+        # TODO: upload files
