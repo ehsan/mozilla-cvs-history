@@ -415,6 +415,7 @@ static CertificatesWindowController* gCertificatesWindowController;
   [[self window] setFrameAutosaveName:@"CertificatesWindow"];
 
   [mCertsOutlineView setAutoresizesOutlineColumn:NO];
+  [mCertsOutlineView setAllowsEditing:NO];
 
   [mCertsOutlineView setAutosaveName:@"CertificatesOutlineView"];
   [mCertsOutlineView setAutosaveTableColumns:YES];

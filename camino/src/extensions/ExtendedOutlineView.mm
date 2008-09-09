@@ -159,7 +159,7 @@ static NSString* const kAutosaveSortDirectionKey        = @"sort_descending";
         
       case NSCarriageReturnCharacter:
         // Start editing
-        if ([self numberOfSelectedRows] == 1)
+        if (mAllowsEditing && ([self numberOfSelectedRows] == 1))
         {
           [self editColumn:0 row:[self selectedRow] withEvent:aEvent select:YES];
           handled = YES;

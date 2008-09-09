@@ -2,8 +2,17 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>IBDocumentLocation</key>
+	<string>69 14 356 240 0 0 1440 878 </string>
+	<key>IBEditorPositions</key>
+	<dict>
+		<key>75</key>
+		<string>69 259 126 192 0 0 1440 878 </string>
+		<key>99</key>
+		<string>69 259 95 111 0 0 1440 878 </string>
+	</dict>
 	<key>IBFramework Version</key>
-	<string>670</string>
+	<string>489.0</string>
 	<key>IBLastKnownRelativeProjectPath</key>
 	<string>../../../Camino.xcodeproj</string>
 	<key>IBOldestOS</key>
