@@ -104,6 +104,9 @@ const CAL_ITEM_FLAG_HAS_RELATIONS = 128;
 
 const USECS_PER_SECOND = 1000000;
 
+var gTransCount = 0;
+var gTransErr = null;
+
 //
 // Storage helpers
 //
@@ -2163,17 +2166,16 @@ calStorageCalendar.prototype = {
     flushItem: function (item, olditem) {
         ASSERT(!item.recurrenceId, "no parent item passed!", true);
 
-        this.mDB.beginTransaction();
+        this.acquireTransaction();
         try {
-            this.deleteItemById(olditem ? olditem.id : item.id, true /* hasGuardingTransaction */);
+            this.deleteItemById(olditem ? olditem.id : item.id);
             this.writeItem(item, olditem);
-            this.mDB.commitTransaction();
         } catch (e) {
-            dump("flushItem DB error: " + this.mDB.lastErrorString + "\n");
-            Components.utils.reportError("flushItem DB error: " +
-                                         this.mDB.lastErrorString);
-            this.mDB.rollbackTransaction();
+            ERROR("flushItem DB error: " + this.mDB.lastErrorString + "\nexc: " + e);
+            gTransErr = e;
             throw e;
+        } finally {
+            this.releaseTransaction();
         }
 
         this.cacheItem(item);
@@ -2475,10 +2477,8 @@ calStorageCalendar.prototype = {
     //
     // delete the item with the given uid
     //
-    deleteItemById: function stor_deleteItemById(aID, hasGuardingTransaction) {
-        if (!hasGuardingTransaction) {
-            this.mDB.beginTransaction();
-        }
+    deleteItemById: function stor_deleteItemById(aID) {
+        this.acquireTransaction();
         try {
             this.mDeleteAttendees(aID);
             this.mDeleteProperties(aID);
@@ -2487,20 +2487,46 @@ calStorageCalendar.prototype = {
             this.mDeleteTodo(aID);
             this.mDeleteAttachments(aID);
             this.mDeleteMetaData(aID);
-            if (!hasGuardingTransaction) {
-                this.mDB.commitTransaction();
-            }
         } catch (e) {
-            Components.utils.reportError("deleteItemById DB error: " + this.mDB.lastErrorString);
-            if (!hasGuardingTransaction) {
-                this.mDB.rollbackTransaction();
-            }
+            ERROR("deleteItemById DB error: " + this.mDB.lastErrorString + "\nexc: " + e);
+            gTransErr = e;
             throw e;
+        } finally {
+            this.releaseTransaction();
         }
 
         delete this.mItemCache[aID];
         delete this.mRecEventCache[aID];
         delete this.mRecTodoCache[aID];
+    },
+
+    acquireTransaction: function stor_acquireTransaction() {
+        if (gTransCount++ == 0) {
+            this.mDB.beginTransaction();
+        }
+    },
+    releaseTransaction: function stor_releaseTransaction() {
+        if (gTransCount > 0) {
+            if (--gTransCount == 0) {
+                if (gTransErr) {
+                    this.mDB.rollbackTransaction();
+                    gTransErr = null;
+                } else {
+                    this.mDB.commitTransaction();
+                }
+            }
+        } else {
+            ASSERT(gTransCount > 0, "unexepcted batch count!");
+        }
+    },
+
+    startBatch: function stor_startBatch() {
+        this.acquireTransaction();
+        this.__proto__.__proto__.startBatch.apply(this, arguments);
+    },
+    endBatch: function stor_endBatch() {
+        this.releaseTransaction();
+        this.__proto__.__proto__.endBatch.apply(this, arguments);
     },
 
     //

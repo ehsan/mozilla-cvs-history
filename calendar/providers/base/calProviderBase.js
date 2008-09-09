@@ -220,12 +220,21 @@ calProviderBase.prototype = {
     },
 
     // void startBatch();
+    mBatchCount: 0,
     startBatch: function cPB_startBatch() {
-        this.mObservers.notify("onStartBatch");
+        if (this.mBatchCount++ == 0) {
+            this.mObservers.notify("onStartBatch");
+        }
     },
 
     endBatch: function cPB_endBatch() {
-        this.mObservers.notify("onEndBatch");
+        if (this.mBatchCount > 0) {
+            if (--this.mBatchCount == 0) {
+                this.mObservers.notify("onEndBatch");
+            }
+        } else {
+            ASSERT(this.mBatchCount > 0, "unexepcted endBatch!");
+        }
     },
 
     notifyOperationComplete: function cPB_notifyOperationComplete(aListener,
