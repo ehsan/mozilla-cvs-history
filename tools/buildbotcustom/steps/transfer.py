@@ -9,7 +9,8 @@ class MozillaStageUpload(ShellCommand):
                  remoteBasePath, group=None, chmodMode=755, sshKey=None,
                  releaseToDated=True, releaseToLatest=True,
                  releaseToTinderboxBuilds=True, tinderboxBuildsDir=None, 
-                 dependToDated=True, uploadCompleteMar=True, **kwargs):
+                 dependToDated=True, uploadCompleteMar=True,
+                 uploadLangPacks=False, **kwargs):
         """
         @type  objdir: string
         @param objdir: The obj directory used for the build. This is needed to
@@ -88,7 +89,13 @@ class MozillaStageUpload(ShellCommand):
                                   the complete mar file found in dist/update to
                                   the datedDir/latestDir. This option only
                                   applies when releaseToDated or
-                                  releaseToLatest is True.
+                                  releaseToLatest is True. Default: True
+
+        @type  uploadLangPacks: bool
+        @param uploadLangPacks: When True, the MozillaStageUpload will upload
+                                language pack XPIs to the datedDir/latestDir.
+                                This option only applies when releaseToDated or
+                                releaseToLatest is True. Default: False
         """
 
         ShellCommand.__init__(self, **kwargs)
@@ -109,7 +116,8 @@ class MozillaStageUpload(ShellCommand):
                                      releaseToTinderboxBuilds=releaseToTinderboxBuilds,
                                      tinderboxBuildsDir=tinderboxBuildsDir,
                                      dependToDated=dependToDated,
-                                     uploadCompleteMar=uploadCompleteMar)
+                                     uploadCompleteMar=uploadCompleteMar,
+                                     uploadLangPacks=uploadLangPacks)
 
         assert platform in ('win32', 'linux', 'macosx')
         self.objdir = objdir
@@ -127,6 +135,7 @@ class MozillaStageUpload(ShellCommand):
         self.tinderboxBuildsDir = tinderboxBuildsDir
         self.dependToDated = dependToDated
         self.uploadCompleteMar = uploadCompleteMar
+        self.uploadLangPacks = uploadLangPacks
 
         self.description = ["uploading package(s) to", remoteHost]
         self.descriptionDone = ["upload package(s) to", remoteHost]
@@ -236,6 +245,12 @@ class MozillaStageUpload(ShellCommand):
                  ' ' + self.username + '@' + self.remoteHost + ':' + \
                  dir
 
+    def uploadLangPacksCommand(self, dir):
+        packageGlob = '%s/dist/install/*.langpack.xpi' % self.objdir
+        return self._getBaseCommand(scp=True) + ' ' + packageGlob + \
+                 ' ' + self.username + '@' + self.remoteHost + ':' + \
+                 dir
+
     def start(self):
         datedDir = self.getLongDatedPath()
         latestDir = self.getLatestPath()
@@ -253,6 +268,8 @@ class MozillaStageUpload(ShellCommand):
                    self.uploadCommand(datedDir)
             if self.uploadCompleteMar:
                 cmd += " && " + self.uploadCompleteMarCommand(datedDir)
+            if self.uploadLangPacks:
+                cmd += " && " + self.uploadLangPacksCommand(datedDir)
             cmd += " && " + self.chmodCommand(datedDir)
             if self.group:
                 cmd += " && " + self.chgrpCommand(datedDir)
@@ -274,6 +291,8 @@ class MozillaStageUpload(ShellCommand):
                 cmd += self.uploadCommand(latestDir) + " && "
                 if self.uploadCompleteMar:
                     cmd += self.uploadCompleteMarCommand(latestDir) + " && "
+                if self.uploadLangPacks:
+                    cmd += self.uploadLangPacksCommand(latestDir) + " && "
             cmd += self.chmodCommand(latestDir)
             if self.group:
                 cmd += " && " + self.chgrpCommand(latestDir)
