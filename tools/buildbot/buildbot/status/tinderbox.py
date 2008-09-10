@@ -48,6 +48,8 @@ class TinderboxMailNotifier(mail.MailNotifier):
 
         @type  tree: string
         @param tree: The Tinderbox tree to post to.
+                     When tree is a WithProperties instance it will be
+                     interpolated as such. See WithProperties for more detail 
 
         @type  extraRecipients: tuple of string
         @param extraRecipients: E-mail addresses of recipients. This should at
@@ -109,6 +111,9 @@ class TinderboxMailNotifier(mail.MailNotifier):
                                    subject=subject,
                                    extraRecipients=extraRecipients,
                                    sendToInterestedUsers=False)
+        assert isinstance(tree, basestring) \
+            or isinstance(tree, WithProperties), \
+            "tree must be a string or a WithProperties instance"
         self.tree = tree
         self.binaryURL = binaryURL
         self.logCompression = logCompression
@@ -134,7 +139,15 @@ class TinderboxMailNotifier(mail.MailNotifier):
         # shortform
         t = "tinderbox:"
 
-        text += "%s tree: %s\n" % (t, self.tree)
+        if type(self.tree) is str:
+            # use the exact string given
+            text += "%s tree: %s\n" % (t, self.tree)
+        elif isinstance(self.tree, WithProperties):
+            # interpolate the WithProperties instance, use that
+            text += "%s tree: %s\n" % (t, self.tree.render(build))
+        else:
+            raise Exception("tree is an unhandled value")    
+
         # the start time
         # getTimes() returns a fractioned time that tinderbox doesn't understand
         builddate = int(build.getTimes()[0])
