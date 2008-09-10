@@ -1,0 +1,4767 @@
+diff -r 71c48ddc9e8c dom/public/idl/css/nsIDOMCSS2Properties.idl
+--- a/dom/public/idl/css/nsIDOMCSS2Properties.idl	Mon Sep 08 15:52:35 2008 -0700
++++ b/dom/public/idl/css/nsIDOMCSS2Properties.idl	Tue Sep 09 09:59:56 2008 -0700
+@@ -406,7 +406,7 @@ interface nsIDOMCSS2Properties : nsISupp
+                                         // raises(DOMException) on setting
+ };
+ 
+-[scriptable, uuid(216343fe-4e61-11dd-9843-001485f1fdbb)]
++[scriptable, uuid(06b9eb9a-a845-4cb7-a941-fa87305ded4b)]
+ interface nsIDOMNSCSS2Properties : nsIDOMCSS2Properties
+ {
+            /* Non-DOM 2 extensions */
+@@ -614,4 +614,11 @@ interface nsIDOMNSCSS2Properties : nsIDO
+ 
+            attribute DOMString        wordWrap;
+                                         // raises(DOMException) on setting
++
++           attribute DOMString        MozTransform;
++                                        // raises(DOMException) on setting
++
++           attribute DOMString        MozTransformOrigin;
++                                        // raises(DOMException) on setting 
++	
+ };
+diff -r 71c48ddc9e8c layout/base/nsCSSFrameConstructor.cpp
+--- a/layout/base/nsCSSFrameConstructor.cpp	Mon Sep 08 15:52:35 2008 -0700
++++ b/layout/base/nsCSSFrameConstructor.cpp	Tue Sep 09 09:59:56 2008 -0700
+@@ -1079,10 +1079,12 @@ private:
+   nsAbsoluteItems* mItems;                // pointer to struct whose data we save/restore
+   PRBool*          mFirstLetterStyle;
+   PRBool*          mFirstLineStyle;
++  PRBool*          mFixedPosIsAbsPos;
+ 
+   nsAbsoluteItems  mSavedItems;           // copy of original data
+   PRBool           mSavedFirstLetterStyle;
+   PRBool           mSavedFirstLineStyle;
++  PRBool           mSavedFixedPosIsAbsPos;
+ 
+   // The name of the child list in which our frames would belong
+   nsIAtom* mChildListName;
+@@ -1112,6 +1114,14 @@ public:
+   nsAbsoluteItems           mFloatedItems;
+   PRBool                    mFirstLetterStyle;
+   PRBool                    mFirstLineStyle;
++
++  // When working with the -moz-transform property, we want to hook
++  // the abs-pos and fixed-pos lists together, since transformed
++  // elements are fixed-pos containing blocks.  This flag determines
++  // whether or not we want to wire the fixed-pos and abs-pos lists
++  // together.
++  PRBool                    mFixedPosIsAbsPos;
++
+   nsCOMPtr<nsILayoutHistoryState> mFrameState;
+   nsPseudoFrames            mPseudoFrames;
+   // These bits will be added to the state bits of any frame we construct
+@@ -1192,6 +1202,21 @@ public:
+                     PRBool aInsertAfter = PR_FALSE,
+                     nsIFrame* aInsertAfterFrame = nsnull);
+ 
++  /**
++   * Function to return the fixed-pos element list.  Normally this will just hand back the
++   * fixed-pos element list, but in case we're dealing with a transformed element that's
++   * acting as an abs-pos and fixed-pos container, we'll hand back the abs-pos list.  Callers should
++   * use this function if they want to get the list acting as the fixed-pos item parent.
++   */
++  nsAbsoluteItems& GetFixedItems()
++  {
++    return mFixedPosIsAbsPos ? mAbsoluteItems : mFixedItems;
++  }
++  const nsAbsoluteItems& GetFixedItems() const
++  {
++    return mFixedPosIsAbsPos ? mAbsoluteItems : mFixedItems;
++  }
++
+ protected:
+   friend class nsFrameConstructorSaveState;
+ 
+@@ -1220,6 +1245,7 @@ nsFrameConstructorState::nsFrameConstruc
+     mFloatedItems(aFloatContainingBlock),
+     mFirstLetterStyle(PR_FALSE),
+     mFirstLineStyle(PR_FALSE),
++    mFixedPosIsAbsPos(PR_FALSE),
+     mFrameState(aHistoryState),
+     mPseudoFrames(),
+     mAdditionalStateBits(0)
+@@ -1243,6 +1269,7 @@ nsFrameConstructorState::nsFrameConstruc
+     mFloatedItems(aFloatContainingBlock),
+     mFirstLetterStyle(PR_FALSE),
+     mFirstLineStyle(PR_FALSE),
++    mFixedPosIsAbsPos(PR_FALSE),
+     mPseudoFrames(),
+     mAdditionalStateBits(0)
+ {
+@@ -1289,8 +1316,19 @@ nsFrameConstructorState::PushAbsoluteCon
+   aSaveState.mSavedItems = mAbsoluteItems;
+   aSaveState.mChildListName = nsGkAtoms::absoluteList;
+   aSaveState.mState = this;
++
++  /* Store whether we're wiring the abs-pos and fixed-pos lists together. */
++  aSaveState.mFixedPosIsAbsPos = &mFixedPosIsAbsPos;
++  aSaveState.mSavedFixedPosIsAbsPos = mFixedPosIsAbsPos;
++
+   mAbsoluteItems = 
+     nsAbsoluteItems(AdjustAbsoluteContainingBlock(aNewAbsoluteContainingBlock));
++
++  /* See if we're wiring the fixed-pos and abs-pos lists together.  This happens iff
++   * we're a transformed element.
++   */
++  mFixedPosIsAbsPos = (aNewAbsoluteContainingBlock &&
++                       aNewAbsoluteContainingBlock->GetStyleDisplay()->HasTransform());
+ }
+ 
+ void
+@@ -1353,8 +1391,8 @@ nsFrameConstructorState::GetGeometricPar
+   }
+ 
+   if (aStyleDisplay->mPosition == NS_STYLE_POSITION_FIXED &&
+-      mFixedItems.containingBlock) {
+-    return mFixedItems.containingBlock;
++      GetFixedItems().containingBlock) {
++    return GetFixedItems().containingBlock;
+   }
+ 
+   return aContentParentFrame;
+@@ -1405,11 +1443,11 @@ nsFrameConstructorState::AddChild(nsIFra
+       frameItems = &mAbsoluteItems;
+     }
+     if (disp->mPosition == NS_STYLE_POSITION_FIXED &&
+-        mFixedItems.containingBlock) {
+-      NS_ASSERTION(aNewFrame->GetParent() == mFixedItems.containingBlock,
++        GetFixedItems().containingBlock) {
++      NS_ASSERTION(aNewFrame->GetParent() == GetFixedItems().containingBlock,
+                    "Fixed pos whose parent is not the fixed pos containing block?");
+       needPlaceholder = PR_TRUE;
+-      frameItems = &mFixedItems;
++      frameItems = &GetFixedItems();
+     }
+   }
+ 
+@@ -1551,9 +1589,11 @@ nsFrameConstructorSaveState::nsFrameCons
+   : mItems(nsnull),
+     mFirstLetterStyle(nsnull),
+     mFirstLineStyle(nsnull),
++    mFixedPosIsAbsPos(nsnull),
+     mSavedItems(nsnull),
+     mSavedFirstLetterStyle(PR_FALSE),
+     mSavedFirstLineStyle(PR_FALSE),
++    mSavedFixedPosIsAbsPos(PR_FALSE),
+     mChildListName(nsnull),
+     mState(nsnull)
+ {
+@@ -1577,6 +1617,9 @@ nsFrameConstructorSaveState::~nsFrameCon
+   }
+   if (mFirstLineStyle) {
+     *mFirstLineStyle = mSavedFirstLineStyle;
++  }
++  if (mFixedPosIsAbsPos) {
++    *mFixedPosIsAbsPos = mSavedFixedPosIsAbsPos;
+   }
+ }
+ 
+@@ -6469,7 +6512,8 @@ nsCSSFrameConstructor::ConstructFrameByD
+     rv = ConstructBlock(aState, aDisplay, aContent, 
+                         aState.GetGeometricParent(aDisplay, aParentFrame),
+                         aParentFrame, aStyleContext, &newFrame, aFrameItems,
+-                        aDisplay->mPosition == NS_STYLE_POSITION_RELATIVE);
++                        aDisplay->mPosition == NS_STYLE_POSITION_RELATIVE ||
++                        aDisplay->HasTransform());
+     if (NS_FAILED(rv)) {
+       return rv;
+     }
+@@ -6477,7 +6521,8 @@ nsCSSFrameConstructor::ConstructFrameByD
+     addedToFrameList = PR_TRUE;
+   }
+   // See if it's relatively positioned
+-  else if ((NS_STYLE_POSITION_RELATIVE == aDisplay->mPosition) &&
++  else if ((NS_STYLE_POSITION_RELATIVE == aDisplay->mPosition ||
++            aDisplay->HasTransform()) &&
+            (aDisplay->IsBlockInside() ||
+             (NS_STYLE_DISPLAY_INLINE == aDisplay->mDisplay))) {
+     if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
+diff -r 71c48ddc9e8c layout/base/nsDisplayList.cpp
+--- a/layout/base/nsDisplayList.cpp	Mon Sep 08 15:52:35 2008 -0700
++++ b/layout/base/nsDisplayList.cpp	Tue Sep 09 09:59:56 2008 -0700
+@@ -51,6 +51,9 @@
+ #include "nsFrameManager.h"
+ #include "gfxContext.h"
+ #include "nsStyleStructInlines.h"
++#include "gfxMatrix.h"
++#include "nsTArray.h"
++#include "nsStyleTransformMatrix.h"
+ 
+ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
+     PRBool aIsForEvents, PRBool aBuildCaret)
+@@ -358,7 +361,7 @@ nsIFrame* nsDisplayList::HitTest(nsDispl
+       }
+     }
+   }
+-  NS_ASSERTION(aState->mItemBuffer.Length() == itemBufferStart,
++  NS_ASSERTION(aState->mItemBuffer.Length() == PRUint32(itemBufferStart),
+                "How did we forget to pop some elements?");
+   return nsnull;
+ }
+@@ -928,3 +931,401 @@ nsDisplayWrapList* nsDisplayClip::WrapWi
+   return new (aBuilder)
+     nsDisplayClip(aItem->GetUnderlyingFrame(), mClippingFrame, aItem, mClip);
+ }
++
++
++
++///////////////////////////////////////////////////
++// nsDisplayTransform Implementation
++//
++
++// Write #define UNIFIED_CONTINUATIONS here to have the transform property try
++// to transform content with continuations as one unified block instead of
++// several smaller ones.  This is currently disabled because it doesn't work
++// correctly, since when the frames are initially being reflown, their
++// continuations all compute their bounding rects independently of each other
++// and consequently get the wrong value.  Write #define DEBUG_HIT here to have
++// the nsDisplayTransform class dump out a bunch of information about hit
++// detection.
++#undef  UNIFIED_CONTINUATIONS
++#undef  DEBUG_HIT
++
++/* Returns the bounds of a frame as defined for transforms.  If
++ * UNIFIED_CONTINUATIONS is not defined, this is simply the frame's bounding
++ * rectangle, translated to the origin. Otherwise, returns the smallest
++ * rectangle containing a frame and all of its continuations.  For example, if
++ * there is a <span> element with several continuations split over several
++ * lines, this function will return the rectangle containing all of those
++ * continuations.  This rectangle is relative to the origin of the frame's local
++ * coordinate space.
++ */
++#ifndef UNIFIED_CONTINUATIONS
++
++nsRect
++nsDisplayTransform::GetFrameBoundsForTransform(const nsIFrame *const aFrame)
++{
++  NS_PRECONDITION(aFrame, "Can't get the bounds of a nonexistent frame!");
++  return nsRect(nsPoint(0, 0), aFrame->GetSize());
++}
++
++#else
++
++nsRect
++nsDisplayTransform::GetFrameBoundsForTransform(const nsIFrame *const aFrame)
++{
++  NS_PRECONDITION(aFrame, "Can't get the bounds of a nonexistent frame!");
++
++  nsRect result;
++  
++  /* Iterate through the continuation list, unioning together all the
++   * bounding rects.
++   */
++  for (const nsIFrame *currFrame = aFrame->GetFirstContinuation();
++       currFrame != nsnull;
++       currFrame = currFrame->GetNextContinuation())
++    {
++      /* Get the frame rect in local coordinates, then translate back to the
++       * original coordinates.
++       */
++      result.UnionRect(result, nsRect(currFrame->GetOffsetTo(aFrame),
++                                      currFrame->GetSize()));
++    }
++
++  return result;
++}
++
++#endif
++
++/* Returns the delta specified by the -moz-tranform-origin property.
++ * This is a positive delta, meaning that it indicates the direction to move
++ * to get from (0, 0) of the frame to the transform origin.
++ */
++static
++gfxPoint GetDeltaToMozTransformOrigin(const nsIFrame *const aFrame,
++                                      const PRInt32 aFactor,
++                                      const nsRect *const aBoundsOverride)
++{
++  NS_PRECONDITION(aFrame, "Can't get delta for a null frame!");
++  NS_PRECONDITION(aFrame->GetStyleDisplay()->HasTransform(),
++                  "Can't get a delta for an untransformed frame!");
++
++  /* For both of the coordinates, if the value of -moz-transform is a
++   * percentage, it's relative to the size of the frame.  Otherwise, if it's
++   * a distance, it's already computed for us!
++   */
++  const nsStyleDisplay *const display = aFrame->GetStyleDisplay();
++  const nsRect boundingRect =
++    (aBoundsOverride ? *aBoundsOverride :
++     nsDisplayTransform::GetFrameBoundsForTransform(aFrame));
++
++  /* Allows us to access named variables by index. */
++  gfxPoint result;
++  gfxFloat * const coords[2] = {&result.x, &result.y};
++  const nscoord * const dimensions[2] =
++    {&boundingRect.width, &boundingRect.height};
++
++  for (PRUint8 index = 0; index < 2; ++index) {
++    /* If the -moz-transform-origin specifies a percentage, take the percentage
++     * of the size of the box.
++     */
++    if (display->mTransformOrigin[index].GetUnit() == eStyleUnit_Percent)
++      *coords[index] = NSAppUnitsToFloatPixels(*dimensions[index], aFactor) *
++        display->mTransformOrigin[index].GetPercentValue();
++    
++    /* Otherwise, it's a length. */
++    else
++      *coords[index] =
++        NSAppUnitsToFloatPixels(display->
++                                mTransformOrigin[index].GetCoordValue(),
++                                aFactor);
++  }
++  
++  /* Adjust based on the origin of the rectangle. */
++  result.x += NSAppUnitsToFloatPixels(boundingRect.x, aFactor);
++  result.y += NSAppUnitsToFloatPixels(boundingRect.y, aFactor);
++
++  return result;
++}
++
++/* Wraps up the -moz-transform matrix in a change-of-basis matrix pair that
++ * translates from local coordinate space to transform coordinate space, then
++ * hands it back.
++ */
++gfxMatrix
++nsDisplayTransform::GetResultingTransformMatrix(const nsIFrame *const aFrame,
++                                                const nsPoint &aOrigin,
++                                                const PRInt32 aFactor,
++                                                const nsRect *const
++                                                aBoundsOverride)
++{
++  NS_PRECONDITION(aFrame, "Cannot get transform matrix for a null frame!");
++  NS_PRECONDITION(aFrame->GetStyleDisplay()->HasTransform(),
++                  "Cannot get transform matrix if frame isn't transformed!");
++
++  /* Account for the -moz-transform-origin property by translating the
++   * coordinate space to the new origin.
++   */
++  const gfxPoint toMozOrigin = 
++    GetDeltaToMozTransformOrigin(aFrame, aFactor, aBoundsOverride);
++  const gfxPoint newOrigin = 
++    gfxPoint(NSAppUnitsToFloatPixels(aOrigin.x, aFactor),
++             NSAppUnitsToFloatPixels(aOrigin.y, aFactor));
++
++  /* Get the underlying transform matrix.  This requires us to get the
++   * bounds of the frame.
++   */
++  const nsStyleDisplay *const disp = aFrame->GetStyleDisplay();
++  const nsRect bounds =
++    (aBoundsOverride ? *aBoundsOverride :
++     nsDisplayTransform::GetFrameBoundsForTransform(aFrame));
++
++  /* Get the matrix, then change its basis to factor in the origin. */
++  return nsLayoutUtils::ChangeMatrixBasis
++    (newOrigin + toMozOrigin,
++     disp->mTransform.GetThebesMatrix(bounds, aFactor));
++}
++
++/* Painting applies the transform, paints the sublist, then unapplies
++ * the transform.
++ */
++void nsDisplayTransform::Paint(nsDisplayListBuilder *aBuilder,
++                               nsIRenderingContext *aCtx,
++                               const nsRect &aDirtyRect)
++{
++  /* Here's how this is going to work:
++   * 1. Convert the stored transform matrix into a gfxMatrix
++   * 2. Read out the old graphics matrix.
++   * 3. Compute the net graphics matrix at this point.
++   * 4. Set that as the active matrix.
++   * 5. Apply the inverse transform to the dirty rect so that children think
++   *    they're drawing in local space.
++   * 6. Render everything.
++   * 7. Reset the matrix.
++   */
++  /* Get the context and automatically save and restore it. */
++  gfxContext *const gfx = aCtx->ThebesContext();
++  const gfxContextAutoSaveRestore autoRestorer(gfx);
++
++  /* Unit conversion is based on the local presentation context. */
++  const PRInt32 factor = mFrame->PresContext()->AppUnitsPerDevPixel();
++
++  /* Compute the new matrix by taking the old matrix and multiplying the
++   * transform matrix of this frame only.  The new transform is prepended to
++   * the old transform, since that way, if we have several stacked transforms,
++   * the innermost transform is applied first.
++   */
++  gfxMatrix newTransformMatrix =
++    GetResultingTransformMatrix(mFrame, aBuilder->ToReferenceFrame(mFrame),
++                                factor, nsnull);
++
++  newTransformMatrix.Multiply(gfx->CurrentMatrix());
++
++  /* Set the matrix for the transform based on the old matrix and the new
++   * transform data.
++   */
++  gfx->SetMatrix(newTransformMatrix);
++
++  /* Now, send the paint call down.  As we do this, we need to be sure to
++   * untransform the dirty rect, since we want everything that's painting to
++   * think that it's painting in its original rectangular coordinate space.
++   */    
++  mStoredList.Paint(aBuilder, aCtx,
++                    UntransformRect(aDirtyRect, mFrame,
++                                    aBuilder->ToReferenceFrame(mFrame)));
++
++  /* The AutoSaveRestore object will clean things up. */
++}
++
++/* We don't need to do anything here. */
++PRBool nsDisplayTransform::OptimizeVisibility(nsDisplayListBuilder *aBuilder,
++                                              nsRegion *aVisibleRegion)
++{
++  return PR_TRUE;
++}
++
++#ifdef DEBUG_HIT
++#include <time.h>
++#endif
++
++/* HitTest does some fun stuff with matrix transforms to obtain the answer. */
++nsIFrame *nsDisplayTransform::HitTest(nsDisplayListBuilder *aBuilder,
++                                      nsPoint aPt,
++                                      HitTestState *aState)
++{
++  /* Here's how this works:
++   * 1. Get the matrix.  If it's singular, abort (clearly we didn't hit
++   *    anything).
++   * 2. Invert the matrix.
++   * 3. Use it to transform the point into the correct space.
++   * 4. Pass that point down through to the list's version of HitTest.
++   */
++  const PRInt32 factor = nsPresContext::AppUnitsPerCSSPixel();
++  gfxMatrix matrix =
++    GetResultingTransformMatrix(mFrame, aBuilder->ToReferenceFrame(mFrame),
++                                factor, nsnull);
++  if (matrix.IsSingular())
++    return nsnull;
++
++  /* We want to go from transformed-space to regular space.
++   * Thus we have to invert the matrix, which normally does
++   * the reverse operation (e.g. regular->transformed)
++   */
++  matrix.Invert();
++
++  /* Now, apply the transform and pass it down the channel. */
++  const gfxPoint result =
++    matrix.Transform(gfxPoint(NSAppUnitsToFloatPixels(aPt.x, factor),
++                              NSAppUnitsToFloatPixels(aPt.y, factor)));
++
++#ifdef DEBUG_HIT
++  printf("Frame: %p\n", dynamic_cast<void *>(mFrame));
++  printf("  Untransformed point: (%f, %f)\n", result.x, result.y);
++#endif
++
++  nsIFrame *const resultFrame =
++    mStoredList.HitTest
++    (aBuilder,
++     nsPoint(NSFloatPixelsToAppUnits(float(result.x), factor),
++             NSFloatPixelsToAppUnits(float(result.y), factor)), aState);
++
++#ifdef DEBUG_HIT
++  if (resultFrame)
++    printf("  Hit!  Time: %f, frame: %p\n", static_cast<double>(clock()),
++           dynamic_cast<void *>(resultFrame));
++  printf("=== end of hit test ===\n");
++#endif
++
++  return resultFrame;
++}
++
++/* The bounding rectangle for the object is the overflow rectangle translated
++ * by the reference point.
++ */
++nsRect nsDisplayTransform::GetBounds(nsDisplayListBuilder *aBuilder)
++{
++  return mFrame->GetOverflowRect() + aBuilder->ToReferenceFrame(mFrame);
++}
++
++/* The transform is opaque iff the transform consists solely of scales and
++ * transforms and if the underlying content is opaque.  Thus if the transform
++ * is of the form
++ *
++ * |a c e|
++ * |b d f|
++ * |0 0 1|
++ *
++ * We need b and c to be zero.
++ */
++PRBool nsDisplayTransform::IsOpaque(nsDisplayListBuilder *aBuilder)
++{
++  const nsStyleDisplay *const disp = mFrame->GetStyleDisplay();
++  return disp->mTransform.GetMainMatrixEntry(1) == 0.0f &&
++    disp->mTransform.GetMainMatrixEntry(2) == 0.0f &&
++    mStoredList.IsOpaque(aBuilder);
++}
++
++/* The transform is uniform if it fills the entire bounding rect and the
++ * wrapped list is uniform.  See IsOpaque for discussion of why this
++ * works.
++ */
++PRBool nsDisplayTransform::IsUniform(nsDisplayListBuilder *aBuilder)
++{
++  const nsStyleDisplay *const disp = mFrame->GetStyleDisplay();
++  return disp->mTransform.GetMainMatrixEntry(1) == 0.0f &&
++    disp->mTransform.GetMainMatrixEntry(2) == 0.0f &&
++    mStoredList.IsUniform(aBuilder);
++}
++
++/* If UNIFIED_CONTINUATIONS is defined, we can merge two display lists that
++ * share the same underlying content.  Otherwise, doing so results in graphical
++ * glitches.
++ */
++#ifndef UNIFIED_CONTINUATIONS
++
++PRBool
++nsDisplayTransform::TryMerge(nsDisplayListBuilder *aBuilder,
++                             nsDisplayItem *aItem)
++{
++  return PR_FALSE;
++}
++
++#else
++
++PRBool
++nsDisplayTransform::TryMerge(nsDisplayListBuilder *aBuilder,
++                             nsDisplayItem *aItem)
++{
++  NS_PRECONDITION(aItem, "Why did you try merging with a null item?");
++  NS_PRECONDITION(aBuilder, "Why did you try merging with a null builder?");
++
++  /* Make sure that we're dealing with two transforms. */
++  if (aItem->GetType() != TYPE_TRANSFORM)
++    return PR_FALSE;
++
++  /* Check to see that both frames are part of the same content. */
++  if (aItem->GetUnderlyingFrame()->GetContent() != mFrame->GetContent())
++    return PR_FALSE;
++
++  /* Now, move everything over to this frame and signal that
++   * we merged things!
++   */
++  mStoredList.GetList()->
++    AppendToBottom(&static_cast<nsDisplayTransform *>(aItem)->mStoredList);
++  return PR_TRUE;
++}
++
++#endif
++
++/* TransformRect takes in as parameters a rectangle (in app space) and returns
++ * the smallest rectangle (in app space) containing the transformed image of
++ * that rectangle.  That is, it takes the four corners of the rectangle,
++ * transforms them according to the matrix associated with the specified frame,
++ * then returns the smallest rectangle containing the four transformed points.
++ *
++ * @param untransformedBounds The rectangle (in app units) to transform.
++ * @param aFrame The frame whose transformation should be applied.
++ * @param aOrigin The delta from the frame origin to the coordinate space origin
++ * @param aBoundsOverride (optional) Force the frame bounds to be the
++ *        specified bounds.
++ * @return The smallest rectangle containing the image of the transformed
++ *         rectangle.
++ */
++nsRect nsDisplayTransform::TransformRect(const nsRect &untransformedBounds,
++                                         const nsIFrame *const aFrame,
++                                         const nsPoint &aOrigin,
++                                         const nsRect *const aBoundsOverride)
++{
++  NS_PRECONDITION(aFrame, "Can't take the transform based on a null frame!");
++  NS_PRECONDITION(aFrame->GetStyleDisplay()->HasTransform(),
++                  "Cannot transform a rectangle if there's no transformation!");
++
++  const PRInt32 factor = nsPresContext::AppUnitsPerCSSPixel();
++  return nsLayoutUtils::MatrixTransformRect
++    (untransformedBounds,
++     GetResultingTransformMatrix(aFrame, aOrigin, factor, aBoundsOverride),
++     factor);
++}
++
++nsRect nsDisplayTransform::UntransformRect(const nsRect &untransformedBounds,
++                                           const nsIFrame *const aFrame,
++                                           const nsPoint &aOrigin)
++{
++  NS_PRECONDITION(aFrame, "Can't take the transform based on a null frame!");
++  NS_PRECONDITION(aFrame->GetStyleDisplay()->HasTransform(),
++                  "Cannot transform a rectangle if there's no transformation!");
++
++
++  /* Grab the matrix.  If the transform is degenerate, just hand back the
++   * empty rect.
++   */
++  const PRInt32 factor = nsPresContext::AppUnitsPerCSSPixel();
++  gfxMatrix matrix = GetResultingTransformMatrix(aFrame, aOrigin,
++                                                 factor, nsnull);
++  if (matrix.IsSingular())
++    return nsRect();
++
++  /* We want to untransform the matrix, so invert the transformation first! */
++  matrix.Invert();
++
++  return nsLayoutUtils::MatrixTransformRect(untransformedBounds, matrix,
++                                            factor);
++}
+diff -r 71c48ddc9e8c layout/base/nsDisplayList.h
+--- a/layout/base/nsDisplayList.h	Mon Sep 08 15:52:35 2008 -0700
++++ b/layout/base/nsDisplayList.h	Tue Sep 09 09:59:56 2008 -0700
+@@ -53,7 +53,6 @@
+ #include "nsCaret.h"
+ #include "plarena.h"
+ #include "nsLayoutUtils.h"
+-#include "nsTArray.h"
+ 
+ #include <stdlib.h>
+ 
+@@ -200,14 +199,18 @@ public:
+    * @return the root of the display list's frame (sub)tree, whose origin
+    * establishes the coordinate system for the display list
+    */
+-  nsIFrame* ReferenceFrame() { return mReferenceFrame; }
++  const nsIFrame* ReferenceFrame() const { return mReferenceFrame; }
++  nsIFrame* ReferenceFrame()
++  {
++    return const_cast<nsIFrame *>(static_cast<const nsDisplayListBuilder *>(this)->ReferenceFrame());
++  }
+   /**
+    * @return a point pt such that adding pt to a coordinate relative to aFrame
+    * makes it relative to ReferenceFrame(), i.e., returns 
+    * aFrame->GetOffsetTo(ReferenceFrame()). It may be optimized to be faster
+    * than aFrame->GetOffsetTo(ReferenceFrame()) (but currently isn't).
+    */
+-  nsPoint ToReferenceFrame(nsIFrame* aFrame) {
++  nsPoint ToReferenceFrame(const nsIFrame* const aFrame) const {
+     return aFrame->GetOffsetTo(ReferenceFrame());
+   }
+   /**
+@@ -392,7 +395,8 @@ public:
+     TYPE_OUTLINE,
+     TYPE_CLIP,
+     TYPE_OPACITY,
+-    TYPE_WRAPLIST
++    TYPE_WRAPLIST,
++    TYPE_TRANSFORM
+   };
+ 
+   struct HitTestState {
+@@ -1252,4 +1256,116 @@ private:
+   nsRect    mClip;
+ };
+ 
++/* A display item that applies a transformation to all of its descendent
++ * elements.  This wrapper should only be used if there is a transform applied
++ * to the root element.
++ * INVARIANT: The wrapped frame is transformed.
++ * INVARIANT: The wrapped frame is non-null.
++ */ 
++class nsDisplayTransform: public nsDisplayItem
++{
++public:
++  /* Constructor accepts a display list, empties it, and wraps it up.  It also
++   * ferries the underlying frame to the nsDisplayItem constructor.
++   */
++  nsDisplayTransform(nsIFrame *aFrame, nsDisplayList *aList) :
++    nsDisplayItem(aFrame), mStoredList(aFrame, aList)
++  {
++    MOZ_COUNT_CTOR(nsDisplayTransform);
++  }
++
++#ifdef NS_BUILD_REFCNT_LOGGING
++  virtual ~nsDisplayTransform()
++  {
++    MOZ_COUNT_DTOR(nsDisplayTransform);
++  }
++#endif
++
++  NS_DISPLAY_DECL_NAME("nsDisplayTransform");
++
++  virtual Type GetType() 
++  {
++    return TYPE_TRANSFORM;
++  }
++
++  virtual nsIFrame* HitTest(nsDisplayListBuilder *aBuilder, nsPoint aPt,
++                            HitTestState *aState);
++  virtual nsRect GetBounds(nsDisplayListBuilder *aBuilder);
++  virtual PRBool IsOpaque(nsDisplayListBuilder *aBuilder);
++  virtual PRBool IsUniform(nsDisplayListBuilder *aBuilder);
++  virtual void   Paint(nsDisplayListBuilder *aBuilder,
++                       nsIRenderingContext *aCtx,
++                       const nsRect &aDirtyRect);
++  virtual PRBool OptimizeVisibility(nsDisplayListBuilder *aBuilder,
++                                    nsRegion *aVisibleRegion);
++  virtual PRBool TryMerge(nsDisplayListBuilder *aBuilder, nsDisplayItem *aItem);
++
++  /**
++   * TransformRect takes in as parameters a rectangle (in aFrame's coordinate
++   * space) and returns the smallest rectangle (in aFrame's coordinate space)
++   * containing the transformed image of that rectangle.  That is, it takes
++   * the four corners of the rectangle, transforms them according to the
++   * matrix associated with the specified frame, then returns the smallest
++   * rectangle containing the four transformed points.
++   *
++   * @param untransformedBounds The rectangle (in app units) to transform.
++   * @param aFrame The frame whose transformation should be applied.  This
++   *        function raises an assertion if aFrame is null or doesn't have a
++   *        transform applied to it.
++   * @param aOrigin The origin of the transform relative to aFrame's local
++   *        coordinate space.
++   * @param aBoundsOverride (optional) Rather than using the frame's computed
++   *        bounding rect as frame bounds, use this rectangle instead.  Pass
++   *        nsnull (or nothing at all) to use the default.
++   */
++  static nsRect TransformRect(const nsRect &untransformedBounds, 
++                              const nsIFrame *const aFrame,
++                              const nsPoint &aOrigin,
++                              const nsRect *const aBoundsOverride = nsnull);
++
++  /* UntransformRect is like TransformRect, except that it inverts the
++   * transform.
++   */
++  static nsRect UntransformRect(const nsRect &untransformedBounds, 
++                                const nsIFrame *const aFrame,
++                                const nsPoint &aOrigin);
++
++  /**
++   * Returns the bounds of a frame as defined for transforms.  If
++   * UNIFIED_CONTINUATIONS is not defined, this is simply the frame's bounding
++   * rectangle, translated to the origin.  Otherwise, returns the smallest
++   * rectangle containing a frame and all of its continuations.  For example,
++   * if there is a <span> element with several continuations split over
++   * several lines, this function will return the rectangle containing all of
++   * those continuations.  This rectangle is relative to the origin of the
++   * frame's local coordinate space.
++   *
++   * @param aFrame The frame to get the bounding rect for.
++   * @return The frame's bounding rect, as described above.
++   */
++  static nsRect GetFrameBoundsForTransform(const nsIFrame *const aFrame);
++
++  /**
++   * Given a frame with the -moz-transform property, returns the
++   * transformation matrix for that frame.
++   *
++   * @param aFrame The frame to get the matrix from.
++   * @param aOrigin Relative to which point this transform should be applied.
++   * @param aScaleFactor The number of app units per graphics unit.
++   * @param aBoundsOverride [optional] If this is nsnull (the default), the
++   *        computation will use the value of GetFrameBoundsForTransform(aFrame)
++   *        for the frame's bounding rectangle. Otherwise, it will use the
++   *        value of aBoundsOverride.  This is mostly for internal use and in
++   *        most cases you will not need to specify a value.
++   */
++  static gfxMatrix GetResultingTransformMatrix(const nsIFrame *const aFrame,
++                                               const nsPoint &aOrigin,
++                                               const PRInt32 aFactor,
++                                               const nsRect *const
++                                               aBoundsOverride = nsnull);
++
++private:
++  nsDisplayWrapList mStoredList;
++};
++
+ #endif /*NSDISPLAYLIST_H_*/
+diff -r 71c48ddc9e8c layout/base/nsLayoutUtils.cpp
+--- a/layout/base/nsLayoutUtils.cpp	Mon Sep 08 15:52:35 2008 -0700
++++ b/layout/base/nsLayoutUtils.cpp	Tue Sep 09 09:59:56 2008 -0700
+@@ -76,6 +76,8 @@
+ #include "nsIDocShell.h"
+ #include "nsIDocShellTreeItem.h"
+ #include "nsIWidget.h"
++#include "gfxMatrix.h"
++#include "gfxTypes.h"
+ 
+ #ifdef MOZ_SVG
+ #include "nsSVGUtils.h"
+@@ -263,15 +265,15 @@ nsLayoutUtils::IsGeneratedContentFor(nsI
+ }
+ 
+ // static
+-nsIFrame*
++const nsIFrame*
+ nsLayoutUtils::GetCrossDocParentFrame(const nsIFrame* aFrame,
+                                       nsPoint* aExtraOffset)
+ {
+-  nsIFrame* p = aFrame->GetParent();
++  const nsIFrame* p = aFrame->GetParent();
+   if (p)
+     return p;
+ 
+-  nsIView* v = aFrame->GetView();
++  const nsIView* v = aFrame->GetView();
+   if (!v)
+     return nsnull;
+   v = v->GetParent(); // anonymous inner view
+@@ -283,7 +285,7 @@ nsLayoutUtils::GetCrossDocParentFrame(co
+   v = v->GetParent(); // subdocumentframe's view
+   if (!v)
+     return nsnull;
+-  return static_cast<nsIFrame*>(v->GetClientData());
++  return static_cast<const nsIFrame*>(v->GetClientData());
+ }
+ 
+ // static
+@@ -638,19 +640,17 @@ nsLayoutUtils::GetEventCoordinatesRelati
+   if (!GUIEvent->widget)
+     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+ 
+-  // If it is, or is a descendant of, an SVG foreignobject frame,
+-  // then we need to do extra work
++  /* If we walk up the frame tree and discover that any of the frames are
++   * transformed, we need to do extra work to convert from the global
++   * space to the local space.
++   */
+   nsIFrame* rootFrame = aFrame;
++  PRBool transformFound = PR_FALSE;
++
+   for (nsIFrame* f = aFrame; f; f = GetCrossDocParentFrame(f)) {
+-#ifdef MOZ_SVG
+-    if (f->IsFrameOfType(nsIFrame::eSVGForeignObject) && f->GetFirstChild(nsnull)) {
+-      nsSVGForeignObjectFrame* fo = static_cast<nsSVGForeignObjectFrame*>(f);
+-      nsIFrame* outer = nsSVGUtils::GetOuterSVGFrame(fo);
+-      return fo->TransformPointFromOuter(
+-          GetEventCoordinatesRelativeTo(aEvent, outer)) -
+-        aFrame->GetOffsetTo(fo->GetFirstChild(nsnull));
+-    }
+-#endif
++    if(f->IsTransformed())
++      transformFound = PR_TRUE;
++
+     rootFrame = f;
+   }
+ 
+@@ -665,7 +665,140 @@ nsLayoutUtils::GetEventCoordinatesRelati
+   if (widgetToView == nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE))
+     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+ 
++  /* If we encountered a transform, we can't do simple arithmetic to figure
++   * out how to convert back to aFrame's coordinates and must use the CTM.
++   */
++  if (transformFound)
++    return InvertTransformsToRoot(aFrame, widgetToView);
++  
++  /* Otherwise, all coordinate systems are translations of one another,
++   * so we can just subtract out the different.
++   */
+   return widgetToView - aFrame->GetOffsetTo(rootFrame);
++}
++
++gfxMatrix
++nsLayoutUtils::ChangeMatrixBasis(const gfxPoint &aOrigin,
++                                 const gfxMatrix &aMatrix)
++{
++  /* These are translation matrices from world-to-origin of relative frame and
++   * vice-versa.  Although I could use the gfxMatrix::Translate function to
++   * accomplish this, I'm hoping to reduce the overall number of matrix
++   * operations by hardcoding as many of the matrices as possible.
++   */
++  gfxMatrix worldToOrigin(static_cast<gfxFloat>(1.0),
++                          static_cast<gfxFloat>(0.0), 
++                          static_cast<gfxFloat>(0.0),
++                          static_cast<gfxFloat>(1.0), 
++                          -aOrigin.x, -aOrigin.y);
++  gfxMatrix originToWorld(static_cast<gfxFloat>(1.0),
++                          static_cast<gfxFloat>(0.0), 
++                          static_cast<gfxFloat>(0.0),
++                          static_cast<gfxFloat>(1.0), 
++                          aOrigin.x, aOrigin.y);
++
++  /* Multiply all three to get the transform! */
++  gfxMatrix result(worldToOrigin);
++  result.Multiply(aMatrix);
++  result.Multiply(originToWorld);
++  return result;
++}
++
++/**
++ * Given a gfxFloat, constrains its value to be between nscoord_MIN and nscoord_MAX.
++ *
++ * @param aVal The value to constrain (in/out)
++ */
++static void ConstrainToCoordValues(gfxFloat &aVal)
++{
++  if(aVal <= nscoord_MIN)
++    aVal = nscoord_MIN;
++  else if(aVal >= nscoord_MAX)
++    aVal = nscoord_MAX;
++}
++
++nsRect
++nsLayoutUtils::RoundGfxRectToAppRect(const gfxRect &aRect, const PRInt32 aFactor)
++{ 
++  /* Get a new gfxRect whose units are app units by scaling by the specified factor. */ 
++  gfxRect scaledRect(aRect.pos.x * aFactor, aRect.pos.y * aFactor,
++                     aRect.size.width * aFactor,
++                     aRect.size.height * aFactor);
++  
++  /* Round outward. */
++  scaledRect.RoundOut();
++
++  /* We now need to constrain our results to the max and min values for coords. */
++  ConstrainToCoordValues(scaledRect.pos.x);
++  ConstrainToCoordValues(scaledRect.pos.y);
++  ConstrainToCoordValues(scaledRect.size.width);
++  ConstrainToCoordValues(scaledRect.size.height);
++  
++  /* Now typecast everything back.  This is guaranteed to be safe. */
++  return nsRect(nscoord(scaledRect.pos.x), nscoord(scaledRect.pos.y),
++                nscoord(scaledRect.size.width), nscoord(scaledRect.size.height));
++}
++
++nsRect
++nsLayoutUtils::MatrixTransformRect(const nsRect &aBounds, const gfxMatrix &aMatrix,
++                                   const PRInt32 aFactor)
++{
++  const gfxRect image = aMatrix.TransformBounds(gfxRect(NSAppUnitsToFloatPixels(aBounds.x, aFactor),
++                                                        NSAppUnitsToFloatPixels(aBounds.y, aFactor),
++                                                        NSAppUnitsToFloatPixels(aBounds.width, aFactor),
++                                                        NSAppUnitsToFloatPixels(aBounds.height, aFactor)));
++  
++  return RoundGfxRectToAppRect(image, aFactor);
++}
++
++nsPoint
++nsLayoutUtils::MatrixTransformPoint(const nsPoint &aPoint, const gfxMatrix &aMatrix,
++                                    const PRInt32 aFactor)
++{
++  const gfxPoint image = aMatrix.Transform(gfxPoint(NSAppUnitsToFloatPixels(aPoint.x, aFactor),
++                                                    NSAppUnitsToFloatPixels(aPoint.y, aFactor)));
++  return nsPoint(NSFloatPixelsToAppUnits(float(image.x), aFactor),
++                 NSFloatPixelsToAppUnits(float(image.y), aFactor));
++}
++
++/**
++ * Returns the CTM at the specified frame.
++ *
++ * @param aFrame The frame at which we should calculate the CTM.
++ * @return The CTM at the specified frame.
++ */
++static gfxMatrix GetCTMAt(nsIFrame *aFrame)
++{
++  gfxMatrix ctm;
++
++  /* Starting at the specified frame, we'll use the GetTransformMatrix
++   * function of the frame, which gives us a matrix from this frame up
++   * to some other ancestor frame.  Once this function returns null,
++   * we've hit the top of the frame tree and can stop.  We get the CTM
++   * by simply accumulating all of these matrices together.
++   */
++  while (aFrame)
++    ctm *= aFrame->GetTransformMatrix(&aFrame);
++  return ctm;
++}
++
++nsPoint
++nsLayoutUtils::InvertTransformsToRoot(nsIFrame *aFrame,
++                                      const nsPoint &aPoint)
++{
++  NS_PRECONDITION(aFrame, "Why are you inverting transforms when there is no frame?");
++
++  /* To invert everything to the root, we'll get the CTM, invert it, and use it to transform
++   * the point.
++   */
++  gfxMatrix ctm = GetCTMAt(aFrame);
++
++  /* If the ctm is singular, hand back (0, 0) as a sentinel. */
++  if(ctm.IsSingular())
++    return nsPoint(0, 0);
++
++  /* Otherwise, invert the CTM and use it to transform the point. */
++  return MatrixTransformPoint(aPoint, ctm.Invert(), aFrame->PresContext()->AppUnitsPerDevPixel());
+ }
+ 
+ nsPoint
+diff -r 71c48ddc9e8c layout/base/nsLayoutUtils.h
+--- a/layout/base/nsLayoutUtils.h	Mon Sep 08 15:52:35 2008 -0700
++++ b/layout/base/nsLayoutUtils.h	Tue Sep 09 09:59:56 2008 -0700
+@@ -232,8 +232,14 @@ public:
+    * @param aExtraOffset [in/out] if non-null, then as we cross documents
+    * an extra offset may be required and it will be added to aCrossDocOffset
+    */
+-  static nsIFrame* GetCrossDocParentFrame(const nsIFrame* aFrame,
+-                                          nsPoint* aCrossDocOffset = nsnull);
++  static const nsIFrame* GetCrossDocParentFrame(const nsIFrame *aFrame,
++                                                nsPoint* aCrossDocOffset = nsnull);
++  static nsIFrame* GetCrossDocParentFrame(nsIFrame* aFrame,
++                                          nsPoint* aCrossDocOffset = nsnull)
++  {
++    return const_cast<nsIFrame *>(GetCrossDocParentFrame(static_cast<const nsIFrame *>(aFrame),
++                                                         aCrossDocOffset));
++  }
+   
+   /**
+    * IsProperAncestorFrame checks whether aAncestorFrame is an ancestor
+@@ -387,6 +393,20 @@ public:
+                                        nsIView* aView);
+ 
+   /**
++   * Given a matrix and a point, let T be the transformation matrix translating points
++   * in the coordinate space with origin aOrigin to the coordinate space used by the
++   * matrix.  If M is the stored matrix, this function returns (T-1)MT, the matrix
++   * that's equivalent to aMatrix but in the coordinate space that treats aOrigin
++   * as the origin.
++   *
++   * @param aOrigin The origin to translate to.
++   * @param aMatrix The matrix to change the basis of.
++   * @return A matrix equivalent to aMatrix, but operating in the coordinate system with
++   *         origin aOrigin.
++   */
++  static gfxMatrix ChangeMatrixBasis(const gfxPoint &aOrigin, const gfxMatrix &aMatrix);
++
++  /**
+    * Given aFrame, the root frame of a stacking context, find its descendant
+    * frame under the point aPt that receives a mouse event at that location,
+    * or nsnull if there is no such frame.
+@@ -396,6 +416,54 @@ public:
+    */
+   static nsIFrame* GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt,
+                                     PRBool aShouldIgnoreSuppression = PR_FALSE);
++
++  /**
++   * Given a point in the global coordinate space, returns that point expressed
++   * in the coordinate system of aFrame.  This effectively inverts all transforms
++   * between this point and the root frame.
++   *
++   * @param aFrame The frame that acts as the coordinate space container.
++   * @param aPoint The point, in the global space, to get in the frame-local space.
++   * @return aPoint, expressed in aFrame's canonical coordinate space.
++   */
++  static nsPoint InvertTransformsToRoot(nsIFrame* aFrame,
++                                        const nsPoint &aPt);
++
++
++  /**
++   * Helper function that, given a rectangle and a matrix, returns the smallest
++   * rectangle containing the image of the source rectangle.
++   *
++   * @param aBounds The rectangle to transform.
++   * @param aMatrix The matrix to transform it with.
++   * @param aFactor The number of app units per graphics unit.
++   * @return The smallest rect that contains the image of aBounds.
++   */
++  static nsRect MatrixTransformRect(const nsRect &aBounds, const gfxMatrix &aMatrix,
++                                    const PRInt32 aFactor);
++
++  /**
++   * Helper function that, given a point and a matrix, returns the image
++   * of that point under the matrix transform.
++   *
++   * @param aPoint The point to transform.
++   * @param aMatrix The matrix to transform it with.
++   * @param aFactor The number of app units per graphics unit.
++   * @return The image of the point under the transform.
++   */
++  static nsPoint MatrixTransformPoint(const nsPoint &aPoint, const gfxMatrix &aMatrix,
++                                      const PRInt32 aFactor);
++
++  /**
++   * Given a graphics rectangle in graphics space, return a rectangle in
++   * app space that contains the graphics rectangle, rounding out as necessary.
++   *
++   * @param aRect The graphics rect to round outward.
++   * @param aFactor The number of app units per graphics unit.
++   * @return The smallest rectangle in app space that contains aRect.
++   */
++  static nsRect RoundGfxRectToAppRect(const gfxRect &aRect, const PRInt32 aFactor);
++
+ 
+   /**
+    * Given aFrame, the root frame of a stacking context, paint it and its
+diff -r 71c48ddc9e8c layout/base/nsPresShell.cpp
+--- a/layout/base/nsPresShell.cpp	Mon Sep 08 15:52:35 2008 -0700
++++ b/layout/base/nsPresShell.cpp	Tue Sep 09 09:59:56 2008 -0700
+@@ -913,6 +913,7 @@ public:
+   NS_IMETHOD ResizeReflow(nsIView *aView, nscoord aWidth, nscoord aHeight);
+   NS_IMETHOD_(PRBool) IsVisible();
+   NS_IMETHOD_(void) WillPaint();
++  NS_IMETHOD_(void) InvalidateFrameForView(nsIView *view);
+ 
+   // caret handling
+   NS_IMETHOD GetCaret(nsCaret **aOutCaret);
+@@ -1011,7 +1012,6 @@ protected:
+ 
+   void UnsuppressAndInvalidate();
+ 
+-
+   void WillCauseReflow() {
+     nsContentUtils::AddScriptBlocker();
+     ++mChangeNestCount;
+@@ -4191,6 +4191,14 @@ PresShell::GetSelectionForCopy(nsISelect
+   return rv;
+ }
+ 
++/* Just hook this call into InvalidateOverflowRect */
++void
++PresShell::InvalidateFrameForView(nsIView *aView)
++{
++  nsIFrame *const frame = nsLayoutUtils::GetFrameFor(aView);
++  if(frame)
++    frame->InvalidateOverflowRect();
++}
+ 
+ NS_IMETHODIMP
+ PresShell::DoGetContents(const nsACString& aMimeType, PRUint32 aFlags, PRBool aSelectionOnly, nsAString& aOutValue)
+diff -r 71c48ddc9e8c layout/generic/nsContainerFrame.cpp
+--- a/layout/generic/nsContainerFrame.cpp	Mon Sep 08 15:52:35 2008 -0700
++++ b/layout/generic/nsContainerFrame.cpp	Tue Sep 09 09:59:56 2008 -0700
+@@ -560,6 +560,12 @@ nsContainerFrame::SyncFrameViewPropertie
+   }
+ 
+   nsIViewManager* vm = aView->GetViewManager();
++ 
++  /* If this frame has a -moz-transform property, tell it to invalidate on a scroll
++   * rather than doing a BitBlt.
++   */
++  if (aFrame->GetStyleDisplay()->HasTransform())
++    aView->SetInvalidateFrameOnScroll();
+ 
+   if (nsnull == aStyleContext) {
+     aStyleContext = aFrame->GetStyleContext();
+@@ -633,7 +639,7 @@ nsContainerFrame::FrameNeedsView(nsIFram
+       nsCSSAnonBoxes::scrolledContent) {
+     return PR_TRUE;
+   }
+-  return aFrame->NeedsView();
++  return aFrame->NeedsView() || aFrame->GetStyleDisplay()->HasTransform();
+ }
+ 
+ static nscoord GetCoord(const nsStyleCoord& aCoord, nscoord aIfNotCoord)
+diff -r 71c48ddc9e8c layout/generic/nsFrame.cpp
+--- a/layout/generic/nsFrame.cpp	Mon Sep 08 15:52:35 2008 -0700
++++ b/layout/generic/nsFrame.cpp	Tue Sep 09 09:59:56 2008 -0700
+@@ -435,6 +435,12 @@ nsFrame::Init(nsIContent*      aContent,
+     mState |= state & (NS_FRAME_INDEPENDENT_SELECTION |
+                        NS_FRAME_GENERATED_CONTENT);
+   }
++  if (IsTransformed()) {
++    // The frame gets reconstructed if we toggle the -moz-transform
++    // property, so we can set this bit here and then ignore it.
++    mState |= NS_FRAME_MAY_BE_TRANSFORMED;
++  }
++  
+   DidSetStyleContext();
+ 
+   if (IsBoxWrapped())
+@@ -660,6 +666,12 @@ nsIFrame::GetPaddingRect() const
+   nsRect r(mRect);
+   r.Deflate(b);
+   return r;
++}
++
++PRBool
++nsIFrame::IsTransformed() const
++{
++  return GetStyleDisplay()->HasTransform();
+ }
+ 
+ nsRect
+@@ -1177,6 +1189,13 @@ nsIFrame::BuildDisplayListForStackingCon
+   PRBool applyAbsPosClipping =
+       ApplyAbsPosClipping(aBuilder, disp, this, &absPosClip);
+   nsRect dirtyRect = aDirtyRect;
++
++  /* If we're being transformed, we need to invert the matrix transform so that we don't 
++   * grab points in the wrong coordinate system!
++   */
++  if (disp->HasTransform())
++    dirtyRect = nsDisplayTransform::UntransformRect(dirtyRect, this, nsPoint(0, 0));
++  
+   if (applyAbsPosClipping) {
+     dirtyRect.IntersectRect(dirtyRect,
+                             absPosClip - aBuilder->ToReferenceFrame(this));
+@@ -1253,6 +1272,23 @@ nsIFrame::BuildDisplayListForStackingCon
+   // 8, 9: non-negative z-index children
+   resultList.AppendToTop(set.PositionedDescendants());
+ 
++  /* If we're going to apply a transformation, wrap everything in an
++   * nsDisplayTransform.
++   */
++  if (disp->HasTransform()) {
++    /* Make the transform, fail if we can't. */
++    nsDisplayTransform *transform =
++      new (aBuilder) nsDisplayTransform(this, &resultList);
++
++    if (!transform)  
++      return NS_ERROR_OUT_OF_MEMORY;
++    
++    /* Creating newList emptied resultList, so let's go add the transformed
++     * item to the list.
++     */
++    resultList.AppendToTop(transform);
++  }
++  
+   if (applyAbsPosClipping) {
+     nsAbsPosClipWrapper wrapper(this, absPosClip);
+     nsDisplayItem* item = wrapper.WrapList(aBuilder, this, &resultList);
+@@ -1406,7 +1442,11 @@ nsIFrame::BuildDisplayListForChild(nsDis
+       !PresContext()->GetTheme()->WidgetIsContainer(ourDisp->mAppearance))
+     return NS_OK;
+ 
+-  PRBool isComposited = disp->mOpacity != 1.0f;
++  /* The frame is composited if it's partially transparent or if there's a
++   * transform applied to it (since the rotation might have us drawing over
++   * whatever's below us.
++   */
++  PRBool isComposited = disp->mOpacity != 1.0f || aChild->GetStyleDisplay()->HasTransform();
+   PRBool isPositioned = disp->IsPositioned();
+   if (isComposited || isPositioned || (aFlags & DISPLAY_CHILD_FORCE_STACKING_CONTEXT)) {
+     // If you change this, also change IsPseudoStackingContextFromStyle()
+@@ -3590,9 +3630,100 @@ void
+ void
+ nsIFrame::InvalidateInternal(const nsRect& aDamageRect, nscoord aX, nscoord aY,
+                              nsIFrame* aForChild, PRBool aImmediate)
+-{
+-  GetParent()->
+-    InvalidateInternal(aDamageRect, aX + mRect.x, aY + mRect.y, this, aImmediate);
++{ 
++  /* If we're a transformed frame, then we need to apply our transform to the
++   * damage rectangle so that the redraw correctly redraws the transformed
++   * region.  We're moved over aX and aY from our origin, but since this aX
++   * and aY is contained within our border, we need to scoot back by -aX and
++   * -aY to get back to the origin of the transform.
++   *
++   * There's one more problem, though, and that's that we don't know what
++   * coordinate space this rectangle is in.  Sometimes it's in the local
++   * coordinate space for the frame, and sometimes its in the transformed
++   * coordinate space.  If we get it wrong, we'll display incorrectly.  Until I
++   * find a better fix for this problem, we'll invalidate the union of the two
++   * rectangles (original rectangle and transformed rectangle).  At least one of
++   * these will be correct.
++   *
++   * See bug #452496 for more details.
++   */
++  if (GetStyleDisplay()->HasTransform()) {
++    nsRect newDamageRect;
++    newDamageRect.UnionRect
++      (nsDisplayTransform::TransformRect(aDamageRect, this, nsPoint(-aX, -aY)),
++       aDamageRect);
++    GetParent()->
++      InvalidateInternal(newDamageRect, aX + mRect.x, aY + mRect.y,
++                         this, aImmediate);
++  }
++  else
++    GetParent()->
++      InvalidateInternal(aDamageRect, aX + mRect.x, aY + mRect.y, this, aImmediate);
++}
++
++gfxMatrix
++nsIFrame::GetTransformMatrix(nsIFrame **aOutAncestor)
++{
++  NS_PRECONDITION(aOutAncestor, "Need a place to put the ancestor!");
++
++  /* If we're transformed, we want to hand back the combination transform/translate
++   * matrix that will apply our current transform, then shift us to our parent.
++   */
++  if (IsTransformed()) {
++    *aOutAncestor = nsLayoutUtils::GetCrossDocParentFrame(this);
++
++    /* Compute the delta to the parent, which we need because we are converting
++     * coordinates to our parent.
++     */
++    const nsPoint delta = GetOffsetTo(*aOutAncestor);
++    const PRInt32 scaleFactor = PresContext()->AppUnitsPerDevPixel();
++
++    gfxMatrix result =
++      nsDisplayTransform::GetResultingTransformMatrix
++      (this, nsPoint(0, 0),
++       PresContext()->AppUnitsPerDevPixel());
++    result *= gfxMatrix().Translate
++      (gfxPoint(NSAppUnitsToFloatPixels(delta.x, scaleFactor),
++                NSAppUnitsToFloatPixels(delta.y, scaleFactor)));
++    return result;
++  }
++  
++  /* Otherwise, we're not transformed.  In that case, we'll walk up the frame
++   * tree until we either hit the root frame or something that may be
++   * transformed.  We'll then change coordinates into that frame, since we're
++   * guaranteed that nothing in-between can be transformed.  First, however,
++   * we have to check to see if we have a parent.  If not, we'll set the
++   * outparam to null (indicating that there's nothing left) and will hand back
++   * the identity matrix.
++   */
++  *aOutAncestor = nsLayoutUtils::GetCrossDocParentFrame(this);
++  if (!*aOutAncestor)
++    return gfxMatrix();
++  
++  for (;;) {
++    /* Might be transformed; stop iterating. */
++    if ((*aOutAncestor)->mState & NS_FRAME_MAY_BE_TRANSFORMED)
++      break;
++
++    /* If no parent, stop iterating.  Otherwise, update the ancestor. */
++    nsIFrame *const parent =
++      nsLayoutUtils::GetCrossDocParentFrame(*aOutAncestor);
++    if (!parent)
++      break;
++
++    *aOutAncestor = parent;
++  }
++
++  NS_ASSERTION(*aOutAncestor, "Somehow ended up with a null ancestor...?");
++
++  /* Translate from this frame to our ancestor, if it exists.  That's the
++   * entire transform, so we're done.
++   */
++  const nsPoint delta = GetOffsetTo(*aOutAncestor);
++  const PRInt32 scaleFactor = PresContext()->AppUnitsPerDevPixel();
++  return gfxMatrix().Translate
++    (gfxPoint(NSAppUnitsToFloatPixels(delta.x, scaleFactor),
++              NSAppUnitsToFloatPixels(delta.y, scaleFactor)));
+ }
+ 
+ void
+@@ -5378,6 +5509,16 @@ nsIFrame::FinishAndStoreOverflow(nsRect*
+     aOverflowArea->UnionRectIncludeEmpty(*aOverflowArea,
+                                          nsRect(nsPoint(0, 0), aNewSize));
+ 
++  /* If we're transformed, transform the overflow rect by the current transformation. */
++  if (GetStyleDisplay()->HasTransform()) {
++    /* Since our size might not actually have been computed yet, we need to make sure that we use the
++     * correct dimensions by overriding the stored bounding rectangle with the value the caller has
++     * ensured us we'll use.
++     */
++    const nsRect newBounds(nsPoint(0, 0), aNewSize);
++    *aOverflowArea = nsDisplayTransform::TransformRect(*aOverflowArea, this, nsPoint(0, 0), &newBounds);
++  }
++  
+   PRBool geometricOverflow =
+     aOverflowArea->x < 0 || aOverflowArea->y < 0 ||
+     aOverflowArea->XMost() > aNewSize.width || aOverflowArea->YMost() > aNewSize.height;
+diff -r 71c48ddc9e8c layout/generic/nsGfxScrollFrame.cpp
+--- a/layout/generic/nsGfxScrollFrame.cpp	Mon Sep 08 15:52:35 2008 -0700
++++ b/layout/generic/nsGfxScrollFrame.cpp	Tue Sep 09 09:59:56 2008 -0700
+@@ -1391,9 +1391,16 @@ nsGfxScrollFrameInner::NeedsClipWidget()
+ nsGfxScrollFrameInner::NeedsClipWidget() const
+ {
+   // Scrollports contained in form controls (e.g., listboxes) don't get
+-  // widgets.
++  // widgets.  Also, transformed elements don't need clip widgets since they
++  // result in graphical glitches.
+   for (nsIFrame* parentFrame = mOuter; parentFrame;
+-       parentFrame = parentFrame->GetParent()) {
++       parentFrame = nsLayoutUtils::GetCrossDocParentFrame(parentFrame)) {
++    
++    /* See if we have a transform... we should have no widget if that's the case. */
++    if (parentFrame->GetStyleDisplay()->HasTransform())
++      return PR_FALSE;
++
++    /* If we're a form element, we don't need a widget. */
+     nsIFormControlFrame* fcFrame;
+     if ((NS_SUCCEEDED(parentFrame->QueryInterface(NS_GET_IID(nsIFormControlFrame), (void**)&fcFrame)))) {
+       return PR_FALSE;
+diff -r 71c48ddc9e8c layout/generic/nsIFrame.h
+--- a/layout/generic/nsIFrame.h	Mon Sep 08 15:52:35 2008 -0700
++++ b/layout/generic/nsIFrame.h	Tue Sep 09 09:59:56 2008 -0700
+@@ -53,6 +53,7 @@
+ #include "nsStyleContext.h"
+ #include "nsIContent.h"
+ #include "nsHTMLReflowMetrics.h"
++#include "gfxMatrix.h"
+ 
+ /**
+  * New rules of reflow:
+@@ -231,7 +232,11 @@ enum {
+   // results when an inline has been split because of a nested block.
+   NS_FRAME_IS_SPECIAL =                         0x00008000,
+ 
+-  NS_FRAME_THIS_BIT_BELONGS_TO_ROC_DO_NOT_USE_OR_I_WILL_HUNT_YOU_DOWN = 0x00010000,
++  // If this bit is set, the frame may have a transform that it applies
++  // to its coordinate system (e.g. CSS transform, SVG foreignObject).
++  // This is used primarily in GetTransformMatrix to optimize for the
++  // common case.
++  NS_FRAME_MAY_BE_TRANSFORMED =                 0x00010000,
+ 
+ #ifdef IBMBIDI
+   // If this bit is set, the frame itself is a bidi continuation,
+@@ -902,6 +907,12 @@ public:
+   virtual PRBool NeedsView() { return PR_FALSE; }
+ 
+   /**
++   * Returns whether this frame has a transform matrix applied to it.  This is true
++   * if we have the -moz-transform property or if we're an SVGForeignObjectFrame.
++   */
++  virtual PRBool IsTransformed() const;
++
++  /**
+    * This frame needs a view with a widget (e.g. because it's fixed
+    * positioned), so we call this to create the widget. If widgets for
+    * this frame type need to be of a certain type or require special
+@@ -1550,7 +1561,19 @@ public:
+    * @see nsGkAtoms
+    */
+   virtual nsIAtom* GetType() const = 0;
+-  
++
++  /**
++   * Returns a transformation matrix that converts points in this frame's coordinate space
++   * to points in some ancestor frame's coordinate space.  The frame decides which ancestor
++   * it will use as a reference point.  If this frame has no ancestor, aOutAncestor will be
++   * set to null.
++   *
++   * @param aOutAncestor [out] The ancestor frame the frame has chosen.  If this frame has no
++   *        ancestor, aOutAncestor will be nsnull.
++   * @return A gfxMatrix that converts points in this frame's coordinate space into
++   *         points in aOutAncestor's coordinate space.
++   */
++  virtual gfxMatrix GetTransformMatrix(nsIFrame **aOutAncestor);
+ 
+   /**
+    * Bit-flags to pass to IsFrameOfType()
+diff -r 71c48ddc9e8c layout/reftests/reftest.list
+--- a/layout/reftests/reftest.list	Mon Sep 08 15:52:35 2008 -0700
++++ b/layout/reftests/reftest.list	Tue Sep 09 09:59:56 2008 -0700
+@@ -105,6 +105,9 @@ include text-shadow/reftest.list
+ # text-transform/
+ include text-transform/reftest.list
+ 
++# -moz-transform/
++include transform/reftest.list
++
+ # xul-document-load/
+ include xul-document-load/reftest.list
+ 
+diff -r 71c48ddc9e8c layout/reftests/transform/abspos-1-ref.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/abspos-1-ref.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,12 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="width: 100px; height: 200px; position: relative; left: 50px; top: 50px; background-color: gold;">
++    A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
++    <div style="background-color: navy; color: gold; width: 200px; height: 100px; position: absolute; left: 50px; top: 100px;">
++      0 1 2 3 4 5 6 7 8 9
++    </div>
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/abspos-1a.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/abspos-1a.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,12 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="width: 100px; height: 200px; -moz-transform: translate(50px); background-color: gold;">
++    A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
++    <div style="background-color: navy; color: gold; width: 200px; height: 100px; position: absolute; left: 50px; top: 100px;">
++      0 1 2 3 4 5 6 7 8 9
++    </div>
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/abspos-1b.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/abspos-1b.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,12 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="width: 100px; height: 200px; -moz-transform: translate(50px) ;background-color: gold;">
++    A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
++    <div style="background-color: navy; color: gold; width: 200px; height: 100px; position: fixed; left: 50px; top: 100px;">
++      0 1 2 3 4 5 6 7 8 9
++    </div>
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/abspos-1c.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/abspos-1c.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,12 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="width: 100px; height: 200px; -moz-transform: translate(50px) ;background-color: gold;">
++    A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
++    <div style="background-color: navy; color: gold; width: 200px; height: 100px; position: fixed; right: -150px; bottom: 0px;">
++      0 1 2 3 4 5 6 7 8 9
++    </div>
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/abspos-1d.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/abspos-1d.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,12 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="width: 100px; height: 200px; -moz-transform: translate(50px) ;background-color: gold;">
++    A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
++    <div style="background-color: navy; color: gold; width: 200px; height: 100px; position: absolute; right: -150px; bottom: 0px;">
++      0 1 2 3 4 5 6 7 8 9
++    </div>
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/abspos-1e.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/abspos-1e.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,12 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="width: 100px; height: 200px; -moz-transform: translate(50px) ;background-color: gold;">
++    A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
++    <div style="background-color: navy; color: gold; width: 200px; height: 100px; position: absolute; right: -151px; bottom: 0px;">
++      0 1 2 3 4 5 6 7 8 9
++    </div>
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/origin-1-ref.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/origin-1-ref.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,9 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="width:200px;height:100px;border:1px solid black; -moz-transform: rotate(45deg);">
++	Some text!
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/origin-1a.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/origin-1a.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,9 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="width:200px;height:100px;border:1px solid black; -moz-transform: rotate(45deg); -moz-transform-origin: 0% 0%">
++	Some text!
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/origin-1b.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/origin-1b.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,9 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="width:200px;height:100px;border:1px solid black; -moz-transform: rotate(45deg); -moz-transform-origin:100% 50%">
++	Some text!
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/origin-2-ref.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/origin-2-ref.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,9 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="width:200px;height:100px;border:1px solid black; -moz-transform: rotate(45deg);">
++	Some text!
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/origin-2a.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/origin-2a.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,9 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="width:200px;height:100px;border:1px solid black; -moz-transform: rotate(45deg); -moz-transform-origin: 101px 51px;">
++	Some text!
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/origin-2b.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/origin-2b.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,9 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="width:200px;height:100px;border:1px solid black; -moz-transform: rotate(45deg); -moz-transform-origin: 101px 50%;">
++	Some text!
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/origin-2c.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/origin-2c.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,9 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="width:200px;height:100px;border:1px solid black; -moz-transform: rotate(45deg); -moz-transform-origin: 50% 51px;">
++	Some text!
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/origin-name-1-ref.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/origin-name-1-ref.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,8 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="margin-left: 300px; margin-top:300px; width:100px; height:200px; background-color:#202040; -moz-transform: rotate(45deg); -moz-transform-origin: 0% 0%;">
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/origin-name-1a.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/origin-name-1a.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,8 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="margin-left: 300px; margin-top:300px; width:100px; height:200px; background-color:#202040; -moz-transform: rotate(45deg); -moz-transform-origin: top left;">
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/origin-name-1b.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/origin-name-1b.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,8 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="margin-left: 300px; margin-top:300px; width:100px; height:200px; background-color:#202040; -moz-transform: rotate(45deg); -moz-transform-origin: left top;">
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/origin-name-2-ref.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/origin-name-2-ref.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,8 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="margin-left: 300px; margin-top:300px; width:100px; height:200px; background-color:#202040; -moz-transform: rotate(45deg); -moz-transform-origin: 50% 0%;">
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/origin-name-2a.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/origin-name-2a.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,8 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="margin-left: 300px; margin-top:300px; width:100px; height:200px; background-color:#202040; -moz-transform: rotate(45deg); -moz-transform-origin: top;">
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/origin-name-2b.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/origin-name-2b.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,8 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="margin-left: 300px; margin-top:300px; width:100px; height:200px; background-color:#202040; -moz-transform: rotate(45deg); -moz-transform-origin: top center;">
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/origin-name-2c.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/origin-name-2c.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,8 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="margin-left: 300px; margin-top:300px; width:100px; height:200px; background-color:#202040; -moz-transform: rotate(45deg); -moz-transform-origin: center top;">
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/origin-name-3-ref.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/origin-name-3-ref.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,8 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="margin-left: 300px; margin-top:300px; width:100px; height:200px; background-color:#202040; -moz-transform: rotate(45deg); -moz-transform-origin: 100% 0%;">
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/origin-name-3a.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/origin-name-3a.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,8 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="margin-left: 300px; margin-top:300px; width:100px; height:200px; background-color:#202040; -moz-transform: rotate(45deg); -moz-transform-origin: top right;">
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/origin-name-3b.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/origin-name-3b.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,8 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="margin-left: 300px; margin-top:300px; width:100px; height:200px; background-color:#202040; -moz-transform: rotate(45deg); -moz-transform-origin: right top;">
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/percent-1-ref.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/percent-1-ref.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,14 @@
++<html>
++<head>
++  <style type="text/css">
++    .transformed
++    {
++    -moz-transform: rotate(10deg) translatex(50px) rotate(10deg) translatey(50px) skewx(10deg) translate(25px);
++    }
++  </style>
++</head>
++<body>
++  <div style="width:100px; height:50px; background-color:gold; position: absolute; left:100px; top:100px;" class="transformed">
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/percent-1a.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/percent-1a.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,14 @@
++<html>
++<head>
++  <style type="text/css">
++    .transformed
++    {
++    -moz-transform: rotate(10deg) translatex(50%) rotate(10deg) translatey(50px) skewx(10deg) translate(25px);
++    }
++  </style>
++</head>
++<body>
++  <div style="width:100px; height:50px; background-color:gold; position: absolute; left:100px; top:100px;" class="transformed">
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/percent-1b.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/percent-1b.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,14 @@
++<html>
++<head>
++  <style type="text/css">
++    .transformed
++    {
++    -moz-transform: rotate(10deg) translatex(50px) rotate(10deg) translatey(100%) skewx(10deg) translate(25px);
++    }
++  </style>
++</head>
++<body>
++  <div style="width:100px; height:50px; background-color:gold; position: absolute; left:100px; top:100px;" class="transformed">
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/percent-1c.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/percent-1c.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,14 @@
++<html>
++<head>
++  <style type="text/css">
++    .transformed
++    {
++    -moz-transform: rotate(10deg) translatex(50px) rotate(10deg) translatey(50px) skewx(10deg) translate(25%, 50%);
++    }
++  </style>
++</head>
++<body>
++  <div style="width:100px; height:50px; background-color:gold; position: absolute; left:100px; top:100px;" class="transformed">
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/percent-1d.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/percent-1d.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,14 @@
++<html>
++<head>
++  <style type="text/css">
++    .transformed
++    {
++    -moz-transform: rotate(10deg) translatex(50%) rotate(10deg) translatey(100%) skewx(10deg) translate(25px);
++    }
++  </style>
++</head>
++<body>
++  <div style="width:100px; height:50px; background-color:gold; position: absolute; left:100px; top:100px;" class="transformed">
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/percent-1e.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/percent-1e.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,14 @@
++<html>
++<head>
++  <style type="text/css">
++    .transformed
++    {
++    -moz-transform: rotate(10deg) translatex(50%) rotate(10deg) translatey(100%) skewx(10deg) translate(25%, 50%);
++    }
++  </style>
++</head>
++<body>
++  <div style="width:100px; height:50px; background-color:gold; position: absolute; left:100px; top:100px;" class="transformed">
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/percent-1f.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/percent-1f.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,14 @@
++<html>
++<head>
++  <style type="text/css">
++    .transformed
++    {
++    -moz-transform: rotate(10deg) translatex(50%) rotate(10deg) translatey(50px) skewx(10deg) translate(25%, 50%);
++    }
++  </style>
++</head>
++<body>
++  <div style="width:100px; height:50px; background-color:gold; position: absolute; left:100px; top:100px;" class="transformed">
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/percent-1g.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/percent-1g.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,14 @@
++<html>
++<head>
++  <style type="text/css">
++    .transformed
++    {
++    -moz-transform: rotate(10deg) translatex(50px) rotate(10deg) translatey(100%) skewx(10deg) translate(25%, 50%);
++    }
++  </style>
++</head>
++<body>
++  <div style="width:100px; height:50px; background-color:gold; position: absolute; left:100px; top:100px;" class="transformed">
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/reftest.list
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/reftest.list	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,59 @@
++# translatex should act like position: relative
++== translatex-1a.html translatex-1-ref.html
++== translatex-1b.html translatex-1-ref.html
++== translatex-1c.html translatex-1-ref.html
++== translatex-1d.html translatex-1-ref.html
++== translatex-1e.html translatex-1-ref.html
++== translatex-1a.html translatex-1-ref-2.html
++# translatey should act like position: relative
++== translatey-1a.html translatey-1-ref.html
++== translatey-1b.html translatey-1-ref.html
++== translatey-1c.html translatey-1-ref.html
++== translatey-1d.html translatey-1-ref.html
++== translatey-1e.html translatey-1-ref.html
++# matrices defined to be translations should act like position: relative
++== translatex-2.html translatex-1-ref.html
++== translatey-2.html translatey-1-ref.html
++# translate should act like position: relative
++== translate-1a.html translate-1-ref.html
++== translate-1b.html translate-1-ref.html
++== translate-1c.html translate-1-ref.html
++== translate-1d.html translate-1-ref.html
++== translate-1e.html translate-1-ref.html
++# rotate: Several rotations of the same object should be idempotent
++== rotate-1a.html rotate-1-ref.html
++== rotate-1b.html rotate-1-ref.html
++== rotate-1c.html rotate-1-ref.html
++== rotate-1d.html rotate-1-ref.html
++== rotate-1e.html rotate-1-ref.html
++# rotate: 90deg rotations should be indistinguishable from objects constructed to look the same.
++== rotate-2a.html rotate-2-ref.html
++# -moz-transform-origin: We should NOT get the same images when using different -moz-transform-origins.
++!= origin-1a.html origin-1-ref.html
++!= origin-1b.html origin-1-ref.html
++# -moz-transform-origin: We should get the same images when using equivalent -moz-transform-origins.
++== origin-2a.html origin-2-ref.html
++== origin-2b.html origin-2-ref.html
++== origin-2c.html origin-2-ref.html
++# translate with percentages should be indistinguishable from translate with equivalent values.
++== percent-1a.html percent-1-ref.html
++== percent-1b.html percent-1-ref.html
++== percent-1c.html percent-1-ref.html
++== percent-1d.html percent-1-ref.html
++== percent-1e.html percent-1-ref.html
++== percent-1f.html percent-1-ref.html
++== percent-1g.html percent-1-ref.html
++# Transformed elements are abs-pos and fixed-pos containing blocks.
++== abspos-1a.html abspos-1-ref.html
++== abspos-1b.html abspos-1-ref.html
++== abspos-1c.html abspos-1-ref.html
++== abspos-1d.html abspos-1-ref.html
++!= abspos-1e.html abspos-1-ref.html
++# Origin can use "top" "right" etc.
++== origin-name-1a.html origin-name-1-ref.html
++== origin-name-1b.html origin-name-1-ref.html
++== origin-name-2a.html origin-name-2-ref.html
++== origin-name-2b.html origin-name-2-ref.html
++== origin-name-2c.html origin-name-2-ref.html
++== origin-name-3a.html origin-name-3-ref.html
++== origin-name-3b.html origin-name-3-ref.html
+\ No newline at end of file
+diff -r 71c48ddc9e8c layout/reftests/transform/rotate-1-ref.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/rotate-1-ref.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,9 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="-moz-transform: rotate(45deg);">
++    Test Text
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/rotate-1a.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/rotate-1a.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,9 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="-moz-transform: rotate(45deg) rotate(360deg);">
++    Test Text
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/rotate-1b.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/rotate-1b.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,9 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="-moz-transform: rotate(45deg) rotate(400grad);">
++    Test Text
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/rotate-1c.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/rotate-1c.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,9 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="-moz-transform: rotate(45deg) rotate(100deg) rotate(80deg) rotate(200grad);">
++    Test Text
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/rotate-1d.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/rotate-1d.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,9 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="-moz-transform: rotate(-45deg) rotate(100grad);">
++    Test Text
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/rotate-1e.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/rotate-1e.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,9 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="-moz-transform: rotate(-135deg) rotate(3.1415926535897932384626433rad);">
++    Test Text
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/rotate-2-ref.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/rotate-2-ref.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,9 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="width:200px;height:100px;border:1px solid black;">
++
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/rotate-2a.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/rotate-2a.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,9 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="width:100px;height:200px;-moz-transform: rotate(-90deg) translate(50px, -50px); border: 1px solid black;">
++
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/translate-1-ref.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/translate-1-ref.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,9 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="position: relative; left: 50px; top: 50px;">
++    Test Text
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/translate-1a.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/translate-1a.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,9 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="-moz-transform: translate(50px);">
++    Test Text
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/translate-1b.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/translate-1b.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,9 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="-moz-transform: translate(50px) rotate(360deg);">
++    Test Text
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/translate-1c.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/translate-1c.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,9 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="-moz-transform: translate(25px) translate(25px);">
++    Test Text
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/translate-1d.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/translate-1d.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,9 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="-moz-transform: translate(25px); position:relative; top:25px; left:25px;">
++    Test Text
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/translate-1e.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/translate-1e.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,9 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="-moz-transform: translate(50px) translate(-100px) translate(150px) translate(-50px);">
++    Test Text
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/translatex-1-ref-2.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/translatex-1-ref-2.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,9 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="margin-left: 50px;">
++    Test Text
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/translatex-1-ref.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/translatex-1-ref.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,9 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="position:relative; left:50px;">
++    Test Text
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/translatex-1a.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/translatex-1a.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,9 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="-moz-transform: translatex(50px);">
++    Test Text
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/translatex-1b.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/translatex-1b.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,9 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="-moz-transform: translatex(50px) rotate(360deg);">
++    Test Text
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/translatex-1c.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/translatex-1c.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,9 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="-moz-transform: translatex(25px) translatex(25px);">
++    Test Text
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/translatex-1d.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/translatex-1d.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,9 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="-moz-transform: translatex(25px); position:relative; left:25px; top:0px;">
++    Test Text
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/translatex-1e.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/translatex-1e.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,9 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="-moz-transform: translatex(50px) translatex(-100px) translatex(150px) translatex(-50px);">
++    Test Text
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/translatex-2.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/translatex-2.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,9 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="-moz-transform: matrix(1, 0, 0, 1, 50px, 0);">
++    Test Text
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/translatey-1-ref-2.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/translatey-1-ref-2.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,9 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="margin-top: 50px;">
++    Test Text
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/translatey-1-ref.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/translatey-1-ref.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,9 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="position:relative; top:50px;">
++    Test Text
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/translatey-1a.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/translatey-1a.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,9 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="-moz-transform: translatey(50px);">
++    Test Text
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/translatey-1b.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/translatey-1b.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,9 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="-moz-transform: translatey(50px) rotate(360deg);">
++    Test Text
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/translatey-1c.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/translatey-1c.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,9 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="-moz-transform: translatey(25px) translatey(25px);">
++    Test Text
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/translatey-1d.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/translatey-1d.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,9 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="-moz-transform: translatey(25px); position:relative; top:25px; left:0px;">
++    Test Text
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/translatey-1e.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/translatey-1e.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,9 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="-moz-transform: translatey(50px) translatey(-100px) translatey(150px) translatey(-50px);">
++    Test Text
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/reftests/transform/translatey-2.html
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/reftests/transform/translatey-2.html	Tue Sep 09 09:59:56 2008 -0700
+@@ -0,0 +1,9 @@
++<html>
++<head>
++</head>
++<body>
++  <div style="-moz-transform: matrix(1, 0, 0, 1, 0, 50px);">
++    Test Text
++  </div>
++</body>
++</html>
+diff -r 71c48ddc9e8c layout/style/Makefile.in
+--- a/layout/style/Makefile.in	Mon Sep 08 15:52:35 2008 -0700
++++ b/layout/style/Makefile.in	Tue Sep 09 09:59:57 2008 -0700
+@@ -122,6 +122,7 @@ EXPORTS		= \
+ 		nsStyleStructFwd.h \
+ 		nsStyleStructInlines.h \
+ 		nsStyleStructList.h \
++		nsStyleTransformMatrix.h \
+ 		nsStyleUtil.h \
+ 		$(NULL)
+ 
+@@ -161,6 +162,7 @@ CPPSRCS		= \
+ 		nsStyleCoord.cpp \
+ 		nsStyleSet.cpp \
+ 		nsStyleStruct.cpp \
++		nsStyleTransformMatrix.cpp \
+ 		nsStyleUtil.cpp \
+ 		$(NULL)
+ 
+diff -r 71c48ddc9e8c layout/style/nsCSSDeclaration.cpp
+--- a/layout/style/nsCSSDeclaration.cpp	Mon Sep 08 15:52:35 2008 -0700
++++ b/layout/style/nsCSSDeclaration.cpp	Tue Sep 09 09:59:57 2008 -0700
+@@ -226,12 +226,14 @@ PRBool nsCSSDeclaration::AppendValueToSt
+         const nsCSSValuePair *pair = static_cast<const nsCSSValuePair*>(storage);
+         AppendCSSValueToString(aProperty, pair->mXValue, aResult);
+         if (pair->mYValue != pair->mXValue ||
+-            (aProperty == eCSSProperty_background_position &&
++            ((aProperty == eCSSProperty_background_position ||
++              aProperty == eCSSProperty__moz_transform_origin) &&
+              pair->mXValue.GetUnit() != eCSSUnit_Inherit &&
+              pair->mXValue.GetUnit() != eCSSUnit_Initial)) {
+           // Only output a Y value if it's different from the X value
+           // or if it's a background-position value other than 'initial'
+-          // or 'inherit'.
++          // or 'inherit' or if it's a -moz-transform-origin value other
++          // than 'initial' or 'inherit'.
+           aResult.Append(PRUnichar(' '));
+           AppendCSSValueToString(aProperty, pair->mYValue, aResult);
+         }
+@@ -328,6 +330,29 @@ nsCSSDeclaration::AppendCSSValueToString
+         mark = PR_TRUE;
+       }
+     }
++  }
++  /* Although Function is backed by an Array, we'll handle it separately
++   * because it's a bit quirky.
++   */
++  else if (eCSSUnit_Function == unit) {
++    const nsCSSValue::Array *const array = aValue.GetArrayValue();
++    NS_ASSERTION(array->Count() >= 1, "Functions must have at least one element for the name.");
++
++    /* Append the function name. */
++    AppendCSSValueToString(aProperty, array->Item(0), aResult);
++    aResult.AppendLiteral("(");
++
++    /* Now, step through the function contents, writing each of them as we go. */
++    for (PRUint16 index = 1; index < array->Count(); ++index) {
++      AppendCSSValueToString(aProperty, array->Item(index), aResult);
++
++      /* If we're not at the final element, append a comma. */
++      if (index + 1 != array->Count())
++        aResult.AppendLiteral(", ");
++    }
++
++    /* Finally, append the closing parenthesis. */
++    aResult.AppendLiteral(")");
+   }
+   else if (eCSSUnit_Integer == unit) {
+     nsAutoString tmpStr;
+@@ -453,6 +478,7 @@ nsCSSDeclaration::AppendCSSValueToString
+     case eCSSUnit_Attr:
+     case eCSSUnit_Counter:
+     case eCSSUnit_Counters:     aResult.Append(PRUnichar(')'));    break;
++    case eCSSUnit_Function:     break;
+     case eCSSUnit_Integer:      break;
+     case eCSSUnit_Enumerated:   break;
+     case eCSSUnit_EnumColor:    break;
+diff -r 71c48ddc9e8c layout/style/nsCSSKeywordList.h
+--- a/layout/style/nsCSSKeywordList.h	Mon Sep 08 15:52:35 2008 -0700
++++ b/layout/style/nsCSSKeywordList.h	Tue Sep 09 09:59:57 2008 -0700
+@@ -336,6 +336,7 @@ CSS_KEY(lowercase, lowercase)
+ CSS_KEY(lowercase, lowercase)
+ CSS_KEY(ltr, ltr)
+ CSS_KEY(margin-box, margin_box)
++CSS_KEY(matrix, matrix)
+ CSS_KEY(medium, medium)
+ CSS_KEY(menu, menu)
+ CSS_KEY(menutext, menutext)
+@@ -391,11 +392,15 @@ CSS_KEY(right, right)
+ CSS_KEY(right, right)
+ CSS_KEY(right-side, right_side)
+ CSS_KEY(rightwards, rightwards)
++CSS_KEY(rotate, rotate)
+ CSS_KEY(round, round)
+ CSS_KEY(row-resize, row_resize)
+ CSS_KEY(rtl, rtl)
+ CSS_KEY(s, s)
+ CSS_KEY(s-resize, s_resize)
++CSS_KEY(scale, scale)
++CSS_KEY(scalex, scalex)
++CSS_KEY(scaley, scaley)
+ CSS_KEY(scroll, scroll)
+ CSS_KEY(scrollbar, scrollbar)
+ CSS_KEY(scrollbar-small, scrollbar_small)
+@@ -410,6 +415,9 @@ CSS_KEY(separate, separate)
+ CSS_KEY(separate, separate)
+ CSS_KEY(show, show)
+ CSS_KEY(silent, silent)
++CSS_KEY(skew, skew)
++CSS_KEY(skewx, skewx)
++CSS_KEY(skewy, skewy)
+ CSS_KEY(slow, slow)
+ CSS_KEY(slower, slower)
+ CSS_KEY(small, small)
+@@ -450,6 +458,9 @@ CSS_KEY(toggle, toggle)
+ CSS_KEY(toggle, toggle)
+ CSS_KEY(top, top)
+ CSS_KEY(top-outside, top_outside)
++CSS_KEY(translate, translate)
++CSS_KEY(translatex, translatex)
++CSS_KEY(translatey, translatey)
+ CSS_KEY(transparent, transparent)
+ CSS_KEY(tri-state, tri_state)
+ CSS_KEY(ultra-condensed, ultra_condensed)
+diff -r 71c48ddc9e8c layout/style/nsCSSParser.cpp
+--- a/layout/style/nsCSSParser.cpp	Mon Sep 08 15:52:35 2008 -0700
++++ b/layout/style/nsCSSParser.cpp	Tue Sep 09 09:59:57 2008 -0700
+@@ -83,6 +83,8 @@
+ #include "math.h"
+ #include "nsContentUtils.h"
+ #include "nsDOMError.h"
++#include "nsAutoPtr.h"
++#include "nsTArray.h"
+ 
+ // Flags for ParseVariant method
+ #define VARIANT_KEYWORD         0x000001  // K
+@@ -268,6 +270,7 @@ protected:
+ 
+   PRBool ExpectSymbol(nsresult& aErrorCode, PRUnichar aSymbol, PRBool aSkipWS);
+   PRBool ExpectEndProperty(nsresult& aErrorCode);
++  PRBool CheckEndProperty(nsresult& aErrorCode);
+   nsSubstring* NextIdent(nsresult& aErrorCode);
+   void SkipUntil(nsresult& aErrorCode, PRUnichar aStopSymbol);
+   void SkipRuleSet(nsresult& aErrorCode);
+@@ -398,6 +401,8 @@ protected:
+   PRBool ParseBackground(nsresult& aErrorCode);
+   PRBool ParseBackgroundPosition(nsresult& aErrorCode);
+   PRBool ParseBackgroundPositionValues(nsresult& aErrorCode);
++  PRBool ParseBoxPosition(nsCSSValuePair& aOut, nsresult& aErrorCode);
++  PRBool ParseBoxPositionValues(nsCSSValuePair& aOut, nsresult& aErrorCode);
+   PRBool ParseBorderColor(nsresult& aErrorCode);
+   PRBool ParseBorderColors(nsresult& aErrorCode,
+                            nsCSSValueList** aResult,
+@@ -434,6 +439,7 @@ protected:
+   PRBool ParseListStyle(nsresult& aErrorCode);
+   PRBool ParseMargin(nsresult& aErrorCode);
+   PRBool ParseMarks(nsresult& aErrorCode, nsCSSValue& aValue);
++  PRBool ParseMozTransform(nsresult& aErrorCode);
+   PRBool ParseOutline(nsresult& aErrorCode);
+   PRBool ParseOverflow(nsresult& aErrorCode);
+   PRBool ParsePadding(nsresult& aErrorCode);
+@@ -493,6 +499,20 @@ protected:
+     return mParsingCompoundProperty;
+   }
+ 
++  /* Functions for -moz-transform Parsing */
++  PRBool ReadSingleTransform(nsresult &aErrorCode, nsCSSValueList**& aTail);
++  PRBool ParseFunction(const nsString &aFunction, const PRInt32 aAllowedTypes[],
++                       PRUint16 aMinElems, PRUint16 aMaxElems,
++                       nsCSSValue &aValue, nsresult &aErrorCode);
++  PRBool ParseFunctionInternals(const PRInt32 aVariantMask[],
++                                PRUint16 aMinElems,
++                                PRUint16 aMaxElems,
++                                nsTArray<nsCSSValue> &aOutput,
++                                nsresult &aErrorCode);
++
++  /* Functions for -moz-transform-origin Parsing */
++  PRBool ParseMozTransformOrigin(nsresult &aErrorCode);
++
+   /* Find and return the correct namespace ID for the prefix aPrefix.  If the
+      prefix cannot be resolved to a namespace, this method will return false.
+      Otherwise it will return true.  When returning false, it may set
+@@ -1301,20 +1321,35 @@ PRBool CSSParserImpl::ExpectSymbol(nsres
+   return PR_FALSE;
+ }
+ 
+-PRBool CSSParserImpl::ExpectEndProperty(nsresult& aErrorCode)
++// Checks to see if we're at the end of a property.  If an error occurs during
++// the check, sets aErrorCode appropriately.
++PRBool CSSParserImpl::CheckEndProperty(nsresult &aErrorCode)
+ {
+   if (!GetToken(aErrorCode, PR_TRUE)) {
+     return PR_TRUE; // properties may end with eof
+   }
+   if ((eCSSToken_Symbol == mToken.mType) &&
+-      ((';' == mToken.mSymbol) || ('!' == mToken.mSymbol) || ('}' == mToken.mSymbol))) {
++      ((';' == mToken.mSymbol) ||
++       ('!' == mToken.mSymbol) ||
++       ('}' == mToken.mSymbol))) {
+     // XXX need to verify that ! is only followed by "important [;|}]
+     // XXX this requires a multi-token pushback buffer
+     UngetToken();
+     return PR_TRUE;
+   }
++  
++  UngetToken();
++  return PR_FALSE;
++}
++
++// Checks if we're at the end of a property, raising an error if we're not.
++PRBool CSSParserImpl::ExpectEndProperty(nsresult& aErrorCode)
++{
++  if(CheckEndProperty(aErrorCode))
++    return PR_TRUE;
++
++  // If we're here, we read something incorrect, so we should report it.
+   REPORT_UNEXPECTED_TOKEN(PEExpectEndValue);
+-  UngetToken();
+   return PR_FALSE;
+ }
+ 
+@@ -4849,6 +4884,8 @@ PRBool CSSParserImpl::ParseProperty(nsre
+     return ParseBorderRadius(aErrorCode);
+   case eCSSProperty__moz_outline_radius:
+     return ParseOutlineRadius(aErrorCode);
++  case eCSSProperty_box_shadow:
++    return ParseBoxShadow(aErrorCode);
+   case eCSSProperty_clip:
+     return ParseRect(mTempData.mDisplay.mClip, aErrorCode,
+                      eCSSProperty_clip);
+@@ -4913,9 +4950,11 @@ PRBool CSSParserImpl::ParseProperty(nsre
+     return ParseSize(aErrorCode);
+   case eCSSProperty_text_shadow:
+     return ParseTextShadow(aErrorCode);
+-  case eCSSProperty_box_shadow:
+-    return ParseBoxShadow(aErrorCode);
+-
++  case eCSSProperty__moz_transform:
++    return ParseMozTransform(aErrorCode);
++  case eCSSProperty__moz_transform_origin:
++    return ParseMozTransformOrigin(aErrorCode);
++    
+ #ifdef MOZ_SVG
+   case eCSSProperty_fill:
+     return ParsePaint(aErrorCode, &mTempData.mSVG.mFill, eCSSProperty_fill);
+@@ -4972,7 +5011,6 @@ PRBool CSSParserImpl::ParseProperty(nsre
+     // The user can't use these
+     REPORT_UNEXPECTED(PEInaccessibleProperty2);
+     return PR_FALSE;
+-
+   default:  // must be single property
+     {
+       nsCSSValue value;
+@@ -5064,6 +5102,8 @@ PRBool CSSParserImpl::ParseSingleValuePr
+   case eCSSProperty_quotes:
+   case eCSSProperty_size:
+   case eCSSProperty_text_shadow:
++  case eCSSProperty__moz_transform:
++  case eCSSProperty__moz_transform_origin:
+   case eCSSProperty_COUNT:
+ #ifdef MOZ_SVG
+   case eCSSProperty_fill:
+@@ -5631,7 +5671,7 @@ PRBool CSSParserImpl::ParseAzimuth(nsres
+ }
+ 
+ static nsCSSValue
+-BackgroundPositionMaskToCSSValue(PRInt32 aMask, PRBool isX)
++BoxPositionMaskToCSSValue(PRInt32 aMask, PRBool isX)
+ {
+   PRInt32 val = NS_STYLE_BG_POSITION_CENTER;
+   if (isX) {
+@@ -5810,8 +5850,7 @@ PRBool CSSParserImpl::ParseBackground(ns
+ 
+ PRBool CSSParserImpl::ParseBackgroundPosition(nsresult& aErrorCode)
+ {
+-  if (!ParseBackgroundPositionValues(aErrorCode) ||
+-      !ExpectEndProperty(aErrorCode)) 
++  if (!ParseBoxPosition(mTempData.mColor.mBackPosition, aErrorCode)) 
+     return PR_FALSE;
+   mTempData.SetPropertyBit(eCSSProperty_background_position);
+   return PR_TRUE;
+@@ -5819,9 +5858,32 @@ PRBool CSSParserImpl::ParseBackgroundPos
+ 
+ PRBool CSSParserImpl::ParseBackgroundPositionValues(nsresult& aErrorCode)
+ {
++  return ParseBoxPositionValues(mTempData.mColor.mBackPosition, aErrorCode);
++}
++
++/**
++ * Parses two values that correspond to positions in a box.  These can be
++ * values corresponding to percentages of the box, raw offsets, or keywords
++ * like "top," "left center," etc.
++ *
++ * @param aOut The nsCSSValuePair where to place the result.
++ * @param aErrorCode Where to store an error code.
++ * @return Whether or not the operation succeeded.
++ */
++PRBool CSSParserImpl::ParseBoxPosition(nsCSSValuePair &aOut,
++                                       nsresult &aErrorCode)
++{
++  // Need to read the box positions and the end of the property.
++  return ParseBoxPositionValues(aOut, aErrorCode) &&
++    ExpectEndProperty(aErrorCode);
++}
++
++PRBool CSSParserImpl::ParseBoxPositionValues(nsCSSValuePair &aOut,
++                                             nsresult& aErrorCode)
++{
+   // First try a percentage or a length value
+-  nsCSSValue &xValue = mTempData.mColor.mBackPosition.mXValue,
+-             &yValue = mTempData.mColor.mBackPosition.mYValue;
++  nsCSSValue &xValue = aOut.mXValue,
++             &yValue = aOut.mYValue;
+   if (ParseVariant(aErrorCode, xValue, VARIANT_HLP, nsnull)) {
+     if (eCSSUnit_Inherit == xValue.GetUnit() ||
+         eCSSUnit_Initial == xValue.GetUnit()) {  // both are inherited or both are set to initial
+@@ -5841,7 +5903,7 @@ PRBool CSSParserImpl::ParseBackgroundPos
+         // The second keyword can only be 'center', 'top', or 'bottom'
+         return PR_FALSE;
+       }
+-      yValue = BackgroundPositionMaskToCSSValue(yVal, PR_FALSE);
++      yValue = BoxPositionMaskToCSSValue(yVal, PR_FALSE);
+       return PR_TRUE;
+     }
+ 
+@@ -5877,7 +5939,7 @@ PRBool CSSParserImpl::ParseBackgroundPos
+           return PR_FALSE;
+         }
+ 
+-        xValue = BackgroundPositionMaskToCSSValue(mask, PR_TRUE);
++        xValue = BoxPositionMaskToCSSValue(mask, PR_TRUE);
+         return PR_TRUE;
+       }
+     }
+@@ -5891,8 +5953,8 @@ PRBool CSSParserImpl::ParseBackgroundPos
+   }
+ 
+   // Create style values
+-  xValue = BackgroundPositionMaskToCSSValue(mask, PR_TRUE);
+-  yValue = BackgroundPositionMaskToCSSValue(mask, PR_FALSE);
++  xValue = BoxPositionMaskToCSSValue(mask, PR_TRUE);
++  yValue = BoxPositionMaskToCSSValue(mask, PR_FALSE);
+   return PR_TRUE;
+ }
+ 
+@@ -6212,7 +6274,7 @@ PRBool CSSParserImpl::ParseBorderColors(
+     list->mValue = value;
+ 
+     while (list) {
+-      if (ExpectEndProperty(aErrorCode)) {
++      if (CheckEndProperty(aErrorCode)) {
+         mTempData.SetPropertyBit(aProperty);
+         *aResult = listHead;
+         aErrorCode = NS_OK;
+@@ -6327,7 +6389,7 @@ PRBool CSSParserImpl::ParseContent(nsres
+     list->mValue = value;
+ 
+     while (nsnull != list) {
+-      if (ExpectEndProperty(aErrorCode)) {
++      if (CheckEndProperty(aErrorCode)) {
+         mTempData.SetPropertyBit(eCSSProperty_content);
+         mTempData.mContent.mContent = listHead;
+         aErrorCode = NS_OK;
+@@ -6423,7 +6485,7 @@ PRBool CSSParserImpl::ParseCounterData(n
+         UngetToken();
+       }
+     }
+-    if (ExpectEndProperty(aErrorCode)) {
++    if (CheckEndProperty(aErrorCode)) {
+       mTempData.SetPropertyBit(aPropID);
+       *aResult = dataHead;
+       aErrorCode = NS_OK;
+@@ -6675,6 +6737,380 @@ PRBool CSSParserImpl::ParseOneFamily(nsr
+   }
+ }
+ 
++///////////////////////////////////////////////////////
++// -moz-transform Parsing Implementation
++
++/* Reads a function list of arguments.  Do not call this function
++ * directly; it's mean to be caled from ParseFunction.
++ */
++PRBool
++CSSParserImpl::ParseFunctionInternals(const PRInt32 aVariantMask[],
++                                      PRUint16 aMinElems,
++                                      PRUint16 aMaxElems,
++                                      nsTArray<nsCSSValue> &aOutput,
++                                      nsresult &aErrorCode)
++{
++  for (PRUint16 index = 0; index < aMaxElems; ++index) {
++    nsCSSValue newValue;
++    if (!ParseVariant(aErrorCode, newValue, aVariantMask[index], nsnull))
++      return PR_FALSE;
++
++    aOutput.AppendElement(newValue);
++    
++    // See whether to continue or whether to look for end of function.
++    if (!ExpectSymbol(aErrorCode, ',', PR_TRUE)) {
++      // We need to read the closing parenthesis, and also must take care
++      // that we haven't read too few symbols.
++      return ExpectSymbol(aErrorCode, ')', PR_TRUE) && (index + 1) >= aMinElems;
++    }
++  }
++
++  // If we're here, we finished looping without hitting the end, so we read too
++  // many elements.
++  return PR_FALSE;
++}
++
++/* Parses a function [ input of the form (a [, b]*) ] and stores it
++ * as an nsCSSValue that holds a function of the form
++ * function-name arg1 arg2 ... argN
++ *
++ * On error, the return value is PR_FALSE and aErrorCode will be adjusted
++ * accordingly.
++ *
++ * @param aFunction The name of the function that we're reading.
++ * @param aAllowedTypes An array of values corresponding to the legal
++ *        types for each element in the function.  The zeroth element in the
++ *        array corresponds to the first function parameter, etc.  The length
++ *        of this array _must_ be greater than or equal to aMaxElems or the
++ *        behavior is undefined.
++ * @param aMinElems Minimum number of elements to read.  Reading fewer than
++ *        this many elements will result in the function failing.
++ * @param aMaxElems Maximum number of elements to read.  Reading more than
++ *        this many elements will result in the function failing.
++ * @param aValue (out) The value that was parsed.
++ * @param aErrorCode (out) The error code generated during this function.
++ */
++PRBool
++CSSParserImpl::ParseFunction(const nsString &aFunction,
++                             const PRInt32 aAllowedTypes[],
++                             PRUint16 aMinElems, PRUint16 aMaxElems,
++                             nsCSSValue &aValue, nsresult &aErrorCode)
++{
++  typedef nsTArray<nsCSSValue>::size_type arrlen_t;
++
++  /* 2^16 - 2, so that if we have 2^16 - 2 transforms, we have 2^16 - 1
++   * elements stored in the the nsCSSValue::Array.
++   */
++  const arrlen_t MAX_ALLOWED_ELEMS = 0xFFFE;
++
++  /* Make a copy of the function name, since the reference is _probably_ to
++   * mToken.mIdent, which is going to get overwritten during the course of this
++   * function.
++   */
++  const nsString functionName(aFunction);
++
++  /* First things first... read the parenthesis.  If it fails, abort. */
++  if (!ExpectSymbol(aErrorCode, '(', PR_TRUE))
++    return PR_FALSE;
++  
++  /* Read in a list of values as an nsTArray, failing if we can't or if
++   * it's out of bounds.
++   */
++  nsTArray<nsCSSValue> foundValues;
++  if (!ParseFunctionInternals(aAllowedTypes, aMinElems, aMaxElems, foundValues,
++                              aErrorCode))
++    return PR_FALSE;
++  
++  /* Now, convert this nsTArray into an nsCSSValue::Array object.
++   * We'll need N + 1 spots, one for the function name and the rest for the
++   * arguments.  In case the user has given us more than 2^16 - 2 arguments,
++   * we'll truncate them at 2^16 - 2 arguments.
++   */
++  const PRUint16 numElements = (foundValues.Length() <= MAX_ALLOWED_ELEMS ?
++                                foundValues.Length() + 1 : MAX_ALLOWED_ELEMS);
++  nsRefPtr<nsCSSValue::Array> convertedArray =
++	  nsCSSValue::Array::Create(numElements);
++  if (!convertedArray) {
++    aErrorCode = NS_ERROR_OUT_OF_MEMORY;
++    return PR_FALSE;
++  }
++  
++  /* Copy things over. */
++  convertedArray->Item(0).SetStringValue(functionName, eCSSUnit_String);
++  for (PRUint16 index = 0; index + 1 < numElements; ++index)
++    convertedArray->Item(index + 1) = foundValues[static_cast<arrlen_t>(index)];
++  
++  /* Fill in the outparam value with the array. */
++  aValue.SetArrayValue(convertedArray, eCSSUnit_Function);
++  
++  /* Return it! */
++  return PR_TRUE;
++}
++
++/**
++ * Given a token, determines the minimum and maximum number of function
++ * parameters to read, along with the mask that should be used to read
++ * those function parameters.  If the token isn't a transform function,
++ * returns an error.
++ *
++ * @param aToken The token identifying the function.
++ * @param aMinElems [out] The minimum number of elements to read.
++ * @param aMaxElems [out] The maximum number of elements to read
++ * @param aVariantMask [out] The variant mask to use during parsing
++ * @return Whether the information was loaded successfully.
++ */
++static PRBool GetFunctionParseInformation(nsCSSKeyword aToken,
++                                          PRUint16 &aMinElems,
++                                          PRUint16 &aMaxElems,
++                                          const PRInt32 *& aVariantMask)
++{
++/* These types represent the common variant masks that will be used to
++   * parse out the individual functions.  The order in the enumeration
++   * must match the order in which the masks are declared.
++   */
++  enum { eLengthPercent,
++         eTwoLengthPercents,
++         eAngle,
++         eNumber,
++         eTwoNumbers,
++         eMatrix,
++         eNumVariantMasks };
++  static const PRInt32 kMaxElemsPerFunction = 6;
++  static const PRInt32 kVariantMasks[eNumVariantMasks][kMaxElemsPerFunction] = {
++    {VARIANT_LENGTH | VARIANT_PERCENT},
++    {VARIANT_LENGTH | VARIANT_PERCENT, VARIANT_LENGTH | VARIANT_PERCENT},
++    {VARIANT_ANGLE},
++    {VARIANT_NUMBER},
++    {VARIANT_NUMBER, VARIANT_NUMBER},
++    {VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER,
++     VARIANT_LENGTH | VARIANT_PERCENT, VARIANT_LENGTH | VARIANT_PERCENT}};
++
++#ifdef DEBUG
++  static const PRUint8 kVariantMaskLengths[eNumVariantMasks] =
++    {1, 2, 1, 1, 2, 6};
++#endif
++
++  PRInt32 variantIndex = eNumVariantMasks;
++
++  switch (aToken) {
++  case eCSSKeyword_translatex:
++    /* Exactly one length or percent. */
++    variantIndex = eLengthPercent;
++    aMinElems = 1U;
++    aMaxElems = 1U;
++    break;
++  case eCSSKeyword_translatey:
++    /* Exactly one length or percent. */
++    variantIndex = eLengthPercent;
++    aMinElems = 1U;
++    aMaxElems = 1U;
++    break;
++  case eCSSKeyword_scalex:
++    /* Exactly one scale factor. */
++    variantIndex = eNumber;
++    aMinElems = 1U;
++    aMaxElems = 1U;
++    break;
++  case eCSSKeyword_scaley:
++    /* Exactly one scale factor. */
++    variantIndex = eNumber;
++    aMinElems = 1U;
++    aMaxElems = 1U;
++    break;
++  case eCSSKeyword_rotate:
++    /* Exactly one angle. */
++    variantIndex = eAngle;
++    aMinElems = 1U;
++    aMaxElems = 1U;
++    break;
++  case eCSSKeyword_translate:
++    /* One or two lengths or percents. */
++    variantIndex = eTwoLengthPercents;
++    aMinElems = 1U;
++    aMaxElems = 2U;
++    break;
++  case eCSSKeyword_skew:
++    /* Exactly one angle. */
++    variantIndex = eAngle;
++    aMinElems = 1U;
++    aMaxElems = 1U;
++    break;
++  case eCSSKeyword_scale:
++    /* One or two scale factors. */
++    variantIndex = eTwoNumbers;
++    aMinElems = 1U;
++    aMaxElems = 2U;
++    break;
++  case eCSSKeyword_skewx:
++    /* Exactly one angle. */
++    variantIndex = eAngle;
++    aMinElems = 1U;
++    aMaxElems = 1U;
++    break;
++  case eCSSKeyword_skewy:
++    /* Exactly one angle. */
++    variantIndex = eAngle;
++    aMinElems = 1U;
++    aMaxElems = 1U;
++    break;
++  case eCSSKeyword_matrix:
++    /* Six values, which can be numbers, lengths, or percents. */
++    variantIndex = eMatrix;
++    aMinElems = 6U;
++    aMaxElems = 6U;
++    break;
++    
++  default:
++    /* Oh dear, we didn't match.  Report an error. */
++    return PR_FALSE;
++  }
++
++  NS_ASSERTION(aMinElems > 0, "Didn't update minimum elements!");
++  NS_ASSERTION(aMaxElems > 0, "Didn't update maximum elements!");
++  NS_ASSERTION(aMinElems <= aMaxElems, "aMinElems > aMaxElems!");
++  NS_ASSERTION(variantIndex >= 0, "Invalid variant mask!");
++  NS_ASSERTION(variantIndex < eNumVariantMasks, "Invalid variant mask!");
++#ifdef DEBUG
++  NS_ASSERTION(aMaxElems <= kVariantMaskLengths[variantIndex],
++               "Invalid aMaxElems for this variant mask.");
++#endif
++
++  // Convert the index into a mask.
++  aVariantMask = kVariantMasks[variantIndex];
++
++  return PR_TRUE;
++}
++                                          
++
++/* Reads a single transform function from the tokenizer stream, reporting an
++ * error if something goes wrong.
++ */
++PRBool CSSParserImpl::ReadSingleTransform(nsresult &aErrorCode,
++                                          nsCSSValueList **& aTail)
++{
++  typedef nsTArray<nsCSSValue>::size_type arrlen_t;
++	
++  if (!GetToken(aErrorCode, PR_TRUE))
++    return PR_FALSE;
++  
++  /* Check to make sure that we've read a function. */
++  if (mToken.mType != eCSSToken_Function) {
++    UngetToken();
++    return PR_FALSE;
++  }
++
++  /* Load up the variant mask information for ParseFunction.  If we can't,
++   * abort.
++   */
++  const PRInt32* variantMask;
++  PRUint16 minElems, maxElems;
++  if (!GetFunctionParseInformation(nsCSSKeywords::LookupKeyword(mToken.mIdent),
++                                   minElems, maxElems, variantMask))
++    return PR_FALSE;
++
++  /* Create a cell to populate, fail if we're out of memory. */
++  nsAutoPtr<nsCSSValue> newCell(new nsCSSValue);
++  if (!newCell) {
++    aErrorCode = NS_ERROR_OUT_OF_MEMORY;
++    return PR_FALSE;
++  }
++
++  /* Try reading things in, failing if we can't */
++  if (!ParseFunction(mToken.mIdent, variantMask,
++                     minElems, maxElems, *newCell, aErrorCode))
++    return PR_FALSE;
++
++  /* Wrap up our result in an nsCSSValueList cell. */
++  nsAutoPtr<nsCSSValueList> toAppend(new nsCSSValueList);
++  if (!toAppend)
++    return PR_FALSE;
++
++  toAppend->mValue = *newCell;
++  
++  /* Chain the element to the end of the transform list, then update the
++   * list.
++   */
++  *aTail = toAppend.forget();
++  aTail = &(*aTail)->mNext;
++  
++  /* It worked!  Return true. */
++  return PR_TRUE;
++}
++
++/* Parses a -moz-transform property list by continuously reading in properties
++ * and constructing a matrix from it.
++ */
++PRBool CSSParserImpl::ParseMozTransform(nsresult& aErrorCode)
++{
++  nsCSSValueList *transformList = nsnull;
++  mTempData.mDisplay.mTransform = nsnull;
++ 
++  /* First, check to see if this is some sort of keyword - none, inherit,
++   * or initial.
++   */
++  nsCSSValue keywordValue;
++  if (ParseVariant(aErrorCode, keywordValue, VARIANT_INHERIT | VARIANT_NONE,
++                  nsnull)) {
++    /* Looks like it is.  Make a new value list and fill it in, failing if
++     * we can't.
++     */
++    mTempData.mDisplay.mTransform = new nsCSSValueList;
++    if (!mTempData.mDisplay.mTransform) {
++      aErrorCode = NS_ERROR_OUT_OF_MEMORY;
++      return PR_FALSE;
++    }
++
++    /* Inform the parser that everything worked. */
++    mTempData.mDisplay.mTransform->mValue = keywordValue;
++    mTempData.SetPropertyBit(eCSSProperty__moz_transform);
++    aErrorCode = NS_OK;
++    return PR_TRUE;
++  }
++  
++  /* We will read a nonempty list of transforms.  Thus we'll read in a
++   * transform, then continuously read transforms until we're no longer
++   * able to do so.
++   */
++  nsCSSValueList **tail = &transformList;
++  do {
++    /* Try reading a transform.  If we fail to do so, abort. */
++    if (!ReadSingleTransform(aErrorCode, tail)) {
++      delete transformList;
++      return PR_FALSE;
++    }
++  }
++  while (!CheckEndProperty(aErrorCode));
++
++  /* Confirm that this is the end of the property and set error code
++   * appropriately otherwise.
++   */
++  if (!ExpectEndProperty(aErrorCode)) {
++    delete transformList;
++    return PR_FALSE;
++  }
++  
++  /* Validate our data. */
++  NS_ASSERTION(transformList, "Didn't read any transforms!");
++  
++  mTempData.SetPropertyBit(eCSSProperty__moz_transform);
++  mTempData.mDisplay.mTransform = transformList;
++  aErrorCode = NS_OK;
++
++  return PR_TRUE;
++}
++
++PRBool CSSParserImpl::ParseMozTransformOrigin(nsresult &aErrorCode)
++{
++  /* Read in a box position, fail if we can't. */
++  if(!ParseBoxPosition(mTempData.mDisplay.mTransformOrigin, aErrorCode))
++    return PR_FALSE;
++
++  /* Set the property bit and return. */
++  mTempData.SetPropertyBit(eCSSProperty__moz_transform_origin);
++  aErrorCode = NS_OK;
++  return PR_TRUE;
++}
++
+ PRBool CSSParserImpl::ParseFamily(nsresult& aErrorCode, nsCSSValue& aValue)
+ {
+   if (!GetToken(aErrorCode, PR_TRUE))
+@@ -6881,7 +7317,7 @@ PRBool CSSParserImpl::ParseMarks(nsresul
+ {
+   if (ParseVariant(aErrorCode, aValue, VARIANT_HOK, nsCSSProps::kPageMarksKTable)) {
+     if (eCSSUnit_Enumerated == aValue.GetUnit()) {
+-      if (PR_FALSE == ExpectEndProperty(aErrorCode)) {
++      if (PR_FALSE == CheckEndProperty(aErrorCode)) {
+         nsCSSValue  second;
+         if (ParseEnum(aErrorCode, second, nsCSSProps::kPageMarksKTable)) {
+           aValue.SetIntValue(aValue.GetIntValue() | second.GetIntValue(), eCSSUnit_Enumerated);
+@@ -7021,7 +7457,7 @@ PRBool CSSParserImpl::ParseQuotes(nsresu
+         // get mandatory close
+         if (ParseVariant(aErrorCode, quotes->mYValue, VARIANT_STRING,
+                          nsnull)) {
+-          if (ExpectEndProperty(aErrorCode)) {
++          if (CheckEndProperty(aErrorCode)) {
+             mTempData.SetPropertyBit(eCSSProperty_quotes);
+             mTempData.mContent.mQuotes = quotesHead;
+             aErrorCode = NS_OK;
+@@ -7318,7 +7754,7 @@ PRBool CSSParserImpl::ParseDasharray(nsr
+     list->mValue = value;
+ 
+     for (;;) {
+-      if (ExpectEndProperty(aErrorCode)) {
++      if (CheckEndProperty(aErrorCode)) {
+         mTempData.SetPropertyBit(eCSSProperty_stroke_dasharray);
+         mTempData.mSVG.mStrokeDasharray = listHead;
+         aErrorCode = NS_OK;
+diff -r 71c48ddc9e8c layout/style/nsCSSPropList.h
+--- a/layout/style/nsCSSPropList.h	Mon Sep 08 15:52:35 2008 -0700
++++ b/layout/style/nsCSSPropList.h	Tue Sep 09 09:59:57 2008 -0700
+@@ -500,6 +500,8 @@ CSS_PROP_TEXT(text-indent, text_indent, 
+ CSS_PROP_TEXT(text-indent, text_indent, TextIndent, Text, mTextIndent, eCSSType_Value, nsnull)
+ CSS_PROP_TEXT(text-shadow, text_shadow, TextShadow, Text, mTextShadow, eCSSType_ValueList, nsnull)
+ CSS_PROP_TEXT(text-transform, text_transform, TextTransform, Text, mTextTransform, eCSSType_Value, kTextTransformKTable)
++CSS_PROP_DISPLAY(-moz-transform, _moz_transform, MozTransform, Display, mTransform, eCSSType_ValueList, kDisplayKTable)
++CSS_PROP_DISPLAY(-moz-transform-origin, _moz_transform_origin, MozTransformOrigin, Display, mTransformOrigin, eCSSType_ValuePair, kBackgroundPositionKTable)
+ CSS_PROP_POSITION(top, top, Top, Position, mOffset.mTop, eCSSType_Value, nsnull)
+ CSS_PROP_TEXTRESET(unicode-bidi, unicode_bidi, UnicodeBidi, Text, mUnicodeBidi, eCSSType_Value, kUnicodeBidiKTable)
+ CSS_PROP_USERINTERFACE(-moz-user-focus, user_focus, MozUserFocus, UserInterface, mUserFocus, eCSSType_Value, kUserFocusKTable) // XXX bug 3935
+diff -r 71c48ddc9e8c layout/style/nsCSSStruct.cpp
+--- a/layout/style/nsCSSStruct.cpp	Mon Sep 08 15:52:35 2008 -0700
++++ b/layout/style/nsCSSStruct.cpp	Tue Sep 09 09:59:57 2008 -0700
+@@ -213,7 +213,8 @@ nsCSSValueListRect::sides[4] = {
+ 
+ // --- nsCSSDisplay -----------------
+ 
+-nsCSSDisplay::nsCSSDisplay(void)
++/* During allocation, null-out the transform list. */
++nsCSSDisplay::nsCSSDisplay(void) : mTransform(nsnull)
+ {
+   MOZ_COUNT_CTOR(nsCSSDisplay);
+ }
+diff -r 71c48ddc9e8c layout/style/nsCSSStruct.h
+--- a/layout/style/nsCSSStruct.h	Mon Sep 08 15:52:35 2008 -0700
++++ b/layout/style/nsCSSStruct.h	Tue Sep 09 09:59:57 2008 -0700
+@@ -279,6 +279,8 @@ struct nsCSSDisplay : public nsCSSStruct
+   nsCSSValue mOverflowY;
+   nsCSSValue mVisibility;
+   nsCSSValue mOpacity;
++  nsCSSValueList *mTransform; // List of Arrays containing transform information
++  nsCSSValuePair mTransformOrigin;
+ 
+   // temp fix for bug 24000 
+   nsCSSValue mBreakBefore;
+diff -r 71c48ddc9e8c layout/style/nsCSSValue.cpp
+--- a/layout/style/nsCSSValue.cpp	Mon Sep 08 15:52:35 2008 -0700
++++ b/layout/style/nsCSSValue.cpp	Tue Sep 09 09:59:57 2008 -0700
+@@ -104,7 +104,7 @@ nsCSSValue::nsCSSValue(nsCSSValue::Array
+ nsCSSValue::nsCSSValue(nsCSSValue::Array* aValue, nsCSSUnit aUnit)
+   : mUnit(aUnit)
+ {
+-  NS_ASSERTION(eCSSUnit_Array <= aUnit && aUnit <= eCSSUnit_Counters,
++  NS_ASSERTION(eCSSUnit_Array <= aUnit && aUnit <= eCSSUnit_Function,
+                "bad unit");
+   mValue.mArray = aValue;
+   mValue.mArray->AddRef();
+@@ -143,7 +143,7 @@ nsCSSValue::nsCSSValue(const nsCSSValue&
+   else if (eCSSUnit_Color == mUnit) {
+     mValue.mColor = aCopy.mValue.mColor;
+   }
+-  else if (eCSSUnit_Array <= mUnit && mUnit <= eCSSUnit_Counters) {
++  else if (eCSSUnit_Array <= mUnit && mUnit <= eCSSUnit_Function) {
+     mValue.mArray = aCopy.mValue.mArray;
+     mValue.mArray->AddRef();
+   }
+@@ -185,7 +185,7 @@ PRBool nsCSSValue::operator==(const nsCS
+     else if (eCSSUnit_Color == mUnit) {
+       return mValue.mColor == aOther.mValue.mColor;
+     }
+-    else if (eCSSUnit_Array <= mUnit && mUnit <= eCSSUnit_Counters) {
++    else if (eCSSUnit_Array <= mUnit && mUnit <= eCSSUnit_Function) {
+       return *mValue.mArray == *aOther.mValue.mArray;
+     }
+     else if (eCSSUnit_URL == mUnit) {
+@@ -249,7 +249,7 @@ void nsCSSValue::DoReset()
+ {
+   if (UnitHasStringValue()) {
+     mValue.mString->Release();
+-  } else if (eCSSUnit_Array <= mUnit && mUnit <= eCSSUnit_Counters) {
++  } else if (eCSSUnit_Array <= mUnit && mUnit <= eCSSUnit_Function) {
+     mValue.mArray->Release();
+   } else if (eCSSUnit_URL == mUnit) {
+     mValue.mURL->Release();
+@@ -314,7 +314,7 @@ void nsCSSValue::SetColorValue(nscolor a
+ 
+ void nsCSSValue::SetArrayValue(nsCSSValue::Array* aValue, nsCSSUnit aUnit)
+ {
+-  NS_ASSERTION(eCSSUnit_Array <= aUnit && aUnit <= eCSSUnit_Counters,
++  NS_ASSERTION(eCSSUnit_Array <= aUnit && aUnit <= eCSSUnit_Function,
+                "bad unit");
+   Reset();
+   mUnit = aUnit;
+diff -r 71c48ddc9e8c layout/style/nsCSSValue.h
+--- a/layout/style/nsCSSValue.h	Mon Sep 08 15:52:35 2008 -0700
++++ b/layout/style/nsCSSValue.h	Tue Sep 09 09:59:57 2008 -0700
+@@ -71,6 +71,9 @@ enum nsCSSUnit {
+   eCSSUnit_Array        = 20,     // (nsCSSValue::Array*) a list of values
+   eCSSUnit_Counter      = 21,     // (nsCSSValue::Array*) a counter(string,[string]) value
+   eCSSUnit_Counters     = 22,     // (nsCSSValue::Array*) a counters(string,string[,string]) value
++  eCSSUnit_Function     = 23,     // (nsCSSValue::Array*) a function with parameters.  First elem of array is name,
++                                  //  the rest of the values are arguments.
++
+   eCSSUnit_URL          = 30,     // (nsCSSValue::URL*) value
+   eCSSUnit_Image        = 31,     // (nsCSSValue::Image*) value
+   eCSSUnit_Integer      = 50,     // (int) simple value
+@@ -221,7 +224,7 @@ public:
+ 
+   Array* GetArrayValue() const
+   {
+-    NS_ASSERTION(eCSSUnit_Array <= mUnit && mUnit <= eCSSUnit_Counters,
++    NS_ASSERTION(eCSSUnit_Array <= mUnit && mUnit <= eCSSUnit_Function,
+                  "not an array value");
+     return mValue.mArray;
+   }
+diff -r 71c48ddc9e8c layout/style/nsComputedDOMStyle.cpp
+--- a/layout/style/nsComputedDOMStyle.cpp	Mon Sep 08 15:52:35 2008 -0700
++++ b/layout/style/nsComputedDOMStyle.cpp	Tue Sep 09 09:59:57 2008 -0700
+@@ -49,6 +49,7 @@
+ #include "nsDOMString.h"
+ #include "nsIDOMCSS2Properties.h"
+ #include "nsIDOMElement.h"
++#include "nsIDOMCSSPrimitiveValue.h"
+ #include "nsStyleContext.h"
+ #include "nsIScrollableFrame.h"
+ #include "nsContentUtils.h"
+@@ -72,6 +73,9 @@
+ #include "nsInspectorCSSUtils.h"
+ #include "nsLayoutUtils.h"
+ #include "nsFrameManager.h"
++#include "nsCSSKeywords.h"
++#include "nsStyleCoord.h"
++#include "nsDisplayList.h"
+ 
+ #if defined(DEBUG_bzbarsky) || defined(DEBUG_caillon)
+ #define DEBUG_ComputedDOMStyle
+@@ -810,6 +814,127 @@ nsComputedDOMStyle::GetCounterIncrement(
+   }
+ 
+   return CallQueryInterface(valueList, aValue);
++}
++
++/* Convert the stored representation into a list of two values and then hand
++ * it back.
++ */
++nsresult nsComputedDOMStyle::GetMozTransformOrigin(nsIDOMCSSValue **aValue)
++{
++  /* We need to build up a list of two values.  We'll call them
++   * width and height.
++   */
++  nsAutoPtr<nsROCSSPrimitiveValue> width(GetROCSSPrimitiveValue());
++  nsAutoPtr<nsROCSSPrimitiveValue> height(GetROCSSPrimitiveValue());
++  if(!width || !height)
++    return NS_ERROR_OUT_OF_MEMORY;
++
++  /* Now, get the values. */
++  const nsStyleDisplay *const display = GetStyleDisplay();
++  SetValueToCoord(width, display->mTransformOrigin[0],
++                  &nsComputedDOMStyle::GetFrameBoundsWidthForTransform);
++  SetValueToCoord(height, display->mTransformOrigin[1],
++                  &nsComputedDOMStyle::GetFrameBoundsHeightForTransform);
++
++  /* Store things as a value list, fail if we can't get one. */
++  nsAutoPtr<nsDOMCSSValueList> valueList(GetROCSSValueList(PR_FALSE));
++  if (!valueList)
++    return NS_ERROR_OUT_OF_MEMORY;
++
++  /* Chain on width and height, fail if we can't. */
++  if (!valueList->AppendCSSValue(width))
++    return NS_ERROR_OUT_OF_MEMORY;
++  width.forget();
++  if (!valueList->AppendCSSValue(height))
++    return NS_ERROR_OUT_OF_MEMORY;
++  height.forget();
++
++  /* Release the pointer and call query interface!  We're done. */
++  return CallQueryInterface(valueList.forget(), aValue);
++}
++
++/* If the property is "none", hand back "none" wrapped in a value.
++ * Otherwise, compute the aggregate transform matrix and hands it back in a
++ * "matrix" wrapper.
++ */
++nsresult nsComputedDOMStyle::GetMozTransform(nsIDOMCSSValue **aValue)
++{
++  static const PRInt32 NUM_FLOATS = 4;
++  
++  /* First, get the display data.  We'll need it. */
++  const nsStyleDisplay *const display = GetStyleDisplay();
++  
++  /* If the "no transforms" flag is set, then we should construct a
++   * single-element entry and hand it back.
++   */
++  if (!display->mTransformPresent) {
++    nsROCSSPrimitiveValue *val(GetROCSSPrimitiveValue());
++    if (!val)
++      return NS_ERROR_OUT_OF_MEMORY;
++    
++    /* Set it to "none." */
++    val->SetIdent(eCSSKeyword_none);
++    return CallQueryInterface(val, aValue);
++  }
++  
++  /* Otherwise, we need to compute the current value of the transform matrix,
++   * store it in a string, and hand it back to the caller.
++   */
++  nsAutoString resultString(NS_LITERAL_STRING("matrix("));
++  
++  /* Now, we need to convert the matrix into a string.  We'll start by taking
++   * the first four entries and converting them directly to floating-point
++   * values.
++   */
++  for (PRInt32 index = 0; index < NUM_FLOATS; ++index) {
++    resultString.AppendFloat(display->mTransform.GetMainMatrixEntry(index));
++    resultString.Append(NS_LITERAL_STRING(", "));
++  }
++  
++  /* For the next part, we need to compute the translate values.  This means
++   * that we'll need to get the width and height of this object.
++   */
++  PRInt32 cssPxWidth = 0, cssPxHeight = 0;
++
++  /* Use the inner frame for width and height.  If we fail, assume zero.
++   * TODO: There is no good way for us to represent the case where there's no
++   * frame, which is problematic.  The reason is that when we have percentage
++   * transforms, there are a total of four stored matrix entries that influence
++   * the transform based on the size of the element.  However, this poses a
++   * problem, because only two of these values can be explicitly referenced
++   * using the named transforms.  Until a real solution is found, we'll just
++   * use this approach.
++   */
++  const nsRect bounds =
++    (mInnerFrame ? nsDisplayTransform::GetFrameBoundsForTransform(mInnerFrame) :
++     nsRect(0, 0, 0, 0));
++
++  /* Now, compute the dX and dY components by adding the stored coord value
++   * (in CSS pixels) to the translate values.
++   */
++  
++  const float deltaX = 
++    nsPresContext::AppUnitsToFloatCSSPixels
++    (display->mTransform.GetXTranslation(bounds));
++  const float deltaY =
++    nsPresContext::AppUnitsToFloatCSSPixels
++    (display->mTransform.GetYTranslation(bounds));
++     
++
++  /* Append these values! */
++  resultString.AppendFloat(deltaX);
++  resultString.Append(NS_LITERAL_STRING("px, "));
++  resultString.AppendFloat(deltaY);
++  resultString.Append(NS_LITERAL_STRING("px)"));
++
++  /* Create a value to hold our result. */
++  nsROCSSPrimitiveValue *const rv(GetROCSSPrimitiveValue());
++
++  if (!rv)
++    return NS_ERROR_OUT_OF_MEMORY;
++
++  rv->SetString(resultString);
++  return CallQueryInterface(rv, aValue);
+ }
+ 
+ nsresult
+@@ -3317,6 +3442,42 @@ nsComputedDOMStyle::GetFrameBorderRectWi
+   FlushPendingReflows();
+ 
+   aWidth = mInnerFrame->GetSize().width;
++  return PR_TRUE;
++}
++
++PRBool
++nsComputedDOMStyle::GetFrameBoundsWidthForTransform(nscoord& aWidth)
++{
++  // We need a frame to work with.
++  if (!mInnerFrame) {
++    return PR_FALSE;
++  }
++
++  FlushPendingReflows();
++
++  // Check to see that we're transformed.
++  if(!mInnerFrame->GetStyleDisplay()->HasTransform())
++    return PR_FALSE;
++
++  aWidth = nsDisplayTransform::GetFrameBoundsForTransform(mInnerFrame).width;
++  return PR_TRUE;
++}
++
++PRBool
++nsComputedDOMStyle::GetFrameBoundsHeightForTransform(nscoord& aHeight)
++{
++  // We need a frame to work with.
++  if (!mInnerFrame) {
++    return PR_FALSE;
++  }
++
++  FlushPendingReflows();
++
++  // Check to see that we're transformed.
++  if(!mInnerFrame->GetStyleDisplay()->HasTransform())
++    return PR_FALSE;
++
++  aHeight = nsDisplayTransform::GetFrameBoundsForTransform(mInnerFrame).height;
+   return PR_TRUE;
+ }
+ 
+@@ -4030,6 +4191,8 @@ nsComputedDOMStyle::GetQueryableProperty
+     COMPUTED_STYLE_MAP_ENTRY(_moz_outline_radius_topLeft,    OutlineRadiusTopLeft),
+     COMPUTED_STYLE_MAP_ENTRY(_moz_outline_radius_topRight,   OutlineRadiusTopRight),
+     COMPUTED_STYLE_MAP_ENTRY(stack_sizing,                  StackSizing),
++    COMPUTED_STYLE_MAP_ENTRY(_moz_transform,                MozTransform),
++    COMPUTED_STYLE_MAP_ENTRY(_moz_transform_origin,         MozTransformOrigin),
+     COMPUTED_STYLE_MAP_ENTRY(user_focus,                    UserFocus),
+     COMPUTED_STYLE_MAP_ENTRY(user_input,                    UserInput),
+     COMPUTED_STYLE_MAP_ENTRY(user_modify,                   UserModify),
+diff -r 71c48ddc9e8c layout/style/nsComputedDOMStyle.h
+--- a/layout/style/nsComputedDOMStyle.h	Mon Sep 08 15:52:35 2008 -0700
++++ b/layout/style/nsComputedDOMStyle.h	Tue Sep 09 09:59:57 2008 -0700
+@@ -271,6 +271,8 @@ private:
+   nsresult GetOverflowY(nsIDOMCSSValue** aValue);
+   nsresult GetPageBreakAfter(nsIDOMCSSValue** aValue);
+   nsresult GetPageBreakBefore(nsIDOMCSSValue** aValue);
++  nsresult GetMozTransform(nsIDOMCSSValue** aValue);
++  nsresult GetMozTransformOrigin(nsIDOMCSSValue **aValue);
+ 
+   /* User interface properties */
+   nsresult GetCursor(nsIDOMCSSValue** aValue);
+@@ -374,6 +376,8 @@ private:
+ 
+   PRBool GetCBContentWidth(nscoord& aWidth);
+   PRBool GetCBContentHeight(nscoord& aWidth);
++  PRBool GetFrameBoundsWidthForTransform(nscoord &aWidth);
++  PRBool GetFrameBoundsHeightForTransform(nscoord &aHeight);
+   PRBool GetFrameBorderRectWidth(nscoord& aWidth);
+ 
+   struct ComputedStyleMapEntry
+diff -r 71c48ddc9e8c layout/style/nsRuleNode.cpp
+--- a/layout/style/nsRuleNode.cpp	Mon Sep 08 15:52:35 2008 -0700
++++ b/layout/style/nsRuleNode.cpp	Tue Sep 09 09:59:57 2008 -0700
+@@ -69,6 +69,8 @@
+ #include "nsIStyleRule.h"
+ #include "nsBidiUtils.h"
+ #include "nsStyleStructInlines.h"
++#include "nsStyleTransformMatrix.h"
++#include "nsCSSKeywords.h"
+ 
+ /*
+  * For storage of an |nsRuleNode|'s children in a PLDHashTable.
+@@ -231,14 +233,25 @@ static nscoord CalcLengthWith(const nsCS
+   return 0;
+ }
+ 
+-static nscoord CalcLength(const nsCSSValue& aValue,
+-                          nsStyleContext* aStyleContext,
+-                          nsPresContext* aPresContext,
+-                          PRBool& aInherited)
++/* static */ nscoord
++nsRuleNode::CalcLength(const nsCSSValue& aValue,
++                       nsStyleContext* aStyleContext,
++                       nsPresContext* aPresContext,
++                       PRBool& aInherited)
+ {
+   NS_ASSERTION(aStyleContext, "Must have style data");
+ 
+   return CalcLengthWith(aValue, -1, nsnull, aStyleContext, aPresContext, aInherited);
++}
++
++/* Inline helper function to redirect requests to CalcLength. */
++static inline nscoord CalcLength(const nsCSSValue& aValue,
++                                 nsStyleContext* aStyleContext,
++                                 nsPresContext* aPresContext,
++                                 PRBool& aInherited)
++{
++  return nsRuleNode::CalcLength(aValue, aStyleContext,
++                                aPresContext, aInherited);
+ }
+ 
+ /* static */ nscoord
+@@ -264,6 +277,7 @@ nsRuleNode::CalcLengthWithInitialFont(ns
+ #define SETCOORD_INITIAL_AUTO           0x400
+ #define SETCOORD_INITIAL_NONE           0x800
+ #define SETCOORD_INITIAL_NORMAL         0x1000
++#define SETCOORD_INITIAL_HALF           0x2000
+ 
+ #define SETCOORD_LP     (SETCOORD_LENGTH | SETCOORD_PERCENT)
+ #define SETCOORD_LH     (SETCOORD_LENGTH | SETCOORD_INHERIT)
+@@ -343,10 +357,38 @@ static PRBool SetCoord(const nsCSSValue&
+            (aValue.GetUnit() == eCSSUnit_Initial)) {
+     aCoord.SetNormalValue();
+   }
++  else if (((aMask & SETCOORD_INITIAL_HALF) != 0) &&
++           (aValue.GetUnit() == eCSSUnit_Initial)) {
++    aCoord.SetPercentValue(0.5f);
++  }
+   else {
+     result = PR_FALSE;  // didn't set anything
+   }
+   return result;
++}
++
++/* Given an enumerated value that represents a box position, converts it to
++ * a float representing the percentage of the box it corresponds to.  For
++ * example, "center" becomes 0.5f.
++ *
++ * @param aEnumValue The enumerated value.
++ * @return The float percent it corresponds to.
++ */
++static float GetFloatFromBoxPosition(PRInt32 aEnumValue)
++{
++  switch (aEnumValue) {
++  case NS_STYLE_BG_POSITION_LEFT:
++  case NS_STYLE_BG_POSITION_TOP:
++    return 0.0f;
++  case NS_STYLE_BG_POSITION_RIGHT:
++  case NS_STYLE_BG_POSITION_BOTTOM:
++    return 1.0f;
++  default:
++    NS_NOTREACHED("unexpected value");
++    // fall through
++  case NS_STYLE_BG_POSITION_CENTER:
++    return 0.5f;
++  }
+ }
+ 
+ static PRBool SetColor(const nsCSSValue& aValue, const nscolor aParentColor, 
+@@ -3066,6 +3108,38 @@ nsRuleNode::ComputeUIResetData(void* aSt
+   COMPUTE_END_RESET(UIReset, ui)
+ }
+ 
++/* Given a -moz-transform token stream, accumulates them into an
++ * nsStyleTransformMatrix
++ *
++ * @param aList The nsCSSValueList of arrays to read into transform functions.
++ * @param aContext The style context to use for unit conversion.
++ * @param aPresContext The presentation context to use for unit conversion
++ * @param aInherited If the value is inherited, this is set to PR_TRUE.
++ * @return An nsStyleTransformMatrix corresponding to the net transform.
++ */
++static nsStyleTransformMatrix ReadTransforms(const nsCSSValueList* aList,
++                                             nsStyleContext *const aContext,
++                                             nsPresContext *const aPresContext,
++                                             PRBool &aInherited)
++{
++  nsStyleTransformMatrix result;
++
++  for (const nsCSSValueList* curr = aList; curr != nsnull; curr = curr->mNext) {
++    const nsCSSValue &currElem = curr->mValue;
++    NS_ASSERTION(currElem.GetUnit() == eCSSUnit_Function,
++                 "Stream should consist solely of functions!");
++    NS_ASSERTION(currElem.GetArrayValue()->Count() >= 1,
++                 "Incoming function is too short!");
++
++    /* Read in a single transform matrix, then accumulate it with the total. */
++    nsStyleTransformMatrix currMatrix;
++    currMatrix.SetToTransformFunction(currElem.GetArrayValue(), aContext,
++                                      aPresContext);
++    result *= currMatrix;
++  }
++  return result;
++}
++
+ const void*
+ nsRuleNode::ComputeDisplayData(void* aStartStruct,
+                                const nsRuleDataStruct& aData, 
+@@ -3318,6 +3392,79 @@ nsRuleNode::ComputeDisplayData(void* aSt
+     }
+ 
+   }
++  
++  /* Convert the nsCSSValueList into an nsTArray<nsTransformFunction *>. */
++  const nsCSSValueList *head = displayData.mTransform;
++  
++  if (head != nsnull) {
++    /* There is a chance that we will discover that
++     * the transform property has been set to 'none,' 'initial,' or 'inherit.'
++     * If so, process appropriately.
++     */
++    
++    /* If it's 'none,' indicate that there are no transforms. */
++    if (head->mValue.GetUnit() == eCSSUnit_None)
++      display->mTransformPresent = PR_FALSE;
++    
++    /* If we need to inherit, do so by making a full deep-copy. */
++    else if (head->mValue.GetUnit() == eCSSUnit_Inherit)  {
++      display->mTransformPresent = parentDisplay->mTransformPresent;
++      if (parentDisplay->mTransformPresent)
++        display->mTransform = parentDisplay->mTransform;
++      inherited = PR_TRUE;
++    }
++    /* If it's 'initial', then we reset to empty. */
++    else if (head->mValue.GetUnit() == eCSSUnit_Initial)
++      display->mTransformPresent = PR_FALSE;
++    
++    /* Otherwise, we are looking at a list of CSS tokens.  We'll read each of
++     * them in as an array of nsTransformFunction objects, then will accumulate
++     * them all together to form the final transform matrix.
++     */
++    else {
++ 
++      display->mTransform = 
++        ReadTransforms(head, aContext, mPresContext, inherited);
++
++      /* Make sure to say that this data is valid! */
++      display->mTransformPresent = PR_TRUE;
++    }
++  }
++  
++  /* Convert -moz-transform-origin. */
++  if (displayData.mTransformOrigin.mXValue.GetUnit() != eCSSUnit_Null ||
++      displayData.mTransformOrigin.mXValue.GetUnit() != eCSSUnit_Null) {
++
++    /* If X coordinate is an enumerated type, handle it explicitly. */
++    if (eCSSUnit_Enumerated == displayData.mTransformOrigin.mXValue.GetUnit())
++      display->mTransformOrigin[0].SetPercentValue
++        (GetFloatFromBoxPosition
++         (displayData.mTransformOrigin.mXValue.GetIntValue()));
++    else {
++      /* Convert lengths, percents, and inherit.  Default value is 50%. */
++      const PRBool result = SetCoord(displayData.mTransformOrigin.mXValue,
++                                     display->mTransformOrigin[0],
++                                     parentDisplay->mTransformOrigin[0],
++                                     SETCOORD_LPH | SETCOORD_INITIAL_HALF,
++                                     aContext, mPresContext, aInherited);
++      NS_ASSERTION(result, "Malformed -moz-transform-origin parse!");
++    }
++
++    /* If Y coordinate is an enumerated type, handle it explicitly. */
++    if (eCSSUnit_Enumerated == displayData.mTransformOrigin.mYValue.GetUnit())
++      display->mTransformOrigin[1].SetPercentValue
++        (GetFloatFromBoxPosition
++         (displayData.mTransformOrigin.mYValue.GetIntValue()));
++    else {
++      /* Convert lengths, percents, initial, inherit. */
++      const PRBool result = SetCoord(displayData.mTransformOrigin.mYValue,
++                                     display->mTransformOrigin[1],
++                                     parentDisplay->mTransformOrigin[1],
++                                     SETCOORD_LPH | SETCOORD_INITIAL_HALF,
++                                     aContext, mPresContext, aInherited);
++      NS_ASSERTION(result, "Malformed -moz-transform-origin parse!");
++    }
++  }
+ 
+   COMPUTE_END_RESET(Display, display)
+ }
+@@ -3479,20 +3626,9 @@ nsRuleNode::ComputeBackgroundData(void* 
+     bg->mBackgroundFlags &= ~NS_STYLE_BG_X_POSITION_PERCENT;
+   }
+   else if (eCSSUnit_Enumerated == colorData.mBackPosition.mXValue.GetUnit()) {
+-    switch (colorData.mBackPosition.mXValue.GetIntValue()) {
+-      case NS_STYLE_BG_POSITION_LEFT:
+-        bg->mBackgroundXPosition.mFloat = 0.0f;
+-        break;
+-      case NS_STYLE_BG_POSITION_RIGHT:
+-        bg->mBackgroundXPosition.mFloat = 1.0f;
+-        break;
+-      default:
+-        NS_NOTREACHED("unexpected value");
+-        // fall through
+-      case NS_STYLE_BG_POSITION_CENTER:
+-        bg->mBackgroundXPosition.mFloat = 0.5f;
+-        break;
+-    }
++    bg->mBackgroundXPosition.mFloat =
++      GetFloatFromBoxPosition(colorData.mBackPosition.mXValue.GetIntValue());
++
+     bg->mBackgroundFlags |= NS_STYLE_BG_X_POSITION_PERCENT;
+     bg->mBackgroundFlags &= ~NS_STYLE_BG_X_POSITION_LENGTH;
+   }
+@@ -3518,20 +3654,9 @@ nsRuleNode::ComputeBackgroundData(void* 
+     bg->mBackgroundFlags &= ~NS_STYLE_BG_Y_POSITION_PERCENT;
+   }
+   else if (eCSSUnit_Enumerated == colorData.mBackPosition.mYValue.GetUnit()) {
+-    switch (colorData.mBackPosition.mYValue.GetIntValue()) {
+-      case NS_STYLE_BG_POSITION_TOP:
+-        bg->mBackgroundYPosition.mFloat = 0.0f;
+-        break;
+-      case NS_STYLE_BG_POSITION_BOTTOM:
+-        bg->mBackgroundYPosition.mFloat = 1.0f;
+-        break;
+-      default:
+-        NS_NOTREACHED("unexpected value");
+-        // fall through
+-      case NS_STYLE_BG_POSITION_CENTER:
+-        bg->mBackgroundYPosition.mFloat = 0.5f;
+-        break;
+-    }
++    bg->mBackgroundYPosition.mFloat =
++      GetFloatFromBoxPosition(colorData.mBackPosition.mYValue.GetIntValue());
++
+     bg->mBackgroundFlags |= NS_STYLE_BG_Y_POSITION_PERCENT;
+     bg->mBackgroundFlags &= ~NS_STYLE_BG_Y_POSITION_LENGTH;
+   }
+diff -r 71c48ddc9e8c layout/style/nsRuleNode.h
+--- a/layout/style/nsRuleNode.h	Mon Sep 08 15:52:35 2008 -0700
++++ b/layout/style/nsRuleNode.h	Tue Sep 09 09:59:57 2008 -0700
+@@ -742,6 +742,11 @@ public:
+   // Expose this so media queries can use it
+   static nscoord CalcLengthWithInitialFont(nsPresContext* aPresContext,
+                                            const nsCSSValue& aValue);
++  // Expose this so nsTransformFunctions can use it.
++  static nscoord CalcLength(const nsCSSValue& aValue,
++                            nsStyleContext* aStyleContext,
++                            nsPresContext* aPresContext,
++                            PRBool& aInherited);
+ };
+ 
+ #endif
+diff -r 71c48ddc9e8c layout/style/nsStyleStruct.cpp
+--- a/layout/style/nsStyleStruct.cpp	Mon Sep 08 15:52:35 2008 -0700
++++ b/layout/style/nsStyleStruct.cpp	Tue Sep 09 09:59:57 2008 -0700
+@@ -1238,6 +1238,9 @@ nsStyleDisplay::nsStyleDisplay()
+   mClipFlags = NS_STYLE_CLIP_AUTO;
+   mClip.SetRect(0,0,0,0);
+   mOpacity = 1.0f;
++  mTransformPresent = PR_FALSE; // No transform
++  mTransformOrigin[0].SetPercentValue(0.5f); // Transform is centered on origin
++  mTransformOrigin[1].SetPercentValue(0.5f); 
+ }
+ 
+ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
+@@ -1256,6 +1259,15 @@ nsStyleDisplay::nsStyleDisplay(const nsS
+   mClipFlags = aSource.mClipFlags;
+   mClip = aSource.mClip;
+   mOpacity = aSource.mOpacity;
++
++  /* Copy over the transformation information. */
++  mTransformPresent = aSource.mTransformPresent;
++  if(mTransformPresent)
++    mTransform = aSource.mTransform;
++  
++  /* Copy over transform origin. */
++  mTransformOrigin[0] = aSource.mTransformOrigin[0];
++  mTransformOrigin[1] = aSource.mTransformOrigin[1];
+ }
+ 
+ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
+@@ -1287,6 +1299,32 @@ nsChangeHint nsStyleDisplay::CalcDiffere
+   if (mOpacity != aOther.mOpacity)
+     NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
+ 
++  /* If we've added or removed the transform property, we need to reconstruct the frame to add
++   * or remove the view object, and also to handle abs-pos and fixed-pos containers.
++   */
++  if (mTransformPresent != aOther.mTransformPresent)
++    NS_UpdateHint(hint, nsChangeHint_ReconstructFrame);
++
++  /* Otherwise, if we've kept the property lying around and we already had a
++   * transform, we need to see whether or not we've changed the transform.
++   * If so, we need to do a reflow and a repaint. The reflow is to recompute
++   * the overflow rect (which probably changed if the transform changed)
++   * and to redraw within the bounds of that new overflow rect.
++   */
++  else if(mTransformPresent) {
++    if (mTransform != aOther.mTransform)
++      NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_ReflowFrame,
++                                         nsChangeHint_RepaintFrame));
++    
++    for (PRUint8 index = 0; index < 2; ++index)
++      if (mTransformOrigin[index] != aOther.mTransformOrigin[index]) {
++        NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_ReflowFrame,
++                                           nsChangeHint_RepaintFrame));
++        break;
++      }
++  }
++  
++  
+   return hint;
+ }
+ 
+diff -r 71c48ddc9e8c layout/style/nsStyleStruct.h
+--- a/layout/style/nsStyleStruct.h	Mon Sep 08 15:52:35 2008 -0700
++++ b/layout/style/nsStyleStruct.h	Tue Sep 09 09:59:57 2008 -0700
+@@ -62,6 +62,7 @@
+ #include "nsIAtom.h"
+ #include "nsIURI.h"
+ #include "nsCSSValue.h"
++#include "nsStyleTransformMatrix.h"
+ 
+ class nsIFrame;
+ class imgIRequest;
+@@ -906,7 +907,10 @@ struct nsStyleDisplay {
+   PRUint8 mOverflowX;           // [reset] see nsStyleConsts.h
+   PRUint8 mOverflowY;           // [reset] see nsStyleConsts.h
+   PRUint8   mClipFlags;         // [reset] see nsStyleConsts.h
+-  
++  PRPackedBool mTransformPresent;  // [reset] Whether there is a -moz-transform.
++  nsStyleTransformMatrix mTransform; // [reset] The stored transform matrix
++  nsStyleCoord mTransformOrigin[2]; // [reset] Origin of the -moz-transform.
++
+   PRBool IsBlockInside() const {
+     return NS_STYLE_DISPLAY_BLOCK == mDisplay ||
+            NS_STYLE_DISPLAY_LIST_ITEM == mDisplay ||
+@@ -938,8 +942,18 @@ struct nsStyleDisplay {
+   PRBool IsAbsolutelyPositioned() const {return (NS_STYLE_POSITION_ABSOLUTE == mPosition) ||
+                                                 (NS_STYLE_POSITION_FIXED == mPosition);}
+ 
+-  PRBool IsPositioned() const {return IsAbsolutelyPositioned() ||
+-                                      (NS_STYLE_POSITION_RELATIVE == mPosition);}
++  /* Returns whether an element is positioned even if we ignore the
++   * effects of the transform property.
++   */
++  PRBool IsPositionedIgnoringTransform() const {
++    return IsAbsolutelyPositioned() ||
++      (NS_STYLE_POSITION_RELATIVE == mPosition);
++  }
++
++  /* Returns true if we're positioned or there's a transform in effect. */
++  PRBool IsPositioned() const {
++    return IsPositionedIgnoringTransform() || mTransformPresent;
++  }
+ 
+   PRBool IsScrollableOverflow() const {
+     // mOverflowX and mOverflowY always match when one of them is
+@@ -954,6 +968,11 @@ struct nsStyleDisplay {
+     return mOverflowX == NS_STYLE_OVERFLOW_CLIP ||
+            (mOverflowX == NS_STYLE_OVERFLOW_HIDDEN &&
+             mOverflowY == NS_STYLE_OVERFLOW_HIDDEN);
++  }
++
++  /* Returns whether the element has the -moz-transform property. */
++  PRBool HasTransform() const {
++    return mTransformPresent;
+   }
+ };
+ 
+diff -r 71c48ddc9e8c layout/style/nsStyleTransformMatrix.cpp
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/style/nsStyleTransformMatrix.cpp	Tue Sep 09 09:59:57 2008 -0700
+@@ -0,0 +1,550 @@
++/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
++/* ***** BEGIN LICENSE BLOCK *****
++ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
++ *
++ * The contents of this file are subject to the Mozilla Public License Version
++ * 1.1 (the "License"); you may not use this file except in compliance with
++ * the License. You may obtain a copy of the License at
++ * http://www.mozilla.org/MPL/
++ *
++ * Software distributed under the License is distributed on an "AS IS" basis,
++ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
++ * for the specific language governing rights and limitations under the
++ * License.
++ *
++ * The Original Code is mozilla.org code.
++ *
++ * The Initial Developer of the Original Code is
++ *   Mozilla Corporation
++ *
++ * Contributor(s):
++ *   Keith Schwarz <kschwarz@mozilla.com> (original author)
++ *
++ * Alternatively, the contents of this file may be used under the terms of
++ * either of the GNU General Public License Version 2 or later (the "GPL"),
++ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
++ * in which case the provisions of the GPL or the LGPL are applicable instead
++ * of those above. If you wish to allow use of your version of this file only
++ * under the terms of either the GPL or the LGPL, and not to allow others to
++ * use your version of this file under the terms of the MPL, indicate your
++ * decision by deleting the provisions above and replace them with the notice
++ * and other provisions required by the GPL or the LGPL. If you do not delete
++ * the provisions above, a recipient may use your version of this file under
++ * the terms of any one of the MPL, the GPL or the LGPL.
++ *
++ * ***** END LICENSE BLOCK ***** */
++
++/*
++ * A class used for intermediate representations of the -moz-transform property.
++ */
++
++#include "nsStyleTransformMatrix.h"
++#include "nsAutoPtr.h"
++#include "nsCSSValue.h"
++#include "nsStyleContext.h"
++#include "nsPresContext.h"
++#include "nsRuleNode.h"
++#include "nsCSSKeywords.h"
++#include <math.h>
++
++/* Arguably, this loses precision, but it doesn't hurt! */
++const float kPi = 3.1415926535897932384626433f;
++const float kEpsilon = 0.0001f;
++
++/* Computes tan(theta).  For values of theta such that
++ * tan(theta) is undefined or arbitrarily large, SafeTangent
++ * returns a managably large or small value of the correct sign.
++ */
++static float SafeTangent(const float aTheta)
++{
++  /* We'll do this by computing sin and cos theta.  If cos(theta) is
++   * is too close to zero, we'll set it to some arbitrary epsilon value
++   * that avoid float overflow or undefined result.
++   */
++  const float sinTheta = sin(aTheta);
++  float cosTheta = cos(aTheta);
++  
++  /* Bound cos(theta) to be in the range [-1, -epsilon) U (epsilon, 1] */
++  if (cosTheta >= 0 && cosTheta < kEpsilon)
++    cosTheta = kEpsilon;
++  else if (cosTheta < 0 && cosTheta >= -kEpsilon)
++    cosTheta = -kEpsilon;
++  
++  return sinTheta / cosTheta;
++}
++
++/* Converts an nsCSSValue containing an angle into an equivalent measure
++ * of radians.
++ */
++static float CSSToRadians(const nsCSSValue &aValue)
++{
++  NS_PRECONDITION(aValue.IsAngularUnit(),
++                  "Expected an angle, but didn't find one!");
++  
++  switch (aValue.GetUnit()) {
++  case eCSSUnit_Degree:
++    /* 360deg = 2pi rad, so deg = pi / 180 rad */
++    return aValue.GetFloatValue() * kPi / 180.0f;
++  case eCSSUnit_Grad:
++    /* 400grad = 2pi rad, so grad = pi / 200 rad */
++    return aValue.GetFloatValue() * kPi / 200.0f;
++  case eCSSUnit_Radian:
++    /* Yay identity transforms! */
++    return aValue.GetFloatValue();
++  default:
++    NS_NOTREACHED("Unexpected angular unit!");
++    return 0.0f;
++  }
++}
++
++/* Constructor sets the data to the identity matrix. */
++nsStyleTransformMatrix::nsStyleTransformMatrix()
++{
++  SetToIdentity();
++}
++
++/* SetToIdentity just fills in the appropriate values. */
++void nsStyleTransformMatrix::SetToIdentity()
++{
++    /* Set the main matrix to the identity. */
++  mMain[0] = static_cast<gfxFloat>(1.0);
++  mMain[1] = static_cast<gfxFloat>(0.0);
++  mMain[2] = static_cast<gfxFloat>(0.0);
++  mMain[3] = static_cast<gfxFloat>(1.0);
++  mDelta[0] = 0;
++  mDelta[1] = 0;
++
++  /* Both translation matrices are zero. */
++  mX[0] = static_cast<gfxFloat>(0.0);
++  mX[1] = static_cast<gfxFloat>(0.0);
++  mY[0] = static_cast<gfxFloat>(0.0);
++  mY[1] = static_cast<gfxFloat>(0.0);
++}
++
++/* Adds the constant translation to the scale factor translation components. */
++nscoord nsStyleTransformMatrix::GetXTranslation(const nsRect& aBounds) const
++{
++  return nscoord(aBounds.width * mX[0] + aBounds.height * mY[0]) + mDelta[0];
++}
++nscoord nsStyleTransformMatrix::GetYTranslation(const nsRect& aBounds) const
++{
++  return nscoord(aBounds.width * mX[1] + aBounds.height * mY[1]) + mDelta[1];
++}
++
++/* GetThebesMatrix converts the stored matrix in a few steps. */
++gfxMatrix nsStyleTransformMatrix::GetThebesMatrix(const nsRect& aBounds,
++						  PRInt32 aScale) const
++{
++  /* Compute the graphics matrix.  Unfortunately, the gfxMatrix stores entries
++   * as
++   * | a b e |
++   * | c d f |
++   * | 0 0 1 |
++   * But we store the matrix as
++   * | a c e |
++   * | b d f |
++   * | 0 0 1 |
++   * So, we'll have to be a bit clever about how we do the conversion.
++   *
++   * Also, we need to be sure to add to this matrices the following:
++   *
++   * | 0 0 dx1|
++   * | 0 0 dx2| * width
++   * | 0 0   0|
++   *
++   * | 0 0 dy1|
++   * | 0 0 dy2| * height
++   * | 0 0   0|
++   */
++
++  return gfxMatrix(mMain[0], mMain[2], mMain[1], mMain[3],
++                   NSAppUnitsToFloatPixels(GetXTranslation(aBounds), aScale),
++                   NSAppUnitsToFloatPixels(GetYTranslation(aBounds), aScale));
++}
++
++/* Performs the matrix multiplication necessary to multiply the two matrices,
++ * then hands back a reference to ourself.
++ */
++nsStyleTransformMatrix&
++nsStyleTransformMatrix::operator *= (const nsStyleTransformMatrix &aOther)
++{
++  /* We'll buffer all of our results into a temporary storage location
++   * during this operation since we don't want to overwrite the values of
++   * the old matrix with the values of the new.
++   */
++  gfxFloat newMatrix[4];
++  nscoord newDelta[2];
++  gfxFloat newX[2];
++  gfxFloat newY[2];
++  
++  /*  [aOther]    [this]
++   * |a1 c1 e1| |a0 c0 e0|   |a0a1 + b0c1    c0a1 + d0c1     e0a1 + f0c1 + e1|
++   * |b1 d1 f1|x|b0 d0 f0| = |a0b1 + b0d1    c0b1 + d0d1     e0b1 + f0d1 + f1|
++   * |0  0  1 | | 0  0  1|   |          0              0                    1|
++   */
++  newMatrix[0] = mMain[0] * aOther.mMain[0] + mMain[1] * aOther.mMain[2];
++  newMatrix[1] = mMain[0] * aOther.mMain[1] + mMain[1] * aOther.mMain[3];
++  newMatrix[2] = mMain[2] * aOther.mMain[0] + mMain[3] * aOther.mMain[2];
++  newMatrix[3] = mMain[2] * aOther.mMain[1] + mMain[3] * aOther.mMain[3];
++  newDelta[0] =
++    NSCoordMultiply(mDelta[0], static_cast<float>(aOther.mMain[0])) +
++    NSCoordMultiply(mDelta[1], static_cast<float>(aOther.mMain[2])) +
++    aOther.mDelta[0];
++  newDelta[1] =
++    NSCoordMultiply(mDelta[0], static_cast<float>(aOther.mMain[1])) +
++    NSCoordMultiply(mDelta[1], static_cast<float>(aOther.mMain[3])) +
++    aOther.mDelta[1];
++
++  /* For consistent terminology, let u0, u1, v0, and v1 be the four transform
++   * coordinates from the old matrix, and let x0, x1, y0, and y1 be the four
++   * transform coordinates from the new matrix.  Then the new transform
++   * coordinates are:
++   *
++   * u0' = a1u0 + c1u1 + x0
++   * u1' = b1u0 + d1u1 + x1
++   * v0' = a1v0 + c1v1 + y0
++   * v1' = b1v0 + d1v1 + y1
++   */
++  newX[0] = aOther.mMain[0] * mX[0] + aOther.mMain[2] * mX[1] + aOther.mX[0];
++  newX[1] = aOther.mMain[1] * mX[0] + aOther.mMain[3] * mX[1] + aOther.mX[1];
++  newY[0] = aOther.mMain[0] * mY[0] + aOther.mMain[2] * mY[1] + aOther.mY[0];
++  newY[1] = aOther.mMain[1] * mY[0] + aOther.mMain[3] * mY[1] + aOther.mY[1];
++
++  /* Now, write everything back in. */
++  for (PRInt32 index = 0; index < 4; ++index)
++    mMain[index] = newMatrix[index];
++  for (PRInt32 index = 0; index < 2; ++index) {
++    mDelta[index] = newDelta[index];
++    mX[index] = newX[index];
++    mY[index] = newY[index];
++  }
++
++  /* As promised, return a reference to ourselves. */
++  return *this;
++}
++
++/* op* is implemented in terms of op*=. */
++const nsStyleTransformMatrix
++nsStyleTransformMatrix::operator *(const nsStyleTransformMatrix &aOther) const
++{
++  return nsStyleTransformMatrix(*this) *= aOther;
++}
++
++/* Helper function to fill in an nscoord with the specified nsCSSValue. */
++static void SetCoordToValue(const nsCSSValue &aValue,
++			    nsStyleContext *const aContext,
++			    nsPresContext *const aPresContext, nscoord &aOut)
++{
++  PRBool unused = PR_FALSE;
++  aOut = nsRuleNode::CalcLength(aValue, aContext, aPresContext, unused);
++
++  NS_POSTCONDITION(!unused, "How did we inherit a value?");
++}
++
++/* Helper function to process a matrix entry. */
++static void ProcessMatrix(gfxFloat aMain[4], nscoord aDelta[2],
++			  gfxFloat aX[2], gfxFloat aY[2],
++			  const nsCSSValue::Array *const aData,
++			  nsStyleContext *const aContext,
++			  nsPresContext *const aPresContext)
++{
++  NS_PRECONDITION(aData->Count() == 7, "Invalid array!");
++
++  /* Take the first four elements out of the array as floats and store
++   * them in aMain.
++   */
++  for (PRUint16 index = 1; index <= 4; ++index)
++    aMain[index - 1] = aData->Item(index).GetFloatValue();
++
++  /* For the fifth element, if it's a percentage, store it in aX[0].
++   * Otherwise, it's a length that needs to go in aDelta[0]
++   */
++  if (aData->Item(5).GetUnit() == eCSSUnit_Percent)
++    aX[0] = aData->Item(5).GetPercentValue();
++  else
++    SetCoordToValue(aData->Item(5), aContext, aPresContext, aDelta[0]);
++
++  /* For the final element, if it's a percentage, store it in aY[1].
++   * Otherwise, it's a length that needs to go in aDelta[1].
++   */
++  if (aData->Item(6).GetUnit() == eCSSUnit_Percent)
++    aY[1] = aData->Item(5).GetPercentValue();
++  else
++    SetCoordToValue(aData->Item(6), aContext, aPresContext, aDelta[1]);
++}
++
++/* Helper function to process a translatex function. */
++static void ProcessTranslateX(nscoord aDelta[2], gfxFloat aX[2],
++			      const nsCSSValue::Array *const aData,
++			      nsStyleContext *const aContext,
++			      nsPresContext *const aPresContext)
++{
++  NS_PRECONDITION(aData->Count() == 2, "Invalid array!");
++
++  /* There are two cases.  If we have a number, we want our matrix to look
++   * like this:
++   *
++   * |  1  0 dx|
++   * |  0  1  0|
++   * |  0  0  1|
++   * So E = value
++   * 
++   * Otherwise, we might have a percentage, so we want to set the dX component
++   * to the percent.
++   */
++  if (aData->Item(1).GetUnit() != eCSSUnit_Percent)
++    SetCoordToValue(aData->Item(1), aContext, aPresContext, aDelta[0]);
++  else
++    aX[0] = aData->Item(1).GetPercentValue();
++}
++
++/* Helper function to process a translatey function. */
++static void ProcessTranslateY(nscoord aDelta[2], gfxFloat aY[2],
++			      const nsCSSValue::Array *const aData,
++			      nsStyleContext *const aContext,
++			      nsPresContext *const aPresContext)
++{
++  NS_PRECONDITION(aData->Count() == 2, "Invalid array!");
++
++  /* There are two cases.  If we have a number, we want our matrix to look
++   * like this:
++   *
++   * |  1  0  0|
++   * |  0  1 dy|
++   * |  0  0  1|
++   * So E = value
++   * 
++   * Otherwise, we might have a percentage, so we want to set the dY component
++   * to the percent.
++   */
++  if (aData->Item(1).GetUnit() != eCSSUnit_Percent)
++    SetCoordToValue(aData->Item(1), aContext, aPresContext, aDelta[1]);
++  else
++    aY[1] = aData->Item(1).GetPercentValue();
++}
++
++/* Helper functiont to process a translate function. */
++static void ProcessTranslate(nscoord aDelta[2], gfxFloat aX[2], gfxFloat aY[2],
++			     const nsCSSValue::Array *const aData,
++			     nsStyleContext *const aContext,
++			     nsPresContext *const aPresContext)
++{
++  NS_PRECONDITION(aData->Count() == 2 || aData->Count() == 3, "Invalid array!");
++
++  /* There are several cases to consider.
++   * First, we might have one value, or we might have two.  If we have
++   * one, pretend we got two of the same value.
++   * Next, the values might be lengths, or they might be percents.  If they're
++   * percents, store them in the dX and dY components.  Otherwise, store them in
++   * the main matrix.
++   */
++
++  const nsCSSValue &dx = aData->Item(1);
++  const nsCSSValue &dy = (aData->Count() == 2 ? dx : aData->Item(2));
++
++  if (dx.GetUnit() == eCSSUnit_Percent)
++    aX[0] = dx.GetPercentValue();
++  else
++    SetCoordToValue(dx, aContext, aPresContext, aDelta[0]);
++
++  if (dy.GetUnit() == eCSSUnit_Percent)
++    aY[1] = dy.GetPercentValue();
++  else
++    SetCoordToValue(dy, aContext, aPresContext, aDelta[1]); 
++}
++
++/* Helper function to set up a scale matrix. */
++static void ProcessScaleHelper(float aXScale, float aYScale, gfxFloat aMain[4])
++{
++  /* We want our matrix to look like this:
++   * | dx  0  0|
++   * |  0 dy  0|
++   * |  0  0  1|
++   * So A = value
++   */
++  aMain[0] = aXScale;
++  aMain[3] = aYScale;
++}
++
++/* Process a scalex function. */
++static void ProcessScaleX(gfxFloat aMain[4],
++			  const nsCSSValue::Array* const aData)
++{
++  NS_PRECONDITION(aData->Count() == 2, "Bad array!");
++  ProcessScaleHelper(aData->Item(1).GetFloatValue(), 1.0f, aMain);
++}
++
++/* Process a scaley function. */
++static void ProcessScaleY(gfxFloat aMain[4],
++			  const nsCSSValue::Array* const aData)
++{
++  NS_PRECONDITION(aData->Count() == 2, "Bad array!");
++  ProcessScaleHelper(1.0f, aData->Item(1).GetFloatValue(), aMain);
++}
++
++/* Process a scale function. */
++static void ProcessScale(gfxFloat aMain[4],
++			  const nsCSSValue::Array* const aData)
++{
++  NS_PRECONDITION(aData->Count() == 2 || aData->Count() == 3, "Bad array!");
++  /* We either have one element or two.  If we have one, it's for both X and Y.
++   * Otherwise it's one for each.
++   */
++  const nsCSSValue& scaleX = aData->Item(1);
++  const nsCSSValue& scaleY = (aData->Count() == 2 ? scaleX :
++			      aData->Item(2));
++
++  ProcessScaleHelper(scaleX.GetFloatValue(),
++		     scaleY.GetFloatValue(), aMain);
++}
++
++/* Helper function that, given a set of angles, constructs the appropriate
++ * skew matrix.
++ */
++static void ProcessSkewHelper(float aXAngle, float aYAngle, gfxFloat aMain[4])
++{
++  /* We want our matrix to look like this:
++   * |  1           tan(ThetaY)  0|
++   * |  tan(ThetaX) 1            0|
++   * |  0           0            1|
++   * However, to avoid infinte values, we'll use the SafeTangent function
++   * instead of the C standard tan function.
++   */
++  aMain[1] = SafeTangent(aXAngle);
++  aMain[2] = SafeTangent(aYAngle);
++}
++
++/* Function that converts a skewx transform into a matrix. */
++static void ProcessSkewX(gfxFloat aMain[4],
++			 const nsCSSValue::Array *const aData)
++{
++  NS_ASSERTION(aData->Count() == 2, "Bad array!");
++  ProcessSkewHelper(CSSToRadians(aData->Item(1)), 0.0f, aMain);
++}
++
++/* Function that converts a skewy transform into a matrix. */
++static void ProcessSkewY(gfxFloat aMain[4],
++			  const nsCSSValue::Array *const aData)
++{
++  NS_ASSERTION(aData->Count() == 2, "Bad array!");
++  ProcessSkewHelper(0.0f, CSSToRadians(aData->Item(1)), aMain);
++}
++
++/* Function that converts a skew transform into a matrix. */
++static void ProcessSkew(gfxFloat aMain[4],
++			const nsCSSValue::Array *const aData)
++{
++  NS_ASSERTION(aData->Count() == 2 || aData->Count() == 3, "Bad array!");
++  
++  const float xSkew = CSSToRadians(aData->Item(1));
++  const float ySkew = (aData->Count() == 2 ? xSkew : 
++		       CSSToRadians(aData->Item(2)));
++
++  ProcessSkewHelper(xSkew, ySkew, aMain);
++}
++
++/* Function that converts a rotate transform into a matrix. */
++static void ProcessRotate(gfxFloat aMain[4],
++			  const nsCSSValue::Array *const aData)
++{
++  NS_PRECONDITION(aData->Count() == 2, "Invalid array!");
++
++  /* We want our matrix to look like this:
++   * |  cos(theta)  -sin(theta)  0|
++   * |  sin(theta)   cos(theta)  0|
++   * |           0            0  1|
++   * However, there's a bit of a problem - our coordinate system has Y
++   * increasing downward.  Thus we will rotate by -theta
++   * degrees.  Thus:
++   * A = cos(theta), B = -sin(theta), C = sin(theta), D = cos(theta)
++   * (see http://www.w3.org/TR/SVG/coords.html#RotationDefined)
++   */
++  const float theta = CSSToRadians(aData->Item(1));
++  const float cosTheta = cos(theta);
++  const float sinTheta = sin(theta);
++
++  aMain[0] = cosTheta;
++  aMain[1] = -sinTheta;
++  aMain[2] = sinTheta;
++  aMain[3] = cosTheta;
++}
++
++/**
++ * SetToTransformFunction is essentially a giant switch statement that fans
++ * out to many smaller helper functions.
++ */
++void
++nsStyleTransformMatrix::SetToTransformFunction(const nsCSSValue::Array *const
++					       aData,
++					       nsStyleContext*const aContext,
++					       nsPresContext*const aPresContext)
++{
++  NS_PRECONDITION(aData, "Why did you want to get data from a null array?");
++  NS_PRECONDITION(aContext, "Need a context for unit conversion!");
++  NS_PRECONDITION(aPresContext, "Need a context for unit conversion!");
++  
++  /* Reset the matrix to the identity so that each subfunction can just
++   * worry about its own components.
++   */
++  SetToIdentity();
++
++  /* Get the keyword for the transform. */
++  nsAutoString keyword;
++  aData->Item(0).GetStringValue(keyword);
++  switch (nsCSSKeywords::LookupKeyword(keyword)) {
++  case eCSSKeyword_translatex:
++    ProcessTranslateX(mDelta, mX, aData, aContext, aPresContext);
++    break;
++  case eCSSKeyword_translatey:
++    ProcessTranslateY(mDelta, mY, aData, aContext, aPresContext);
++    break;
++  case eCSSKeyword_translate:
++    ProcessTranslate(mDelta, mX, mY, aData, aContext, aPresContext);
++    break;
++  case eCSSKeyword_scalex:
++    ProcessScaleX(mMain, aData);
++    break;
++  case eCSSKeyword_scaley:
++    ProcessScaleY(mMain, aData);
++    break;
++  case eCSSKeyword_scale:
++    ProcessScale(mMain, aData);
++    break;
++  case eCSSKeyword_skewx:
++    ProcessSkewX(mMain, aData);
++    break;
++  case eCSSKeyword_skewy:
++    ProcessSkewY(mMain, aData);
++    break;
++  case eCSSKeyword_skew:
++    ProcessSkew(mMain, aData);
++    break;
++  case eCSSKeyword_rotate:
++    ProcessRotate(mMain, aData);
++    break;
++  case eCSSKeyword_matrix:
++    ProcessMatrix(mMain, mDelta, mX, mY, aData, aContext, aPresContext);
++    break;
++  default:
++    NS_NOTREACHED("Unknown transform function!");
++  }
++}
++
++/* Does an element-by-element comparison and returns whether or not the
++ * matrices are equal.
++ */
++PRBool
++nsStyleTransformMatrix::operator ==(const nsStyleTransformMatrix &aOther) const
++{
++  for (PRInt32 index = 0; index < 4; ++index)
++    if (mMain[index] != aOther.mMain[index])
++      return PR_FALSE;
++
++  for (PRInt32 index = 0; index < 2; ++index)
++    if (mDelta[index] != aOther.mDelta[index] ||
++	mX[index] != aOther.mX[index] ||
++	mY[index] != aOther.mY[index])
++      return PR_FALSE;
++
++  return PR_TRUE;
++}
+diff -r 71c48ddc9e8c layout/style/nsStyleTransformMatrix.h
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ b/layout/style/nsStyleTransformMatrix.h	Tue Sep 09 09:59:57 2008 -0700
+@@ -0,0 +1,173 @@
++/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
++/* ***** BEGIN LICENSE BLOCK *****
++ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
++ *
++ * The contents of this file are subject to the Mozilla Public License Version
++ * 1.1 (the "License"); you may not use this file except in compliance with
++ * the License. You may obtain a copy of the License at
++ * http://www.mozilla.org/MPL/
++ *
++ * Software distributed under the License is distributed on an "AS IS" basis,
++ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
++ * for the specific language governing rights and limitations under the
++ * License.
++ *
++ * The Original Code is mozilla.org code.
++ *
++ * The Initial Developer of the Original Code is
++ *   Mozilla Corporation
++ *
++ * Contributor(s):
++ *   Keith Schwarz <kschwarz@mozilla.com> (original author)
++ *
++ * Alternatively, the contents of this file may be used under the terms of
++ * either of the GNU General Public License Version 2 or later (the "GPL"),
++ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
++ * in which case the provisions of the GPL or the LGPL are applicable instead
++ * of those above. If you wish to allow use of your version of this file only
++ * under the terms of either the GPL or the LGPL, and not to allow others to
++ * use your version of this file under the terms of the MPL, indicate your
++ * decision by deleting the provisions above and replace them with the notice
++ * and other provisions required by the GPL or the LGPL. If you do not delete
++ * the provisions above, a recipient may use your version of this file under
++ * the terms of any one of the MPL, the GPL or the LGPL.
++ *
++ * ***** END LICENSE BLOCK ***** */
++
++/*
++ * A class representing three matrices that can be used for style transforms.
++ */
++
++#ifndef nsStyleTransformMatrix_h_
++#define nsStyleTransformMatrix_h_
++
++#include "nsCSSValue.h"
++#include "gfxTypes.h"
++#include "gfxMatrix.h"
++#include "nsRect.h"
++
++/**
++ * A class representing a style transformation matrix.  The class actually
++ * wraps three different matrices, a constant matrix and two matrices
++ * whose values are scaled by the width and the height of the bounding
++ * rectangle for the object to transform.
++ */
++class nsStyleContext;
++class nsPresContext;
++class nsStyleTransformMatrix
++{
++ public:
++  /**
++   * Constructor sets the matrix to the identity.
++   */
++  nsStyleTransformMatrix();
++
++  /**
++   * Given a frame's bounding rectangle, returns a gfxMatrix
++   * corresponding to the transformation represented by this
++   * matrix.  The transformation takes points in the frame's
++   * local space and converts them to points in the frame's
++   * transformed space.
++   *
++   * @param aBounds The frame's bounding rectangle.
++   * @param aFactor The number of app units per device pixel.
++   * @return A Thebes matrix corresponding to the transform.
++   */
++  gfxMatrix GetThebesMatrix(const nsRect& aBounds, PRInt32 aFactor) const;
++
++  /**
++   * Multiplies this matrix by another matrix.  The multiplication is
++   * a post-multiplication, so A *= B updates this matrix to be BA.
++   *
++   * @param aOther The matrix to multiply this matrix by.
++   * @return A reference to this matrix.
++   */
++  nsStyleTransformMatrix& operator *= (const nsStyleTransformMatrix &aOther);
++
++  /**
++   * Returns a new nsStyleTransformMatrix that's equal to this matrix
++   * post-multiplied with another matrix.
++   *
++   * @param aOther The matrix to multiply this matrix by.
++   * @return A new nsStyleTransformMatrix equal to this matrix postmultiplied
++   *         with the other matrix.
++   */
++  const nsStyleTransformMatrix
++    operator * (const nsStyleTransformMatrix &aOther) const;
++
++  /**
++   * Given an nsCSSValue::Array* containing a -moz-transform function,
++   * updates this matrix to hold the value of that function.
++   *
++   * @param aData The nsCSSValue::Array* containing the transform function.
++   * @param aContext The style context, used for unit conversion.
++   * @param aPresContext The presentation context, used for unit conversion.
++   */
++  void SetToTransformFunction(const nsCSSValue::Array *const aData,
++                              nsStyleContext *const aContext,
++                              nsPresContext *const aPresContext);
++
++  /**
++   * Sets this matrix to be the identity matrix.
++   */
++  void SetToIdentity();
++
++  /**
++   * Returns the value of the entry at the 2x2 submatrix of the
++   * transform matrix that defines the non-affine linear transform.
++   * The order is given as
++   * |elem[0]  elem[2]|
++   * |elem[1]  elem[3]|
++   *
++   * @param aIndex The element index.
++   * @return The value of the element at that index.
++   */
++  gfxFloat GetMainMatrixEntry(PRInt32 aIndex) const
++  {
++    NS_PRECONDITION(aIndex >= 0 && aIndex < 4, "Index out of bounds!");
++    return mMain[aIndex];
++  }
++
++  /**
++   * Returns the value of the X or Y translation component of the matrix,
++   * given the specified bounds.
++   *
++   * @param aBounds The bounds of the element.
++   * @return The value of the X or Ytranslation component.
++   */
++  nscoord GetXTranslation(const nsRect& aBounds) const;
++  nscoord GetYTranslation(const nsRect& aBounds) const;
++
++  /**
++   * Returns whether the two matrices are equal or not.
++   *
++   * @param aOther The matrix to compare to.
++   * @return Whether the two matrices are equal.
++   */
++  PRBool operator== (const nsStyleTransformMatrix& aOther) const;
++  PRBool operator!= (const nsStyleTransformMatrix& aOther) const
++  {
++    return !(*this == aOther);
++  }
++
++ private:
++  /* The three matrices look like this:
++   * |mMain[0] mMain[2] mDelta[0]|
++   * |mMain[1] mMain[3] mDelta[1]| <-- Constant matrix
++   * |       0        0         1|
++   *
++   * |       0        0     mX[0]|
++   * |       0        0     mX[1]| <-- Scaled by width of element
++   * |       0        0         1|
++   *
++   * |       0        0     mY[0]|
++   * |       0        0     mY[1]| <-- Scaled by height of element
++   * |       0        0         1|
++   */
++  gfxFloat mMain[4];
++  nscoord  mDelta[2];
++  gfxFloat mX[2];
++  gfxFloat mY[2];
++};
++
++#endif
+diff -r 71c48ddc9e8c layout/style/test/property_database.js
+--- a/layout/style/test/property_database.js	Mon Sep 08 15:52:35 2008 -0700
++++ b/layout/style/test/property_database.js	Tue Sep 09 09:59:57 2008 -0700
+@@ -503,6 +503,32 @@ var gCSSProperties = {
+ 		initial_values: [ "0", "0px", "0%", "0em", "0ex" ],
+ 		other_values: [ "1px", "3em" ],
+ 		invalid_values: []
++	},
++	/* This section is for the full property.  Uncomment it when you're ready. */
++	"-moz-transform": {
++		domProp: "MozTransform",
++		inherited: false,
++		type: CSS_TYPE_LONGHAND,
++		initial_values: [ "none" ],
++		other_values: [ "translatex(1px)", "translatex(4em)", "translatex(-4px)", "translatex(3px)", "translatex(0px) translatex(1px) translatex(2px) translatex(3px) translatex(4px)", "translatey(4em)", "translate(3px)", "translate(10px, -3px)", "rotate(45deg)", "rotate(45grad)", "rotate(45rad)", "rotate(0)", "scalex(10)", "scaley(10)", "scale(10)", "scale(10, 20)", "skewx(30deg)", "skewx(0)", "skewy(0)", "skewx(30grad)", "skewx(30rad)", "skewy(30deg)", "skewy(30grad)", "skewy(30rad)", "matrix(1, 2, 3, 4, 5px, 6em)", "rotate(45deg) scale(2, 1)", "skewx(45deg) skewx(-50grad)", "translate(0, 0) scale(1, 1) skewx(0) skewy(0) matrix(1, 0, 0, 1, 0, 0)", "translatex(50%)", "translatey(50%)", "translate(50%)", "translate(3%, 5px)", "translate(5px, 3%)", "matrix(1, 2, 3, 4, 5px, 6%)", "matrix(1, 2, 3, 4, 5%, 6px)", "matrix(1, 2, 3, 4, 5%, 6%)"],
++		invalid_values: ["1px", "#0000ff", "red", "auto", "translatex(1px 1px)", "translatex(translatex(1px))", "translatex(#0000ff)", "translatex(red)", "translatey()", "matrix(1, 2, 3, 4, 5, 6)", "matrix(1px, 2px, 3px, 4px, 5px, 6px)", "scale(150%)", "skewx(red)", "matrix(1%, 0, 0, 0, 0px, 0px)", "matrix(0, 1%, 2, 3, 4px,5px)", "matrix(0, 1, 2%, 3, 4px, 5px)", "matrix(0, 1, 2, 3%, 4%, 5%)"]
++	},
++	"-moz-transform-origin": {
++		domProp: "MozTransformOrigin",
++		inherited: false,
++		type: CSS_TYPE_LONGHAND,
++		/* no subproperties */
++		prerequisites: { "width": "10px", "height": "10px", "display": "block"},
++		initial_values: [ "50% 50%", "center", "center center" ],
++		other_values: [ "25% 25%", "5px 5px", "20% 3em", "0 0", "0in 1in",
++						"top", "bottom","top left", "top right",
++						"top center", "center left", "center right",
++						"bottom left", "bottom right", "bottom center",
++						"20% center", "5px center", "13in bottom",
++						"left 50px", "right 13%", "center 40px"],
++		invalid_values: ["red", "auto", "none", "0.5 0.5", "40px #0000ff",
++						 "border", "center red", "right diagonal",
++						 "#00ffff bottom"]
+ 	},
+ 	"-moz-stack-sizing": {
+ 		domProp: "MozStackSizing",
+diff -r 71c48ddc9e8c layout/svg/base/src/nsSVGForeignObjectFrame.cpp
+--- a/layout/svg/base/src/nsSVGForeignObjectFrame.cpp	Mon Sep 08 15:52:35 2008 -0700
++++ b/layout/svg/base/src/nsSVGForeignObjectFrame.cpp	Tue Sep 09 09:59:57 2008 -0700
+@@ -303,6 +303,20 @@ nsSVGForeignObjectFrame::TransformPointF
+   *aOut = nsPoint(PresContext()->DevPixelsToAppUnits(NSToIntRound(x)),
+                   PresContext()->DevPixelsToAppUnits(NSToIntRound(y)));
+   return NS_OK;
++}
++
++gfxMatrix
++nsSVGForeignObjectFrame::GetTransformMatrix(nsIFrame **aOutAncestor)
++{
++  NS_PRECONDITION(aOutAncestor, "We need an ancestor to write to!");
++
++  /* Set the ancestor to be the outer frame. */
++  *aOutAncestor = nsSVGUtils::GetOuterSVGFrame(this);
++  NS_ASSERTION(*aOutAncestor, "How did we end up without an outer frame?");
++
++  /* Return the matrix back to the root, factoring in the x and y offsets. */
++  const nsCOMPtr<nsIDOMSVGMatrix> matrix = GetTMIncludingOffset();
++  return nsSVGUtils::ConvertSVGMatrixToThebes(matrix);
+ }
+  
+ NS_IMETHODIMP_(nsIFrame*)
+diff -r 71c48ddc9e8c layout/svg/base/src/nsSVGForeignObjectFrame.h
+--- a/layout/svg/base/src/nsSVGForeignObjectFrame.h	Mon Sep 08 15:52:35 2008 -0700
++++ b/layout/svg/base/src/nsSVGForeignObjectFrame.h	Tue Sep 09 09:59:57 2008 -0700
+@@ -81,6 +81,19 @@ public:
+                     nsReflowStatus&          aStatus);
+ 
+   /**
++   * Foreign objects are always transformed.
++   */
++  virtual PRBool IsTransformed() const
++  {
++    return PR_TRUE;
++  }
++
++  /**
++   * Foreign objects can return a transform matrix.
++   */
++  virtual gfxMatrix GetTransformMatrix(nsIFrame **aOutAncestor);
++
++  /**
+    * Get the "type" of the frame
+    *
+    * @see nsGkAtoms::svgForeignObjectFrame
+diff -r 71c48ddc9e8c view/public/nsIView.h
+--- a/view/public/nsIView.h	Mon Sep 08 15:52:35 2008 -0700
++++ b/view/public/nsIView.h	Tue Sep 09 09:59:57 2008 -0700
+@@ -86,6 +86,11 @@ enum nsViewVisibility {
+ // If set, the view disowns the widget and leaves it up
+ // to other code to destroy it.
+ #define NS_VIEW_DISOWNS_WIDGET             0x0020
++
++// If set, the view should always invalidate its frame
++// during a scroll instead of doing a BitBlt.  This bit
++// is propagated down to children.
++#define NS_VIEW_FLAG_INVALIDATE_ON_SCROLL  0x0040
+ 
+ struct nsViewZIndex {
+   PRBool mIsAuto;
+@@ -315,6 +320,22 @@ public:
+     mVFlags |= NS_VIEW_DISOWNS_WIDGET;
+   }
+ 
++  /**
++   * If called, will make the view invalidate its frame instead of BitBlitting
++   * it when there's a scroll.
++   */
++  void SetInvalidateFrameOnScroll()
++  {
++    mVFlags |= NS_VIEW_FLAG_INVALIDATE_ON_SCROLL;
++  }
++
++  /**
++   * Returns whether or not we should automatically fail to BitBlt when scrolling.
++   * This is true if either we're marked to have invalidate on scroll or if some
++   * ancestor does.
++   */
++  PRBool NeedsInvalidateFrameOnScroll() const;
++
+ #ifdef DEBUG
+   /**
+    * Output debug info to FILE
+diff -r 71c48ddc9e8c view/public/nsIViewObserver.h
+--- a/view/public/nsIViewObserver.h	Mon Sep 08 15:52:35 2008 -0700
++++ b/view/public/nsIViewObserver.h	Tue Sep 09 09:59:57 2008 -0700
+@@ -47,8 +47,8 @@ class nsGUIEvent;
+ class nsGUIEvent;
+ 
+ #define NS_IVIEWOBSERVER_IID   \
+-{ 0x0f4bc34a, 0xc93b, 0x4699, \
+-{ 0xb6, 0xc2, 0xb3, 0xca, 0x9e, 0xe4, 0x6c, 0x95 } }
++{ 0x63ae23ee, 0xe251, 0x4005, \
++{ 0xaf, 0xe4, 0x5b, 0x0f, 0xa1, 0x5a, 0xb4, 0x99 } }
+ 
+ class nsIViewObserver : public nsISupports
+ {
+@@ -114,6 +114,12 @@ public:
+    * and geometry changes if it wants to.
+    */
+   NS_IMETHOD_(void) WillPaint() = 0;
++
++  /**
++   * Notify the observer that it should invalidate the frame bounds for
++   * the frame associated with this view.
++   */
++  NS_IMETHOD_(void) InvalidateFrameForView(nsIView *aView) = 0;
+ };
+ 
+ NS_DEFINE_STATIC_IID_ACCESSOR(nsIViewObserver, NS_IVIEWOBSERVER_IID)
+diff -r 71c48ddc9e8c view/src/nsScrollPortView.cpp
+--- a/view/src/nsScrollPortView.cpp	Mon Sep 08 15:52:35 2008 -0700
++++ b/view/src/nsScrollPortView.cpp	Tue Sep 09 09:59:57 2008 -0700
+@@ -520,6 +520,12 @@ void nsScrollPortView::Scroll(nsView *aS
+ {
+   if (aTwipsDelta.x != 0 || aTwipsDelta.y != 0)
+   {
++    /* If we should invalidate our wrapped view, we should do so at this
++     * point.
++     */
++    if (aScrolledView->NeedsInvalidateFrameOnScroll())
++      GetViewManager()->GetViewObserver()->InvalidateFrameForView(aScrolledView);
++    
+     nsIWidget *scrollWidget = GetWidget();
+     nsRegion updateRegion;
+     PRBool canBitBlit = scrollWidget &&
+diff -r 71c48ddc9e8c view/src/nsView.cpp
+--- a/view/src/nsView.cpp	Mon Sep 08 15:52:35 2008 -0700
++++ b/view/src/nsView.cpp	Tue Sep 09 09:59:57 2008 -0700
+@@ -45,7 +45,6 @@
+ #include "nsGfxCIID.h"
+ #include "nsIRegion.h"
+ #include "nsIInterfaceRequestor.h"
+-
+ 
+ //mmptemp
+ 
+@@ -875,3 +874,15 @@ nsIView::SetDeletionObserver(nsWeakView*
+   }
+   mDeletionObserver = aDeletionObserver;
+ }
++
++/* We invalidate the frame on a scroll iff this frame is marked as such or if
++ * some parent is.
++ */
++PRBool nsIView::NeedsInvalidateFrameOnScroll() const
++{
++  for (const nsIView *currView = this; currView != nsnull; currView = currView->GetParent())
++    if (currView->mVFlags & NS_VIEW_FLAG_INVALIDATE_ON_SCROLL)
++      return PR_TRUE;
++  
++  return PR_FALSE;
++}
+diff -r 71c48ddc9e8c view/src/nsViewManager.cpp
+--- a/view/src/nsViewManager.cpp	Mon Sep 08 15:52:35 2008 -0700
++++ b/view/src/nsViewManager.cpp	Tue Sep 09 09:59:57 2008 -0700
+@@ -123,6 +123,7 @@ static PRBool IsViewVisible(nsView *aVie
+     if (view->GetVisibility() == nsViewVisibility_kHide)
+       return PR_FALSE;
+   }
++
+   // Find out if the root view is visible by asking the view observer
+   // (this won't be needed anymore if we link view trees across chrome /
+   // content boundaries in DocumentViewerImpl::MakeWindow).
+@@ -720,6 +721,7 @@ nsViewManager::WillBitBlit(nsView* aView
+   }
+ 
+   NS_PRECONDITION(aView, "Must have a view");
++  NS_PRECONDITION(!aView->NeedsInvalidateFrameOnScroll(), "We shouldn't be BitBlting.");
+   NS_PRECONDITION(aView->HasWidget(), "View must have a widget");
+ 
+   ++mScrollCnt;
