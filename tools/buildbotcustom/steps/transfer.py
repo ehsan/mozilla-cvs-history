@@ -86,8 +86,9 @@ class MozillaStageUpload(ShellCommand):
         @type  uploadCompleteMar: bool
         @param uploadCompleteMar: When True, the MozillaStageUpload will upload
                                   the complete mar file found in dist/update to
-                                  the datedDir. This option only applies when
-                                  releaseToDated is True.
+                                  the datedDir/latestDir. This option only
+                                  applies when releaseToDated or
+                                  releaseToLatest is True.
         """
 
         ShellCommand.__init__(self, **kwargs)
@@ -249,13 +250,13 @@ class MozillaStageUpload(ShellCommand):
             # 5) Symlink the longer dated directory to the shorter one.
             cmd = ""
             cmd += self.createDirCommand(datedDir) + " && " + \
-                   self.uploadCommand(datedDir) + " && " + \
-                   self.chmodCommand(datedDir)
+                   self.uploadCommand(datedDir)
+            if self.uploadCompleteMar:
+                cmd += " && " + self.uploadCompleteMarCommand(datedDir)
+            cmd += " && " + self.chmodCommand(datedDir)
             if self.group:
                 cmd += " && " + self.chgrpCommand(datedDir)
             cmd += " && " + self.symlinkDateDirCommand(datedDir)
-            if self.uploadCompleteMar:
-                cmd += " && " + self.uploadCompleteMarCommand(datedDir)
             commands.append(cmd)
 
         if self.releaseToLatest:
@@ -271,6 +272,8 @@ class MozillaStageUpload(ShellCommand):
                 cmd += self.syncCommand(datedDir, latestDir) + " && "
             else:
                 cmd += self.uploadCommand(latestDir) + " && "
+                if self.uploadCompleteMar:
+                    cmd += self.uploadCompleteMarCommand(latestDir) + " && "
             cmd += self.chmodCommand(latestDir)
             if self.group:
                 cmd += " && " + self.chgrpCommand(latestDir)
