@@ -508,7 +508,6 @@
         -->
       <method name="addDropShadows">
         <body><![CDATA[
-          }
 #ifdef XP_UNIX
          var self = this;
          setTimeout(function addDropShadows2() { self.addDropShadows2(); }, 10);
@@ -532,7 +531,6 @@
               for (var i = 0; i < this.monthView.mShadowLength; i++) {
                   var dropbox =  document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "box");
                   dropbox.setAttribute("dropbox", "true");
-                  dropbox.setAttribute("flex", "1");
 
                   var box = this.monthView.findBoxForDate(shadowStart);
                   if (!box) {
