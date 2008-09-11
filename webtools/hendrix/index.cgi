@@ -54,7 +54,6 @@ my %product_destination_map = (
 	"Minefield"                     => "mozilla.feedback",
 	"Thunderbird"                   => "mozilla.feedback.thunderbird",
 	"Thunderbird Release Candidate" => "mozilla.feedback.thunderbird.prerelease",
-	"Mozilla Suite"                 => "mozilla.feedback",
 	"SeaMonkey"                     => "mozilla.feedback",
 	"Sunbird"                       => "mozilla.feedback",
 	"Camino"                        => "caminofeedback\@mozilla.org",
@@ -67,7 +66,7 @@ my %product_destination_map = (
 my @products_list = (
 	"Firefox", "Firefox Release Candidate", "Thunderbird", 
   "Thunderbird Release Candidate", "Shiretoko", "Minefield", 
-  "Camino", "SeaMonkey", "Mozilla Suite", "Sunbird", 
+  "Camino", "SeaMonkey", "Sunbird", 
 	"Developer Center", "Other"
 );
 
