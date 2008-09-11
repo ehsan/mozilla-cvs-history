@@ -1715,7 +1715,7 @@ calDavCalendar.prototype = {
 
         // We want a trailing slash, ensure it.
         var nsUri = this.calendarUri.clone();
-        nsUri.path = aNameSpaceList.pop().replace(/([^\/])$/, "\1/");
+        nsUri.path = aNameSpaceList.pop().replace(/([^\/])$/, "$1/");
 
         if (this.verboseLogging()) {
             LOG("CalDAV: send: " + queryMethod + " " + nsUri.spec + "\n" + queryXml);
