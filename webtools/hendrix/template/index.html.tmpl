@@ -24,7 +24,7 @@
   # ***** END LICENSE BLOCK ***** %]
   
 [% script = BLOCK %]
-var ids = ["name", "subject", "comments", "recaptcha_response_field"];
+var ids = ["subject", "comments", "recaptcha_response_field"];
 
 function checkSubmitEnable() {
   /* To enable the button, all fields must have a value */
@@ -198,7 +198,7 @@ projects.</p>
 </form>
 
 <p>
-Information submitted here will be publicly-readable. <b>Do not submit private information.</b> Your email address will be obfuscated to make life difficult for spammers.
+<b>All</b> information submitted here, including name and email address, will be publicly-readable. <b>Do not submit private information.</b> Your email address will be obfuscated to make life difficult for spammers.
 </p>
 
 [% PROCESS footer.html.tmpl %]
