@@ -916,8 +916,8 @@ calDavCalendar.prototype = {
             // XXX We should probably expose the inner calendar via an
             // interface, but for now use wrappedJSObject.
             var calendar = calendars[i].wrappedJSObject;
-            if (calendar.mCachedCalendar) {
-                calendar = calendar.mCachedCalendar;
+            if (calendar.mUncachedCalendar) {
+                calendar = calendar.mUncachedCalendar;
             }
             if (calendar.uri.prePath == this.uri.prePath &&
                 calendar.authRealm == this.mAuthRealm) {
