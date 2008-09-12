@@ -10,7 +10,7 @@ class MozillaStageUpload(ShellCommand):
                  releaseToDated=True, releaseToLatest=True,
                  releaseToTinderboxBuilds=True, tinderboxBuildsDir=None, 
                  dependToDated=True, uploadCompleteMar=True,
-                 uploadLangPacks=False, **kwargs):
+                 uploadLangPacks=False, packageGlob=None, **kwargs):
         """
         @type  objdir: string
         @param objdir: The obj directory used for the build. This is needed to
@@ -96,6 +96,13 @@ class MozillaStageUpload(ShellCommand):
                                 language pack XPIs to the datedDir/latestDir.
                                 This option only applies when releaseToDated or
                                 releaseToLatest is True. Default: False
+
+        @type  packageGlob: string
+        @param packageGlob: The shell wildcard pattern that expresses the build
+                            files we will be uploading. Default: each platform gets
+                            a sensible default in objdir/dist/*.{ext} with ext tailored
+                            for that platform (i.e. .zip, .dmg, .tar.gz)
+
         """
 
         ShellCommand.__init__(self, **kwargs)
@@ -108,6 +115,7 @@ class MozillaStageUpload(ShellCommand):
                                      platform=platform,
                                      remoteHost=remoteHost,
                                      remoteBasePath=remoteBasePath,
+                                     packageGlob=packageGlob,
                                      group=group,
                                      chmodMode=chmodMode,
                                      sshKey=sshKey,
@@ -126,6 +134,7 @@ class MozillaStageUpload(ShellCommand):
         self.platform = platform
         self.remoteHost = remoteHost
         self.remoteBasePath = remoteBasePath
+        self.packageGlob = packageGlob
         self.group = group
         self.chmodMode = chmodMode
         self.sshKey = sshKey
@@ -171,6 +180,8 @@ class MozillaStageUpload(ShellCommand):
         return '%s-%s' % (self.getBuildID(), self.milestone)
 
     def getPackageGlob(self):
+        if self.packageGlob:
+            return self.packageGlob
         # i can't find a better way to do this.
         if self.platform == "win32":
             return '%s/dist/*.zip %s/dist/install/sea/*.exe' % (self.objdir,
