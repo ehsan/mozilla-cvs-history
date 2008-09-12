@@ -611,6 +611,10 @@ calCalendarManager.prototype = {
         }
         this.mCalendarCount++;
 
+        if (!calendar.getProperty("disabled") && calendar.canRefresh) {
+            calendar.refresh();
+        }
+
         this.notifyObservers("onCalendarRegistered", [calendar]);
     },
 
@@ -865,6 +869,11 @@ calMgrCalendarObserver.prototype = {
                     // any attempt to switch this flag will reset the cached calendar;
                     // could be useful for users in case the cache may be corrupted.
                     aCalendar.wrappedJSObject.setupCachedCalendar();
+                }
+                break;
+            case "disabled":
+                if (!aValue && aCalendar.canRefresh) {
+                    aCalendar.refresh();
                 }
                 break;
         }
