@@ -852,6 +852,9 @@ calRecurrenceInfo.prototype = {
             return;
         }
 
+        // convert both dates to UTC since subtractDate is not timezone aware.
+        var timeDiff = aNewStartTime.getInTimezone(UTC()).subtractDate(aOldStartTime.getInTimezone(UTC()));
+
         var rdates = {};
 
         // take RDATE's and EXDATE's into account.
@@ -877,15 +880,19 @@ calRecurrenceInfo.prototype = {
                     }
                 }
                 ritem.setDates(rdates.length,rdates);
+            } else if (calInstanceOf(ritem, Components.interfaces.calIRecurrenceRule)) {
+                ritem = ritem.QueryInterface(Components.interfaces.calIRecurrenceRule);
+                if (!ritem.isByCount) {
+                    var endDate = ritem.endDate;
+                    if (endDate) {
+                        endDate.addDuration(timeDiff);
+                        ritem.endDate = endDate;
+                    }
+                }
             }
         }
 
         var startTimezone = aNewStartTime.timezone;
-
-        // convert both dates to UTC since subtractDate is not timezone aware.
-        aOldStartTime = aOldStartTime.getInTimezone(UTC());
-        aNewStartTime = aNewStartTime.getInTimezone(UTC());
-        var timeDiff = aNewStartTime.subtractDate(aOldStartTime);
         var exceptions = this.getExceptionIds({});
         var modifiedExceptions = [];
         for each (var exid in exceptions) {
@@ -896,7 +903,7 @@ calRecurrenceInfo.prototype = {
                 // otherwise those won't match any longer w.r.t DST:
                 var rid = ex.recurrenceId;
                 rid = rid.getInTimezone(rdates[getRidKey(rid)]
-                                        ? origRdates[getRidKey(rid)].timezone
+                                        ? rdates[getRidKey(rid)].timezone
                                         : startTimezone);
                 rid.addDuration(timeDiff);
                 ex.recurrenceId = rid;
