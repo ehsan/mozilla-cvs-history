@@ -1738,19 +1738,19 @@ calDavCalendar.prototype = {
             function caldav_cPNS_oSC(aLoader, aContext, aStatus,
                                          aResultLength, aResult) {
             var str = convertByteArray(aResult, aResultLength);
-            if (aContext.responseStatus != 207) {
-                LOG("CalDAV: Bad response to in/outbox query, status " +
-                    aContext.responseStatus);
-                doesntSupportScheduling();
-                return;
-            }
-            var str = convertByteArray(aResult, aResultLength);
             if (!str) {
                 LOG("CalDAV: Failed to report principals namespace");
                 doesntSupportScheduling();
                 return;
             } else if (thisCalendar.verboseLogging()) {
                 LOG("CalDAV: recv: " + str);
+            }
+
+            if (aContext.responseStatus != 207) {
+                LOG("CalDAV: Bad response to in/outbox query, status " +
+                    aContext.responseStatus);
+                doesntSupportScheduling();
+                return;
             }
 
             if (str.substr(0,6) == "<?xml ") {
@@ -1861,7 +1861,7 @@ calDavCalendar.prototype = {
             }
         } else {
             this.reportDavError(aError);
-            if (thisCalendar.isCached && aChangeLogListener) {
+            if (this.isCached && aChangeLogListener) {
                 aChangeLogListener.onResult({ status: Components.results.NS_ERROR_FAILURE },
                                             Components.results.NS_ERROR_FAILURE);
             }
@@ -2181,7 +2181,7 @@ calDavCalendar.prototype = {
             }
         };
 
-        thisCalendar.mTargetCalendar.getItem(aItem.id, getItemListener);
+        this.mTargetCalendar.getItem(aItem.id, getItemListener);
     },
 
     canNotify: function caldav_canNotify(aMethod, aItem) {
