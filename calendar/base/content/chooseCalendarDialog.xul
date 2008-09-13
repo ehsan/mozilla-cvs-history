@@ -95,8 +95,9 @@
             document.getElementById("prompt").value = window.arguments[0].promptText;
 
             if (calendars.length) {
-                listbox.selectedIndex = selectedIndex;
                 listbox.ensureIndexIsVisible(selectedIndex);
+                var selItem = listbox.getItemAtIndex(selectedIndex);
+                listbox.timedSelect(selItem, 0);
             } else {
                 // If there are no calendars, then disable the accept button
                 document.documentElement.getButton("accept").setAttribute("disabled", "true");
