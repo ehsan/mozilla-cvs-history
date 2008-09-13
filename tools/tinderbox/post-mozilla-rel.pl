@@ -178,7 +178,7 @@ sub mail_locale_finished_message {
 sub stagesymbols {
   my $builddir = shift;
   if (TinderUtils::is_windows()) {
-    TinderUtils::run_shell_command("make -C $builddir deliver");
+    TinderUtils::run_shell_command("$Settings::Make -C $builddir deliver");
   }
 }
 
@@ -220,7 +220,7 @@ sub makefullsoft {
 
   if (!$rv) {
     if (!$Settings::UsePrebuiltTalkback) {
-      TinderUtils::run_shell_command("make -C $builddir/fullsoft $set_fc_build");
+      TinderUtils::run_shell_command("$Settings::Make -C $builddir/fullsoft $set_fc_build");
     } else {
       # We need to update the Talkback master.ini file with the current
       # build ID.
@@ -242,10 +242,10 @@ sub makefullsoft {
 
   if (!$rv) {
     if ($Settings::BinaryName ne 'Camino') {
-      TinderUtils::run_shell_command("make -C $builddir/fullsoft fullcircle-push $set_fc_build");
+      TinderUtils::run_shell_command("$Settings::Make -C $builddir/fullsoft fullcircle-push $set_fc_build");
     } else {
       # Something completely different
-      TinderUtils::run_shell_command("make -C $builddir/fullsoft fullcircle-push $set_fc_build UPLOAD_FILES='`find -X $builddir/dist/Camino.app -type f -perm -111 -exec file {} \\; | grep \": Mach-O\" | sed \"s/: Mach-O.*//\" | xargs`'");
+      TinderUtils::run_shell_command("$Settings::Make -C $builddir/fullsoft fullcircle-push $set_fc_build UPLOAD_FILES='`find -X $builddir/dist/Camino.app -type f -perm -111 -exec file {} \\; | grep \": Mach-O\" | sed \"s/: Mach-O.*//\" | xargs`'");
     }
   }
 
@@ -253,7 +253,7 @@ sub makefullsoft {
     if ($Settings::BinaryName eq 'Camino') {
       TinderUtils::run_shell_command("rsync -a --copy-unsafe-links $builddir/dist/bin/components/*qfa* $builddir/dist/bin/components/talkback $builddir/dist/Camino.app/Contents/MacOS/components");
     } else {
-      TinderUtils::run_shell_command("make -C $builddir/$Settings::mac_bundle_path");
+      TinderUtils::run_shell_command("$Settings::Make -C $builddir/$Settings::mac_bundle_path");
     }
 
     if ($Settings::MacUniversalBinary) {
@@ -319,7 +319,7 @@ sub packit {
 
     # one of the operations we care about saving status of
     if ($Settings::sea_installer || $Settings::stub_installer) {
-      $status = TinderUtils::run_shell_command("make -C $packaging_dir installer");
+      $status = TinderUtils::run_shell_command("$Settings::Make -C $packaging_dir installer");
     } else {
       $status = 0;
     }
@@ -369,7 +369,7 @@ sub packit {
         my $save_7zip = $ENV{MOZ_INSTALLER_USE_7ZIP};
         $ENV{MOZ_PACKAGE_MSI} = "";
         $ENV{MOZ_INSTALLER_USE_7ZIP} = "";
-        TinderUtils::run_shell_command("make -C $packaging_dir installer");
+        TinderUtils::run_shell_command("$Settings::Make -C $packaging_dir installer");
         $ENV{MOZ_PACKAGE_MSI} = $save_msi;
         $ENV{MOZ_INSTALLER_USE_7ZIP} = $save_7zip;
         TinderUtils::run_shell_command("cp -r $package_location/xpi $stagedir/windows-xpi");
@@ -424,7 +424,7 @@ sub packit {
   }
 
   if ($Settings::archive) {
-    TinderUtils::run_shell_command("make -C $packaging_dir");
+    TinderUtils::run_shell_command("$Settings::Make -C $packaging_dir");
 
     if (TinderUtils::is_windows()) {
       TinderUtils::run_shell_command("cp $package_location/../*.zip $stagedir/");
@@ -661,7 +661,7 @@ sub update_create_package {
       chomp($up_distdir);
     }
 
-    TinderUtils::run_shell_command("make -C $objdir/tools/update-packaging full-update STAGE_DIR=$up_temp_stagedir DIST=$up_distdir AB_CD=$locale");
+    TinderUtils::run_shell_command("$Settings::Make -C $objdir/tools/update-packaging full-update STAGE_DIR=$up_temp_stagedir DIST=$up_distdir AB_CD=$locale");
 
     my $update_file = "update.mar";
     my @updatemar;
@@ -1427,10 +1427,10 @@ sub main {
   }
 
   if ($cachebuild && $Settings::crashreporter_buildsymbols) {
-    TinderUtils::run_shell_command("make -C $objdir buildsymbols");
+    TinderUtils::run_shell_command("$Settings::Make -C $objdir buildsymbols");
   }
   if ($cachebuild && $Settings::crashreporter_pushsymbols) {
-    TinderUtils::run_shell_command("make -C $objdir uploadsymbols");
+    TinderUtils::run_shell_command("$Settings::Make -C $objdir uploadsymbols");
   }
 
   $local_build_dir = $package_location . "/" . $package_dir;
@@ -1455,7 +1455,7 @@ sub main {
     if (not $Settings::CompareLocalesAviary) {
       my $mar_tool = "$srcdir/modules/libmar/tool/mar";
       if (! -f $mar_tool) {
-        TinderUtils::run_shell_command("make -C $srcdir/nsprpub && make -C $srcdir/config && make -C $srcdir/modules/libmar");
+        TinderUtils::run_shell_command("$Settings::Make -C $srcdir/nsprpub && $Settings::Make -C $srcdir/config && $Settings::Make -C $srcdir/modules/libmar");
         # mar tool should exist now.
         if (! -f $mar_tool) {
           TinderUtils::print_log("Failed to build $mar_tool\n");
