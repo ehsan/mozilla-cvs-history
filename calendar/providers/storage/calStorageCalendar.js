@@ -265,7 +265,6 @@ calStorageCalendar.prototype = {
     // private members
     //
     mDB: null,
-    mDBTwo: null,
     mCalId: 0,
     mItemCache: null,
     mRecItemCacheInited: false,
@@ -378,11 +377,9 @@ calStorageCalendar.prototype = {
             // open the database
             dbService = Components.classes[kStorageServiceContractID].getService(kStorageServiceIID);
             this.mDB = dbService.openDatabase(fileURL.file);
-            this.mDBTwo = dbService.openDatabase(fileURL.file);
         } else if (aUri.scheme == "moz-profile-calendar") {
             dbService = Components.classes[kStorageServiceContractID].getService(kStorageServiceIID);
             this.mDB = dbService.openSpecialDatabase("profile");
-            this.mDBTwo = dbService.openSpecialDatabase("profile");
         }
 
         this.mCalId = id;
@@ -1476,17 +1473,19 @@ calStorageCalendar.prototype = {
             " AND recurrence_id IS NOT NULL"
             );
 
-        // For the extra-item data, note that we use mDBTwo, so that
-        // these can be executed while a selectItems is running!
+        // For the extra-item data, we used to use mDBTwo, so that
+        // these could be executed while a selectItems was running.
+        // This no longer seems to be needed and actually causes
+        // havoc when transactions are in use.
         this.mSelectAttendeesForItem = createStatement(
-            this.mDBTwo,
+            this.mDB,
             "SELECT * FROM cal_attendees " +
             "WHERE item_id = :item_id AND cal_id = " + this.mCalId +
             " AND recurrence_id IS NULL"
             );
 
         this.mSelectAttendeesForItemWithRecurrenceId = createStatement(
-            this.mDBTwo,
+            this.mDB,
             "SELECT * FROM cal_attendees " +
             "WHERE item_id = :item_id AND cal_id = " + this.mCalId +
             " AND recurrence_id = :recurrence_id" +
@@ -1494,13 +1493,13 @@ calStorageCalendar.prototype = {
             );
 
         this.mSelectPropertiesForItem = createStatement(
-            this.mDBTwo,
+            this.mDB,
             "SELECT * FROM cal_properties " +
             "WHERE item_id = :item_id AND recurrence_id IS NULL"
             );
 
         this.mSelectPropertiesForItemWithRecurrenceId = createStatement(
-            this.mDBTwo,
+            this.mDB,
             "SELECT * FROM cal_properties " +
             "WHERE item_id = :item_id AND cal_id = " + this.mCalId +
             " AND recurrence_id = :recurrence_id" +
@@ -1508,20 +1507,20 @@ calStorageCalendar.prototype = {
             );
 
         this.mSelectRecurrenceForItem = createStatement(
-            this.mDBTwo,
+            this.mDB,
             "SELECT * FROM cal_recurrence " +
             "WHERE item_id = :item_id AND cal_id = " + this.mCalId +
             " ORDER BY recur_index"
             );
 
         this.mSelectAttachmentsForItem = createStatement(
-            this.mDBTwo,
+            this.mDB,
             "SELECT * FROM cal_attachments " +
             "WHERE item_id = :item_id AND cal_id = " + this.mCalId
             );
 
         this.mSelectRelationsForItem = createStatement(
-            this.mDBTwo,
+            this.mDB,
             "SELECT * FROM cal_relations " +
             "WHERE item_id = :item_id AND cal_id = " + this.mCalId
             );
@@ -1865,9 +1864,8 @@ calStorageCalendar.prototype = {
     // after we get the base item, we need to check if we need to pull in
     // any extra data from other tables.  We do that here.
 
-    // note that we use mDBTwo for this, so this can be run while a
-    // select is executing; don't use any statements that aren't
-    // against mDBTwo in here!
+    // We used to use mDBTwo for this, so this can be run while a
+    // select is executing but this no longer seems to be required.
     
     getAdditionalDataForItem: function (item, flags) {
         // This is needed to keep the modification time intact.
