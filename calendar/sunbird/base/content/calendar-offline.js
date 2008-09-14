@@ -56,7 +56,13 @@ calendarOfflineManager.toggleOfflineStatus = function sunbird_toggleOfflineStatu
     if (ioService.offline) {
         // Going online
         ioService.offline = false;
-        ioService.manageOfflineStatus = getPrefSafe("offline.autoDetect", true);
+        try {
+            // Alternatively we could check for @mozilla.org/network/network-link-service;1 here
+            // instead of using a try-catch block, but the dependency on that service is rather an
+            // implementation detail of the IO service.
+            ioService.manageOfflineStatus = getPrefSafe("offline.autoDetect", true);
+        } catch (exc) {
+        }
     } else {
         // Going offline
         ioService.manageOfflineStatus = false;
