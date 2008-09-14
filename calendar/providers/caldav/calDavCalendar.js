@@ -1046,7 +1046,7 @@ calDavCalendar.prototype = {
                 }
                 if (badFetch) {
                     thisCalendar.reportDavError(Components.interfaces.calIErrors.DAV_REPORT_ERROR);
-                    if (thisCalendar.isCached)
+                    if (thisCalendar.isCached && aChangeLogListener)
                         aChangeLogListener.onResult({ status: Components.results.NS_ERROR_FAILURE },
                                                     Components.results.NS_ERROR_FAILURE);
                     return;
@@ -1092,7 +1092,7 @@ calDavCalendar.prototype = {
                 // avoid sending empty multiget requests
                 // update views if something has been deleted server-side
                 if (!aRefreshEvent.itemsNeedFetching.length) {
-                    if (thisCalendar.isCached) {
+                    if (thisCalendar.isCached && aChangeLogListener) {
                         aChangeLogListener.onResult({ status: Components.results.NS_OK },
                                                     Components.results.NS_OK);
                     }
