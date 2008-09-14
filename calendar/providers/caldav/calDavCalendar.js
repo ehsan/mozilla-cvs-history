@@ -804,6 +804,17 @@ calDavCalendar.prototype = {
     safeRefresh: function caldav_safeRefresh(aChangeLogListener) {
         this.ensureTargetCalendar();
 
+        if (this.mAuthScheme == "Digest") {
+            // the auth could have timed out and be in need of renegotiation
+            // we can't risk several calendars doing this simultaneously so
+            // we'll force the renegotiation in a sync query, using HEAD to keep
+            // it quick
+            var headchannel = calPrepHttpChannel(this.calendarUri, null, null,
+                                                 this);
+            headchannel.requestMethod = "HEAD";
+            headchannel.open();
+        }
+
         if (!this.mCtag || !this.mFirstRefreshDone) {
             var refreshEvent = this.prepRefresh();
             this.getUpdatedItems(refreshEvent, aChangeLogListener);
@@ -872,13 +883,9 @@ calDavCalendar.prototype = {
                     LOG("CalDAV: ctag matches, no need to fetch data for calendar "
                         + thisCalendar.name);
                 }
-                // we may still need to refesh other cals in this authrealm
-                // and we should poll the inbox
+                // we may still need to poll the inbox
                 if (thisCalendar.firstInRealm()) {
                     thisCalendar.pollInBox();
-                    if (thisCalendar.mAuthScheme == "Digest") {
-                        thisCalendar.refreshOtherCals();
-                    }
                 }
             }
         };
@@ -889,21 +896,10 @@ calDavCalendar.prototype = {
     refresh: function caldav_refresh() {
         if (!this.mCheckedServerInfo) {
             // If we haven't refreshed yet, then we should check the resource
-            // type first. This will call refresh() again afterwards
+            // type first. This will call refresh() again afterwards.
             this.checkDavResourceType(null);
-            return;
-        }
-
-        if (this.mAuthScheme != "Digest") {
-            // Basic HTTP Auth will not have timed out, we can just refresh
-            // Same for Cosmo ticket-based authentication
-            this.safeRefresh(null);
         } else {
-            // Digest auth may have timed out, and we need to make sure that
-            // several calendars in this realm do not attempt re-auth simultaneously
-            if (this.firstInRealm()) {
-                this.safeRefresh(null);
-            }
+            this.safeRefresh();
         }
     },
 
@@ -928,22 +924,6 @@ calDavCalendar.prototype = {
             }
         }
         return false;
-    },
-
-    refreshOtherCals: function caldav_refreshOtherCals() {
-        // XXX we cannot refresh other cached calendars because we don't have their
-        // changelog listener
-        if (!this.isCached) {
-            var calendars = getCalendarManager().getCalendars({});
-            for (var i = 0; i < calendars.length ; i++) {
-                if (calendars[i].type == "caldav" &&
-                    calendars[i].uri.prePath == this.uri.prePath &&
-                    calendars[i].QueryInterface(calICalDavCalendar).authRealm == this.mAuthRealm &&
-                    calendars[i].id != this.id) {
-                    calendars[i].safeRefresh(null);
-                }
-            }
-        }
     },
 
     prepRefresh: function caldav_prepRefresh() {
@@ -1141,11 +1121,6 @@ calDavCalendar.prototype = {
                                              null,
                                              null,
                                              aChangeLogListener);
-
-                if (thisCalendar.mAuthScheme == "Digest" &&
-                    thisCalendar.firstInRealm()) {
-                    thisCalendar.refreshOtherCals();
-                }
 
             } else {
                 thisCalendar.getUpdatedItems(aRefreshEvent, aChangeLogListener);

@@ -49,11 +49,5 @@ interface calICalDavCalendar : calICalendar
      */
     readonly attribute AUTF8String authRealm;
 
-    /**
-     * Refreshes the calendar. Used by calendars in the same authentication
-     * realm to coordinate refreshes
-     *
-     */
-    calIOperation safeRefresh();
 };
 
