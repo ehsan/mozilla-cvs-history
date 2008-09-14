@@ -104,8 +104,8 @@ const CAL_ITEM_FLAG_HAS_RELATIONS = 128;
 
 const USECS_PER_SECOND = 1000000;
 
-var gTransCount = 0;
-var gTransErr = null;
+var gTransCount = {};
+var gTransErr = {};
 
 //
 // Storage helpers
@@ -2169,12 +2169,10 @@ calStorageCalendar.prototype = {
             this.deleteItemById(olditem ? olditem.id : item.id);
             this.writeItem(item, olditem);
         } catch (e) {
-            ERROR("flushItem DB error: " + this.mDB.lastErrorString + "\nexc: " + e);
-            gTransErr = e;
+            this.releaseTransaction(e);
             throw e;
-        } finally {
-            this.releaseTransaction();
         }
+        this.releaseTransaction();
 
         this.cacheItem(item);
     },
@@ -2486,12 +2484,10 @@ calStorageCalendar.prototype = {
             this.mDeleteAttachments(aID);
             this.mDeleteMetaData(aID);
         } catch (e) {
-            ERROR("deleteItemById DB error: " + this.mDB.lastErrorString + "\nexc: " + e);
-            gTransErr = e;
+            this.releaseTransaction(e);
             throw e;
-        } finally {
-            this.releaseTransaction();
         }
+        this.releaseTransaction();
 
         delete this.mItemCache[aID];
         delete this.mRecEventCache[aID];
@@ -2499,22 +2495,32 @@ calStorageCalendar.prototype = {
     },
 
     acquireTransaction: function stor_acquireTransaction() {
-        if (gTransCount++ == 0) {
+        var uriKey = this.uri.spec;
+        if (!(uriKey in gTransCount)) {
+            gTransCount[uriKey] = 0;
+        }
+        if (gTransCount[uriKey]++ == 0) {
             this.mDB.beginTransaction();
         }
     },
-    releaseTransaction: function stor_releaseTransaction() {
-        if (gTransCount > 0) {
-            if (--gTransCount == 0) {
-                if (gTransErr) {
+    releaseTransaction: function stor_releaseTransaction(err) {
+        var uriKey = this.uri.spec;
+        if (err) {
+            ERROR("DB error: " + this.mDB.lastErrorString + "\nexc: " + err);
+            gTransErr[uriKey] = exc;
+        }
+
+        if (gTransCount[uriKey] > 0) {
+            if (--gTransCount[uriKey] == 0) {
+                if (gTransErr[uriKey]) {
                     this.mDB.rollbackTransaction();
-                    gTransErr = null;
+                    delete gTransErr[uriKey];
                 } else {
                     this.mDB.commitTransaction();
                 }
             }
         } else {
-            ASSERT(gTransCount > 0, "unexepcted batch count!");
+            ASSERT(gTransCount[uriKey] > 0, "unexepcted batch count!");
         }
     },
 
