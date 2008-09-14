@@ -1514,7 +1514,7 @@ calDavCalendar.prototype = {
         streamListener.onStreamComplete =
             function checkServerCaps_oSC(aLoader, aContext, aStatus,
                                          aResultLength, aResult) {
-            var dav;
+            var dav = null;
             try {
                 dav = aContext.getResponseHeader("DAV");
                 if (thisCalendar.verboseLogging()) {
@@ -1544,7 +1544,7 @@ calDavCalendar.prototype = {
                 thisCalendar.hasScheduling = true;
             }
 
-            if (thisCalendar.hasAutoScheduling || thisCalendar.hasScheduling) {
+            if (thisCalendar.hasAutoScheduling || (dav && dav.indexOf("calendar-schedule") != -1)) {
                 // XXX - we really shouldn't register with the fb service
                 // if another calendar with the same principal-URL has already
                 // done so. We also shouldn't register with the fb service if we
@@ -1917,11 +1917,13 @@ calDavCalendar.prototype = {
         // even in case sched is turned off.
         if (!this.outBoxUrl || !this.calendarUserAddress) {
             LOG("CalDAV: Server does not support scheduling; freebusy query not possible");
+            aListener.onResult(null, null);
             return;
         }
 
         if (!this.firstInRealm()) {
             // don't spam every known outbox with freebusy queries
+            aListener.onResult(null, null);
             return;
         }
 
@@ -1941,6 +1943,7 @@ calDavCalendar.prototype = {
         if (aCalIdParts[0] != "mailto"
             && aCalIdParts[0] != "http"
             && aCalIdParts[0] != "https" ) {
+            aListener.onResult(null, null);
             return;
         }
         var mailto_aCalId = aCalIdParts.join(":");
@@ -2015,6 +2018,7 @@ calDavCalendar.prototype = {
                 var status = response..C::response..C::["request-status"];
                 if (status.substr(0,1) != 2) {
                     LOG("CalDAV: Got status " + status + " in response to freebusy query");
+                    aListener.onResult(null, null);
                     return;
                 }
                 if (status.substr(0,3) != "2.0") {
@@ -2078,8 +2082,8 @@ calDavCalendar.prototype = {
                 aListener.onResult(null, periodsToReturn);
             } else {
                 LOG("CalDAV: Received status " + aContext.responseStatus + " from freebusy query");
+                aListener.onResult(null, null);
             }
-
         };
 
         var streamLoader = createStreamLoader();
