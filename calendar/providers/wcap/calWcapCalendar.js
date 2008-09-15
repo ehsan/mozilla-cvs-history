@@ -141,7 +141,6 @@ calWcapCalendar.prototype = {
                 return this.getCalendarProperties("X-S1CS-CALPROPS-COMMON-NAME");
             case "itip.disableRevisionChecks":
                 return true;
-            case "cache.supported": // until bug 412914 and bug 412606 are fixed
             case "capabilities.timezones.floating.supported":
             case "capabilities.timezones.UTC.supported":
             case "capabilities.attachments.supported":
