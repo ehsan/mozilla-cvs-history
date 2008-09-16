@@ -179,6 +179,7 @@ calendar-header-container[weekend="true"][selected="true"],
 .calendar-event-box-container {
     padding: 0;
     overflow: hidden;
+    margin: 1px;    
 }
 
 .calendar-event-box-container[categories] {
@@ -186,7 +187,6 @@ calendar-header-container[weekend="true"][selected="true"],
 }
 
 .calendar-event-details {
-    margin: 1px;
     -moz-padding-start: 2px;
     overflow: hidden;    
 }
@@ -545,7 +545,7 @@ calendar-event-box[readonly="true"]:hover .calendar-event-box-grippy-bottom {
 /* Alarm image */
 .alarm-image {
     list-style-image: url(chrome://calendar/skin/alarm.png);
-    margin: 2px;
+    margin: 2px 2px 0px;
 }
 
 .alarm-image[flashing="true"] {

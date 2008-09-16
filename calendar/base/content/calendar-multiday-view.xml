@@ -1985,7 +1985,7 @@
                    </xul:hbox>
                    <xul:calendar-category-box anonid="category-box" xbl:inherits="categories" pack="end"/>
                  </xul:hbox>
-                <xul:box xbl:inherits="orient" flex="1">
+                <xul:box xbl:inherits="orient">
                   <xul:calendar-event-gripbar anonid="gripbar1"
                                               class="calendar-event-box-grippy-top"
                                               whichside="start"
@@ -2045,9 +2045,9 @@
       <method name="getOptimalMinSize">
         <body><![CDATA[
           if (this.getAttribute("orient") == "vertical") {
-              var minHeight = getOptimalMinimumHeight(this.eventNameLabel) + 
-                          getSummarizedStyleValues(document.getAnonymousElementByAttribute(this, "anonid", "calendar-event-details"), ["margin-bottom", "margin-top"]) +
-                          getSummarizedStyleValues(this, ["border-bottom-width", "border-top-width"]);
+              var minHeight = getOptimalMinimumHeight(this.eventNameLabel) +
+                              getSummarizedStyleValues(document.getAnonymousElementByAttribute(this, "anonid", "eventbox"), ["margin-bottom", "margin-top"]) +
+                              getSummarizedStyleValues(this, ["border-bottom-width", "border-top-width"]);
               this.setAttribute("minheight", minHeight);
               this.setAttribute("minwidth", "1");
               return minHeight;
