@@ -69,6 +69,10 @@ function calDavCalendar() {
     this.mTargetCalendar = null;
     this.mQueuedQueries = [];
     this.mCtag = null;
+
+    // By default, support both events and todos.
+    this.supportedItemTypes = ["VEVENT", "VTODO"];
+
 }
 
 // some shorthand
@@ -103,6 +107,11 @@ calDavCalendar.prototype = {
                                  Components.interfaces.calIChangeLog,
                                  calICalDavCalendar]);
     },
+
+    // An array of components that are supported by the server. The default is
+    // to support VEVENT and VTODO, if queries for these components return a 4xx
+    // error, then they will be removed from this array.
+    supportedItemTypes: null,
 
     get isCached caldav_get_isCached() {
         return (this != this.superCalendar);
@@ -143,15 +152,6 @@ calDavCalendar.prototype = {
         throw NS_ERROR_NOT_IMPLEMENTED;
     },
 
-
-    get supportedItemTypes caldav_get_supportedItemTypes() {
-        if (this.mUri.host == "www.google.com") {
-            // XXX Special casing for Google, since they don't support sending
-            // VTODO queries, even though they should return an empty set, yuck!
-            return ["VEVENT"];
-        }
-        return ["VEVENT", "VTODO"];
-    },
 
     // calIChangeLog interface
     resetLog: function caldav_resetLog() {
@@ -928,7 +928,7 @@ calDavCalendar.prototype = {
 
     prepRefresh: function caldav_prepRefresh() {
 
-        var itemTypes = this.supportedItemTypes;
+        var itemTypes = this.supportedItemTypes.concat([]);
         var typesCount = itemTypes.length;
         var refreshEvent = {};
         refreshEvent.itemTypes = itemTypes;
@@ -1001,16 +1001,16 @@ calDavCalendar.prototype = {
                     thisCalendar.name);
                 responseStatus = "none";
             }
-            var str = convertByteArray(aResult, aResultLength);
-            if (!str) {
-                LOG("CAlDAV: Failed to parse getetag REPORT");
-            } else if (thisCalendar.verboseLogging()) {
-                LOG("CalDAV: recv: " + str);
-            }
 
             if (responseStatus == 207) {
                 // We only need to parse 207's, anything else is probably a
                 // server error (i.e 50x).
+                var str = convertByteArray(aResult, aResultLength);
+                if (!str) {
+                    LOG("CAlDAV: Failed to parse getetag REPORT");
+                } else if (thisCalendar.verboseLogging()) {
+                    LOG("CalDAV: recv: " + str);
+                }
 
                 if (str.substr(0,6) == "<?xml ") {
                     str = str.substring(str.indexOf('<', 2));
@@ -1031,27 +1031,32 @@ calDavCalendar.prototype = {
                         aRefreshEvent.itemsNeedFetching.push(resourcePath);
                     }
                 }
+            } else if (Math.floor(responseStatus / 100) == 4) {
+                // A 4xx error probably means the server doesn't support this
+                // type of query. Disable it for this session. This doesn't
+                // really match the spec (which requires a 207), but it works
+                // around bugs in Google and eGroupware 1.6.
+                LOG("CalDAV: Server doesn't support " + itemType + "s");
+                var itemTypeIndex = thisCalendar.supportedItemTypes.indexOf(itemType);
+                if (itemTypeIndex > -1) {
+                    thisCalendar.supportedItemTypes.splice(itemTypeIndex, 1);
+                }
+            } else {
+                aRefreshEvent.unhandledErrors++;
             }
 
             aRefreshEvent.queryStatuses.push(responseStatus);
             var needsRefresh = false;
             if (aRefreshEvent.queryStatuses.length == aRefreshEvent.typesCount) {
-
-                var badFetch = false;
-                for each (var statusCode in aRefreshEvent.queryStatuses) {
-                    if (statusCode != 207) {
-                        LOG("CalDAV: error fetching item etags: " + statusCode);
-                        badFetch = true;
-                    }
-                }
-                if (badFetch) {
+                if (aRefreshEvent.unhandledErrors) {
+                    LOG("CalDAV: Error fetching item etags");
                     thisCalendar.reportDavError(Components.interfaces.calIErrors.DAV_REPORT_ERROR);
-                    if (thisCalendar.isCached && aChangeLogListener)
+                    if (thisCalendar.isCached && aChangeLogListener) {
                         aChangeLogListener.onResult({ status: Components.results.NS_ERROR_FAILURE },
                                                     Components.results.NS_ERROR_FAILURE);
+                    }
                     return;
                 }
-
                 if (thisCalendar.isCached) {
                     thisCalendar.superCalendar.startBatch();
                 }
