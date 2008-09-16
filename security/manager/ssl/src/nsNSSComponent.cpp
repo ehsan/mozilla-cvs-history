@@ -296,10 +296,7 @@ nsNSSComponent::nsNSSComponent()
   memset(&mIdentityInfoCallOnce, 0, sizeof(PRCallOnceType));
 
   nsSSLIOLayerHelpers::Init();
-  mClientAuthRememberService = new nsClientAuthRememberService;
-  if (mClientAuthRememberService)
-    mClientAuthRememberService->Init();
-
+  
   NS_ASSERTION( (0 == mInstanceCount), "nsNSSComponent is a singleton, but instantiated multiple times!");
   ++mInstanceCount;
   hashTableCerts = nsnull;
@@ -1686,9 +1683,6 @@ nsNSSComponent::ShutdownNSS()
 
     ShutdownSmartCardThreads();
     SSL_ClearSessionCache();
-    if (mClientAuthRememberService) {
-      mClientAuthRememberService->ClearRememberedDecisions();
-    }
     UnloadLoadableRoots();
     CleanupIdentityInfo();
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("evaporating psm resources\n"));
@@ -2154,9 +2148,6 @@ void nsNSSComponent::ShowAlert(AlertIdentifier ai)
 
 nsresult nsNSSComponent::LogoutAuthenticatedPK11()
 {
-  if (mClientAuthRememberService) {
-    mClientAuthRememberService->ClearRememberedDecisions();
-  }
   return mShutdownObjectList->doPK11Logout();
 }
 
@@ -2416,14 +2407,6 @@ nsNSSComponent::DoProfileChangeNetRestore()
   if (mCertVerificationThread)
     mCertVerificationThread->startThread();
   mIsNetworkDown = PR_FALSE;
-}
-
-NS_IMETHODIMP
-nsNSSComponent::GetClientAuthRememberService(nsClientAuthRememberService **cars)
-{
-  NS_ENSURE_ARG_POINTER(cars);
-  NS_IF_ADDREF(*cars = mClientAuthRememberService);
-  return NS_OK;
 }
 
 //---------------------------------------------
@@ -3195,3 +3178,4 @@ PSMContentListener::SetParentContentListener(nsIURIContentListener * aContentLis
   mParentContentListener = aContentListener;
   return NS_OK;
 }
+
