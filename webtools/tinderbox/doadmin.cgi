@@ -38,8 +38,6 @@ $|=1;
 
 &tb_check_password(\%form, \%cookie_jar);
 
-print "Content-type: text/html\n\n<HTML>\n";
-
 my $command = $form{'command'};
 my $tree= $form{'tree'};
 
@@ -48,6 +46,8 @@ if ($command eq 'create_tree') {
 } else {
     $tree = &require_only_one_tree($tree);
 }
+
+print "Content-type: text/html\n\n<HTML>\n";
 
 if( $command eq 'create_tree' || $command eq 'edit_tree' ){
     &create_tree;
@@ -70,6 +70,8 @@ elsif( $command eq 'admin_builds' ){
     print "Unknown command: \"" . value_encode($command) . "\".";
     exit(1);
 }
+
+print "</HTML>\n";
 
 # Recreate static pages after administrative command
 my %static_form = ();
