@@ -53,6 +53,7 @@
   IBOutlet NSButton*      checkboxAutoUpdate;
 }
 
+- (IBAction)homePageModified:(id)sender;
 - (IBAction)checkboxStartPageClicked:(id)sender;
 - (IBAction)defaultBrowserChange:(id)sender;
 - (IBAction)defaultFeedViewerChange:(id)sender;
