@@ -72,7 +72,6 @@ function calDavCalendar() {
 
     // By default, support both events and todos.
     this.supportedItemTypes = ["VEVENT", "VTODO"];
-
 }
 
 // some shorthand
@@ -2100,7 +2099,7 @@ calDavCalendar.prototype = {
             return;
         }
 
-        var itemTypes = this.supportedItemTypes;
+        var itemTypes = this.supportedItemTypes.concat([]);
         var typesCount = itemTypes.length;
         var refreshEvent = {};
         refreshEvent.itemTypes = itemTypes;
