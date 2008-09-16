@@ -3482,12 +3482,6 @@ nsIntRect nsIFrame::GetScreenRect() const
   return nsIntRect(r.x, r.y, r.width, r.height);
 }
 
-// virtual
-nsRect nsIFrame::GetScreenRectInAppUnitsExternal() const
-{
-  return GetScreenRectInAppUnits();
-}
-
 nsRect nsIFrame::GetScreenRectInAppUnits() const
 {
   nsRect retval(0,0,0,0);
