@@ -1177,6 +1177,11 @@ calDavCalendar.prototype = {
             var str = convertByteArray(aResult, aResultLength);
             if (!str) {
                 LOG("CalDAV: Failed to parse getCalendarData REPORT");
+                if (thisCalendar.isCached && aChangeLogListener) {
+                    aChangeLogListener.onResult({ status: Components.results.NS_ERROR_FAILURE },
+                                                Components.results.NS_ERROR_FAILURE);
+                }
+                return;
             } else if (thisCalendar.verboseLogging()) {
                 LOG("CalDAV: recv: " + str);
             }
