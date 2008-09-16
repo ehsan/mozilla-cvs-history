@@ -1520,7 +1520,6 @@ public:
    * @return the app unit rect of the frame in screen coordinates.
    */
   nsRect GetScreenRectInAppUnits() const;
-  virtual nsRect GetScreenRectInAppUnitsExternal() const;
 
   /**
    * Returns the offset from this frame to the closest geometric parent that
@@ -2251,6 +2250,9 @@ private:
   NS_IMETHOD_(nsrefcnt) Release(void) = 0;
 
   nsRect* GetOverflowAreaProperty(PRBool aCreateIfNecessary = PR_FALSE);
+
+public:
+  virtual nsRect GetScreenRectInAppUnitsExternal() const;
 };
 
 //----------------------------------------------------------------------
