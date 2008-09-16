@@ -50,6 +50,9 @@
 
 @interface PreferencePaneBase : NSPreferencePane 
 {
+  void* dummy; // Placeholder for the old mPrefService variable to prevent
+               // third-party preference panes deployed on both 1.x and 2+
+               // from breaking due to the fragile base class problem.
 }
 
 - (NSString*)getStringPref: (const char*)prefName withSuccess:(BOOL*)outSuccess;
