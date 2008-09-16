@@ -2250,9 +2250,6 @@ private:
   NS_IMETHOD_(nsrefcnt) Release(void) = 0;
 
   nsRect* GetOverflowAreaProperty(PRBool aCreateIfNecessary = PR_FALSE);
-
-public:
-  virtual nsRect GetScreenRectInAppUnitsExternal() const;
 };
 
 //----------------------------------------------------------------------
