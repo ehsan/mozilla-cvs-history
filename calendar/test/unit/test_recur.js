@@ -87,6 +87,36 @@ function run_test() {
                          "EXDATE:20020402T114500Z\n"),
                          []);
 
+    test_recur(createEventFromIcalString("BEGIN:VCALENDAR\nBEGIN:VEVENT\n" +
+                                         "UID:123\n" +
+                                         "DESCRIPTION:Every day, exception put on exdated day\n" +
+                                         "RRULE:FREQ=DAILY;COUNT=3\n" +
+                                         "DTSTART:20020402T114500Z\n" +
+                                         "EXDATE:20020403T114500Z\n" +
+                                         "END:VEVENT\n" +
+                                         "BEGIN:VEVENT\n" +
+                                         "DTSTART:20020403T114500Z\n" +
+                                         "UID:123\n" +
+                                         "RECURRENCE-ID:20020404T114500Z\n" +
+                                         "END:VEVENT\nEND:VCALENDAR\n"),
+               ["20020402T114500Z", "20020403T114500Z"],
+               true /* ignore next occ check, bug 455490 */);
+
+    test_recur(createEventFromIcalString("BEGIN:VCALENDAR\nBEGIN:VEVENT\n" +
+                                         "UID:123\n" +
+                                         "DESCRIPTION:Every day, exception put on exdated start day\n" +
+                                         "RRULE:FREQ=DAILY;COUNT=3\n" +
+                                         "DTSTART:20020402T114500Z\n" +
+                                         "EXDATE:20020402T114500Z\n" +
+                                         "END:VEVENT\n" +
+                                         "BEGIN:VEVENT\n" +
+                                         "DTSTART:20020402T114500Z\n" +
+                                         "UID:123\n" +
+                                         "RECURRENCE-ID:20020404T114500Z\n" +
+                                         "END:VEVENT\nEND:VCALENDAR\n"),
+               ["20020402T114500Z", "20020403T114500Z"],
+               true /* ignore next occ check, bug 455490 */);
+
     var item = makeEvent("DESCRIPTION:occurrence on day 1 moved between the occurrences " +
                                      "on days 2 and 3\n" +
                          "RRULE:FREQ=DAILY;COUNT=3\n" +
@@ -127,7 +157,7 @@ function run_test() {
     test_recur(item, ["20020330T114500Z", "20020401T114500Z", "20020403T114500Z"]);
 }
 
-function test_recur(event, expected) {
+function test_recur(event, expected, ignoreNextOccCheck) {
     dump("Checking '" + event.getProperty("DESCRIPTION") + "'\n");
     // Get recurrence dates
     var start = createDate(1990, 0, 1);
@@ -144,6 +174,10 @@ function test_recur(event, expected) {
 
         // Make sure occurrences are correct
         do_check_eq(occurrences[i].startDate.icalString, expected[i]);
+
+        if (ignoreNextOccCheck) {
+            continue;
+        }
 
         // Make sure getNextOccurrence works correctly
         var nextOcc = event.recurrenceInfo.getNextOccurrence(recdates[i]);

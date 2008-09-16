@@ -1824,8 +1824,6 @@ function compareItemContent(aFirstItem, aSecondItem) {
  * If no comptor is specified, the default greater-than comptor will be used.
  *
  * @param itemArray             The array to search.
- * @param low                   The lower limit to start searching
- * @param high                  The upper limit to end searching (inclusive)
  * @param newItem               The item to search in the array.
  * @param comptor               A comparation function that can compare two items.
  * @return                      The index of the new item.

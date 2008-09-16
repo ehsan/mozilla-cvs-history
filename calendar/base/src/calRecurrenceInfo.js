@@ -369,7 +369,7 @@ calRecurrenceInfo.prototype = {
                     // the pattern is only valid afterwards. If an occurrence
                     // was found in a previous round, we can go ahead and start
                     // searching from that occurrence.
-                    var searchStart = nextOccurrences[i] ||  startDate;
+                    var searchStart = nextOccurrences[i] || startDate;
 
                     // Search for the next occurrence after aTime. If the last
                     // round was invalid, then in this round we need to search
@@ -452,8 +452,7 @@ calRecurrenceInfo.prototype = {
 
         var rids = this.calculateDates(early,
                                        aTime,
-                                       0,
-                                       true);
+                                       0);
         // The returned dates are sorted, so the last one is a good
         // candidate, if it exists.
         return (rids.length > 0 ? this.getOccurrenceFor(rids[rids.length - 1].id) : null);
@@ -462,16 +461,12 @@ calRecurrenceInfo.prototype = {
     // internal helper function;
     calculateDates: function cRI_calculateDates(aRangeStart,
                                                 aRangeEnd,
-                                                aMaxCount,
-                                                aReturnRIDs) {
+                                                aMaxCount) {
         this.ensureBaseItem();
         this.ensureSortedRecurrenceRules();
 
         function ridDateSortComptor(a,b) {
             return a.rstart.compare(b.rstart);
-        }
-        function dateSortComptor(a, b) {
-            return a.compare(b);
         }
 
         // workaround for UTC- timezones
@@ -502,9 +497,7 @@ calRecurrenceInfo.prototype = {
             var occDate = checkIfInRange(item, aRangeStart, aRangeEnd, true);
             occurrenceMap[ex] = true;
             if (occDate) {
-                binaryInsert(dates,
-                             aReturnRIDs ? { id: item.recurrenceId, rstart: occDate } : occDate,
-                             aReturnRIDs ? ridDateSortComptor : dateSortComptor);
+                binaryInsert(dates, { id: item.recurrenceId, rstart: occDate }, ridDateSortComptor);
             }
         }
 
@@ -514,9 +507,7 @@ calRecurrenceInfo.prototype = {
         var baseOccDateKey = getRidKey(baseOccDate);
         if (baseOccDate && !occurrenceMap[baseOccDateKey]) {
             occurrenceMap[baseOccDateKey] = true;
-            binaryInsert(dates,
-                         aReturnRIDs ? { id: baseOccDate, rstart: baseOccDate } : baseOccDate,
-                         aReturnRIDs ? ridDateSortComptor : dateSortComptor);
+            binaryInsert(dates, { id: baseOccDate, rstart: baseOccDate }, ridDateSortComptor);
         }
 
         // if both range start and end are specified, we ask for all of the occurrences,
@@ -565,9 +556,7 @@ calRecurrenceInfo.prototype = {
                 }
                 // TODO if cur_dates[] is also sorted, then this binary
                 // search could be optimized further
-                binaryInsert(dates,
-                             aReturnRIDs ? { id: date, rstart: date } : date,
-                             aReturnRIDs ? ridDateSortComptor : dateSortComptor);
+                binaryInsert(dates, { id: date, rstart: date }, ridDateSortComptor);
                 occurrenceMap[dateKey] = true;
             }
         }
@@ -593,13 +582,7 @@ calRecurrenceInfo.prototype = {
                     // to construct the array of occurrences. Right now I'm
                     // just using the occurrence map to skip the filter
                     // action if the occurrence isn't there anyway.
-                    dates = dates.filter(function (d) {
-                        if (aReturnRIDs) {
-                            return d.rstart.compare(dateToRemove) != 0;
-                        } else {
-                            return d.compare(dateToRemove) != 0;
-                        }
-                    });
+                    dates = dates.filter(function (d) { return d.id.compare(dateToRemove) != 0; });
                     delete occurrenceMap[dateToRemoveKey];
                 }
             }
@@ -618,7 +601,8 @@ calRecurrenceInfo.prototype = {
                                                         aRangeEnd,
                                                         aMaxCount,
                                                         aCount) {
-        var dates = this.calculateDates(aRangeStart, aRangeEnd, aMaxCount, false);
+        var dates = this.calculateDates(aRangeStart, aRangeEnd, aMaxCount);
+        dates = dates.map(function(d) { return d.rstart; });
         aCount.value = dates.length;
         return dates;
     },
@@ -628,7 +612,7 @@ calRecurrenceInfo.prototype = {
                                                 aMaxCount,
                                                 aCount) {
         var results = [];
-        var dates = this.calculateDates(aRangeStart, aRangeEnd, aMaxCount, true);
+        var dates = this.calculateDates(aRangeStart, aRangeEnd, aMaxCount);
         if (dates.length) {
             var count = aMaxCount;
             if (!count)

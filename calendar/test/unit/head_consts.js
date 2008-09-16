@@ -64,9 +64,17 @@ function createDate(aYear, aMonth, aDay, aHasTime, aHour, aMinute, aSecond, aTim
 }
 
 function createEventFromIcalString(icalString) {
-    var event = Cc["@mozilla.org/calendar/event;1"]
-                .createInstance(Ci.calIEvent);
-    event.icalString = icalString;
+    if (/^BEGIN:VCALENDAR/.test(icalString)) {
+        var parser = Components.classes["@mozilla.org/calendar/ics-parser;1"]
+                               .createInstance(Components.interfaces.calIIcsParser);
+        parser.parseString(icalString, null);
+        var items = parser.getItems({});
+        ASSERT(items.length == 1);
+        return items[0];
+    } else {
+        var event = Cc["@mozilla.org/calendar/event;1"].createInstance(Ci.calIEvent);
+        event.icalString = icalString;
+    }
     return event;
 }
 
