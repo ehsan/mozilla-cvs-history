@@ -76,8 +76,9 @@ if (defined($args = $form{log}) or defined($args = $form{exerpt})) {
 $fulltext    = $form{fulltext};
 
 $safe_buildname = value_encode($buildname);
-$safe_buildtime = value_encode($buildname);
+$safe_buildtime = value_encode($buildtime);
 $enc_buildname = url_encode($buildname);
+$enc_buildtime = url_encode($buildtime);
 $enc_errorparser = url_encode($errorparser);
 $enc_logfile = url_encode($logfile);
 
@@ -211,7 +212,7 @@ sub print_notes {
   my $found_note = 0;
   open(NOTES,"<", "$::tree_dir/$tree/notes.txt") 
     or print "<h2>warning: Couldn't open $tree/notes.txt </h2>\n";
-  print "$safe_buildtime, $safe_buildname<br>\n";
+
   while (<NOTES>) {
     chop;
     my ($nbuildtime,$nbuildname,$nwho,$nnow,$nenc_note) = split(/\|/);
