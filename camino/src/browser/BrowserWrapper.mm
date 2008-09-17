@@ -55,6 +55,7 @@
 #import "FindBarController.h"
 #import "CHGradient.h"
 #import "NSString+Gecko.h"
+#import "NSString+Utils.h"
 
 #include "CHBrowserService.h"
 #include "ContentClickListener.h"
@@ -411,7 +412,8 @@ enum StatusPriority {
 {
   // blast it into the urlbar immediately so that we know what we're
   // trying to load, even if it doesn't work
-  [mDelegate updateLocationFields:urlSpec ignoreTyping:YES];
+  if (![urlSpec hasCaseInsensitivePrefix:@"javascript:"])
+    [mDelegate updateLocationFields:urlSpec ignoreTyping:YES];
 
   [self setPendingURI:urlSpec];
 
