@@ -191,6 +191,7 @@ WriteVersion(nsIFile* aProfileDir, const nsACString& aVersion,
 
 - (void)registerNotificationListener;
 - (void)initUpdatePrefs;
+- (void)cleanUpObsoletePrefs;
 
 - (void)termEmbedding:(NSNotification*)aNotification;
 - (void)xpcomTerminate:(NSNotification*)aNotification;
@@ -370,6 +371,7 @@ static BOOL gMadePrefManager;
     }
 
     [self initUpdatePrefs];
+    [self cleanUpObsoletePrefs];
     
     mDefaults = [NSUserDefaults standardUserDefaults];
   }
@@ -702,6 +704,24 @@ static BOOL gMadePrefManager;
                    currentLanguage];
   }
   [defaults setObject:manifestURL forKey:SUFeedURLKey];
+}
+
+- (void)cleanUpObsoletePrefs
+{
+  NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
+  
+  // remove old 0.8-era toolbar configuration prefs that are no longer functional
+  [defaults removeObjectForKey:@"NSToolbar Configuration preferences.toolbar"];
+  
+  // Avoid the General Prefs missing-icon problem for users who have migrated to 1.6+
+  // from older versions who had changed the toolbar display prefs (with the now-removed widget).
+  // When the widget was used to change the toolbar configuration, it saved the bundle IDs
+  // of the pref panes. When an ID changed, the stale data in the plist caused missing icons.
+  // Turns out we don't need the bundle IDs at all, so just delete them from the plist.
+  NSMutableDictionary* prefsToolbarConfiguration = [[[defaults objectForKey:@"NSToolbar Configuration preferences.toolbar.1"] mutableCopy] autorelease];
+
+  [prefsToolbarConfiguration removeObjectForKey:@"TB Item Identifiers"];
+  [defaults setObject:prefsToolbarConfiguration forKey:@"NSToolbar Configuration preferences.toolbar.1"];
 }
 
 // Convert an Apple locale (or language with the dialect specified) from the form en_GB
