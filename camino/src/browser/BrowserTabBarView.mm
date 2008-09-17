@@ -96,10 +96,6 @@ static const float kScrollButtonInterval = 0.15;  // time (in seconds) between f
   self = [super initWithFrame:frame];
   if (self) {
     mOverflowTabs = NO;
-    // initialize to YES so that awakeFromNib: will set the right size; awakeFromNib uses setVisible which
-    // will only be effective if visibility changes. initializing to YES causes the right thing to happen even
-    // if this view is visible in a nib file.
-    mVisible = YES;
     // this will not likely have any result here
     [self rebuildTabBar];
     [self registerForDraggedTypes:[NSArray arrayWithObjects: kCaminoBookmarkListPBoardType,
@@ -331,7 +327,7 @@ static const float kScrollButtonInterval = 0.15;  // time (in seconds) between f
 // allows tab button cells to react to mouse events
 -(void)registerTabButtonsForTracking
 {
-  if ([self window] && mVisible) {
+  if ([self window] && ![self isHidden]) {
     NSArray* tabItems = [mTabView tabViewItems];
     if (mTrackingCells)
       [self unregisterTabButtonsForTracking];
@@ -688,7 +684,7 @@ static const float kScrollButtonInterval = 0.15;  // time (in seconds) between f
 
 -(BOOL)isVisible
 {
-  return mVisible;
+  return ![self isHidden];
 }
 
 // show or hide tabs- should be called if this view will be hidden, to give it a chance to register or
@@ -698,19 +694,13 @@ static const float kScrollButtonInterval = 0.15;  // time (in seconds) between f
 -(void)setVisible:(BOOL)show
 {
   // only change anything if the new state is different from the current state
-  if (show && !mVisible) {
-    mVisible = show;
-    NSRect newFrame = [self frame];
-    newFrame.size.height = [self tabBarHeight];
-    [self setFrame:newFrame];
+  if (show && [self isHidden]) {
+    [self setHidden:NO];
     [self rebuildTabBar];
     // set up tracking rects
     [self registerTabButtonsForTracking];
-  } else if (!show && mVisible) { // being hidden
-    mVisible = show;
-    NSRect newFrame = [self frame];
-    newFrame.size.height = 0.0;
-    [self setFrame:newFrame];
+  } else if (!show && ![self isHidden]) { // being hidden
+    [self setHidden:YES];
     // destroy tracking rects
     [self unregisterTabButtonsForTracking];
   }

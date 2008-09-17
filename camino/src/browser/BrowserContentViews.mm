@@ -243,15 +243,16 @@ static const float kMinBrowserViewHeight = 100.0;
 - (void)resizeSubviewsWithOldSize:(NSSize)oldFrameSize
 {
   NSRect adjustedRect = [self bounds];
-  // mTabView will have set the appropriate size by now
-  adjustedRect.size.height -= [mTabBarView frame].size.height;  
+  if ([mTabBarView isVisible]) {
+    adjustedRect.size.height -= [mTabBarView frame].size.height;
+
+    NSRect tbRect = adjustedRect;
+    tbRect.size.height = [mTabBarView frame].size.height;
+    tbRect.origin.x = 0;
+    tbRect.origin.y = NSMaxY(adjustedRect);
+    [mTabBarView setFrame:tbRect];
+  }
   [mTabView setFrame:adjustedRect];
-  
-  NSRect tbRect = adjustedRect;
-  tbRect.size.height = [mTabBarView frame].size.height;
-  tbRect.origin.x = 0;
-  tbRect.origin.y = NSMaxY(adjustedRect);
-  [mTabBarView setFrame:tbRect];
 }
 
 @end
