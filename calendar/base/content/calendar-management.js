@@ -562,6 +562,7 @@ var calendarListTreeView = {
         // calendar.
         var composite = getCompositeCalendar();
         composite.defaultCalendar = getSelectedCalendar();
+        document.commandDispatcher.updateCommands("calendar_commands");
     },
 
     onTooltipShowing: function cLTV_onTooltipShowing(event) {

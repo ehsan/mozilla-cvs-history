@@ -180,7 +180,7 @@ var calendarController = {
                     case "cmd_copy":
                         return this.item_selected;
                     case "cmd_paste":
-                        return this.writable && canPaste();
+                        return canPaste();
                     case "cmd_undo":
                         goSetMenuValue(aCommand, 'valueDefault');
                         return canUndo();
@@ -289,14 +289,10 @@ var calendarController = {
                         pasteFromClipboard();
                         break;
                     case "cmd_undo":
-                        if (canUndo()) {
-                            getTransactionMgr().undo();
-                        }
+                        undo();
                         break;
                     case "cmd_redo":
-                        if (canRedo()) {
-                            getTransactionMgr().redo();
-                        }
+                        redo();
                         break;
                     case "cmd_selectAll":
                         selectAllEvents();

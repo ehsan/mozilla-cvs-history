@@ -435,13 +435,17 @@ function doTransaction(aAction, aItem, aCalendar, aOldItem, aListener) {
 }
 
 function undo() {
-    getTransactionMgr().undo();
-    updateUndoRedoMenu();
+    if (canUndo()) {
+        getTransactionMgr().undo();
+        updateUndoRedoMenu();
+    }
 }
 
 function redo() {
-    getTransactionMgr().redo();
-    updateUndoRedoMenu();
+    if (canRedo()) {
+        getTransactionMgr().redo();
+        updateUndoRedoMenu();
+    }
 }
 
 function startBatchTransaction() {

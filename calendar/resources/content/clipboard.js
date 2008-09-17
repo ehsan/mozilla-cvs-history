@@ -65,12 +65,18 @@ var SupportsString = (("nsISupportsWString" in Components.interfaces)
                      );
 
 /** 
-* Test if the clipboard has items that can be pasted into Calendar.
+* Test a writable calendar is selecte and
+* if the clipboard has items that can be pasted into Calendar.
 * This must be of type "text/calendar" or "text/unicode"
 */
 
 function canPaste()
 {
+    var cal = getSelectedCalendar();
+    if (!cal || !isCalendarWritable(cal)) {
+        return false;
+    }
+
     const kClipboardIID = Components.interfaces.nsIClipboard;
 
     var clipboard = getClipboard();
@@ -181,7 +187,6 @@ function copyToClipboard( calendarItemArray )
 function pasteFromClipboard()
 {
     if (!canPaste()) {
-        dump("Attempting to paste with no useful data on the clipboard");
         return;
     }
 

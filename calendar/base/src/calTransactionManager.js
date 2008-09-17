@@ -77,12 +77,36 @@ calTransactionManager.prototype = {
         this.transactionManager.endBatch();
     },
 
+    checkWritable: function cTM_checkWritable(transaction) {
+        if (transaction) {
+            transaction = transaction.wrappedJSObject;
+            if (transaction) {
+                function checkItem(item) {
+                    if (item) {
+                        var cal = item.calendar;
+                        if (cal && !isCalendarWritable(cal)) {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+
+                if (!checkItem(transaction.mItem) ||
+                    !checkItem(transaction.mOldItem)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    },
+
     undo: function cTM_undo() {
         this.transactionManager.undoTransaction();
     },
 
     canUndo: function cTM_canUndo() {
-        return (this.transactionManager.numberOfUndoItems > 0);
+        return ((this.transactionManager.numberOfUndoItems > 0) &&
+                this.checkWritable(this.transactionManager.peekUndoStack()));
     },
 
     redo: function cTM_redo() {
@@ -90,11 +114,13 @@ calTransactionManager.prototype = {
     },
 
     canRedo: function cTM_canRedo() {
-        return (this.transactionManager.numberOfRedoItems > 0);
+        return ((this.transactionManager.numberOfRedoItems > 0) &&
+                this.checkWritable(this.transactionManager.peekRedoStack()));
     }
 };
 
 function calTransaction(aAction, aItem, aCalendar, aOldItem, aListener) {
+    this.wrappedJSObject = this;
     this.mAction = aAction;
     this.mItem = aItem;
     this.mCalendar = aCalendar;
