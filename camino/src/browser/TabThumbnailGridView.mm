@@ -45,6 +45,7 @@
 #import "BrowserTabViewItem.h"
 #import "BrowserWrapper.h"
 #import "CHGradient.h"
+#import "NSArray+Utils.h"
 #import "NSView+Utils.h"
 
 const int kVerticalPadding = 25;
@@ -54,6 +55,7 @@ const int kHorizontalPadding = 25;
 - (void)updateGridSizeFor:(int)num;
 - (void)layoutThumbnails;
 - (void)createThumbnailViews;
+- (BOOL)validateTabExists:(ThumbnailView*)tabThumb;
 @end
 
 @implementation TabThumbnailGridView
@@ -86,36 +88,74 @@ const int kHorizontalPadding = 25;
 #pragma mark Private
 
 //
-// Takes thumbnails of the open tabs in a window then creates a
-// ThumbnailView for each and adds it as a subview
+// Creates a ThumbnailView for each and adds it as a subview, and schedules
+// loading of actual thumbnails.
 //
 - (void)createThumbnailViews
 {
-  // Browser wrapper is used here since moving CHBrowserView disconnects needed attributes (i.e. URL)
   // The window isn't hooked up yet, so go through the superview
   BrowserWindowController* bwc = (BrowserWindowController*)[[[self superview] window] windowController];
   BrowserTabView* tabView = [bwc tabBrowser];
   NSArray* openTabs = [tabView tabViewItems];
 
+  NSMutableArray* thumbViewsToLoad = [NSMutableArray arrayWithCapacity:[openTabs count]];
+
   NSEnumerator* tabEnum = [openTabs objectEnumerator];
   BrowserTabViewItem* tabViewItem;
 
-  while ((tabViewItem = [tabEnum nextObject])) {
-    NSImage* thumb = [[[tabViewItem view] browserView] snapshot];
-    if (!thumb)
-      continue;
-    ThumbnailView* curThumbView = [[[ThumbnailView alloc] init] autorelease];
+  NSSize browserContentSize = [[bwc browserWrapper] frame].size;
+  NSImage* placeholderThumb = [[[NSImage alloc] initWithSize:browserContentSize] autorelease];
+  [placeholderThumb lockFocus];
+  [[NSColor whiteColor] set];
+  [NSBezierPath fillRect:NSMakeRect(0, 0, browserContentSize.width, browserContentSize.height)];
+  [placeholderThumb unlockFocus];
 
+  while ((tabViewItem = [tabEnum nextObject])) {
+    ThumbnailView* curThumbView = [[[ThumbnailView alloc] init] autorelease];
     if (curThumbView) {
-      [curThumbView setThumbnail:thumb];
+      [curThumbView setThumbnail:placeholderThumb];
       [curThumbView setRepresentedObject:tabViewItem];
       [curThumbView setTitle:[tabViewItem label]];
       [curThumbView setDelegate:self];
       [self addSubview:curThumbView];
+      [thumbViewsToLoad addObject:curThumbView];
     }
   }
 
   [self layoutThumbnails];
+
+  // Start the tab thumbnailing process. We do this one tab at a time, scheduled
+  // with the runloop, so that the grid view comes up immediately and the UI
+  // stays responsive the whole time.
+  [self performSelector:@selector(loadNextThumbnailForViews:)
+             withObject:thumbViewsToLoad
+             afterDelay:0];
+}
+
+- (void)loadNextThumbnailForViews:(NSMutableArray*)thumbViewsToLoad
+{
+  // First, bail if the tab grid view has been dismissed.
+  if (![self superview])
+    return;
+
+  // Load the next view if we aren't done yet.
+  ThumbnailView* thumbView = [thumbViewsToLoad firstObject];
+  if (!thumbView)
+    return;
+  [thumbViewsToLoad removeObjectAtIndex:0];
+  BrowserTabViewItem* tabViewItem = [thumbView representedObject];
+  // Ensure that the tab hasn't somehow vanished out from under us. The user
+  // shouldn't be able to close it, but a site potentially could via JS.
+  if (![self validateTabExists:thumbView])
+    return;
+
+  NSImage* thumb = [[[tabViewItem view] browserView] snapshot];
+  if (thumb)
+    [thumbView setThumbnail:thumb];
+  // Schedule the next iteration.
+  [self performSelector:@selector(loadNextThumbnailForViews:)
+             withObject:thumbViewsToLoad
+             afterDelay:0];
 }
 
 //
@@ -130,10 +170,33 @@ const int kHorizontalPadding = 25;
 }
 
 //
+// Checks that the tab this thumbnail represents still exists, and removes it
+// from the grid if not.
+//
+- (BOOL)validateTabExists:(ThumbnailView*)tabThumb
+{
+  BrowserWindowController* bwc = (BrowserWindowController*)[[[self superview] window] windowController];
+  if (![[[bwc tabBrowser] tabViewItems] containsObject:[tabThumb representedObject]]) {
+    // Remove the now-dead tab, and re-flow
+    [tabThumb removeFromSuperview];
+    [self layoutThumbnails];
+    return NO;
+  }
+  return YES;
+}
+
+//
 // Change the tab to the selected ThumbnailView
 //
 - (void)thumbnailViewWasSelected:(ThumbnailView*)selectedView
 {
+  // Ensure that the tab hasn't somehow vanished out from under us. The user
+  // shouldn't be able to close it, but a site potentially could via JS.
+  // The user experience is odd here, but this is so unlikely that setting up
+  // a notification-based live update seems like overkill. 
+  if (![self validateTabExists:selectedView])
+    return;
+
   BrowserWindowController* bwc = (BrowserWindowController*)[[self window] windowController];
   BrowserTabView* tabView = [bwc tabBrowser];
 

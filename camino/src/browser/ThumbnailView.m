@@ -62,6 +62,7 @@ static const int kThumbnailTitleHeight = 20;
   if (image != mThumbnail) {
     [mThumbnail release];
     mThumbnail = [image retain];
+    [self setNeedsDisplay:YES];
   }
 }
 
