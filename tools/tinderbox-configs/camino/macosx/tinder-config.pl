@@ -79,9 +79,9 @@ $RegxpcomTest             = 0;
 #$EmbedCodesizeTest        = 0;  # mZ, require mozilla/tools/codesigns
 #$MailBloatTest            = 0;
 #$EmbedTest                = 0;  # Assumes you wanted $BuildEmbed=1
-$LayoutPerformanceTest    = 1;  # Tp
+$LayoutPerformanceTest    = 0;  # Tp
 #$LayoutPerformanceLocalTest   = 0;  # Tp2
-$DHTMLPerformanceTest     = 1;  # Tdhtml
+$DHTMLPerformanceTest     = 0;  # Tdhtml
 #$QATest                   = 0;  
 #$XULWindowOpenTest        = 0;  # Txul
 $StartupPerformanceTest   = 1;  # Ts
@@ -94,7 +94,7 @@ $StartupPerformanceTest   = 1;  # Ts
                                 # aviary directory structure?
 
 $TestsPhoneHome           = 1;  # Should test report back to server?
-$GraphNameOverride        = 'cb-xserve01.mozilla.com'; # Override name built from ::hostname() and $BuildTag
+#$GraphNameOverride        = ''; # Override name built from ::hostname() and $BuildTag
 
 # $results_server
 #----------------------------------------------------------------------------
@@ -183,7 +183,7 @@ $ObjDir = '../build';
 #$SubObjDir = '';
 
 # Extra build name, if needed.
-$BuildNameExtra = 'CmTrunk';
+$BuildNameExtra = 'Cm2-M1.9';
 
 # User comment, eg. ip address for dhcp builds.
 # ex: $UserComment = "ip = 208.12.36.108";
@@ -225,7 +225,7 @@ $BinaryName = 'Camino';
 # If set to a filepath, tinderbox will use the file contents (presumed to be a bz2
 # archive of a compatible Talkback extension) rather than compiling Talkback
 # from source. 
-$UsePrebuiltTalkback = "/builds/tinderbox/CmTrunk/talkback-camino-trunk-mac.tar.bz2";
+$UsePrebuiltTalkback = "/builds/tinderbox/Cm2-M1.9/talkback-camino-trunk-mac.tar.bz2";
 
 # Release build options
 #$ReleaseBuild  = 1;
@@ -248,7 +248,7 @@ $ftp_path      = "/home/ftp/pub/camino/nightly";
 $url_path      = "http://ftp.mozilla.org/pub/mozilla.org/camino/nightly";
 $tbox_ftp_path = '/home/ftp/pub/camino/tinderbox-builds';
 $tbox_url_path = "http://ftp.mozilla.org/pub/mozilla.org/camino/tinderbox-builds";
-$milestone     = "trunk";
+$milestone     = "2.0-M1.9";
 #$notify_list   = 'build-announce@mozilla.org';
 #$stub_installer = 1;
 #$sea_installer = 1;
