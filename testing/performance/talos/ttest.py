@@ -161,9 +161,9 @@ def runTest(browser_config, test_config):
     initializeProfile(profile_dir, browser_config)
     
     utils.debug("initialized firefox")
-    ffprocess.Sleep()
   
     for i in range(test_config['cycles']):
+      ffprocess.Sleep()
       # check to see if the previous cycle is still hanging around 
       if (i > 0) and checkAllProcesses():
         raise talosError("previous cycle still running")
