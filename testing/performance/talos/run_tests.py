@@ -58,6 +58,7 @@ import string
 import socket
 socket.setdefaulttimeout(480)
 import getopt
+import re
 
 import utils
 from utils import talosError
@@ -224,7 +225,7 @@ def send_to_graph(results_server, results_link, title, date, browser_config, res
         links += chunk_link
     utils.stamped_msg("Transmitting test: " + res, "Stopped")
  
-  first_results = ''
+  first_results = 'RETURN:<br>'
   last_results = '' 
   full_results = '\nRETURN:<p style="font-size:smaller;">Details:<br>'  
   lines = links.split('\n')
@@ -246,6 +247,33 @@ def send_to_graph(results_server, results_link, title, date, browser_config, res
       last_results = last_results + '| ' + link + ' '
   full_results = first_results + full_results + last_results + '|</p>'
   print full_results
+
+def browserInfo(browser_config):
+  """Get the buildid and changeset from the application.ini (if it exists)
+  """
+  appIniFileName = "application.ini"
+  appIniPath = os.path.join(os.path.dirname(browser_config['firefox']), appIniFileName)
+  if os.path.isfile(appIniPath):
+    appIni = open(appIniPath)
+    appIniContents = appIni.readlines()
+    appIni.close()
+    reSourceStamp = re.compile('SourceStamp\s*=\s*(.*)$')
+    reRepository = re.compile('SourceRepository\s*=\s*(.*)$')
+    reBuildID = re.compile('BuildID\s*=\s*(.*)$')
+    for line in appIniContents:
+      match = re.match(reBuildID, line)
+      if match:
+        browser_config['buildid'] = match.group(1)
+        print 'RETURN:id:' + browser_config['buildid']
+      match = re.match(reRepository, line)
+      if match:
+          browser_config['repository'] = match.group(1)
+      match = re.match(reSourceStamp, line)
+      if match:
+          browser_config['sourcestamp'] = match.group(1)
+    if ('repository' in browser_config) and ('sourcestamp' in browser_config):
+      print 'RETURN:<a href = "' + browser_config['repository'] + '/rev/' + browser_config['sourcestamp'] + '">rev:' + browser_config['sourcestamp'] + '</a>'
+  return browser_config
 
 def test_file(filename):
   """Runs the Ts and Tp tests on the given config file and generates a report.
@@ -307,6 +335,8 @@ def test_file(filename):
     date = int(time.time()) #TODO get this into own file
   utils.debug("using testdate: %d" % date)
   utils.debug("actual date: %d" % int(time.time()))
+  #pull buildid & sourcestamp from browser
+  browser_config = browserInfo(browser_config)
 
   utils.stamped_msg(title, "Started")
   for test in tests:
