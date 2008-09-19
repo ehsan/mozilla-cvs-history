@@ -76,12 +76,14 @@ autoflush STDERR 1;
 use vars qw($PID_FILE
             $DEFAULT_HASH_TYPE
             $DEFAULT_CVSROOT
+            $DEFAULT_MOZILLA_CENTRAL
             $DEFAULT_SCHEMA_VERSION $CURRENT_SCHEMA_VERSION
             $ST_SIZE );
 
 $PID_FILE = 'patcher2.pid';
 $DEFAULT_HASH_TYPE = 'SHA1';
 $DEFAULT_CVSROOT = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
+$DEFAULT_MOZILLA_CENTRAL = 'http://hg.mozilla.org/mozilla-central';
 
 $DEFAULT_SCHEMA_VERSION = 0;
 $CURRENT_SCHEMA_VERSION = 1;
@@ -97,7 +99,8 @@ sub main {
     PrintUsage(exitCode => 1) if ($config eq undef);
 
 
-    if (not $config->RequestedStep('build-tools') and
+    if (not ($config->RequestedStep('build-tools') or
+             $config->RequestedStep('build-tools-hg')) and
         not ValidateToolsDirectory(toolsDir => $config->GetToolsDir())) {
         my $badDir = $config->GetToolsDir();
         print STDERR <<__END_TOOLS_ERROR__;
@@ -114,7 +117,8 @@ __END_TOOLS_ERROR__
     $config->RemoveBrokenUpdates();
     #printf("POST-REMOVE-BROKEN:\n\n%s", Data::Dumper::Dumper($config));
 
-    BuildTools(config => $config) if $config->RequestedStep('build-tools');
+    BuildTools(config => $config, fromHg => 0) if $config->RequestedStep('build-tools');
+    BuildTools(config => $config, fromHg => 1) if $config->RequestedStep('build-tools-hg');
 
     run_download_complete_patches(config => $config) if $config->RequestedStep('download');
 
@@ -150,6 +154,9 @@ Required global settings:
 Patcher can be run in one of the following modes:
 
 --build-tools                   Checkout and build the tools needed for updates
+                                (From CVS)
+--build-tools-hg                Checkout and build the tools needed for updates
+                                (From mozilla-central)
 --download                      Download "to" and "from" complete MAR files
 --create-patches                Create partial MAR files
                                 NOTE - create-patches calls create-patchinfo
@@ -169,6 +176,7 @@ __END_USAGE__
 sub BuildTools {
     my %args = @_;
     my $config = $args{'config'};
+    my $fromHg = $args{'fromHg'};
     my $codir = $config->GetToolsDir();
     my $toolsRevision = $config->GetToolsRevision();
 
@@ -189,19 +197,34 @@ sub BuildTools {
         die "ERROR: $codir/mozilla exists.  Please move it away before continuing!";
     }
 
-    { # Checkout 'client.mk'.
-        printf("Checking out 'client.mk' from $toolsRevision... \n");
-        my $cvsroot = $ENV{'CVSROOT'} || $DEFAULT_CVSROOT;
+    if ($fromHg) {
+        { # When we're building out of Mercurial this pulls the entire
+          # repository.
+            printf("Cloning mozilla-central and updating to $toolsRevision\n");
+            my $mc = $ENV{'MOZILLA_CENTRAL'} || $DEFAULT_MOZILLA_CENTRAL;
 
-        my $checkoutArgs = ["-d$cvsroot", 'co', 
-                            '-r' . $toolsRevision,
-                            'mozilla/client.mk'];
+            my $cloneArgs = ["clone", "-r", $toolsRevision, $mc, "mozilla"];
 
-        run_shell_command(cmd => 'cvs',
-                          cmdArgs => $checkoutArgs);
+            run_shell_command(cmd => 'hg',
+                              cmdArgs => $cloneArgs);
 
-        printf("\n\nCheckout complete.\n");
-    } # Checkout 'client.mk'.
+            printf("\n\nClone complete.\n");
+        }
+    } else {
+        { # When we're building out of CVS this *only* pulls client.mk
+            printf("Checking out 'client.mk' from $toolsRevision... \n");
+            my $cvsroot = $ENV{'CVSROOT'} || $DEFAULT_CVSROOT;
+
+            my $checkoutArgs = ["-d$cvsroot", 'co', 
+                                '-r' . $toolsRevision,
+                                'mozilla/client.mk'];
+
+            run_shell_command(cmd => 'cvs',
+                              cmdArgs => $checkoutArgs);
+
+            printf("\n\nCheckout complete.\n");
+        } # Checkout 'client.mk'.
+    }
 
     my $mozDir = catfile($codir, 'mozilla');
     # The checkout directory should exist but doesn't.
@@ -236,6 +259,9 @@ sub BuildTools {
 
         my $makeArgs = ['-f', './client.mk'];
 
+        # When we're building out of Mercurial this goes straight to compiling
+        # the tools. When we're building out of CVS this checks outo the
+        # rest of the repository, and *then* builds the tools.
         run_shell_command(cmd => 'make',
                           cmdArgs => $makeArgs,
                           dir => $mozDir,

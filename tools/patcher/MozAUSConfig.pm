@@ -66,6 +66,7 @@ use vars qw( @RUN_MODES
            );
 
 @RUN_MODES = qw( build-tools
+                 build-tools-hg
                  download 
                  create-patches create-patchinfo );
 
