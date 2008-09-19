@@ -45,6 +45,7 @@
 #import "BrowserTabView.h"
 #import "BrowserTabViewItem.h"
 #import "TabButtonView.h"
+#import "RolloverImageButton.h"
 
 #import "NSArray+Utils.h"
 #import "NSImage+Utils.h"
@@ -110,6 +111,10 @@ static const float kScrollButtonInterval = 0.15;  // time (in seconds) between f
 
 -(void)awakeFromNib
 {
+  // The last subview of the bar will have its next key view set as the "next external key view" of
+  // the BrowserTabBarView, which was set from within Interface Builder.  The next key view of the
+  // BrowserTabBarView itself is changed to instead be the first subview item inside the tab bar.
+  mNextExternalKeyView = [self nextKeyView];
   // start off with the tabs hidden, and allow our controller to show or hide as appropriate.
   [self setVisible:NO];
   // this needs to be called again since our tabview should be non-nil now
@@ -317,6 +322,7 @@ static const float kScrollButtonInterval = 0.15;  // time (in seconds) between f
   [self unregisterTabButtonsForTracking];
   [self layoutButtonsPreservingVisibility:NO];
   [self registerTabButtonsForTracking];
+  [self updateKeyViewLoop];
 }
 
 - (void)viewWillMoveToWindow:(NSWindow*)window
@@ -703,6 +709,75 @@ static const float kScrollButtonInterval = 0.15;  // time (in seconds) between f
     [self setHidden:YES];
     // destroy tracking rects
     [self unregisterTabButtonsForTracking];
+  }
+}
+
+- (void)updateKeyViewLoop
+{
+  // Connects the key view loop among all subviews of the BrowserTabBarView.
+
+  int numberOfTabs = [mTabView numberOfTabViewItems];
+
+  if (numberOfTabs <= 0)
+    return;
+
+  TabButtonView* firstTabButton = [(BrowserTabViewItem*)[mTabView tabViewItemAtIndex:0] buttonView];
+  // If we don't have a tab button yet, just keep the current nextKeyView.
+  if (!firstTabButton)
+    return;  
+
+  // Set the next key view of the BrowserTabBarView itself to the close button of the first tab.
+  // If there are overflow buttons, insert them before the first close button. 
+  if (mOverflowTabs) {
+    [self setNextKeyView:mOverflowLeftButton];
+    [mOverflowLeftButton setNextKeyView:[firstTabButton closeButton]];
+  }
+  else {
+    [self setNextKeyView:[firstTabButton closeButton]];
+  }
+
+  // Other than the last tab button, set the nextKeyView of each to the following tab's close
+  // button.  Make the tab itself the next key view of its own close button.
+  for (int currentButtonIndex = 0; currentButtonIndex < (numberOfTabs - 1); currentButtonIndex++) {
+    TabButtonView* currentTabButton = 
+    [(BrowserTabViewItem*)[mTabView tabViewItemAtIndex:currentButtonIndex] buttonView];
+    TabButtonView* nextTabButton = 
+    [(BrowserTabViewItem*)[mTabView tabViewItemAtIndex:(currentButtonIndex + 1)] buttonView];
+    
+    [[currentTabButton closeButton] setNextKeyView:currentTabButton];
+    [currentTabButton setNextKeyView:[nextTabButton closeButton]];
+  }
+
+  // For the last tab, account for the right overflow items and set the next key view of
+  // the last tab bar item to the next external key view of the tab bar itself.
+  TabButtonView* lastTabButton = 
+  [(BrowserTabViewItem*)[mTabView tabViewItemAtIndex:(numberOfTabs - 1)] buttonView];
+  [[lastTabButton closeButton] setNextKeyView:lastTabButton];
+  if (mOverflowTabs) {
+    [lastTabButton setNextKeyView:mOverflowRightButton];
+    [mOverflowRightButton setNextKeyView:mOverflowMenuButton];
+    [mOverflowMenuButton setNextKeyView:mNextExternalKeyView];
+  }
+  else {
+    [lastTabButton setNextKeyView:mNextExternalKeyView];
+  }
+}
+
+- (void)keyDown:(NSEvent *)theEvent
+{
+  // If the spacebar key was pressed with either the left or right overflow buttons highlighted,
+  // restore focus on them after the key event is processed.  (They will normally lose
+  // focus when carrying out their action, and it makes sense to leave it on them for
+  // further action).
+  [self ensureOverflowButtonsInitted];
+  NSResponder *firstResponder = [[self window] firstResponder];
+  [super keyDown:theEvent];
+  if ([[theEvent characters] isEqualToString:@" "] &&
+      (firstResponder == mOverflowLeftButton ||
+       firstResponder == mOverflowRightButton))
+  {
+    if ([firstResponder acceptsFirstResponder])
+      [[self window] makeFirstResponder:firstResponder];
   }
 }
     

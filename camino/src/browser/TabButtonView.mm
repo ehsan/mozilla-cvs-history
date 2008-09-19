@@ -198,6 +198,11 @@ static NSImage* sTabButtonDividerImage = nil;
   [mCloseButton setEnabled:isEnabled];
 }
 
+- (RolloverImageButton*)closeButton
+{
+  return mCloseButton;
+}
+
 - (void)setMenu:(NSMenu *)aMenu
 {
   // set the tag of every menu item to the tab view item's tag,
@@ -283,7 +288,16 @@ static NSImage* sTabButtonDividerImage = nil;
     [dropTargetOutline fill];
   }
 
+  [mLabelCell setShowsFirstResponder:NO];
   [mLabelCell drawInteriorWithFrame:mLabelRect inView:self];
+
+  // Draw a focus rect on the tab if we are the current key view.
+  if ([[self window] firstResponder] == self) {
+    [NSGraphicsContext saveGraphicsState];
+    NSSetFocusRingStyle(NSFocusRingOnly);
+    [[NSBezierPath bezierPathWithRect:mLabelRect] fill];
+    [NSGraphicsContext restoreGraphicsState];    
+  }
 }
 
 #pragma mark -
@@ -559,6 +573,46 @@ static NSImage* sTabButtonDividerImage = nil;
     return NO;
   }
   return [super accessibilityIsAttributeSettable:attribute];
+}
+
+#pragma mark -
+
+- (BOOL)acceptsFirstResponder
+{
+  return YES;
+}
+
+- (BOOL)becomeFirstResponder
+{
+  // The TabButton should not become the key view (and draw a focus rect) if it was clicked
+  // on with the mouse.  Only becomeFirstResponder when tabbing from the previous key view.
+  if ([[NSApp currentEvent] type] != NSKeyDown)
+    return NO;
+
+  [self setNeedsDisplay:YES];
+  return YES;
+}
+
+- (BOOL)resignFirstResponder
+{
+  [self setNeedsDisplay:YES];
+  return YES;
+}
+
+- (void)keyDown:(NSEvent *)theEvent
+{
+  // If the spacebar key is pressed while we are the window's first responder, it should simulate
+  // a mouse click and select the highlighted tab.
+  if ([[self window] firstResponder] == self &&
+      [[theEvent characters] isEqualToString:@" "])
+  {
+    [[NSNotificationCenter defaultCenter] postNotificationName:kTabWillChangeNotifcation object:mTabViewItem];
+    [[mTabViewItem tabView] selectTabViewItem:mTabViewItem];
+  }
+  else
+  {
+    [super keyDown:theEvent];
+  }
 }
 
 @end

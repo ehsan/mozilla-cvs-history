@@ -76,6 +76,8 @@
 // Enable or disable the close button.
 - (void)setCloseButtonEnabled:(BOOL)isEnabled;
 
+- (RolloverImageButton*)closeButton;
+
 // Enable or disable draving of a right-side divider.
 - (void)setDrawsDivider:(BOOL)drawsDivider;
 

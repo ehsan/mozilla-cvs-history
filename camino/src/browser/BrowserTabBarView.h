@@ -66,6 +66,8 @@
   
   int               mLeftMostVisibleTabIndex;    // Index of tab view item left-most in the tab bar
   int               mNumberOfVisibleTabs;        // Number of tab view items drawn in the tab bar
+
+  NSView*           mNextExternalKeyView; // The next key view after the tab bar, as set from within Interface Builder.
 }
 
 // destroy the tab bar and recreate it from the tabview
@@ -78,5 +80,6 @@
 // unregister tracking rects as appropriate
 -(void)setVisible:(BOOL)show;
 -(void)scrollTabIndexToVisible:(int)index;
+- (void)updateKeyViewLoop;
 
 @end
