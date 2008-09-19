@@ -50,7 +50,8 @@
   BookmarkButton* mDragInsertionButton;
   int             mDragInsertionPosition;
   BOOL            mDrawBorder;
-  BOOL            mButtonListDirty;   // do we need a full rebuild of the button list?
+  BOOL            mButtonListDirty;     // do we need a full rebuild of the button list?
+  NSView*         mNextExternalKeyView;
 }
 
   // Called to construct & edit the initial set of personal toolbar buttons.

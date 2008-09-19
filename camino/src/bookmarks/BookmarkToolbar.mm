@@ -73,6 +73,7 @@ static const float kButtonRectVPadding = 4.0f;
 - (BOOL)findDropAnchorScanningFromPoint:(NSPoint)testPoint withStep:(int)step;
 - (void)drawBackgroundInRect:(NSRect)rect;
 - (void)drawInsertionHighlightForButtonRect:(NSRect)rect;
+- (void)setupKeyViewLoop;
 
 @end
 
@@ -111,6 +112,15 @@ static const int kBMBarScanningStep = 5;
         name:kBookmarkManagerStartedNotification object:nil];
   }
   return self;
+}
+
+- (void)awakeFromNib
+{
+  // The BookmarkToolbar manages its key view loop like NSTabView.  The initially provided 
+  // nextKeyView of the BookmarkToolbar is remembered as the "next external key view".  The last
+  // bookmark button will then be given the "next external key view" as its next key view.
+  // The nextKeyView of the toolbar itself is changed to instead be the first bookmark button.
+  mNextExternalKeyView = [self nextKeyView];
 }
 
 - (void)dealloc
@@ -272,6 +282,8 @@ static const int kBMBarScanningStep = 5;
 
   mButtonListDirty = NO;
 
+  [self setupKeyViewLoop];
+
   if ([self isVisible])
     [self reflowButtons];
 }
@@ -283,6 +295,7 @@ static const int kBMBarScanningStep = 5;
     return;
   [self addSubview:button];
   [mButtons insertObject:button atIndex:aIndex];
+  [self setupKeyViewLoop];
   if ([self isVisible])
     [self reflowButtonsStartingAtIndex:aIndex];
 }
@@ -318,6 +331,7 @@ static const int kBMBarScanningStep = 5;
     }
   }
   [self setNeedsDisplay:YES];
+  [self setupKeyViewLoop];
 }
 
 - (void)reflowButtons
@@ -773,6 +787,24 @@ static const int kBMBarScanningStep = 5;
 {
   return [[[BookmarkButton alloc] initWithFrame:NSMakeRect(0.0f, 0.0f, kMaxBookmarkButtonWidth, kBookmarkButtonHeight)
                                            item:aItem] autorelease];
+}
+
+- (void)setupKeyViewLoop
+{
+  unsigned int totalButtons = [mButtons count];
+  // First, point the toolbar's nextKeyView to the first button.
+  if (totalButtons > 0)
+    [self setNextKeyView:[mButtons objectAtIndex:0]];
+  
+  // Then, except for the last button, connect the key view loop among each bookmark button.
+  for (unsigned int i = 0; i < (totalButtons - 1); i++) {
+    BookmarkButton* currentButton = [mButtons objectAtIndex:i];
+    [currentButton setNextKeyView:[mButtons objectAtIndex:(i + 1)]];
+  }
+
+  // Set the last button's nextKeyView to the next external key view of the toolbar itself.
+  BookmarkButton* lastButton = [mButtons objectAtIndex:(totalButtons - 1)];
+  [lastButton setNextKeyView:mNextExternalKeyView];
 }
 
 #pragma mark -
