@@ -85,4 +85,6 @@
 // Currently unimplemented.
 - (IBAction)findAll:(id)sender;
 
+- (NSView*)lastKeyViewInFindBar;
+
 @end

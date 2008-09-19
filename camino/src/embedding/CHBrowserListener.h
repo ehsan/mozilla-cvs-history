@@ -47,6 +47,7 @@
 #include "nsIWindowCreator.h"
 #include "nsIWindowProvider.h"
 #include "nsIDOMEventListener.h"
+#include "nsIWebBrowserChromeFocus.h"
 
 #include "nsIContextMenuListener.h"
 #include "nsITooltipListener.h"
@@ -70,7 +71,8 @@ class CHBrowserListener : public nsSupportsWeakReference,
                                public nsIWebProgressListener2,
                                public nsIContextMenuListener,
                                public nsIDOMEventListener,
-                               public nsITooltipListener
+                               public nsITooltipListener,
+                               public nsIWebBrowserChromeFocus
 {
 public:
   CHBrowserListener(CHBrowserView* aView);
@@ -88,6 +90,7 @@ public:
   NS_DECL_NSICONTEXTMENULISTENER
   NS_DECL_NSITOOLTIPLISTENER
   NS_DECL_NSIDOMEVENTLISTENER
+  NS_DECL_NSIWEBBROWSERCHROMEFOCUS
     
   void AddListener(id <CHBrowserListener> aListener);
   void RemoveListener(id <CHBrowserListener> aListener);

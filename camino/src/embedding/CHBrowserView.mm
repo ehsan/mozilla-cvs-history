@@ -1939,4 +1939,15 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   wpd->LoadPage(aDesc, aDisplayType);
 }
 
+- (BOOL)canBecomeKeyView
+{
+  return YES;
+}
+
+- (BOOL)becomeFirstResponder
+{
+  [self setActive:YES];
+  return YES;
+}
+
 @end

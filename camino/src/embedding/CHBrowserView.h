@@ -142,6 +142,11 @@ typedef enum {
 - (void)willShowPrompt;
 - (void)didDismissPrompt;
 
+// Keyboard focus should be transferred to the next eligible view before or after
+// the browser. An argument of YES indicates tab was pressed after the last Gecko
+// element had been focused; NO if shift-tab with the first element focused.
+- (void)tabOutOfBrowser:(BOOL)tabbingForward;
+
 @end
 
 enum {

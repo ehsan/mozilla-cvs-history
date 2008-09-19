@@ -3820,6 +3820,12 @@ public:
   [newView setFrame:[mTabBrowser contentRect] resizingBrowserViewIfHidden:YES];
 
   [newTab setView: newView];  // takes ownership
+
+  // The tab must have an initial first responder set or AppKit will override our manual key
+  // view loop with an automatically generated one.
+  [newTab setInitialFirstResponder:newView];
+  [newView setNextKeyViewFollowingBrowserContent:mPersonalToolbar];
+
   [newView release];
   
   // we have to copy the context menu for each tag, because

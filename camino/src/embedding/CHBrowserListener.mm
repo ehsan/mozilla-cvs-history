@@ -93,9 +93,9 @@ CHBrowserListener::~CHBrowserListener()
   [mContainer release];
 }
 
-// Gecko's macros only go to 11, but this baby goes to 12!
-#define NS_IMPL_QUERY_INTERFACE12(_class, _i1, _i2, _i3, _i4, _i5, _i6,       \
-                                  _i7, _i8, _i9, _i10, _i11, _i12)            \
+// Gecko's macros only go to 11, but this baby goes to 13!
+#define NS_IMPL_QUERY_INTERFACE13(_class, _i1, _i2, _i3, _i4, _i5, _i6,       \
+                                  _i7, _i8, _i9, _i10, _i11, _i12, _i13)      \
   NS_INTERFACE_MAP_BEGIN(_class)                                              \
     NS_INTERFACE_MAP_ENTRY(_i1)                                               \
     NS_INTERFACE_MAP_ENTRY(_i2)                                               \
@@ -109,16 +109,17 @@ CHBrowserListener::~CHBrowserListener()
     NS_INTERFACE_MAP_ENTRY(_i10)                                              \
     NS_INTERFACE_MAP_ENTRY(_i11)                                              \
     NS_INTERFACE_MAP_ENTRY(_i12)                                              \
+    NS_INTERFACE_MAP_ENTRY(_i13)                                              \
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, _i1)                        \
   NS_INTERFACE_MAP_END
-#define NS_IMPL_ISUPPORTS12(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8,   \
-                            _i9, _i10, _i11, _i12)                            \
+#define NS_IMPL_ISUPPORTS13(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8,   \
+                            _i9, _i10, _i11, _i12, _i13)                      \
   NS_IMPL_ADDREF(_class)                                                      \
   NS_IMPL_RELEASE(_class)                                                     \
-  NS_IMPL_QUERY_INTERFACE12(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8,   \
-                            _i9, _i10, _i11, _i12)
+  NS_IMPL_QUERY_INTERFACE13(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8,   \
+                            _i9, _i10, _i11, _i12, _i13)
 
-NS_IMPL_ISUPPORTS12(CHBrowserListener,
+NS_IMPL_ISUPPORTS13(CHBrowserListener,
                    nsIInterfaceRequestor,
                    nsIWebBrowserChrome,
                    nsIWindowCreator,
@@ -130,7 +131,8 @@ NS_IMPL_ISUPPORTS12(CHBrowserListener,
                    nsISupportsWeakReference,
                    nsIContextMenuListener,
                    nsIDOMEventListener,
-                   nsITooltipListener)
+                   nsITooltipListener,
+                   nsIWebBrowserChromeFocus)
 
 // Implementation of nsIInterfaceRequestor
 NS_IMETHODIMP 
@@ -1087,5 +1089,30 @@ CHBrowserListener::HandleXULCommandEvent(nsIDOMEvent* inEvent)
     return rv;
 
   [mContainer onXULCommand:nsEvent];
+  return NS_OK;
+}
+
+// Implementation of nsIWebBrowserChromeFocus
+/* void focusNextElement(); */
+NS_IMETHODIMP
+CHBrowserListener::FocusNextElement()
+{
+  if (!mContainer)
+    return NS_ERROR_FAILURE;
+
+  [mContainer tabOutOfBrowser:YES];
+
+  return NS_OK;
+}
+
+/* void focusPrevElement(); */
+NS_IMETHODIMP
+CHBrowserListener::FocusPrevElement()
+{
+  if (!mContainer)
+    return NS_ERROR_FAILURE;
+
+  [mContainer tabOutOfBrowser:NO];
+
   return NS_OK;
 }

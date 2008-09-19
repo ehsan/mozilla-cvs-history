@@ -161,6 +161,8 @@ enum StatusPriority {
     mBrowserView = [[CHBrowserView alloc] initWithFrame:[self bounds] andWindow:window];
     [self addSubview:mBrowserView];
 
+    [self setNextKeyView:mBrowserView];
+
     [mBrowserView setContainer:self];
     [mBrowserView addListener:self];
 
@@ -1294,6 +1296,24 @@ enum StatusPriority {
   return mDetectedSearchPlugins;
 }
 
+- (void)tabOutOfBrowser:(BOOL)tabbingForward;
+{
+  if (tabbingForward)
+    [[self window] selectKeyViewFollowingView:mBrowserView];
+  else
+    [[self window] selectKeyViewPrecedingView:mBrowserView];
+}
+
+// Clients should use this method, rather than -[BrowserWrapper setNextKeyView:], to set
+// which view should come after the browser content in the key view loop.
+- (void)setNextKeyViewFollowingBrowserContent:(NSView *)aNextKeyView
+{
+  if (mFindBarView)
+    [[mFindBarController lastKeyViewInFindBar] setNextKeyView:aNextKeyView];
+  else
+    [mBrowserView setNextKeyView:aNextKeyView];
+}
+
 #pragma mark -
 
 - (BOOL)popupsAreBlacklistedForURL:(NSString*)inURL
@@ -1374,6 +1394,8 @@ enum StatusPriority {
     [mBlockedPopupCloseButton setImage:[NSImage imageNamed:@"popup_close"]];
     [mBlockedPopupCloseButton setAlternateImage:[NSImage imageNamed:@"popup_close_pressed"]];
     [mBlockedPopupCloseButton setHoverImage:[NSImage imageNamed:@"popup_close_hover"]];
+    [self setNextKeyView:mBlockedPopupView];
+    [mBlockedPopupCloseButton setNextKeyView:mBrowserView];
 
     [self addSubview:mBlockedPopupView];
     [self setFrame:[self frame] resizingBrowserViewIfHidden:YES];
@@ -1390,6 +1412,7 @@ enum StatusPriority {
 - (void)removeBlockedPopupViewAndDisplay
 {
   if (mBlockedPopupView) {
+    [self setNextKeyView:mBrowserView];
     [mBlockedPopupView removeFromSuperview];
     [mBlockedPopupView release]; // retain count of 1 from nib
     mBlockedPopupView = nil;
@@ -1448,6 +1471,9 @@ enum StatusPriority {
   [self addSubview:mFindBarView];
   [self setFrame:[self frame] resizingBrowserViewIfHidden:YES];
   [self display];
+  NSView* viewAfterBrowserView = [mBrowserView nextKeyView];
+  [mBrowserView setNextKeyView:mFindBarView];
+  [[mFindBarController lastKeyViewInFindBar] setNextKeyView:viewAfterBrowserView];
 }
 
 //
@@ -1459,6 +1485,9 @@ enum StatusPriority {
 - (void)removeFindBarViewAndDisplay
 {
   if (mFindBarView) {
+    NSView* viewAfterFindBar = [[mFindBarController lastKeyViewInFindBar] nextKeyView];
+    [mBrowserView setNextKeyView:viewAfterFindBar];
+
     [mFindBarView removeFromSuperview];
     mFindBarView = nil;
     [self setFrame:[self frame] resizingBrowserViewIfHidden:YES];

@@ -271,5 +271,10 @@
   return searchText;
 }
 
+- (NSView*)lastKeyViewInFindBar
+{
+  return mMatchCase;
+}
+
 @end
 

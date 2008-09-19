@@ -236,6 +236,8 @@ class nsIArray;
 
 - (void)showFindBar;
 
+- (void)setNextKeyViewFollowingBrowserContent:(NSView *)aNextKeyView;
+
 // FindBarController content view method
 - (void)showFindBarView:(NSView*)inBarView;
 
