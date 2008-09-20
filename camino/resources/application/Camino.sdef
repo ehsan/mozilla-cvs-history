@@ -94,7 +94,10 @@
 		</class>
 		<!-- The old Standard Suite: run, reopen, open, print, and quit. -->
 		<command name="open" code="aevtodoc" description="Open an object.">
-			<direct-parameter description="The file(s) to be opened." type="file"/>
+			<direct-parameter description="The file(s) to be opened.">
+				<type type="file"/>
+				<type type="file" list="yes"/>
+			</direct-parameter>
 		</command>
 		<!-- NSCoreSuite doesn't define these.
 			<command name="run" code="aevtoapp" description="Run an application.  Most applications will open an empty, untitled window."/>
