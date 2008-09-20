@@ -1160,7 +1160,7 @@ enum StatusPriority {
     [self setSiteIconURI:inSiteIconURI];
 
     // update the proxy icon
-    [mDelegate updateSiteIcons:mSiteIconImage ignoreTyping:NO];
+    [mDelegate updateSiteIcons:mSiteIconImage];
 
     resetTabIcon = YES;
   }

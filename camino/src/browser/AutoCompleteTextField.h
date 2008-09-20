@@ -83,6 +83,7 @@ extern NSString* const kWillShowFeedMenu;
 - (void) setSession:(NSString *)aSession;
 - (NSString *) session;
 
+- (PageProxyIcon*)pageProxyIcon;
 - (void)setPageProxyIcon:(NSImage *)aImage;
 - (void)setURI:(NSString*)aURI;
 

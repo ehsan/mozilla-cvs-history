@@ -525,6 +525,11 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   return minRows < kMaxRows ? minRows : kMaxRows;
 }
 
+- (PageProxyIcon*) pageProxyIcon
+{
+  return mProxyIcon;
+}
+
 - (void) setPageProxyIcon:(NSImage *)aImage
 {
   [mProxyIcon setImage:aImage];

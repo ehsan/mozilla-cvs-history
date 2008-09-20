@@ -1987,14 +1987,11 @@ public:
     [[PageInfoWindowController visiblePageInfoWindowController] updateFromBrowserView:[self activeBrowserView]];
 }
 
-- (void)updateSiteIcons:(NSImage*)icon ignoreTyping:(BOOL)ignoreTyping
+- (void)updateSiteIcons:(NSImage*)icon
 {
-  if (!ignoreTyping && [self userChangedLocationField])
-    return;
-
   if (icon == nil)
     icon = [NSImage imageNamed:@"globe_ico"];
-  [mProxyIcon setImage:icon];
+  [mURLBar setPageProxyIcon:icon];
 }
 
 - (void)showPopupBlocked:(BOOL)inBlocked
@@ -2230,7 +2227,7 @@ public:
   [self setLoadingActive:[mBrowserView isBusy]];
   [self setLoadingProgress:[mBrowserView loadingProgress]];
   [self showSecurityState:[mBrowserView securityState]];
-  [self updateSiteIcons:[mBrowserView siteIcon] ignoreTyping:NO];
+  [self updateSiteIcons:[mBrowserView siteIcon]];
   [self updateStatus:[mBrowserView statusString]];
   [self updateLocationFields:[mBrowserView currentURI] ignoreTyping:NO];
   [self showFeedDetected:[mBrowserView feedsDetected]];
@@ -4861,9 +4858,9 @@ public:
 }
 
 
-- (PageProxyIcon *)proxyIconView
+- (PageProxyIcon*)proxyIconView
 {
-  return mProxyIcon;
+  return [mURLBar pageProxyIcon];
 }
 
 // XXX this is only used to show bm after an import

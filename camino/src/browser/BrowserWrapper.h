@@ -65,7 +65,7 @@ class nsIArray;
 - (void)updateStatus:(NSString*)status;
 
 - (void)updateLocationFields:(NSString*)url ignoreTyping:(BOOL)ignoreTyping;
-- (void)updateSiteIcons:(NSImage*)icon ignoreTyping:(BOOL)ignoreTyping;
+- (void)updateSiteIcons:(NSImage*)icon;
 
 - (void)showPopupBlocked:(BOOL)blocked;
 - (void)showSecurityState:(unsigned long)state;

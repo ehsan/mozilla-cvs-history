@@ -123,7 +123,6 @@ typedef enum  {
   IBOutlet NSWindow*          mLocationSheetWindow;
   IBOutlet NSTextField*       mLocationSheetURLField;
   IBOutlet NSView*            mStatusBar;     // contains the status text, progress bar, and lock
-  IBOutlet PageProxyIcon*     mProxyIcon;
   IBOutlet BrowserContentView*  mContentView;
   
   IBOutlet BookmarkToolbar*     mPersonalToolbar;
