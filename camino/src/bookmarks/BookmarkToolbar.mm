@@ -792,9 +792,14 @@ static const int kBMBarScanningStep = 5;
 - (void)setupKeyViewLoop
 {
   unsigned int totalButtons = [mButtons count];
+  // If the bar is empty, just make sure we pass to the next view.
+  if (totalButtons == 0) {
+    [self setNextKeyView:mNextExternalKeyView];
+    return;
+  }
+
   // First, point the toolbar's nextKeyView to the first button.
-  if (totalButtons > 0)
-    [self setNextKeyView:[mButtons objectAtIndex:0]];
+  [self setNextKeyView:[mButtons objectAtIndex:0]];
   
   // Then, except for the last button, connect the key view loop among each bookmark button.
   for (unsigned int i = 0; i < (totalButtons - 1); i++) {
