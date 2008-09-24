@@ -1,0 +1,5 @@
+mk_add_options MOZ_CO_PROJECT=browser
+
+ac_add_options --enable-application=browser
+ac_add_options --disable-compile-environment
+ac_add_options --with-branding=browser/branding/unofficial
