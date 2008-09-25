@@ -170,6 +170,7 @@ typedef enum EBookmarkOpenBehavior
 - (IBAction)zoomAll:(id)aSender;
 - (IBAction)previousTab:(id)aSender;
 - (IBAction)nextTab:(id)aSender;
+- (IBAction)toggleTabThumbnailView:(id)aSender;
 - (IBAction)downloadsWindow:(id)aSender;
 
 // Help menu actions

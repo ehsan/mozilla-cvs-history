@@ -321,6 +321,7 @@
                 toggleAutoCharsetDetection = id; 
                 toggleBookmarksToolbar = id; 
                 toggleOfflineMode = id; 
+                toggleTabThumbnailView = id; 
                 viewPageSource = id; 
                 zoomAll = id; 
             }; 

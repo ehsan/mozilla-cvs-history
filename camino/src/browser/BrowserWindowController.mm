@@ -1759,6 +1759,16 @@ public:
     return YES;
   }
 
+  // For the tab thumbnail view, check for a sheet rather than using
+  // shouldSuppressWindowActions so that it doesn't disable itself.
+  if (action == @selector(toggleTabThumbnailView:)) {
+    if ([mContentView tabThumbnailGridViewIsVisible])
+      [aMenuItem setTitle:NSLocalizedString(@"HideTabThumbnailView", nil)];
+    else
+      [aMenuItem setTitle:NSLocalizedString(@"ShowTabThumbnailView", nil)];
+    return ![[self window] attachedSheet];
+  }
+
   if ([self shouldSuppressWindowActions])
     return NO;
 

@@ -59,6 +59,9 @@
 "HideBookmarkManager" = "Hide Bookmark Manager";
 "ShowBookmarkManager" = "Show Bookmark Manager";
 
+"ShowTabThumbnailView" = "Show Tab Overview";
+"HideTabThumbnailView" = "Hide Tab Overview";
+
 /* offline window title (unused) */
 "OfflineTitleFormat" = "%@ [Working Offline]";
 

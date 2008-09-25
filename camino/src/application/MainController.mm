@@ -1651,6 +1651,11 @@ NSString* const kPreviousSessionTerminatedNormallyKey = @"PreviousSessionTermina
   [[self mainWindowBrowserController] nextTab:aSender];
 }
 
+- (IBAction)toggleTabThumbnailView:(id)aSender
+{
+  [[self mainWindowBrowserController] toggleTabThumbnailView:aSender];
+}
+
 - (IBAction)downloadsWindow:(id)aSender
 {
   ProgressDlgController* dlgController = [ProgressDlgController sharedDownloadController];
@@ -1778,13 +1783,19 @@ NSString* const kPreviousSessionTerminatedNormallyKey = @"PreviousSessionTermina
   if (action == @selector(goForward:))
     action = @selector(forward:);
 
+  // Special case toggleTabThumbnailView:, since the normal path for validating
+  // window actions checks for the menu suppression flag that the tab thumbnail
+  // view itself triggers.
+  if (action == @selector(toggleTabThumbnailView:))
+    return (browserController && [browserController validateMenuItem:aMenuItem]);
+
   if (action == @selector(stop:) ||
       action == @selector(back:) ||
       action == @selector(forward:) ||
       action == @selector(reload:) ||
       action == @selector(reloadAllTabs:) ||
       action == @selector(nextTab:) ||
-      action == @selector(previousTab:) || 
+      action == @selector(previousTab:) ||
       action == @selector(closeCurrentTab:) ||
       action == @selector(makeTextBigger:) ||
       action == @selector(makeTextSmaller:) ||
