@@ -1056,7 +1056,7 @@ SessionStoreService.prototype = {
                             aTextarea.name;
     if (!id
       || !(aTextarea instanceof Ci.nsIDOMHTMLTextAreaElement 
-      || aTextarea instanceof Ci.nsIDOMHTMLInputElement)) {
+      || aTextarea instanceof Ci.nsIDOMHTMLInputElement && aTextarea.type != "password")) {
       return false; // nothing to save
     }
     
