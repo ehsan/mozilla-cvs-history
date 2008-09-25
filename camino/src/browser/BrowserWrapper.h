@@ -112,6 +112,9 @@ extern NSString* const kBrowserInstanceClosedNotification;
 // notification that the given view from this provider has been inserted
 // for the given url
 - (void)contentView:(NSView*)inView usedForURL:(NSString*)inURL;
+// So the content view can be integrated into an existing key view loop,
+// return the last key view inside of it.
+- (NSView*)lastKeySubview;
 
 @end
 

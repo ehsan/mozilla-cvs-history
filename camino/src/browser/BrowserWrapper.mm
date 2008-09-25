@@ -507,8 +507,16 @@ NSString* const kBrowserInstanceClosedNotification = @"BrowserInstanceClosed";
     [mDelegate contentViewChangedTo:newContentView forURL:inURL];
 
     // tell the provider that we swapped in its view
-    if (providedView)
+    if (providedView) {
       [provider contentView:providedView usedForURL:inURL];
+
+      NSView* viewAfterBrowserView = [mBrowserView nextKeyView];
+      [self setNextKeyView:providedView];
+      [[provider lastKeySubview] setNextKeyView:viewAfterBrowserView];
+    }
+    else {
+      [self setNextKeyView:mBrowserView];
+    }
   }
 }
 

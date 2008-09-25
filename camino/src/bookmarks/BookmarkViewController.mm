@@ -2004,6 +2004,11 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
   return mBookmarksEditingView;
 }
 
+- (NSView*)lastKeySubview
+{
+  return mSearchField;
+}
+
 - (void)contentView:(NSView*)inView usedForURL:(NSString*)inURL
 {
   if (inView == mBookmarksEditingView) {
