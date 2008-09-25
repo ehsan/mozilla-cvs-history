@@ -95,7 +95,10 @@
 		<!-- The old Standard Suite: run, reopen, open, print, and quit. -->
 		<command name="open" code="aevtodoc" description="Open an object.">
 			<direct-parameter description="The file(s) to be opened.">
-				<type type="file"/>
+			<!-- Skeleton.sdef includes both type defenitions, but having both causes random
+			     failures to open files on 10.4.  Using just the type definition with 'list="yes"'
+			     allows opening one or more files on 10.4 and 10.5.
+				<type type="file"/> -->
 				<type type="file" list="yes"/>
 			</direct-parameter>
 		</command>
