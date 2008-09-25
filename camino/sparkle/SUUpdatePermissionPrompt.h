@@ -9,22 +9,24 @@
 #ifndef SUUPDATEPERMISSIONPROMPT_H
 #define SUUPDATEPERMISSIONPROMPT_H
 
-#import "Sparkle.h"
+#import "SUWindowController.h"
 
 typedef enum {
 	SUAutomaticallyCheck,
 	SUDoNotAutomaticallyCheck
 } SUPermissionPromptResult;
 
+@class SUHost;
 @interface SUUpdatePermissionPrompt : SUWindowController {
-	NSBundle *hostBundle;
+	SUHost *host;
+	NSArray *systemProfileInformationArray;
 	id delegate;
 	IBOutlet NSTextField *descriptionTextField;
 	IBOutlet NSView *moreInfoView;
 	IBOutlet NSButton *moreInfoButton;
 	BOOL isShowingMoreInfo, shouldSendProfile;
 }
-+ (void)promptWithHostBundle:(NSBundle *)hb delegate:(id)d;
++ (void)promptWithHost:(SUHost *)aHost systemProfile:(NSArray *)profile delegate:(id)d;
 - (IBAction)toggleMoreInfo:(id)sender;
 - (IBAction)finishPrompt:(id)sender;
 @end

@@ -15,17 +15,19 @@
 
 extern NSMutableArray *__unarchiverImplementations;
 
-+ (SUUnarchiver *)unarchiverForURL:(NSURL *)URL
++ (SUUnarchiver *)unarchiverForPath:(NSString *)path
 {
 	NSEnumerator *implementationEnumerator = [[self _unarchiverImplementations] objectEnumerator];
 	id current;
 	while ((current = [implementationEnumerator nextObject]))
 	{
-		if ([current _canUnarchiveURL:URL])
-			return [[[current alloc] _initWithURL:URL] autorelease];
+		if ([current _canUnarchivePath:path])
+			return [[[current alloc] _initWithPath:path] autorelease];
 	}
 	return nil;
 }
+
+- (NSString *)description { return [NSString stringWithFormat:@"%@ <%@>", [self class], archivePath]; }
 
 - (void)setDelegate:del
 {

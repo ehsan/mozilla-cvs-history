@@ -38,13 +38,16 @@
 
 #import <SystemConfiguration/SystemConfiguration.h>
 
-#import <Sparkle/Sparkle.h>
 
 #import "NSArray+Utils.h"
 #import "NSString+Gecko.h"
 #import "NSWorkspace+Utils.h"
 
 #import "PreferenceManager.h"
+
+// Must be after PreferenceManager.h to pick up Cocoa headers.
+#import <Sparkle/Sparkle.h>
+
 #import "AppDirServiceProvider.h"
 #import "UserDefaults.h"
 #import "CHBrowserService.h"
@@ -657,19 +660,25 @@ static BOOL gMadePrefManager;
 - (void)initUpdatePrefs
 {
   // If the Camino 1.6-style settings are in place, upgrade to the new method.
+  // Sparkle has code to try to handle this, but it will change the update
+  // interval to its own default in NSUserDefaults, stomping our value in the
+  // Info.plist, so clean it up ourselves.
+  // This block can be removed in some later release, after we can assume that
+  // everyone has run something later than 1.6.x
+  NSString* const kSparkleCheckIntervalKey = @"SUScheduledCheckInterval";
   NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-  if ([defaults objectForKey:SUScheduledCheckIntervalKey]) {
-    BOOL wasEnabled = [defaults integerForKey:SUScheduledCheckIntervalKey] > 0;
-    [defaults removeObjectForKey:SUScheduledCheckIntervalKey];
+  if ([defaults objectForKey:kSparkleCheckIntervalKey]) {
+    BOOL wasEnabled = [defaults integerForKey:kSparkleCheckIntervalKey] > 0;
+    [defaults removeObjectForKey:kSparkleCheckIntervalKey];
     if (wasEnabled)
-      [defaults removeObjectForKey:SUEnableAutomaticChecksKey];
+      [defaults removeObjectForKey:@"SUEnableAutomaticChecks"];
     else
-      [defaults setBool:NO forKey:SUEnableAutomaticChecksKey];
+      [[SUUpdater sharedUpdater] setAutomaticallyChecksForUpdates:NO];
   }
 
   // If updates are disabled for this build, don't bother setting up the manifest URL.
   NSBundle* mainBundle = [NSBundle mainBundle];
-  if (![[mainBundle objectForInfoDictionaryKey:SUEnableAutomaticChecksKey] boolValue])
+  if (![[mainBundle objectForInfoDictionaryKey:@"SUEnableAutomaticChecks"] boolValue])
     return;
 
   // Get the base auto-update manifest URL
@@ -703,7 +712,7 @@ static BOOL gMadePrefManager;
                    ([intlUAString length] ? 1 : 0),
                    currentLanguage];
   }
-  [defaults setObject:manifestURL forKey:SUFeedURLKey];
+  [[SUUpdater sharedUpdater] setFeedURL:[NSURL URLWithString:manifestURL]];
 }
 
 - (void)cleanUpObsoletePrefs

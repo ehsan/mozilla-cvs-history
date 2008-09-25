@@ -10,9 +10,11 @@
 #define SUPLAININSTALLER_H
 
 #import "Sparkle.h"
+#import "SUInstaller.h"
+#import "SUVersionComparisonProtocol.h"
 
 @interface SUPlainInstaller : SUInstaller { }
-+ (void)performInstallationWithPath:(NSString *)path hostBundle:(NSBundle *)hostBundle delegate:delegate synchronously:(BOOL)synchronously;
++ (void)performInstallationWithPath:(NSString *)path host:(SUHost *)host delegate:delegate synchronously:(BOOL)synchronously versionComparator:(id <SUVersionComparison>)comparator;
 @end
 
 #endif

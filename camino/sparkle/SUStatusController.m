@@ -11,12 +11,12 @@
 
 @implementation SUStatusController
 
-- (id)initWithHostBundle:(NSBundle *)hb
+- (id)initWithHost:(SUHost *)aHost
 {
-	self = [super initWithHostBundle:hb windowNibName:@"SUStatus"];
+	self = [super initWithHost:aHost windowNibName:@"SUStatus"];
 	if (self)
 	{
-		hostBundle = [hb retain];
+		host = [aHost retain];
 		[self setShouldCascadeWindows:NO];
 	}
 	return self;
@@ -24,12 +24,14 @@
 
 - (void)dealloc
 {
-	[hostBundle release];
+	[host release];
 	[title release];
 	[statusText release];
 	[buttonTitle release];
 	[super dealloc];
 }
+
+- (NSString *)description { return [NSString stringWithFormat:@"%@ <%@>", [self class], [host bundlePath]]; }
 
 - (void)awakeFromNib
 {
@@ -40,12 +42,12 @@
 
 - (NSString *)windowTitle
 {
-	return [NSString stringWithFormat:SULocalizedString(@"Updating %@", nil), [hostBundle name]];
+	return [NSString stringWithFormat:SULocalizedString(@"Updating %@", nil), [host name]];
 }
 
 - (NSImage *)applicationIcon
 {
-	return [hostBundle icon];
+	return [host icon];
 }
 
 - (void)beginActionWithTitle:(NSString *)aTitle maxProgressValue:(double)aMaxProgressValue statusText:(NSString *)aStatusText
@@ -80,6 +82,11 @@
 	[actionButton setTarget:target];
 	[actionButton setAction:action];
 	[actionButton setKeyEquivalent:isDefault ? @"\r" : @""];
+}
+
+- (BOOL)progressBarShouldAnimate
+{
+	return YES;
 }
 
 - (void)setButtonEnabled:(BOOL)enabled

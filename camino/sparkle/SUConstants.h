@@ -20,7 +20,6 @@ extern NSString *SUShowReleaseNotesKey;
 extern NSString *SUSkippedVersionKey;
 extern NSString *SUScheduledCheckIntervalKey;
 extern NSString *SULastCheckTimeKey;
-extern NSString *SUExpectsDSASignatureKey;
 extern NSString *SUPublicDSAKeyKey;
 extern NSString *SUPublicDSAKeyFileKey;
 extern NSString *SUAutomaticallyUpdateKey;
@@ -29,6 +28,7 @@ extern NSString *SUEnableAutomaticChecksKey;
 extern NSString *SUEnableAutomaticChecksKeyOld;
 extern NSString *SUEnableSystemProfilingKey;
 extern NSString *SUSendProfileInfoKey;
+extern NSString *SULastProfileSubmitDateKey;
 
 extern NSString *SUSparkleErrorDomain;
 // Appcast phase errors.
@@ -51,6 +51,7 @@ extern OSStatus SUMissingUpdateError;
 extern OSStatus SUMissingInstallerToolError;
 extern OSStatus SURelaunchError;
 extern OSStatus SUInstallationError;
+extern OSStatus SUDowngradeError;
 
 // NSInteger is a type that was added to Leopard.
 // Here is some glue to ensure that NSInteger will work with pre-10.5 SDKs:

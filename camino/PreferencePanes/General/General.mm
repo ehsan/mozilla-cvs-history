@@ -39,14 +39,16 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import <ApplicationServices/ApplicationServices.h>
+
+#import "General.h"
+
+// Must be after General.h to pick up Cocoa headers.
 #import <Sparkle/Sparkle.h>
 
 #import "NSWorkspace+Utils.h"
 #import "AppListMenuFactory.h"
 #import "UserDefaults.h"
 #import "GeckoPrefConstants.h"
-
-#import "General.h"
 
 @interface OrgMozillaCaminoPreferenceGeneral(Private)
 
@@ -96,14 +98,13 @@
   if ([self getBooleanPref:kGeckoPrefSessionSaveEnabled withSuccess:&gotPref])
     [checkboxRememberWindowState setState:NSOnState];
 
-  if (![[[NSBundle mainBundle] objectForInfoDictionaryKey:SUEnableAutomaticChecksKey] boolValue]) {
+  if (![[[NSBundle mainBundle] objectForInfoDictionaryKey:@"SUEnableAutomaticChecks"] boolValue]) {
     // Disable update checking if it's turned off for this build.  The tooltip comes
     // from the main application because it's used there too.
     [checkboxAutoUpdate setEnabled:NO];
     [checkboxAutoUpdate setToolTip:NSLocalizedString(@"AutoUpdateDisabledToolTip", @"")];
   }
-  else if (![[NSUserDefaults standardUserDefaults] objectForKey:SUEnableAutomaticChecksKey]) {
-    // Unset pref and on for the build means on.
+  else if ([[SUUpdater sharedUpdater] automaticallyChecksForUpdates]) {
     [checkboxAutoUpdate setState:NSOnState];
   }
 
@@ -129,11 +130,6 @@
   // ensure that the prefs exist
   [self setPref:kGeckoPrefNewWindowStartPage toInt:[checkboxNewWindowBlank state] ? kStartPageHome : kStartPageBlank];
   [self setPref:kGeckoPrefNewTabStartPage toInt:[checkboxNewTabBlank state] ? kStartPageHome : kStartPageBlank];
-}
-
-- (IBAction)homePageModified:(id)sender
-{
-  [self setPref:kGeckoPrefHomepageURL toString:[textFieldHomePage stringValue]];
 }
 
 - (IBAction)checkboxStartPageClicked:(id)sender
@@ -170,12 +166,17 @@
 {
   if (sender == checkboxAutoUpdate) {
     NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-    // We never set SUEnableAutomaticChecksKey to YES; instead we let that case fall
+    // We never set the pref to YES; instead we let that case fall
     // through to the Info.plist, which will be YES for official builds.
-    if ([sender state] == NSOnState)
-      [defaults removeObjectForKey:SUEnableAutomaticChecksKey];
-    else
-      [defaults setBool:NO forKey:SUEnableAutomaticChecksKey];
+    if ([sender state] == NSOnState) {
+      // Unfortunately, the official API doesn't include the prefs any more,
+      // so we have to hard-code the key to get the behavior we want.
+      [defaults removeObjectForKey:@"SUEnableAutomaticChecks"];
+      [[SUUpdater sharedUpdater] resetUpdateCycle];
+    }
+    else {
+      [[SUUpdater sharedUpdater] setAutomaticallyChecksForUpdates:NO];
+    }
   }
 }
 

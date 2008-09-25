@@ -38,8 +38,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import <Carbon/Carbon.h>
-#import <Sparkle/Sparkle.h>
 #import <SharedMenusCocoa/SharedMenusObj.h>
+
+#import "MainController.h"
+
+// Must be after MainController.h to pick up Cocoa headers.
+#import <Sparkle/Sparkle.h>
 
 #import "NSArray+Utils.h"
 #import "NSString+Utils.h"
@@ -48,7 +52,6 @@
 #import "NSWorkspace+Utils.h"
 
 #import "ChimeraUIConstants.h"
-#import "MainController.h"
 #import "BrowserWindow.h"
 #import "BrowserWindowController.h"
 #import "BookmarkMenu.h"
@@ -1810,7 +1813,7 @@ NSString* const kPreviousSessionTerminatedNormallyKey = @"PreviousSessionTermina
   }
 
   if (action == @selector(checkForUpdates:) &&
-      ![[[NSBundle mainBundle] objectForInfoDictionaryKey:SUEnableAutomaticChecksKey] boolValue])
+      ![[[NSBundle mainBundle] objectForInfoDictionaryKey:@"SUEnableAutomaticChecks"] boolValue])
   {
     // Disable update checking if it's been turned off for this build.
     [aMenuItem setToolTip:NSLocalizedString(@"AutoUpdateDisabledToolTip", @"")];

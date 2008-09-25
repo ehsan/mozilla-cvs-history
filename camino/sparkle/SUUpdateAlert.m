@@ -6,29 +6,31 @@
 //  Copyright 2006 Andy Matuschak. All rights reserved.
 //
 
-#import "Sparkle.h"
 #import "SUUpdateAlert.h"
 
+#import "SUHost.h"
 #import <WebKit/WebKit.h>
 
 @implementation SUUpdateAlert
 
-- (id)initWithAppcastItem:(SUAppcastItem *)item hostBundle:(NSBundle *)hb
+- (id)initWithAppcastItem:(SUAppcastItem *)item host:(SUHost *)aHost
 {
-	self = [super initWithHostBundle:hb windowNibName:@"SUUpdateAlert"];
+	self = [super initWithHost:host windowNibName:@"SUUpdateAlert"];
 	if (self)
 	{
-		hostBundle = [hb retain];
+		host = [aHost retain];
 		updateItem = [item retain];
 		[self setShouldCascadeWindows:NO];
 	}
 	return self;
 }
 
+- (NSString *)description { return [NSString stringWithFormat:@"%@ <%@>", [self class], [host bundlePath]]; }
+
 - (void)dealloc
 {
 	[updateItem release];
-	[hostBundle release];
+	[host release];
 	[super dealloc];
 }
 
@@ -59,8 +61,11 @@
 
 - (void)displayReleaseNotes
 {
-	[[WebPreferences standardPreferences] setStandardFontFamily:[[NSFont systemFontOfSize:8] familyName]];
-	[releaseNotesView setPreferences:[WebPreferences standardPreferences]];
+	// Set the default font, but avoid polluting the standard preferences.
+	WebPreferences *preferences = [NSKeyedUnarchiver unarchiveObjectWithData:[NSKeyedArchiver archivedDataWithRootObject:[WebPreferences standardPreferences]]];
+    [preferences setStandardFontFamily:[[NSFont systemFontOfSize:8] familyName]];
+	[preferences setDefaultFontSize:(int)[NSFont systemFontSizeForControlSize:NSSmallControlSize]];
+	[releaseNotesView setPreferences:preferences];
 	[releaseNotesView setFrameLoadDelegate:self];
 	[releaseNotesView setPolicyDelegate:self];
 	
@@ -75,17 +80,24 @@
 	// If there's a release notes URL, load it; otherwise, just stick the contents of the description into the web view.
 	if ([updateItem releaseNotesURL])
 	{
-		[[releaseNotesView mainFrame] loadRequest:[NSURLRequest requestWithURL:[updateItem releaseNotesURL] cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:30]];
+		if ([[updateItem releaseNotesURL] isFileURL])
+		{
+			[[releaseNotesView mainFrame] loadHTMLString:@"Release notes with file:// URLs are not supported for security reasons&mdash;Javascript would be able to read files on your file system." baseURL:nil];
+		}
+		else
+		{
+			[[releaseNotesView mainFrame] loadRequest:[NSURLRequest requestWithURL:[updateItem releaseNotesURL] cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:30]];
+		}
 	}
 	else
 	{
-		[[releaseNotesView mainFrame] loadHTMLString:[updateItem description] baseURL:nil];
+		[[releaseNotesView mainFrame] loadHTMLString:[updateItem itemDescription] baseURL:nil];
 	}	
 }
 
 - (BOOL)showsReleaseNotes
 {
-	NSNumber *shouldShowReleaseNotes = [hostBundle objectForInfoDictionaryKey:SUShowReleaseNotesKey];
+	NSNumber *shouldShowReleaseNotes = [host objectForInfoDictionaryKey:SUShowReleaseNotesKey];
 	if (shouldShowReleaseNotes == nil)
 		return YES; // defaults to YES
 	else
@@ -94,11 +106,9 @@
 
 - (BOOL)allowsAutomaticUpdates
 {
-	if (![[hostBundle objectForInfoDictionaryKey:SUExpectsDSASignatureKey] boolValue])
-		return NO; // Automatic updating requires DSA-signed updates
-	if (![hostBundle objectForInfoDictionaryKey:SUAllowsAutomaticUpdatesKey])
+	if (![host objectForInfoDictionaryKey:SUAllowsAutomaticUpdatesKey])
 		return YES; // defaults to YES
-	return [[hostBundle objectForInfoDictionaryKey:SUAllowsAutomaticUpdatesKey] boolValue];
+	return [host boolForInfoDictionaryKey:SUAllowsAutomaticUpdatesKey];
 }
 
 - (void)awakeFromNib
@@ -140,17 +150,25 @@
 
 - (NSImage *)applicationIcon
 {
-	return [hostBundle icon];
+	return [host icon];
 }
 
 - (NSString *)titleText
 {
-	return [NSString stringWithFormat:SULocalizedString(@"A new version of %@ is available!", nil), [hostBundle name]];
+	return [NSString stringWithFormat:SULocalizedString(@"A new version of %@ is available!", nil), [host name]];
 }
 
 - (NSString *)descriptionText
 {
-	return [NSString stringWithFormat:SULocalizedString(@"%@ %@ is now available-you have %@. Would you like to download it now?", nil), [hostBundle name], [updateItem displayVersionString], [hostBundle displayVersion]];
+	NSString *updateItemVersion = [updateItem displayVersionString];
+    NSString *hostVersion = [host displayVersion];
+	// Display more info if the version strings are the same; useful for betas.
+    if ([updateItemVersion isEqualToString:hostVersion])
+	{
+        updateItemVersion = [updateItemVersion stringByAppendingFormat:@" (%@)", [updateItem versionString]];
+        hostVersion = [hostVersion stringByAppendingFormat:@" (%@)", [host version]];
+    }
+    return [NSString stringWithFormat:SULocalizedString(@"%@ %@ is now available--you have %@. Would you like to download it now?", nil), [host name], updateItemVersion, hostVersion];
 }
 
 - (void)webView:(WebView *)sender didFinishLoadForFrame:frame
