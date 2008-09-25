@@ -577,6 +577,25 @@ static NSImage* sTabButtonDividerImage = nil;
 
 #pragma mark -
 
+- (BOOL)canBecomeKeyView
+{
+  // This a hack; NSView isn't smart about conditionally accepting first
+  // responder only when FKA is enabled, but NSButton apparently is, so
+  // piggy-back on our close button to get this information (there's no API;
+  // WebKit gets the information by manually reading the pref from the
+  // accessibility domain then watching for an undocumented notification).
+  // Perhaps we should look into making our tabs controls/buttons instead of
+  // views?
+  //
+  // mCloseButton will also return NO when it's disabled, so enable it before
+  // asking, then put it back.
+  BOOL closeButtonEnabled = [[self closeButton] isEnabled];
+  [self setCloseButtonEnabled:YES];
+  BOOL canBecomeKey = [mCloseButton canBecomeKeyView];
+  [self setCloseButtonEnabled:closeButtonEnabled];
+  return canBecomeKey;
+}
+
 - (BOOL)acceptsFirstResponder
 {
   return YES;
