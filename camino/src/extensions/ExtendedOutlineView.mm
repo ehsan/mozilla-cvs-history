@@ -328,7 +328,7 @@ static NSString* const kAutosaveSortDirectionKey        = @"sort_descending";
 //
 - (void)textDidEndEditing:(NSNotification *)aNotification
 {
-  // This action is not needed on Leopard, as selection behavior was changed.
+  // The overridden behavior is not needed on Leopard, as selection behavior was changed.
   if ([NSWorkspace isLeopardOrHigher]) {
     [super textDidEndEditing:aNotification];
     return; 
