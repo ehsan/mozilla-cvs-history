@@ -132,6 +132,11 @@
   [self setPref:kGeckoPrefNewTabStartPage toInt:[checkboxNewTabBlank state] ? kStartPageHome : kStartPageBlank];
 }
 
+- (IBAction)homePageModified:(id)sender                                         
+{                                                                               
+  [self setPref:kGeckoPrefHomepageURL toString:[textFieldHomePage stringValue]];
+}                                                                               
+
 - (IBAction)checkboxStartPageClicked:(id)sender
 {
   const char* prefName = NULL;
