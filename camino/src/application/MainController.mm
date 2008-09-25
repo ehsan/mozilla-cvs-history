@@ -222,10 +222,6 @@ NSString* const kPreviousSessionTerminatedNormallyKey = @"PreviousSessionTermina
   // Set up menu tracking
   [NSMenu setUpMenuTrackingWatch];
 
-  // TODO: These should be set in the nib instead next time the nib is changed.
-  [mTextEncodingsMenu setDelegate:self];
-  [mBookmarksMenu setDelegate:self];
-
   NSNotificationCenter* notificationCenter = [NSNotificationCenter defaultCenter];
 
   // register for various window layering changes
