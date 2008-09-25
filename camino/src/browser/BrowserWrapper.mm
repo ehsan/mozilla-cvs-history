@@ -99,6 +99,8 @@ enum StatusPriority {
   eStatusScriptDefault = 3, // javascript window.defaultStatus
 };
 
+NSString* const kBrowserInstanceClosedNotification = @"BrowserInstanceClosed";
+
 @interface BrowserWrapper(Private)
 
 - (void)ensureContentClickListeners;
@@ -251,6 +253,10 @@ enum StatusPriority {
 
 - (void)browserClosed
 {
+  // Post a notification that we are closing, before the browser view is gone.
+  [[NSNotificationCenter defaultCenter] postNotificationName:kBrowserInstanceClosedNotification
+                                                      object:self];
+
   // Break the cycle, but don't clear ourselves as the container
   // before we call |destroyWebBrowser| or onUnload handlers won't be
   // able to create new windows. The container will get cleared

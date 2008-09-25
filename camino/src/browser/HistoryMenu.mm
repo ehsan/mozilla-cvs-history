@@ -45,6 +45,7 @@
 
 #import "MainController.h"
 #import "BrowserWindowController.h"
+#import "BrowserWrapper.h"
 #import "CHBrowserService.h"
 #import "PreferenceManager.h"
 
@@ -59,6 +60,9 @@ static const int kMaxNumHistoryItems = 50;
 
 // the maximum number of "today" items to show on the main menu
 static const unsigned int kMaxTodayItems = 12;
+
+// the maximum number of recently closed pages to show
+static const unsigned int kMaxRecentlyClosedItems = 20;
 
 // the maximum number of characters in a menu title before cropping it
 static const unsigned int kMaxTitleLength = 50;
@@ -331,9 +335,13 @@ static const unsigned int kMaxTitleLength = 50;
 - (void)openHistoryItem:(id)sender
 {
   id repObject = [sender representedObject];
-  if ([repObject isKindOfClass:[HistoryItem class]]) {
-    NSString* itemURL = [repObject url];
+  NSString* itemURL = nil;
+  if ([repObject isKindOfClass:[HistoryItem class]])
+    itemURL = [repObject url];
+  else if ([repObject isKindOfClass:[NSString class]])
+    itemURL = repObject;
 
+  if (itemURL) {
     // XXX share this logic with MainController and HistoryOutlineViewDelegate
     BrowserWindowController* bwc = [(MainController *)[NSApp delegate] mainWindowBrowserController];
     if (bwc) {
@@ -389,17 +397,25 @@ static const unsigned int kMaxTitleLength = 50;
 {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   [mTodayItem release];
+  [mRecentlyClosedMenu release];
   [super dealloc];
 }
 
 - (void)awakeFromNib
 {
+  mRecentlyClosedMenu = [[NSMenu alloc] initWithTitle:NSLocalizedString(@"RecentlyClosed", nil)];
   [self setNeedsRebuild:YES];
 
   // listen for app launch completion
   [[NSNotificationCenter defaultCenter] addObserver:self
                                            selector:@selector(appLaunchFinished:)
                                                name:NSApplicationDidFinishLaunchingNotification
+                                             object:nil];
+
+  // listen for closing pages
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(browserClosed:)
+                                               name:kBrowserInstanceClosedNotification
                                              object:nil];
 }
 
@@ -409,6 +425,49 @@ static const unsigned int kMaxTitleLength = 50;
   // setup the history menu after a delay, so that other app launch stuff
   // finishes first
   [self performSelector:@selector(setupHistoryMenu) withObject:nil afterDelay:0];
+}
+
+- (void)browserClosed:(NSNotification*)inNotification
+{
+  BrowserWrapper* browser = [inNotification object];
+  NSString* pageURI = [browser currentURI];
+
+  // Ignore empty pages, as well as things like Bookmarks and History.
+  if ([pageURI isBlankURL] || [pageURI hasCaseInsensitivePrefix:@"about:"])
+    return;
+
+  NSString* itemTitle = [browser pageTitle];
+  if ([itemTitle length] == 0)
+    itemTitle = pageURI;
+  itemTitle = [itemTitle stringByTruncatingTo:kMaxTitleLength at:kTruncateAtMiddle];
+
+  // If this is the first item being added, mark the menu as needing a rebuild
+  // so that the folder will be added.
+  if ([mRecentlyClosedMenu numberOfItems] == 0)
+    [self setNeedsRebuild:YES];
+
+  NSMenuItem* newItem = [[[NSMenuItem alloc] initWithTitle:itemTitle
+                                                    action:@selector(openHistoryItem:)
+                                             keyEquivalent:@""] autorelease];
+  [newItem setImage:[browser siteIcon]];
+  [newItem setTarget:self];
+  [newItem setRepresentedObject:pageURI];
+
+  // Add the new item and its alternates at the top of the menu, and figure out
+  // how many menu items there are per entry so we can enforce the max correctly.
+  [mRecentlyClosedMenu insertItem:newItem atIndex:0];
+  int itemsPerEntry = 1 + [mRecentlyClosedMenu addCommandKeyAlternatesForMenuItem:newItem];
+  int maxItems = kMaxRecentlyClosedItems * itemsPerEntry;
+
+  // Remove any previous entries with the same URL so we don't have duplicates,
+  // then enforce the limit.
+  for (int i = [mRecentlyClosedMenu numberOfItems] - 1; i >= itemsPerEntry; --i) {
+    if ([[[mRecentlyClosedMenu itemAtIndex:i] representedObject] isEqualToString:pageURI])
+      [mRecentlyClosedMenu removeItemAtIndex:i];
+  }
+  while ([mRecentlyClosedMenu numberOfItems] > maxItems) {
+    [mRecentlyClosedMenu removeItemAtIndex:maxItems];
+  }
 }
 
 - (void)menuWillBeDisplayed
@@ -493,10 +552,20 @@ static const unsigned int kMaxTitleLength = 50;
 
 - (void)addLastItems
 {
-  // at the bottom of the go menu, add a Clear History item
   if ([[mRootItem children] count] > 0)
     [self addItem:[NSMenuItem separatorItem]];
 
+  // Add the recently closed items menu if there are any.
+  if ([mRecentlyClosedMenu numberOfItems] > 0) {
+    NSMenuItem* recentlyClosedItem = [self addItemWithTitle:NSLocalizedString(@"RecentlyClosed", nil)
+                                                     action:nil
+                                              keyEquivalent:@""];
+    [recentlyClosedItem setImage:[NSImage imageNamed:@"folder"]];
+    [self setSubmenu:mRecentlyClosedMenu forItem:recentlyClosedItem];
+    [self addItem:[NSMenuItem separatorItem]];
+  }
+
+  // at the bottom of the go menu, add a Clear History item
   NSMenuItem* clearHistoryItem = [[[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"ClearHistoryMenuItem", @"")
                                                              action:@selector(clearHistory:)
                                                       keyEquivalent:@""] autorelease];
@@ -509,6 +578,8 @@ static const unsigned int kMaxTitleLength = 50;
 
   // If rootChangedItem is nil, the whole history tree is being rebuilt.
   if (!rootChangedItem) {
+    [mRecentlyClosedMenu release];
+    mRecentlyClosedMenu = [[NSMenu alloc] initWithTitle:NSLocalizedString(@"RecentlyClosed", nil)];
     [mTodayItem release];
     mTodayItem = nil;
   }

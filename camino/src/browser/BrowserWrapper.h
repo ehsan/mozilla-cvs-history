@@ -48,6 +48,8 @@
 class nsIMutableArray;
 class nsIArray;
 
+extern NSString* const kBrowserInstanceClosedNotification;
+
 // 
 // The BrowserWrapper communicates with the UI via this delegate.
 // The delegate will be nil for background tabs.

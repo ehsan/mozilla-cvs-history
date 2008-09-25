@@ -74,6 +74,7 @@
 {
   IBOutlet NSMenuItem*  mItemBeforeHistoryItems; // the item after which we add history items.
   HistoryItem*          mTodayItem;              // the "Today" history group
+  NSMenu*               mRecentlyClosedMenu;     // the folder of recently closed pages
 
   BOOL                  mAppLaunchDone;          // has app launching completed?
 }
