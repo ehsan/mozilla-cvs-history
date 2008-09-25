@@ -39,6 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import "ExtendedOutlineView.h"
+#import "NSWorkspace+Utils.h"
 
 
 static NSString* const kAutosaveSortColumnIdentifierKey = @"sortcolumn_id";
@@ -327,6 +328,12 @@ static NSString* const kAutosaveSortDirectionKey        = @"sort_descending";
 //
 - (void)textDidEndEditing:(NSNotification *)aNotification
 {
+  // This action is not needed on Leopard, as selection behavior was changed.
+  if ([NSWorkspace isLeopardOrHigher]) {
+    [super textDidEndEditing:aNotification];
+    return; 
+  }
+
   // Fake our own notification. We pretend that the editing was canceled due to a
   // mouse click. This prevents outlineviw from selecting another cell for editing.
   NSDictionary *userInfo = [NSDictionary dictionaryWithObject:[NSNumber numberWithInt:NSIllegalTextMovement] forKey:@"NSTextMovement"];
