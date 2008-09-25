@@ -1150,10 +1150,11 @@ NSString* const kPreviousSessionTerminatedNormallyKey = @"PreviousSessionTermina
 
 - (IBAction)newTab:(id)aSender
 {
-  BrowserWindowController* browserController = [self mainWindowBrowserController];
-  if (browserController)
-    [browserController newTab:aSender];
-  else {
+  NSWindow* existingWindow = [self frontmostBrowserWindow];
+  if (existingWindow) {
+      [[existingWindow delegate] newTab:aSender];
+      [existingWindow makeKeyAndOrderFront:aSender];
+  } else {
     // follow the pref about what to load in a new tab (even though we're making a new window)
     int newTabPage = [[PreferenceManager sharedInstance] getIntPref:kGeckoPrefNewTabStartPage withSuccess:NULL];
     BOOL loadHomepage = (newTabPage == kStartPageHome);
@@ -1751,12 +1752,6 @@ NSString* const kPreviousSessionTerminatedNormallyKey = @"PreviousSessionTermina
     else
       [aMenuItem setTitle:NSLocalizedString(@"Open in Tabs in New Window", nil)];
   }
-
-  // only enable newTab if there is a browser window frontmost, or if there is no window
-  // (i.e., disable it for non-browser windows and popups).
-  if (action == @selector(newTab:))
-    return (((browserController && ([NSApp mainWindow] == [self frontmostBrowserWindow]))) ||
-            ![NSApp mainWindow]);
 
   // disable openFile if the frontmost window is a popup or view-source window
   if (action == @selector(openFile:)) {
