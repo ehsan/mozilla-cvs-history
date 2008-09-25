@@ -57,7 +57,9 @@ case $product in
 
 #        cd ..
         if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla/js/src; make -f Makefile.ref clobber" 2>&1; then
-            error "during SpiderMonkey clobber" $LINENO
+            echo "error during SpiderMonkey clobber." $LINENO
+            echo "Forcing clobber" $LINENO
+            rm -fR $BUILDTREE/mozilla/js/src/*_*.OBJ
         fi
         ;;
 esac
