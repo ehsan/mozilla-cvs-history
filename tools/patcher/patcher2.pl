@@ -206,7 +206,8 @@ sub BuildTools {
             my $cloneArgs = ["clone", "-r", $toolsRevision, $mc, "mozilla"];
 
             run_shell_command(cmd => 'hg',
-                              cmdArgs => $cloneArgs);
+                              cmdArgs => $cloneArgs,
+                              timeout => 3600);
 
             printf("\n\nClone complete.\n");
         }
