@@ -303,7 +303,7 @@ class MozillaMochitest(ShellCommandReportTimeout):
     
     def __init__(self, leakThreshold=None, **kwargs):
         if leakThreshold:
-            self.command.append("--leak-threshold=" + leakThreshold)
+            self.command.append("--leak-threshold=" + str(leakThreshold))
         ShellCommandReportTimeout.__init__(self, **kwargs)    
     
     def createSummary(self, log):
@@ -364,7 +364,7 @@ class MozillaMochichrome(ShellCommandReportTimeout):
     
     def __init__(self, leakThreshold=None, **kwargs):
         if leakThreshold:
-            self.command.append("--leak-threshold=" + leakThreshold)
+            self.command.append("--leak-threshold=" + str(leakThreshold))
         ShellCommandReportTimeout.__init__(self, **kwargs)    
     
     def createSummary(self, log):
@@ -428,7 +428,7 @@ class MozillaBrowserChromeTest(ShellCommandReportTimeout):
     
     def __init__(self, leakThreshold=None, **kwargs):
         if leakThreshold:
-            self.command.append("--leak-threshold=" + leakThreshold)
+            self.command.append("--leak-threshold=" + str(leakThreshold))
         ShellCommandReportTimeout.__init__(self, **kwargs)    
     
     def createSummary(self, log):
