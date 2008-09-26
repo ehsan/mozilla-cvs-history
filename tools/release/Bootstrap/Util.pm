@@ -12,6 +12,7 @@ use base qw(Exporter);
 our @EXPORT_OK = qw(CvsCatfile CvsTag
                     GetDiffFileList
                     GetFtpNightlyDir
+                    LoadLocaleManifest
                     GetLocaleManifest
                     GetBouncerPlatforms GetPatcherPlatforms
                     GetBouncerToPatcherPlatformMap);

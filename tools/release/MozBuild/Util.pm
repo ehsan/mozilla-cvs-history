@@ -16,7 +16,7 @@ use Cwd;
 use base qw(Exporter);
 
 our @EXPORT_OK = qw(RunShellCommand MkdirWithPath HashFile DownloadFile Email
-                    UnpackBuild);
+                    UnpackBuild GetBuildIDFromFTP);
 
 my $DEFAULT_EXEC_TIMEOUT = 600;
 my $EXEC_IO_READINCR = 1000;
@@ -533,4 +533,56 @@ sub UnpackBuild {
         chdir($oldpwd);
     }
 }
+
+sub GetBuildIDFromFTP {
+    my %args = @_;
+
+    my $os = $args{'os'};
+    if (! defined($os)) {
+        die("ASSERT: MozBuild::GetBuildIDFromFTP(): os is required argument");
+    }
+    my $releaseDir = $args{'releaseDir'};
+    if (! defined($releaseDir)) {
+        die("ASSERT: MozBuild::GetBuildIDFromFTP(): releaseDir is required argument");
+    }
+    my $stagingServer = $args{'stagingServer'};
+    if (! defined($stagingServer)) {
+        die("ASSERT: MozBuild::GetBuildIDFromFTP(): stagingServer is a required argument");
+    }
+
+    my ($bh, $buildIDTempFile) = tempfile(UNLINK => 1);
+    $bh->close();
+    my $rv = RunShellCommand(
+      command => 'wget',
+      args => ['-O', $buildIDTempFile,
+               'http://' . $stagingServer . '/' . $releaseDir . '/' .
+               $os . '_info.txt']
+    );
+
+    if ($rv->{'timedOut'} || $rv->{'dumpedCore'} || ($rv->{'exitValue'} != 0)) {
+        die('wget of ' . $os . '_info.txt failed.');
+    }
+
+    my $buildID;
+    open(FILE, "< $buildIDTempFile") || 
+     die("Could not open buildID temp file $buildIDTempFile: $!");
+    while (<FILE>) {
+      my ($var, $value) = split(/\s*=\s*/, $_, 2);
+      if ($var eq 'buildID') {
+          $buildID = $value;
+      }
+    }
+    close(FILE) || 
+     die("Could not close buildID temp file $buildIDTempFile: $!");
+    if (! defined($buildID)) {
+        die("Could not read buildID from temp file $buildIDTempFile: $!");
+    }
+    if (! $buildID =~ /^\d+$/) {
+        die("ASSERT: MozBuild::GetBuildIDFromFTP: $buildID is non-numerical");
+    }
+    chomp($buildID);
+
+    return $buildID;
+}
+
 1;

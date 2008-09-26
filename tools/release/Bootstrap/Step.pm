@@ -218,37 +218,11 @@ sub GetBuildIDFromFTP() {
     }
 
     my $config = new Bootstrap::Config();
-    my $stagingUser = $config->Get(var => 'stagingUser');
     my $stagingServer = $config->Get(var => 'stagingServer');
 
-    my ($bh, $buildIDTempFile) = tempfile(UNLINK => 1);
-    $bh->close();
-    $this->Shell(
-      cmd => 'scp',
-      cmdArgs => [$stagingUser . '@' . $stagingServer . ':' . 
-                  $releaseDir .'/' . $os . '_info.txt',
-                  $buildIDTempFile],
-    );
-    my $buildID;
-    open(FILE, "< $buildIDTempFile") || 
-     die("Could not open buildID temp file $buildIDTempFile: $!");
-    while (<FILE>) {
-      my ($var, $value) = split(/\s*=\s*/, $_, 2);
-      if ($var eq 'buildID') {
-          $buildID = $value;
-      }
-    }
-    close(FILE) || 
-     die("Could not close buildID temp file $buildIDTempFile: $!");
-    if (! defined($buildID)) {
-        die("Could not read buildID from temp file $buildIDTempFile: $!");
-    }
-    if (! $buildID =~ /^\d+$/) {
-        die("ASSERT: BumpPatcherConfig: $buildID is non-numerical");
-    }
-    chomp($buildID);
-
-    return $buildID;
+    return MozBuild::Util::GetBuildIDFromFTP(os => $os,
+                                             releaseDir => $releaseDir,
+                                             stagingServer => $stagingServer);
 }
 
 sub CvsCo {
