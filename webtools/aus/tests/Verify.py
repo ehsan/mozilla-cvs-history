@@ -6,6 +6,7 @@ Released under the terms of the GNU General Public License version 2 or later.
 
 import feedparser # http://feedparser.org/
 import urllib2
+from urllib import pathname2url
 from fit.ColumnFixture import ColumnFixture
 
 auth_handler = urllib2.HTTPBasicAuthHandler()
@@ -133,13 +134,17 @@ class Verify(ColumnFixture):
         if (not self.osVersion): self.osVersion = self.args[6]
 
         if (self.osVersion != "NULL"):
-            return '/'.join((self.host, self.updateVersion, self.product, self.version,     \
-                            self.build, self.platform, self.locale,     \
-                            self.channel, self.osVersion, self.dist,    \
-                            self.distVersion, "update.xml"))
+            return '/'.join((self.host, 
+                pathname2url('/'.join((self.updateVersion, self.product, self.version,
+                            self.build, self.platform, self.locale,
+                            self.channel, self.osVersion, self.dist, 
+                            self.distVersion, "update.xml")))
+                ))
         else:
-             return '/'.join((self.host, self.updateVersion, self.product, self.version,     \
-                            self.build, self.platform, self.locale,     \
-                            self.channel, "update.xml"))
+             return '/'.join((self.host,
+                pathname2url('/'.join((self.updateVersion, self.product, self.version, 
+                            self.build, self.platform, self.locale, 
+                            self.channel, "update.xml")))
+                ))
            
 
