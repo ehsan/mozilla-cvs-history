@@ -88,7 +88,8 @@ class Patch extends AUS_Object {
         $this->setProductBranchVersions($productBranchVersions);
         $this->setNightlyChannels($nightlyChannels);
         $this->setVar('isPatch',false);
-        $this->setVar('patchType',$type); 
+        $this->setVar('patchType',$type);
+        $this->setVar('updateType','minor');
         $this->setVar('hasUpdateInfo',false);
         $this->setVar('hasDetailsUrl',false);
     }
