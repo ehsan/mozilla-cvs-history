@@ -1,6 +1,6 @@
-
 from buildbot.process import base
 from buildbot.status import builder
+from buildbot.process.properties import Properties
 
 
 class BuildSet:
@@ -10,13 +10,18 @@ class BuildSet:
     source.revision), or a build of a certain set of Changes
     (source.changes=list)."""
 
-    def __init__(self, builderNames, source, reason=None, bsid=None):
+    def __init__(self, builderNames, source, reason=None, bsid=None,
+                 properties=None):
         """
         @param source: a L{buildbot.sourcestamp.SourceStamp}
         """
         self.builderNames = builderNames
         self.source = source
         self.reason = reason
+
+        self.properties = Properties()
+        if properties: self.properties.updateFromProperties(properties)
+
         self.stillHopeful = True
         self.status = bss = builder.BuildSetStatus(source, reason,
                                                    builderNames, bsid)
@@ -34,7 +39,8 @@ class BuildSet:
 
         # create the requests
         for b in builders:
-            req = base.BuildRequest(self.reason, self.source, b.name)
+            req = base.BuildRequest(self.reason, self.source, b.name, 
+                                    properties=self.properties)
             reqs.append((b, req))
             self.requests.append(req)
             d = req.waitUntilFinished()

@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/env python
 
 import sys, os, re
 from distutils.core import setup
@@ -44,49 +44,66 @@ for f in os.listdir("buildbot/test/mail"):
     if re.search(r'\.\d+$', f):
         testmsgs.append("buildbot/test/mail/%s" % f)
 
-setup(name="buildbot",
-      version=version,
-      description="BuildBot build automation system",
-      long_description=long_description,
-      author="Brian Warner",
-      author_email="warner-buildbot@lothar.com",
-      url="http://buildbot.net/",
-      license="GNU GPL",
-      # does this classifiers= mean that this can't be installed on 2.2/2.3?
-      classifiers=[
-    'Development Status :: 4 - Beta',
-    'Environment :: No Input/Output (Daemon)',
-    'Environment :: Web Environment',
-    'Intended Audience :: Developers',
-    'License :: OSI Approved :: GNU General Public License (GPL)',
-    'Topic :: Software Development :: Build Tools',
-    'Topic :: Software Development :: Testing',
-    ],
+setup_args = {
+    'name': "buildbot",
+    'version': version,
+    'description': "BuildBot build automation system",
+    'long_description': long_description,
+    'author': "Brian Warner",
+    'author_email': "warner-buildbot@lothar.com",
+    'url': "http://buildbot.net/",
+    'license': "GNU GPL",
+    # does this classifiers= mean that this can't be installed on 2.2/2.3?
+    'classifiers': [
+        'Development Status :: 4 - Beta',
+        'Environment :: No Input/Output (Daemon)',
+        'Environment :: Web Environment',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: GNU General Public License (GPL)',
+        'Topic :: Software Development :: Build Tools',
+        'Topic :: Software Development :: Testing',
+        ],
 
-      packages=["buildbot",
-                "buildbot.status", "buildbot.status.web",
-                "buildbot.changes",
-                "buildbot.steps",
-                "buildbot.process",
-                "buildbot.clients",
-                "buildbot.slave",
-                "buildbot.scripts",
-                "buildbot.test",
+    'packages': ["buildbot",
+              "buildbot.status", "buildbot.status.web",
+              "buildbot.changes",
+              "buildbot.steps",
+              "buildbot.process",
+              "buildbot.clients",
+              "buildbot.slave",
+              "buildbot.scripts",
+              "buildbot.test",
+              ],
+    'data_files': [("buildbot", ["buildbot/buildbot.png"]),
+                ("buildbot/clients", ["buildbot/clients/debug.glade"]),
+                ("buildbot/status/web",
+                 ["buildbot/status/web/classic.css",
+                  "buildbot/status/web/index.html",
+                  "buildbot/status/web/robots.txt",
+                  ]),
+                ("buildbot/scripts", ["buildbot/scripts/sample.cfg"]),
+                ("buildbot/test/mail", testmsgs),
+                ("buildbot/test/subdir", ["buildbot/test/subdir/emit.py"]),
                 ],
-      data_files=[("buildbot", ["buildbot/buildbot.png"]),
-                  ("buildbot/clients", ["buildbot/clients/debug.glade"]),
-                  ("buildbot/status/web",
-                   ["buildbot/status/web/classic.css",
-                    "buildbot/status/web/index.html",
-                    "buildbot/status/web/robots.txt",
-                    ]),
-                  ("buildbot/scripts", ["buildbot/scripts/sample.cfg"]),
-                  ("buildbot/test/mail", testmsgs),
-                  ("buildbot/test/subdir", ["buildbot/test/subdir/emit.py"]),
-                  ],
-      scripts = scripts,
-      cmdclass={'install_data': install_data_twisted},
-      )
+    'scripts':  scripts,
+    'cmdclass': {'install_data': install_data_twisted},
+    }
+
+try:
+    # If setuptools is installed, then we'll add setuptools-specific arguments
+    # to the setup args.
+    import setuptools
+except ImportError:
+    pass
+else:
+    setup_args['install_requires'] = ['twisted >= 2.0.0']
+    entry_points={
+        'console_scripts': [
+            'buildbot = buildbot.scripts.runner:run'
+            ]
+        },
+
+setup(**setup_args)
 
 # Local Variables:
 # fill-column: 71

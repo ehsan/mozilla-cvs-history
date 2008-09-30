@@ -565,7 +565,7 @@ class VCBase(SignalMixin):
         self.shouldExist(self.workdir, "subdir", "subdir.c")
         if self.metadir:
             self.shouldExist(self.workdir, self.metadir)
-        self.failUnlessEqual(bs.getProperty("revision"), self.helper.trunk[0])
+        self.failUnlessEqual(bs.getProperty("revision"), self.helper.trunk[0] or None)
         self.failUnlessEqual(bs.getProperty("branch"), None)
         self.checkGotRevision(bs, self.helper.trunk[0])
         # leave the tree at HEAD
@@ -623,7 +623,7 @@ class VCBase(SignalMixin):
         self.shouldContain(self.workdir, "version.c",
                            "version=%d" % (self.helper.version-1))
         self.failUnlessEqual(bs.getProperty("revision"),
-                             self.helper.trunk[-2])
+                             self.helper.trunk[-2] or None)
         self.checkGotRevision(bs, self.helper.trunk[-2])
 
         # now update to the newer revision
@@ -637,7 +637,7 @@ class VCBase(SignalMixin):
         self.shouldContain(self.workdir, "version.c",
                            "version=%d" % self.helper.version)
         self.failUnlessEqual(bs.getProperty("revision"),
-                             self.helper.trunk[-1])
+                             self.helper.trunk[-1] or None)
         self.checkGotRevision(bs, self.helper.trunk[-1])
 
 
@@ -744,7 +744,7 @@ class VCBase(SignalMixin):
         data = open(subdir_c, "r").read()
         self.failUnlessIn("Hello patched subdir.\\n", data)
         self.failUnlessEqual(bs.getProperty("revision"),
-                             self.helper.trunk[-1])
+                             self.helper.trunk[-1] or None)
         self.checkGotRevision(bs, self.helper.trunk[-1])
 
         # make sure that a rebuild does not use the leftover patched workdir
@@ -783,7 +783,7 @@ class VCBase(SignalMixin):
         data = open(subdir_c, "r").read()
         self.failUnlessIn("Hello patched subdir.\\n", data)
         self.failUnlessEqual(bs.getProperty("revision"),
-                             self.helper.trunk[-2])
+                             self.helper.trunk[-2] or None)
         self.checkGotRevision(bs, self.helper.trunk[-2])
 
         # now check that we can patch a branch
@@ -802,8 +802,8 @@ class VCBase(SignalMixin):
         data = open(subdir_c, "r").read()
         self.failUnlessIn("Hello patched subdir.\\n", data)
         self.failUnlessEqual(bs.getProperty("revision"),
-                             self.helper.branch[-1])
-        self.failUnlessEqual(bs.getProperty("branch"), self.helper.branchname)
+                             self.helper.branch[-1] or None)
+        self.failUnlessEqual(bs.getProperty("branch"), self.helper.branchname or None)
         self.checkGotRevision(bs, self.helper.branch[-1])
 
 
@@ -2565,6 +2565,10 @@ class GitHelper(BaseHelper):
         yield w; w.getResult()
         w = self.dovc(tmp, ["add", "."])
         yield w; w.getResult()
+        w = self.dovc(tmp, ["config", "user.email", "buildbot-trial@localhost"])
+        yield w; w.getResult()
+        w = self.dovc(tmp, ["config", "user.name", "Buildbot Trial"])
+        yield w; w.getResult()
         w = self.dovc(tmp, ["commit", "-m", "initial_import"])
         yield w; w.getResult()
 
@@ -2592,6 +2596,10 @@ class GitHelper(BaseHelper):
         log.msg("vc_revise" + self.gitrepo)
         w = self.dovc(self.repbase, ["clone", self.gitrepo, "gittmp"])
         yield w; w.getResult()
+        w = self.dovc(tmp, ["config", "user.email", "buildbot-trial@localhost"])
+        yield w; w.getResult()
+        w = self.dovc(tmp, ["config", "user.name", "Buildbot Trial"])
+        yield w; w.getResult()
 
         self.version += 1
         version_c = VERSION_C % self.version
@@ -2615,6 +2623,10 @@ class GitHelper(BaseHelper):
             rmdirRecursive(workdir)
 
         w = self.dovc(self.repbase, ["clone", self.gitrepo, workdir])
+        yield w; w.getResult()
+        w = self.dovc(workdir, ["config", "user.email", "buildbot-trial@localhost"])
+        yield w; w.getResult()
+        w = self.dovc(workdir, ["config", "user.name", "Buildbot Trial"])
         yield w; w.getResult()
 
         if branch is not None:

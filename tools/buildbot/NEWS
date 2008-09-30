@@ -1,5 +1,205 @@
 User visible changes in Buildbot.             -*- outline -*-
 
+* Release 0.7.9 (15 Sep 2008)
+
+** New Features
+
+*** Configurable public_html directory (#162)
+
+The public_html/ directory, which provides static content for the WebStatus()
+HTTP server, is now configurable. The default location is still the
+public_html/ subdirectory of the buildmaster's base directory, but you can
+change this by passing a suitable argument when creating the WebStatus()
+instance in your master.cfg file:
+
+  c['status'].append( WebStatus(8080, public_html="/var/www/buildbot") )
+
+*** Lock access modes (#313)
+
+Albert Hofkamp added code to provide two distinct access modes to Locks:
+"counting" and "exclusive". Locks can accept a configurable number of
+"counting"-mode users, or a single "exclusive"-mode. For example, a Lock is
+defined with maxCount=3, and then a 'compile' BuildStep uses this lock in
+counting mode, while a 'cleanup' BuildStep uses this lock in exclusive mode.
+Then, there can be one, two, or three simultaneous Builds in the compile step
+(as long as there are no builds in the cleanup step). Only one build can be
+in the cleanup step at a time, and if there is such a build in the cleanup
+step, then the compile steps in other builds will wait for it to finish.
+Please see the "Interlocks" section of the user's manual for more details.
+
+** Bugs Fixed
+
+*** Buildslave missing_timeout= fired too quickly (#211)
+
+By providing a missing_timeout= argument when creating the BuildSlave
+instance, you can ask the buildmaster to send email if a buildslave is
+disconnected for too long. A bug in the previous version caused this
+notification to be sent too soon, rather than waiting until the timeout
+period expired. This should be fixed now.
+
+*** Test command display fixed (#332)
+
+In the previous version, a steps.shell.Test step would display the parsed
+test results (in the step's box on the waterfall display) in lieu of any
+other descriptive text the step might provide. In this release, these two
+pieces of information are combined.
+
+** Minor Changes
+
+The buildmaster's version is logged to its twistd.log file at startup. The
+buildslave does the same, to its own logfile.
+
+Remote commands now record how long each command took. The "elapsedTime="
+message will appear in the step's main logfile.
+
+The "buildbot restart" command no longer fails if the buildbot wasn't already
+running.
+
+The FileUpload and FileDownload steps now create their target directories
+(and any missing intermediate directories) before writing to the destination
+file.
+
+The per-build and per-step web pages now show the start, finish, and elapsed
+time of their build or step.
+
+If a Subversion-based build is started with a mixture of Changes that specify
+particular numeric revisions and "HEAD" Changes (which indicate that a trunk
+checkout is desired), the build will use a trunk checkout. Previously this
+would probably cause an error. It is not clear how this situation might
+arise.
+
+** Compability With Other Tools
+
+The mercurial commit hook (buildbot.changes.hgbuildbot) in the previous
+version doesn't work with hg-1.0 or later (it uses an API function that was
+present in the hg-0.9.5 release, but was removed from hg-1.0). This
+incompability has been fixed: the new version of buildbot should be
+compatible with hg-1.0 and newer (and it probably retains compability with
+hg-0.9.5 and earlier too). (#328)
+
+The Git tool has traditionally provided two ways to run each command, either
+as subcommands of /usr/bin/git (like "git checkout"), or as individual tools
+(like /usr/bin/git-checkout). The latter form is being removed in the
+upcoming 1.6 Git release. Previous versions of Buildbot have used the
+git-checkout form, and will break when Git is upgraded to 1.6 or beyond. The
+new Buildbot release switches to the subcommand form. Note that this is a
+change on the buildslave side.
+
+The Git checkout command will now use the default branch (as set in the
+steps.source.Git() step definition) if the changes that it is building do not
+specify some other branch to build. (#340)
+
+** Deprecation Schedule
+
+No features have been deprecated in this release, and no deprecated features
+have been removed. As a reminder, the following deprecated features are
+scheduled for removal in an upcoming release:
+
+c['sources'] (plural) was replaced by c['change_source'] (singular) in 0.7.6,
+and will be removed by 0.8.0.
+
+c['bots'] was replaced by c['buildslaves'] in 0.7.6, and will be removed by
+0.8.0 . c['bots'] only accepts BuildSlave instances, not name/passwd tuples.
+
+The html.Waterfall status target was replaced by html.WebStatus in 0.7.6, and
+will be removed by 0.8.0.
+
+
+* Release 0.7.8 (24 Jul 2008)
+
+** New features
+
+The IRC bot will respond to three new commands: 'notify' subscribes the
+channel (or the sender, if the command is sent as a private "/msg") to hear
+about build events. 'join' tells the bot to join some new IRC channel.
+'leave' tells it to leave a channel. See the "IRC Bot" section of the User's
+Manual for details. (#171)
+
+Build Steps now have "statistics", in addition to logfiles. These are used to
+count things like how many tests passed or failed. There are methods to sum
+these counters across all steps and display the results in the Build status.
+The Waterfall display now shows the count of failed tests on the top-most box
+in each column, using this mechanism.
+
+The new buildbot.steps.shell.PerlModuleTest step was added, to run Perl unit
+tests. This is a wrapper around the regular ShellCommand that parses the
+output of the standard perl unit test system and counts how many tests
+passed/failed/etc. The results are put into the step's summary text, and a
+count of tests passed/failed/skipped are tracked in the steps's statistics.
+The factory.CPAN build factory has been updated to use this, so configuring a
+Buildbot to test a perl module available from CPAN should be as easy as:
+
+ s = source.CVS(cvsroot, cvsmodule)
+ f = factory.CPAN(s)
+
+Build Properties have been generalized: they remain associated with a single
+Build, but the properties can be set from a variety of sources. In previous
+releases, the Build itself would set properties like 'buildername', 'branch',
+and 'revision' (the latter two indicating which version of the source code it
+was trying to get), and the source-checkout BuildSteps would set a property
+named 'got_revision' (to indicate what version of the soruce code it actually
+got). In this release, the 'scheduler' property is set to indicate which
+Scheduler caused the build to be started. In addition, the config file can
+specify properties to be set on all Builds, or on all Builds for a specific
+Builder. All these properties are available for interpolation into
+ShellCommands and environment variables by using the WithProperties() marker.
+
+It may be easier to implement simple build parameterization (e.g. to upload
+generated binaries to a specific directory, or to only perform long-running
+tests on a nightly build instead of upon every checkin) by using these Build
+Properties than to write custom BuildSteps.
+
+** Other improvements
+
+The /buildslaves web page shows which slaves are currently running builds.
+Offline slaves are displayed in bold.
+
+Buildbot's setup.py now provides metadata to setuptools (if installed): an
+entry_points script was added, and a dependency upon twisted-2.4.x or newer
+was declared. This makes it more likely that 'easy_install buildbot' will
+work.
+
+The MailNotifier class acquired a mode="passing" flag: in this mode, the
+buildbot will only send mail about passing builds (versus only on failing
+builds, or only on builds which failed when the previous build had passed).
+
+** Bugs fixed
+
+Don't display force/stop build buttons when build control is disabled (#246)
+
+When a build is waiting on a lock, don't claim that it has started (#107)
+
+Make SVN mode=copy tolerate symlinks on freebsd, "cp -rp" -> "cp -RPp" (#86)
+
+The svnpoller changesource now ignores branch deletion (#261)
+
+The Git unit tests should run even if the user has not told Git about their
+username/email.
+
+The WebStatus /xmlrpc server's getStatus() method was renamed to the
+more-accurate getLastBuildResults().
+
+The TinderboxMailNotifier status output acquired an useChangeTime= argument.
+
+The bonsaipoller changesource got some fixes.
+
+** Deprecation Schedule
+
+No features have been deprecated in this release, and no deprecated features
+have been removed. As a reminder, the following deprecated features are
+scheduled for removal in an upcoming release:
+
+c['sources'] (plural) was replaced by c['change_source'] (singular) in 0.7.6,
+and will be removed by 0.8.0.
+
+c['bots'] was replaced by c['buildslaves'] in 0.7.6, and will be removed by
+0.8.0 . c['bots'] only accepts BuildSlave instances, not name/passwd tuples.
+
+The html.Waterfall status target was replaced by html.WebStatus in 0.7.6, and
+will be removed by 0.8.0.
+
+
+
 * Release 0.7.7 (29 Mar 2008)
 
 ** Things You Need To Know

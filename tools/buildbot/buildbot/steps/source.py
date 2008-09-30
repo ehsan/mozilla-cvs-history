@@ -47,8 +47,8 @@ class Source(LoggingBuildStep):
              should be maintained in a separate directory (called the
              'copydir'), using checkout or update as necessary. For each
              build, a new workdir is created with a copy of the source
-             tree (rm -rf workdir; cp -r copydir workdir). This doubles
-             the disk space required, but keeps the bandwidth low
+             tree (rm -rf workdir; cp -R -P -p copydir workdir). This
+             doubles the disk space required, but keeps the bandwidth low
              (update instead of a full checkout). A full 'clean' build
              is performed each time.  This avoids any generated-file
              build problems, but is still occasionally vulnerable to
@@ -187,7 +187,7 @@ class Source(LoggingBuildStep):
         got_revision = None
         if cmd.updates.has_key("got_revision"):
             got_revision = str(cmd.updates["got_revision"][-1])
-        self.setProperty("got_revision", got_revision)
+        self.setProperty("got_revision", got_revision, "Source")
 
 
 
@@ -212,7 +212,7 @@ class CVS(Source):
     # parsing each line. Might be handy to have a hook in LogFile that gets
     # called with each complete line.
 
-    def __init__(self, cvsroot, cvsmodule, 
+    def __init__(self, cvsroot, cvsmodule,
                  global_options=[], branch=None, checkoutDelay=None,
                  login=None,
                  **kwargs):
@@ -267,7 +267,7 @@ class CVS(Source):
                                read-only (I assume this means it won't
                                use locks to insure atomic access to the
                                ,v files)."""
-                               
+
         self.checkoutDelay = checkoutDelay
         self.branch = branch
 
@@ -366,7 +366,7 @@ class SVN(Source):
                         which a branch name will be appended. It should
                         probably end in a slash. Use exactly one of
                         C{svnurl} and C{baseURL}.
-                         
+
         @param defaultBranch: if branches are enabled, this is the branch
                               to use if the Build does not specify one
                               explicitly. It will simply be appended
@@ -395,7 +395,7 @@ class SVN(Source):
 
 
     def computeSourceRevision(self, changes):
-        if not changes:
+        if not changes or None in [c.revision for c in changes]:
             return None
         lastChange = max([int(c.revision) for c in changes])
         return lastChange
@@ -476,9 +476,9 @@ class SVN(Source):
 class Darcs(Source):
     """Check out a source tree from a Darcs repository at 'repourl'.
 
-    To the best of my knowledge, Darcs has no concept of file modes. This
-    means the eXecute-bit will be cleared on all source files. As a result,
-    you may need to invoke configuration scripts with something like:
+    Darcs has no concept of file modes. This means the eXecute-bit will be
+    cleared on all source files. As a result, you may need to invoke
+    configuration scripts with something like:
 
     C{s(step.Configure, command=['/bin/sh', './configure'])}
     """
@@ -499,7 +499,7 @@ class Darcs(Source):
                         which a branch name will be appended. It should
                         probably end in a slash. Use exactly one of
                         C{repourl} and C{baseURL}.
-                         
+
         @param defaultBranch: if branches are enabled, this is the branch
                               to use if the Build does not specify one
                               explicitly. It will simply be appended to
@@ -591,7 +591,9 @@ class Git(Source):
         return changes[-1].revision
 
     def startVC(self, branch, revision, patch):
-        self.args['branch'] = branch
+        if branch is not None:
+            self.args['branch'] = branch
+
         self.args['revision'] = revision
         self.args['patch'] = patch
         slavever = self.slaveVersion("git")
@@ -789,7 +791,7 @@ class Bzr(Source):
                         which a branch name will be appended. It should
                         probably end in a slash. Use exactly one of
                         C{repourl} and C{baseURL}.
-                         
+
         @param defaultBranch: if branches are enabled, this is the branch
                               to use if the Build does not specify one
                               explicitly. It will simply be appended to

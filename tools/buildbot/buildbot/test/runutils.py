@@ -13,6 +13,7 @@ from buildbot.process.base import BuildRequest, Build
 from buildbot.process.buildstep import BuildStep
 from buildbot.sourcestamp import SourceStamp
 from buildbot.status import builder
+from buildbot.process.properties import Properties
 
 
 
@@ -152,7 +153,7 @@ class RunMixin:
         if bs.getResults() != builder.SUCCESS:
             log.msg("failUnlessBuildSucceeded noticed that the build failed")
             self.logBuildResults(bs)
-        self.failUnless(bs.getResults() == builder.SUCCESS)
+        self.failUnlessEqual(bs.getResults(), builder.SUCCESS)
         return bs # useful for chaining
 
     def logBuildResults(self, bs):
@@ -275,6 +276,12 @@ def fake_slaveVersion(command, oldversion=None):
     from buildbot.slave.registry import commandRegistry
     return commandRegistry[command]
 
+class FakeBuildMaster:
+    properties = Properties(masterprop="master")
+
+class FakeBotMaster:
+    parent = FakeBuildMaster()
+
 def makeBuildStep(basedir, step_class=BuildStep, **kwargs):
     bss = setupBuildStepStatus(basedir)
 
@@ -282,13 +289,15 @@ def makeBuildStep(basedir, step_class=BuildStep, **kwargs):
     setup = {'name': "builder1", "slavename": "bot1",
              'builddir': "builddir", 'factory': None}
     b0 = Builder(setup, bss.getBuild().getBuilder())
+    b0.botmaster = FakeBotMaster()
     br = BuildRequest("reason", ss)
     b = Build([br])
     b.setBuilder(b0)
     s = step_class(**kwargs)
     s.setBuild(b)
     s.setStepStatus(bss)
-    b.setupStatus(bss.getBuild())
+    b.build_status = bss.getBuild()
+    b.setupProperties()
     s.slaveVersion = fake_slaveVersion
     return s
 
@@ -480,7 +489,8 @@ class SetTestFlagStep(BuildStep):
         self.value = value
 
     def start(self):
-        _flags[self.flagname] = self.value
+        properties = self.build.getProperties()
+        _flags[self.flagname] = properties.render(self.value)
         self.finished(builder.SUCCESS)
 
 class TestFlagMixin:
