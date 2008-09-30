@@ -7,10 +7,11 @@ from twisted.python import log
 from twisted.python.failure import Failure
 from twisted.internet import reactor, defer, error
 
-from buildbot import interfaces
+from buildbot import interfaces, locks
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION
 from buildbot.status.builder import Results, BuildRequestStatus
 from buildbot.status.progress import BuildProgress
+from buildbot.process.properties import Properties
 
 class BuildRequest:
     """I represent a request to a specific Builder to run a single build.
@@ -39,6 +40,9 @@ class BuildRequest:
                   provide this, but for forced builds the user requesting the
                   build will provide a string.
 
+    @type properties: Properties object
+    @ivar properties: properties that should be applied to this build
+
     @ivar status: the IBuildStatus object which tracks our status
 
     @ivar submittedAt: a timestamp (seconds since epoch) when this request
@@ -52,12 +56,17 @@ class BuildRequest:
 
     implements(interfaces.IBuildRequestControl)
 
-    def __init__(self, reason, source, builderName=None):
+    def __init__(self, reason, source, builderName=None, properties=None):
         # TODO: remove the =None on builderName, it is there so I don't have
         # to change a lot of tests that create BuildRequest objects
         assert interfaces.ISourceStamp(source, None)
         self.reason = reason
         self.source = source
+
+        self.properties = Properties()
+        if properties:
+            self.properties.updateFromProperties(properties)
+
         self.start_watchers = []
         self.finish_watchers = []
         self.status = BuildRequestStatus(source, builderName)
@@ -169,8 +178,6 @@ class Build:
         self.source = requests[0].mergeWith(requests[1:])
         self.reason = requests[0].mergeReasons(requests[1:])
 
-        #self.abandoned = False
-
         self.progress = None
         self.currentStep = None
         self.slaveEnvironment = {}
@@ -189,15 +196,17 @@ class Build:
     def getSourceStamp(self):
         return self.source
 
-    def setProperty(self, propname, value):
+    def setProperty(self, propname, value, source):
         """Set a property on this build. This may only be called after the
         build has started, so that it has a BuildStatus object where the
         properties can live."""
-        self.build_status.setProperty(propname, value)
+        self.build_status.setProperty(propname, value, source)
+
+    def getProperties(self):
+        return self.build_status.getProperties()
 
     def getProperty(self, propname):
-        return self.build_status.properties[propname]
-
+        return self.build_status.getProperty(propname)
 
     def allChanges(self):
         return self.source.changes
@@ -255,18 +264,35 @@ class Build:
     def getSlaveName(self):
         return self.slavebuilder.slave.slavename
 
-    def setupStatus(self, build_status):
-        self.build_status = build_status
-        self.setProperty("buildername", self.builder.name)
-        self.setProperty("buildnumber", self.build_status.number)
-        self.setProperty("branch", self.source.branch)
-        self.setProperty("revision", self.source.revision)
+    def setupProperties(self):
+        props = self.getProperties()
+
+        # start with global properties from the configuration
+        buildmaster = self.builder.botmaster.parent
+        props.updateFromProperties(buildmaster.properties)
+
+        # get any properties from requests (this is the path through
+        # which schedulers will send us properties)
+        for rq in self.requests:
+            props.updateFromProperties(rq.properties)
+
+        # now set some properties of our own, corresponding to the
+        # build itself
+        props.setProperty("buildername", self.builder.name, "Build")
+        props.setProperty("buildnumber", self.build_status.number, "Build")
+        props.setProperty("branch", self.source.branch, "Build")
+        props.setProperty("revision", self.source.revision, "Build")
 
     def setupSlaveBuilder(self, slavebuilder):
         self.slavebuilder = slavebuilder
+
+        # navigate our way back to the L{buildbot.buildslave.BuildSlave}
+        # object that came from the config, and get its properties
+        buildslave_properties = slavebuilder.slave.properties
+        self.getProperties().updateFromProperties(buildslave_properties)
+
         self.slavename = slavebuilder.slave.slavename
         self.build_status.setSlavename(self.slavename)
-        self.setProperty("slavename", self.slavename)
 
     def startBuild(self, build_status, expectations, slavebuilder):
         """This method sets up the build, then starts it by invoking the
@@ -279,22 +305,32 @@ class Build:
         # the Deferred returned by this method.
 
         log.msg("%s.startBuild" % self)
-        self.setupStatus(build_status)
+        self.build_status = build_status
         # now that we have a build_status, we can set properties
+        self.setupProperties()
         self.setupSlaveBuilder(slavebuilder)
+        slavebuilder.slave.updateSlaveStatus(buildStarted=build_status)
 
         # convert all locks into their real forms
-        self.locks = [self.builder.botmaster.getLockByID(l)
-                      for l in self.locks]
+        lock_list = []
+        for access in self.locks:
+            if not isinstance(access, locks.LockAccess):
+                # Buildbot 0.7.7 compability: user did not specify access
+                access = access.defaultAccess()
+            lock = self.builder.botmaster.getLockByID(access.lockid)
+            lock_list.append((lock, access))
+        self.locks = lock_list
         # then narrow SlaveLocks down to the right slave
-        self.locks = [l.getLock(self.slavebuilder) for l in self.locks]
+        self.locks = [(l.getLock(self.slavebuilder), la)
+                       for l, la in self.locks]
         self.remote = slavebuilder.remote
         self.remote.notifyOnDisconnect(self.lostRemote)
         d = self.deferred = defer.Deferred()
-        def _release_slave(res):
+        def _release_slave(res, slave, bs):
             self.slavebuilder.buildFinished()
+            slave.updateSlaveStatus(buildFinished=bs)
             return res
-        d.addCallback(_release_slave)
+        d.addCallback(_release_slave, self.slavebuilder.slave, build_status)
 
         try:
             self.setupBuild(expectations) # create .steps
@@ -315,7 +351,6 @@ class Build:
             d.callback(self)
             return d
 
-        self.build_status.buildStarted(self)
         self.acquireLocks().addCallback(self._startBuild_2)
         return d
 
@@ -323,18 +358,19 @@ class Build:
         log.msg("acquireLocks(step %s, locks %s)" % (self, self.locks))
         if not self.locks:
             return defer.succeed(None)
-        for lock in self.locks:
-            if not lock.isAvailable():
+        for lock, access in self.locks:
+            if not lock.isAvailable(access):
                 log.msg("Build %s waiting for lock %s" % (self, lock))
-                d = lock.waitUntilMaybeAvailable(self)
+                d = lock.waitUntilMaybeAvailable(self, access)
                 d.addCallback(self.acquireLocks)
                 return d
         # all locks are available, claim them all
-        for lock in self.locks:
-            lock.claim(self)
+        for lock, access in self.locks:
+            lock.claim(self, access)
         return defer.succeed(None)
 
     def _startBuild_2(self, res):
+        self.build_status.buildStarted(self)
         self.startNextStep()
 
     def setupBuild(self, expectations):
@@ -555,8 +591,8 @@ class Build:
 
     def releaseLocks(self):
         log.msg("releaseLocks(%s): %s" % (self, self.locks))
-        for lock in self.locks:
-            lock.release(self)
+        for lock, access in self.locks:
+            lock.release(self, access)
 
     # IBuildControl
 

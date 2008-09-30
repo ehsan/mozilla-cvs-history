@@ -6,6 +6,8 @@ import os, sys, stat, re, time
 import traceback
 from twisted.python import usage, util, runtime
 
+from buildbot.interfaces import BuildbotNotRunningError
+
 # this is mostly just a front-end for mktap, twistd, and kill(1), but in the
 # future it will also provide an interface to some developer tools that talk
 # directly to a remote buildmaster (like 'try' and a status client)
@@ -457,7 +459,10 @@ def stop(config, signame="TERM", wait=False):
     basedir = config['basedir']
     quiet = config['quiet']
     os.chdir(basedir)
-    f = open("twistd.pid", "rt")
+    try:
+        f = open("twistd.pid", "rt")
+    except:
+        raise BuildbotNotRunningError
     pid = int(f.read().strip())
     signum = getattr(signal, "SIG"+signame)
     timer = 0
@@ -483,7 +488,10 @@ def stop(config, signame="TERM", wait=False):
 def restart(config):
     quiet = config['quiet']
     from buildbot.scripts.startup import start
-    stop(config, wait=True)
+    try:
+        stop(config, wait=True)
+    except BuildbotNotRunningError:
+        pass
     if not quiet:
         print "now restarting buildbot process.."
     start(config)
@@ -763,6 +771,8 @@ class TryOptions(usage.Options):
 
         ["builder", "b", None,
          "Run the trial build on this Builder. Can be used multiple times."],
+        ["properties", None, None,
+         "A set of properties made available in the build environment, format:prop=value,propb=valueb..."],
         ]
 
     optFlags = [
@@ -772,9 +782,20 @@ class TryOptions(usage.Options):
     def __init__(self):
         super(TryOptions, self).__init__()
         self['builders'] = []
+        self['properties'] = {}
 
     def opt_builder(self, option):
         self['builders'].append(option)
+
+    def opt_properties(self, option):
+        # We need to split the value of this option into a dictionary of properties
+        properties = {}
+        propertylist = option.split(",")
+        for i in range(0,len(propertylist)):
+            print propertylist[i]
+            splitproperty = propertylist[i].split("=")
+            properties[splitproperty[0]] = splitproperty[1]
+        self['properties'] = properties
 
     def opt_patchlevel(self, option):
         self['patchlevel'] = int(option)

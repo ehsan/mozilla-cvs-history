@@ -6,6 +6,7 @@ from twisted.web import html
 import urllib
 
 import time
+import operator
 
 from buildbot import interfaces, util
 from buildbot import version
@@ -110,6 +111,8 @@ class BuildTopBox(components.Adapter):
         number = b.getNumber()
         url = path_to_build(req, b)
         text = b.getText()
+        tests_failed = b.getSummaryStatistic('tests-failed', operator.add, 0)
+        if tests_failed: text.extend(["Failed tests: %d" % tests_failed])
         # TODO: maybe add logs?
         # TODO: add link to the per-build page at 'url'
         c = b.getColor()
@@ -528,7 +531,7 @@ class WaterfallStatusResource(HtmlResource):
 
         data += "</table>\n"
 
-        data += "<hr />\n"
+        data += '<hr /><div class="footer">\n'
 
         def with_args(req, remove_args=[], new_args=[], new_path=None):
             # sigh, nevow makes this sort of manipulation easier
@@ -591,6 +594,7 @@ class WaterfallStatusResource(HtmlResource):
                  time.strftime("%a %d %b %Y %H:%M:%S",
                                time.localtime(util.now()))
                  + "\n")
+        data += '</div>\n'
         return data
 
     def body0(self, request, builders):

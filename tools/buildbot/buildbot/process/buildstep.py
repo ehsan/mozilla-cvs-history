@@ -8,8 +8,7 @@ from twisted.python import log
 from twisted.python.failure import Failure
 from twisted.web.util import formatFailure
 
-from buildbot import util
-from buildbot import interfaces
+from buildbot import interfaces, locks
 from buildbot.status import progress
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, SKIPPED, \
      EXCEPTION
@@ -632,8 +631,8 @@ class BuildStep:
     def getProperty(self, propname):
         return self.build.getProperty(propname)
 
-    def setProperty(self, propname, value):
-        self.build.setProperty(propname, value)
+    def setProperty(self, propname, value, source="Step"):
+        self.build.setProperty(propname, value, source)
 
     def startStep(self, remote):
         """Begin the step. This returns a Deferred that will fire when the
@@ -663,12 +662,18 @@ class BuildStep:
         self.remote = remote
         self.deferred = defer.Deferred()
         # convert all locks into their real form
-        self.locks = [self.build.builder.botmaster.getLockByID(l)
-                      for l in self.locks]
+        lock_list = []
+        for access in self.locks:
+            if not isinstance(access, locks.LockAccess):
+                # Buildbot 0.7.7 compability: user did not specify access
+                access = access.defaultAccess()
+            lock = self.build.builder.botmaster.getLockByID(access.lockid)
+            lock_list.append((lock, access))
+        self.locks = lock_list
         # then narrow SlaveLocks down to the slave that this build is being
         # run on
-        self.locks = [l.getLock(self.build.slavebuilder) for l in self.locks]
-        for l in self.locks:
+        self.locks = [(l.getLock(self.build.slavebuilder), la) for l, la in self.locks]
+        for l, la in self.locks:
             if l in self.build.locks:
                 log.msg("Hey, lock %s is claimed by both a Step (%s) and the"
                         " parent Build (%s)" % (l, self, self.build))
@@ -681,15 +686,15 @@ class BuildStep:
         log.msg("acquireLocks(step %s, locks %s)" % (self, self.locks))
         if not self.locks:
             return defer.succeed(None)
-        for lock in self.locks:
-            if not lock.isAvailable():
+        for lock, access in self.locks:
+            if not lock.isAvailable(access):
                 log.msg("step %s waiting for lock %s" % (self, lock))
-                d = lock.waitUntilMaybeAvailable(self)
+                d = lock.waitUntilMaybeAvailable(self, access)
                 d.addCallback(self.acquireLocks)
                 return d
         # all locks are available, claim them all
-        for lock in self.locks:
-            lock.claim(self)
+        for lock, access in self.locks:
+            lock.claim(self, access)
         return defer.succeed(None)
 
     def _startStep_2(self, res):
@@ -770,8 +775,8 @@ class BuildStep:
 
     def releaseLocks(self):
         log.msg("releaseLocks(%s): %s" % (self, self.locks))
-        for lock in self.locks:
-            lock.release(self)
+        for lock, access in self.locks:
+            lock.release(self, access)
 
     def finished(self, results):
         if self.progress:
@@ -1092,46 +1097,8 @@ class LoggingBuildStep(BuildStep):
         self.step_status.setText(self.getText(cmd, results))
         self.step_status.setText2(self.maybeGetText2(cmd, results))
 
-class _BuildPropertyMapping:
-    def __init__(self, build):
-        self.build = build
-    def __getitem__(self, name):
-        p = self.build.getProperty(name)
-        if p is None:
-            p = ""
-        return p
+# (WithProeprties used to be available in this module)
+from buildbot.process.properties import WithProperties
+_hush_pyflakes = [WithProperties]
+del _hush_pyflakes
 
-class WithProperties(util.ComparableMixin):
-    """This is a marker class, used in ShellCommand's command= argument to
-    indicate that we want to interpolate a build property.
-    """
-
-    compare_attrs = ('fmtstring', 'args')
-
-    def __init__(self, fmtstring, *args):
-        self.fmtstring = fmtstring
-        self.args = args
-
-    def render(self, build):
-        pmap = _BuildPropertyMapping(build)
-        if self.args:
-            strings = []
-            for name in self.args:
-                strings.append(pmap[name])
-            s = self.fmtstring % tuple(strings)
-        else:
-            s = self.fmtstring % pmap
-        return s
-
-def render_properties(s, build):
-    """Return a string based on s and build that is suitable for use
-    in a running BuildStep.  If s is a string, return s.  If s is a
-    WithProperties object, return the result of s.render(build).
-    Otherwise, return str(s).
-    """
-    if isinstance(s, (str, unicode)):
-        return s
-    elif isinstance(s, WithProperties):
-        return s.render(build)
-    else:
-        return str(s)

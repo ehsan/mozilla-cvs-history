@@ -1,8 +1,8 @@
 <html lang="en">
 <head>
-<title>BuildBot Manual 0.7.7</title>
+<title>BuildBot Manual 0.7.9</title>
 <meta http-equiv="Content-Type" content="text/html">
-<meta name="description" content="BuildBot Manual 0.7.7">
+<meta name="description" content="BuildBot Manual 0.7.9">
 <meta name="generator" content="makeinfo 4.11">
 <link title="Top" rel="top" href="#Top">
 <link href="http://www.gnu.org/software/texinfo/" rel="generator-home" title="Texinfo Homepage">
@@ -28,7 +28,7 @@ provided the copyright notice and this notice are preserved.-->
 --></style>
 </head>
 <body>
-<h1 class="settitle">BuildBot Manual 0.7.7</h1>
+<h1 class="settitle">BuildBot Manual 0.7.9</h1>
    <div class="contents">
 <h2>Table of Contents</h2>
 <ul>
@@ -85,6 +85,7 @@ provided the copyright notice and this notice are preserved.-->
 <li><a href="#IRC-Nicknames">3.6.3 IRC Nicknames</a>
 <li><a href="#Live-Status-Clients">3.6.4 Live Status Clients</a>
 </li></ul>
+<li><a href="#Build-Properties">3.7 Build Properties</a>
 </li></ul>
 <li><a name="toc_Configuration" href="#Configuration">4 Configuration</a>
 <ul>
@@ -92,19 +93,25 @@ provided the copyright notice and this notice are preserved.-->
 <li><a href="#Loading-the-Config-File">4.2 Loading the Config File</a>
 <li><a href="#Testing-the-Config-File">4.3 Testing the Config File</a>
 <li><a href="#Defining-the-Project">4.4 Defining the Project</a>
-<li><a href="#Listing-Change-Sources-and-Schedulers">4.5 Listing Change Sources and Schedulers</a>
+<li><a href="#Change-Sources-and-Schedulers">4.5 Change Sources and Schedulers</a>
 <ul>
-<li><a href="#Scheduler-Types">4.5.1 Scheduler Types</a>
-<li><a href="#Build-Dependencies">4.5.2 Build Dependencies</a>
+<li><a href="#Scheduler-Scheduler">4.5.1 Scheduler Scheduler</a>
+<li><a href="#AnyBranchScheduler">4.5.2 AnyBranchScheduler</a>
+<li><a href="#Dependent-Scheduler">4.5.3 Dependent Scheduler</a>
+<li><a href="#Periodic-Scheduler">4.5.4 Periodic Scheduler</a>
+<li><a href="#Nightly-Scheduler">4.5.5 Nightly Scheduler</a>
+<li><a href="#Try-Schedulers">4.5.6 Try Schedulers</a>
+<li><a href="#Triggerable-Scheduler">4.5.7 Triggerable Scheduler</a>
 </li></ul>
 <li><a href="#Setting-the-slaveport">4.6 Setting the slaveport</a>
 <li><a href="#Buildslave-Specifiers">4.7 Buildslave Specifiers</a>
 <ul>
 <li><a href="#When-Buildslaves-Go-Missing">4.7.1 When Buildslaves Go Missing</a>
 </li></ul>
-<li><a href="#Defining-Builders">4.8 Defining Builders</a>
-<li><a href="#Defining-Status-Targets">4.9 Defining Status Targets</a>
-<li><a href="#Debug-options">4.10 Debug options</a>
+<li><a href="#Defining-Global-Properties">4.8 Defining Global Properties</a>
+<li><a href="#Defining-Builders">4.9 Defining Builders</a>
+<li><a href="#Defining-Status-Targets">4.10 Defining Status Targets</a>
+<li><a href="#Debug-options">4.11 Debug options</a>
 </li></ul>
 <li><a name="toc_Getting-Source-Code-Changes" href="#Getting-Source-Code-Changes">5 Getting Source Code Changes</a>
 <ul>
@@ -134,40 +141,42 @@ provided the copyright notice and this notice are preserved.-->
 <li><a href="#Build-Steps">6.1 Build Steps</a>
 <ul>
 <li><a href="#Common-Parameters">6.1.1 Common Parameters</a>
-<li><a href="#Source-Checkout">6.1.2 Source Checkout</a>
+<li><a href="#Using-Build-Properties">6.1.2 Using Build Properties</a>
+<li><a href="#Source-Checkout">6.1.3 Source Checkout</a>
 <ul>
-<li><a href="#CVS">6.1.2.1 CVS</a>
-<li><a href="#SVN">6.1.2.2 SVN</a>
-<li><a href="#Darcs">6.1.2.3 Darcs</a>
-<li><a href="#Mercurial">6.1.2.4 Mercurial</a>
-<li><a href="#Arch">6.1.2.5 Arch</a>
-<li><a href="#Bazaar">6.1.2.6 Bazaar</a>
-<li><a href="#Bzr">6.1.2.7 Bzr</a>
-<li><a href="#P4">6.1.2.8 P4</a>
-<li><a href="#Git">6.1.2.9 Git</a>
+<li><a href="#CVS">6.1.3.1 CVS</a>
+<li><a href="#SVN">6.1.3.2 SVN</a>
+<li><a href="#Darcs">6.1.3.3 Darcs</a>
+<li><a href="#Mercurial">6.1.3.4 Mercurial</a>
+<li><a href="#Arch">6.1.3.5 Arch</a>
+<li><a href="#Bazaar">6.1.3.6 Bazaar</a>
+<li><a href="#Bzr">6.1.3.7 Bzr</a>
+<li><a href="#P4">6.1.3.8 P4</a>
+<li><a href="#Git">6.1.3.9 Git</a>
 </li></ul>
-<li><a href="#ShellCommand">6.1.3 ShellCommand</a>
-<li><a href="#Simple-ShellCommand-Subclasses">6.1.4 Simple ShellCommand Subclasses</a>
+<li><a href="#ShellCommand">6.1.4 ShellCommand</a>
+<li><a href="#Simple-ShellCommand-Subclasses">6.1.5 Simple ShellCommand Subclasses</a>
 <ul>
-<li><a href="#Configure">6.1.4.1 Configure</a>
-<li><a href="#Compile">6.1.4.2 Compile</a>
-<li><a href="#Test">6.1.4.3 Test</a>
-<li><a href="#TreeSize">6.1.4.4 TreeSize</a>
-<li><a href="#Build-Properties">6.1.4.5 Build Properties</a>
+<li><a href="#Configure">6.1.5.1 Configure</a>
+<li><a href="#Compile">6.1.5.2 Compile</a>
+<li><a href="#Test">6.1.5.3 Test</a>
+<li><a href="#TreeSize">6.1.5.4 TreeSize</a>
+<li><a href="#PerlModuleTest">6.1.5.5 PerlModuleTest</a>
+<li><a href="#SetProperty">6.1.5.6 SetProperty</a>
 </li></ul>
-<li><a href="#Python-BuildSteps">6.1.5 Python BuildSteps</a>
+<li><a href="#Python-BuildSteps">6.1.6 Python BuildSteps</a>
 <ul>
-<li><a href="#BuildEPYDoc">6.1.5.1 BuildEPYDoc</a>
-<li><a href="#PyFlakes">6.1.5.2 PyFlakes</a>
+<li><a href="#BuildEPYDoc">6.1.6.1 BuildEPYDoc</a>
+<li><a href="#PyFlakes">6.1.6.2 PyFlakes</a>
 </li></ul>
-<li><a href="#Transferring-Files">6.1.6 Transferring Files</a>
-<li><a href="#Triggering-Schedulers">6.1.7 Triggering Schedulers</a>
-<li><a href="#Writing-New-BuildSteps">6.1.8 Writing New BuildSteps</a>
+<li><a href="#Transferring-Files">6.1.7 Transferring Files</a>
+<li><a href="#Triggering-Schedulers">6.1.8 Triggering Schedulers</a>
+<li><a href="#Writing-New-BuildSteps">6.1.9 Writing New BuildSteps</a>
 <ul>
-<li><a href="#BuildStep-LogFiles">6.1.8.1 BuildStep LogFiles</a>
-<li><a href="#Reading-Logfiles">6.1.8.2 Reading Logfiles</a>
-<li><a href="#Adding-LogObservers">6.1.8.3 Adding LogObservers</a>
-<li><a href="#BuildStep-URLs">6.1.8.4 BuildStep URLs</a>
+<li><a href="#BuildStep-LogFiles">6.1.9.1 BuildStep LogFiles</a>
+<li><a href="#Reading-Logfiles">6.1.9.2 Reading Logfiles</a>
+<li><a href="#Adding-LogObservers">6.1.9.3 Adding LogObservers</a>
+<li><a href="#BuildStep-URLs">6.1.9.4 BuildStep URLs</a>
 </li></ul>
 </li></ul>
 <li><a href="#Interlocks">6.2 Interlocks</a>
@@ -329,6 +338,7 @@ provided the copyright notice and this notice are preserved.
 <li><a href="#BuildRequest">BuildRequest</a>
 <li><a href="#Builder">Builder</a>
 <li><a href="#Users">Users</a>
+<li><a href="#Build-Properties">Build Properties</a>
 
 </li></ul>
 <p>Version Control Systems
@@ -359,20 +369,26 @@ provided the copyright notice and this notice are preserved.
 <li><a href="#Loading-the-Config-File">Loading the Config File</a>
 <li><a href="#Testing-the-Config-File">Testing the Config File</a>
 <li><a href="#Defining-the-Project">Defining the Project</a>
-<li><a href="#Listing-Change-Sources-and-Schedulers">Listing Change Sources and Schedulers</a>
+<li><a href="#Change-Sources-and-Schedulers">Change Sources and Schedulers</a>
 <li><a href="#Setting-the-slaveport">Setting the slaveport</a>
 <li><a href="#Buildslave-Specifiers">Buildslave Specifiers</a>
+<li><a href="#Defining-Global-Properties">Defining Global Properties</a>
 <li><a href="#Defining-Builders">Defining Builders</a>
 <li><a href="#Defining-Status-Targets">Defining Status Targets</a>
 <li><a href="#Debug-options">Debug options</a>
 
 </li></ul>
-<p>Listing Change Sources and Schedulers
+<p>Change Sources and Schedulers
 
 </p>
 <ul class="menu">
-<li><a href="#Scheduler-Types">Scheduler Types</a>
-<li><a href="#Build-Dependencies">Build Dependencies</a>
+<li><a href="#Scheduler-Scheduler">Scheduler Scheduler</a>
+<li><a href="#AnyBranchScheduler">AnyBranchScheduler</a>
+<li><a href="#Dependent-Scheduler">Dependent Scheduler</a>
+<li><a href="#Periodic-Scheduler">Periodic Scheduler</a>
+<li><a href="#Nightly-Scheduler">Nightly Scheduler</a>
+<li><a href="#Try-Schedulers">Try Schedulers</a>
+<li><a href="#Triggerable-Scheduler">Triggerable Scheduler</a>
 
 </li></ul>
 <p>Buildslave Specifiers
@@ -430,6 +446,7 @@ provided the copyright notice and this notice are preserved.
 </p>
 <ul class="menu">
 <li><a href="#Common-Parameters">Common Parameters</a>
+<li><a href="#Using-Build-Properties">Using Build Properties</a>
 <li><a href="#Source-Checkout">Source Checkout</a>
 <li><a href="#ShellCommand">ShellCommand</a>
 <li><a href="#Simple-ShellCommand-Subclasses">Simple ShellCommand Subclasses</a>
@@ -462,7 +479,8 @@ provided the copyright notice and this notice are preserved.
 <li><a href="#Compile">Compile</a>
 <li><a href="#Test">Test</a>
 <li><a href="#TreeSize">TreeSize</a>
-<li><a href="#Build-Properties">Build Properties</a>
+<li><a href="#PerlModuleTest">PerlModuleTest</a>
+<li><a href="#SetProperty">SetProperty</a>
 
 </li></ul>
 <p>Python BuildSteps
@@ -1464,6 +1482,10 @@ use the <code>restart</code> shortcut, which does both steps for you:
 by <code>buildbot reconfig</code>. If this occurs, <code>buildbot restart</code>
 is a more robust tool to fully switch over to the new configuration.
 
+   <p><code>buildbot restart</code> may also be used to start a stopped Buildbot
+instance. This behaviour is useful when writing scripts that stop, start
+and restart Buildbot.
+
 <div class="node">
 <p><hr>
 <a name="Maintenance"></a>
@@ -1615,6 +1637,7 @@ configure it properly.
 <li><a accesskey="4" href="#BuildRequest">BuildRequest</a>
 <li><a accesskey="5" href="#Builder">Builder</a>
 <li><a accesskey="6" href="#Users">Users</a>
+<li><a accesskey="7" href="#Build-Properties">Build Properties</a>
 </ul>
 
 <div class="node">
@@ -2092,7 +2115,7 @@ SourceStamp, which will result in same behavior as this.
 generally triggered by a user request or Periodic build.
 
      <br><dt><code>(revision=REV, changes=None, patch=(LEVEL, DIFF))</code><dd>This checks out the tree at the given revision REV, then applies a
-patch (using <code>diff -pLEVEL &lt;DIFF</code>). The <a href="#try">try</a> feature uses
+patch (using <code>patch -pLEVEL &lt;DIFF</code>). The <a href="#try">try</a> feature uses
 this kind of <code>SourceStamp</code>. If <code>patch</code> is None, the patching
 step is bypassed.
 
@@ -2170,6 +2193,7 @@ OS-X-based buildslave.
 <div class="node">
 <p><hr>
 <a name="Users"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Build-Properties">Build Properties</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#Builder">Builder</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Concepts">Concepts</a>
 
@@ -2347,6 +2371,57 @@ developer (like &ldquo;hey, you broke the build&rdquo;).
 
 <div class="node">
 <p><hr>
+<a name="Build-Properties"></a>
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Users">Users</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Concepts">Concepts</a>
+
+</div>
+
+<h3 class="section">3.7 Build Properties</h3>
+
+<p><a name="index-Properties-11"></a>
+Each build has a set of &ldquo;Build Properties&rdquo;, which can be used by its
+BuildStep to modify their actions.  These properties, in the form of
+key-value pairs, provide a general framework for dynamically altering
+the behavior of a build based on its circumstances.
+
+   <p>Properties come from a number of places:
+     <ul>
+<li>global configuration &ndash;
+These properties apply to all builds. 
+<li>schedulers &ndash;
+A scheduler can specify properties available to all the builds it
+starts. 
+<li>buildslaves &ndash;
+A buildslave can pass properties on to the builds it performs. 
+<li>builds &ndash;
+A build automatically sets a number of properties on itself. 
+<li>steps &ndash;
+Steps of a build can set properties that are available to subsequent
+steps.  In particular, source steps set a number of properties. 
+</ul>
+
+   <p>Properties are very flexible, and can be used to implement all manner
+of functionality.  Here are some examples:
+
+   <p>Most Source steps record the revision that they checked out in
+the <code>got_revision</code> property.  A later step could use this
+property to specify the name of a fully-built tarball, dropped in an
+easily-acessible directory for later testing.
+
+   <p>Some projects want to perform nightly builds as well as in response
+to committed changes.  Such a project would run two schedulers,
+both pointing to the same set of builders, but could provide an
+<code>is_nightly</code> property so that steps can distinguish the nightly
+builds, perhaps to run more resource-intensive tests.
+
+   <p>Some projects have different build processes on different systems. 
+Rather than create a build factory for each slave, the steps can use
+buildslave properties to identify the unique aspects of each slave
+and adapt the build process dynamically.
+
+<div class="node">
+<p><hr>
 <a name="Configuration"></a>
 Next:&nbsp;<a rel="next" accesskey="n" href="#Getting-Source-Code-Changes">Getting Source Code Changes</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#Concepts">Concepts</a>,
@@ -2356,7 +2431,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
 
 <h2 class="chapter">4 Configuration</h2>
 
-<p><a name="index-Configuration-11"></a>
+<p><a name="index-Configuration-12"></a>
 The buildbot's behavior is defined by the &ldquo;config file&rdquo;, which
 normally lives in the <samp><span class="file">master.cfg</span></samp> file in the buildmaster's base
 directory (but this can be changed with an option to the
@@ -2379,11 +2454,12 @@ understand how to fill in each section properly.
 <li><a accesskey="2" href="#Loading-the-Config-File">Loading the Config File</a>
 <li><a accesskey="3" href="#Testing-the-Config-File">Testing the Config File</a>
 <li><a accesskey="4" href="#Defining-the-Project">Defining the Project</a>
-<li><a accesskey="5" href="#Listing-Change-Sources-and-Schedulers">Listing Change Sources and Schedulers</a>
+<li><a accesskey="5" href="#Change-Sources-and-Schedulers">Change Sources and Schedulers</a>
 <li><a accesskey="6" href="#Setting-the-slaveport">Setting the slaveport</a>
 <li><a accesskey="7" href="#Buildslave-Specifiers">Buildslave Specifiers</a>
-<li><a accesskey="8" href="#Defining-Builders">Defining Builders</a>
-<li><a accesskey="9" href="#Defining-Status-Targets">Defining Status Targets</a>
+<li><a accesskey="8" href="#Defining-Global-Properties">Defining Global Properties</a>
+<li><a accesskey="9" href="#Defining-Builders">Defining Builders</a>
+<li><a href="#Defining-Status-Targets">Defining Status Targets</a>
 <li><a href="#Debug-options">Debug options</a>
 </ul>
 
@@ -2513,7 +2589,8 @@ will work, but you should really remove the deprecated items and use
 the recommended replacements instead:
 
 <pre class="example">     % buildbot checkconfig master.cfg
-     /usr/lib/python2.4/site-packages/buildbot/master.py:559: DeprecationWarning: c['sources'] is deprecated as of 0.7.6 and will be removed by 0.8.0 . Please use c['change_source'] instead.
+     /usr/lib/python2.4/site-packages/buildbot/master.py:559: DeprecationWarning: c['sources'] is
+     deprecated as of 0.7.6 and will be removed by 0.8.0 . Please use c['change_source'] instead.
        warnings.warn(m, DeprecationWarning)
      Config file is good!
 </pre>
@@ -2534,7 +2611,7 @@ the recommended replacements instead:
    <div class="node">
 <p><hr>
 <a name="Defining-the-Project"></a>
-Next:&nbsp;<a rel="next" accesskey="n" href="#Listing-Change-Sources-and-Schedulers">Listing Change Sources and Schedulers</a>,
+Next:&nbsp;<a rel="next" accesskey="n" href="#Change-Sources-and-Schedulers">Change Sources and Schedulers</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#Testing-the-Config-File">Testing the Config File</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Configuration">Configuration</a>
 
@@ -2551,16 +2628,16 @@ exercised by this particular Buildbot installation.
      c['projectURL'] = "http://buildbot.sourceforge.net/"
      c['buildbotURL'] = "http://localhost:8010/"
 </pre>
-   <p><a name="index-c_005b_0027projectName_0027_005d-12"></a><code>projectName</code> is a short string will be used to describe the
+   <p><a name="index-c_005b_0027projectName_0027_005d-13"></a><code>projectName</code> is a short string will be used to describe the
 project that this buildbot is working on. For example, it is used as
 the title of the waterfall HTML page.
 
-   <p><a name="index-c_005b_0027projectURL_0027_005d-13"></a><code>projectURL</code> is a string that gives a URL for the project as a
+   <p><a name="index-c_005b_0027projectURL_0027_005d-14"></a><code>projectURL</code> is a string that gives a URL for the project as a
 whole. HTML status displays will show <code>projectName</code> as a link to
 <code>projectURL</code>, to provide a link from buildbot HTML pages to your
 project's home page.
 
-   <p><a name="index-c_005b_0027buildbotURL_0027_005d-14"></a>The <code>buildbotURL</code> string should point to the location where the
+   <p><a name="index-c_005b_0027buildbotURL_0027_005d-15"></a>The <code>buildbotURL</code> string should point to the location where the
 buildbot's internal web server (usually the <code>html.Waterfall</code>
 page) is visible. This typically uses the port number set when you
 create the <code>Waterfall</code> object: the buildbot needs your help to
@@ -2574,16 +2651,16 @@ more information about this buildbot.
 
 <div class="node">
 <p><hr>
-<a name="Listing-Change-Sources-and-Schedulers"></a>
+<a name="Change-Sources-and-Schedulers"></a>
 Next:&nbsp;<a rel="next" accesskey="n" href="#Setting-the-slaveport">Setting the slaveport</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#Defining-the-Project">Defining the Project</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Configuration">Configuration</a>
 
 </div>
 
-<h3 class="section">4.5 Listing Change Sources and Schedulers</h3>
+<h3 class="section">4.5 Change Sources and Schedulers</h3>
 
-<p><a name="index-c_005b_0027sources_0027_005d-15"></a><a name="index-c_005b_0027change_005fsource_0027_005d-16"></a>
+<p><a name="index-c_005b_0027sources_0027_005d-16"></a><a name="index-c_005b_0027change_005fsource_0027_005d-17"></a>
 The <code>c['change_source']</code> key is the ChangeSource
 instance<a rel="footnote" href="#fn-6" name="fnd-6"><sup>6</sup></a> that
 defines how the buildmaster learns about source code changes. More
@@ -2592,138 +2669,170 @@ information about what goes here is available in See <a href="#Getting-Source-Co
 <pre class="example">     from buildbot.changes.pb import PBChangeSource
      c['change_source'] = PBChangeSource()
 </pre>
-   <p>(note: in buildbot-0.7.5 and earlier, this key was named
+   <p><a name="index-c_005b_0027schedulers_0027_005d-18"></a>
+(note: in buildbot-0.7.5 and earlier, this key was named
 <code>c['sources']</code>, and required a list. <code>c['sources']</code> is
 deprecated as of buildbot-0.7.6 and is scheduled to be removed in a
 future release).
 
-   <p><a name="index-c_005b_0027schedulers_0027_005d-17"></a><code>c['schedulers']</code> is a list of Scheduler instances, each of which
-causes builds to be started on a particular set of Builders. The two
-basic Scheduler classes you are likely to start with are
-<code>Scheduler</code> and <code>Periodic</code>, but you can write a customized
-subclass to implement more complicated build scheduling.
+   <p><code>c['schedulers']</code> is a list of Scheduler instances, each
+of which causes builds to be started on a particular set of
+Builders. The two basic Scheduler classes you are likely to start
+with are <code>Scheduler</code> and <code>Periodic</code>, but you can write a
+customized subclass to implement more complicated build scheduling.
 
-   <p>The docstring for <code>buildbot.scheduler.Scheduler</code> is the best
-place to see all the options that can be used. Type <code>pydoc
-buildbot.scheduler.Scheduler</code> to see it, or look in
-<samp><span class="file">buildbot/scheduler.py</span></samp> directly.
+   <p>Scheduler arguments
+should always be specified by name (as keyword arguments), to allow
+for future expansion:
 
-   <p>The basic Scheduler takes four arguments:
+<pre class="example">     sched = Scheduler(name="quick", builderNames=['lin', 'win'])
+</pre>
+   <p>All schedulers have several arguments in common:
 
      <dl>
-<dt><code>name</code><dd>Each Scheduler must have a unique name. This is only used in status
-displays.
+<dt><code>name</code><dd>
+Each Scheduler must have a unique name. This is used in status
+displays, and is also available in the build property <code>scheduler</code>.
 
-     <br><dt><code>branch</code><dd>This Scheduler will pay attention to a single branch, ignoring Changes
+     <br><dt><code>builderNames</code><dd>
+This is the set of builders which this scheduler should trigger, specified
+as a list of names (strings).
+
+     <br><dt><code>properties</code><dd><a name="index-Properties-19"></a>
+This is a dictionary specifying properties that will be transmitted
+to all builds started by this scheduler.
+
+   </dl>
+
+   <p>Here is a brief catalog of the available Scheduler types. All these
+Schedulers are classes in <code>buildbot.scheduler</code>, and the
+docstrings there are the best source of documentation on the arguments
+taken by each one.
+
+<ul class="menu">
+<li><a accesskey="1" href="#Scheduler-Scheduler">Scheduler Scheduler</a>
+<li><a accesskey="2" href="#AnyBranchScheduler">AnyBranchScheduler</a>
+<li><a accesskey="3" href="#Dependent-Scheduler">Dependent Scheduler</a>
+<li><a accesskey="4" href="#Periodic-Scheduler">Periodic Scheduler</a>
+<li><a accesskey="5" href="#Nightly-Scheduler">Nightly Scheduler</a>
+<li><a accesskey="6" href="#Try-Schedulers">Try Schedulers</a>
+<li><a accesskey="7" href="#Triggerable-Scheduler">Triggerable Scheduler</a>
+</ul>
+
+<div class="node">
+<p><hr>
+<a name="Scheduler-Scheduler"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#AnyBranchScheduler">AnyBranchScheduler</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Change-Sources-and-Schedulers">Change Sources and Schedulers</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Change-Sources-and-Schedulers">Change Sources and Schedulers</a>
+
+</div>
+
+<h4 class="subsection">4.5.1 Scheduler Scheduler</h4>
+
+<p><a name="index-buildbot_002escheduler_002eScheduler-20"></a>
+This is the original and still most popular Scheduler class. It follows
+exactly one branch, and starts a configurable tree-stable-timer after
+each change on that branch. When the timer expires, it starts a build
+on some set of Builders. The Scheduler accepts a <code>fileIsImportant</code>
+function which can be used to ignore some Changes if they do not
+affect any &ldquo;important&rdquo; files.
+
+   <p>The arguments to this scheduler are:
+
+     <dl>
+<dt><code>name</code>
+<br><dt><code>builderNames</code>
+<br><dt><code>properties</code>
+<br><dt><code>branch</code><dd>This Scheduler will pay attention to a single branch, ignoring Changes
 that occur on other branches. Setting <code>branch</code> equal to the
-special value of <code>None</code> means it should only pay attention to the
-default branch. Note that <code>None</code> is a keyword, not a string, so
-you want to use <code>None</code> and not <code>"None"</code>.
+special value of <code>None</code> means it should only pay attention to
+the default branch. Note that <code>None</code> is a keyword, not a string,
+so you want to use <code>None</code> and not <code>"None"</code>.
 
      <br><dt><code>treeStableTimer</code><dd>The Scheduler will wait for this many seconds before starting the
 build. If new changes are made during this interval, the timer will be
 restarted, so really the build will be started after a change and then
 after this many seconds of inactivity.
 
-     <br><dt><code>builderNames</code><dd>When the tree-stable-timer finally expires, builds will be started on
-these Builders. Each Builder gets a unique name: these strings must
-match.
+     <br><dt><code>fileIsImportant</code><dd>A callable which takes one argument, a Change instance, and returns
+<code>True</code> if the change is worth building, and <code>False</code> if
+it is not.  Unimportant Changes are accumulated until the build is
+triggered by an important change.  The default value of None means
+that all Changes are important. 
+</dl>
 
-   </dl>
+   <p>Example:
 
 <pre class="example">     from buildbot import scheduler
-     quick = scheduler.Scheduler("quick", None, 60,
-                                 ["quick-linux", "quick-netbsd"])
-     full = scheduler.Scheduler("full", None, 5*60,
-                                ["full-linux", "full-netbsd", "full-OSX"])
-     nightly = scheduler.Periodic("nightly", ["full-solaris"], 24*60*60)
-     c['schedulers'] = [quick, full, nightly]
+     quick = scheduler.Scheduler(name="quick",
+                         branch=None,
+                         treeStableTimer=60,
+                         builderNames=["quick-linux", "quick-netbsd"])
+     full = scheduler.Scheduler(name="full",
+                         branch=None,
+                         treeStableTimer=5*60,
+                         builderNames=["full-linux", "full-netbsd", "full-OSX"])
+     c['schedulers'] = [quick, full]
 </pre>
-   <p>In this example, the two &ldquo;quick&rdquo; builds are triggered 60 seconds
+   <p>In this example, the two &ldquo;quick&rdquo; builders are triggered 60 seconds
 after the tree has been changed. The &ldquo;full&rdquo; builds do not run quite
 so quickly (they wait 5 minutes), so hopefully if the quick builds
 fail due to a missing file or really simple typo, the developer can
 discover and fix the problem before the full builds are started. Both
-Schedulers only pay attention to the default branch: any changes on
-other branches are ignored by these Schedulers. Each Scheduler
+Schedulers only pay attention to the default branch: any changes
+on other branches are ignored by these Schedulers. Each Scheduler
 triggers a different set of Builders, referenced by name.
 
-   <p>The third Scheduler in this example just runs the full solaris build
-once per day. (note that this Scheduler only lets you control the time
-between builds, not the absolute time-of-day of each Build, so this
-could easily wind up a &ldquo;daily&rdquo; or &ldquo;every afternoon&rdquo; scheduler
-depending upon when it was first activated).
-
-<ul class="menu">
-<li><a accesskey="1" href="#Scheduler-Types">Scheduler Types</a>
-<li><a accesskey="2" href="#Build-Dependencies">Build Dependencies</a>
-</ul>
-
 <div class="node">
 <p><hr>
-<a name="Scheduler-Types"></a>
-Next:&nbsp;<a rel="next" accesskey="n" href="#Build-Dependencies">Build Dependencies</a>,
-Previous:&nbsp;<a rel="previous" accesskey="p" href="#Listing-Change-Sources-and-Schedulers">Listing Change Sources and Schedulers</a>,
-Up:&nbsp;<a rel="up" accesskey="u" href="#Listing-Change-Sources-and-Schedulers">Listing Change Sources and Schedulers</a>
+<a name="AnyBranchScheduler"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Dependent-Scheduler">Dependent Scheduler</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Scheduler-Scheduler">Scheduler Scheduler</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Change-Sources-and-Schedulers">Change Sources and Schedulers</a>
 
 </div>
 
-<h4 class="subsection">4.5.1 Scheduler Types</h4>
+<h4 class="subsection">4.5.2 AnyBranchScheduler</h4>
 
-<p><a name="index-buildbot_002escheduler_002eScheduler-18"></a><a name="index-buildbot_002escheduler_002eAnyBranchScheduler-19"></a><a name="index-buildbot_002escheduler_002ePeriodic-20"></a><a name="index-buildbot_002escheduler_002eNightly-21"></a>
-Here is a brief catalog of the available Scheduler types. All these
-Schedulers are classes in <code>buildbot.scheduler</code>, and the
-docstrings there are the best source of documentation on the arguments
-taken by each one.
-
-     <dl>
-<dt><code>Scheduler</code><dd>This is the default Scheduler class. It follows exactly one branch,
-and starts a configurable tree-stable-timer after each change on that
-branch. When the timer expires, it starts a build on some set of
-Builders. The Scheduler accepts a <code>fileIsImportant</code> function
-which can be used to ignore some Changes if they do not affect any
-&ldquo;important&rdquo; files.
-
-     <br><dt><code>AnyBranchScheduler</code><dd>This scheduler uses a tree-stable-timer like the default one, but
+<p><a name="index-buildbot_002escheduler_002eAnyBranchScheduler-21"></a>
+This scheduler uses a tree-stable-timer like the default one, but
 follows multiple branches at once. Each branch gets a separate timer.
 
-     <br><dt><code>Dependent</code><dd>This scheduler watches an &ldquo;upstream&rdquo; Scheduler. When all the
-Builders launched by that Scheduler successfully finish, the Dependent
-scheduler is triggered. The next section (see <a href="#Build-Dependencies">Build Dependencies</a>)
-describes this scheduler in more detail.
+   <p>The arguments to this scheduler are:
 
-     <br><dt><code>Triggerable</code><dd>This scheduler does nothing until it is triggered by a Trigger
-step in another build.  This facilitates a more general form of
-build dependencies, as described in the next section (see <a href="#Build-Dependencies">Build Dependencies</a>).
+     <dl>
+<dt><code>name</code>
+<br><dt><code>builderNames</code>
+<br><dt><code>properties</code>
+<br><dt><code>branches</code><dd>This Scheduler will pay attention to any number of branches, ignoring
+Changes that occur on other branches. Branches are specified just as
+for the <code>Scheduler</code> class.
 
-     <br><dt><code>Periodic</code><dd>This simple scheduler just triggers a build every N seconds.
+     <br><dt><code>treeStableTimer</code><dd>The Scheduler will wait for this many seconds before starting the
+build. If new changes are made during this interval, the timer will be
+restarted, so really the build will be started after a change and then
+after this many seconds of inactivity.
 
-     <br><dt><code>Nightly</code><dd>This is highly configurable periodic build scheduler, which triggers a
-build at particular times of day, week, month, or year. The
-configuration syntax is very similar to the well-known <code>crontab</code>
-format, in which you provide values for minute, hour, day, and month
-(some of which can be wildcards), and a build is triggered whenever
-the current time matches the given constraints. This can run a build
-every night, every morning, every weekend, alternate Thursdays, on
-your boss's birthday, etc.
-
-     <br><dt><code>Try_Jobdir / Try_Userpass</code><dd>This scheduler allows developers to use the <code>buildbot try</code>
-command to trigger builds of code they have not yet committed. See
-<a href="#try">try</a> for complete details.
-
-   </dl>
+     <br><dt><code>fileIsImportant</code><dd>A callable which takes one argument, a Change instance, and returns
+<code>True</code> if the change is worth building, and <code>False</code> if
+it is not.  Unimportant Changes are accumulated until the build is
+triggered by an important change.  The default value of None means
+that all Changes are important. 
+</dl>
 
 <div class="node">
 <p><hr>
-<a name="Build-Dependencies"></a>
-Previous:&nbsp;<a rel="previous" accesskey="p" href="#Scheduler-Types">Scheduler Types</a>,
-Up:&nbsp;<a rel="up" accesskey="u" href="#Listing-Change-Sources-and-Schedulers">Listing Change Sources and Schedulers</a>
+<a name="Dependent-Scheduler"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Periodic-Scheduler">Periodic Scheduler</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#AnyBranchScheduler">AnyBranchScheduler</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Change-Sources-and-Schedulers">Change Sources and Schedulers</a>
 
 </div>
 
-<h4 class="subsection">4.5.2 Build Dependencies</h4>
+<h4 class="subsection">4.5.3 Dependent Scheduler</h4>
 
-<p><a name="index-Dependent-22"></a><a name="index-Dependencies-23"></a><a name="index-buildbot_002escheduler_002eDependent-24"></a><a name="index-buildbot_002escheduler_002eTriggerable-25"></a>
+<p><a name="index-Dependent-22"></a><a name="index-Dependencies-23"></a><a name="index-buildbot_002escheduler_002eDependent-24"></a>
 It is common to wind up with one kind of build which should only be
 performed if the same source code was successfully handled by some
 other kind of build first. An example might be a packaging step: you
@@ -2738,58 +2847,236 @@ code. Or, if one Build creates a product (like a compiled library)
 that is used by some other Builder, you'd want to make sure the
 consuming Build is run <em>after</em> the producing one.
 
-   <p>You can use <code>Dependencies</code> to express this relationship to the
-Buildbot. There is a special kind of Scheduler named
+   <p>You can use &ldquo;Dependencies&rdquo; to express this relationship
+to the Buildbot. There is a special kind of Scheduler named
 <code>scheduler.Dependent</code> that will watch an &ldquo;upstream&rdquo; Scheduler
-for builds to complete successfully (on all of its Builders). Each
-time that happens, the same source code (i.e. the same
-<code>SourceStamp</code>) will be used to start a new set of builds, on a
-different set of Builders. This &ldquo;downstream&rdquo; scheduler doesn't pay
-attention to Changes at all, it only pays attention to the upstream
-scheduler.
+for builds to complete successfully (on all of its Builders). Each time
+that happens, the same source code (i.e. the same <code>SourceStamp</code>)
+will be used to start a new set of builds, on a different set of
+Builders. This &ldquo;downstream&rdquo; scheduler doesn't pay attention to
+Changes at all. It only pays attention to the upstream scheduler.
 
-   <p>If the SourceStamp fails on any of the Builders in the upstream set,
-the downstream builds will not fire.
+   <p>If the build fails on any of the Builders in the upstream set,
+the downstream builds will not fire.  Note that, for SourceStamps
+generated by a ChangeSource, the <code>revision</code> is None, meaning HEAD. 
+If any changes are committed between the time the upstream scheduler
+begins its build and the time the dependent scheduler begins its
+build, then those changes will be included in the downstream build. 
+See the see <a href="#Triggerable-Scheduler">Triggerable Scheduler</a> for a more flexible dependency
+mechanism that can avoid this problem.
+
+   <p>The arguments to this scheduler are:
+
+     <dl>
+<dt><code>name</code>
+<br><dt><code>builderNames</code>
+<br><dt><code>properties</code>
+<br><dt><code>upstream</code><dd>The upstream scheduler to watch.  Note that this is an &ldquo;instance&rdquo;,
+not the name of the scheduler. 
+</dl>
+
+   <p>Example:
 
 <pre class="example">     from buildbot import scheduler
-     tests = scheduler.Scheduler("tests", None, 5*60,
+     tests = scheduler.Scheduler("just-tests", None, 5*60,
                                  ["full-linux", "full-netbsd", "full-OSX"])
-     package = scheduler.Dependent("package",
-                                   tests, # upstream scheduler
+     package = scheduler.Dependent("build-package",
+                                   tests, # upstream scheduler -- no quotes!
                                    ["make-tarball", "make-deb", "make-rpm"])
      c['schedulers'] = [tests, package]
 </pre>
-   <p>Note that <code>Dependent</code>'s upstream scheduler argument is given as a
-<code>Scheduler</code> <em>instance</em>, not a name. This makes it impossible
-to create circular dependencies in the config file.
+   <div class="node">
+<p><hr>
+<a name="Periodic-Scheduler"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Nightly-Scheduler">Nightly Scheduler</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Dependent-Scheduler">Dependent Scheduler</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Change-Sources-and-Schedulers">Change Sources and Schedulers</a>
 
-   <p>A more general way to coordinate builds is by &ldquo;triggering&rdquo;
-schedulers from builds. The Triggerable waits to be triggered by a
-Trigger step (see <a href="#Triggering-Schedulers">Triggering Schedulers</a>) in another build. That
-step can optionally wait for the scheduler's builds to complete. This
+</div>
+
+<h4 class="subsection">4.5.4 Periodic Scheduler</h4>
+
+<p><a name="index-buildbot_002escheduler_002ePeriodic-25"></a>
+This simple scheduler just triggers a build every N seconds.
+
+   <p>The arguments to this scheduler are:
+
+     <dl>
+<dt><code>name</code>
+<br><dt><code>builderNames</code>
+<br><dt><code>properties</code>
+<br><dt><code>periodicBuildTimer</code><dd>The time, in seconds, after which to start a build. 
+</dl>
+
+   <p>Example:
+
+<pre class="example">     from buildbot import scheduler
+     nightly = scheduler.Periodic(name="nightly",
+                     builderNames=["full-solaris"],
+                     periodicBuildTimer=24*60*60)
+     c['schedulers'] = [nightly]
+</pre>
+   <p>The Scheduler in this example just runs the full solaris build once
+per day. Note that this Scheduler only lets you control the time
+between builds, not the absolute time-of-day of each Build, so this
+could easily wind up a &ldquo;daily&rdquo; or &ldquo;every afternoon&rdquo; scheduler
+depending upon when it was first activated.
+
+<div class="node">
+<p><hr>
+<a name="Nightly-Scheduler"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Try-Schedulers">Try Schedulers</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Periodic-Scheduler">Periodic Scheduler</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Change-Sources-and-Schedulers">Change Sources and Schedulers</a>
+
+</div>
+
+<h4 class="subsection">4.5.5 Nightly Scheduler</h4>
+
+<p><a name="index-buildbot_002escheduler_002eNightly-26"></a>
+This is highly configurable periodic build scheduler, which triggers
+a build at particular times of day, week, month, or year. The
+configuration syntax is very similar to the well-known <code>crontab</code>
+format, in which you provide values for minute, hour, day, and month
+(some of which can be wildcards), and a build is triggered whenever
+the current time matches the given constraints. This can run a build
+every night, every morning, every weekend, alternate Thursdays,
+on your boss's birthday, etc.
+
+   <p>Pass some subset of <code>minute</code>, <code>hour</code>, <code>dayOfMonth</code>,
+<code>month</code>, and <code>dayOfWeek</code>; each may be a single number or
+a list of valid values. The builds will be triggered whenever the
+current time matches these values. Wildcards are represented by a
+'*' string. All fields default to a wildcard except 'minute', so
+with no fields this defaults to a build every hour, on the hour. 
+The full list of parameters is:
+
+     <dl>
+<dt><code>name</code>
+<br><dt><code>builderNames</code>
+<br><dt><code>properties</code>
+<br><dt><code>branch</code><dd>The branch to build, just as for <code>Scheduler</code>.
+
+     <br><dt><code>minute</code><dd>The minute of the hour on which to start the build.  This defaults
+to 0, meaning an hourly build.
+
+     <br><dt><code>hour</code><dd>The hour of the day on which to start the build, in 24-hour notation. 
+This defaults to *, meaning every hour.
+
+     <br><dt><code>month</code><dd>The month in which to start the build, with January = 1.  This defaults
+to *, meaning every month.
+
+     <br><dt><code>dayOfWeek</code><dd>The day of the week to start a build, with Monday = 0.  This defauls
+to *, meaning every day of the week. 
+</dl>
+
+   <p>For example, the following master.cfg clause will cause a build to be
+started every night at 3:00am:
+
+<pre class="example">     s = scheduler.Nightly(name='nightly',
+             builderNames=['builder1', 'builder2'],
+             hour=3,
+             minute=0)
+</pre>
+   <p>This scheduler will perform a build each monday morning at 6:23am and
+again at 8:23am:
+
+<pre class="example">     s = scheduler.Nightly(name='BeforeWork',
+              builderNames=['builder1'],
+              dayOfWeek=0,
+              hour=[6,8],
+              minute=23)
+</pre>
+   <p>The following runs a build every two hours, using Python's <code>range</code>
+function:
+
+<pre class="example">     s = Nightly(name='every2hours',
+             builderNames=['builder1'],
+             hour=range(0, 24, 2))
+</pre>
+   <p>Finally, this example will run only on December 24th:
+
+<pre class="example">     s = Nightly(name='SleighPreflightCheck',
+             builderNames=['flying_circuits', 'radar'],
+             month=12,
+             dayOfMonth=24,
+             hour=12,
+             minute=0)
+</pre>
+   <div class="node">
+<p><hr>
+<a name="Try-Schedulers"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Triggerable-Scheduler">Triggerable Scheduler</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Nightly-Scheduler">Nightly Scheduler</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Change-Sources-and-Schedulers">Change Sources and Schedulers</a>
+
+</div>
+
+<h4 class="subsection">4.5.6 Try Schedulers</h4>
+
+<p><a name="index-buildbot_002escheduler_002eTry_005fJobdir-27"></a><a name="index-buildbot_002escheduler_002eTry_005fUserpass-28"></a>
+This scheduler allows developers to use the <code>buildbot try</code>
+command to trigger builds of code they have not yet committed. See
+<a href="#try">try</a> for complete details.
+
+   <p>Two implementations are available: <code>Try_Jobdir</code> and
+<code>Try_Userpass</code>.  The former monitors a job directory, specified
+by the <code>jobdir</code> parameter, while the latter listens for PB
+connections on a specific <code>port</code>, and authenticates against
+<code>userport</code>.
+
+<div class="node">
+<p><hr>
+<a name="Triggerable-Scheduler"></a>
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Try-Schedulers">Try Schedulers</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Change-Sources-and-Schedulers">Change Sources and Schedulers</a>
+
+</div>
+
+<h4 class="subsection">4.5.7 Triggerable Scheduler</h4>
+
+<p><a name="index-Triggers-29"></a><a name="index-buildbot_002escheduler_002eTriggerable-30"></a>
+The <code>Triggerable</code> scheduler waits to be triggered by a Trigger
+step (see <a href="#Triggering-Schedulers">Triggering Schedulers</a>) in another build. That step
+can optionally wait for the scheduler's builds to complete. This
 provides two advantages over Dependent schedulers. First, the same
 scheduler can be triggered from multiple builds. Second, the ability
 to wait for a Triggerable's builds to complete provides a form of
-"subroutine call", where one or more builds can "call" a scheduler to
-perform some work for them, perhaps on other buildslaves.
+"subroutine call", where one or more builds can "call" a scheduler
+to perform some work for them, perhaps on other buildslaves.
+
+   <p>The parameters are just the basics:
+
+     <dl>
+<dt><code>name</code><br><dt><code>builderNames</code><br><dt><code>properties</code><dd></dl>
+
+   <p>This class is only useful in conjunction with the <code>Trigger</code> step. 
+Here is a fully-worked example:
 
 <pre class="example">     from buildbot import scheduler
      from buildbot.steps import trigger
      
-     checkin = scheduler.Scheduler("checkin", None, 5*60, ["checkin"])
-     nightly = scheduler.Scheduler("nightly", ... , ["nightly"])
+     checkin = scheduler.Scheduler(name="checkin",
+                 branch=None,
+                 treeStableTimer=5*60,
+                 builderNames=["checkin"])
+     nightly = scheduler.Nightly(name='nightly',
+                 builderNames=['nightly'],
+                 hour=3,
+                 minute=0)
      
-     mktarball = scheduler.Triggerable("mktarball",
-                                       ["mktarball"])
-     build = scheduler.Triggerable("build-all-platforms",
-                                   ["build-all-platforms"])
-     test = scheduler.Triggerable("distributed-test",
-                                  ["distributed-test"])
-     package = scheduler.Triggerable("package-all-platforms",
-                                     ["package-all-platforms"])
+     mktarball = scheduler.Triggerable(name="mktarball",
+                     builderNames=["mktarball"])
+     build = scheduler.Triggerable(name="build-all-platforms",
+                     builderNames=["build-all-platforms"])
+     test = scheduler.Triggerable(name="distributed-test",
+                     builderNames=["distributed-test"])
+     package = scheduler.Triggerable(name="package-all-platforms",
+                     builderNames=["package-all-platforms"])
      
      c['schedulers'] = [checkin, nightly, build, test, package]
      
+     # on checkin, make a tarball, build it, and test it
      checkin_factory = factory.BuildFactory()
      f.addStep(trigger.Trigger('mktarball', schedulers=['mktarball'],
                                             waitForFinish=True)
@@ -2798,6 +3085,7 @@ perform some work for them, perhaps on other buildslaves.
      f.addStep(trigger.Trigger('test', schedulers=['distributed-test'],
                                        waitForFinish=True)
      
+     # and every night, make a tarball, build it, and package it
      nightly_factory = factory.BuildFactory()
      f.addStep(trigger.Trigger('mktarball', schedulers=['mktarball'],
                                             waitForFinish=True)
@@ -2810,14 +3098,14 @@ perform some work for them, perhaps on other buildslaves.
 <p><hr>
 <a name="Setting-the-slaveport"></a>
 Next:&nbsp;<a rel="next" accesskey="n" href="#Buildslave-Specifiers">Buildslave Specifiers</a>,
-Previous:&nbsp;<a rel="previous" accesskey="p" href="#Listing-Change-Sources-and-Schedulers">Listing Change Sources and Schedulers</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Change-Sources-and-Schedulers">Change Sources and Schedulers</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Configuration">Configuration</a>
 
 </div>
 
 <h3 class="section">4.6 Setting the slaveport</h3>
 
-<p><a name="index-c_005b_0027slavePortnum_0027_005d-26"></a>
+<p><a name="index-c_005b_0027slavePortnum_0027_005d-31"></a>
 The buildmaster will listen on a TCP port of your choosing for
 connections from buildslaves. It can also use this port for
 connections from remote Change Sources, status clients, and debug
@@ -2848,7 +3136,7 @@ and they are all configured to contact the buildmaster at
 <div class="node">
 <p><hr>
 <a name="Buildslave-Specifiers"></a>
-Next:&nbsp;<a rel="next" accesskey="n" href="#Defining-Builders">Defining Builders</a>,
+Next:&nbsp;<a rel="next" accesskey="n" href="#Defining-Global-Properties">Defining Global Properties</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#Setting-the-slaveport">Setting the slaveport</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Configuration">Configuration</a>
 
@@ -2856,18 +3144,13 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Configuration">Configuration</a>
 
 <h3 class="section">4.7 Buildslave Specifiers</h3>
 
-<p><a name="index-c_005b_0027slaves_0027_005d-27"></a>
+<p><a name="index-c_005b_0027slaves_0027_005d-32"></a>
 The <code>c['slaves']</code> key is a list of known buildslaves. Each
 buildslave is defined by an instance of the BuildSlave class, created
 with two values: (slavename, slavepassword). These are the same two
 values that need to be provided to the buildslave administrator when
 they create the buildslave.
 
-<pre class="example">     from buildbot.buildslave import BuildSlave
-     c['slaves'] = [BuildSlave('bot-solaris', 'solarispasswd'),
-                    BuildSlave('bot-bsd', 'bsdpasswd'),
-                   ]
-</pre>
    <p>The slavenames must be unique, of course. The password exists to
 prevent evildoers from interfering with the buildbot by inserting
 their own (broken) buildslaves into the system and thus displacing the
@@ -2877,9 +3160,23 @@ real ones.
 will be rejected when they attempt to connect, and a message
 describing the problem will be put in the log file (see <a href="#Logfiles">Logfiles</a>).
 
-   <p>The <code>BuildSlave</code> constructor can take an optional
-<code>max_builds</code> parameter to limit the number of builds that it will
-execute simultaneously:
+<pre class="example">     from buildbot.buildslave import BuildSlave
+     c['slaves'] = [BuildSlave('bot-solaris', 'solarispasswd')
+                    BuildSlave('bot-bsd', 'bsdpasswd')
+                   ]
+</pre>
+   <p><a name="index-Properties-33"></a><code>BuildSlave</code> objects can also be created with an optional
+<code>properties</code> argument, a dictionary specifying properties that
+will be available to any builds performed on this slave.  For example:
+
+<pre class="example">     from buildbot.buildslave import BuildSlave
+     c['slaves'] = [BuildSlave('bot-solaris', 'solarispasswd',
+                         properties={'os':'solaris'}),
+                   ]
+</pre>
+   <p>The <code>BuildSlave</code> constructor can also take an optional
+<code>max_builds</code> parameter to limit the number of builds that it
+will execute simultaneously:
 
 <pre class="example">     from buildbot.buildslave import BuildSlave
      c['slaves'] = [BuildSlave("bot-linux", "linuxpassword", max_builds=2)]
@@ -2954,16 +3251,37 @@ builders=[], as follows:
 </pre>
    <div class="node">
 <p><hr>
-<a name="Defining-Builders"></a>
-Next:&nbsp;<a rel="next" accesskey="n" href="#Defining-Status-Targets">Defining Status Targets</a>,
+<a name="Defining-Global-Properties"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Defining-Builders">Defining Builders</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#Buildslave-Specifiers">Buildslave Specifiers</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Configuration">Configuration</a>
 
 </div>
 
-<h3 class="section">4.8 Defining Builders</h3>
+<h3 class="section">4.8 Defining Global Properties</h3>
 
-<p><a name="index-c_005b_0027builders_0027_005d-28"></a>
+<p><a name="index-c_005b_0027properties_0027_005d-34"></a><a name="index-Properties-35"></a>
+The <code>'properties'</code> configuration key defines a dictionary
+of properties that will be available to all builds started by the
+buildmaster:
+
+<pre class="example">     c['properties'] = {
+         'Widget-version' : '1.2',
+         'release-stage' : 'alpha'
+     }
+</pre>
+   <div class="node">
+<p><hr>
+<a name="Defining-Builders"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Defining-Status-Targets">Defining Status Targets</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Defining-Global-Properties">Defining Global Properties</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Configuration">Configuration</a>
+
+</div>
+
+<h3 class="section">4.9 Defining Builders</h3>
+
+<p><a name="index-c_005b_0027builders_0027_005d-36"></a>
 The <code>c['builders']</code> key is a list of dictionaries which specify
 the Builders. The Buildmaster runs a collection of Builders, each of
 which handles a single type of build (e.g. full versus quick), on a
@@ -3040,14 +3358,14 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Configuration">Configuration</a>
 
 </div>
 
-<h3 class="section">4.9 Defining Status Targets</h3>
+<h3 class="section">4.10 Defining Status Targets</h3>
 
 <p>The Buildmaster has a variety of ways to present build status to
 various users. Each such delivery method is a &ldquo;Status Target&rdquo; object
 in the configuration's <code>status</code> list. To add status targets, you
 just append more objects to this list:
 
-   <p><a name="index-c_005b_0027status_0027_005d-29"></a>
+   <p><a name="index-c_005b_0027status_0027_005d-37"></a>
 <pre class="example">     c['status'] = []
      
      from buildbot.status import html
@@ -3074,9 +3392,9 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Configuration">Configuration</a>
 
 </div>
 
-<h3 class="section">4.10 Debug options</h3>
+<h3 class="section">4.11 Debug options</h3>
 
-<p><a name="index-c_005b_0027debugPassword_0027_005d-30"></a>If you set <code>c['debugPassword']</code>, then you can connect to the
+<p><a name="index-c_005b_0027debugPassword_0027_005d-38"></a>If you set <code>c['debugPassword']</code>, then you can connect to the
 buildmaster with the diagnostic tool launched by <code>buildbot
 debugclient MASTER:PORT</code>. From this tool, you can reload the config
 file, manually force builds, and inject changes, which may be useful
@@ -3087,7 +3405,7 @@ debug tool uses the same port number as the slaves do:
 
 <pre class="example">     c['debugPassword'] = "debugpassword"
 </pre>
-   <p><a name="index-c_005b_0027manhole_0027_005d-31"></a>If you set <code>c['manhole']</code> to an instance of one of the classes in
+   <p><a name="index-c_005b_0027manhole_0027_005d-39"></a>If you set <code>c['manhole']</code> to an instance of one of the classes in
 <code>buildbot.manhole</code>, you can telnet or ssh into the buildmaster
 and get an interactive Python shell, which may be useful for debugging
 buildbot internals. It is probably only useful for buildbot
@@ -3355,7 +3673,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Getting-Source-Code-Changes">Getting S
 
 <h3 class="section">5.3 CVSToys - PBService</h3>
 
-<p><a name="index-buildbot_002echanges_002efreshcvs_002eFreshCVSSource-32"></a>
+<p><a name="index-buildbot_002echanges_002efreshcvs_002eFreshCVSSource-40"></a>
 The <a href="http://purl.net/net/CVSToys">CVSToys</a> package provides a
 server which runs on the machine that hosts the CVS repository it
 watches. It has a variety of ways to distribute commit notifications,
@@ -3440,8 +3758,8 @@ buildmaster admin needs to arrange for these email messages to arrive
 in a place where the buildmaster can find them, and configure the
 buildmaster to parse the messages correctly. Once that is in place,
 the email parser will create Change objects and deliver them to the
-Schedulers (see see <a href="#Scheduler-Types">Scheduler Types</a>) just like any other
-ChangeSource.
+Schedulers (see see <a href="#Change-Sources-and-Schedulers">Change Sources and Schedulers</a>) just
+like any other ChangeSource.
 
    <p>There are two components to setting up an email-based ChangeSource. 
 The first is to route the email messages to the buildmaster, which is
@@ -3612,7 +3930,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Parsing-Email-Change-Messages">Parsing
 
 <h5 class="subsubsection">5.4.3.1 FCMaildirSource</h5>
 
-<p><a name="index-buildbot_002echanges_002email_002eFCMaildirSource-33"></a>
+<p><a name="index-buildbot_002echanges_002email_002eFCMaildirSource-41"></a>
 http://twistedmatrix.com/users/acapnotic/wares/code/CVSToys/
 
    <p>This parser works with the CVSToys <code>MailNotification</code> action,
@@ -3641,7 +3959,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Parsing-Email-Change-Messages">Parsing
 
 <h5 class="subsubsection">5.4.3.2 SyncmailMaildirSource</h5>
 
-<p><a name="index-buildbot_002echanges_002email_002eSyncmailMaildirSource-34"></a>
+<p><a name="index-buildbot_002echanges_002email_002eSyncmailMaildirSource-42"></a>
 http://sourceforge.net/projects/cvs-syncmail
 
    <p><code>SyncmailMaildirSource</code> knows how to parse the message format used by
@@ -3661,7 +3979,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Parsing-Email-Change-Messages">Parsing
 
 <h5 class="subsubsection">5.4.3.3 BonsaiMaildirSource</h5>
 
-<p><a name="index-buildbot_002echanges_002email_002eBonsaiMaildirSource-35"></a>
+<p><a name="index-buildbot_002echanges_002email_002eBonsaiMaildirSource-43"></a>
 http://www.mozilla.org/bonsai.html
 
    <p><code>BonsaiMaildirSource</code> parses messages sent out by Bonsai, the CVS
@@ -3680,7 +3998,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Parsing-Email-Change-Messages">Parsing
 
 <h5 class="subsubsection">5.4.3.4 SVNCommitEmailMaildirSource</h5>
 
-<p><a name="index-buildbot_002echanges_002email_002eSVNCommitEmailMaildirSource-36"></a>
+<p><a name="index-buildbot_002echanges_002email_002eSVNCommitEmailMaildirSource-44"></a>
 <code>SVNCommitEmailMaildirSource</code> parses message sent out by the
 <code>commit-email.pl</code> script, which is included in the Subversion
 distribution.
@@ -3702,7 +4020,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Getting-Source-Code-Changes">Getting S
 
 <h3 class="section">5.5 PBChangeSource</h3>
 
-<p><a name="index-buildbot_002echanges_002epb_002ePBChangeSource-37"></a>
+<p><a name="index-buildbot_002echanges_002epb_002ePBChangeSource-45"></a>
 The last kind of ChangeSource actually listens on a TCP port for
 clients to connect and push change notices <em>into</em> the
 Buildmaster. This is used by the built-in <code>buildbot sendchange</code>
@@ -3775,7 +4093,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Getting-Source-Code-Changes">Getting S
 
 <h3 class="section">5.6 P4Source</h3>
 
-<p><a name="index-buildbot_002echanges_002ep4poller_002eP4Source-38"></a>
+<p><a name="index-buildbot_002echanges_002ep4poller_002eP4Source-46"></a>
 The <code>P4Source</code> periodically polls a <a href="http://www.perforce.com/">Perforce</a> depot for changes. It accepts the following arguments:
 
      <dl>
@@ -3823,7 +4141,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Getting-Source-Code-Changes">Getting S
 
 <h3 class="section">5.7 BonsaiPoller</h3>
 
-<p><a name="index-buildbot_002echanges_002ebonsaipoller_002eBonsaiPoller-39"></a>
+<p><a name="index-buildbot_002echanges_002ebonsaipoller_002eBonsaiPoller-47"></a>
 The <code>BonsaiPoller</code> periodically polls a Bonsai server. This is a
 CGI script accessed through a web server that provides information
 about a CVS tree, for example the Mozilla bonsai server at
@@ -3846,7 +4164,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Getting-Source-Code-Changes">Getting S
 
 <h3 class="section">5.8 SVNPoller</h3>
 
-<p><a name="index-buildbot_002echanges_002esvnpoller_002eSVNPoller-40"></a>
+<p><a name="index-buildbot_002echanges_002esvnpoller_002eSVNPoller-48"></a>
 The <code>buildbot.changes.svnpoller.SVNPoller</code> is a ChangeSource
 which periodically polls a <a href="http://subversion.tigris.org/">Subversion</a> repository for new revisions, by running the <code>svn
 log</code> command in a subshell. It can watch a single branch or multiple
@@ -4256,19 +4574,20 @@ control each.
 
 <ul class="menu">
 <li><a accesskey="1" href="#Common-Parameters">Common Parameters</a>
-<li><a accesskey="2" href="#Source-Checkout">Source Checkout</a>
-<li><a accesskey="3" href="#ShellCommand">ShellCommand</a>
-<li><a accesskey="4" href="#Simple-ShellCommand-Subclasses">Simple ShellCommand Subclasses</a>
-<li><a accesskey="5" href="#Python-BuildSteps">Python BuildSteps</a>
-<li><a accesskey="6" href="#Transferring-Files">Transferring Files</a>
-<li><a accesskey="7" href="#Triggering-Schedulers">Triggering Schedulers</a>
-<li><a accesskey="8" href="#Writing-New-BuildSteps">Writing New BuildSteps</a>
+<li><a accesskey="2" href="#Using-Build-Properties">Using Build Properties</a>
+<li><a accesskey="3" href="#Source-Checkout">Source Checkout</a>
+<li><a accesskey="4" href="#ShellCommand">ShellCommand</a>
+<li><a accesskey="5" href="#Simple-ShellCommand-Subclasses">Simple ShellCommand Subclasses</a>
+<li><a accesskey="6" href="#Python-BuildSteps">Python BuildSteps</a>
+<li><a accesskey="7" href="#Transferring-Files">Transferring Files</a>
+<li><a accesskey="8" href="#Triggering-Schedulers">Triggering Schedulers</a>
+<li><a accesskey="9" href="#Writing-New-BuildSteps">Writing New BuildSteps</a>
 </ul>
 
 <div class="node">
 <p><hr>
 <a name="Common-Parameters"></a>
-Next:&nbsp;<a rel="next" accesskey="n" href="#Source-Checkout">Source Checkout</a>,
+Next:&nbsp;<a rel="next" accesskey="n" href="#Using-Build-Properties">Using Build Properties</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#Build-Steps">Build Steps</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Build-Steps">Build Steps</a>
 
@@ -4318,14 +4637,172 @@ names. Also note that all Locks must have unique names.
 
 <div class="node">
 <p><hr>
-<a name="Source-Checkout"></a>
-Next:&nbsp;<a rel="next" accesskey="n" href="#ShellCommand">ShellCommand</a>,
+<a name="Using-Build-Properties"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Source-Checkout">Source Checkout</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#Common-Parameters">Common Parameters</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Build-Steps">Build Steps</a>
 
 </div>
 
-<h4 class="subsection">6.1.2 Source Checkout</h4>
+<h4 class="subsection">6.1.2 Using Build Properties</h4>
+
+<p><a name="index-Properties-49"></a>
+Build properties are a generalized way to provide configuration
+information to build steps; see <a href="#Build-Properties">Build Properties</a>.
+
+   <p>Some build properties are inherited from external sources &ndash; global
+properties, schedulers, or buildslaves.  Some build properties are
+set when the build starts, such as the SourceStamp information. Other
+properties can be set by BuildSteps as they run, for example the
+various Source steps will set the <code>got_revision</code> property to the
+source revision that was actually checked out (which can be useful
+when the SourceStamp in use merely requested the &ldquo;latest revision&rdquo;:
+<code>got_revision</code> will tell you what was actually built).
+
+   <p>In custom BuildSteps, you can get and set the build properties with
+the <code>getProperty</code>/<code>setProperty</code> methods. Each takes a string
+for the name of the property, and returns or accepts an
+arbitrary<a rel="footnote" href="#fn-7" name="fnd-7"><sup>7</sup></a> object. For example:
+
+<pre class="example">     class MakeTarball(ShellCommand):
+         def start(self):
+             if self.getProperty("os") == "win":
+                 self.setCommand([ ... ]) # windows-only command
+             else:
+                 self.setCommand([ ... ]) # equivalent for other systems
+             ShellCommand.start(self)
+</pre>
+   <h3 class="heading">WithProperties</h3>
+
+<p><a name="index-WithProperties-50"></a>
+You can use build properties in ShellCommands by using the
+<code>WithProperties</code> wrapper when setting the arguments of
+the ShellCommand. This interpolates the named build properties
+into the generated shell command.  Most step parameters accept
+<code>WithProperties</code>.  Please file bugs for any parameters which
+do not.
+
+<pre class="example">     from buildbot.steps.shell import ShellCommand
+     from buildbot.process.properties import WithProperties
+     
+     f.addStep(ShellCommand(
+               command=["tar", "czf",
+                        WithProperties("build-%s.tar.gz", "revision"),
+                        "source"]))
+</pre>
+   <p>If this BuildStep were used in a tree obtained from Subversion, it
+would create a tarball with a name like <samp><span class="file">build-1234.tar.gz</span></samp>.
+
+   <p>The <code>WithProperties</code> function does <code>printf</code>-style string
+interpolation, using strings obtained by calling
+<code>build.getProperty(propname)</code>. Note that for every <code>%s</code> (or
+<code>%d</code>, etc), you must have exactly one additional argument to
+indicate which build property you want to insert.
+
+   <p>You can also use python dictionary-style string interpolation by using
+the <code>%(propname)s</code> syntax. In this form, the property name goes
+in the parentheses, and WithProperties takes <em>no</em> additional
+arguments:
+
+<pre class="example">     f.addStep(ShellCommand(
+               command=["tar", "czf",
+                        WithProperties("build-%(revision)s.tar.gz"),
+                        "source"]))
+</pre>
+   <p>Don't forget the extra &ldquo;s&rdquo; after the closing parenthesis! This is
+the cause of many confusing errors.
+
+   <p>The dictionary-style interpolation supports a number of more advanced
+syntaxes, too.
+
+     <dl>
+<dt><code>propname:-replacement</code><dd>If <code>propname</code> exists, substitute its value; otherwise,
+substitute <code>replacement</code>.  <code>replacement</code> may be empty
+(<code>%(propname:-)s</code>)
+
+     <br><dt><code>propname:+replacement</code><dd>If <code>propname</code> exists, substitute <code>replacement</code>; otherwise,
+substitute an empty string.
+
+   </dl>
+
+   <p>Although these are similar to shell substitutions, no other
+substitutions are currently supported, and <code>replacement</code> in the
+above cannot contain more substitutions.
+
+   <p>Note: like python, you can either do positional-argument interpolation
+<em>or</em> keyword-argument interpolation, not both. Thus you cannot use
+a string like <code>WithProperties("foo-%(revision)s-%s", "branch")</code>.
+
+<h3 class="heading">Common Build Properties</h3>
+
+<p>The following build properties are set when the build is started, and
+are available to all steps.
+
+     <dl>
+<dt><code>branch</code><dd>
+This comes from the build's SourceStamp, and describes which branch is
+being checked out. This will be <code>None</code> (which interpolates into
+<code>WithProperties</code> as an empty string) if the build is on the
+default branch, which is generally the trunk. Otherwise it will be a
+string like &ldquo;branches/beta1.4&rdquo;. The exact syntax depends upon the VC
+system being used.
+
+     <br><dt><code>revision</code><dd>
+This also comes from the SourceStamp, and is the revision of the
+source code tree that was requested from the VC system. When a build
+is requested of a specific revision (as is generally the case when
+the build is triggered by Changes), this will contain the revision
+specification. The syntax depends upon the VC system in use: for SVN
+it is an integer, for Mercurial it is a short string, for Darcs it
+is a rather large string, etc.
+
+     <p>If the &ldquo;force build&rdquo; button was pressed, the revision will be
+<code>None</code>, which means to use the most recent revision available. 
+This is a &ldquo;trunk build&rdquo;. This will be interpolated as an empty
+string.
+
+     <br><dt><code>got_revision</code><dd>
+This is set when a Source step checks out the source tree, and
+provides the revision that was actually obtained from the VC system. 
+In general this should be the same as <code>revision</code>, except for
+trunk builds, where <code>got_revision</code> indicates what revision was
+current when the checkout was performed. This can be used to rebuild
+the same source code later.
+
+     <p>Note that for some VC systems (Darcs in particular), the revision is a
+large string containing newlines, and is not suitable for interpolation
+into a filename.
+
+     <br><dt><code>buildername</code><dd>
+This is a string that indicates which Builder the build was a part of. 
+The combination of buildername and buildnumber uniquely identify a
+build.
+
+     <br><dt><code>buildnumber</code><dd>
+Each build gets a number, scoped to the Builder (so the first build
+performed on any given Builder will have a build number of 0). This
+integer property contains the build's number.
+
+     <br><dt><code>slavename</code><dd>
+This is a string which identifies which buildslave the build is
+running on.
+
+     <br><dt><code>scheduler</code><dd>
+If the build was started from a scheduler, then this property will
+contain the name of that scheduler.
+
+   </dl>
+
+<div class="node">
+<p><hr>
+<a name="Source-Checkout"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#ShellCommand">ShellCommand</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Using-Build-Properties">Using Build Properties</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Build-Steps">Build Steps</a>
+
+</div>
+
+<h4 class="subsection">6.1.3 Source Checkout</h4>
 
 <p>The first step of any build is typically to acquire the source code
 from which the build will be performed. There are several classes to
@@ -4441,9 +4918,9 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Source-Checkout">Source Checkout</a>
 
 </div>
 
-<h5 class="subsubsection">6.1.2.1 CVS</h5>
+<h5 class="subsubsection">6.1.3.1 CVS</h5>
 
-<p><a name="index-CVS-Checkout-41"></a><a name="index-buildbot_002esteps_002esource_002eCVS-42"></a>
+<p><a name="index-CVS-Checkout-51"></a><a name="index-buildbot_002esteps_002esource_002eCVS-52"></a>
 
    <p>The <code>CVS</code> build step performs a <a href="http://www.nongnu.org/cvs/">CVS</a> checkout or update. It takes the following arguments:
 
@@ -4477,9 +4954,9 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Source-Checkout">Source Checkout</a>
 
 </div>
 
-<h5 class="subsubsection">6.1.2.2 SVN</h5>
+<h5 class="subsubsection">6.1.3.2 SVN</h5>
 
-<p><a name="index-SVN-Checkout-43"></a><a name="index-buildbot_002esteps_002esource_002eSVN-44"></a>
+<p><a name="index-SVN-Checkout-53"></a><a name="index-buildbot_002esteps_002esource_002eSVN-54"></a>
 
    <p>The <code>SVN</code> build step performs a
 <a href="http://subversion.tigris.org">Subversion</a> checkout or update. 
@@ -4614,9 +5091,9 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Source-Checkout">Source Checkout</a>
 
 </div>
 
-<h5 class="subsubsection">6.1.2.3 Darcs</h5>
+<h5 class="subsubsection">6.1.3.3 Darcs</h5>
 
-<p><a name="index-Darcs-Checkout-45"></a><a name="index-buildbot_002esteps_002esource_002eDarcs-46"></a>
+<p><a name="index-Darcs-Checkout-55"></a><a name="index-buildbot_002esteps_002esource_002eDarcs-56"></a>
 
    <p>The <code>Darcs</code> build step performs a
 <a href="http://darcs.net/">Darcs</a> checkout or update.
@@ -4661,9 +5138,9 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Source-Checkout">Source Checkout</a>
 
 </div>
 
-<h5 class="subsubsection">6.1.2.4 Mercurial</h5>
+<h5 class="subsubsection">6.1.3.4 Mercurial</h5>
 
-<p><a name="index-Mercurial-Checkout-47"></a><a name="index-buildbot_002esteps_002esource_002eMercurial-48"></a>
+<p><a name="index-Mercurial-Checkout-57"></a><a name="index-buildbot_002esteps_002esource_002eMercurial-58"></a>
 
    <p>The <code>Mercurial</code> build step performs a
 <a href="http://selenic.com/mercurial">Mercurial</a> (aka &ldquo;hg&rdquo;) checkout
@@ -4696,9 +5173,9 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Source-Checkout">Source Checkout</a>
 
 </div>
 
-<h5 class="subsubsection">6.1.2.5 Arch</h5>
+<h5 class="subsubsection">6.1.3.5 Arch</h5>
 
-<p><a name="index-Arch-Checkout-49"></a><a name="index-buildbot_002esteps_002esource_002eArch-50"></a>
+<p><a name="index-Arch-Checkout-59"></a><a name="index-buildbot_002esteps_002esource_002eArch-60"></a>
 
    <p>The <code>Arch</code> build step performs an <a href="http://gnuarch.org/">Arch</a> checkout or update using the <code>tla</code> client. It takes the
 following arguments:
@@ -4727,9 +5204,9 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Source-Checkout">Source Checkout</a>
 
 </div>
 
-<h5 class="subsubsection">6.1.2.6 Bazaar</h5>
+<h5 class="subsubsection">6.1.3.6 Bazaar</h5>
 
-<p><a name="index-Bazaar-Checkout-51"></a><a name="index-buildbot_002esteps_002esource_002eBazaar-52"></a>
+<p><a name="index-Bazaar-Checkout-61"></a><a name="index-buildbot_002esteps_002esource_002eBazaar-62"></a>
 
    <p><code>Bazaar</code> is an alternate implementation of the Arch VC system,
 which uses a client named <code>baz</code>. The checkout semantics are just
@@ -4750,9 +5227,9 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Source-Checkout">Source Checkout</a>
 
 </div>
 
-<h5 class="subsubsection">6.1.2.7 Bzr</h5>
+<h5 class="subsubsection">6.1.3.7 Bzr</h5>
 
-<p><a name="index-Bzr-Checkout-53"></a><a name="index-buildbot_002esteps_002esource_002eBzr-54"></a>
+<p><a name="index-Bzr-Checkout-63"></a><a name="index-buildbot_002esteps_002esource_002eBzr-64"></a>
 <code>bzr</code> is a descendant of Arch/Baz, and is frequently referred to
 as simply &ldquo;Bazaar&rdquo;. The repository-vs-workspace model is similar to
 Darcs, but it uses a strictly linear sequence of revisions (one
@@ -4783,9 +5260,9 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Source-Checkout">Source Checkout</a>
 
 </div>
 
-<h5 class="subsubsection">6.1.2.8 P4</h5>
+<h5 class="subsubsection">6.1.3.8 P4</h5>
 
-<p><a name="index-Perforce-Update-55"></a><a name="index-buildbot_002esteps_002esource_002eP4-56"></a><!-- TODO @bsindex buildbot.steps.source.P4Sync -->
+<p><a name="index-Perforce-Update-65"></a><a name="index-buildbot_002esteps_002esource_002eP4-66"></a><!-- TODO @bsindex buildbot.steps.source.P4Sync -->
 
    <p>The <code>P4</code> build step creates a <a href="http://www.perforce.com/">Perforce</a> client specification and performs an update.
 
@@ -4820,9 +5297,9 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Source-Checkout">Source Checkout</a>
 
 </div>
 
-<h5 class="subsubsection">6.1.2.9 Git</h5>
+<h5 class="subsubsection">6.1.3.9 Git</h5>
 
-<p><a name="index-Git-Checkout-57"></a><a name="index-buildbot_002esteps_002esource_002eGit-58"></a>
+<p><a name="index-Git-Checkout-67"></a><a name="index-buildbot_002esteps_002esource_002eGit-68"></a>
 The <code>Git</code> build step clones or updates a <a href="http://git.or.cz/">Git</a> repository and checks out the specified branch or revision. Note
 that the buildbot supports Git version 1.2.0 and later: earlier
 versions (such as the one shipped in Ubuntu 'Dapper') do not support
@@ -4848,9 +5325,9 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Build-Steps">Build Steps</a>
 
 </div>
 
-<h4 class="subsection">6.1.3 ShellCommand</h4>
+<h4 class="subsection">6.1.4 ShellCommand</h4>
 
-<p><a name="index-buildbot_002esteps_002eshell_002eShellCommand-59"></a><!-- TODO @bsindex buildbot.steps.shell.TreeSize -->
+<p><a name="index-buildbot_002esteps_002eshell_002eShellCommand-69"></a><!-- TODO @bsindex buildbot.steps.shell.TreeSize -->
 
    <p>This is a useful base class for just about everything you might want
 to do during a build (except for the initial source checkout). It runs
@@ -4888,8 +5365,8 @@ metacharacters.
 command's environment. For example, to run tests with a different i18n
 language setting, you might use
 
-     <pre class="example">          f.addStep(ShellCommand, command=["make", "test"],
-                    env={'LANG': 'fr_FR'})
+     <pre class="example">          f.addStep(ShellCommand(command=["make", "test"],
+                                 env={'LANG': 'fr_FR'}))
 </pre>
      <p>These variable settings will override any existing ones in the
 buildslave's environment. The exception is PYTHONPATH, which is merged
@@ -4900,9 +5377,10 @@ string is treated like a one-item list. For example, to prepend both
 to any existing $PYTHONPATH setting, you would do something like the
 following:
 
-     <pre class="example">          f.addStep(ShellCommand, command=["make", "test"],
-                    env={'PYTHONPATH': ["/usr/local/lib/python2.3",
-                                        "/home/buildbot/lib/python"] })
+     <pre class="example">          f.addStep(ShellCommand(
+                        command=["make", "test"],
+                        env={'PYTHONPATH': ["/usr/local/lib/python2.3",
+                                             "/home/buildbot/lib/python"] }))
 </pre>
      <br><dt><code>want_stdout</code><dd>if False, stdout from the child process is discarded rather than being
 sent to the buildmaster for inclusion in the step's LogFile.
@@ -4927,8 +5405,9 @@ the log data is presented in the build results) to a remote filename
 file will be polled on a regular basis (every couple of seconds) as
 the build runs, and any new text will be sent over to the buildmaster.
 
-     <pre class="example">          f.addStep(ShellCommand, command=["make", "test"],
-                    logfiles={"triallog": "_trial_temp/test.log"})
+     <pre class="example">          f.addStep(ShellCommand(
+                        command=["make", "test"],
+                        logfiles={"triallog": "_trial_temp/test.log"}))
 </pre>
      <br><dt><code>timeout</code><dd>if the command fails to produce any output for this many seconds, it
 is assumed to be locked up and will be killed.
@@ -4950,9 +5429,9 @@ actual command arguments will be used to construct the description.
 This may be a bit too wide to fit comfortably on the Waterfall
 display.
 
-     <pre class="example">          f.addStep(ShellCommand, command=["make", "test"],
-                    description=["testing"],
-                    descriptionDone=["tests"])
+     <pre class="example">          f.addStep(ShellCommand(command=["make", "test"],
+                                 description=["testing"],
+                                 descriptionDone=["tests"]))
 </pre>
      </dl>
 
@@ -4965,7 +5444,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Build-Steps">Build Steps</a>
 
 </div>
 
-<h4 class="subsection">6.1.4 Simple ShellCommand Subclasses</h4>
+<h4 class="subsection">6.1.5 Simple ShellCommand Subclasses</h4>
 
 <p>Several subclasses of ShellCommand are provided as starting points for
 common build steps. These are all very simple: they just override a few
@@ -4977,7 +5456,8 @@ file less verbose.
 <li><a accesskey="2" href="#Compile">Compile</a>
 <li><a accesskey="3" href="#Test">Test</a>
 <li><a accesskey="4" href="#TreeSize">TreeSize</a>
-<li><a accesskey="5" href="#Build-Properties">Build Properties</a>
+<li><a accesskey="5" href="#PerlModuleTest">PerlModuleTest</a>
+<li><a accesskey="6" href="#SetProperty">SetProperty</a>
 </ul>
 
 <div class="node">
@@ -4989,9 +5469,9 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Simple-ShellCommand-Subclasses">Simple
 
 </div>
 
-<h5 class="subsubsection">6.1.4.1 Configure</h5>
+<h5 class="subsubsection">6.1.5.1 Configure</h5>
 
-<p><a name="index-buildbot_002esteps_002eshell_002eConfigure-60"></a>
+<p><a name="index-buildbot_002esteps_002eshell_002eConfigure-70"></a>
 This is intended to handle the <code>./configure</code> step from
 autoconf-style projects, or the <code>perl Makefile.PL</code> step from perl
 MakeMaker.pm-style modules. The default command is <code>./configure</code>
@@ -5006,9 +5486,9 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Simple-ShellCommand-Subclasses">Simple
 
 </div>
 
-<h5 class="subsubsection">6.1.4.2 Compile</h5>
+<h5 class="subsubsection">6.1.5.2 Compile</h5>
 
-<p><a name="index-buildbot_002esteps_002eshell_002eCompile-61"></a>
+<p><a name="index-buildbot_002esteps_002eshell_002eCompile-71"></a>
 This is meant to handle compiling or building a project written in C. 
 The default command is <code>make all</code>. When the compile is finished,
 the log file is scanned for GCC warning messages, a summary log is
@@ -5045,24 +5525,24 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Simple-ShellCommand-Subclasses">Simple
 
 </div>
 
-<h5 class="subsubsection">6.1.4.3 Test</h5>
+<h5 class="subsubsection">6.1.5.3 Test</h5>
 
-<p><a name="index-buildbot_002esteps_002eshell_002eTest-62"></a>
+<p><a name="index-buildbot_002esteps_002eshell_002eTest-72"></a>
 This is meant to handle unit tests. The default command is <code>make
 test</code>, and the <code>warnOnFailure</code> flag is set.
 
 <div class="node">
 <p><hr>
 <a name="TreeSize"></a>
-Next:&nbsp;<a rel="next" accesskey="n" href="#Build-Properties">Build Properties</a>,
+Next:&nbsp;<a rel="next" accesskey="n" href="#PerlModuleTest">PerlModuleTest</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#Test">Test</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Simple-ShellCommand-Subclasses">Simple ShellCommand Subclasses</a>
 
 </div>
 
-<h5 class="subsubsection">6.1.4.4 TreeSize</h5>
+<h5 class="subsubsection">6.1.5.4 TreeSize</h5>
 
-<p><a name="index-buildbot_002esteps_002eshell_002eTreeSize-63"></a>
+<p><a name="index-buildbot_002esteps_002eshell_002eTreeSize-73"></a>
 This is a simple command that uses the 'du' tool to measure the size
 of the code tree. It puts the size (as a count of 1024-byte blocks,
 aka 'KiB' or 'kibibytes') on the step's status text, and sets a build
@@ -5070,147 +5550,62 @@ property named 'tree-size-KiB' with the same value.
 
 <div class="node">
 <p><hr>
-<a name="Build-Properties"></a>
+<a name="PerlModuleTest"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#SetProperty">SetProperty</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#TreeSize">TreeSize</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Simple-ShellCommand-Subclasses">Simple ShellCommand Subclasses</a>
 
 </div>
 
-<h5 class="subsubsection">6.1.4.5 Build Properties</h5>
+<h5 class="subsubsection">6.1.5.5 PerlModuleTest</h5>
 
-<p><a name="index-build-properties-64"></a>
-Each build has a set of &ldquo;Build Properties&rdquo;, which can be used by its
-BuildStep to modify their actions. For example, the SVN revision
-number of the source code being built is available as a build
-property, and a ShellCommand step could incorporate this number into a
-command which create a numbered release tarball.
+<p><a name="index-buildbot_002esteps_002eshell_002ePerlModuleTest-74"></a>
+This is a simple command that knows how to run tests of perl modules. 
+It parses the output to determine the number of tests passed and
+failed and total number executed, saving the results for later query.
 
-   <p>Some build properties are set when the build starts, such as the
-SourceStamp information. Other properties can be set by BuildSteps as
-they run, for example the various Source steps will set the
-<code>got_revision</code> property to the source revision that was actually
-checked out (which can be useful when the SourceStamp in use merely
-requested the &ldquo;latest revision&rdquo;: <code>got_revision</code> will tell you
-what was actually built).
+<div class="node">
+<p><hr>
+<a name="SetProperty"></a>
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#PerlModuleTest">PerlModuleTest</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Simple-ShellCommand-Subclasses">Simple ShellCommand Subclasses</a>
 
-   <p>In custom BuildSteps, you can get and set the build properties with
-the <code>getProperty</code>/<code>setProperty</code> methods. Each takes a string
-for the name of the property, and returns or accepts an
-arbitrary<a rel="footnote" href="#fn-7" name="fnd-7"><sup>7</sup></a> object. For example:
+</div>
 
-<pre class="example">     class MakeTarball(ShellCommand):
-         def start(self):
-             self.setCommand(["tar", "czf",
-                              "build-%s.tar.gz" % self.getProperty("revision"),
-                              "source"])
-             ShellCommand.start(self)
+<h5 class="subsubsection">6.1.5.6 SetProperty</h5>
+
+<p><a name="index-buildbot_002esteps_002eshell_002eSetProperty-75"></a>
+This buildstep is similar to ShellCommand, except that it captures the
+output of the command into a property.  It is usually used like this:
+
+<pre class="example">     f.addStep(SetProperty(command="uname -a", property="uname"))
 </pre>
-   <p><a name="index-WithProperties-65"></a>
-You can use build properties in ShellCommands by using the
-<code>WithProperties</code> wrapper when setting the arguments of the
-ShellCommand. This interpolates the named build properties into the
-generated shell command. You can also use a <code>WithProperties</code> as
-the <code>workdir=</code> argument: this allows the working directory for a
-command to be varied for each build, depending upon various build
-properties.
+   <p>This runs <code>uname -a</code> and captures its stdout, stripped of leading
+and trailing whitespace, in the property "uname".  To avoid stripping,
+add <code>strip=False</code>.  The <code>property</code> argument can be specified
+as a <code>WithProperties</code> object.
 
-<pre class="example">     from buildbot.steps.shell import ShellCommand, WithProperties
-     
-     f.addStep(ShellCommand,
-               command=["tar", "czf",
-                        WithProperties("build-%s.tar.gz", "revision"),
-                        "source"])
+   <p>The more advanced usage allows you to specify a function to extract
+properties from the command output.  Here you can use regular
+expressions, string interpolation, or whatever you would like. 
+The function is called with three arguments: the exit status of the
+command, its standard output as a string, and its standard error as
+a string.  It should return a dictionary containing all new properties.
+
+<pre class="example">     def glob2list(rc, stdout, stderr):
+         jpgs = [ l.strip() for l in stdout.split('\n') ]
+         return { 'jpgs' : jpgs }
+     f.addStep(SetProperty(command="ls -1 *.jpg", extract_fn=glob2list))
 </pre>
-   <p>If this BuildStep were used in a tree obtained from Subversion, it
-would create a tarball with a name like <samp><span class="file">build-1234.tar.gz</span></samp>.
+   <p>Note that any ordering relationship of the contents of stdout and
+stderr is lost.  For example, given
 
-   <p>The <code>WithProperties</code> function does <code>printf</code>-style string
-interpolation, using strings obtained by calling
-<code>build.getProperty(propname)</code>. Note that for every <code>%s</code> (or
-<code>%d</code>, etc), you must have exactly one additional argument to
-indicate which build property you want to insert.
-
-   <p>You can also use python dictionary-style string interpolation by using
-the <code>%(propname)s</code> syntax. In this form, the property name goes
-in the parentheses, and WithProperties takes <em>no</em> additional
-arguments:
-
-<pre class="example">     f.addStep(ShellCommand,
-               command=["tar", "czf",
-                        WithProperties("build-%(revision)s.tar.gz"),
-                        "source"])
+<pre class="example">     f.addStep(SetProperty(
+         command="echo output1; echo error &gt;&amp;2; echo output2",
+         extract_fn=my_extract))
 </pre>
-   <p>Don't forget the extra &ldquo;s&rdquo; after the closing parenthesis! This is
-the cause of many confusing errors. Also note that you can only use
-WithProperties in the list form of the command= definition. You cannot
-currently use it in the (discouraged) <code>command="stuff"</code>
-single-string form. However, you can use something like
-<code>command=["/bin/sh", "-c", "stuff", WithProperties(stuff)]</code> to
-use both shell expansion and WithProperties interpolation.
-
-   <p>Note that, like python, you can either do positional-argument
-interpolation <em>or</em> keyword-argument interpolation, not both. Thus
-you cannot use a string like
-<code>WithProperties("foo-%(revision)s-%s", "branch")</code>.
-
-   <p>At the moment, the only way to set build properties is by writing a
-custom BuildStep.
-
-<h3 class="heading">Common Build Properties</h3>
-
-<p>The following build properties are set when the build is started, and
-are available to all steps.
-
-     <dl>
-<dt><code>branch</code><dd>
-This comes from the build's SourceStamp, and describes which branch is
-being checked out. This will be <code>None</code> (which interpolates into
-<code>WithProperties</code> as an empty string) if the build is on the
-default branch, which is generally the trunk. Otherwise it will be a
-string like &ldquo;branches/beta1.4&rdquo;. The exact syntax depends upon the VC
-system being used.
-
-     <br><dt><code>revision</code><dd>
-This also comes from the SourceStamp, and is the revision of the
-source code tree that was requested from the VC system. When a build
-is requested of a specific revision (as is generally the case when the
-build is triggered by Changes), this will contain the revision
-specification. The syntax depends upon the VC system in use: for SVN
-it is an integer, for Mercurial it is a short string, for Darcs it is
-a rather large string, etc.
-
-     <p>If the &ldquo;force build&rdquo; button was pressed, the revision will be
-<code>None</code>, which means to use the most recent revision available. 
-This is a &ldquo;trunk build&rdquo;. This will be interpolated as an empty
-string.
-
-     <br><dt><code>got_revision</code><dd>
-This is set when a Source step checks out the source tree, and
-provides the revision that was actually obtained from the VC system. 
-In general this should be the same as <code>revision</code>, except for
-trunk builds, where <code>got_revision</code> indicates what revision was
-current when the checkout was performed. This can be used to rebuild
-the same source code later.
-
-     <p>Note that for some VC systems (Darcs in particular), the revision is a
-large string containing newlines, and is not suitable for
-interpolation into a filename.
-
-     <br><dt><code>buildername</code><dd>
-This is a string that indicates which Builder the build was a part of. 
-The combination of buildername and buildnumber uniquely identify a
-build.
-
-     <br><dt><code>buildnumber</code><dd>
-Each build gets a number, scoped to the Builder (so the first build
-performed on any given Builder will have a build number of 0). This
-integer property contains the build's number.
-
-     <br><dt><code>slavename</code><dd>
-This is a string which identifies which buildslave the build is
-running on.
-
-   </dl>
+   <p>Then <code>my_extract</code> will see <code>stdout="output1\noutput2\n"</code>
+and <code>stderr="error\n"</code>.
 
 <div class="node">
 <p><hr>
@@ -5221,7 +5616,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Build-Steps">Build Steps</a>
 
 </div>
 
-<h4 class="subsection">6.1.5 Python BuildSteps</h4>
+<h4 class="subsection">6.1.6 Python BuildSteps</h4>
 
 <p>Here are some BuildSteps that are specifcally useful for projects
 implemented in Python.
@@ -5240,9 +5635,9 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Python-BuildSteps">Python BuildSteps</
 
 </div>
 
-<h5 class="subsubsection">6.1.5.1 BuildEPYDoc</h5>
+<h5 class="subsubsection">6.1.6.1 BuildEPYDoc</h5>
 
-<p><a name="index-buildbot_002esteps_002epython_002eBuildEPYDoc-66"></a>
+<p><a name="index-buildbot_002esteps_002epython_002eBuildEPYDoc-76"></a>
 <a href="http://epydoc.sourceforge.net/">epydoc</a> is a tool for generating
 API documentation for Python modules from their docstrings. It reads
 all the .py files from your source tree, processes the docstrings
@@ -5271,7 +5666,7 @@ same place where the generated install tarball is placed.
 <pre class="example">     from buildbot.steps.python import BuildEPYDoc
      
      ...
-     f.addStep(BuildEPYDoc, command=["epydoc", "-o", "apiref", "source/mypkg"])
+     f.addStep(BuildEPYDoc(command=["epydoc", "-o", "apiref", "source/mypkg"]))
 </pre>
    <div class="node">
 <p><hr>
@@ -5281,9 +5676,9 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Python-BuildSteps">Python BuildSteps</
 
 </div>
 
-<h5 class="subsubsection">6.1.5.2 PyFlakes</h5>
+<h5 class="subsubsection">6.1.6.2 PyFlakes</h5>
 
-<p><a name="index-buildbot_002esteps_002epython_002ePyFlakes-67"></a>
+<p><a name="index-buildbot_002esteps_002epython_002ePyFlakes-77"></a>
 <a href="http://divmod.org/trac/wiki/DivmodPyflakes">PyFlakes</a> is a tool
 to perform basic static analysis of Python code to look for simple
 errors, like missing imports and references of undefined names. It is
@@ -5301,7 +5696,7 @@ with a &ldquo;pyflakes&rdquo; target. You might want to use something like
 <pre class="example">     from buildbot.steps.python import PyFlakes
      
      ...
-     f.addStep(PyFlakes, command=["pyflakes", "src"])
+     f.addStep(PyFlakes(command=["pyflakes", "src"]))
 </pre>
    <div class="node">
 <p><hr>
@@ -5312,9 +5707,9 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Build-Steps">Build Steps</a>
 
 </div>
 
-<h4 class="subsection">6.1.6 Transferring Files</h4>
+<h4 class="subsection">6.1.7 Transferring Files</h4>
 
-<p><a name="index-File-Transfer-68"></a><a name="index-buildbot_002esteps_002etransfer_002eFileUpload-69"></a><a name="index-buildbot_002esteps_002etransfer_002eFileDownload-70"></a>
+<p><a name="index-File-Transfer-78"></a><a name="index-buildbot_002esteps_002etransfer_002eFileUpload-79"></a><a name="index-buildbot_002esteps_002etransfer_002eFileDownload-80"></a>
 Most of the work involved in a build will take place on the
 buildslave. But occasionally it is useful to do some work on the
 buildmaster side. The most basic way to involve the buildmaster is
@@ -5335,10 +5730,9 @@ master-side <samp><span class="file">~/public_html/ref.html</span></samp>.
 <pre class="example">     from buildbot.steps.shell import ShellCommand
      from buildbot.steps.transfer import FileUpload
      
-     f.addStep(ShellCommand, command=["make", "docs"])
-     f.addStep(FileUpload,
-               slavesrc="docs/reference.html",
-               masterdest="~/public_html/ref.html")
+     f.addStep(ShellCommand(command=["make", "docs"]))
+     f.addStep(FileUpload(slavesrc="docs/reference.html",
+                          masterdest="~/public_html/ref.html"))
 </pre>
    <p>The <code>masterdest=</code> argument will be passed to os.path.expanduser,
 so things like &ldquo;~&rdquo; will be expanded properly. Non-absolute paths
@@ -5355,10 +5749,9 @@ side:
 <pre class="example">     from buildbot.steps.shell import ShellCommand
      from buildbot.steps.transfer import FileUpload
      
-     f.addStep(FileDownload
-               mastersrc="~/todays_build_config.txt",
-               slavedest="build_config.txt")
-     f.addStep(ShellCommand, command=["make", "config"])
+     f.addStep(FileDownload(mastersrc="~/todays_build_config.txt",
+                            slavedest="build_config.txt"))
+     f.addStep(ShellCommand(command=["make", "config"]))
 </pre>
    <p>Like <code>FileUpload</code>, the <code>mastersrc=</code> argument is interpreted
 relative to the buildmaster's base directory, and the
@@ -5367,8 +5760,8 @@ directory. If the buildslave is running in <samp><span class="file">~buildslave<
 builder's &ldquo;builddir&rdquo; is something like <samp><span class="file">tests-i386</span></samp>, then the
 workdir is going to be <samp><span class="file">~buildslave/tests-i386/build</span></samp>, and a
 <code>slavedest=</code> of <samp><span class="file">foo/bar.html</span></samp> will get put in
-<samp><span class="file">~buildslave/tests-i386/build/foo/bar.html</span></samp>. Remember that
-neither of these commands will create missing directories for you.
+<samp><span class="file">~buildslave/tests-i386/build/foo/bar.html</span></samp>. Both of these commands
+will create any missing intervening directories.
 
 <h4 class="subheading">Other Parameters</h4>
 
@@ -5399,15 +5792,15 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Build-Steps">Build Steps</a>
 
 </div>
 
-<h4 class="subsection">6.1.7 Triggering Schedulers</h4>
+<h4 class="subsection">6.1.8 Triggering Schedulers</h4>
 
 <p>The counterpart to the Triggerable described in section
-see <a href="#Build-Dependencies">Build Dependencies</a> is the Trigger BuildStep.
+see <a href="#Triggerable-Scheduler">Triggerable Scheduler</a> is the Trigger BuildStep.
 
 <pre class="example">     from buildbot.steps.trigger import Trigger
-     f.addStep(Trigger, schedulerNames=['build-prep'],
-                        waitForFinish=True,
-                        updateSourceStamp=True)
+     f.addStep(Trigger(schedulerNames=['build-prep'],
+                       waitForFinish=True,
+                       updateSourceStamp=True))
 </pre>
    <p>The <code>schedulerNames=</code> argument lists the Triggerables
 that should be triggered when this step is executed.  Note that
@@ -5436,7 +5829,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Build-Steps">Build Steps</a>
 
 </div>
 
-<h4 class="subsection">6.1.8 Writing New BuildSteps</h4>
+<h4 class="subsection">6.1.9 Writing New BuildSteps</h4>
 
 <p>While it is a good idea to keep your build process self-contained in
 the source code tree, sometimes it is convenient to put more
@@ -5469,7 +5862,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Writing-New-BuildSteps">Writing New Bu
 
 </div>
 
-<h5 class="subsubsection">6.1.8.1 BuildStep LogFiles</h5>
+<h5 class="subsubsection">6.1.9.1 BuildStep LogFiles</h5>
 
 <p>Each BuildStep has a collection of &ldquo;logfiles&rdquo;. Each one has a short
 name, like &ldquo;stdio&rdquo; or &ldquo;warnings&rdquo;. Each LogFile contains an
@@ -5563,7 +5956,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Writing-New-BuildSteps">Writing New Bu
 
 </div>
 
-<h5 class="subsubsection">6.1.8.2 Reading Logfiles</h5>
+<h5 class="subsubsection">6.1.9.2 Reading Logfiles</h5>
 
 <p>Once a LogFile has been added to a BuildStep with <code>addLog()</code>,
 <code>addCompleteLog()</code>, <code>addHTMLLog()</code>, or <code>logfiles=</code>,
@@ -5592,9 +5985,9 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Writing-New-BuildSteps">Writing New Bu
 
 </div>
 
-<h5 class="subsubsection">6.1.8.3 Adding LogObservers</h5>
+<h5 class="subsubsection">6.1.9.3 Adding LogObservers</h5>
 
-<p><a name="index-LogObserver-71"></a><a name="index-LogLineObserver-72"></a>
+<p><a name="index-LogObserver-81"></a><a name="index-LogLineObserver-82"></a>
 Most shell commands emit messages to stdout or stderr as they operate,
 especially if you ask them nicely with a <code>--verbose</code> flag of some
 sort. They may also write text to a log file while they run. Your
@@ -5820,9 +6213,19 @@ modify your environment to set the PYTHONPATH variable.
      [GCC 4.1.2 20060928 (prerelease) (Debian 4.1.1-15)] on linux2
      Type "help", "copyright", "credits" or "license" for more information.
      &gt;&gt;&gt; import sys
-     &gt;&gt;&gt; print sys.path
-     ['', '/usr/lib/python24.zip', '/usr/lib/python2.4', '/usr/lib/python2.4/plat-linux2', '/usr/lib/python2.4/lib-tk', '/usr/lib/python2.4/lib-dynload', '/usr/local/lib/python2.4/site-packages', '/usr/lib/python2.4/site-packages', '/usr/lib/python2.4/site-packages/Numeric', '/var/lib/python-support/python2.4', '/usr/lib/site-python']
-     &gt;&gt;&gt;
+     &gt;&gt;&gt; import pprint
+     &gt;&gt;&gt; pprint.pprint(sys.path)
+     ['',
+      '/usr/lib/python24.zip',
+      '/usr/lib/python2.4',
+      '/usr/lib/python2.4/plat-linux2',
+      '/usr/lib/python2.4/lib-tk',
+      '/usr/lib/python2.4/lib-dynload',
+      '/usr/local/lib/python2.4/site-packages',
+      '/usr/lib/python2.4/site-packages',
+      '/usr/lib/python2.4/site-packages/Numeric',
+      '/var/lib/python-support/python2.4',
+      '/usr/lib/site-python']
 </pre>
    <p>In this case, putting the code into
 /usr/local/lib/python2.4/site-packages/framboozle.py would work just
@@ -5872,9 +6275,9 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Writing-New-BuildSteps">Writing New Bu
 
 </div>
 
-<h5 class="subsubsection">6.1.8.4 BuildStep URLs</h5>
+<h5 class="subsubsection">6.1.9.4 BuildStep URLs</h5>
 
-<p><a name="index-links-73"></a><a name="index-BuildStep-URLs-74"></a><a name="index-addURL-75"></a>
+<p><a name="index-links-83"></a><a name="index-BuildStep-URLs-84"></a><a name="index-addURL-85"></a>
 Each BuildStep has a collection of &ldquo;links&rdquo;. Like its collection of
 LogFiles, each link has a name and a target URL. The web status page
 creates HREFs for each link in the same box as it does for LogFiles,
@@ -5950,7 +6353,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Build-Process">Build Process</a>
 
 <h3 class="section">6.2 Interlocks</h3>
 
-<p><a name="index-locks-76"></a><a name="index-buildbot_002elocks_002eMasterLock-77"></a><a name="index-buildbot_002elocks_002eSlaveLock-78"></a>
+<p><a name="index-locks-86"></a><a name="index-buildbot_002elocks_002eMasterLock-87"></a><a name="index-buildbot_002elocks_002eSlaveLock-88"></a><a name="index-buildbot_002elocks_002eLockAccess-89"></a>
 For various reasons, you may want to prevent certain Steps (or perhaps
 entire Builds) from running simultaneously. Limited CPU speed or
 network bandwidth to the VC server, problems with simultaneous access
@@ -5969,8 +6372,14 @@ separate copy of each <code>SlaveLock</code>, which could enforce a
 one-Build-at-a-time limit for each machine, but still allow as many
 simultaneous builds as there are machines.
 
+   <p>When using a <code>Lock</code>, you can specify how you want to access it
+with a <code>LockAccess</code> object. You can have an exclusive lock (the
+<code>'exclusive'</code> mode) where the lock has exactly one owner, or
+share it with with others up to the limit (the <code>'counting'</code>
+mode).
+
    <p>Each <code>Lock</code> is created with a unique name. Each lock gets a count
-of how many owners it may have: how many processes can claim it at ths
+of how many owners it may have in <code>'counting'</code> mode: how many processes can claim it at the
 same time. This limit defaults to one, and is controllable through the
 <code>maxCount</code> argument. On <code>SlaveLock</code>s you can set the owner
 count on a per-slave basis by providing a dictionary (that maps from
@@ -5978,14 +6387,19 @@ slavename to maximum owner count) to its <code>maxCountForSlave</code>
 argument. Any buildslaves that aren't mentioned in
 <code>maxCountForSlave</code> get their owner count from <code>maxCount</code>.
 
-   <p>To use a lock, simply include it in the <code>locks=</code> argument of the
+   <p>To use a lock, simply include it with the desired mode of access in the <code>locks=</code> argument of the
 <code>BuildStep</code> object that should obtain the lock before it runs. 
-This argument accepts a list of <code>Lock</code> objects: the Step will
-acquire all of them before it runs.
+This argument accepts a list of <code>LockAccess</code> objects: the Step will
+acquire all of them before it runs. (For backwards compatibility, the
+list also accepts <code>Lock</code> objects which are accessed in
+<code>'counting'</code> mode.)
 
    <p>To claim a lock for the whole Build, add a <code>'locks'</code> key to the
-builder specification dictionary with the same list of <code>Lock</code>
-objects. (This is the dictionary that has the <code>'name'</code>,
+builder specification dictionary with the same list of
+<code>LockAccess</code> objects (and for backwards compatibility, the list
+also accepts <code>Lock</code> objects which are accessed in
+<code>'counting'</code> mode). 
+(The builder specification dictionary is the dictionary that has the <code>'name'</code>,
 <code>'slavename'</code>, <code>'builddir'</code>, and <code>'factory'</code> keys). The
 <code>Build</code> object also accepts a <code>locks=</code> argument, but unless
 you are writing your own <code>BuildFactory</code> subclass then it will be
@@ -6013,12 +6427,16 @@ from happening at the same time.
      f = factory.BuildFactory()
      f.addStep(source.SVN(svnurl="http://example.org/svn/Trunk"))
      f.addStep(shell.ShellCommand(command="make all"))
-     f.addStep(shell.ShellCommand(command="make test", locks=[db_lock]))
-     b1 = {'name': 'full1', 'slavename': 'bot-1', builddir='f1', 'factory': f}
-     b2 = {'name': 'full2', 'slavename': 'bot-2', builddir='f2', 'factory': f}
-     b3 = {'name': 'full3', 'slavename': 'bot-3', builddir='f3', 'factory': f}
+     f.addStep(shell.ShellCommand(command="make test",
+                                  locks=[db_lock.access('exclusive')]))
+     b1 = {'name': 'full1', 'slavename': 'bot-1', 'builddir': 'f1', 'factory': f}
+     b2 = {'name': 'full2', 'slavename': 'bot-2', 'builddir': 'f2', 'factory': f}
+     b3 = {'name': 'full3', 'slavename': 'bot-3', 'builddir': 'f3', 'factory': f}
      c['builders'] = [b1, b2, b3]
 </pre>
+   <p>Note that by default, a <code>Lock</code> uses a <code>maxCount=1</code> limit, so
+you can also use the <code>'counting'</code> access mode in this example.
+
    <p>In the next example, we have one buildslave hosting three separate
 Builders (each running tests against a different version of Python). 
 The machine which hosts this buildslave is not particularly fast, so
@@ -6041,13 +6459,37 @@ goal of two simultaneous builds per slave.
      f22 = factory.Trial(source, trialpython=["python2.2"])
      f23 = factory.Trial(source, trialpython=["python2.3"])
      f24 = factory.Trial(source, trialpython=["python2.4"])
-     b1 = {'name': 'p22', 'slavename': 'bot-1', builddir='p22', 'factory': f22,
-           'locks': [slow_lock] }
-     b2 = {'name': 'p23', 'slavename': 'bot-1', builddir='p23', 'factory': f23,
-           'locks': [slow_lock] }
-     b3 = {'name': 'p24', 'slavename': 'bot-1', builddir='p24', 'factory': f24,
-           'locks': [slow_lock] }
+     b1 = {'name': 'p22', 'slavename': 'bot-1', 'builddir': 'p22',
+           'factory': f22, 'locks': [slow_lock.access('counting')] }
+     b2 = {'name': 'p23', 'slavename': 'bot-1', 'builddir': 'p23',
+           'factory': f23, 'locks': [slow_lock.access('counting')] }
+     b3 = {'name': 'p24', 'slavename': 'bot-1', 'builddir': 'p24',
+           'factory': f24, 'locks': [slow_lock.access('counting')] }
      c['builders'] = [b1, b2, b3]
+</pre>
+   <p>You can also mix access modes. In the next example, a limit of at most
+two builds is enforced. The cleanup process however needs exclusive
+access to prevent interference with the build processes.
+
+<pre class="example">     from buildbot import locks
+     from buildbot.steps import source, shell
+     from buildbot.process import factory
+     
+     build_lock = locks.MasterLock("builds", maxCount=2)
+     fb = factory.BuildFactory()
+     fb.addStep(source.SVN(svnurl="http://example.org/svn/Trunk"))
+     fb.addStep(shell.ShellCommand(command=["make", "all"]))
+     b1 = {'name': 'b1', 'slavename': 'bot-1', 'builddir' : 'b1',
+           'factory': fb, 'locks': [build_lock.access('counting')] }
+     b2 = {'name': 'b2', 'slavename': 'bot-2', 'builddir' : 'b2',
+           'factory': fb, 'locks': [build_lock.access('counting')] }
+     b3 = {'name': 'b3', 'slavename': 'bot-3', 'builddir' : 'b3',
+           'factory': fb, 'locks': [build_lock.access('counting')] }
+     fc = factory.BuildFactory()
+     fc.addStep(shell.ShellCommand(command=["cleanup"]))
+     cl = {'name': 'clean', 'slavename': 'bot-1', 'builddir' :clean',
+           'factory': fc, 'locks': [build_lock.access('exclusive')] }
+     c['builders'] = [b1, b2, b3, cl]
 </pre>
    <p>In the last example, we use two Locks at the same time. In this case,
 we're concerned about both of the previous constraints, but we'll say
@@ -6068,17 +6510,21 @@ unlimited concurrent builds on the fast machine.
      cpu_lock = locks.SlaveLock("cpu", maxCountForSlave=slavecounts)
      f = factory.BuildFactory()
      f.addStep(source.SVN(svnurl="http://example.org/svn/Trunk"))
-     f.addStep(shell.ShellCommand(command="make all", locks=[cpu_lock]))
-     f.addStep(shell.ShellCommand(command="make test", locks=[cpu_lock]))
-     f.addStep(shell.ShellCommand(command="make db-test", locks=[db_lock, cpu_lock]))
+     f.addStep(shell.ShellCommand(command="make all",
+                                  locks=[cpu_lock.access('counting')]))
+     f.addStep(shell.ShellCommand(command="make test",
+                                  locks=[cpu_lock.access('counting')]))
+     f.addStep(shell.ShellCommand(command="make db-test",
+                                  locks=[db_lock.access('exclusive'),
+     			            cpu_lock.access('counting')]))
      
-     b1 = {'name': 'full1', 'slavename': 'bot-slow', builddir='full1',
+     b1 = {'name': 'full1', 'slavename': 'bot-slow', 'builddir': 'full1',
            'factory': f}
-     b2 = {'name': 'full2', 'slavename': 'bot-slow', builddir='full2',
+     b2 = {'name': 'full2', 'slavename': 'bot-slow', 'builddir': 'full2',
            'factory': f}
-     b3 = {'name': 'full3', 'slavename': 'bot-fast', builddir='full3',
+     b3 = {'name': 'full3', 'slavename': 'bot-fast', 'builddir': 'full3',
            'factory': f}
-     b4 = {'name': 'full4', 'slavename': 'bot-fast', builddir='full4',
+     b4 = {'name': 'full4', 'slavename': 'bot-fast', 'builddir': 'full4',
            'factory': f}
      c['builders'] = [b1, b2, b3, b4]
 </pre>
@@ -6182,8 +6628,8 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Build-Factories">Build Factories</a>
 
 <h4 class="subsection">6.3.2 BuildFactory</h4>
 
-<p><a name="index-buildbot_002eprocess_002efactory_002eBuildFactory-79"></a><a name="index-buildbot_002eprocess_002efactory_002eBasicBuildFactory-80"></a><!-- TODO: what is BasicSVN anyway? -->
-<a name="index-buildbot_002eprocess_002efactory_002eBasicSVN-81"></a>
+<p><a name="index-buildbot_002eprocess_002efactory_002eBuildFactory-90"></a><a name="index-buildbot_002eprocess_002efactory_002eBasicBuildFactory-91"></a><!-- TODO: what is BasicSVN anyway? -->
+<a name="index-buildbot_002eprocess_002efactory_002eBasicSVN-92"></a>
 The default <code>BuildFactory</code>, provided in the
 <code>buildbot.process.factory</code> module, contains an internal list of
 &ldquo;BuildStep specifications&rdquo;: a list of <code>(step_class, kwargs)</code>
@@ -6293,7 +6739,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#BuildFactory">BuildFactory</a>
 
 <p>Some attributes from the BuildFactory are copied into each Build.
 
-   <p><a name="index-treeStableTimer-82"></a>
+   <p><a name="index-treeStableTimer-93"></a>
      <dl>
 <dt><code>useProgress</code><dd>(defaults to True): if True, the buildmaster keeps track of how long
 each step takes, so it can provide estimates of how long future builds
@@ -6314,7 +6760,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#BuildFactory">BuildFactory</a>
 
 <h5 class="subsubsection">6.3.2.2 Quick builds</h5>
 
-<p><a name="index-buildbot_002eprocess_002efactory_002eQuickBuildFactory-83"></a>
+<p><a name="index-buildbot_002eprocess_002efactory_002eQuickBuildFactory-94"></a>
 The difference between a &ldquo;full build&rdquo; and a &ldquo;quick build&rdquo; is that
 quick builds are generally done incrementally, starting with the tree
 where the previous build was performed. That simply means that the
@@ -6361,7 +6807,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Process_002dSpecific-build-factories">
 
 <h5 class="subsubsection">6.3.3.1 GNUAutoconf</h5>
 
-<p><a name="index-buildbot_002eprocess_002efactory_002eGNUAutoconf-84"></a>
+<p><a name="index-buildbot_002eprocess_002efactory_002eGNUAutoconf-95"></a>
 <a href="http://www.gnu.org/software/autoconf/">GNU Autoconf</a> is a
 software portability tool, intended to make it possible to write
 programs in C (and other languages) which will run on a variety of
@@ -6435,7 +6881,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Process_002dSpecific-build-factories">
 
 <h5 class="subsubsection">6.3.3.2 CPAN</h5>
 
-<p><a name="index-buildbot_002eprocess_002efactory_002eCPAN-85"></a>
+<p><a name="index-buildbot_002eprocess_002efactory_002eCPAN-96"></a>
 Most Perl modules available from the <a href="http://www.cpan.org/">CPAN</a>
 archive use the <code>MakeMaker</code> module to provide configuration,
 build, and test services. The standard build routine for these modules
@@ -6471,7 +6917,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Process_002dSpecific-build-factories">
 
 <h5 class="subsubsection">6.3.3.3 Python distutils</h5>
 
-<p><a name="index-buildbot_002eprocess_002efactory_002eDistutils-86"></a>
+<p><a name="index-buildbot_002eprocess_002efactory_002eDistutils-97"></a>
 Most Python modules use the <code>distutils</code> package to provide
 configuration and build services. The standard build process looks
 like:
@@ -6513,8 +6959,8 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Process_002dSpecific-build-factories">
 
 <h5 class="subsubsection">6.3.3.4 Python/Twisted/trial projects</h5>
 
-<p><a name="index-buildbot_002eprocess_002efactory_002eTrial-87"></a><!-- TODO: document these steps better -->
-<a name="index-buildbot_002esteps_002epython_005ftwisted_002eHLint-88"></a><a name="index-buildbot_002esteps_002epython_005ftwisted_002eTrial-89"></a><a name="index-buildbot_002esteps_002epython_005ftwisted_002eProcessDocs-90"></a><a name="index-buildbot_002esteps_002epython_005ftwisted_002eBuildDebs-91"></a><a name="index-buildbot_002esteps_002epython_005ftwisted_002eRemovePYCs-92"></a>
+<p><a name="index-buildbot_002eprocess_002efactory_002eTrial-98"></a><!-- TODO: document these steps better -->
+<a name="index-buildbot_002esteps_002epython_005ftwisted_002eHLint-99"></a><a name="index-buildbot_002esteps_002epython_005ftwisted_002eTrial-100"></a><a name="index-buildbot_002esteps_002epython_005ftwisted_002eProcessDocs-101"></a><a name="index-buildbot_002esteps_002epython_005ftwisted_002eBuildDebs-102"></a><a name="index-buildbot_002esteps_002epython_005ftwisted_002eRemovePYCs-103"></a>
 Twisted provides a unit test tool named <code>trial</code> which provides a
 few improvements over Python's built-in <code>unittest</code> module. Many
 python projects which use Twisted for their networking or application
@@ -6705,7 +7151,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Status-Delivery">Status Delivery</a>
 
 <h3 class="section">7.1 WebStatus</h3>
 
-<p><a name="index-WebStatus-93"></a><a name="index-buildbot_002estatus_002eweb_002ebaseweb_002eWebStatus-94"></a>
+<p><a name="index-WebStatus-104"></a><a name="index-buildbot_002estatus_002eweb_002ebaseweb_002eWebStatus-105"></a>
 The <code>buildbot.status.html.WebStatus</code> status target runs a small
 web server inside the buildmaster. You can point a browser at this web
 server and retrieve information about every build the buildbot knows
@@ -6734,7 +7180,7 @@ branches, or which ran on certain Builders. These pages are described
 in great detail below.
 
    <p>When the buildmaster is created, a subdirectory named
-<samp><span class="file">public_html/</span></samp> is created in its base directory. <code>WebStatus</code>
+<samp><span class="file">public_html/</span></samp> is created in its base directory. By default, <code>WebStatus</code>
 will serve files from this directory: for example, when a user points
 their browser at the buildbot's <code>WebStatus</code> URL, they will see
 the contents of the <samp><span class="file">public_html/index.html</span></samp> file. Likewise,
@@ -6757,6 +7203,11 @@ buildbot behind a reverse proxy, you'll probably need to put the
 robots.txt file somewhere else (at the top level of the parent web
 server), and replace the URL prefixes in it with more suitable values.
 
+   <p>If you would like to use an alternative root directory, add the
+<code>public_html=..</code> option to the <code>WebStatus</code> creation:
+
+<pre class="example">     c['status'].append(WebStatus(8080, public_html="/var/www/buildbot"))
+</pre>
    <p>In addition, if you are familiar with twisted.web <em>Resource
 Trees</em>, you can write code to add additional pages at places inside
 this web space. Just use <code>webstatus.putChild</code> to place these
@@ -7049,14 +7500,14 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#WebStatus">WebStatus</a>
 
 <h4 class="subsection">7.1.4 HTML Waterfall</h4>
 
-<p><a name="index-Waterfall-95"></a><a name="index-buildbot_002estatus_002ehtml_002eWaterfall-96"></a>
+<p><a name="index-Waterfall-106"></a><a name="index-buildbot_002estatus_002ehtml_002eWaterfall-107"></a>
 The <code>Waterfall</code> status target, deprecated as of 0.7.6, is a
 subset of the regular <code>WebStatus</code> resource (see <a href="#WebStatus">WebStatus</a>). 
 This section (and the <code>Waterfall</code> class itself) will be removed
 from a future release.
 
 <pre class="example">     from buildbot.status import html
-     w = html.Waterfall(http_port=8080)
+     w = html.WebStatus(http_port=8080)
      c['status'].append(w)
 </pre>
    <div class="node">
@@ -7070,7 +7521,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Status-Delivery">Status Delivery</a>
 
 <h3 class="section">7.2 MailNotifier</h3>
 
-<p><a name="index-email-97"></a><a name="index-mail-98"></a><a name="index-buildbot_002estatus_002email_002eMailNotifier-99"></a>
+<p><a name="index-email-108"></a><a name="index-mail-109"></a><a name="index-buildbot_002estatus_002email_002eMailNotifier-110"></a>
 The buildbot can also send email when builds finish. The most common
 use of this is to tell developers when their change has caused the
 build to fail. It is also quite common to send a message to a mailing
@@ -7178,14 +7629,14 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Status-Delivery">Status Delivery</a>
 
 <h3 class="section">7.3 IRC Bot</h3>
 
-<p><a name="index-IRC-100"></a><a name="index-buildbot_002estatus_002ewords_002eIRC-101"></a>
+<p><a name="index-IRC-111"></a><a name="index-buildbot_002estatus_002ewords_002eIRC-112"></a>
 
    <p>The <code>buildbot.status.words.IRC</code> status target creates an IRC bot
 which will attach to certain channels and be available for status
 queries. It can also be asked to announce builds as they occur, or be
 told to shut up.
 
-<pre class="example">     from twisted.status import words
+<pre class="example">     from buildbot.status import words
      irc = words.IRC("irc.example.org", "botnickname",
                      channels=["channel1", "channel2"],
                      password="mysecretpassword")
@@ -7209,7 +7660,23 @@ normally (<code>botnickname: status</code>) or with private messages
 <br><dt><code>status all</code><dd>Announce the status of all Builders
 <br><dt><code>watch BUILDER</code><dd>If the given Builder is currently running, wait until the Build is
 finished and then announce the results. 
-<br><dt><code>last BUILDER</code><dd>Return the results of the last build to run on the given Builder.
+<br><dt><code>last BUILDER</code><dd>Return the results of the last build to run on the given Builder. 
+<br><dt><code>join CHANNEL</code><dd>Join the given IRC channel
+<br><dt><code>leave CHANNEL</code><dd>Leave the given IRC channel
+<br><dt><code>notify on|off|list EVENT</code><dd>Report events relating to builds.  If the command is issued as a
+private message, then the report will be sent back as a private
+message to the user who issued the command.  Otherwise, the report
+will be sent to the channel.  Available events to be notified are:
+
+          <dl>
+<dt><code>started</code><dd>A build has started
+<br><dt><code>finished</code><dd>A build has finished
+<br><dt><code>success</code><dd>A build finished successfully
+<br><dt><code>failed</code><dd>A build failed
+<br><dt><code>exception</code><dd>A build generated and exception
+<br><dt><code>successToFailure</code><dd>The previous build was successful, but this one failed
+<br><dt><code>failureToSuccess</code><dd>The previous build failed, but this one was successful
+</dl>
 
      <br><dt><code>help COMMAND</code><dd>Describe a command. Use <code>help commands</code> to get a list of known
 commands. 
@@ -7243,7 +7710,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Status-Delivery">Status Delivery</a>
 
 <h3 class="section">7.4 PBListener</h3>
 
-<p><a name="index-PBListener-102"></a><a name="index-buildbot_002estatus_002eclient_002ePBListener-103"></a>
+<p><a name="index-PBListener-113"></a><a name="index-buildbot_002estatus_002eclient_002ePBListener-114"></a>
 
 <pre class="example">     import buildbot.status.client
      pbl = buildbot.status.client.PBListener(port=int, user=str,
@@ -7427,7 +7894,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Developer-Tools">Developer Tools</a>
 
 <h4 class="subsection">8.2.2 statusgui</h4>
 
-<p><a name="index-statusgui-104"></a>
+<p><a name="index-statusgui-115"></a>
 If you have set up a PBListener (see <a href="#PBListener">PBListener</a>), you will be able
 to monitor your Buildbot using a simple Gtk+ application invoked with
 the <code>buildbot statusgui</code> command:
@@ -7473,7 +7940,7 @@ form does not require a local tree to run from. See See <a href="#try-_002d_002d
 
 <h3 class="heading">TryScheduler</h3>
 
-<p><a name="index-buildbot_002escheduler_002eTry_005fJobdir-105"></a><a name="index-buildbot_002escheduler_002eTry_005fUserpass-106"></a>
+<p><a name="index-buildbot_002escheduler_002eTry_005fJobdir-116"></a><a name="index-buildbot_002escheduler_002eTry_005fUserpass-117"></a>
 The buildmaster must have a <code>scheduler.Try</code> instance in
 the config file's <code>c['schedulers']</code> list. This lets the
 administrator control who may initiate these &ldquo;trial&rdquo; builds, which
@@ -8091,86 +8558,91 @@ admins are unlikely to have much use for.
 <h3 class="heading">Change Sources</h3>
 
 <ul class="index-cs" compact>
-<li><a href="#index-buildbot_002echanges_002ebonsaipoller_002eBonsaiPoller-39"><code>buildbot.changes.bonsaipoller.BonsaiPoller</code></a>: <a href="#BonsaiPoller">BonsaiPoller</a></li>
-<li><a href="#index-buildbot_002echanges_002efreshcvs_002eFreshCVSSource-32"><code>buildbot.changes.freshcvs.FreshCVSSource</code></a>: <a href="#CVSToys-_002d-PBService">CVSToys - PBService</a></li>
-<li><a href="#index-buildbot_002echanges_002email_002eBonsaiMaildirSource-35"><code>buildbot.changes.mail.BonsaiMaildirSource</code></a>: <a href="#BonsaiMaildirSource">BonsaiMaildirSource</a></li>
-<li><a href="#index-buildbot_002echanges_002email_002eFCMaildirSource-33"><code>buildbot.changes.mail.FCMaildirSource</code></a>: <a href="#FCMaildirSource">FCMaildirSource</a></li>
-<li><a href="#index-buildbot_002echanges_002email_002eSVNCommitEmailMaildirSource-36"><code>buildbot.changes.mail.SVNCommitEmailMaildirSource</code></a>: <a href="#SVNCommitEmailMaildirSource">SVNCommitEmailMaildirSource</a></li>
-<li><a href="#index-buildbot_002echanges_002email_002eSyncmailMaildirSource-34"><code>buildbot.changes.mail.SyncmailMaildirSource</code></a>: <a href="#SyncmailMaildirSource">SyncmailMaildirSource</a></li>
-<li><a href="#index-buildbot_002echanges_002ep4poller_002eP4Source-38"><code>buildbot.changes.p4poller.P4Source</code></a>: <a href="#P4Source">P4Source</a></li>
-<li><a href="#index-buildbot_002echanges_002epb_002ePBChangeSource-37"><code>buildbot.changes.pb.PBChangeSource</code></a>: <a href="#PBChangeSource">PBChangeSource</a></li>
-<li><a href="#index-buildbot_002echanges_002esvnpoller_002eSVNPoller-40"><code>buildbot.changes.svnpoller.SVNPoller</code></a>: <a href="#SVNPoller">SVNPoller</a></li>
+<li><a href="#index-buildbot_002echanges_002ebonsaipoller_002eBonsaiPoller-47"><code>buildbot.changes.bonsaipoller.BonsaiPoller</code></a>: <a href="#BonsaiPoller">BonsaiPoller</a></li>
+<li><a href="#index-buildbot_002echanges_002efreshcvs_002eFreshCVSSource-40"><code>buildbot.changes.freshcvs.FreshCVSSource</code></a>: <a href="#CVSToys-_002d-PBService">CVSToys - PBService</a></li>
+<li><a href="#index-buildbot_002echanges_002email_002eBonsaiMaildirSource-43"><code>buildbot.changes.mail.BonsaiMaildirSource</code></a>: <a href="#BonsaiMaildirSource">BonsaiMaildirSource</a></li>
+<li><a href="#index-buildbot_002echanges_002email_002eFCMaildirSource-41"><code>buildbot.changes.mail.FCMaildirSource</code></a>: <a href="#FCMaildirSource">FCMaildirSource</a></li>
+<li><a href="#index-buildbot_002echanges_002email_002eSVNCommitEmailMaildirSource-44"><code>buildbot.changes.mail.SVNCommitEmailMaildirSource</code></a>: <a href="#SVNCommitEmailMaildirSource">SVNCommitEmailMaildirSource</a></li>
+<li><a href="#index-buildbot_002echanges_002email_002eSyncmailMaildirSource-42"><code>buildbot.changes.mail.SyncmailMaildirSource</code></a>: <a href="#SyncmailMaildirSource">SyncmailMaildirSource</a></li>
+<li><a href="#index-buildbot_002echanges_002ep4poller_002eP4Source-46"><code>buildbot.changes.p4poller.P4Source</code></a>: <a href="#P4Source">P4Source</a></li>
+<li><a href="#index-buildbot_002echanges_002epb_002ePBChangeSource-45"><code>buildbot.changes.pb.PBChangeSource</code></a>: <a href="#PBChangeSource">PBChangeSource</a></li>
+<li><a href="#index-buildbot_002echanges_002esvnpoller_002eSVNPoller-48"><code>buildbot.changes.svnpoller.SVNPoller</code></a>: <a href="#SVNPoller">SVNPoller</a></li>
    </ul><h3 class="heading">Schedulers and Locks</h3>
 
 
 
 <ul class="index-sl" compact>
-<li><a href="#index-buildbot_002elocks_002eMasterLock-77"><code>buildbot.locks.MasterLock</code></a>: <a href="#Interlocks">Interlocks</a></li>
-<li><a href="#index-buildbot_002elocks_002eSlaveLock-78"><code>buildbot.locks.SlaveLock</code></a>: <a href="#Interlocks">Interlocks</a></li>
-<li><a href="#index-buildbot_002escheduler_002eAnyBranchScheduler-19"><code>buildbot.scheduler.AnyBranchScheduler</code></a>: <a href="#Scheduler-Types">Scheduler Types</a></li>
-<li><a href="#index-buildbot_002escheduler_002eDependent-24"><code>buildbot.scheduler.Dependent</code></a>: <a href="#Build-Dependencies">Build Dependencies</a></li>
-<li><a href="#index-buildbot_002escheduler_002eNightly-21"><code>buildbot.scheduler.Nightly</code></a>: <a href="#Scheduler-Types">Scheduler Types</a></li>
-<li><a href="#index-buildbot_002escheduler_002ePeriodic-20"><code>buildbot.scheduler.Periodic</code></a>: <a href="#Scheduler-Types">Scheduler Types</a></li>
-<li><a href="#index-buildbot_002escheduler_002eScheduler-18"><code>buildbot.scheduler.Scheduler</code></a>: <a href="#Scheduler-Types">Scheduler Types</a></li>
-<li><a href="#index-buildbot_002escheduler_002eTriggerable-25"><code>buildbot.scheduler.Triggerable</code></a>: <a href="#Build-Dependencies">Build Dependencies</a></li>
-<li><a href="#index-buildbot_002escheduler_002eTry_005fJobdir-105"><code>buildbot.scheduler.Try_Jobdir</code></a>: <a href="#try">try</a></li>
-<li><a href="#index-buildbot_002escheduler_002eTry_005fUserpass-106"><code>buildbot.scheduler.Try_Userpass</code></a>: <a href="#try">try</a></li>
+<li><a href="#index-buildbot_002elocks_002eLockAccess-89"><code>buildbot.locks.LockAccess</code></a>: <a href="#Interlocks">Interlocks</a></li>
+<li><a href="#index-buildbot_002elocks_002eMasterLock-87"><code>buildbot.locks.MasterLock</code></a>: <a href="#Interlocks">Interlocks</a></li>
+<li><a href="#index-buildbot_002elocks_002eSlaveLock-88"><code>buildbot.locks.SlaveLock</code></a>: <a href="#Interlocks">Interlocks</a></li>
+<li><a href="#index-buildbot_002escheduler_002eAnyBranchScheduler-21"><code>buildbot.scheduler.AnyBranchScheduler</code></a>: <a href="#AnyBranchScheduler">AnyBranchScheduler</a></li>
+<li><a href="#index-buildbot_002escheduler_002eDependent-24"><code>buildbot.scheduler.Dependent</code></a>: <a href="#Dependent-Scheduler">Dependent Scheduler</a></li>
+<li><a href="#index-buildbot_002escheduler_002eNightly-26"><code>buildbot.scheduler.Nightly</code></a>: <a href="#Nightly-Scheduler">Nightly Scheduler</a></li>
+<li><a href="#index-buildbot_002escheduler_002ePeriodic-25"><code>buildbot.scheduler.Periodic</code></a>: <a href="#Periodic-Scheduler">Periodic Scheduler</a></li>
+<li><a href="#index-buildbot_002escheduler_002eScheduler-20"><code>buildbot.scheduler.Scheduler</code></a>: <a href="#Scheduler-Scheduler">Scheduler Scheduler</a></li>
+<li><a href="#index-buildbot_002escheduler_002eTriggerable-30"><code>buildbot.scheduler.Triggerable</code></a>: <a href="#Triggerable-Scheduler">Triggerable Scheduler</a></li>
+<li><a href="#index-buildbot_002escheduler_002eTry_005fJobdir-116"><code>buildbot.scheduler.Try_Jobdir</code></a>: <a href="#try">try</a></li>
+<li><a href="#index-buildbot_002escheduler_002eTry_005fJobdir-27"><code>buildbot.scheduler.Try_Jobdir</code></a>: <a href="#Try-Schedulers">Try Schedulers</a></li>
+<li><a href="#index-buildbot_002escheduler_002eTry_005fUserpass-117"><code>buildbot.scheduler.Try_Userpass</code></a>: <a href="#try">try</a></li>
+<li><a href="#index-buildbot_002escheduler_002eTry_005fUserpass-28"><code>buildbot.scheduler.Try_Userpass</code></a>: <a href="#Try-Schedulers">Try Schedulers</a></li>
    </ul><h3 class="heading">Build Factories</h3>
 
 
 
 <ul class="index-bf" compact>
-<li><a href="#index-buildbot_002eprocess_002efactory_002eBasicBuildFactory-80"><code>buildbot.process.factory.BasicBuildFactory</code></a>: <a href="#BuildFactory">BuildFactory</a></li>
-<li><a href="#index-buildbot_002eprocess_002efactory_002eBasicSVN-81"><code>buildbot.process.factory.BasicSVN</code></a>: <a href="#BuildFactory">BuildFactory</a></li>
-<li><a href="#index-buildbot_002eprocess_002efactory_002eBuildFactory-79"><code>buildbot.process.factory.BuildFactory</code></a>: <a href="#BuildFactory">BuildFactory</a></li>
-<li><a href="#index-buildbot_002eprocess_002efactory_002eCPAN-85"><code>buildbot.process.factory.CPAN</code></a>: <a href="#CPAN">CPAN</a></li>
-<li><a href="#index-buildbot_002eprocess_002efactory_002eDistutils-86"><code>buildbot.process.factory.Distutils</code></a>: <a href="#Python-distutils">Python distutils</a></li>
-<li><a href="#index-buildbot_002eprocess_002efactory_002eGNUAutoconf-84"><code>buildbot.process.factory.GNUAutoconf</code></a>: <a href="#GNUAutoconf">GNUAutoconf</a></li>
-<li><a href="#index-buildbot_002eprocess_002efactory_002eQuickBuildFactory-83"><code>buildbot.process.factory.QuickBuildFactory</code></a>: <a href="#Quick-builds">Quick builds</a></li>
-<li><a href="#index-buildbot_002eprocess_002efactory_002eTrial-87"><code>buildbot.process.factory.Trial</code></a>: <a href="#Python_002fTwisted_002ftrial-projects">Python/Twisted/trial projects</a></li>
+<li><a href="#index-buildbot_002eprocess_002efactory_002eBasicBuildFactory-91"><code>buildbot.process.factory.BasicBuildFactory</code></a>: <a href="#BuildFactory">BuildFactory</a></li>
+<li><a href="#index-buildbot_002eprocess_002efactory_002eBasicSVN-92"><code>buildbot.process.factory.BasicSVN</code></a>: <a href="#BuildFactory">BuildFactory</a></li>
+<li><a href="#index-buildbot_002eprocess_002efactory_002eBuildFactory-90"><code>buildbot.process.factory.BuildFactory</code></a>: <a href="#BuildFactory">BuildFactory</a></li>
+<li><a href="#index-buildbot_002eprocess_002efactory_002eCPAN-96"><code>buildbot.process.factory.CPAN</code></a>: <a href="#CPAN">CPAN</a></li>
+<li><a href="#index-buildbot_002eprocess_002efactory_002eDistutils-97"><code>buildbot.process.factory.Distutils</code></a>: <a href="#Python-distutils">Python distutils</a></li>
+<li><a href="#index-buildbot_002eprocess_002efactory_002eGNUAutoconf-95"><code>buildbot.process.factory.GNUAutoconf</code></a>: <a href="#GNUAutoconf">GNUAutoconf</a></li>
+<li><a href="#index-buildbot_002eprocess_002efactory_002eQuickBuildFactory-94"><code>buildbot.process.factory.QuickBuildFactory</code></a>: <a href="#Quick-builds">Quick builds</a></li>
+<li><a href="#index-buildbot_002eprocess_002efactory_002eTrial-98"><code>buildbot.process.factory.Trial</code></a>: <a href="#Python_002fTwisted_002ftrial-projects">Python/Twisted/trial projects</a></li>
    </ul><h3 class="heading">Build Steps</h3>
 
 
 
 <ul class="index-bs" compact>
-<li><a href="#index-buildbot_002esteps_002emaxq_002eMaxQ-108"><code>buildbot.steps.maxq.MaxQ</code></a>: <a href="#Index-of-Useful-Classes">Index of Useful Classes</a></li>
-<li><a href="#index-buildbot_002esteps_002epython_002eBuildEPYDoc-66"><code>buildbot.steps.python.BuildEPYDoc</code></a>: <a href="#BuildEPYDoc">BuildEPYDoc</a></li>
-<li><a href="#index-buildbot_002esteps_002epython_002ePyFlakes-67"><code>buildbot.steps.python.PyFlakes</code></a>: <a href="#PyFlakes">PyFlakes</a></li>
-<li><a href="#index-buildbot_002esteps_002epython_005ftwisted_002eBuildDebs-91"><code>buildbot.steps.python_twisted.BuildDebs</code></a>: <a href="#Python_002fTwisted_002ftrial-projects">Python/Twisted/trial projects</a></li>
-<li><a href="#index-buildbot_002esteps_002epython_005ftwisted_002eHLint-88"><code>buildbot.steps.python_twisted.HLint</code></a>: <a href="#Python_002fTwisted_002ftrial-projects">Python/Twisted/trial projects</a></li>
-<li><a href="#index-buildbot_002esteps_002epython_005ftwisted_002eProcessDocs-90"><code>buildbot.steps.python_twisted.ProcessDocs</code></a>: <a href="#Python_002fTwisted_002ftrial-projects">Python/Twisted/trial projects</a></li>
-<li><a href="#index-buildbot_002esteps_002epython_005ftwisted_002eRemovePYCs-92"><code>buildbot.steps.python_twisted.RemovePYCs</code></a>: <a href="#Python_002fTwisted_002ftrial-projects">Python/Twisted/trial projects</a></li>
-<li><a href="#index-buildbot_002esteps_002epython_005ftwisted_002eTrial-89"><code>buildbot.steps.python_twisted.Trial</code></a>: <a href="#Python_002fTwisted_002ftrial-projects">Python/Twisted/trial projects</a></li>
-<li><a href="#index-buildbot_002esteps_002eshell_002eCompile-61"><code>buildbot.steps.shell.Compile</code></a>: <a href="#Compile">Compile</a></li>
-<li><a href="#index-buildbot_002esteps_002eshell_002eConfigure-60"><code>buildbot.steps.shell.Configure</code></a>: <a href="#Configure">Configure</a></li>
-<li><a href="#index-buildbot_002esteps_002eshell_002eShellCommand-59"><code>buildbot.steps.shell.ShellCommand</code></a>: <a href="#ShellCommand">ShellCommand</a></li>
-<li><a href="#index-buildbot_002esteps_002eshell_002eTest-62"><code>buildbot.steps.shell.Test</code></a>: <a href="#Test">Test</a></li>
-<li><a href="#index-buildbot_002esteps_002eshell_002eTreeSize-63"><code>buildbot.steps.shell.TreeSize</code></a>: <a href="#TreeSize">TreeSize</a></li>
-<li><a href="#index-buildbot_002esteps_002esource_002eArch-50"><code>buildbot.steps.source.Arch</code></a>: <a href="#Arch">Arch</a></li>
-<li><a href="#index-buildbot_002esteps_002esource_002eBazaar-52"><code>buildbot.steps.source.Bazaar</code></a>: <a href="#Bazaar">Bazaar</a></li>
-<li><a href="#index-buildbot_002esteps_002esource_002eBzr-54"><code>buildbot.steps.source.Bzr</code></a>: <a href="#Bzr">Bzr</a></li>
-<li><a href="#index-buildbot_002esteps_002esource_002eCVS-42"><code>buildbot.steps.source.CVS</code></a>: <a href="#CVS">CVS</a></li>
-<li><a href="#index-buildbot_002esteps_002esource_002eDarcs-46"><code>buildbot.steps.source.Darcs</code></a>: <a href="#Darcs">Darcs</a></li>
-<li><a href="#index-buildbot_002esteps_002esource_002eGit-107"><code>buildbot.steps.source.Git</code></a>: <a href="#Index-of-Useful-Classes">Index of Useful Classes</a></li>
-<li><a href="#index-buildbot_002esteps_002esource_002eGit-58"><code>buildbot.steps.source.Git</code></a>: <a href="#Git">Git</a></li>
-<li><a href="#index-buildbot_002esteps_002esource_002eMercurial-48"><code>buildbot.steps.source.Mercurial</code></a>: <a href="#Mercurial">Mercurial</a></li>
-<li><a href="#index-buildbot_002esteps_002esource_002eP4-56"><code>buildbot.steps.source.P4</code></a>: <a href="#P4">P4</a></li>
-<li><a href="#index-buildbot_002esteps_002esource_002eSVN-44"><code>buildbot.steps.source.SVN</code></a>: <a href="#SVN">SVN</a></li>
-<li><a href="#index-buildbot_002esteps_002etransfer_002eFileDownload-70"><code>buildbot.steps.transfer.FileDownload</code></a>: <a href="#Transferring-Files">Transferring Files</a></li>
-<li><a href="#index-buildbot_002esteps_002etransfer_002eFileUpload-69"><code>buildbot.steps.transfer.FileUpload</code></a>: <a href="#Transferring-Files">Transferring Files</a></li>
+<li><a href="#index-buildbot_002esteps_002emaxq_002eMaxQ-119"><code>buildbot.steps.maxq.MaxQ</code></a>: <a href="#Index-of-Useful-Classes">Index of Useful Classes</a></li>
+<li><a href="#index-buildbot_002esteps_002epython_002eBuildEPYDoc-76"><code>buildbot.steps.python.BuildEPYDoc</code></a>: <a href="#BuildEPYDoc">BuildEPYDoc</a></li>
+<li><a href="#index-buildbot_002esteps_002epython_002ePyFlakes-77"><code>buildbot.steps.python.PyFlakes</code></a>: <a href="#PyFlakes">PyFlakes</a></li>
+<li><a href="#index-buildbot_002esteps_002epython_005ftwisted_002eBuildDebs-102"><code>buildbot.steps.python_twisted.BuildDebs</code></a>: <a href="#Python_002fTwisted_002ftrial-projects">Python/Twisted/trial projects</a></li>
+<li><a href="#index-buildbot_002esteps_002epython_005ftwisted_002eHLint-99"><code>buildbot.steps.python_twisted.HLint</code></a>: <a href="#Python_002fTwisted_002ftrial-projects">Python/Twisted/trial projects</a></li>
+<li><a href="#index-buildbot_002esteps_002epython_005ftwisted_002eProcessDocs-101"><code>buildbot.steps.python_twisted.ProcessDocs</code></a>: <a href="#Python_002fTwisted_002ftrial-projects">Python/Twisted/trial projects</a></li>
+<li><a href="#index-buildbot_002esteps_002epython_005ftwisted_002eRemovePYCs-103"><code>buildbot.steps.python_twisted.RemovePYCs</code></a>: <a href="#Python_002fTwisted_002ftrial-projects">Python/Twisted/trial projects</a></li>
+<li><a href="#index-buildbot_002esteps_002epython_005ftwisted_002eTrial-100"><code>buildbot.steps.python_twisted.Trial</code></a>: <a href="#Python_002fTwisted_002ftrial-projects">Python/Twisted/trial projects</a></li>
+<li><a href="#index-buildbot_002esteps_002eshell_002eCompile-71"><code>buildbot.steps.shell.Compile</code></a>: <a href="#Compile">Compile</a></li>
+<li><a href="#index-buildbot_002esteps_002eshell_002eConfigure-70"><code>buildbot.steps.shell.Configure</code></a>: <a href="#Configure">Configure</a></li>
+<li><a href="#index-buildbot_002esteps_002eshell_002ePerlModuleTest-74"><code>buildbot.steps.shell.PerlModuleTest</code></a>: <a href="#PerlModuleTest">PerlModuleTest</a></li>
+<li><a href="#index-buildbot_002esteps_002eshell_002eSetProperty-75"><code>buildbot.steps.shell.SetProperty</code></a>: <a href="#SetProperty">SetProperty</a></li>
+<li><a href="#index-buildbot_002esteps_002eshell_002eShellCommand-69"><code>buildbot.steps.shell.ShellCommand</code></a>: <a href="#ShellCommand">ShellCommand</a></li>
+<li><a href="#index-buildbot_002esteps_002eshell_002eTest-72"><code>buildbot.steps.shell.Test</code></a>: <a href="#Test">Test</a></li>
+<li><a href="#index-buildbot_002esteps_002eshell_002eTreeSize-73"><code>buildbot.steps.shell.TreeSize</code></a>: <a href="#TreeSize">TreeSize</a></li>
+<li><a href="#index-buildbot_002esteps_002esource_002eArch-60"><code>buildbot.steps.source.Arch</code></a>: <a href="#Arch">Arch</a></li>
+<li><a href="#index-buildbot_002esteps_002esource_002eBazaar-62"><code>buildbot.steps.source.Bazaar</code></a>: <a href="#Bazaar">Bazaar</a></li>
+<li><a href="#index-buildbot_002esteps_002esource_002eBzr-64"><code>buildbot.steps.source.Bzr</code></a>: <a href="#Bzr">Bzr</a></li>
+<li><a href="#index-buildbot_002esteps_002esource_002eCVS-52"><code>buildbot.steps.source.CVS</code></a>: <a href="#CVS">CVS</a></li>
+<li><a href="#index-buildbot_002esteps_002esource_002eDarcs-56"><code>buildbot.steps.source.Darcs</code></a>: <a href="#Darcs">Darcs</a></li>
+<li><a href="#index-buildbot_002esteps_002esource_002eGit-118"><code>buildbot.steps.source.Git</code></a>: <a href="#Index-of-Useful-Classes">Index of Useful Classes</a></li>
+<li><a href="#index-buildbot_002esteps_002esource_002eGit-68"><code>buildbot.steps.source.Git</code></a>: <a href="#Git">Git</a></li>
+<li><a href="#index-buildbot_002esteps_002esource_002eMercurial-58"><code>buildbot.steps.source.Mercurial</code></a>: <a href="#Mercurial">Mercurial</a></li>
+<li><a href="#index-buildbot_002esteps_002esource_002eP4-66"><code>buildbot.steps.source.P4</code></a>: <a href="#P4">P4</a></li>
+<li><a href="#index-buildbot_002esteps_002esource_002eSVN-54"><code>buildbot.steps.source.SVN</code></a>: <a href="#SVN">SVN</a></li>
+<li><a href="#index-buildbot_002esteps_002etransfer_002eFileDownload-80"><code>buildbot.steps.transfer.FileDownload</code></a>: <a href="#Transferring-Files">Transferring Files</a></li>
+<li><a href="#index-buildbot_002esteps_002etransfer_002eFileUpload-79"><code>buildbot.steps.transfer.FileUpload</code></a>: <a href="#Transferring-Files">Transferring Files</a></li>
    </ul><!-- undocumented steps -->
-<p><a name="index-buildbot_002esteps_002esource_002eGit-107"></a><a name="index-buildbot_002esteps_002emaxq_002eMaxQ-108"></a>
+<p><a name="index-buildbot_002esteps_002esource_002eGit-118"></a><a name="index-buildbot_002esteps_002emaxq_002eMaxQ-119"></a>
 
 <h3 class="heading">Status Targets</h3>
 
 
 
 <ul class="index-st" compact>
-<li><a href="#index-buildbot_002estatus_002eclient_002ePBListener-103"><code>buildbot.status.client.PBListener</code></a>: <a href="#PBListener">PBListener</a></li>
-<li><a href="#index-buildbot_002estatus_002ehtml_002eWaterfall-96"><code>buildbot.status.html.Waterfall</code></a>: <a href="#HTML-Waterfall">HTML Waterfall</a></li>
-<li><a href="#index-buildbot_002estatus_002email_002eMailNotifier-99"><code>buildbot.status.mail.MailNotifier</code></a>: <a href="#MailNotifier">MailNotifier</a></li>
-<li><a href="#index-buildbot_002estatus_002eweb_002ebaseweb_002eWebStatus-94"><code>buildbot.status.web.baseweb.WebStatus</code></a>: <a href="#WebStatus">WebStatus</a></li>
-<li><a href="#index-buildbot_002estatus_002ewords_002eIRC-101"><code>buildbot.status.words.IRC</code></a>: <a href="#IRC-Bot">IRC Bot</a></li>
+<li><a href="#index-buildbot_002estatus_002eclient_002ePBListener-114"><code>buildbot.status.client.PBListener</code></a>: <a href="#PBListener">PBListener</a></li>
+<li><a href="#index-buildbot_002estatus_002ehtml_002eWaterfall-107"><code>buildbot.status.html.Waterfall</code></a>: <a href="#HTML-Waterfall">HTML Waterfall</a></li>
+<li><a href="#index-buildbot_002estatus_002email_002eMailNotifier-110"><code>buildbot.status.mail.MailNotifier</code></a>: <a href="#MailNotifier">MailNotifier</a></li>
+<li><a href="#index-buildbot_002estatus_002eweb_002ebaseweb_002eWebStatus-105"><code>buildbot.status.web.baseweb.WebStatus</code></a>: <a href="#WebStatus">WebStatus</a></li>
+<li><a href="#index-buildbot_002estatus_002ewords_002eIRC-112"><code>buildbot.status.words.IRC</code></a>: <a href="#IRC-Bot">IRC Bot</a></li>
    </ul><!-- TODO: undocumented targets -->
 <div class="node">
 <p><hr>
@@ -8198,18 +8670,19 @@ master.cfg as <code>c['change_source']</code>.
 
 
 <ul class="index-bc" compact>
-<li><a href="#index-c_005b_0027buildbotURL_0027_005d-14"><code>c['buildbotURL']</code></a>: <a href="#Defining-the-Project">Defining the Project</a></li>
-<li><a href="#index-c_005b_0027builders_0027_005d-28"><code>c['builders']</code></a>: <a href="#Defining-Builders">Defining Builders</a></li>
-<li><a href="#index-c_005b_0027change_005fsource_0027_005d-16"><code>c['change_source']</code></a>: <a href="#Listing-Change-Sources-and-Schedulers">Listing Change Sources and Schedulers</a></li>
-<li><a href="#index-c_005b_0027debugPassword_0027_005d-30"><code>c['debugPassword']</code></a>: <a href="#Debug-options">Debug options</a></li>
-<li><a href="#index-c_005b_0027manhole_0027_005d-31"><code>c['manhole']</code></a>: <a href="#Debug-options">Debug options</a></li>
-<li><a href="#index-c_005b_0027projectName_0027_005d-12"><code>c['projectName']</code></a>: <a href="#Defining-the-Project">Defining the Project</a></li>
-<li><a href="#index-c_005b_0027projectURL_0027_005d-13"><code>c['projectURL']</code></a>: <a href="#Defining-the-Project">Defining the Project</a></li>
-<li><a href="#index-c_005b_0027schedulers_0027_005d-17"><code>c['schedulers']</code></a>: <a href="#Listing-Change-Sources-and-Schedulers">Listing Change Sources and Schedulers</a></li>
-<li><a href="#index-c_005b_0027slavePortnum_0027_005d-26"><code>c['slavePortnum']</code></a>: <a href="#Setting-the-slaveport">Setting the slaveport</a></li>
-<li><a href="#index-c_005b_0027slaves_0027_005d-27"><code>c['slaves']</code></a>: <a href="#Buildslave-Specifiers">Buildslave Specifiers</a></li>
-<li><a href="#index-c_005b_0027sources_0027_005d-15"><code>c['sources']</code></a>: <a href="#Listing-Change-Sources-and-Schedulers">Listing Change Sources and Schedulers</a></li>
-<li><a href="#index-c_005b_0027status_0027_005d-29"><code>c['status']</code></a>: <a href="#Defining-Status-Targets">Defining Status Targets</a></li>
+<li><a href="#index-c_005b_0027buildbotURL_0027_005d-15"><code>c['buildbotURL']</code></a>: <a href="#Defining-the-Project">Defining the Project</a></li>
+<li><a href="#index-c_005b_0027builders_0027_005d-36"><code>c['builders']</code></a>: <a href="#Defining-Builders">Defining Builders</a></li>
+<li><a href="#index-c_005b_0027change_005fsource_0027_005d-17"><code>c['change_source']</code></a>: <a href="#Change-Sources-and-Schedulers">Change Sources and Schedulers</a></li>
+<li><a href="#index-c_005b_0027debugPassword_0027_005d-38"><code>c['debugPassword']</code></a>: <a href="#Debug-options">Debug options</a></li>
+<li><a href="#index-c_005b_0027manhole_0027_005d-39"><code>c['manhole']</code></a>: <a href="#Debug-options">Debug options</a></li>
+<li><a href="#index-c_005b_0027projectName_0027_005d-13"><code>c['projectName']</code></a>: <a href="#Defining-the-Project">Defining the Project</a></li>
+<li><a href="#index-c_005b_0027projectURL_0027_005d-14"><code>c['projectURL']</code></a>: <a href="#Defining-the-Project">Defining the Project</a></li>
+<li><a href="#index-c_005b_0027properties_0027_005d-34"><code>c['properties']</code></a>: <a href="#Defining-Global-Properties">Defining Global Properties</a></li>
+<li><a href="#index-c_005b_0027schedulers_0027_005d-18"><code>c['schedulers']</code></a>: <a href="#Change-Sources-and-Schedulers">Change Sources and Schedulers</a></li>
+<li><a href="#index-c_005b_0027slavePortnum_0027_005d-31"><code>c['slavePortnum']</code></a>: <a href="#Setting-the-slaveport">Setting the slaveport</a></li>
+<li><a href="#index-c_005b_0027slaves_0027_005d-32"><code>c['slaves']</code></a>: <a href="#Buildslave-Specifiers">Buildslave Specifiers</a></li>
+<li><a href="#index-c_005b_0027sources_0027_005d-16"><code>c['sources']</code></a>: <a href="#Change-Sources-and-Schedulers">Change Sources and Schedulers</a></li>
+<li><a href="#index-c_005b_0027status_0027_005d-37"><code>c['status']</code></a>: <a href="#Defining-Status-Targets">Defining Status Targets</a></li>
    </ul><div class="node">
 <p><hr>
 <a name="Index"></a>
@@ -8223,45 +8696,50 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
 
 
 <ul class="index-cp" compact>
-<li><a href="#index-addURL-75">addURL</a>: <a href="#BuildStep-URLs">BuildStep URLs</a></li>
-<li><a href="#index-Arch-Checkout-49">Arch Checkout</a>: <a href="#Arch">Arch</a></li>
-<li><a href="#index-Bazaar-Checkout-51">Bazaar Checkout</a>: <a href="#Bazaar">Bazaar</a></li>
-<li><a href="#index-build-properties-64">build properties</a>: <a href="#Build-Properties">Build Properties</a></li>
+<li><a href="#index-addURL-85">addURL</a>: <a href="#BuildStep-URLs">BuildStep URLs</a></li>
+<li><a href="#index-Arch-Checkout-59">Arch Checkout</a>: <a href="#Arch">Arch</a></li>
+<li><a href="#index-Bazaar-Checkout-61">Bazaar Checkout</a>: <a href="#Bazaar">Bazaar</a></li>
 <li><a href="#index-Builder-9">Builder</a>: <a href="#Builder">Builder</a></li>
 <li><a href="#index-BuildRequest-8">BuildRequest</a>: <a href="#BuildRequest">BuildRequest</a></li>
 <li><a href="#index-BuildSet-7">BuildSet</a>: <a href="#BuildSet">BuildSet</a></li>
-<li><a href="#index-BuildStep-URLs-74">BuildStep URLs</a>: <a href="#BuildStep-URLs">BuildStep URLs</a></li>
-<li><a href="#index-Bzr-Checkout-53">Bzr Checkout</a>: <a href="#Bzr">Bzr</a></li>
-<li><a href="#index-Configuration-11">Configuration</a>: <a href="#Configuration">Configuration</a></li>
-<li><a href="#index-CVS-Checkout-41">CVS Checkout</a>: <a href="#CVS">CVS</a></li>
-<li><a href="#index-Darcs-Checkout-45">Darcs Checkout</a>: <a href="#Darcs">Darcs</a></li>
-<li><a href="#index-Dependencies-23">Dependencies</a>: <a href="#Build-Dependencies">Build Dependencies</a></li>
-<li><a href="#index-Dependent-22">Dependent</a>: <a href="#Build-Dependencies">Build Dependencies</a></li>
-<li><a href="#index-email-97">email</a>: <a href="#MailNotifier">MailNotifier</a></li>
-<li><a href="#index-File-Transfer-68">File Transfer</a>: <a href="#Transferring-Files">Transferring Files</a></li>
-<li><a href="#index-Git-Checkout-57">Git Checkout</a>: <a href="#Git">Git</a></li>
+<li><a href="#index-BuildStep-URLs-84">BuildStep URLs</a>: <a href="#BuildStep-URLs">BuildStep URLs</a></li>
+<li><a href="#index-Bzr-Checkout-63">Bzr Checkout</a>: <a href="#Bzr">Bzr</a></li>
+<li><a href="#index-Configuration-12">Configuration</a>: <a href="#Configuration">Configuration</a></li>
+<li><a href="#index-CVS-Checkout-51">CVS Checkout</a>: <a href="#CVS">CVS</a></li>
+<li><a href="#index-Darcs-Checkout-55">Darcs Checkout</a>: <a href="#Darcs">Darcs</a></li>
+<li><a href="#index-Dependencies-23">Dependencies</a>: <a href="#Dependent-Scheduler">Dependent Scheduler</a></li>
+<li><a href="#index-Dependent-22">Dependent</a>: <a href="#Dependent-Scheduler">Dependent Scheduler</a></li>
+<li><a href="#index-email-108">email</a>: <a href="#MailNotifier">MailNotifier</a></li>
+<li><a href="#index-File-Transfer-78">File Transfer</a>: <a href="#Transferring-Files">Transferring Files</a></li>
+<li><a href="#index-Git-Checkout-67">Git Checkout</a>: <a href="#Git">Git</a></li>
 <li><a href="#index-installation-3">installation</a>: <a href="#Installing-the-code">Installing the code</a></li>
 <li><a href="#index-introduction-1">introduction</a>: <a href="#Introduction">Introduction</a></li>
-<li><a href="#index-IRC-100">IRC</a>: <a href="#IRC-Bot">IRC Bot</a></li>
-<li><a href="#index-links-73">links</a>: <a href="#BuildStep-URLs">BuildStep URLs</a></li>
-<li><a href="#index-locks-76">locks</a>: <a href="#Interlocks">Interlocks</a></li>
+<li><a href="#index-IRC-111">IRC</a>: <a href="#IRC-Bot">IRC Bot</a></li>
+<li><a href="#index-links-83">links</a>: <a href="#BuildStep-URLs">BuildStep URLs</a></li>
+<li><a href="#index-locks-86">locks</a>: <a href="#Interlocks">Interlocks</a></li>
 <li><a href="#index-logfiles-4">logfiles</a>: <a href="#Logfiles">Logfiles</a></li>
-<li><a href="#index-LogLineObserver-72">LogLineObserver</a>: <a href="#Adding-LogObservers">Adding LogObservers</a></li>
-<li><a href="#index-LogObserver-71">LogObserver</a>: <a href="#Adding-LogObservers">Adding LogObservers</a></li>
-<li><a href="#index-mail-98">mail</a>: <a href="#MailNotifier">MailNotifier</a></li>
-<li><a href="#index-Mercurial-Checkout-47">Mercurial Checkout</a>: <a href="#Mercurial">Mercurial</a></li>
-<li><a href="#index-PBListener-102">PBListener</a>: <a href="#PBListener">PBListener</a></li>
-<li><a href="#index-Perforce-Update-55">Perforce Update</a>: <a href="#P4">P4</a></li>
+<li><a href="#index-LogLineObserver-82">LogLineObserver</a>: <a href="#Adding-LogObservers">Adding LogObservers</a></li>
+<li><a href="#index-LogObserver-81">LogObserver</a>: <a href="#Adding-LogObservers">Adding LogObservers</a></li>
+<li><a href="#index-mail-109">mail</a>: <a href="#MailNotifier">MailNotifier</a></li>
+<li><a href="#index-Mercurial-Checkout-57">Mercurial Checkout</a>: <a href="#Mercurial">Mercurial</a></li>
+<li><a href="#index-PBListener-113">PBListener</a>: <a href="#PBListener">PBListener</a></li>
+<li><a href="#index-Perforce-Update-65">Perforce Update</a>: <a href="#P4">P4</a></li>
 <li><a href="#index-Philosophy-of-operation-2">Philosophy of operation</a>: <a href="#History-and-Philosophy">History and Philosophy</a></li>
+<li><a href="#index-Properties-49">Properties</a>: <a href="#Using-Build-Properties">Using Build Properties</a></li>
+<li><a href="#index-Properties-35">Properties</a>: <a href="#Defining-Global-Properties">Defining Global Properties</a></li>
+<li><a href="#index-Properties-33">Properties</a>: <a href="#Buildslave-Specifiers">Buildslave Specifiers</a></li>
+<li><a href="#index-Properties-19">Properties</a>: <a href="#Change-Sources-and-Schedulers">Change Sources and Schedulers</a></li>
+<li><a href="#index-Properties-11">Properties</a>: <a href="#Build-Properties">Build Properties</a></li>
 <li><a href="#index-Scheduler-6">Scheduler</a>: <a href="#Schedulers">Schedulers</a></li>
-<li><a href="#index-statusgui-104">statusgui</a>: <a href="#statusgui">statusgui</a></li>
-<li><a href="#index-SVN-Checkout-43">SVN Checkout</a>: <a href="#SVN">SVN</a></li>
-<li><a href="#index-treeStableTimer-82">treeStableTimer</a>: <a href="#BuildFactory-Attributes">BuildFactory Attributes</a></li>
+<li><a href="#index-statusgui-115">statusgui</a>: <a href="#statusgui">statusgui</a></li>
+<li><a href="#index-SVN-Checkout-53">SVN Checkout</a>: <a href="#SVN">SVN</a></li>
+<li><a href="#index-treeStableTimer-93">treeStableTimer</a>: <a href="#BuildFactory-Attributes">BuildFactory Attributes</a></li>
+<li><a href="#index-Triggers-29">Triggers</a>: <a href="#Triggerable-Scheduler">Triggerable Scheduler</a></li>
 <li><a href="#index-Users-10">Users</a>: <a href="#Users">Users</a></li>
 <li><a href="#index-Version-Control-5">Version Control</a>: <a href="#Version-Control-Systems">Version Control Systems</a></li>
-<li><a href="#index-Waterfall-95">Waterfall</a>: <a href="#HTML-Waterfall">HTML Waterfall</a></li>
-<li><a href="#index-WebStatus-93">WebStatus</a>: <a href="#WebStatus">WebStatus</a></li>
-<li><a href="#index-WithProperties-65">WithProperties</a>: <a href="#Build-Properties">Build Properties</a></li>
+<li><a href="#index-Waterfall-106">Waterfall</a>: <a href="#HTML-Waterfall">HTML Waterfall</a></li>
+<li><a href="#index-WebStatus-104">WebStatus</a>: <a href="#WebStatus">WebStatus</a></li>
+<li><a href="#index-WithProperties-50">WithProperties</a>: <a href="#Using-Build-Properties">Using Build Properties</a></li>
    </ul><div class="footnote">
 <hr>
 <a name="texinfo-footnotes-in-document"></a><h4>Footnotes</h4><p class="footnote"><small>[<a name="fn-1" href="#fnd-1">1</a>]</small> this

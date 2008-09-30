@@ -24,6 +24,17 @@ def later(old, new):
         return old
     return new
 
+def formatInterval(eta):
+    eta_parts = []
+    if eta > 3600:
+        eta_parts.append("%d hrs" % (eta / 3600))
+        eta %= 3600
+    if eta > 60:
+        eta_parts.append("%d mins" % (eta / 60))
+        eta %= 60
+    eta_parts.append("%d secs" % eta)
+    return ", ".join(eta_parts)
+
 class CancelableDeferred(Deferred):
     """I am a version of Deferred that can be canceled by calling my
     .cancel() method. After being canceled, no callbacks or errbacks will be
@@ -60,10 +71,14 @@ class ComparableMixin:
         return hash(tuple(alist))
 
     def __cmp__(self, them):
-        if cmp(type(self), type(them)):
-            return cmp(type(self), type(them))
-        if cmp(self.__class__, them.__class__):
-            return cmp(self.__class__, them.__class__)
+        result = cmp(type(self), type(them))
+        if result:
+            return result
+
+        result = cmp(self.__class__, them.__class__)
+        if result:
+            return result
+
         assert self.compare_attrs == them.compare_attrs
         self_list= [getattr(self, name, _None) for name in self.compare_attrs]
         them_list= [getattr(them, name, _None) for name in self.compare_attrs]

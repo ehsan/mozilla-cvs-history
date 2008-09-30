@@ -1,4 +1,3 @@
-#! /usr/bin/python
 
 from twisted.internet import gtk2reactor
 gtk2reactor.install()
@@ -105,8 +104,9 @@ class DebugWidget:
             if revision == '':
                 revision = None
         reason = "debugclient 'Request Build' button pushed"
+        properties = {}
         d = self.remote.callRemote("requestBuild",
-                                   name, reason, branch, revision)
+                                   name, reason, branch, revision, properties)
         d.addErrback(self.err)
 
     def do_ping(self, widget):
@@ -165,9 +165,7 @@ class DebugWidget:
         d = self.remote.callRemote("setCurrentState", name, state)
         d.addErrback(self.err)
     def err(self, failure):
-        print "received error"
-        failure.printTraceback()
-        
+        print "received error:", failure
 
     def run(self):
         reactor.run()

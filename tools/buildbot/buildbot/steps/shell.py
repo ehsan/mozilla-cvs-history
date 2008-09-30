@@ -2,12 +2,14 @@
 
 import re
 from twisted.python import log
-from buildbot.process.buildstep import LoggingBuildStep, RemoteShellCommand, \
-     render_properties
-from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE
+from buildbot.process.buildstep import LoggingBuildStep, RemoteShellCommand
+from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, STDOUT, STDERR
 
-# for existing configurations that import WithProperties from here
-from buildbot.process.buildstep import WithProperties
+# for existing configurations that import WithProperties from here.  We like
+# to move this class around just to keep our readers guessing.
+from buildbot.process.properties import WithProperties
+_hush_pyflakes = [WithProperties]
+del _hush_pyflakes
 
 class ShellCommand(LoggingBuildStep):
     """I run a single shell command on the buildslave. I return FAILURE if
@@ -118,11 +120,12 @@ class ShellCommand(LoggingBuildStep):
         if self.description is not None:
             return self.description
 
+        properties = self.build.getProperties()
         words = self.command
         if isinstance(words, (str, unicode)):
             words = words.split()
         # render() each word to handle WithProperties objects
-        words = [render_properties(word, self.build) for word in words]
+        words = properties.render(words)
         if len(words) < 1:
             return ["???"]
         if len(words) == 1:
@@ -131,45 +134,18 @@ class ShellCommand(LoggingBuildStep):
             return ["'%s" % words[0], "%s'" % words[1]]
         return ["'%s" % words[0], "%s" % words[1], "...'"]
 
-    def _interpolateProperties(self, value):
-        """
-        Expand the L{WithProperties} objects in L{value}
-        """
-        if isinstance(value, (str, unicode, bool, int, float, type(None))):
-            return value
-
-        if isinstance(value, list):
-            return [self._interpolateProperties(val) for val in value]
-
-        if isinstance(value, tuple):
-            return tuple([self._interpolateProperties(val) for val in value])
-
-        if isinstance(value, dict):
-            new_dict = { }
-            for key, val in value.iteritems():
-                new_key = self._interpolateProperties(key)
-                new_dict[new_key] = self._interpolateProperties(val)
-            return new_dict
-
-        # To make sure we catch anything we forgot
-        assert isinstance(value, WithProperties), \
-               "%s (%s) is not a WithProperties" % (value, type(value))
-
-        return value.render(self.build)
-
-    def _interpolateWorkdir(self, workdir):
-        return render_properties(workdir, self.build)
-
     def setupEnvironment(self, cmd):
+        # XXX is this used? documented? replaced by properties?
         # merge in anything from Build.slaveEnvironment . Earlier steps
         # (perhaps ones which compile libraries or sub-projects that need to
         # be referenced by later steps) can add keys to
         # self.build.slaveEnvironment to affect later steps.
+        properties = self.build.getProperties()
         slaveEnv = self.build.slaveEnvironment
         if slaveEnv:
             if cmd.args['env'] is None:
                 cmd.args['env'] = {}
-            cmd.args['env'].update(self._interpolateProperties(slaveEnv))
+            cmd.args['env'].update(properties.render(slaveEnv))
             # note that each RemoteShellCommand gets its own copy of the
             # dictionary, so we shouldn't be affecting anyone but ourselves.
 
@@ -199,12 +175,11 @@ class ShellCommand(LoggingBuildStep):
         # this block is specific to ShellCommands. subclasses that don't need
         # to set up an argv array, an environment, or extra logfiles= (like
         # the Source subclasses) can just skip straight to startCommand()
-        command = self._interpolateProperties(self.command)
-        assert isinstance(command, (list, tuple, str))
+        properties = self.build.getProperties()
+
         # create the actual RemoteShellCommand instance now
-        kwargs = self._interpolateProperties(self.remote_kwargs)
-        kwargs['workdir'] = self._interpolateWorkdir(kwargs['workdir'])
-        kwargs['command'] = command
+        kwargs = properties.render(self.remote_kwargs)
+        kwargs['command'] = properties.render(self.command)
         kwargs['logfiles'] = self.logfiles
         cmd = RemoteShellCommand(**kwargs)
         self.setupEnvironment(cmd)
@@ -224,7 +199,7 @@ class TreeSize(ShellCommand):
         m = re.search(r'^(\d+)', out)
         if m:
             self.kib = int(m.group(1))
-            self.setProperty("tree-size-KiB", self.kib)
+            self.setProperty("tree-size-KiB", self.kib, "treesize")
 
     def evaluateCommand(self, cmd):
         if cmd.rc != 0:
@@ -237,6 +212,61 @@ class TreeSize(ShellCommand):
         if self.kib is not None:
             return ["treesize", "%d KiB" % self.kib]
         return ["treesize", "unknown"]
+
+class SetProperty(ShellCommand):
+    name = "setproperty"
+
+    def __init__(self, **kwargs):
+        self.property = None
+        self.extract_fn = None
+        self.strip = True
+
+        if kwargs.has_key('property'):
+            self.property = kwargs['property']
+            del kwargs['property']
+        if kwargs.has_key('extract_fn'):
+            self.extract_fn = kwargs['extract_fn']
+            del kwargs['extract_fn']
+        if kwargs.has_key('strip'):
+            self.strip = kwargs['strip']
+            del kwargs['strip']
+
+        ShellCommand.__init__(self, **kwargs)
+
+        self.addFactoryArguments(property=self.property)
+        self.addFactoryArguments(extract_fn=self.extract_fn)
+        self.addFactoryArguments(strip=self.strip)
+
+        assert self.property or self.extract_fn, \
+            "SetProperty step needs either property= or extract_fn="
+
+        self.property_changes = {}
+
+    def commandComplete(self, cmd):
+        if self.property:
+            result = cmd.logs['stdio'].getText()
+            if self.strip: result = result.strip()
+            propname = self.build.getProperties().render(self.property)
+            self.setProperty(propname, result, "SetProperty Step")
+            self.property_changes[propname] = result
+        else:
+            log = cmd.logs['stdio']
+            new_props = self.extract_fn(cmd.rc,
+                    ''.join(log.getChunks([STDOUT], onlyText=True)),
+                    ''.join(log.getChunks([STDERR], onlyText=True)))
+            for k,v in new_props.items():
+                self.setProperty(k, v, "SetProperty Step")
+            self.property_changes = new_props
+
+    def createSummary(self, log):
+        props_set = [ "%s: %r" % (k,v) for k,v in self.property_changes.items() ]
+        self.addCompleteLog('property changes', "\n".join(props_set))
+
+    def getText(self, cmd, results):
+        if self.property_changes:
+            return [ "set props:" ] + self.property_changes.keys()
+        else:
+            return [ "no change" ]
 
 class Configure(ShellCommand):
 
@@ -294,11 +324,14 @@ class WarningCountingShellCommand(ShellCommand):
         if self.warnCount:
             self.addCompleteLog("warnings", "\n".join(warnings) + "\n")
 
+        warnings_stat = self.step_status.getStatistic('warnings', 0)
+        self.step_status.setStatistic('warnings', warnings_stat + self.warnCount)
+
         try:
             old_count = self.getProperty("warnings-count")
         except KeyError:
             old_count = 0
-        self.setProperty("warnings-count", old_count + self.warnCount)
+        self.setProperty("warnings-count", old_count + self.warnCount, "WarningCountingShellCommand")
 
 
     def evaluateCommand(self, cmd):
@@ -334,3 +367,81 @@ class Test(WarningCountingShellCommand):
     description = ["testing"]
     descriptionDone = ["test"]
     command = ["make", "test"]
+
+    def setTestResults(self, total=0, failed=0, passed=0, warnings=0):
+        """
+        Called by subclasses to set the relevant statistics; this actually
+        adds to any statistics already present
+        """
+        total += self.step_status.getStatistic('tests-total', 0)
+        self.step_status.setStatistic('tests-total', total)
+        failed += self.step_status.getStatistic('tests-failed', 0)
+        self.step_status.setStatistic('tests-failed', failed)
+        warnings += self.step_status.getStatistic('tests-warnings', 0)
+        self.step_status.setStatistic('tests-warnings', warnings)
+        passed += self.step_status.getStatistic('tests-passed', 0)
+        self.step_status.setStatistic('tests-passed', passed)
+
+    def describe(self, done=False):
+        description = WarningCountingShellCommand.describe(self, done)
+        if done:
+            if self.step_status.hasStatistic('tests-total'):
+                total = self.step_status.getStatistic("tests-total", 0)
+                failed = self.step_status.getStatistic("tests-failed", 0)
+                passed = self.step_status.getStatistic("tests-passed", 0)
+                warnings = self.step_status.getStatistic("tests-warnings", 0)
+                if not total:
+                    total = failed + passed + warnings
+
+                if total:
+                    description.append('%d tests' % total)
+                if passed:
+                    description.append('%d passed' % passed)
+                if warnings:
+                    description.append('%d warnings' % warnings)
+                if failed:
+                    description.append('%d failed' % failed)
+            else:
+                description.append("no test results")
+        return description
+
+class PerlModuleTest(Test):
+    command=["prove", "--lib", "lib", "-r", "t"]
+    total = 0
+
+    def evaluateCommand(self, cmd):
+        lines = self.getLog('stdio').readlines()
+
+        re_test_result = re.compile("^(All tests successful)|(\d+)/(\d+) subtests failed|Files=\d+, Tests=(\d+),")
+
+        mos = map(lambda line: re_test_result.search(line), lines)
+        test_result_lines = [mo.groups() for mo in mos if mo]
+
+        if not test_result_lines:
+            return cmd.rc
+
+        test_result_line = test_result_lines[0]
+
+        success = test_result_line[0]
+
+        if success:
+            failed = 0
+
+            test_totals_line = test_result_lines[1]
+            total_str = test_totals_line[3]
+
+            rc = SUCCESS
+        else:
+            failed_str = test_result_line[1]
+            failed = int(failed_str)
+
+            total_str = test_result_line[2]
+
+            rc = FAILURE
+
+        total = int(total_str)
+        passed = total - failed
+
+        self.setTestResults(total=total, failed=failed, passed=passed)
+
+        return rc

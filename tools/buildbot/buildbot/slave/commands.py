@@ -224,6 +224,14 @@ class ShellCommand:
     KILL = "KILL"
     CHUNK_LIMIT = 128*1024
 
+    # For sending elapsed time:
+    startTime = None
+    elapsedTime = None
+    # I wish we had easy access to CLOCK_MONOTONIC in Python:
+    # http://www.opengroup.org/onlinepubs/000095399/functions/clock_getres.html
+    # Then changes to the system clock during a run wouldn't effect the "elapsed
+    # time" results.
+
     def __init__(self, builder, command,
                  workdir, environ=None,
                  sendStdout=True, sendStderr=True, sendRC=True,
@@ -409,6 +417,7 @@ class ShellCommand:
         # called right after we return, but somehow before connectionMade
         # were called, then kill() would blow up).
         self.process = None
+        self.startTime = time.time()
         p = reactor.spawnProcess(self.pp, argv[0], argv,
                                  self.environ,
                                  self.workdir,
@@ -462,7 +471,8 @@ class ShellCommand:
             self.timer.reset(self.timeout)
 
     def finished(self, sig, rc):
-        log.msg("command finished with signal %s, exit code %s" % (sig,rc))
+        self.elapsedTime = time.time() - self.startTime
+        log.msg("command finished with signal %s, exit code %s, elapsedTime: %0.6f" % (sig,rc,self.elapsedTime))
         for w in self.logFileWatchers:
              # this will send the final updates
             w.stop()
@@ -473,6 +483,7 @@ class ShellCommand:
                 self.sendStatus(
                     {'header': "process killed by signal %d\n" % sig})
             self.sendStatus({'rc': rc})
+        self.sendStatus({'header': "elapsedTime=%0.6f\n" % self.elapsedTime})
         if self.timer:
             self.timer.cancel()
             self.timer = None
@@ -877,6 +888,11 @@ class SlaveFileDownloadCommand(Command):
         self.path = os.path.join(self.builder.basedir,
                                  self.workdir,
                                  os.path.expanduser(self.filename))
+
+        dirname = os.path.dirname(self.path)
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
+
         try:
             self.fp = open(self.path, 'wb')
             if self.debug:
@@ -1391,7 +1407,7 @@ class SourceBase(Command):
         if runtime.platformType != "posix":
             shutil.copytree(fromdir, todir)
             return defer.succeed(0)
-        command = ['cp', '-r', '-p', fromdir, todir]
+        command = ['cp', '-R', '-P', '-p', fromdir, todir]
         c = ShellCommand(self.builder, command, self.builder.basedir,
                          sendRC=False, timeout=self.timeout)
         self.command = c
@@ -1559,15 +1575,24 @@ class SVN(SourceBase):
         self.command = c
         return c.start()
 
-    def parseGotRevision(self):
+    def getSvnVersionCommand(self):
+        """
+        Get the (shell) command used to determine SVN revision number
+        of checked-out code
+
+        return: list of strings, passable as the command argument to ShellCommand
+        """
         # svn checkout operations finish with 'Checked out revision 16657.'
         # svn update operations finish the line 'At revision 16654.'
         # But we don't use those. Instead, run 'svnversion'.
         svnversion_command = getCommand("svnversion")
         # older versions of 'svnversion' (1.1.4) require the WC_PATH
         # argument, newer ones (1.3.1) do not.
-        command = [svnversion_command, "."]
-        c = ShellCommand(self.builder, command,
+        return [svnversion_command, "."]
+
+    def parseGotRevision(self):
+        c = ShellCommand(self.builder,
+                         self.getSvnVersionCommand(),
                          os.path.join(self.builder.basedir, self.srcdir),
                          environ=self.env,
                          sendStdout=False, sendStderr=False, sendRC=False,
@@ -1575,16 +1600,16 @@ class SVN(SourceBase):
         c.usePTY = False
         d = c.start()
         def _parse(res):
-            r = c.stdout.strip()
-            # Support for removing svnversion indicator for 'modified'
-            if r[-1] == 'M':
-                r = r[:-1]
+            r_raw = c.stdout.strip()
+            # Extract revision from the version "number" string
+            r = r_raw.rstrip('MS')
+            r = r.split(':')[-1]
             got_version = None
             try:
                 got_version = int(r)
             except ValueError:
                 msg =("SVN.parseGotRevision unable to parse output "
-                      "of svnversion: '%s'" % r)
+                      "of svnversion: '%s'" % r_raw)
                 log.msg(msg)
                 self.sendStatus({'header': msg + "\n"})
             return got_version
@@ -1818,14 +1843,14 @@ class Git(SourceBase):
         else:
             head = 'FETCH_HEAD'
 
-        command = ['git-reset', '--hard', head]
+        command = ['git', 'reset', '--hard', head]
         c = ShellCommand(self.builder, command, self._fullSrcdir(),
                          sendRC=False, timeout=self.timeout)
         self.command = c
         return c.start()
 
     def doVCUpdate(self):
-        command = ['git-fetch', self.repourl, self.branch]
+        command = ['git', 'fetch', self.repourl, self.branch]
         self.sendStatus({"header": "fetching branch %s from %s\n"
                                         % (self.branch, self.repourl)})
         c = ShellCommand(self.builder, command, self._fullSrcdir(),
@@ -1841,7 +1866,7 @@ class Git(SourceBase):
 
     def doVCFull(self):
         os.mkdir(self._fullSrcdir())
-        c = ShellCommand(self.builder, ['git-init'], self._fullSrcdir(),
+        c = ShellCommand(self.builder, ['git', 'init'], self._fullSrcdir(),
                          sendRC=False, timeout=self.timeout)
         self.command = c
         d = c.start()
@@ -1850,7 +1875,7 @@ class Git(SourceBase):
         return d
 
     def parseGotRevision(self):
-        command = ['git-rev-parse', 'HEAD']
+        command = ['git', 'rev-parse', 'HEAD']
         c = ShellCommand(self.builder, command, self._fullSrcdir(),
                          sendRC=False, keepStdout=True)
         c.usePTY = False
