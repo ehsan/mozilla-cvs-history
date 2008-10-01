@@ -6,7 +6,7 @@ from twisted.python import log
 from buildbot.process.factory import BuildFactory
 from buildbot.steps.shell import Compile, ShellCommand, WithProperties#, \
 #  SetProperty
-from buildbot.steps.source import Mercurial
+from buildbot.steps.source import CVS, Mercurial
 from buildbot.steps.transfer import FileDownload
 
 import buildbotcustom.steps.misc
@@ -92,14 +92,15 @@ class BootstrapFactory(BuildFactory):
 
 class MercurialBuildFactory(BuildFactory):
     def __init__(self, env, objdir, platform, branch, sourceRepo, configRepo,
-                 configSubDir, profiledBuild, stageServer=None,
-                 stageUsername=None, stageGroup=None, stageSshKey=None,
-                 stageBasePath=None, ausBaseUploadDir=None,
+                 configSubDir, profiledBuild, buildRevision=None,
+                 stageServer=None, stageUsername=None, stageGroup=None,
+                 stageSshKey=None, stageBasePath=None, ausBaseUploadDir=None,
                  updatePlatform=None, downloadBaseURL=None, ausUser=None,
                  ausHost=None, nightly=False, leakTest=False, codesighs=True,
                  graphServer=None, graphSelector=None, graphBranch=None,
                  baseName=None, uploadPackages=True, uploadSymbols=True,
-                 dependToDated=True, createSnippet=False, **kwargs):
+                 dependToDated=True, createSnippet=False, doCleanup=True,
+                 **kwargs):
         BuildFactory.__init__(self, **kwargs)
         self.env = env
         self.objdir = objdir
@@ -109,6 +110,7 @@ class MercurialBuildFactory(BuildFactory):
         self.configRepo = configRepo
         self.configSubDir = configSubDir
         self.profiledBuild = profiledBuild
+        self.buildRevision = buildRevision
         self.stageServer = stageServer
         self.stageUsername = stageUsername
         self.stageGroup = stageGroup
@@ -130,13 +132,22 @@ class MercurialBuildFactory(BuildFactory):
         self.uploadSymbols = uploadSymbols
         self.dependToDated = dependToDated
         self.createSnippet = createSnippet
+        self.doCleanup = doCleanup
 
         if self.uploadPackages:
             assert stageServer and stageUsername and stageSshKey
             assert stageBasePath
-        if self.nightly:
+        if self.createSnippet:
             assert ausBaseUploadDir and updatePlatform and downloadBaseURL
             assert ausUser and ausHost
+
+            # this is a tad ugly because we need to python interpolation
+            # as well as WithProperties
+            # here's an example of what it translates to:
+            # /opt/aus2/build/0/Firefox/mozilla2/WINNT_x86-msvc/2008010103/en-US
+            self.ausFullUploadDir = '%s/%s/%%(buildid)s/en-US' % \
+              (self.ausBaseUploadDir, self.updatePlatform)
+
 
         # platform actually contains more than just the platform...
         # we need that to figure out which mozconfig to use
@@ -151,13 +162,6 @@ class MercurialBuildFactory(BuildFactory):
 
         self.logUploadDir = 'tinderbox-builds/%s-%s/' % (self.branch,
                                                          self.platform)
-        # this is a tad ugly because we need to python interpolation
-        # as well as WithProperties
-        # here's an example of what it translates to:
-        # /opt/aus2/build/0/Firefox/mozilla2/WINNT_x86-msvc/2008010103/en-US
-        self.ausFullUploadDir = '%s/%s/%%(buildid)s/en-US' % \
-          (self.ausBaseUploadDir, self.updatePlatform)
-
         # now, generate the steps
         #  regular dep builds (no clobber, no leaktest):
         #   addBuildSteps()
@@ -171,7 +175,7 @@ class MercurialBuildFactory(BuildFactory):
         #   addSymbolSteps()
         #   addUploadSteps()
         #   addUpdateSteps()
-        #  for everything:
+        #  for all dep and nightly builds (but not release builds):
         #   addCleanupSteps()
         self.addBuildSteps()
         if self.leakTest:
@@ -184,7 +188,8 @@ class MercurialBuildFactory(BuildFactory):
             self.addUploadSteps()
         if self.createSnippet:
             self.addUpdateSteps()
-        self.addCleanupSteps()
+        if self.doCleanup:
+            self.addCleanupSteps()
 
     def addBuildSteps(self):
         if self.nightly:
@@ -215,8 +220,18 @@ class MercurialBuildFactory(BuildFactory):
         self.addStep(Mercurial,
          mode='update',
          baseURL=self.sourceRepo,
-         defaultBranch=self.branch
+         defaultBranch=self.branch,
+         timeout=30*60, # 30 minutes
         )
+        if self.buildRevision:
+            self.addStep(ShellCommand,
+             command=['hg', 'up', '-C', '-r', self.buildRevision],
+             haltOnFailure=True
+            )
+            self.addStep(SetProperty,
+             command=['hg', 'identify', '-i'],
+             property='got_revision'
+            )
         changesetLink = '<a href=%s/%s/index.cgi/rev' % (self.sourceRepo,
                                                          self.branch)
         changesetLink += '/%(got_revision)s title="Built from revision %(got_revision)s">rev:%(got_revision)s</a>'
@@ -404,7 +419,7 @@ class MercurialBuildFactory(BuildFactory):
              workdir='build/%s' % self.objdir,
              haltOnFailure=True
          )
-        if self.nightly:
+        if self.createSnippet:
          self.addStep(ShellCommand,
              command=['make', '-C',
                       '%s/tools/update-packaging' % self.objdir],
@@ -557,20 +572,56 @@ class MercurialBuildFactory(BuildFactory):
 
 
 class ReleaseFactory(BuildFactory):
-    def getPushRepo(repo):
+    def getPushRepo(self, repo):
         for proto in ('https', 'http'):
              if repo.startswith(proto):
                  return repo.replace(proto, 'ssh')
         return repo
 
-    def getRepoName(repo):
+    def getRepoName(self, repo):
         return repo.rstrip('/').split('/')[-1]
+
+    def getRepoPath(self, hgHost, repo):
+        repo = repo.replace(hgHost, '').strip('/')
+        if repo.find('central') == -1:
+            repo = 'l10n-central/%s' % repo
+        return repo
+
+
+
+class StagingRepositorySetupFactory(ReleaseFactory):
+    def __init__(self, hgHost, username, sshKey, repositories):
+        ReleaseFactory.__init__(self)
+        for repo in sorted(repositories.keys()):
+            repoName = self.getRepoName(repo)
+            pushRepo = self.getPushRepo(repo)
+            sourceRepoName = self.getRepoPath(hgHost, repo)
+
+            # test for existence
+            command = 'wget -O- %s >/dev/null' % repo
+            command += ' && '
+            # if it exists, delete it
+            command += 'ssh -l %s -i %s %s edit %s delete YES' % \
+              (username, sshKey, hgHost, repoName)
+            command += '; '
+            # either way, try to create it again
+            # this kindof sucks, but if we '&&' we can't create repositories
+            # that don't already exist, which is a huge pain when adding new
+            # locales or repositories.
+            command += 'ssh -l %s -i %s %s clone %s %s' % \
+              (username, sshKey, hgHost, repoName, sourceRepoName)
+
+            self.addStep(ShellCommand,
+             command=['bash', '-c', command],
+             timeout=30*60 # 30 minutes
+            )
 
 
 
 class ReleaseTaggingFactory(ReleaseFactory):
     def __init__(self, repositories, buildToolsRepo, productName, appName,
-                 appVersion, milestone, baseTag, buildNumber):
+                 appVersion, milestone, baseTag, buildNumber, hgUsername,
+                 hgSshKey=None):
         """Repositories looks like this:
             repositories[name]['revision']: changeset# or tag
             repositories[name]['relbranchOverride']: branch name
@@ -620,8 +671,13 @@ class ReleaseTaggingFactory(ReleaseFactory):
                         attempting a release this is 1. Other times it may be
                         higher. It is used for post-fixing tags and some
                         internal logic.
+           hgUsername: The username to use when pushing changes to the remote
+                       repository.
+           hgSshKey: The full path to the ssh key to use (if necessary) when
+                     pushing changes to the remote repository.
+
         """
-        BuildFactory.__init__(self)
+        ReleaseFactory.__init__(self)
 
         # extremely basic validation, to catch really dumb configurations
         assert len(repositories) > 0, \
@@ -662,6 +718,10 @@ class ReleaseTaggingFactory(ReleaseFactory):
             repoName = self.getRepoName(repo)
             pushRepo = self.getPushRepo(repo)
 
+            sshKeyOption = ''
+            if hgSshKey:
+                sshKeyOption = '-i %s' % hgSshKey
+
             repoRevision = repositories[repo]['revision']
             bumpFiles = repositories[repo]['bumpFiles']
 
@@ -698,7 +758,8 @@ class ReleaseTaggingFactory(ReleaseFactory):
              command=['hg', 'clone', repo, repoName],
              workdir='.',
              description=['clone %s' % repoName],
-             haltOnFailure=True
+             haltOnFailure=True,
+             timeout=30*60 # 30 minutes
             )
             self.addStep(ShellCommand,
              command=['hg', 'up', '-r',
@@ -771,11 +832,15 @@ class ReleaseTaggingFactory(ReleaseFactory):
                  haltOnFailure=True
                 )
             self.addStep(ShellCommand,
-             command=['hg', 'out', pushRepo],
+             command=['hg', 'out', '-e',
+                      'ssh -l %s %s' % (hgUsername, sshKeyOption),
+                      pushRepo],
              workdir=repoName,
             )
             self.addStep(ShellCommand,
-             command=['hg', 'push', '-f', pushRepo],
+             command=['hg', 'push', '-e',
+                      'ssh -l %s %s' % (hgUsername, sshKeyOption),
+                      '-f', pushRepo],
              workdir=repoName,
              description=['push %s' % repoName],
              haltOnFailure=True
@@ -785,7 +850,7 @@ class ReleaseTaggingFactory(ReleaseFactory):
 
 class SingleSourceFactory(ReleaseFactory):
     def __init__(self, repository, productName, appVersion, baseTag):
-        BuildFactory.__init__(self)
+        ReleaseFactory.__init__(self)
         repoName = self.getRepoName(repository)
         pushRepo = self.getPushRepo(repository)
         releaseTag = '%s_RELEASE' % (baseTag)
@@ -796,10 +861,11 @@ class SingleSourceFactory(ReleaseFactory):
          command=['hg', 'clone', repository, repoName],
          workdir='.',
          description=['clone %s' % repoName],
-         haltOnFailure=True
+         haltOnFailure=True,
+         timeout=30*60 # 30 minutes
         )
         self.addStep(ShellCommand,
-         command=['hg', 'up', '-r', releaseTag],
+         command=['hg', 'up', '-C', '-r', releaseTag],
          workdir=repoName,
          description=['update to', releaseTag],
          haltOnFailure=True
@@ -823,3 +889,98 @@ class SingleSourceFactory(ReleaseFactory):
          haltOnFailure=True
         )
         # TODO: upload files
+
+
+
+class ReleaseUpdatesFactory(ReleaseFactory):
+    def __init__(self, cvsroot, patcherToolsRev, mozillaCentral, buildTools,
+                 patcherConfig, baseTag, appName, productName, appVersion,
+                 oldVersion, buildNumber, ftpServer, bouncerServer,
+                 stagingServer, useBetaChannel, createPartialMars=True):
+        ReleaseFactory.__init__(self)
+
+        patcherConfigFile = 'patcher-configs/%s' % patcherConfig
+        shippedLocales = '%s/raw-file/%s_RELEASE/%s/locales/shipped-locales' % \
+          (mozillaCentral, baseTag, appName)
+
+        self.addStep(CVS,
+         cvsroot=cvsroot,
+         branch=patcherToolsRev,
+         cvsmodule='mozilla/tools/patcher'
+        )
+        self.addStep(ShellCommand,
+         command=['cvs', '-d', cvsroot, 'co', '-r', patcherToolsRev,
+                  '-d', 'MozBuild',
+                  'mozilla/tools/release/MozBuild'],
+         haltOnFailure=True
+        )
+        self.addStep(ShellCommand,
+         command=['cvs', '-d', cvsroot, 'co', '-r', patcherToolsRev,
+                  '-d' 'Bootstrap',
+                  'mozilla/tools/release/Bootstrap/Util.pm'],
+        )
+        self.addStep(ShellCommand,
+         command=['cvs', '-d', cvsroot, 'co', '-d' 'patcher-configs',
+                  'mozilla/tools/patcher-configs'],
+         haltonFailure=True
+        )
+        self.addStep(ShellCommand,
+         command=['hg', 'clone', buildTools],
+         haltOnFailure=True
+        )
+        self.addStep(ShellCommand,
+         command=['wget', '-O', 'shipped-locales', shippedLocales],
+         haltOnFailure=True
+        )
+        self.addStep(ShellCommand,
+         command=['perl', 'tools/release/patcher-config-bump.pl',
+                  '-p', productName, '-v', appVersion, '-a', appVersion,
+                  '-o', oldVersion, '-b', str(buildNumber),
+                  '-c', patcherConfigFile, '-t', stagingServer,
+                  '-f', ftpServer, '-d', bouncerServer, '-u',
+                  '-l', 'shipped-locales'],
+         haltOnFailure=True
+        )
+#        self.addStep(ShellCommand,
+#         command=['cvs', 'commit', '-m',
+#                  'Automated configuration bump: %s, from %s to %s' % \
+#                    (patcherConfig, oldVersion, appVersion)
+#                 ],
+#         workdir='build/patcher-configs',
+#         haltOnFailure=True
+#        )
+        self.addStep(ShellCommand,
+         command=['perl', 'patcher2.pl', '--build-tools-hg', 
+                  '--tools-revision=%s' % patcherToolsRev,
+                  '--app=%s' % productName,
+                  '--config=patcher-configs/%s' % patcherConfig],
+         haltOnFailure=True
+        )
+        self.addStep(ShellCommand,
+         command=['perl', 'patcher2.pl', '--download',
+                  '--app=%s' % productName,
+                  '--config=patcher-configs/%s' % patcherConfig],
+         haltOnFailure=True
+        )
+        patcherCmd = '--create-patches'
+        if not createPartialMars:
+            self.addStep(ShellCommand,
+             command=['ln', '-s', appVersion,
+                      '%s-%s' % (oldVersion, appVersion)],
+             workdir='build/temp/firefox',
+             haltOnFailure=True
+            )
+            patcherCmd = '--create-patchinfo'
+        self.addStep(ShellCommand,
+         command=['perl', 'patcher2.pl', patcherCmd,
+                  '--partial-patchlist-file=patchlist.cfg',
+                  '--app=%s' % productName,
+                  '--config=patcher-configs/%s' % patcherConfig],
+         haltOnFailure=True
+        )
+#        self.addStep(ShellCommand,
+#         command=PUSH BUILDS TO STAGE
+#        )
+#        self.addStep(ShellCommand,
+#         command=PUSH SNIPPETS TO AUS2-STAGING
+#        )

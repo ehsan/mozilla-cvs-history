@@ -21,3 +21,14 @@ def get_l10n_repositories(file, l10nCentral, relbranch):
         }
 
     return repositories
+
+
+# This function is used as fileIsImportant parameter for Buildbots that do both
+# dep/nightlies and release builds. Because they build the same "branch" this
+# allows us to have the release builder ignore HgPoller triggered changse
+# and the dep builders only obey HgPoller/Force Build triggered ones.
+
+def isHgPollerTriggered(change, hgUrl):
+    if change.comments.find(hgUrl) > -1:
+        return True
+    return False
