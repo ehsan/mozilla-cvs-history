@@ -582,6 +582,7 @@ class ReleaseFactory(BuildFactory):
         return repo.rstrip('/').split('/')[-1]
 
     def getRepoPath(self, repo):
+        repo = repo.rstrip('/')
         repo = repo.split('/')[-1]
         if repo.find('central') == -1:
             repo = 'l10n-central/%s' % repo
