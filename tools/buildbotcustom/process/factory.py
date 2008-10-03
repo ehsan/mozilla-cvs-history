@@ -595,7 +595,6 @@ class StagingRepositorySetupFactory(ReleaseFactory):
         for repo in sorted(repositories.keys()):
             repoName = self.getRepoName(repo)
             pushRepo = self.getPushRepo(repo)
-            sourceRepoName = self.getRepoPath(hgHost, repo)
 
             # test for existence
             command = 'wget -O- %s >/dev/null' % repo
@@ -609,7 +608,7 @@ class StagingRepositorySetupFactory(ReleaseFactory):
             # that don't already exist, which is a huge pain when adding new
             # locales or repositories.
             command += 'ssh -l %s -i %s %s clone %s %s' % \
-              (username, sshKey, hgHost, repoName, sourceRepoName)
+              (username, sshKey, hgHost, repoName, repoName)
 
             self.addStep(ShellCommand,
              command=['bash', '-c', command],
