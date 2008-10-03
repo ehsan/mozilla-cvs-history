@@ -1,5 +1,5 @@
 from datetime import datetime
-import os.path
+import os.path, re
 
 from twisted.python import log
 
@@ -581,8 +581,8 @@ class ReleaseFactory(BuildFactory):
     def getRepoName(self, repo):
         return repo.rstrip('/').split('/')[-1]
 
-    def getRepoPath(self, hgHost, repo):
-        repo = repo.replace(hgHost, '').strip('/')
+    def getRepoPath(self, repo):
+        repo = repo.split('/')[-1]
         if repo.find('central') == -1:
             repo = 'l10n-central/%s' % repo
         return repo
@@ -595,6 +595,7 @@ class StagingRepositorySetupFactory(ReleaseFactory):
         for repo in sorted(repositories.keys()):
             repoName = self.getRepoName(repo)
             pushRepo = self.getPushRepo(repo)
+            sourceRepoPath = self.getRepoPath(repo)
 
             # test for existence
             command = 'wget -O- %s >/dev/null' % repo
@@ -608,7 +609,7 @@ class StagingRepositorySetupFactory(ReleaseFactory):
             # that don't already exist, which is a huge pain when adding new
             # locales or repositories.
             command += 'ssh -l %s -i %s %s clone %s %s' % \
-              (username, sshKey, hgHost, repoName, repoName)
+              (username, sshKey, hgHost, repoName, sourceRepoPath)
 
             self.addStep(ShellCommand,
              command=['bash', '-c', command],
