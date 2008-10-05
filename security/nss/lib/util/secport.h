@@ -37,7 +37,7 @@
 /*
  * secport.h - portability interfaces for security libraries
  *
- * $Id: secport.h,v 1.16 2008/08/22 01:33:05 wtc%google.com Exp $
+ * $Id: secport.h,v 1.17 2008/10/05 20:59:26 nelson%bolyard.com Exp $
  */
 
 #ifndef _SECPORT_H_
@@ -213,7 +213,7 @@ PRBool PORT_ISO88591_UTF8Conversion(const unsigned char *inBuf,
 			unsigned int inBufLen, unsigned char *outBuf,
 			unsigned int maxOutBufLen, unsigned int *outBufLen);
 
-PR_EXTERN(PRBool)
+extern PRBool
 sec_port_ucs4_utf8_conversion_function
 (
   PRBool toUnicode,
@@ -224,7 +224,7 @@ sec_port_ucs4_utf8_conversion_function
   unsigned int *outBufLen
 );
 
-PR_EXTERN(PRBool)
+extern PRBool
 sec_port_ucs2_utf8_conversion_function
 (
   PRBool toUnicode,
