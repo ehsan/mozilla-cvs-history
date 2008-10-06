@@ -578,10 +578,17 @@ static const unsigned int kMaxTitleLength = 50;
 
   // If rootChangedItem is nil, the whole history tree is being rebuilt.
   if (!rootChangedItem) {
-    [mRecentlyClosedMenu release];
-    mRecentlyClosedMenu = [[NSMenu alloc] initWithTitle:NSLocalizedString(@"RecentlyClosed", nil)];
     [mTodayItem release];
     mTodayItem = nil;
+    // We can get here either when the history is being cleared (in which case
+    // we will already have an mRootItem) or when we are doing the lazy
+    // construction of the root item as the menu is shown (in which case
+    // mRootItem is still |nil|). If it's the former, clear the recently closed
+    // pages as well.
+    if (mRootItem) {
+      [mRecentlyClosedMenu release];
+      mRecentlyClosedMenu = [[NSMenu alloc] initWithTitle:NSLocalizedString(@"RecentlyClosed", nil)];
+    }
   }
   else if (mTodayItem == rootChangedItem ||
            mTodayItem == [rootChangedItem parentItem])
