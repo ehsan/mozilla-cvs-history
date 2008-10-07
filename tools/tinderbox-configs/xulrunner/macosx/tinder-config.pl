@@ -1,6 +1,6 @@
 #
-## hostname: bm-xserve09.build.mozilla.org
-## uname: Darwin bm-xserve09.build.mozilla.org 8.8.4 Darwin Kernel Version 8.8.4: Sun Oct 29 15:26:54 PST 2006; root:xnu-792.16.4.obj~1/RELEASE_I386 i386 i386
+## hostname: bm-xserve08.build.mozilla.org
+## uname: Darwin bm-xserve08.build.mozilla.org 8.8.4 Darwin Kernel Version 8.8.4: Sun Oct 29 15:26:54 PST 2006; root:xnu-792.16.4.obj~1/RELEASE_I386 i386 i386
 #
 
 #- tinder-config.pl - Tinderbox configuration file.
@@ -150,8 +150,8 @@ $RunMozillaTests          = 0;  # Allow turning off of all tests if needed.
 # Note that win32 may not need \@, depends on ' or ".
 # :pserver:$ENV{USER}%netscape.com@cvs.mozilla.org:/cvsroot
 
-# sharing bm-xserve09 with T'bird build, do all CVS pulls with that key
-$moz_cvsroot   = ":ext:tbirdbld\@cvs.mozilla.org:/cvsroot";
+# sharing bm-xserve08 with Firefox build, do all CVS pulls with that key
+$moz_cvsroot   = ":ext:ffxbld\@cvs.mozilla.org:/cvsroot";
 
 #- Set these proper values for your tinderbox server
 #$Tinderbox_server = 'tinderbox-daemon@tinderbox.mozilla.org';
