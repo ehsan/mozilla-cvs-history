@@ -167,6 +167,7 @@ _TEST_FILES = 	test_bug5141.html \
 		file_bug426646-1.html \
 		file_bug426646-2.html \
 		test_bug429157.html \
+		test_bug431701.html \
 		test_XHR.html \
 		file_XHR_pass1.xml \
 		file_XHR_pass2.txt \

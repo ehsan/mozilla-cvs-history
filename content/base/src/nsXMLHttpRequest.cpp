@@ -84,6 +84,7 @@
 #include "nsLayoutStatics.h"
 #include "nsDOMError.h"
 #include "nsIHTMLDocument.h"
+#include "nsIDOM3Document.h"
 #include "nsWhitespaceTokenizer.h"
 #include "nsIMultiPartChannel.h"
 #include "nsIScriptObjectPrincipal.h"
@@ -1770,9 +1771,15 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
           nsCOMPtr<nsIDOMSerializer> serializer(do_CreateInstance(NS_XMLSERIALIZER_CONTRACTID, &rv));
           if (NS_FAILED(rv)) return rv;
 
-          nsCOMPtr<nsIDocument> baseDoc(do_QueryInterface(doc));
-          if (baseDoc) {
-            charset = baseDoc->GetDocumentCharacterSet();
+          nsCOMPtr<nsIDOM3Document> dom3doc(do_QueryInterface(doc));
+          if (dom3doc) {
+            nsAutoString inputEncoding;
+            dom3doc->GetInputEncoding(inputEncoding);
+            if (DOMStringIsNull(inputEncoding)) {
+              charset.AssignLiteral("UTF-8");
+            } else {
+              CopyUTF16toUTF8(inputEncoding, charset);
+            }
           }
 
           // Serialize to a stream so that the encoding used will
