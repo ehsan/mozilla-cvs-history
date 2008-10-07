@@ -300,7 +300,7 @@ PR_IMPLEMENT(PRUint64) PR_GetPhysicalMemorySize(void)
 #elif defined(DARWIN)
 
     struct host_basic_info hInfo;
-    mach_msg_type_number_t count = sizeof(hInfo);
+    mach_msg_type_number_t count = HOST_BASIC_INFO_COUNT;
 
     int result = host_info(mach_host_self(),
                            HOST_BASIC_INFO,
