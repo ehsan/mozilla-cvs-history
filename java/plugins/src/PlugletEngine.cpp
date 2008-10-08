@@ -31,13 +31,17 @@
 #include "PlugletManager.h"
 #include "PlugletLog.h"
 
+#ifdef XP_PC
+#include <windows.h>
+#endif
+
+
 #ifndef OJI_DISABLE
 #include "ProxyJNI.h"
 static NS_DEFINE_CID(kJVMManagerCID,NS_JVMMANAGER_CID);
 PlugletSecurityContext *PlugletEngine::securityContext = NULL;
 nsJVMManager * PlugletEngine::jvmManager = NULL;
 #endif /* OJI_DISABLE */
-
 
 static NS_DEFINE_CID(kIPluginIID,NS_IPLUGIN_IID);
 static NS_DEFINE_CID(kPluginCID,NS_PLUGIN_CID);
@@ -47,7 +51,23 @@ static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 
 PRLogModuleInfo* PlugletLog::log = NULL;
 
+typedef jint (*PJNI_CreateJavaVM)(JavaVM **pvm, void **penv, void *args);
+typedef jint (*PJNI_GetCreatedJavaVMs)(JavaVM **, jsize, jsize *);
 
+static PJNI_GetCreatedJavaVMs pJNI_GetCreatedJavaVMs = nsnull;
+static PJNI_CreateJavaVM pJNI_CreateJavaVM = nsnull;
+
+static void _LoadJNIFuntions()
+{
+#ifdef XP_PC
+    HMODULE jvmDll = ::LoadLibrary(TEXT("jvm.dll"));
+
+    pJNI_GetCreatedJavaVMs = (PJNI_GetCreatedJavaVMs) 
+        ::GetProcAddress(jvmDll, "JNI_GetCreatedJavaVMs");
+    pJNI_CreateJavaVM = (PJNI_CreateJavaVM) 
+        ::GetProcAddress(jvmDll, "JNI_CreateJavaVM");
+#endif
+}
 
 int PlugletEngine::objectCount = 0;
 PlugletsDir * PlugletEngine::dir = NULL;
@@ -59,6 +79,7 @@ jobject PlugletEngine::plugletManager = NULL;
 
 PlugletEngine::PlugletEngine() {
     NS_INIT_ISUPPORTS();
+
     PlugletLog::log = PR_NewLogModule("pluglets");
     dir = new PlugletsDir();
     objectCount++;
@@ -173,10 +194,20 @@ char *ToString(jobject obj,JNIEnv *env) {
 JavaVM *PlugletEngine::jvm = NULL;	
 
 void PlugletEngine::StartJVM() {
+    if (nsnull == pJNI_CreateJavaVM) {
+        _LoadJNIFuntions();
+    }
+    if (nsnull == pJNI_CreateJavaVM) {
+        PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+               ("PlugletEngine::StartJVM SEVERE ERROR: Cannot start JVM.  Is Java in your path?\n"));
+        return;
+    }
+
+
     JNIEnv *env = NULL;
     jint res;
     jsize jvmCount;
-    JNI_GetCreatedJavaVMs(&jvm, 1, &jvmCount);
+    pJNI_GetCreatedJavaVMs(&jvm, 1, &jvmCount);
     if (jvmCount) {
         PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
                ("PlugletEngine::StartJVM we got already started JVM\n"));
@@ -209,7 +240,7 @@ void PlugletEngine::StartJVM() {
            ("PlugletEngine::StartJVM about to start JVM with options %s %s %s\n",
             options[0].optionString, options[1].optionString, 
             options[2].optionString));
-    res = JNI_CreateJavaVM(&jvm, (void**)&env, &vm_args);
+    res = pJNI_CreateJavaVM(&jvm, (void**)&env, &vm_args);
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
            ("PlugletEngine::StartJVM after CreateJavaVM res = %d\n",res));
 }

@@ -114,7 +114,6 @@ DEFINES	+= -DDISABLE_JIT
 endif # LINUX
 ifeq ($(OS_ARCH),WINNT)
 EXTRA_LIBS     += \
-		$(JAVA_HOME)/lib/jvm.lib \
 		$(XPCOM_LIBS) \
 		$(DIST)/lib/xpcom_compat.lib \
 		$(NSPR_LIBS) \
