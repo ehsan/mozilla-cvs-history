@@ -809,7 +809,7 @@ class ReleaseTaggingFactory(ReleaseFactory):
                  workdir=repoName
                 )
                 self.addStep(ShellCommand,
-                 command=['hg', 'commit', '-m',
+                 command=['hg', 'commit', '-u', hgUsername, '-m',
                           'Automated checkin: version bump remove "pre" ' + \
                           ' from version number for ' + productName + ' ' + \
                           appVersion + ' release on ' + relbranchName],
@@ -825,7 +825,7 @@ class ReleaseTaggingFactory(ReleaseFactory):
                 )
             for tag in (buildTag, releaseTag):
                 self.addStep(ShellCommand,
-                 command=['hg', 'tag', '-f', '-r',
+                 command=['hg', 'tag', '-u', hgUsername, '-f', '-r',
                           WithProperties('%s', '%s-revision' % repoName),
                           tag],
                  workdir=repoName,
