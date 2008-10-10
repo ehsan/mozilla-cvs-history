@@ -933,13 +933,17 @@ class ReleaseUpdatesFactory(ReleaseFactory):
          command=['wget', '-O', 'shipped-locales', shippedLocales],
          haltOnFailure=True
         )
+
+        bumpCommand = ['perl', 'tools/release/patcher-config-bump.pl',
+                       '-p', productName, '-v', appVersion, '-a', appVersion,
+                       '-o', oldVersion, '-b', str(buildNumber),
+                       '-c', patcherConfigFile, '-t', stagingServer,
+                       '-f', ftpServer, '-d', bouncerServer,
+                       '-l', 'shipped-locales']
+        if useBetaChannel:
+            bumpCommand.append('-u')
         self.addStep(ShellCommand,
-         command=['perl', 'tools/release/patcher-config-bump.pl',
-                  '-p', productName, '-v', appVersion, '-a', appVersion,
-                  '-o', oldVersion, '-b', str(buildNumber),
-                  '-c', patcherConfigFile, '-t', stagingServer,
-                  '-f', ftpServer, '-d', bouncerServer, '-u',
-                  '-l', 'shipped-locales'],
+         command=bumpCommand
          haltOnFailure=True
         )
 #        self.addStep(ShellCommand,
