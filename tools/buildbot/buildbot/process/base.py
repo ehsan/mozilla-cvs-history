@@ -394,7 +394,12 @@ class Build:
             step.setDefaultWorkdir(self.workdir)
             name = step.name
             count = 1
-            while name in stepnames and count < 100:
+            # LOCAL MOZILLA PATCH:
+            # buildbotcustom.process.factory.ReleaseTaggingFactory uses
+            # more than 100 ShellCommands when it runs - this has been bumped up
+            # to support that. upstream buildbot bug here:
+            # http://buildbot.net/trac/ticket/366
+            while name in stepnames and count < 1000:
                 count += 1
                 name = step.name + "_%d" % count
             if name in stepnames:
