@@ -24,7 +24,7 @@
 #include "nsIFile.h"
 #include "nsFileSpec.h"
 #include "nsICategoryManager.h"
-#include "nsIObserver.h"
+#include "nsObserverService.h"
 #include "nsMemory.h"
 
 #include "PlugletEngine.h"
@@ -36,6 +36,8 @@
 #include "prlink.h"
 #include "PlugletManager.h"
 #include "PlugletLog.h"
+
+#include "XPCOMShutdownObserver.h"
 
 #ifdef XP_PC
 #define SEP "\\"
@@ -143,7 +145,7 @@ void PlugletEngine::PopulateClasspath()
     nsCOMPtr<nsIFile> profileDir;
     if (NS_SUCCEEDED(rv)) {
         rv = dirService->Get(NS_APP_USER_PROFILE_50_DIR,
-                             nsIFile::GetIID(),
+                             NS_GET_IID(nsIFile),
                              getter_AddRefs(profileDir));
         if (NS_SUCCEEDED(rv)) {
             rv = profileDir->AppendNative(NS_LITERAL_CSTRING("extensions"));
@@ -193,7 +195,9 @@ int PlugletEngine::objectCount = 0;
 PlugletsDir * PlugletEngine::dir = NULL;
 PRInt32 PlugletEngine::lockCount = 0;
 nsCOMPtr<nsIPluginManager> PlugletEngine::pluginManager;
+nsCOMPtr<nsIObserver> PlugletEngine::shutdownObserver;
 jobject PlugletEngine::plugletManager = NULL;
+
 
 #define PLUGIN_MIME_DESCRIPTION "*:*:Pluglet Engine"
 
@@ -333,27 +337,71 @@ void PlugletEngine::StartJVM() {
                ("PlugletEngine::StartJVM we got already started JVM\n"));
         return;
     }
-    char classpath[1024]="";
+    char classpath[4096]="";
     char debug[256]="";
     char runjdwp[256]="";
+    char jniLibPath[4096] ="";
+
     sprintf(debug, "-Xdebug");
     sprintf(runjdwp, 
             "-Xrunjdwp:transport=dt_shmem,address=jdbconn,server=y,suspend=y");
     JavaVMInitArgs vm_args;
-    JavaVMOption options[4];
+    JavaVMOption options[5];
     char * classpathEnv = PR_GetEnv("CLASSPATH");
     if (classpathEnv != NULL) {
         sprintf(classpath, "-Djava.class.path=%s",classpathEnv);
         PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
                ("PlugletEngine::StartJVM about to create JVM classpath=%s\n",classpath));
     }
+
+    nsresult rv;
+    
+    nsCOMPtr<nsIProperties> dirService
+        (do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv));
+    nsCOMPtr<nsIFile> file;
+    if (NS_SUCCEEDED(rv)) {
+        rv = dirService->Get(NS_APP_USER_PROFILE_50_DIR,
+                             NS_GET_IID(nsIFile),
+                             getter_AddRefs(file));
+        if (NS_SUCCEEDED(rv)) {
+            rv = file->AppendNative(NS_LITERAL_CSTRING("extensions"));
+            if (NS_SUCCEEDED(rv)) {
+                rv = file->AppendNative(NS_LITERAL_CSTRING("pluglet@ridingthecrest.com"));
+                if (NS_SUCCEEDED(rv)) {
+                    rv = file->AppendNative(NS_LITERAL_CSTRING("platform"));
+                    if (NS_SUCCEEDED(rv)) {
+#ifdef XP_PC
+                        rv = file->AppendNative(NS_LITERAL_CSTRING("WINNT_x86-msvc"));
+#endif
+                        if (NS_SUCCEEDED(rv)) {
+                            rv = file->AppendNative(NS_LITERAL_CSTRING("plugletjni.dll"));
+                            if (NS_SUCCEEDED(rv)) {
+                                nsXPIDLCString plugletJni;
+                                rv = file->GetNativePath(plugletJni);
+                                if (NS_SUCCEEDED(rv)) {
+                                    // 20 for -Djava.library.path=, 1 for \0
+                                    PRUint32 len = PL_strlen(plugletJni.get())+
+                                        21;
+                                    PL_strcat(jniLibPath, 
+                                              "-Djava.library.path=");
+                                    PL_strcat(jniLibPath, plugletJni.get());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+                
     options[0].optionString = classpath;
-    options[1].optionString = debug;
-    options[2].optionString = runjdwp;
-    options[3].optionString=""; //-Djava.compiler=NONE";
+    options[1].optionString = jniLibPath;
+    options[2].optionString = debug;
+    options[3].optionString = runjdwp;
+    options[4].optionString=""; //-Djava.compiler=NONE";
     vm_args.version = JNI_VERSION_1_4;
     vm_args.options = options;
-    vm_args.nOptions = 1; // EDBURNS: Change to 3 for debugging, 1 for non-debuging
+    vm_args.nOptions = 2; // EDBURNS: Change to 4 for debugging, 2 for non-debuging
     vm_args.ignoreUnrecognized = JNI_FALSE;
     /* Create the Java VM */
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
@@ -361,6 +409,7 @@ void PlugletEngine::StartJVM() {
             options[0].optionString, options[1].optionString, 
             options[2].optionString));
     res = pJNI_CreateJavaVM(&jvm, (void**)&env, &vm_args);
+
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
            ("PlugletEngine::StartJVM after CreateJavaVM res = %d\n",res));
 }
@@ -487,6 +536,15 @@ static NS_METHOD PlugletEngineRegistration(nsIComponentManager *aCompMgr,
     if (previous) {
         nsMemory::Free(previous);
     }
+
+    PlugletEngine::shutdownObserver = new XPCOMShutdownObserver();
+    nsCOMPtr<nsIObserverService> obs
+        (do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv));
+    if (NS_SUCCEEDED(rv)) {
+        rv = obs->AddObserver(PlugletEngine::shutdownObserver, 
+                              NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
+    }
+
 
     return rv;
 }

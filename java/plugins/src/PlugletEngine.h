@@ -44,6 +44,8 @@ class PlugletEngine : public nsIObserver, public iPlugletEngine, public nsIPlugi
 
     static PlugletEngine *_NewInstance();
 
+    static nsCOMPtr<nsIObserver> shutdownObserver;
+
  private:
     static int objectCount;
     static PRInt32 lockCount;
