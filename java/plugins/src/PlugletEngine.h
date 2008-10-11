@@ -56,6 +56,9 @@ class PlugletEngine : public nsIObserver, public iPlugletEngine, public nsIPlugi
 #else /* OJI_DISABLE */
     static JavaVM *jvm;
     static void StartJVM(void);
+    static void LoadJNIFuntions(void);
+    static void PopulateClasspath(void);
+    static void SatisfyJavaPreconditions(void);
 #endif /* OJI_DISABLE */
 };    
 

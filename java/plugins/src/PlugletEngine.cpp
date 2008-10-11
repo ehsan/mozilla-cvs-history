@@ -19,6 +19,10 @@
  * Contributor(s): 
  */
 #include "nsIGenericFactory.h"
+#include "nsXPCOMCID.h"
+#include "nsAppDirectoryServiceDefs.h"
+#include "nsIFile.h"
+#include "nsFileSpec.h"
 #include "nsICategoryManager.h"
 #include "nsIObserver.h"
 #include "nsMemory.h"
@@ -28,11 +32,14 @@
 #include "nsIServiceManager.h"
 #include "nsServiceManagerUtils.h"
 #include "prenv.h"
+#include "plstr.h"
+#include "prlink.h"
 #include "PlugletManager.h"
 #include "PlugletLog.h"
 
 #ifdef XP_PC
-#include <windows.h>
+#define SEP "\\"
+#define PATH_SEP ";"
 #endif
 
 
@@ -57,17 +64,130 @@ typedef jint (*PJNI_GetCreatedJavaVMs)(JavaVM **, jsize, jsize *);
 static PJNI_GetCreatedJavaVMs pJNI_GetCreatedJavaVMs = nsnull;
 static PJNI_CreateJavaVM pJNI_CreateJavaVM = nsnull;
 
-static void _LoadJNIFuntions()
+void PlugletEngine::LoadJNIFuntions()
 {
-#ifdef XP_PC
-    HMODULE jvmDll = ::LoadLibrary(TEXT("jvm.dll"));
+    char *path = nsnull;
+    char *java_home = nsnull;
+    char *buf = nsnull;
+    char *jvmDllPath = nsnull;
+    char *relativePathToJvmDll;
+    PRUint32 capVariant = 0;
+    PRUint32 len = 0;
+    // Get the path environment variable, accounting for capitilzation variants
+    if (nsnull == (capVariant = 0, path = PR_GetEnv("PATH"))) {
+        if (nsnull == (capVariant = 1, path = PR_GetEnv("path"))) {
+            if (nsnull == (capVariant = 2, path = PR_GetEnv("Path"))) {
+                return;
+            }
+        }
+    }
 
-    pJNI_GetCreatedJavaVMs = (PJNI_GetCreatedJavaVMs) 
-        ::GetProcAddress(jvmDll, "JNI_GetCreatedJavaVMs");
-    pJNI_CreateJavaVM = (PJNI_CreateJavaVM) 
-        ::GetProcAddress(jvmDll, "JNI_CreateJavaVM");
-#endif
+    // If the path does not already have java in it
+    if ((nsnull == PL_strstr(path, "Java")) &&
+        (nsnull == PL_strstr(path, "java")) &&
+        (nsnull == PL_strstr(path, "JAVA"))) {
+        // Get the JAVA_HOME environment variable
+        if (nsnull == (java_home = PR_GetEnv("JAVA_HOME"))) {
+            return;
+        }
+
+        // get the path to jvm.dll, relative to JAVA_HOME
+        relativePathToJvmDll = "jre\\bin\\client";
+
+        // Build the absolute path to the jvm.dll
+        len = PL_strlen(java_home) + PL_strlen(relativePathToJvmDll) + 
+            2; // 1 for \\ 1 for \0
+        buf = new char[len];
+        memset(buf, 0, len);
+        PL_strcat(buf, java_home);
+        PL_strcat(buf, SEP);
+        PL_strcat(buf, relativePathToJvmDll);
+
+        jvmDllPath = PR_GetLibraryName(buf, "jvm.dll");
+        delete [] buf;
+    }
+    else {
+        jvmDllPath = "jvm.dll";
+    }
+
+    PRLibrary *jvmDll = PR_LoadLibrary((const char *) jvmDllPath);
+    if (0 != PL_strstr("jvm.dll", jvmDllPath)) {
+        PR_FreeLibraryName(jvmDllPath);
+    }
+    if (nsnull != jvmDllPath) {
+        pJNI_GetCreatedJavaVMs = (PJNI_GetCreatedJavaVMs) 
+            PR_FindFunctionSymbol(jvmDll, "JNI_GetCreatedJavaVMs");
+        pJNI_CreateJavaVM = (PJNI_CreateJavaVM) 
+            PR_FindFunctionSymbol(jvmDll, "JNI_CreateJavaVM");
+    }
 }
+
+void PlugletEngine::PopulateClasspath()
+{
+    const char *classpath = nsnull;
+    char *buf = nsnull;
+    PRUint32 len = 0;
+    
+    if (nsnull == (classpath = PR_GetEnv("CLASSPATH"))) {
+        if (nsnull == (classpath = PR_GetEnv("Classpath"))) {
+            if (nsnull == (classpath = PR_GetEnv("classpath"))) {
+            }
+        }
+    }
+
+    // Get the profile directory
+    nsresult rv;
+    
+    nsCOMPtr<nsIProperties> dirService
+        (do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv));
+    nsCOMPtr<nsIFile> profileDir;
+    if (NS_SUCCEEDED(rv)) {
+        rv = dirService->Get(NS_APP_USER_PROFILE_50_DIR,
+                             nsIFile::GetIID(),
+                             getter_AddRefs(profileDir));
+        if (NS_SUCCEEDED(rv)) {
+            rv = profileDir->AppendNative(NS_LITERAL_CSTRING("extensions"));
+            if (NS_SUCCEEDED(rv)) {
+                rv = profileDir->AppendNative(NS_LITERAL_CSTRING("pluglet@ridingthecrest.com"));
+                if (NS_SUCCEEDED(rv)) {
+                    rv = profileDir->AppendNative(NS_LITERAL_CSTRING("pluglet.jar"));
+                    if (NS_SUCCEEDED(rv)) {
+                        nsXPIDLCString plugletJar;
+                        rv = profileDir->GetNativePath(plugletJar);
+                        if (NS_SUCCEEDED(rv)) {
+                            if (nsnull == classpath) {
+                                // 10 for CLASSPATH= and 1 for \0
+                                len = PL_strlen(plugletJar.get()) + 11;
+                                buf = new char[len];
+                                memset(buf, 0, len);
+                                PL_strcat(buf, "CLASSPATH=");
+                            }
+                            else {
+                                // 10 for CLASSPATH= and 1 for \0
+                                len = PL_strlen(classpath) + 
+                                      PL_strlen(plugletJar.get()) + 11;
+                                buf = new char[len];
+                                memset(buf, 0, len);
+                                PL_strcat(buf, "CLASSPATH=");
+                                PL_strcat(buf, classpath);
+                                PL_strcat(buf, PATH_SEP);
+                            }
+                            PL_strcat(buf, plugletJar.get());
+                            PR_SetEnv(buf);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void PlugletEngine::SatisfyJavaPreconditions()
+{
+    LoadJNIFuntions();
+    PopulateClasspath();
+}
+
 
 int PlugletEngine::objectCount = 0;
 PlugletsDir * PlugletEngine::dir = NULL;
@@ -195,7 +315,7 @@ JavaVM *PlugletEngine::jvm = NULL;
 
 void PlugletEngine::StartJVM() {
     if (nsnull == pJNI_CreateJavaVM) {
-        _LoadJNIFuntions();
+        SatisfyJavaPreconditions();
     }
     if (nsnull == pJNI_CreateJavaVM) {
         PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
