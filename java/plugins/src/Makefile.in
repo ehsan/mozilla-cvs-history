@@ -63,6 +63,7 @@ CPPSRCS =  \
 	PlugletsDir.cpp \
 	Registry.cpp \
 	PlugletViewFactory.cpp \
+	XPCOMShutdownObserver.cpp \
 	$(NULL)
 
 ifeq ($(OS_ARCH),Linux)
@@ -96,6 +97,7 @@ endif #DARWIN
 
 INCLUDES += \
 	-I$(DIST)/include/string \
+	-I$(DIST)/include/pref \
 	-I$(DIST)/include/plugin \
 	-I$(DIST)/include/xpcom \
 	-I$(DIST)/include/xpcom_obsolete \
