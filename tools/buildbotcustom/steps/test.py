@@ -172,7 +172,7 @@ class CompareBloatLogs(ShellCommand):
 
         self.setProperty('leaks',leaks)
         self.setProperty('bloat',bloat)
-        self.build.setProperty('testresults', [("RLk", "refcnt_leaks", formatBytes(leaks,3))])
+        self.setProperty('testresults', [("RLk", "refcnt_leaks", formatBytes(leaks,3))])
 
         self.addCompleteLog(leaksAbbr + ":" + formatBytes(leaks,3),
                             summary)
@@ -247,7 +247,7 @@ class CompareLeakLogs(ShellCommand):
         a =  formatCount(leakStats['new']['allocs'],3)
 
         self.setProperty('leakStats',leakStats)
-        self.build.setProperty('testresults', [("Lk", "trace_malloc_leaks", lk), ("MH", "trace_malloc_maxheap", mh), ("A", "trace_malloc_allocs", a)])
+        self.setProperty('testresults', [("Lk", "trace_malloc_leaks", lk), ("MH", "trace_malloc_maxheap", mh), ("A", "trace_malloc_allocs", a)])
 
         slug = "Lk: %s, MH: %s, A: %s" % (lk, mh, a)
         logText = ""
@@ -304,7 +304,7 @@ class Codesighs(ShellCommand):
             z = 'mZ'
             zLong = "codesighs_embed"
 
-        self.build.setProperty('testresults', [(z, zLong, bytes)])
+        self.setProperty('testresults', [(z, zLong, bytes)])
 
         slug = '%s:%s' % (z, bytes)
         summary = 'TinderboxPrint:%s\n' % slug
@@ -327,7 +327,7 @@ class GraphServerPost(BuildStep):
         self.changes = self.build.allChanges()
         self.timestamp = int(self.step_status.build.getTimes()[0])
         self.buildid = strftime("%Y%m%d%H%M", localtime(self.timestamp))
-        self.testresults = self.build.getProperty('testresults')
+        self.testresults = self.getProperty('testresults')
         summary = ''
         for res in self.testresults:
             testname, testlongname, testval = res
