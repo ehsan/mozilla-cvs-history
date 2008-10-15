@@ -943,7 +943,7 @@ class ReleaseUpdatesFactory(ReleaseFactory):
         if useBetaChannel:
             bumpCommand.append('-u')
         self.addStep(ShellCommand,
-         command=bumpCommand
+         command=bumpCommand,
          haltOnFailure=True
         )
 #        self.addStep(ShellCommand,
