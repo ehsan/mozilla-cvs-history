@@ -108,8 +108,8 @@ def tinderboxPrint(testName,
 
 class CompareBloatLogs(ShellCommand):
     warnOnFailure = True
-    bloatLog = "" 
-
+    bloatLog = ""
+    
     def __init__(self, **kwargs):
         if not 'bloatLog' in kwargs:
             return FAILURE
@@ -129,6 +129,13 @@ class CompareBloatLogs(ShellCommand):
                              kwargs['bloatLog']
                              ]
         ShellCommand.__init__(self, **kwargs)
+
+    def evaluateCommand(self, cmd):
+        superResult = ShellCommand.evaluateCommand(self, cmd)
+        leaks = self.getProperty('leaks')
+        if leaks and int(leaks) > 0:
+            return WARNINGS
+        return superResult
             
     def createSummary(self, log):
         summary = "######################## BLOAT STATISTICS\n"
@@ -163,6 +170,8 @@ class CompareBloatLogs(ShellCommand):
                                     )
         summary += tinderLink
 
+        self.setProperty('leaks',leaks)
+        self.setProperty('bloat',bloat)
         self.build.setProperty('testresults', [("RLk", "refcnt_leaks", formatBytes(leaks,3))])
 
         self.addCompleteLog(leaksAbbr + ":" + formatBytes(leaks,3),
@@ -172,9 +181,6 @@ class CompareLeakLogs(ShellCommand):
     warnOnFailure = True
     mallocLog = "" 
     leakFailureThreshold = 7261838
-    leakStats = {}
-    leakStats['old'] = {}
-    leakStats['new'] = {}
     leaksAllocsRe = re.compile('Leaks: (\d+) bytes, (\d+) allocations')
     heapRe = re.compile('Maximum Heap Size: (\d+) bytes')
     bytesAllocsRe = re.compile('(\d+) bytes were allocated in (\d+) allocations')
@@ -207,11 +213,15 @@ class CompareLeakLogs(ShellCommand):
 
     def evaluateCommand(self, cmd):
         superResult = ShellCommand.evaluateCommand(self, cmd)
-        if self.leakStats['new']['leaks'] and int(self.leakStats['new']['leaks']) > int(self.leakFailureThreshold):
+        leakStats = self.getProperty('leakStats')
+        if leakStats['new']['leaks'] and int(leakStats['new']['leaks']) > int(self.leakFailureThreshold):
             return WARNINGS
         return superResult
             
     def createSummary(self, log):
+        leakStats = {}
+        leakStats['old'] = {}
+        leakStats['new'] = {}
         summary = self.testname + " trace-malloc bloat test: leakstats\n"
 
         resultSet = 'new'
@@ -219,23 +229,24 @@ class CompareLeakLogs(ShellCommand):
             summary += line
             m = self.leaksAllocsRe.search(line)
             if m:
-                self.leakStats[resultSet]['leaks'] = m.group(1)
-                self.leakStats[resultSet]['leakedAllocs'] = m.group(2)
+                leakStats[resultSet]['leaks'] = m.group(1)
+                leakStats[resultSet]['leakedAllocs'] = m.group(2)
                 continue
             m = self.heapRe.search(line)
             if m:
-                self.leakStats[resultSet]['mhs'] = m.group(1)
+                leakStats[resultSet]['mhs'] = m.group(1)
                 continue
             m = self.bytesAllocsRe.search(line)
             if m:
-                self.leakStats[resultSet]['bytes'] = m.group(1)
-                self.leakStats[resultSet]['allocs'] = m.group(2)
+                leakStats[resultSet]['bytes'] = m.group(1)
+                leakStats[resultSet]['allocs'] = m.group(2)
                 continue
             
-        lk =  formatBytes(self.leakStats['new']['leaks'],3)
-        mh = formatBytes(self.leakStats['new']['mhs'],3)
-        a =  formatCount(self.leakStats['new']['allocs'],3)
+        lk =  formatBytes(leakStats['new']['leaks'],3)
+        mh = formatBytes(leakStats['new']['mhs'],3)
+        a =  formatCount(leakStats['new']['allocs'],3)
 
+        self.setProperty('leakStats',leakStats)
         self.build.setProperty('testresults', [("Lk", "trace_malloc_leaks", lk), ("MH", "trace_malloc_maxheap", mh), ("A", "trace_malloc_allocs", a)])
 
         slug = "Lk: %s, MH: %s, A: %s" % (lk, mh, a)
