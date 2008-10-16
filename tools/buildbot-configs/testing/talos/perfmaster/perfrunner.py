@@ -535,7 +535,7 @@ class MozillaInstallDmgEx(ShellCommand):
 class TalosFactory(BuildFactory):
     """Create working talos build factory"""
 
-    winClean   = ["rm", "-rf", "*.zip", "talos/", "firefox/"]
+    winClean   = ["touch temp.zip &", "rm", "-rf", "*.zip", "talos/", "firefox/"]
     macClean   = "rm -vrf *"
     linuxClean = "rm -vrf *"
 
