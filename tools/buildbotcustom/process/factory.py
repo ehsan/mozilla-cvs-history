@@ -443,6 +443,7 @@ class MercurialBuildFactory(BuildFactory):
          platform=self.platform,
          group=self.stageGroup,
          sshKey=self.stageSshKey,
+         uploadCompleteMar=self.createSnippet,
          releaseToLatest=releaseToLatest,
          releaseToDated=releaseToDated,
          releaseToTinderboxBuilds=True,
