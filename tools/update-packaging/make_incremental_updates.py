@@ -395,7 +395,6 @@ def create_partial_patches(patches):
             mar_extract_time = time.time()
 
             partial_filename = create_partial_patch(work_dir_from, work_dir_to, patch_filename, shas, PatchInfo(work_dir, ['channel-prefs.js','update.manifest','removed-files'],['/readme.txt']),forced_updates)
-            partial_decoded = decode_filename(partial_filename)
             partial_buildid = to_buildid
             partial_shasum = sha.sha(open(partial_filename).read()).hexdigest()
             partial_size = str(os.path.getsize(partial_filename))
@@ -414,8 +413,8 @@ def create_partial_patches(patches):
              'partial_size':partial_size,
              'to_version':to_decoded['version'],
              'from_version':from_decoded['version'],
-             'locale':partial_decoded['locale'],
-             'platform':partial_decoded['platform'],
+             'locale':from_decoded['locale'],
+             'platform':from_decoded['platform'],
             })
             print "done with patch %s/%s time (%.2fs/%.2fs/%.2fs) (mar/patch/total)" % (str(patch_num),str(len(patches)),mar_extract_time-startTime,time.time()-mar_extract_time,time.time()-startTime)
             patch_num += 1
