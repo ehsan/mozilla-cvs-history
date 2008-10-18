@@ -102,10 +102,27 @@
     <!-- for url bar autocomplete -->
     <panel type="autocomplete-richlistbox" chromedir="&locale.dir;" id="PopupAutoCompleteRichResult" noautofocus="true" hidden="true"/>
 
+    <!-- XXX panel element that has one or more text fields should not be
+             top-most panel, for IME users. See bug 433340 comment 100.
+             However, we should not use non-topmost panel on Linux. Because
+             some Window Managers always append title bar and border to the
+             panel. -->
+#ifndef XP_UNIX
+#define USE_NON_TOPMOST_POPUP
+#else
+#ifdef XP_MACOSX
+#define USE_NON_TOPMOST_POPUP
+#endif
+#endif
+
     <panel id="editBookmarkPanel"
            orient="vertical"
            ignorekeys="true"
            hidden="true"
+#ifdef USE_NON_TOPMOST_POPUP
+           noautohide="true"
+           onpopupshowing="this.removeAttribute('noautohide');"
+#endif
            onpopupshown="StarUI.panelShown(event);"
            aria-labelledby="editBookmarkPanelTitle">
       <hbox flex="1" align="top">
