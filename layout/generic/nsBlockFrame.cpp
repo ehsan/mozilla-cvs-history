@@ -1458,7 +1458,7 @@ nsBlockFrame::ComputeCombinedArea(const nsHTMLReflowState& aReflowState,
 }
 
 nsresult
-nsBlockFrame::MarkLineDirty(line_iterator aLine)
+nsBlockFrame::MarkLineDirty(line_iterator aLine, const nsLineList* aLineList)
 {
   // Mark aLine dirty
   aLine->MarkDirty();
@@ -1474,7 +1474,7 @@ nsBlockFrame::MarkLineDirty(line_iterator aLine)
   // Mark previous line dirty if it's an inline line so that it can
   // maybe pullup something from the line just affected.
   // XXX We don't need to do this if aPrevLine ends in a break-after...
-  if (aLine != mLines.front() &&
+  if (aLine != (aLineList ? aLineList : &mLines)->front() &&
       aLine->IsInline() &&
       aLine.prev()->IsInline()) {
     aLine.prev()->MarkDirty();
@@ -6259,7 +6259,7 @@ nsBlockFrame::ChildIsDirty(nsIFrame* aChild)
     PRBool isValid;
     nsBlockInFlowLineIterator iter(this, aChild, &isValid);
     if (isValid) {
-      MarkLineDirty(iter.GetLine());
+      iter.GetContainer()->MarkLineDirty(iter.GetLine(), iter.GetLineList());
     }
   }
 
