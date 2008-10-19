@@ -132,7 +132,7 @@ install: all
 	chmod 750 $(PREFIX)/data/trapdoor
 	@if test ! -r $(PREFIX)/data/treeconfig.pl ; then \
 	echo "Installing treeconfig.pl" && \
-	cp treeconfig.pl $(PREFIX)/data \
+	cp treeconfig.pl $(PREFIX)/data ; \
 	chmod 640 $(PREFIX)/data/treeconfig.pl ; \
 	else \
 	echo ; \
@@ -141,7 +141,7 @@ install: all
 	fi
 	@if test ! -r $(PREFIX)/data/params ; then \
 	echo "Installing params" && \
-	cp params $(PREFIX)/data \
+	cp params $(PREFIX)/data ; \
 	chmod 660 $(PREFIX)/data/params ; \
 	else \
 	echo ; \
@@ -149,7 +149,7 @@ install: all
 	fi
 	@if test ! -r $(PREFIX)/data/cvsgraph.conf ; then \
 	echo "Installing cvsgraph.conf" && \
-	cp cvsgraph.conf $(PREFIX)/data \
+	cp cvsgraph.conf $(PREFIX)/data ; \
 	chmod 640 $(PREFIX)/data/cvsgraph.conf ; \
 	else \
 	echo ; \
