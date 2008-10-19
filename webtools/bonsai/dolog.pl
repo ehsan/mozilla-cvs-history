@@ -56,6 +56,8 @@ $mailhost = 'localhost';
 $rlogcommand = '/usr/bin/rlog';
 $output2mail = 1;
 
+$ENV{'PATH'} = '/bin:/usr/bin';
+
 @mailto = ();
 @changed_files = ();
 @added_files = ();
@@ -318,6 +320,8 @@ sub process_cvs_info {
     while (<ENT>) {
         chop;
         ($d,$fn,$rev,$mod_time,$sticky,$tag) = split(/\//);
+        $rev =~ /^([0-9\.]+)$/;
+        $rev = $1;
         $stat = 'C';
         for $i (@changed_files, "BEATME.NOW", @added_files) {
             if ($i eq "BEATME.NOW") { $stat = 'A'; }
@@ -508,5 +512,6 @@ sub stdout_notification {
 sub shell_escape {
     my ($file) = @_;
     $file =~ s/([ \"\'\?\$\&\|\!<>\(\)\[\]\;\:])/\\$1/g;
-    return $file;
+    $file =~ /^(.*)$/;
+    return $1;
 }
