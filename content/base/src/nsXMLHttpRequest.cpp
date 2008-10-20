@@ -1006,10 +1006,6 @@ nsXMLHttpRequest::NotifyEventListeners(const nsCOMArray<nsIDOMEventListener>& aL
   nsCOMPtr<nsIJSContextStack> stack;
   JSContext *cx = nsnull;
 
-  if (NS_FAILED(CheckInnerWindowCorrectness())) {
-    return;
-  }
-
   if (mScriptContext) {
     stack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
 
@@ -1027,6 +1023,9 @@ nsXMLHttpRequest::NotifyEventListeners(const nsCOMArray<nsIDOMEventListener>& aL
     nsIDOMEventListener* listener = aListeners[index];
     
     if (listener) {
+      if (NS_FAILED(CheckInnerWindowCorrectness())) {
+        break;
+      }
       listener->HandleEvent(aEvent);
     }
   }
