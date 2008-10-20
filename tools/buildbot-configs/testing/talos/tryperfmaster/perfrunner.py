@@ -486,10 +486,10 @@ class MozillaInstallDmg(ShellCommand):
 
 class TalosFactory(BuildFactory):
     """Create working talos build factory"""
-                           
-    winClean   = ["rm", "-rf", "*.zip", "talos/", "firefox/"]
-    macClean   = "rm -vrf *"
-    linuxClean = ["rm", "-rf", "*.bz2", "*.gz", "talos/", "firefox/"]
+        
+    winClean   = ["touch temp.zip &", "rm", "-rf", "*.zip", "talos/", "firefox/"]
+    macClean   = "rm -vrf *"   
+    linuxClean = "rm -vrf *" 
       
     def __init__(self, OS, envName, buildBranch, configOptions, buildSearchString, buildDir, buildPath, talosCmd, customManifest='', cvsRoot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot"):      
         BuildFactory.__init__(self)
