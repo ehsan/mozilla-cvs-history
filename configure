@@ -5328,7 +5328,7 @@ CYGWIN32_NT|CYGWIN_NT*|MINGW*_NT*)
     ;;
 AIX)
     OS_RELEASE=`uname -v`.`uname -r`
-    OS_TEST=`uname -p`
+    OS_TEST=${target_cpu}
     ;;
 BSD_386)
     OS_ARCH=BSD
@@ -5430,7 +5430,7 @@ case "$OS_TEST" in
     CPU_ARCH=x86
     ;;
 
-powerpc* | ppc)
+powerpc* | ppc | rs6000)
     CPU_ARCH=ppc
     ;;
 
@@ -5894,14 +5894,14 @@ ac_compile='${CXX-g++} -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext 1>&5'
 ac_link='${CXX-g++} -o conftest${ac_exeext} $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS 1>&5'
 cross_compiling=$ac_cv_prog_cxx_cross
 
-            echo $ac_n "checking for VisualAge C++ compiler version >= 5.0.2.0""... $ac_c" 1>&6
-echo "configure:5899: checking for VisualAge C++ compiler version >= 5.0.2.0" >&5
+            echo $ac_n "checking for VisualAge C++ compiler version >= 6.0.0.3""... $ac_c" 1>&6
+echo "configure:5899: checking for VisualAge C++ compiler version >= 6.0.0.3" >&5
             cat > conftest.$ac_ext <<EOF
 #line 5901 "configure"
 #include "confdefs.h"
 
 int main() {
-#if (__IBMCPP__ < 502)
+#if (__IBMCPP__ < 600)
                  #error "Bad compiler"
                  #endif
 ; return 0; }
@@ -5918,7 +5918,7 @@ fi
 rm -f conftest*
             if test -n "$_BAD_COMPILER"; then
                 echo "$ac_t""no" 1>&6    
-                { echo "configure: error: VisualAge C++ version 5.0.2.0 or higher is required to build." 1>&2; exit 1; }
+                { echo "configure: error: VisualAge C++ version 6.0.0.3 or higher is required to build." 1>&2; exit 1; }
             else
                 echo "$ac_t""yes" 1>&6    
             fi
