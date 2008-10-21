@@ -107,6 +107,7 @@ def tinderboxPrint(testName,
     return output
 
 class CompareBloatLogs(ShellCommand):
+    warnOnWarnings = True
     warnOnFailure = True
     bloatLog = ""
     
@@ -178,6 +179,7 @@ class CompareBloatLogs(ShellCommand):
                             summary)
 
 class CompareLeakLogs(ShellCommand):
+    warnOnWarnings = True
     warnOnFailure = True
     mallocLog = "" 
     leakFailureThreshold = 7261838
