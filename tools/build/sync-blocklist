@@ -1,6 +1,7 @@
 #!/bin/sh -x
 
 # 2008-05-09 - Copied from sync-configure (nthomas) 
+# 2008-10-21 - Check size to avoid checking in empty blocklists (dtownsend)
 
 URL='https://addons.mozilla.org/blocklist/1/%7Bec8030f7-c20a-464f-9b0e-13a3a9e97384%7D/3.0/'
 
@@ -37,6 +38,13 @@ use_tmpdir()
         return $WGET_STATUS
     fi
     
+    SIZE=`stat -c %s browser/app/blocklist.xml`
+    if [ $SIZE -lt 100 ]
+    then
+        echo "ERROR blocklist appears to be empty"
+        return 1
+    fi
+
     ${CVS} diff browser/app/blocklist.xml  >/dev/null 2>&1
     DIFF_STATUS=$?
     if [ $DIFF_STATUS == 1 ]
