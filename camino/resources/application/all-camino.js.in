@@ -47,8 +47,6 @@ pref("browser.tabs.startPage", 0);
 // What to load in a new window: 0 = blank, 1 = homepage
 pref("browser.startup.page", 1);
 
-pref("browser.quartz.enable.all_font_sizes", true);
-
 pref("chimera.store_passwords_with_keychain", true);
 
 // by default, Camino will take proxy settings (including PAC) from the OS.
@@ -202,3 +200,6 @@ pref("ui.use_native_popup_windows", true);
 
 // auto-update URL base
 pref("app.update.url", "%APP_UPDATE_URL%");
+
+// obey OS font size threshold for disabling text smoothing
+pref("gfx.use_text_smoothing_setting", true);
