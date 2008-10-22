@@ -163,7 +163,9 @@ static const int kEscapeKeyCode = 53;
     if ([keyString length] < 1)
       return NO;    
     keyChar = [keyString characterAtIndex:0];
-    if (keyChar == 'd') {
+    // Check for both d and D in case of caps lock (this is safe because the
+    // modifierFlags check will filter out shift-command-d).
+    if (keyChar == 'd' || keyChar == 'D') {
       if ((([theEvent modifierFlags] & standardModifierKeys) == NSCommandKeyMask) &&
           [windowController validateActionBySelector:@selector(addBookmark:)])
       {
