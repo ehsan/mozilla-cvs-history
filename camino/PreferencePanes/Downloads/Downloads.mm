@@ -72,14 +72,14 @@ private:
 
 
 
-@interface OrgMozillaChimeraPreferenceDownloads(Private)
+@interface OrgMozillaCaminoPreferenceDownloads(Private)
 
 - (void)setupDownloadMenuWithPath:(NSString*)inDLPath;
 - (void)setDownloadFolder:(NSString*)inNewFolder;
 
 @end
 
-@implementation OrgMozillaChimeraPreferenceDownloads
+@implementation OrgMozillaCaminoPreferenceDownloads
 
 - (id)initWithBundle:(NSBundle *)bundle
 {
@@ -92,7 +92,7 @@ private:
   [super dealloc];
 }
 
-- (void)mainViewDidLoad
+- (void)willSelect
 {
   [mAutoCloseDLManager setState:![self getBooleanPref:kGeckoPrefLeaveDownloadManagerOpen withSuccess:NULL]];
   [mEnableHelperApps setState:[self getBooleanPref:kGeckoPrefAutoOpenDownloads withSuccess:NULL]];
@@ -159,7 +159,7 @@ private:
   }
 }
 
-// Given a full path to the d/l dir, display the leaf name and the finder icon associated
+// Given a full path to the d/l dir, display the leaf name and the Finder icon associated
 // with that folder in the first item of the download folder popup.
 //
 - (void)setupDownloadMenuWithPath:(NSString*)inDLPath
@@ -168,7 +168,7 @@ private:
   if (!placeholder)
     return;
   
-  // get the finder icon and scale it down to 16x16
+  // get the Finder icon and scale it down to 16x16
   NSImage* icon = [[NSWorkspace sharedWorkspace] iconForFile:inDLPath];
   [icon setScalesWhenResized:YES];
   [icon setSize:NSMakeSize(16.0, 16.0)];

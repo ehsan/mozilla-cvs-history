@@ -40,7 +40,7 @@
 
 #import "PreferencePaneBase.h"
 
-@interface OrgMozillaChimeraPreferenceSecurity : PreferencePaneBase
+@interface OrgMozillaCaminoPreferenceSecurity : PreferencePaneBase
 {
   IBOutlet NSButton* mLeaveEncrypted;
   IBOutlet NSButton* mViewMixed;  

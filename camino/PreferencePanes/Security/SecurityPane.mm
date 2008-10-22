@@ -46,7 +46,7 @@
 const unsigned int kSelectAutomaticallyMatrixRowValue = 0;
 const unsigned int kAskEveryTimeMatrixRowValue        = 1;
 
-@implementation OrgMozillaChimeraPreferenceSecurity
+@implementation OrgMozillaCaminoPreferenceSecurity
 
 - (void)dealloc
 {
@@ -74,8 +74,7 @@ const unsigned int kAskEveryTimeMatrixRowValue        = 1;
 
 }
 
-
-- (void)mainViewDidLoad
+- (void)willSelect
 {
   [self updateButtons];
 }

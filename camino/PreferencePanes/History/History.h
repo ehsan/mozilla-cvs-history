@@ -41,7 +41,7 @@
 #import <Cocoa/Cocoa.h>
 #import <PreferencePaneBase.h>
 
-@interface OrgMozillaChimeraPreferenceHistory : PreferencePaneBase
+@interface OrgMozillaCaminoPreferenceHistory : PreferencePaneBase
 {
   IBOutlet NSTextField *textFieldHistoryDays;
 }

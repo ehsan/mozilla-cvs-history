@@ -27,6 +27,6 @@
 	<key>NSMainNibFile</key>
 	<string>Security</string>
 	<key>NSPrincipalClass</key>
-	<string>OrgMozillaChimeraPreferenceSecurity</string>
+	<string>OrgMozillaCaminoPreferenceSecurity</string>
 </dict>
 </plist>

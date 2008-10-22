@@ -21,6 +21,6 @@
 	<key>NSMainNibFile</key>
 	<string>Downloads</string>
 	<key>NSPrincipalClass</key>
-	<string>OrgMozillaChimeraPreferenceDownloads</string>
+	<string>OrgMozillaCaminoPreferenceDownloads</string>
 </dict>
 </plist>

@@ -60,7 +60,10 @@ static const int kDefaultExpireDays = 9;
 
 - (NSString *)stringForObjectValue:(id)anObject
 {
-  return [anObject stringValue];
+  // Normally we could just return [anObject stringValue], but since the pref is
+  // being read after the formatter is set, this raises an exception if we do that.
+  // Check for the proper class first to avoid this problem and return "" otherwise.
+  return [anObject isKindOfClass:[NSNumber class]] ? [anObject stringValue] : @"";
 }
 
 - (BOOL)getObjectValue:(id *)anObject forString:(NSString *)string errorDescription:(NSString **)error
@@ -83,9 +86,14 @@ static const int kDefaultExpireDays = 9;
 
 #pragma mark -
 
-@implementation OrgMozillaChimeraPreferenceHistory
+@implementation OrgMozillaCaminoPreferenceHistory
 
 - (void)mainViewDidLoad
+{
+  [textFieldHistoryDays setFormatter:[[[NonNegativeIntegerFormatter alloc] init] autorelease]];
+}
+
+- (void)willSelect
 {
   BOOL gotPref;
   int expireDays = [self getIntPref:kGeckoPrefHistoryLifetimeDays withSuccess:&gotPref];
@@ -93,7 +101,6 @@ static const int kDefaultExpireDays = 9;
     expireDays = kDefaultExpireDays;
   
   [textFieldHistoryDays setIntValue:expireDays];
-  [textFieldHistoryDays setFormatter:[[[NonNegativeIntegerFormatter alloc] init] autorelease]];
 }
 
 - (void)didUnselect

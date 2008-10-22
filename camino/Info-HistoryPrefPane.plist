@@ -21,6 +21,6 @@
 	<key>NSMainNibFile</key>
 	<string>History</string>
 	<key>NSPrincipalClass</key>
-	<string>OrgMozillaChimeraPreferenceHistory</string>
+	<string>OrgMozillaCaminoPreferenceHistory</string>
 </dict>
 </plist>

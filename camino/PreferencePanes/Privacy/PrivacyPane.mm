@@ -134,6 +134,18 @@ const int kSortReverse = 1;
 
 - (void)mainViewDidLoad
 {
+  // set up policy popups
+  NSPopUpButtonCell *popupButtonCell = [mPermissionColumn dataCell];
+  [popupButtonCell setEditable:YES];
+  [popupButtonCell addItemsWithTitles:[NSArray arrayWithObjects:
+    NSLocalizedString(@"Allow", nil),
+    NSLocalizedString(@"Allow for Session", nil),
+    NSLocalizedString(@"Deny", nil),
+    nil]];
+}
+
+- (void)willSelect
+{
   // Hook up cookie prefs.
   BOOL gotPref = NO;
   int acceptCookies = [self getIntPref:kGeckoPrefCookieDefaultAcceptPolicy
@@ -157,15 +169,6 @@ const int kSortReverse = 1;
   // Keychain checkbox
   BOOL storePasswords = [self getBooleanPref:kUseKeychainPref withSuccess:NULL];
   [mStorePasswords setState:(storePasswords ? NSOnState : NSOffState)];
-
-  // set up policy popups
-  NSPopUpButtonCell *popupButtonCell = [mPermissionColumn dataCell];
-  [popupButtonCell setEditable:YES];
-  [popupButtonCell addItemsWithTitles:[NSArray arrayWithObjects:
-    NSLocalizedString(@"Allow", nil),
-    NSLocalizedString(@"Allow for Session", nil),
-    NSLocalizedString(@"Deny", nil),
-    nil]];
 }
 
 - (IBAction)clickCookieBehavior:(id)sender

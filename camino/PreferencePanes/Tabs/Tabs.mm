@@ -55,7 +55,7 @@
   [super dealloc];
 }
 
-- (void)mainViewDidLoad
+- (void)willSelect
 {
   BOOL gotPref;
 

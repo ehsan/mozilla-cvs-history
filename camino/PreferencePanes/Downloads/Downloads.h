@@ -40,7 +40,7 @@
 
 #import <PreferencePaneBase.h>
 
-@interface OrgMozillaChimeraPreferenceDownloads : PreferencePaneBase
+@interface OrgMozillaCaminoPreferenceDownloads : PreferencePaneBase
 {
   IBOutlet NSPopUpButton* mDownloadFolder;
   IBOutlet NSPopUpButton* mDownloadRemovalPolicy;

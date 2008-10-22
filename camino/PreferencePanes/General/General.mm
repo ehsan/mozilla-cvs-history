@@ -80,7 +80,31 @@
 
 - (void)mainViewDidLoad
 {
+  if (![[[NSBundle mainBundle] objectForInfoDictionaryKey:@"SUEnableAutomaticChecks"] boolValue]) {
+    // Disable update checking if it's turned off for this build.  The tooltip comes
+    // from the main application because it's used there too.
+    [checkboxAutoUpdate setEnabled:NO];
+    [checkboxAutoUpdate setToolTip:NSLocalizedString(@"AutoUpdateDisabledToolTip", @"")];
+  }
+
+  // register notification if the default feed viewer is changed in the FeedServiceController
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(updateDefaultFeedViewerMenu)
+                                               name:kDefaultFeedViewerChanged
+                                             object:nil];
+
+  // Set up default browser and default feed viewer menus.
+  // These are here instead of in |willSelect| because of bug 353433,
+  // and should be moved to |willSelect| when that bug is fully fixed.
+  [self updateDefaultBrowserMenu];
+  [self updateDefaultFeedViewerMenu];
+}
+
+- (void) willSelect
+{
   BOOL gotPref;
+
+  [textFieldHomePage setStringValue:[self currentHomePage]];
 
   // Our behaviour here should match what the browser does when the prefs don't exist.
   if (([self getIntPref:kGeckoPrefNewWindowStartPage withSuccess:&gotPref] == kStartPageHome) || !gotPref)
@@ -89,38 +113,17 @@
   if (([self getIntPref:kGeckoPrefNewTabStartPage withSuccess:&gotPref] == kStartPageHome))
     [checkboxNewTabBlank setState:NSOnState];
 
-  if ([self getBooleanPref:kGeckoPrefCheckDefaultBrowserAtLaunch withSuccess:&gotPref] || !gotPref)
-    [checkboxCheckDefaultBrowserOnLaunch setState:NSOnState];
+  if ([self getBooleanPref:kGeckoPrefSessionSaveEnabled withSuccess:&gotPref])
+    [checkboxRememberWindowState setState:NSOnState];
 
   if ([self getBooleanPref:kGeckoPrefWarnWhenClosingWindows withSuccess:&gotPref])
     [checkboxWarnWhenClosing setState:NSOnState];
 
-  if ([self getBooleanPref:kGeckoPrefSessionSaveEnabled withSuccess:&gotPref])
-    [checkboxRememberWindowState setState:NSOnState];
-
-  if (![[[NSBundle mainBundle] objectForInfoDictionaryKey:@"SUEnableAutomaticChecks"] boolValue]) {
-    // Disable update checking if it's turned off for this build.  The tooltip comes
-    // from the main application because it's used there too.
-    [checkboxAutoUpdate setEnabled:NO];
-    [checkboxAutoUpdate setToolTip:NSLocalizedString(@"AutoUpdateDisabledToolTip", @"")];
-  }
-  else if ([[SUUpdater sharedUpdater] automaticallyChecksForUpdates]) {
+  if ([checkboxAutoUpdate isEnabled] && [[SUUpdater sharedUpdater] automaticallyChecksForUpdates])
     [checkboxAutoUpdate setState:NSOnState];
-  }
 
-  [textFieldHomePage setStringValue:[self currentHomePage]];
-
-  // set up default browser menu
-  [self updateDefaultBrowserMenu];
-
-  // set up the feed viewer menu
-  [self updateDefaultFeedViewerMenu];
-
-  // register notification if the default feed viewer is changed in the FeedServiceController
-  [[NSNotificationCenter defaultCenter] addObserver:self
-                                           selector:@selector(updateDefaultFeedViewerMenu)
-                                               name:kDefaultFeedViewerChanged
-                                             object:nil];
+  if ([self getBooleanPref:kGeckoPrefCheckDefaultBrowserAtLaunch withSuccess:&gotPref] || !gotPref)
+    [checkboxCheckDefaultBrowserOnLaunch setState:NSOnState];
 }
 
 - (void) didUnselect

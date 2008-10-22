@@ -77,6 +77,16 @@ const int kAnnoyancePrefSome = 3;
 
 - (void)mainViewDidLoad
 {
+  // Set up policy popups
+  NSPopUpButtonCell *popupButtonCell = [mPolicyColumn dataCell];
+  [popupButtonCell setEditable:YES];
+  [popupButtonCell addItemsWithTitles:[NSArray arrayWithObjects:NSLocalizedString(@"Allow", nil),
+                                                                NSLocalizedString(@"Deny", nil),
+                                                                nil]];
+}
+
+- (void)willSelect
+{
   BOOL gotPref = NO;
 
   // Set initial value on JavaScript checkbox.
@@ -117,17 +127,9 @@ const int kAnnoyancePrefSome = 3;
     [mEnableFlashBlock setState:(enableFlashBlock ? NSOnState : NSOffState)];
   }
 
-  // Set up policy popups
-  NSPopUpButtonCell *popupButtonCell = [mPolicyColumn dataCell];
-  [popupButtonCell setEditable:YES];
-  [popupButtonCell addItemsWithTitles:[NSArray arrayWithObjects:NSLocalizedString(@"Allow", nil),
-                                                                NSLocalizedString(@"Deny", nil),
-                                                                nil]];
-
   // Set tab focus popup.
   [mTabBehaviorPopup selectItemAtIndex:[self popupIndexForCurrentTabFocusPref]];
 }
-
 
 //
 // -clickEnableJS:
