@@ -1,5 +1,6 @@
 from datetime import datetime
 import os.path, re
+from time import strftime
 
 from twisted.python import log
 
@@ -589,6 +590,10 @@ class ReleaseFactory(BuildFactory):
             repo = 'l10n-central/%s' % repo
         return repo
 
+    def getCandidatesDir(self, product, version, buildNumber):
+        return '/home/ftp/pub/' + product + '/nightly/' + str(version) + \
+               '-candidates/build' + str(buildNumber) + '/'
+
 
 
 class StagingRepositorySetupFactory(ReleaseFactory):
@@ -895,31 +900,69 @@ class SingleSourceFactory(ReleaseFactory):
 
 
 class ReleaseUpdatesFactory(ReleaseFactory):
-    def __init__(self, cvsroot, patcherToolsRev, mozillaCentral, buildTools,
+    def __init__(self, cvsroot, patcherToolsTag, mozillaCentral, buildTools,
                  patcherConfig, baseTag, appName, productName, appVersion,
                  oldVersion, buildNumber, ftpServer, bouncerServer,
-                 stagingServer, useBetaChannel, createPartialMars=True):
+                 stagingServer, useBetaChannel, stageUsername, stageSshKey,
+                 ausUser, ausHost, commitPatcherConfig=True):
+        """cvsroot: The CVSROOT to use when pulling patcher, patcher-configs,
+                    Bootstrap/Util.pm, and MozBuild. It is also used when
+                    commiting the version-bumped patcher config so it must have
+                    write permission to the repository if commitPatcherConfig
+                    is True.
+           patcherToolsTag: A tag that has been applied to all of:
+                              mozillaCentral, buildTools, patcher,
+                              MozBuild, Bootstrap.
+                            This version of all of the above tools will be
+                            used - NOT tip.
+           mozillaCentral: Generally is http://hg.mozilla.org/mozilla-central.
+                           This repository is passed to patcher which then
+                           builds the mar tools out of it.
+           buildTools: Generally is http://hg.mozilla.org/build/tools.
+                       This repository must contain the patcher-config-bump.pl
+                       script.
+           patcherConfig: The filename of the patcher config file to bump,
+                          and pass to patcher.
+           commitPatcherConfig: This flag simply controls whether or not
+                                the bumped patcher config file will be
+                                commited to the CVS repository.
+        """
         ReleaseFactory.__init__(self)
 
         patcherConfigFile = 'patcher-configs/%s' % patcherConfig
         shippedLocales = '%s/raw-file/%s_RELEASE/%s/locales/shipped-locales' % \
           (mozillaCentral, baseTag, appName)
+        candidatesDir = self.getCandidatesDir(productName, appVersion,
+                                              buildNumber)
+        updateDir = 'build/temp/%s/%s-%s' % \
+          (productName, oldVersion, appVersion)
+        marDir = '%s/ftp/%s/nightly/%s-candidates/build%s' % \
+          (updateDir, productName, appVersion, buildNumber)
+
+        # If useBetaChannel is False the unnamed snippet type will be
+        # 'beta' channel snippets (and 'release' if we're into stable releases).
+        # If useBetaChannel is True the unnamed type will be 'release'
+        # channel snippets
+        snippetTypes = ['', 'test']
+        if useBetaChannel:
+            snippetTypes.append('beta')
 
         self.addStep(CVS,
          cvsroot=cvsroot,
-         branch=patcherToolsRev,
+         branch=patcherToolsTag,
          cvsmodule='mozilla/tools/patcher'
         )
         self.addStep(ShellCommand,
-         command=['cvs', '-d', cvsroot, 'co', '-r', patcherToolsRev,
+         command=['cvs', '-d', cvsroot, 'co', '-r', patcherToolsTag,
                   '-d', 'MozBuild',
                   'mozilla/tools/release/MozBuild'],
          haltOnFailure=True
         )
         self.addStep(ShellCommand,
-         command=['cvs', '-d', cvsroot, 'co', '-r', patcherToolsRev,
+         command=['cvs', '-d', cvsroot, 'co', '-r', patcherToolsTag,
                   '-d' 'Bootstrap',
                   'mozilla/tools/release/Bootstrap/Util.pm'],
+         haltOnFailure=True
         )
         self.addStep(ShellCommand,
          command=['cvs', '-d', cvsroot, 'co', '-d' 'patcher-configs',
@@ -927,7 +970,7 @@ class ReleaseUpdatesFactory(ReleaseFactory):
          haltonFailure=True
         )
         self.addStep(ShellCommand,
-         command=['hg', 'clone', buildTools],
+         command=['hg', 'clone', '--rev', patcherToolsTag, buildTools],
          haltOnFailure=True
         )
         self.addStep(ShellCommand,
@@ -947,46 +990,85 @@ class ReleaseUpdatesFactory(ReleaseFactory):
          command=bumpCommand,
          haltOnFailure=True
         )
-#        self.addStep(ShellCommand,
-#         command=['cvs', 'commit', '-m',
-#                  'Automated configuration bump: %s, from %s to %s' % \
-#                    (patcherConfig, oldVersion, appVersion)
-#                 ],
-#         workdir='build/patcher-configs',
-#         haltOnFailure=True
-#        )
+        self.addStep(ShellCommand,
+         command=['cvs', 'diff', '-u', patcherConfigFile],
+         workdir='build/patcher-configs'
+        )
+        if commitPatcherConfig:
+            self.addStep(ShellCommand,
+             command=['cvs', 'commit', '-m',
+                      'Automated configuration bump: ' + \
+                      '%s, from %s to %s build %s' % \
+                        (patcherConfig, oldVersion, appVersion, buildNumber)
+                     ],
+             workdir='build/patcher-configs',
+             haltOnFailure=True
+            )
         self.addStep(ShellCommand,
          command=['perl', 'patcher2.pl', '--build-tools-hg', 
-                  '--tools-revision=%s' % patcherToolsRev,
+                  '--tools-revision=%s' % patcherToolsTag,
                   '--app=%s' % productName,
-                  '--config=patcher-configs/%s' % patcherConfig],
+                  '--config=%s' % patcherConfigFile],
+         description=['patcher:', 'build tools'],
          haltOnFailure=True
         )
         self.addStep(ShellCommand,
          command=['perl', 'patcher2.pl', '--download',
                   '--app=%s' % productName,
-                  '--config=patcher-configs/%s' % patcherConfig],
+                  '--config=%s' % patcherConfigFile],
+         description=['patcher:', 'download builds'],
          haltOnFailure=True
         )
-        patcherCmd = '--create-patches'
-        if not createPartialMars:
-            self.addStep(ShellCommand,
-             command=['ln', '-s', appVersion,
-                      '%s-%s' % (oldVersion, appVersion)],
-             workdir='build/temp/firefox',
-             haltOnFailure=True
-            )
-            patcherCmd = '--create-patchinfo'
         self.addStep(ShellCommand,
-         command=['perl', 'patcher2.pl', patcherCmd,
+         command=['perl', 'patcher2.pl', '--create-patches',
                   '--partial-patchlist-file=patchlist.cfg',
                   '--app=%s' % productName,
-                  '--config=patcher-configs/%s' % patcherConfig],
+                  '--config=%s' % patcherConfigFile],
+         description=['patcher:', 'create patches'],
          haltOnFailure=True
         )
-#        self.addStep(ShellCommand,
-#         command=PUSH BUILDS TO STAGE
-#        )
-#        self.addStep(ShellCommand,
-#         command=PUSH SNIPPETS TO AUS2-STAGING
-#        )
+        self.addStep(ShellCommand,
+         command=['rsync', '-av',
+                  '-e', 'ssh -oIdentityFile=~/.ssh/%s' % stageSshKey,
+                  '--exclude=*complete.mar',
+                  'update',
+                  '%s@%s:%s' % (stageUsername, stagingServer, candidatesDir)],
+         workdir=marDir,
+         haltOnFailure=True
+        )
+        # It gets a little hairy down here
+        date = strftime('%Y%m%d')
+        for type in snippetTypes:
+            # Patcher generates an 'aus2' directory and 'aus2.snippetType'
+            # directories for each snippetType. Typically, there is 'aus2',
+            # 'aus2.test', and (when we're out of beta) 'aus2.beta'.
+            localDir = 'aus2'
+            # On the AUS server we store each type of snippet in a directory
+            # named thusly, with the snippet type appended to it
+            remoteDir = '%s-%s-%s' % (date, productName.title(), appVersion)
+            if type != '':
+                localDir = localDir + '.%s' % type
+                remoteDir = remoteDir + '-%s' % type
+            snippetDir = '/opt/aus2/snippets/staging/%s' % remoteDir
+
+            self.addStep(ShellCommand,
+             command=['rsync', '-av', localDir + '/',
+                      '%s@%s:%s' % (ausUser, ausHost, snippetDir)],
+             workdir=updateDir,
+             haltOnFailure=True
+            )
+
+            # We only push test channel snippets from automation.
+            if type == 'test':
+                self.addStep(ShellCommand,
+                 command=['ssh', '-l', ausUser, ausHost,
+                          '~/bin/backupsnip %s' % remoteDir],
+                 timeout=7200, # 2 hours
+                 haltOnFailure=True
+                )
+                self.addStep(ShellCommand,
+                 command=['ssh', '-l', ausUser, ausHost,
+                          '~/bin/pushsnip %s' % remoteDir],
+                 timeout=3600, # 1 hour
+                 haltOnFailure=True
+                )
