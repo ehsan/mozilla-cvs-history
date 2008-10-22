@@ -181,6 +181,12 @@ static NSString* const CacheInfoPaneSeenKey   = @"MVPreferencePaneSeen";    // N
 // this gets called when the user hits the Escape key
 - (void)cancel:(id)sender
 {
+  // We want to cancel any active text-field edits that might be going on
+  // before we call |performClose:|, because closing will commit changes.
+  if ([[[self window] firstResponder] isKindOfClass:[NSTextView class]] &&
+      [[self window] fieldEditor:NO forObject:nil] != nil) {
+    [[(NSTextView*)[[self window] firstResponder] delegate] abortEditing];
+  }
   [[self window] performClose:self];
 }
 
