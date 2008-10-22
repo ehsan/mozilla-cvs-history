@@ -348,6 +348,11 @@ NSString* const kTabBarBackgroundDoubleClickedNotification = @"kTabBarBackground
 
 - (BOOL)handleDrop:(id <NSDraggingInfo>)dragInfo onTab:(NSTabViewItem*)targetTab
 {
+  // We can't use [dragInfo draggingSourceOperationMask] here because we manually set
+  // NSDragOperationGeneric (the normal means of detecting Cmd-drags) all over the place.
+  // We want to append when there's no target tab or when the Command key is down.
+  BOOL loadByAppending = (!targetTab || (([[NSApp currentEvent] modifierFlags] & NSCommandKeyMask) != 0));
+
   NSArray* urls = [self urlsFromPasteboard:[dragInfo draggingPasteboard]];
   if ([urls count] == 0)
     return NO;
@@ -356,7 +361,7 @@ NSString* const kTabBarBackgroundDoubleClickedNotification = @"kTabBarBackground
     NSString* url = [urls objectAtIndex:0];
     BOOL loadInBackground = [BrowserWindowController shouldLoadInBackgroundForDestination:eDestinationNewTab
                                                                                    sender:nil];
-    if (targetTab) {
+    if (!loadByAppending) {
       [[targetTab view] loadURI:url referrer:nil flags:NSLoadFlagsNone focusContent:YES allowPopups:NO];
       
       if (!loadInBackground)
@@ -367,7 +372,9 @@ NSString* const kTabBarBackgroundDoubleClickedNotification = @"kTabBarBackground
     }
   }
   else {
-    [[[self window] windowController] openURLArray:urls tabOpenPolicy:(targetTab ? eReplaceTabs : eAppendTabs) allowPopups:NO];
+    [[[self window] windowController] openURLArray:urls
+                                     tabOpenPolicy:(loadByAppending ? eAppendTabs : eReplaceTabs)
+                                       allowPopups:NO];
   }
   return YES;
 }
