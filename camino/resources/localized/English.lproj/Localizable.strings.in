@@ -186,67 +186,69 @@
 "KeychainUpdateAlertDontUpdateButton" = "Keep Old Values";
 
 /* Browser Toolbar Buttons */
+
+/* Button Labels */
 "Back" = "Back";
 "Forward" = "Forward";
 "Reload" = "Reload";
 "Stop" = "Stop";
 "Home" = "Home";
-"Sidebar" = "Sidebar";
-"Search" = "Search";
-"Progress" = "Progress";
 "Location" = "Location";
+"Manage Bookmarks" = "Manage Bookmarks";
+"Hide Bookmarks" = "Hide Bookmarks";
 "Print" = "Print";
 "View Source" = "View Source";
 "Bookmark" = "Bookmark";
-"Manage Bookmarks" = "Manage Bookmarks";
-"Hide Bookmarks" = "Hide Bookmarks";
+"NewTab" = "New Tab";
+"CloseTab" = "Close Tab";
 "BigText" = "Bigger Text";
 "SmallText" = "Smaller Text";
 "BigPage" = "Zoom In";
 "SmallPage" = "Zoom Out";
-"NewTab" = "New Tab";
-"CloseTab" = "Close Tab";
 "SendLink" = "Email Location";
-"SendLinkPaletteLabel" = "Email Page Location";
 "Downloads" = "Downloads";
-"ScriptItem" = "Script";
-
-"BackToolTipFormat" = "Go back to “%1$@”\n—\n%2$@";        /* 1=title, 2=url */
-"ForwardToolTipFormat" = "Go forward to “%1$@”\n—\n%2$@";  /* 1=title, 2=url */
-"Go Back" = "Go Back";
-"Go Forward" = "Go Forward";
-"Reload Page" = "Reload Page";
-"Force Format" = "Force %@";
-"Stop Loading" = "Stop Loading";
-"Go Home" = "Go Home";
-"Toggle Sidebar" = "Toggle Sidebar";
-"View Page Source" = "View Page Source";
-"Bookmark Page" = "Bookmark Page";
 "Fill Form" = "Fill Form";
 "ShowHistory" = "History";
 
-"BackToolTip" = "Go back one page";
-"ForwardToolTip" = "Go forward one page";
+/* Customize Sheet Labels (where different) */
+"Go Back" = "Go Back";
+"Go Forward" = "Go Forward";
+"Reload Page" = "Reload Page";
+"Stop Loading" = "Stop Loading";
+"Go Home" = "Go Home";
+"Progress" = "Progress";
+"View Page Source" = "View Page Source";
+"Bookmark Page" = "Bookmark Page";
+"SendLinkPaletteLabel" = "Email Page Location";
+"ScriptItem" = "Script";
+
+/* Button Tooltips */
+"BackToolTipFormat" = "Go back to “%1$@”\n—\n%2$@";        /* 1=title, 2=url */
+"ForwardToolTipFormat" = "Go forward to “%1$@”\n—\n%2$@";  /* 1=title, 2=url */
+"BackToolTip" = "Go back one page"; /* for disabled button */
+"ForwardToolTip" = "Go forward one page"; /* for disabled button */
 "ReloadToolTip" = "Reload this page";
 "StopToolTip" = "Stop loading this page";
 "HomeToolTip" = "Go to your home page";
 "ShowBookmarkMgrToolTip" = "Show bookmark manager";
 "HideBookmarkMgrToolTip" = "Hide bookmark manager";
-"SearchToolTip" = "Search the Internet";
 "PrintToolTip" = "Print this page";
 "ViewSourceToolTip" = "Display the HTML source of this page";
 "BookmarkToolTip" = "Add this page to your bookmarks";
+"NewTabToolTip" = "Create a new tab";
+"CloseTabToolTip" = "Close this tab";
 "BigTextToolTip" = "Enlarge the text on this page";
 "SmallTextToolTip" = "Shrink the text on this page";
 "BigPageToolTip" = "Enlarge the content on this page";
 "SmallPageToolTip" = "Shrink the content on this page";
-"NewTabToolTip" = "Create a new tab";
-"CloseTabToolTip" = "Close this tab";
 "SendLinkToolTip" = "Open a new message in your mail program with the location of this page";
 "DownloadsToolTip" = "Show the Downloads window";
 "FillFormToolTip" = "Fill fields on this page with your Address Book information";
 "ShowHistoryToolTip" = "Show recently visited pages";
 "ScriptItemToolTipFormat" = "Run script “%@”";
+
+/* Alternate menu items for Reload */
+"Force Format" = "Force %@";
 
 "BookmarkButtonTooltipFormat" = "%1$@\n—\n%2$@";  /* 1=title, 2=url */
 
