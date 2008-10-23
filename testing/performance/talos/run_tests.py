@@ -340,17 +340,18 @@ def test_file(filename):
 
   utils.stamped_msg(title, "Started")
   for test in tests:
-    utils.stamped_msg("Running test " + test, "Started")
+    testname = test['name']
+    utils.stamped_msg("Running test " + testname, "Started")
     try:
-      browser_dump, counter_dump = ttest.runTest(browser_config, tests[test])
+      browser_dump, counter_dump = ttest.runTest(browser_config, test)
     except talosError, e:
-      utils.stamped_msg("Failed " + test, "Stopped")
-      print 'FAIL: Busted: ' + test
+      utils.stamped_msg("Failed " + testname, "Stopped")
+      print 'FAIL: Busted: ' + testname
       print 'FAIL: ' + e.msg
       sys.exit(0)
     utils.debug("Received test results: " + " ".join(browser_dump))
-    results[test] = [browser_dump, counter_dump]
-    utils.stamped_msg("Completed test " + test, "Stopped")
+    results[testname] = [browser_dump, counter_dump]
+    utils.stamped_msg("Completed test " + testname, "Stopped")
   utils.stamped_msg(title, "Stopped")
 
   #process the results

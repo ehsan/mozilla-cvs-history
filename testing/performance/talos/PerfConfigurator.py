@@ -116,8 +116,6 @@ class PerfConfigurator:
         configFile.close()
         buildidString = "'" + str(self.buildid) + "'"
         activeList = self.activeTests.split(':')
-        def addSpace(x): return '  ' + x
-        activeList = map(addSpace, activeList)
         printMe = True
         testMode = False
         for line in config:
@@ -146,12 +144,14 @@ class PerfConfigurator:
                 #only do this if the user has provided a list of tests to turn on/off
                 # otherwise, all tests are considered to be active
                 if self.activeTests:
-                    if line.startswith('  t'): 
+                    if line.startswith('- name'): 
                         #found the start of an individual test description
                         printMe = False
                     for test in activeList: 
+                        reTestMatch = re.compile('^-\s*name\s*:\s*' + test + '\s*$')
                         #determine if this is a test we are going to run
-                        if line.startswith(test + ':') or line.startswith(test + ' :'):
+                        match = re.match(reTestMatch, line)
+                        if match:
                             printMe = True
                 if self.noChrome: 
                     #if noChrome is True remove --tpchrome option 
