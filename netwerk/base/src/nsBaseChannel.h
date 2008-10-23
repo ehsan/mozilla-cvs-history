@@ -177,7 +177,7 @@ public:
 
   // This is a short-cut to calling nsIRequest::IsPending()
   PRBool IsPending() const {
-    return (mPump != nsnull);
+    return mPump || mWaitingOnAsyncRedirect;
   }
 
   // Set the content length that should be reported for this channel.  Pass -1
@@ -283,6 +283,7 @@ private:
   PRPackedBool                        mQueriedProgressSink;
   PRPackedBool                        mSynthProgressEvents;
   PRPackedBool                        mWasOpened;
+  PRPackedBool                        mWaitingOnAsyncRedirect;
 };
 
 #endif // !nsBaseChannel_h__
