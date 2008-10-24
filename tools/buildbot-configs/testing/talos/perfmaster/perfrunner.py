@@ -70,89 +70,16 @@ class MultiBuildScheduler(Scheduler):
             bs = buildset.BuildSet(self.builderNames, SourceStamp(changes=changes))
             self.submit(bs)
 
-
-class LatestFileURL:
-    sortByDateString = "?C=M;O=A"
-
-    def _retrievePageAtURL(self):
-        content = []
-        try:
-            opener = urllib.URLopener()
-            page = opener.open(self.url + self.sortByDateString)
-            content = page.readlines()
-            opener.close()
-        except:
-            print "unable to retrieve page at: " + self.url + " dated: " + self.sortByDateString
-        return content
-    
-    def _populateDict(self):
-        '''Extract the latest filename from the given URL
-            * retrieve page at URL
-            * for each line
-                * grab filename URL
-                * if filename matches filenameSearchString
-                    * grab datetime
-                    * store date and filename URL in dictionary
-            * return latest filenameURL matching date'''
-        
-        reDatestamp = re.compile('\d\d-[a-zA-Z]{3,3}-\d\d\d\d \d\d:\d\d')
-        reHREF = re.compile('href\="((?:\w|[.-])*)"')
-        content = self._retrievePageAtURL()
-        for line in content:
-            matchHREF = re.search(reHREF, line)
-            if matchHREF:
-                if self.filenameSearchString in matchHREF.group(1):
-                    datetimeMatch = re.search(reDatestamp, line)
-                    if datetimeMatch:
-                        dts = line[datetimeMatch.start():datetimeMatch.end()]
-                        timestamp = datetime(*strptime(dts, '%d-%b-%Y %H:%M')[0:6])
-                        self.dateFileDict[timestamp] = matchHREF.group(1)
-        
-    
-    def _getDateKeys(self):
-        dbKeys = self.dateFileDict.keys()
-        if not dbKeys:
-            return []
-        return dbKeys
-    
-    def getLatestFilename(self):
-        dateKeys = self._getDateKeys()
-        if not dateKeys: return ""
-        return self.dateFileDict[max(dateKeys)]
-    
-    def _printDictionary(self):
-        keys = self._getDateKeys()
-        for timestamp in keys:
-            print "%s : %s" % (timestamp, self.dateFileDict[timestamp])
-    
-    def testrun(self):
-        self._populateDict()
-        self._printDictionary()
-        name = self.getLatestFilename()
-        print self.url + name
-    
-    def __init__(self, url, filenameSearchString):
-        self.url = url
-        self.filenameSearchString = filenameSearchString
-        self.dateFileDict = {}
-        self._populateDict()
-    
-class MozillaWgetLatestDated(ShellCommand):
+class MozillaWget(ShellCommand):
     """Download built Firefox client from dated staging directory."""
     haltOnFailure = True
     
     def __init__(self, **kwargs):
-        assert kwargs['url'] != ""
-        assert kwargs['filenameSearchString'] != ""
         self.changes = kwargs['build'].source.changes
-        #if this change includes a link use it
-        if self.changes[-1].links:
-            self.url = self.changes[-1].links
-        else:
-           self.url = kwargs['url'] + str(self.changes[-1].when) + "/"
-        self.filenameSearchString = kwargs['filenameSearchString']
         self.branch = "HEAD"
-        self.fileURL = ""
+        #a full path is always provided by the poller 
+        self.fileURL = self.changes[-1].links
+        self.filename = self.changes[-1].files[0]
         if 'branch' in kwargs:
             self.branch = kwargs['branch']
         if not 'command' in kwargs:
@@ -166,55 +93,6 @@ class MozillaWgetLatestDated(ShellCommand):
         return ["Wget Download"]
     
     def start(self):
-        urlGetter = LatestFileURL(self.url, self.filenameSearchString)
-        self.filename = urlGetter.getLatestFilename()
-        self.fileURL = self.url + self.filename
-        if self.branch:
-            self.setProperty("fileURL", self.fileURL)
-            self.setProperty("filename", self.filename)
-        self.setCommand(["wget", "-nv", "-N", self.fileURL])
-        ShellCommand.start(self)
-    
-    def evaluateCommand(self, cmd):
-        superResult = ShellCommand.evaluateCommand(self, cmd)
-        if SUCCESS != superResult:
-            return FAILURE
-        if None != re.search('ERROR', cmd.logs['stdio'].getText()):
-            return FAILURE
-        return SUCCESS
-    
-
-class MozillaWgetLatest(ShellCommand):
-    """Download built Firefox client from nightly staging directory."""
-    haltOnFailure = True
-    
-    def __init__(self, **kwargs):
-        assert kwargs['url'] != ""
-        assert kwargs['filenameSearchString'] != ""
-        #if this change includes a link use it
-        if self.changes[-1].links:
-            self.url = self.changes[-1].links
-        else:
-            self.url = kwargs['url']
-        self.filenameSearchString = kwargs['filenameSearchString']
-        self.branch = "HEAD"
-        self.fileURL = ""
-        if 'branch' in kwargs:
-            self.branch = kwargs['branch']
-        if not 'command' in kwargs:
-            kwargs['command'] = ["wget"]
-        ShellCommand.__init__(self, **kwargs)
-    
-    def getFilename(self):
-        return self.filename
-    
-    def describe(self, done=False):
-        return ["Wget Download"]
-    
-    def start(self):
-        urlGetter = LatestFileURL(self.url, self.filenameSearchString)
-        self.filename = urlGetter.getLatestFilename()
-        self.fileURL = self.url + self.filename
         if self.branch:
             self.setProperty("fileURL", self.fileURL)
             self.setProperty("filename", self.filename)
@@ -415,51 +293,6 @@ class MozillaInstallTarGz(ShellCommand):
             return FAILURE
         return SUCCESS
 
-class MozillaWgetFromChange(ShellCommand):
-    """Download built Firefox client from current change's filenames."""
-    haltOnFailure = True
-    
-    def __init__(self, **kwargs):
-        self.branch = "HEAD"
-        self.fileURL = ""
-        self.filename = ""
-        self.filenameSearchString = "en-US.win32.zip"
-        if 'filenameSearchString' in kwargs:
-            self.filenameSearchString = kwargs['filenameSearchString']
-        if 'url' in kwargs:
-            self.url = kwargs['url']
-        else:
-            self.url = kwargs['build'].source.changes[-1].files[0]
-        if 'branch' in kwargs:
-            self.branch = kwargs['branch']
-        if not 'command' in kwargs:
-            kwargs['command'] = ["wget"]
-        ShellCommand.__init__(self, **kwargs)
-    
-    def getFilename(self):
-        return self.filename
-    
-    def describe(self, done=False):
-        return ["Wget Download"]
-    
-    def start(self):
-        urlGetter = LatestFileURL(self.url, self.filenameSearchString)
-        self.filename = urlGetter.getLatestFilename()
-        self.fileURL = self.url + self.filename
-        if self.branch:
-            self.setProperty("fileURL", self.fileURL)
-            self.setProperty("filename", self.filename)
-        self.setCommand(["wget",  "-nv", "-N", self.fileURL])
-        ShellCommand.start(self)
-    
-    def evaluateCommand(self, cmd):
-        superResult = ShellCommand.evaluateCommand(self, cmd)
-        if SUCCESS != superResult:
-            return FAILURE
-        if None != re.search('ERROR', cmd.logs['stdio'].getText()):
-            return FAILURE
-        return SUCCESS
-
 class MozillaInstallDmg(ShellCommand):
     """Install given file, copying to workdir"""
     
@@ -539,7 +372,7 @@ class TalosFactory(BuildFactory):
     macClean   = "rm -vrf *"
     linuxClean = "rm -vrf *"
 
-    def __init__(self, OS, envName, buildBranch, configOptions, buildSearchString, buildDir, buildPath, talosCmd, customManifest='', cvsRoot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot"):
+    def __init__(self, OS, envName, buildBranch, configOptions, buildPath, talosCmd, customManifest='', cvsRoot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot"):
         BuildFactory.__init__(self)
         if OS in ('linux', 'linuxbranch',):
             cleanCmd = self.linuxClean
@@ -576,11 +409,9 @@ class TalosFactory(BuildFactory):
                            haltOnFailure=True,
                            flunkOnFailure=True,
                            env=MozillaEnvironments[envName])
-        self.addStep(MozillaWgetLatestDated,
+        self.addStep(MozillaWget,
                            workdir=".",
                            branch=buildBranch,
-                           url=buildDir,
-                           filenameSearchString=buildSearchString,
                            env=MozillaEnvironments[envName])
         #install the browser, differs based upon platform
         if OS == 'linux':
@@ -648,8 +479,9 @@ class TalosFactory(BuildFactory):
 def main(argv=None):
     if argv is None:
         argv = sys.argv
-    tester = LatestFileURL('http://stage.mozilla.org/pub/mozilla.org/firefox/tinderbox-builds/fx-win32-tbox-trunk/', "en-US.win32.zip")
-    tester.testrun()
+    #BUG - need to come up with a new test case now that we aren't doing url scraping in the perfrunner code
+    #tester = LatestFileURL('http://stage.mozilla.org/pub/mozilla.org/firefox/tinderbox-builds/fx-win32-tbox-trunk/', "en-US.win32.zip")
+   # tester.testrun()
     return 0
 
 if __name__ == '__main__':
