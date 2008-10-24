@@ -208,6 +208,20 @@ use constant DEFAULT_FIELDS => (
     {name => "owner_idle_time",       desc => "Time Since Assignee Touched"},
 );
 
+################
+# Constructors #
+################
+
+# Override match to add is_select.
+sub match {
+    my $self = shift;
+    my ($params) = @_;
+    if (delete $params->{is_select}) {
+        $params->{type} = [FIELD_TYPE_SINGLE_SELECT, FIELD_TYPE_MULTI_SELECT];
+    }
+    return $self->SUPER::match(@_);
+}
+
 ##############
 # Validators #
 ##############
