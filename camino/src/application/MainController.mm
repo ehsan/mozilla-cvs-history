@@ -1126,6 +1126,10 @@ NSString* const kPreviousSessionTerminatedNormallyKey = @"PreviousSessionTermina
 
 - (IBAction)newWindow:(id)aSender
 {
+  // Always come to the front for actions in the Dock menu
+  if ([aSender isKindOfClass:[NSMenuItem class]] && [aSender menu] == mDockMenu)
+    [NSApp activateIgnoringOtherApps:YES];
+
   // If we have a key window, have it autosave its dimensions before
   // we open a new window.  That ensures the size ends up matching.
   NSWindow* curMainWindow = [mApplication mainWindow];
@@ -1599,6 +1603,10 @@ NSString* const kPreviousSessionTerminatedNormallyKey = @"PreviousSessionTermina
 
 - (IBAction)openMenuBookmark:(id)aSender
 {
+  // Always come to the front for actions in the Dock menu
+  if ([aSender isKindOfClass:[NSMenuItem class]] && [aSender menu] == mDockMenu)
+    [NSApp activateIgnoringOtherApps:YES];
+
   BookmarkItem*  item = [aSender representedObject];
   EBookmarkOpenBehavior openBehavior = eBookmarkOpenBehavior_Preferred;
   BOOL reverseBackgroundPref = NO;
