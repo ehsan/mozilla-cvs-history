@@ -1717,7 +1717,12 @@ SessionStoreService.prototype = {
     function restoreTextDataAndScrolling(aContent, aData, aPrefix) {
       restoreTextData(aContent, aPrefix);
       if (aData.innerHTML) {
-        aContent.setTimeout(function(aHTML) { if (this.document.designMode == "on") { this.document.body.innerHTML = aHTML; } }, 0, aData.innerHTML);
+        aContent.setTimeout(
+              function(aHTML) {
+                if (aContent.document.designMode == "on") {
+                  aContent.document.body.innerHTML = aHTML;
+                }
+              }, 0, aData.innerHTML);
       }
       if (aData.scroll && /(\d+),(\d+)/.test(aData.scroll)) {
         aContent.scrollTo(RegExp.$1, RegExp.$2);
