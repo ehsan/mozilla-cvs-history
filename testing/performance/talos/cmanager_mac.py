@@ -79,13 +79,13 @@ def GetPrivateBytes(pid):
   """Calculate the amount of private, writeable memory allocated to a process.
   """
   psData = GetProcessData(pid)
-  return psData[2]
+  return int(psData[2]) * 1024 #convert to bytes
 
 
 def GetResidentSize(pid):
   """Retrieve the current resident memory for a given process"""
   psData = GetProcessData(pid)
-  return psData[1]
+  return int(psData[1]) * 1024 #convert to bytes
 
 def GetCpuTime(pid):
   # return all zeros for now on this platform as per 7/18/07 perf meeting
