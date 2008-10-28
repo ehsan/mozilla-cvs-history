@@ -249,9 +249,9 @@ class CompareLeakLogs(ShellCommand):
         a =  formatCount(leakStats['new']['allocs'],3)
 
         self.setProperty('testresults', [ \
-            ("Lk", "trace_malloc_leaks", self.leakStats['new']['leaks'], lk), \
-            ("MH", "trace_malloc_maxheap", self.leakStats['new']['mhs'], mh), \
-            ("A", "trace_malloc_allocs", self.leakStats['new']['allocs'], a)])
+            ("Lk", "trace_malloc_leaks", leakStats['new']['leaks'], lk), \
+            ("MH", "trace_malloc_maxheap", leakStats['new']['mhs'], mh), \
+            ("A", "trace_malloc_allocs", leakStats['new']['allocs'], a)])
         
         self.setProperty('leakStats',leakStats)
 
