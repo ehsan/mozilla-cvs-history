@@ -73,6 +73,8 @@ pref("general.useragent.extra.notfox", "(like Firefox/%FOX_APP_VERSION%)");
 
 pref("browser.chrome.favicons", true);
 pref("browser.urlbar.autocomplete.enabled", true);
+// Don't do inline autocomplete in the location bar
+pref("browser.urlbar.autoFill", false);
 
 // Default to auto download enabled but auto helper dispatch disabled
 pref("browser.download.autoDownload", true);

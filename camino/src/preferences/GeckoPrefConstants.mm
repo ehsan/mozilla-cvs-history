@@ -137,6 +137,7 @@ const char* const kGeckoPrefEnableFavicons = "browser.chrome.favicons";
 const char* const kGeckoPrefEnableURLFixup = "keyword.enabled";
 const char* const kGeckoPrefDisableBonjour = "camino.disable_bonjour";
 const char* const kGeckoPrefCheckDefaultBrowserAtLaunch = "camino.check_default_browser";
+const char* const kGeckoPrefInlineLocationBarAutocomplete = "browser.urlbar.autoFill";
 
 #pragma mark Keyboard Shortcuts
 

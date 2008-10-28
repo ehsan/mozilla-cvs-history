@@ -46,6 +46,7 @@
 #import "AutoCompleteDataSource.h"
 #import "BrowserWindowController.h"
 #import "PageProxyIcon.h"
+#import "PreferenceManager.h"
 #import "CHBrowserService.h"
 
 #include "nsIAutoCompleteSession.h"
@@ -57,7 +58,6 @@
 #include "nsIWebProgressListener.h"
 #include "nsMemory.h"
 #include "nsString.h"
-#include "UserDefaults.h"
 
 static const int kMaxRows = 6;
 static const int kFrameMargin = 1;
@@ -452,18 +452,27 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
                                            selector:@selector(shutdown:)
                                                name:TermEmbeddingNotificationName
                                              object:nil];
-  
-  // read the user default on if we should auto-complete the text field as the user
-  // types or make them pick something from a list (a-la mozilla).
-  mCompleteWhileTyping = [[NSUserDefaults standardUserDefaults] boolForKey:USER_DEFAULTS_AUTOCOMPLETE_WHILE_TYPING];
-        
-    // register for string & URL drags
+
+  // Use the Firefox pref for inline (IE-style complete-in-the-bar) versus
+  // "traditional" (pick from a dropdown list) autocomplete.
+  mCompleteWhileTyping = [[PreferenceManager sharedInstance] getBooleanPref:kGeckoPrefInlineLocationBarAutocomplete withSuccess:NULL];
+
+  // We need to register a Gecko pref observer
+  // and then register an NSNotificationCenter observer for the pref change notification
+  [[PreferenceManager sharedInstance] addObserver:self forPref:kGeckoPrefInlineLocationBarAutocomplete];
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(inlineLocationBarAutocompletePrefChanged:)
+                                               name:kPrefChangedNotificationName
+                                             object:self]; // since we added ourself as the Gecko pref observer
+
+  // register for string & URL drags
   [self registerForDraggedTypes:[NSArray arrayWithObjects:kCorePasteboardFlavorType_url, NSURLPboardType, NSStringPboardType, nil]];
 }
 
 - (void) dealloc
 {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
+  [[PreferenceManager sharedInstance] removeObserver:self forPref:kGeckoPrefInlineLocationBarAutocomplete];
   [self cleanup];
   [super dealloc];
 }
@@ -549,6 +558,12 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 - (IBAction)cancel:(id)sender
 {
   [self revertText];
+}
+
+// makes sure mCompleteWhileTyping doesn't get stale
+- (void)inlineLocationBarAutocompletePrefChanged:(NSNotification*)aNotification
+{
+  mCompleteWhileTyping = [[PreferenceManager sharedInstance] getBooleanPref:kGeckoPrefInlineLocationBarAutocomplete withSuccess:NULL];
 }
 
 #pragma mark -

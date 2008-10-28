@@ -75,7 +75,7 @@ extern NSString* const kWillShowFeedMenu;
   // determines if the search currently pending should complete the default result when it is ready
   BOOL mCompleteResult;
   // should the autocomplete fill in the default completion into the text field? The default
-  // is no, but this can be set with a user default pref.
+  // is no, but this can be set with a hidden Gecko pref.
   BOOL mCompleteWhileTyping;
 }
 

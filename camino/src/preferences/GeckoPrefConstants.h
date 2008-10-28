@@ -174,6 +174,9 @@ extern const char* const kGeckoPrefDisableBonjour;                     // bool
 // Controls whether the default browser is checked at each launch
 extern const char* const kGeckoPrefCheckDefaultBrowserAtLaunch;        // bool
 
+// Controls whether autocomplete is done in a list or in-line
+extern const char* const kGeckoPrefInlineLocationBarAutocomplete;      // bool
+
 #pragma mark Keyboard Shortcuts
 
 // Controls the behavior of the backspace/delete key
