@@ -173,7 +173,7 @@ class CompareBloatLogs(ShellCommand):
 
         self.setProperty('leaks',leaks)
         self.setProperty('bloat',bloat)
-        self.setProperty('testresults', [("RLk", "refcnt_leaks", formatBytes(leaks,3))])
+        self.setProperty('testresults', [("RLk", "refcnt_leaks", leaks, formatBytes(leaks,3))])
 
         self.addCompleteLog(leaksAbbr + ":" + formatBytes(leaks,3),
                             summary)
@@ -248,8 +248,12 @@ class CompareLeakLogs(ShellCommand):
         mh = formatBytes(leakStats['new']['mhs'],3)
         a =  formatCount(leakStats['new']['allocs'],3)
 
+        self.setProperty('testresults', [ \
+            ("Lk", "trace_malloc_leaks", self.leakStats['new']['leaks'], lk), \
+            ("MH", "trace_malloc_maxheap", self.leakStats['new']['mhs'], mh), \
+            ("A", "trace_malloc_allocs", self.leakStats['new']['allocs'], a)])
+        
         self.setProperty('leakStats',leakStats)
-        self.setProperty('testresults', [("Lk", "trace_malloc_leaks", lk), ("MH", "trace_malloc_maxheap", mh), ("A", "trace_malloc_allocs", a)])
 
         slug = "Lk: %s, MH: %s, A: %s" % (lk, mh, a)
         logText = ""
@@ -293,7 +297,8 @@ class Codesighs(ShellCommand):
         diff = ""
         for line in log.readlines():
             if '__codesize:' in line:
-                bytes = formatBytes(line.split(':')[1].rstrip())
+                rawBytes = line.split(':')[1].rstrip()
+                bytes = formatBytes(rawBytes)
             elif '__codesizeDiff:' in line:
                 diffData = line.split(':')[1].rstrip()
                 # if we anything but '+0' here, we print additional data
@@ -306,7 +311,7 @@ class Codesighs(ShellCommand):
             z = 'mZ'
             zLong = "codesighs_embed"
 
-        self.setProperty('testresults', [(z, zLong, bytes)])
+        self.setProperty('testresults', [(z, zLong, rawBytes, bytes)])
 
         slug = '%s:%s' % (z, bytes)
         summary = 'TinderboxPrint:%s\n' % slug
@@ -324,6 +329,7 @@ class GraphServerPost(BuildStep):
         self.graphurl = "http://%s/%s/collect.cgi" % (server, selector,)
         self.branch = branch
         self.resultsname = resultsname.replace(' ', '_')
+        self.name = 'graph server post'
 
     def start(self):
         self.changes = self.build.allChanges()
@@ -332,15 +338,15 @@ class GraphServerPost(BuildStep):
         self.testresults = self.getProperty('testresults')
         summary = ''
         for res in self.testresults:
-            testname, testlongname, testval = res
-            params = urllib.urlencode({'branchid': self.buildid, 'value': testval.strip(string.letters), 'testname': testlongname, 'tbox' : self.resultsname, 'type' : "continuous", 'time' : self.timestamp, 'branch' : self.branch})
+            testname, testlongname, testval, prettyval = res
+            params = urllib.urlencode({'branchid': self.buildid, 'value': str(testval).strip(string.letters), 'testname': testlongname, 'tbox' : self.resultsname, 'type' : "continuous", 'time' : self.timestamp, 'branch' : self.branch})
             request = urllib.urlopen(self.graphurl, params)
             ret = request.read()
             lines = ret.split('\n')
             summary = summary + ret + '\n'
             for line in lines:
                  if line.find("RETURN:") > -1:
-                      summary = summary + 'TinderboxPrint: <a title = "%s" href = "http://%s/%s">%s:%s</a>\n' % (testlongname, self.server, line.rsplit(":")[3], testname, testval) 
+                      summary = summary + 'TinderboxPrint: <a title = "%s" href = "http://%s/%s">%s:%s</a>\n' % (testlongname, self.server, line.rsplit(":")[3], testname, prettyval) 
 
-        self.addCompleteLog('sending to graph server', summary)
+        self.addCompleteLog('stdio', summary)
         self.finished(SUCCESS)
