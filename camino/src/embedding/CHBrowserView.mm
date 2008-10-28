@@ -1946,7 +1946,8 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 
 - (BOOL)becomeFirstResponder
 {
-  [self setActive:YES];
+  if ([[self window] isKeyWindow])
+    [self setActive:YES];
   return YES;
 }
 
