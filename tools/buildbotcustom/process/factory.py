@@ -890,6 +890,11 @@ class SingleSourceFactory(ReleaseFactory):
          haltOnFailure=True
         )
         self.addStep(ShellCommand,
+         command=['autoconf-2.13'],
+         workdir=repoName,
+         haltOnFailure=True
+        )
+        self.addStep(ShellCommand,
          command=['tar', '-cjf', sourceTarball, repoName],
          workdir='.',
          description=['create tarball'],
