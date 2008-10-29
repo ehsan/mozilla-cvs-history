@@ -349,7 +349,17 @@ public:
 - (void)insertNewlineIgnoringFieldEditor:(id)sender
 {
   BrowserWindowController* bwc = (BrowserWindowController *)[[self window] delegate];
-  [bwc saveURL:nil url:[self string] suggestedFilename:nil];
+  NSString* URLstring = [self string];
+  // so that Option-return works on things like "google.com" where the scheme:// is missing
+  if ([URLstring rangeOfString:@"://"].location == NSNotFound)
+    URLstring = [[@"http://" stringByAppendingString:URLstring] stringByTrimmingWhitespace];
+
+  // make sure the result is actually a valid URL
+  NSURL* testURL = [NSURL URLWithString:URLstring];
+  if (testURL) // a non-nil NSURL means it was valid
+    [bwc saveURL:nil url:URLstring suggestedFilename:nil];
+  else // do something to let the user know their attempted save isn't going to work
+    NSBeep();
 }
 
 // Drag & Drop Methods to match behavior of the AutoCompleteTextField
