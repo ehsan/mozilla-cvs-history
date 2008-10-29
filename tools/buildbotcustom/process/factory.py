@@ -871,14 +871,31 @@ class SingleSourceFactory(ReleaseFactory):
          haltOnFailure=True,
          timeout=30*60 # 30 minutes
         )
+        # This will get us to the version we're building the release with
         self.addStep(ShellCommand,
          command=['hg', 'up', '-C', '-r', releaseTag],
          workdir=repoName,
          description=['update to', releaseTag],
          haltOnFailure=True
         )
+        # ...And this will get us the tags so people can do things like
+        # 'hg up -r FIREFOX_3_1b1_RELEASE' with the bundle
         self.addStep(ShellCommand,
-         command=['hg', 'bundle', '--base', '0', '-r', releaseTag, bundleFile],
+         command=['hg', 'up'],
+         workdir=repoName,
+         description=['update to', 'include tag revs'],
+         haltOnFailure=True
+        )
+        self.addStep(SetProperty,
+         command=['hg', 'identify', '-i'],
+         property='revision',
+         workdir=repoName,
+         haltOnFailure=True
+        )
+        self.addStep(ShellCommand,
+         command=['hg', 'bundle', '--base', 'null',
+                  '-r', WithProperties('%(revision)s'),
+                  bundleFile],
          workdir=repoName,
          description=['create bundle'],
          haltOnFailure=True
