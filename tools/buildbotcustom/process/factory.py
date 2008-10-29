@@ -1094,3 +1094,18 @@ class ReleaseUpdatesFactory(ReleaseFactory):
                  timeout=3600, # 1 hour
                  haltOnFailure=True
                 )
+
+
+
+class ReleaseFinalVerification(ReleaseFactory):
+    def __init__(self, buildTools, cvsroot, linuxConfig, macConfig,
+                 win32Config):
+        ReleaseFactory.__init__(self)
+        self.addStep(Mercurial,
+         mode='clobber',
+         repourl=buildTools
+        )
+        self.addStep(ShellCommand,
+         command=['bash', 'release/final-verification.sh', cvsroot,
+                  linuxConfig, macConfig, win32Config]
+        )
