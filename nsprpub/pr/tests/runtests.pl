@@ -132,7 +132,7 @@ $lstatus = shift;
     $now = getTime;
     # Full output
     print "\nEND TEST: $lprog ($now)\n";
-    print "TEST STATUS: $lprog = $str_status (errno $lstatus)\n";
+    print "TEST STATUS: $lprog = $str_status (exit status $lstatus)\n";
     print "--------------------------------------------------\n\n";
     # Summary output
     print OF "\t\t\t$str_status\n";
@@ -246,9 +246,9 @@ $prog = shift;  # Program to test
     if ( $retwait == 0) {
         # the prog didn't finish after the timeout: kill
         $ProcessObj->Kill($status);
-        print "Timeout ! Process killed with error code $status\n";
+        print "Timeout ! Process killed with exit status $status\n";
     } else {
-        # the prog finished before the timeout: get exit code
+        # the prog finished before the timeout: get exit status
         $ProcessObj->GetExitCode($status);
     }
     print_end($prog,$status);
