@@ -1485,8 +1485,8 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
 
 - (NSDragOperation)outlineView:(NSOutlineView*)outlineView validateDrop:(id <NSDraggingInfo>)info proposedItem:(id)item proposedChildIndex:(int)index
 {
-  //  if the index is -1, deny the drop
-  if (index == NSOutlineViewDropOnItemIndex)
+  //  if the index is -1, or we are in search mode, deny the drop
+  if (index == NSOutlineViewDropOnItemIndex || mSearchResultArray)
     return NSDragOperationNone;
 
   // if the proposed item's parent is a smart folder, deny the drop
