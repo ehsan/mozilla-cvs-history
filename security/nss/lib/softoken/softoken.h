@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: softoken.h,v 1.18 2008/11/03 21:33:00 julien.pierre.boogz%sun.com Exp $ */
+/* $Id: softoken.h,v 1.19 2008/11/03 22:11:52 julien.pierre.boogz%sun.com Exp $ */
 
 #ifndef _SOFTOKEN_H_
 #define _SOFTOKEN_H_
@@ -309,7 +309,7 @@ extern pid_t myPid;
 /* All other Unix pthread platforms only use pthread_atfork */
 
 #define CHECK_FORK() \
-    do { if (forked) { FORK_ASSERT(); return CKR_DEVICE_ERROR; } while (0)
+    do { if (forked) { FORK_ASSERT(); return CKR_DEVICE_ERROR; } } while (0)
     
 #endif
 
