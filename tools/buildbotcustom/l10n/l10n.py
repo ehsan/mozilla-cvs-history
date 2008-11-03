@@ -41,4 +41,4 @@ class BuildL10n(process.base.Build):
       raise Exception("No build found for %s on %s, bad mojo" % \
                       (self.builder.name, self.slavename))
     process.base.Build.setupBuild(self, expectations)
-    self.setProperty('locale', bd.locale)
+    self.setProperty('locale', bd.locale, "Build")
