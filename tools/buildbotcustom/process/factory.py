@@ -1098,14 +1098,13 @@ class ReleaseUpdatesFactory(ReleaseFactory):
 
 
 class ReleaseFinalVerification(ReleaseFactory):
-    def __init__(self, buildTools, cvsroot, linuxConfig, macConfig,
-                 win32Config):
+    def __init__(self, buildTools, linuxConfig, macConfig, win32Config):
         ReleaseFactory.__init__(self)
         self.addStep(Mercurial,
          mode='clobber',
          repourl=buildTools
         )
         self.addStep(ShellCommand,
-         command=['bash', 'release/final-verification.sh', cvsroot,
+         command=['bash', 'release/final-verification.sh',
                   linuxConfig, macConfig, win32Config]
         )
