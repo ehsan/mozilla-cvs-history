@@ -44,8 +44,8 @@ MozillaEnvironments['win32-ref-platform'] = {
             'D:\\msvs8\\Common7\\Tools\\bin;' + \
             'd:\\mercurial;' + \
             'd:\\mozilla-build\\moztools\\bin;' + \
-            'd:\\mozilla-build\\msys\\bin;' + \
             'd:\\mozilla-build\\msys\\local\\bin;' + \
+            'd:\\mozilla-build\\msys\\bin;' + \
             'd:\\mozilla-build\\7zip;' + \
             'd:\\mozilla-build\\upx203w;' + \
             'd:\\mozilla-build\\python25;' + \
