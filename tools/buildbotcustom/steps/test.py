@@ -120,10 +120,6 @@ class CompareBloatLogs(ShellCommand):
         bloatDiffPath = 'tools/rb/bloatdiff.pl'
         if 'bloatDiffPath' in kwargs:
             bloatDiffPath = kwargs['bloatDiffPath']
-        testnameprefix = ""
-        if 'testnameprefix' in kwargs:
-            testnameprefix = kwargs['testnameprefix'] + " "
-        self.testnameprefix=testnameprefix         
         self.name = "compare " + testname + "bloat logs"
         self.description = "compare " + testname + "bloat logs"
         self.descriptionDone = "compare " + testname + "bloat logs complete"
@@ -162,9 +158,9 @@ class CompareBloatLogs(ShellCommand):
         summary += "leaks = %d\n" % leaks
         summary += "bloat = %d\n" % bloat
 
-        leaksAbbr = "%sRLk" % self.testnameprefix
-        leaksTestname = ("%srefcnt_leaks" %self.testnameprefix).replace(' ', '_')
-        leaksTestnameLabel = "%srefcnt Leaks" % self.testnameprefix
+        leaksAbbr = "RLk";
+        leaksTestname = "refcnt_leaks"
+        leaksTestnameLabel = "refcnt Leaks"
 
         tinderLink = tinderboxPrint(leaksTestname,
                                     leaksTestnameLabel, 
@@ -196,8 +192,6 @@ class CompareLeakLogs(ShellCommand):
         platform = kwargs['platform']
         assert platform.startswith('win32') or platform.startswith('macosx') \
           or platform.startswith('linux')
-        assert 'objdir' in kwargs
-        self.objdir = kwargs['objdir']
         if 'leakFailureThreshold' in kwargs:
             self.leakFailureThreshold = kwargs['leakFailureThreshold']
         if not 'mallocLog' in kwargs:
@@ -208,18 +202,14 @@ class CompareLeakLogs(ShellCommand):
         else:
             testname = ""
         self.testname = testname
-        if 'testnameprefix' in kwargs:
-            self.testnameprefix = kwargs['testnameprefix'] + " "
-        else:
-            self.testnameprefix = ""
         self.name = "compare " + testname + "leak logs"
         self.description = "compare " + testname + "leak logs"
         self.descriptionDone = "compare " + testname + "leak logs complete"
         if platform.startswith("win32"):
-            kwargs['command'] = ['%s\\dist\\bin\\leakstats.exe' % self.objdir,
+            kwargs['command'] = ['obj-firefox\\dist\\bin\\leakstats.exe',
                                  kwargs['mallocLog']]
         else:
-            kwargs['command'] = ['%s/dist/bin/leakstats' % self.objdir,
+            kwargs['command'] = ['obj-firefox/dist/bin/leakstats',
                                  kwargs['mallocLog']]
         ShellCommand.__init__(self, **kwargs)
 
@@ -235,13 +225,6 @@ class CompareLeakLogs(ShellCommand):
         leakStats['old'] = {}
         leakStats['new'] = {}
         summary = self.testname + " trace-malloc bloat test: leakstats\n"
-
-        lkAbbr = "%sLk" % self.testnameprefix
-        lkTestname = ("%strace_malloc_leaks" % prefix).replace(' ','_')
-        mhAbbr = "%sMH" % self.testnameprefix
-        mhTestname = ("%strace_malloc_maxheap" % prefix).replace(' ','_')
-        aAbbr  = "%sA"  % self.testnameprefix
-        aTestName = ("%strace_malloc_allocs" % prefix).replace(' ','_')
 
         resultSet = 'new'
         for line in log.readlines():
