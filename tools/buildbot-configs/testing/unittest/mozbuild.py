@@ -26,53 +26,6 @@ MozillaEnvironments['osx'] = {
     "CVS_RSH": 'ssh'
 }
 
-# standard vc8 express build env; vc8 normal will be very similar, 
-# just different platform SDK location.  we can build both from one 
-# generic template.
-MozillaEnvironments['vc8'] = {
-    "MOZ_NO_REMOTE": '1',
-    "NO_EM_RESTART": '1',
-    "XPCOM_DEBUG_BREAK": 'warn',
-    "VCVARS": 'C:\\Program Files\\Microsoft Visual Studio 8\\VC\\bin\\vcvars32.bat',
-    "MOZ_TOOLS": 'C:\\moztools',
-    "CYGWINBASE": 'C:\\cygwin',
-    "CVS_RSH": 'ssh',
-    "VSINSTALLDIR": 'C:\\Program Files\\Microsoft Visual Studio 8',
-    "VCINSTALLDIR": 'C:\\Program Files\\Microsoft Visual Studio 8\\VC',
-    "FrameworkDir": 'C:\\WINDOWS\\Microsoft.NET\\Framework',
-    "FrameworkVersion": 'v2.0.50727',
-    "FrameworkSDKDir": 'C:\\Program Files\\Microsoft Visual Studio 8\\SDK\\v2.0',
-    "MSVCDir": 'C:\\Program Files\\Microsoft Visual Studio 8\\VC',
-    "DevEnvDir": "C:\\Program Files\\Microsoft Visual Studio 8\\Common7\\IDE",
-    "PATH": 'C:\\Python24;' + \
-            'C:\\Python24\\Scripts;' + \
-            'C:\\Program Files\\Microsoft Visual Studio 8\\Common7\\IDE;' + \
-            'C:\\Program Files\\Microsoft Visual Studio 8\\VC\\BIN;' + \
-            'C:\\Program Files\\Microsoft Visual Studio 8\\Common7\\Tools;' + \
-            'C:\\Program Files\\Microsoft Visual Studio 8\\Common7\\Tools\\bin;' + \
-            'C:\\Program Files\\Microsoft Visual Studio 8\\VC\\PlatformSDK\\bin;' + \
-            'C:\\Program Files\\Microsoft Visual Studio 8\\SDK\\v2.0\\bin;' + \
-            'C:\\WINDOWS\\Microsoft.NET\\Framework\\v2.0.50727;' + \
-            'C:\\Program Files\\Microsoft Visual Studio 8\\VC\\VCPackages;' + \
-            'C:\\cygwin\\bin;' + \
-            'C:\\WINDOWS\\System32;' + \
-            'C:\\WINDOWS;' + \
-            'C:\\WINDOWS\System32\Wbem;' + \
-            'C:\\moztools\\bin;' + \
-            'C:\\Utilities;',
-    "INCLUDE": 'C:\\Program Files\\Microsoft Visual Studio 8\\VC\\ATLMFC\\INCLUDE;' + \
-               'C:\\Program Files\\Microsoft Visual Studio 8\\VC\\INCLUDE;' + \
-               'C:\\Program Files\\Microsoft Visual Studio 8\\VC\\PlatformSDK\\include;' + \
-               'C:\\Program Files\\Microsoft Visual Studio 8\\SDK\\v2.0\\include;' + \
-               '%INCLUDE%',
-    "LIB": 'C:\\Program Files\\Microsoft Visual Studio 8\\VC\\ATLMFC\\LIB;' + \
-           'C:\\Program Files\\Microsoft Visual Studio 8\\VC\\LIB;' + \
-           'C:\\Program Files\\Microsoft Visual Studio 8\\VC\\PlatformSDK\\lib;' + \
-           'C:\\Program Files\\Microsoft Visual Studio 8\\SDK\\v2.0\\lib;',
-    "LIBPATH": 'C:\\WINDOWS\\Microsoft.NET\\Framework\\v2.0.50727;' + \
-               'C:\\Program Files\\Microsoft Visual Studio 8\\VC\\ATLMFC\\LIB'
-}
-
 MozillaEnvironments['mozbuild'] = {
     "MOZ_NO_REMOTE": '1',
     "NO_EM_RESTART": '1',
@@ -133,6 +86,68 @@ MozillaEnvironments['mozbuild'] = {
            'D:\\msvs8\\VC\\PlatformSDK\\lib;' + \
            'D:\\msvs8\\SDK\\v2.0\\lib;',
     "LIBPATH": 'C:\\WINDOWS\\Microsoft.NET\\Framework\\v2.0.50727;' + \
+               'D:\\msvs8\\VC\\ATLMFC\\LIB'
+}
+
+MozillaEnvironments['mozbuild2'] = {
+    "MOZ_NO_REMOTE": '1',
+    "NO_EM_RESTART": '1',
+    "MOZ_AIRBAG": '1',
+    "MOZ_CRASHREPORTER_NO_REPORT": '1',
+    "XPCOM_DEBUG_BREAK": 'warn',
+    "VCVARS": 'C:\\Program Files\\Microsoft Visual Studio 8\\VC\\bin\\vcvars32.bat',
+    "MOZ_MSVCVERSION": '8',
+    "MOZILLABUILD": 'C:\\mozilla-build',
+    "MOZILLABUILDDRIVE": 'C:',
+    "MOZILLABUILDPATH": '\\mozilla-build\\',
+    "MOZ_TOOLS": 'C:\\mozilla-build\\moztools',
+    "CVS_RSH": 'ssh',
+    "VSINSTALLDIR": 'C:\\Program Files\\Microsoft Visual Studio 8',
+    "VCINSTALLDIR": 'C:\\Program Files\\Microsoft Visual Studio 8\\VC',
+    "FrameworkDir": 'C:\\WINDOWS\\Microsoft.NET\\Framework',
+    "FrameworkVersion": 'v2.0.50727',
+    "FrameworkSDKDir": 'C:\\Program Files\\Microsoft Visual Studio 8\\SDK\\v2.0',
+    "MSVCDir": 'C:\\Program Files\\Microsoft Visual Studio 8\\VC',
+    "DevEnvDir": "C:\\Program Files\\Microsoft Visual Studio 8\\Common7\\IDE",
+    "PATH": 'C:\\mozilla-build\\msys\\local\\bin;' + \
+            'C:\\mozilla-build\\wget;' + \
+            'C:\\mozilla-build\\7zip;' + \
+            'C:\\mozilla-build\\blat261\\full;' + \
+            'C:\\mozilla-build\\svn-win32-1.4.2\\bin;' + \
+            'C:\\mozilla-build\\upx203w;' + \
+            'C:\\mozilla-build\\xemacs\\XEmacs-21.4.19\\i586-pc-win32;' + \
+            'C:\\mozilla-build\\info-zip;' + \
+            'C:\\mozilla-build\\nsis-2.22;' + \
+            '.;' + \
+            'C:\\mozilla-build\\msys\\bin;' + \
+            'C:\\mozilla-build\\python25;' + \
+            'C:\\mozilla-build\\python25\\scripts;' + \
+            'C:\\Program Files\\Microsoft SDKs\\Windows\\v6.0\\bin;' + \
+            'C:\\Program Files\\Microsoft Visual Studio 8\\Common7\\IDE;' + \
+            'C:\\Program Files\\Microsoft Visual Studio 8\\VC\\BIN;' + \
+            'C:\\Program Files\\Microsoft Visual Studio 8\\Common7\\Tools;' + \
+            'C:\\Program Files\\Microsoft Visual Studio 8\\Common7\\Tools\\bin;' + \
+            'C:\\Program Files\\Microsoft Visual Studio 8\\VC\\PlatformSDK\\bin;' + \
+            'C:\\Program Files\\Microsoft Visual Studio 8\\SDK\\v2.0\\bin;' + \
+            'C:\\WINDOWS\\Microsoft.NET\\Framework\\v2.0.50727;' + \
+            'C:\\Program Files\\Microsoft Visual Studio 8\\VC\\VCPackages;' + \
+            'C:\\WINDOWS\\System32;' + \
+            'C:\\WINDOWS;' + \
+            'C:\\WINDOWS\\System32\\Wbem;' + \
+            'C:\\mozilla-build\\moztools\\bin;',
+    "INCLUDE": 'C:\\Program Files\\Microsoft SDKs\\Windows\\v6.0\\include;' + \
+               'C:\\Program Files\\Microsoft SDKs\\Windows\\v6.0\\include\\atl;' + \
+               'C:\\Program Files\\Microsoft Visual Studio 8\\VC\\ATLMFC\\INCLUDE;' + \
+               'C:\\Program Files\\Microsoft Visual Studio 8\\VC\\INCLUDE;' + \
+               'C:\\Program Files\\Microsoft Visual Studio 8\\VC\\PlatformSDK\\include;' + \
+               'C:\\Program Files\\Microsoft Visual Studio 8\\SDK\\v2.0\\include;' + \
+               '%INCLUDE%',
+    "LIB": 'C:\\Program Files\\Microsoft SDKs\\Windows\\v6.0\\lib;' + \
+           'C:\\Program Files\\Microsoft Visual Studio 8\\VC\\ATLMFC\\LIB;' + \
+           'C:\\Program Files\\Microsoft Visual Studio 8\\VC\\LIB;' + \
+           'C:\\Program Files\\Microsoft Visual Studio 8\\VC\\PlatformSDK\\lib;' + \
+           'C:\\Program Files\\Microsoft Visual Studio 8\\SDK\\v2.0\\lib;',
+    "LIBPATH": 'C:\\WINDOWS\\Microsoft.NET\\Framework\\v2.0.50727;' + \
                'C:\\Program Files\\Microsoft Visual Studio 8\\VC\\ATLMFC\\LIB'
 }
 
@@ -167,8 +182,8 @@ MozillaEnvironments['mozbuild_pgo'] = {
             'D:\\mozilla-build\\nsis-2.22;' + 
             '.;' + 
             'D:\\mozilla-build\\msys\\bin;' + 
-            'D:\\buildbot\\python24;' + 
-            'D:\\buildbot\\python24\\scripts;' + 
+            'D:\\mozilla-build\\python25;' + 
+            'D:\\mozilla-build\\python25\\scripts;' + 
             'D:\\sdks\\v6.0\\Bin;' + 
             'D:\\msvs8\\Common7\\IDE;' + 
             'D:\\msvs8\\VC\\BIN;' + 
@@ -197,7 +212,6 @@ MozillaEnvironments['mozbuild_pgo'] = {
     "LIBPATH": 'C:\\WINDOWS\\Microsoft.NET\\Framework\\v2.0.50727;' + 
                'D:\\msvs8\\VC\\ATLMFC\\LIB'
 }
-
 
 cvsCoLog = "cvsco.log"
 tboxClobberCvsCoLog = "tbox-CLOBBER-cvsco.log"
@@ -520,12 +534,7 @@ class MozillaMochitest(ShellCommandReportTimeout):
         return SUCCESS
 
 class MozillaWin32Mochitest(MozillaMochitest):
-    command = ["python",
-               "runtests.py",
-               "--appname=..\\..\\..\\dist\\bin\\firefox.exe",
-               "--autorun",
-               "--console-level=INFO",
-               "--close-when-done"]
+    command = ['python runtests.py --appname=..\\..\\..\\dist\\bin\\firefox.exe --autorun --console-level=INFO --close-when-done']
 
 class MozillaOSXMochitest(MozillaMochitest):
     command = ["python",
@@ -580,13 +589,7 @@ class MozillaMochichrome(ShellCommandReportTimeout):
     
 
 class MozillaWin32Mochichrome(MozillaMochichrome):
-   command = ["python",
-              "runtests.py",
-              "--appname=..\\..\\..\\dist\\bin\\firefox.exe",
-              "--chrome",
-              "--autorun",
-              "--console-level=INFO",
-              "--close-when-done"]
+   command = ['python runtests.py --appname=..\\..\\..\\dist\\bin\\firefox.exe --chrome --autorun --console-level=INFO --close-when-done']
 
 class MozillaOSXMochichrome(MozillaMochichrome):
    command = ["python",
@@ -638,12 +641,7 @@ class MozillaBrowserChromeTest(ShellCommandReportTimeout):
         return SUCCESS
     
 class MozillaWin32BrowserChromeTest(MozillaBrowserChromeTest):
-    command = ["python", 
-               "runtests.py",
-               "--appname=../../../dist/bin/firefox.exe",
-               "--autorun",
-               "--browser-chrome",
-               "--close-when-done"]
+    command = ['python runtests.py --appname=../../../dist/bin/firefox.exe --autorun --browser-chrome --close-when-done']
 
 class MozillaOSXBrowserChromeTest(MozillaBrowserChromeTest):
     command = ["python",
@@ -652,6 +650,50 @@ class MozillaOSXBrowserChromeTest(MozillaBrowserChromeTest):
                "--autorun",
                "--browser-chrome",
                "--close-when-done"]
+
+class MozillaA11YTest(MozillaMochichrome):
+    name = "a11y test"
+    warnOnFailure = True
+    description = ["a11y test"]
+    descriptionDone = ["a11y test complete"]
+    command = ["python",
+               "runtests.py",
+               "--appname=../../../dist/bin/firefox",
+               "--console-level=INFO",
+               "--autorun",
+               "--a11y", 
+               "--close-when-done"]
+    
+    def createSummary(self, log):
+        passCount = 0
+        failCount = 0
+        todoCount = 0
+        for line in log.readlines():
+            if "INFO Passed:" in line:
+                passCount = int(line.split()[-1])
+            if "INFO Failed:" in line:
+                failCount = int(line.split()[-1])
+            if "INFO Todo:" in line:
+                todoCount = int(line.split()[-1])
+        summary = "TinderboxPrint: a11y<br/>"
+        if not (passCount + failCount + todoCount):
+            summary += "FAIL\n"
+        else:
+            summary +=  str(passCount) + "/" + str(failCount) + "/" + str(todoCount) + "\n"
+        self.addCompleteLog('summary', summary)
+    
+
+class MozillaWin32A11YTest(MozillaA11YTest):
+   command = ['python runtests.py --appname=..\\..\\..\\dist\\bin\\firefox.exe --a11y --autorun --console-level=INFO --close-when-done']
+
+class MozillaOSXA11YTest(MozillaA11YTest):
+   command = ["python",
+              "runtests.py",
+              "--appname=../../../dist/Minefield.app/Contents/MacOS/firefox",
+              "--a11y",
+              "--autorun",
+              "--console-level=INFO",
+              "--close-when-done"]
 
 class CreateProfile(ShellCommandReportTimeout):
     name = "create profile"
