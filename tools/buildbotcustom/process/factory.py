@@ -53,7 +53,7 @@ class BootstrapFactory(BuildFactory):
         self.addStep(ShellCommand, 
          description='clean checkout',
          workdir='.', 
-         command=['rm', '-rfv', 'build'],
+         command=['rm', '-rf', 'build'],
          haltOnFailure=1)
         self.addStep(ShellCommand, 
          description='checkout', 
@@ -195,7 +195,7 @@ class MercurialBuildFactory(BuildFactory):
     def addBuildSteps(self):
         if self.nightly:
             self.addStep(ShellCommand,
-             command=['rm', '-rfv', 'build'],
+             command=['rm', '-rf', 'build'],
              env=self.env,
              workdir='.'
             )
@@ -204,7 +204,7 @@ class MercurialBuildFactory(BuildFactory):
          env=self.env
         )
         self.addStep(ShellCommand,
-         command="rm -rfv %s/dist/firefox-* %s/dist/install/sea/*.exe " %
+         command="rm -rf %s/dist/firefox-* %s/dist/install/sea/*.exe " %
                   (self.objdir, self.objdir),
          env=self.env,
          description=['deleting', 'old', 'package'],
@@ -212,7 +212,7 @@ class MercurialBuildFactory(BuildFactory):
         )
         if self.nightly:
             self.addStep(ShellCommand,
-             command="find 20* -maxdepth 2 -mtime +7 -exec rm -rfv {} \;",
+             command="find 20* -maxdepth 2 -mtime +7 -exec rm -rf {} \;",
              env=self.env,
              workdir='.',
              description=['cleanup', 'old', 'symbols'],
@@ -240,7 +240,7 @@ class MercurialBuildFactory(BuildFactory):
          command=['echo', 'TinderboxPrint:', WithProperties(changesetLink)]
         )
         self.addStep(ShellCommand,
-         command=['rm', '-rfv', 'configs'],
+         command=['rm', '-rf', 'configs'],
          description=['removing', 'configs'],
          descriptionDone=['remove', 'configs'],
          haltOnFailure=True
@@ -554,7 +554,7 @@ class MercurialBuildFactory(BuildFactory):
     def addCleanupSteps(self):
         if self.nightly:
             self.addStep(ShellCommand,
-             command=['rm', '-rfv', 'build'],
+             command=['rm', '-rf', 'build'],
              env=self.env,
              workdir='.'
             )
