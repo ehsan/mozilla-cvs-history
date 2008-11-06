@@ -412,7 +412,7 @@ MODULES_all :=                                  \
 # and commit this file on that tag.
 #MOZ_CO_TAG          = <tag>
 NSPR_CO_TAG          = NSPR_4_7_1_RTM
-NSS_CO_TAG           = NSS_3_12_1_WITH_CKBI_1_72_RTM
+NSS_CO_TAG           = NSS_3_12_2_RC1
 LDAPCSDK_CO_TAG      = LDAPCSDK_6_0_3_CLIENT_BRANCH
 LOCALES_CO_TAG       =
 
