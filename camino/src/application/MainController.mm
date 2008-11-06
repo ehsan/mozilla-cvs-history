@@ -571,6 +571,22 @@ NSString* const kPreviousSessionTerminatedNormallyKey = @"PreviousSessionTermina
         if (NSClassFromString(className))
           [addOnsPresent addObject:[problemAddOns objectForKey:className]];
       }
+      // Check for CamiTools by path, since it's a preference pane rather than an InputManager.
+      NSString* userPreferencePanesPath = [[prefManager profilePath] stringByAppendingPathComponent:@"PreferencePanes"];
+      NSString* globalPreferencePanesPath = @"/Library/Application Support/Camino/PreferencePanes";
+      NSFileManager* fileManager = [NSFileManager defaultManager];
+      NSArray* installedUserPreferencePanes = [fileManager directoryContentsAtPath:userPreferencePanesPath];
+      NSArray* installedGlobalPreferencePanes = [fileManager directoryContentsAtPath:globalPreferencePanesPath];
+      NSMutableArray* installedPreferencePanes = [NSMutableArray array];
+      [installedPreferencePanes addObjectsFromArray:installedUserPreferencePanes];
+      [installedPreferencePanes addObjectsFromArray:installedGlobalPreferencePanes];
+      NSEnumerator* prefPaneEnumerator = [installedPreferencePanes objectEnumerator];
+      NSString* paneName;
+      while ((paneName = [prefPaneEnumerator nextObject])) {
+        if ([paneName rangeOfString:@"CamiTools" options:NSCaseInsensitiveSearch].location != NSNotFound)
+          [addOnsPresent addObject:@"CamiTools"];
+      }
+
       if ([addOnsPresent count] > 0) {
         NSString* warningText =
           [NSString stringWithFormat:NSLocalizedString(@"ProblematicAddOnWarningMessage", nil),
