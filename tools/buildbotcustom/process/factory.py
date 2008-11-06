@@ -1014,7 +1014,6 @@ class ReleaseUpdatesFactory(ReleaseFactory):
         )
         self.addStep(ShellCommand,
          command=['cvs', 'diff', '-u', patcherConfigFile],
-         workdir='build/patcher-configs'
         )
         if commitPatcherConfig:
             self.addStep(ShellCommand,
