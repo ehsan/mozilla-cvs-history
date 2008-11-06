@@ -24,7 +24,7 @@ sub Told {
     my $self = shift;
     my ($event, $message) = @_;
     if ($message =~ /^\s*stocks?\s+(.+?)\s*$/osi) {
-        $self->getURI($event, "http://quote.yahoo.com/d/quotes.csv?f=sl1d1t1c1ohgv&e=.csv&s=$1", $1);
+        $self->getURI($event, "http://download.finance.yahoo.com/d/quotes.csv?f=sl1d1t1c1ohgv&e=.csv&s=$1", $1);
     } else {
         return $self->SUPER::Told(@_);
     }
