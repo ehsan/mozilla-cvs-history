@@ -359,7 +359,7 @@ build_and_test()
 
     if [ -z "${NO_TEST}" ]; then
         test_nss
-        [ $? -eq 0 ] || return 1
+        [ $? -eq 0 ] || return 2
     fi
 
     if [ -z "${NO_JSS}" -a -z "${NO_BUILD}" ]; then
@@ -369,7 +369,7 @@ build_and_test()
 
     if [ -z "${NO_JSS}" -a -z "${NO_TEST}" ]; then
         test_jss
-        [ $? -eq 0 ] || return 1
+        [ $? -eq 0 ] || return 2
     fi
 
     return 0
@@ -397,7 +397,9 @@ run_cycle()
 
     if [ ${STATUS} = "success" ]; then
         build_and_test
-        [ $? -ne 0 ] && STATUS=testfailed
+        RET=$?
+        [ ${RET} -eq 1 ] && STATUS=busted
+        [ ${RET} -eq 2 ] && STATUS=testfailed
     fi
 
     grep ^TinderboxPrint ${LOG_ALL}
