@@ -1654,6 +1654,7 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
   if ([searchString length] == 0) {
     [self clearSearchResults];
     [[self activeOutlineView] reloadData];
+    [self restoreFolderExpandedStates];
     [[BookmarkManager sharedBookmarkManager] setSearchActive:NO];
   }
   else {

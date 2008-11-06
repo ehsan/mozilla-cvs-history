@@ -180,6 +180,8 @@ static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_stat
 {
   [mBookmarksViewController resetSearchField];
   [[self historyDataSource] clearSearchResults];
+  [mHistoryOutlineView reloadData];
+  [self restoreFolderExpandedStates];
 }
 
 #pragma mark -
