@@ -183,7 +183,7 @@ $cfgfile = $1; # untaint it -- we trust this, it comes from the admin.
 # - setup variables
 # note: owner is only used by the Mails module
 my ($server, $port, $password, $localAddr, @nicks, @channels, %channelKeys, $owner,
-    @ignoredUsers, @ignoredTargets);
+    @ignoredUsers, @ignoredTargets, $ssl);
 my $nick = 0;
 my $sleepdelay = 60;
 my $connectTimeout = 120;
@@ -225,6 +225,7 @@ my @modulenames = ('General', 'Greeting', 'Infobot', 'Parrot');
     [\$username, 'username'],
     [\$serverRestrictsIRCNames, 'simpleIRCNameServer'],
     [\$serverExpectsValidUsername, 'validUsernameServer'],
+    [\$ssl, 'ssl'],
     [\$Mails::smtphost, 'smtphost'],
 );
 
@@ -238,6 +239,7 @@ my @modulenames = ('General', 'Greeting', 'Infobot', 'Parrot');
 $changed = &Configuration::Ensure([
     ['Connect to which server?', \$server],
     ['To which port should I connect?', \$port],
+    ['Connect to this port using SSL?', \$ssl],
     ['What is the server\'s password? (Leave blank if there isn\'t one.)', \$password],
     ['What channels should I join?', \@channels],
     ['What is the e-mail address of my owner?', \$owner],
@@ -308,8 +310,8 @@ my $lastNick;
 sub connect {
     $uptime = time();
 
-    &debug("connecting to $server:$port using nick '$nicks[$nick]'...");
-
+    &debug("connecting to $server:$port using nick '$nicks[$nick]'..." 
+			. ($ssl && lc($ssl) eq 'yes')? "via SSL" : "");
     my ($bot, $mailed);
 
     $lastNick = undef;
@@ -333,6 +335,7 @@ sub connect {
              Ircname => $ircname,
              Username => $identd,
              LocalAddr => $localAddr,
+			 SSL => ($ssl && lc($ssl) eq 'yes') ? 'true' : undef, 
            )) {
         &debug("Could not connect. Are you sure '$server:$port' is a valid host?");
         unless (inet_aton($server)) {
