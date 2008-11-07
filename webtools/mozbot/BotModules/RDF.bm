@@ -215,10 +215,6 @@ sub ReportDiffs {
     # items at a time...
 
     if (@output and @output < $self->{'maxInChannel'}) {
-        @output = $self->prettyPrint($self->{'preferredLineLength'}, 
-                                     "Just appeared in $self->{'data'}->{$uri}->{'title'} - $self->{'data'}->{$uri}->{'link'} :  ",
-                                     '', ' -- ', @output);
-
         my %mutedChannels = ();
         if (defined($self->{'mutes'}->{$uri})) {
             %mutedChannels = map { lc($_) => 1 } split(/\s+/os, $self->{'mutes'}->{$uri});
@@ -232,8 +228,9 @@ sub ReportDiffs {
         foreach (@{$self->{'channels'}}) {
             unless ($mutedChannels{$_}) {
                 local $event->{'target'} = $_;
+                $self->say($event, "Just appeared in $self->{'data'}->{$uri}->{'title'} - $self->{'data'}->{$uri}->{'link'} :");
                 foreach (@output) {
-                    $self->say($event, $_);
+                    $self->say($event, "   " . $_);
                 }
             }
         }
