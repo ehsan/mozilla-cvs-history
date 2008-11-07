@@ -32,14 +32,29 @@ sub RegisterConfig {
     $self->SUPER::RegisterConfig(@_);
     $self->registerVariables(
       # [ name, save?, settable? ]
+        ['supportedservices', 1, 1, {
+                                     'Babelfish' => '', #Original WWW::Babelfish Service
+                                     'Yahoo' => '', #Available since WWW::Babelfish 0.14
+                                     'Google' => '', #Available since WWW::Babelfish 0.12
+                                     }],
         ['languages', 1, 1, {
                              'en' => 'English',
                              'fr' => 'French',
                              'de' => 'German',
                              'it' => 'Italian',
                              'es' => 'Spanish',
+                             'ar' => 'Arabic',
+                             'zh' => 'Chinese-simp',
+                             'zt' => 'Chinese-trad',
+                             'zh-CN' => 'Chinese (Simp)', #Google-only
+                             'nl' => 'Dutch',
+                             'el' => 'Greek',
+                             'ja' => 'Japanese',
+                             'pt' => 'Portuguese',
+                             'ru' => 'Russian',
                             }], # short code => Babelfish Language Name
         ['defaultLanguage', 1, 1, 'en'],
+        ['defaultservice', 1, 1, 'Babelfish'],
     );
 }
 
@@ -47,12 +62,14 @@ sub Help {
     my $self = shift;
     my ($event) = @_;
     my @languages = keys(%{$self->{'languages'}});
+    my @services =  keys(%{$self->{'supportedservices'}});
     local $";
     $" = '|';
     return {
-        '' => 'Uses babelfish.altavista.com to translate something.',
-        'translate' => "Syntax: \'translate [from (@languages)] [to (@languages)] sentence\'",
-        'x' => 'Same as translate (which see).',
+        '' => 'Translate text between languages using Babelfish or Google.',
+        'translate' => "Syntax: \'translate [using (@services)] [from (@languages)] [to (@languages)] sentence\'",
+        'x' => 'Same as translate.',
+        'languages' => "Returns list of available languages to translate. Syntax: languages [(@services)]"
     };
 }
 
@@ -61,6 +78,8 @@ sub Told {
     my ($event, $message) = @_;
     if ($message =~ /^\s*(?:translate|x)\s+(.*?)\s*$/osi) {
         $self->Translate($event, $1);
+    } elsif ($message =~ /^\s*languages?(?:\s+(.*?))?\s*(?:[, ]\s*please)?\?*\s*$/osi) {
+        $self->GetLanguages($event, $1);
     } else {
         return $self->SUPER::Told(@_);
     }
@@ -69,8 +88,8 @@ sub Told {
 
 sub translate_do {
     my $self = shift;
-    my ($event, $lang1, $lang2, $words) = @_;
-    my $translate_babelfish = new WWW::Babelfish();
+    my ($event, $service, $lang1, $lang2, $words) = @_;
+    my $translate_babelfish = new WWW::Babelfish('service' => $service);
     my $result = $translate_babelfish->translate(
         'source' => $self->{'languages'}->{$lang1},
         'destination' => $self->{'languages'}->{$lang2},
@@ -99,17 +118,38 @@ sub ChildCompleted {
     }
 }
 
+sub GetLanguages {
+    my $self = shift;
+    my ($event, $rest) = @_;
+    my @services =  keys(%{$self->{'supportedservices'}});
+    my $service = $self->{'defaultservice'};
+    $service = $rest if ($rest);
+
+    my $languages_babelfish = new WWW::Babelfish('service' => $service);
+    $self->say($event,"$event->{'from'}: Available Translation Languages (for $service): " . join(", ", $languages_babelfish->languages)."");
+
+}
+
 sub Translate {
     my $self = shift;
     my ($event, $rest) = @_;
-    my ($lang1, $lang2, $words) = (
+    my ($service, $lang1, $lang2, $words) = (
+        $self->{'defaultservice'},
         $self->{'defaultLanguage'},
         $self->{'defaultLanguage'},
     );
 
+    my @services =  keys(%{$self->{'supportedservices'}});
     my @languages = keys(%{$self->{'languages'}});
     local $";
     $" = '|';
+
+    
+    #check service syntax
+    if ($rest =~ /^\s*using\s+(@services)\s+(.+)$/os) {
+        $service = $1 if defined($1);
+        $rest = $2;
+    }
 
     # check syntax
     if ($rest =~ /^\s*from\s+(@languages)\s+to\s+(@languages)\s+(.+)$/os) {
@@ -125,7 +165,7 @@ sub Translate {
         $lang2 = $2 if $1 eq 'to';
         $words = $3;
     } else {
-        $self->say($event, "$event->{'from'}: Noooo... That\'s not the right syntax at all! Try something like \'translate [from (@languages)] [to (@languages)] sentence\'");
+        $self->say($event, "$event->{'from'}: Noooo... That\'s not the right syntax at all! Try something like \'translate [using (@services)] [from (@languages)] [to (@languages)] sentence\'");
         return;
     }
 
@@ -133,7 +173,7 @@ sub Translate {
     if ($lang1 eq $lang2) {
         $self->say($event, "$event->{'from'}: Erm, well, translating from one language to the same language... doesn't change anything!");
     } else {
-        $self->spawnChild($event, \&translate_do, [$self, $event, $lang1, $lang2, $words], 'babelfish', []);
+        $self->spawnChild($event, \&translate_do, [$self, $event, $service, $lang1, $lang2, $words], 'babelfish', []);
     }
 }
 
