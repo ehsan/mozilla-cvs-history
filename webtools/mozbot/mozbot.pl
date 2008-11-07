@@ -623,17 +623,6 @@ sub on_connect {
         $module->JoinedIRC($event);
     }
 
-    # join the channels
-    &debug('going to join: '.join(',', @channels));
-    foreach my $channel (@channels) {
-        if (defined($channelKeys{$channel})) {
-            $self->join($channel, $channelKeys{$channel});
-        } else {
-            $self->join($channel);
-        }
-    }
-    @channels = ();
-
     # tell the modules to set up the scheduled commands
     &debug('setting up scheduler...');
     foreach my $module (@modules) {
@@ -644,6 +633,17 @@ sub on_connect {
             &debug("Warning: An error occured while loading the module:\n$@");
         }
     }
+
+    # join the channels
+    &debug('going to join: '.join(',', @channels));
+    foreach my $channel (@channels) {
+        if (defined($channelKeys{$channel})) {
+            $self->join($channel, $channelKeys{$channel});
+        } else {
+            $self->join($channel);
+        }
+    }
+    @channels = ();
 
     # enable the drainmsgqueue
     &drainmsgqueue($self);
@@ -1925,6 +1925,16 @@ sub say {
     return unless defined $event->{'target'};
     $data =~ s/^\Q$event->{'target'}\E: //gs;
     &::sendmsg($event->{'bot'}, $event->{'target'}, $data);
+}
+
+# privsay - Sends message to person or channel directly
+# only use this if its time-senstive, otherwise you should use say
+sub privsay {
+	my $self = shift;
+    my ($event, $data) = @_;
+	return unless defined $event->{'target'};
+	$data =~ s/^\Q$event->{'target'}\E: //gs;
+	$event->{'bot'}->privmsg($event->{'target'}, $data);
 }
 
 # announce - Sends a message to every channel

@@ -66,9 +66,9 @@ sub Told {
     if ($message =~ /^\s*setup\s*services\s*login\s+(\S+)\s+(.+?)\s*$/osi) {
         $self->{'servicesNick'} = $1;
         $self->{'loginCommand'} = $2;
-	$self->saveConfig();
-	$self->say($event, "Ok, I'll contact $self->{'servicesNick'} regularly from now on.");
-	$self->login($event);
+		$self->saveConfig();
+		$self->say($event, "Ok, I'll contact $self->{'servicesNick'} regularly from now on.");
+		$self->login($event);
     } else {
         return $self->SUPER::Told(@_);
     }
@@ -81,7 +81,7 @@ sub login {
     if (defined $self->{'servicesNick'} and
         defined $self->{'loginCommand'}) {
         local $event->{'target'} = $self->{'servicesNick'};
-        $self->say($event, $self->{'loginCommand'});
+        $self->privsay($event, $self->{'loginCommand'});
 	return 1;
     }
     return 0;
