@@ -2094,7 +2094,14 @@ sub unescapeXML {
     $string =~ s/&lt;/</gos;
     $string =~ s/&gt;/>/gos;
     $string =~ s/&amp;/&/gos;
+    $string =~ s/&\#(\d+);/convertASCIICode($1)/ges;
     return $string;
+}
+
+sub convertASCIICode {
+    my $code = shift;
+    return chr($code) if ($code > 31 and $code < 127);
+    return "&#$code;";
 }
 
 sub days {
