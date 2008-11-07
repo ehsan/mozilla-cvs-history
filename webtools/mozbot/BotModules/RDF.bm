@@ -20,6 +20,7 @@ sub RegisterConfig {
         ['updateDelay', 1, 1, 600],
         ['preferredLineLength', 1, 1, 80],
         ['maxInChannel', 1, 1, 5],
+        ['maxLines', 1, 1, 20],
         ['trimTitles', 1, 1, '0'],
         ['data', 0, 0, {}],  # data -> uri -> (title, link, last, items -> uri)
         ['mutes', 1, 1, {}],  # uri -> "channel channel channel"
@@ -250,6 +251,12 @@ sub ReportAll {
     @output = $self->prettyPrint($self->{'preferredLineLength'}, 
                                  "Items in $self->{'data'}->{$uri}->{'title'} - $self->{'data'}->{$uri}->{'link'}: ",
                                  "$event->{'from'}: ", ' -- ', @output);
+
+    if (@output > $self->{'maxLines'}) {
+        splice(@output, $self->{'maxLines'} + 1);
+        unshift(@output, "The list is longer than $self->{'maxLines'}"
+            . " lines, only the first $self->{'maxLines'} will be shown.");
+    }
 
     if (@output > $self->{'maxInChannel'}) {
         foreach (@output) {
