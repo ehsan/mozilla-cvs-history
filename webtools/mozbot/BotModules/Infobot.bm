@@ -367,7 +367,7 @@ sub GiveFactoid {
     my $self = shift;
     my($event, $database, $subject, $direct, $target) = @_;
     if ($direct or $self->allowed($event, 'Help')) {
-        if ($target eq $event->{'nick'}) {
+        if ($target =~ m/^$event->{'nick'}$/i) {
             $self->targettedSay($event, 'Oh, yeah, great idea, get me to talk to myself.', $direct);
         } else {
             if (lc($subject) eq 'you') {
