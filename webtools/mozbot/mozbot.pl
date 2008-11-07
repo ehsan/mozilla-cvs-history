@@ -1685,7 +1685,7 @@ sub doScheduled {
     my $bot = shift;
     my ($self, $event, $time, $times, @data) = @_;
     return if ($self->{'_shutdown'}); # see unload()
-    # $self->debug("scheduled event occured; $times left @ $time second interval");
+    # $self->debug("scheduled event occured; $times left @ $$time second interval");
     eval {
         $event->{'time'} = time(); # update the time field of the event
         $self->Scheduled($event, @data);
@@ -1735,7 +1735,7 @@ sub spawnChild {
                 # we are the parent process
                 $pipe->reader();
                 ${$pipe}->{'BotModules_Module'} = $self;
-                ${$pipe}->{'BotModules_Event'} = $event;
+                ${$pipe}->{'BotModules_Event'} = {%$event}; # Must be unchanged
                 ${$pipe}->{'BotModules_ChildType'} = $type;
                 ${$pipe}->{'BotModules_Data'} = $data;
                 ${$pipe}->{'BotModules_Command'} = $command;
