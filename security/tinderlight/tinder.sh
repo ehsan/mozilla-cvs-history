@@ -316,13 +316,16 @@ test_nss()
 
     print_log "$ ./all.sh"
     ./all.sh > ${LOG_TMP} 2>&1 
-    RET=$?
     cat ${LOG_TMP} >> ${LOG_ALL}
-    cat ${LOG_TMP} | grep FAIL
-    print_result "NSS - tests - ${BITS} bits - ${OPT}" ${RET} 0
-    [ ${RET} -eq 0 ] || return 1
 
-    return 0
+    tail -2 ${DATADIR}/mozilla/tests_results/security/${HOST}.1/results.html | grep END_OF_TEST >> ${LOG_ALL}
+    RET=$?
+
+    grep FAIL ${LOG_TMP}
+    [ $? -eq 1 ] || RET=1
+
+    print_result "NSS - tests - ${BITS} bits - ${OPT}" ${RET} 0
+    return ${RET}
 }
 
 test_jss()
@@ -341,13 +344,16 @@ test_jss()
 
     print_log "$ perl all.pl dist ${DATADIR}/mozilla/dist/${PLATFORM}"
     perl all.pl dist ${DATADIR}/mozilla/dist/${PLATFORM} > ${LOG_TMP} 2>&1
-    RET=$?
     cat ${LOG_TMP} >> ${LOG_ALL}
-    cat ${LOG_TMP} | grep FAIL
-    print_result "JSS - tests - ${BITS} bits - ${OPT}" ${RET} 0
-    [ ${RET} -eq 0 ] || return 1
 
-    return 0
+    tail -2 ${LOG_TMP} | grep JSSTEST_RATE > /dev/null
+    RET=$?
+
+    grep FAIL ${LOG_TMP} 
+    [ $? -eq 1 ] || RET=1
+
+    print_result "JSS - tests - ${BITS} bits - ${OPT}" ${RET} 0
+    return ${RET}
 }
 
 build_and_test()
