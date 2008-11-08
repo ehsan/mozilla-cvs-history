@@ -646,6 +646,15 @@ sub CheckForBugMail {
                         $bugids = $dup_id unless $said_bug{$channel . $dup_id};
                         $said_bug{$channel . $dup_id} = 1;
                     }
+                    # Fetch bugs mentioned for dependent field changes
+                    if ($field eq 'OtherBugsDependingOnThis'
+                        || $field eq 'BugsThisDependsOn') {
+                        foreach my $id (split(/,/, $old . $new)) {
+                            $bugids = $id . " " . $bugids
+                                unless $said_bug{$channel . $id};
+                            $said_bug{$channel . $id} = 1;
+                        }
+                    }
                     if (! $said_bug{$channel . $bug_id}) {
                         $bugids = $bug_id . " " . $bugids;
                     }
