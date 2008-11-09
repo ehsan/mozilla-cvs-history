@@ -541,7 +541,7 @@ static CertificatesWindowController* gCertificatesWindowController;
   
   [theOpenPanel beginSheetForDirectory:nil
                                   file:nil
-                                 types:[NSArray arrayWithObjects:@"p12", @"pfx", nil]
+                                 types:[NSArray arrayWithObjects:@"p12", @"pfx", @"pkcs12", nil]
                         modalForWindow:[self window]
                          modalDelegate:self
                         didEndSelector:@selector(restorePanelDidEnd:returnCode:contextInfo:)
