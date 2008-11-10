@@ -29,6 +29,7 @@ from twisted.internet import defer, reactor
 from buildbot.steps.shell import ShellCommand
 from buildbot.scheduler import Nightly, Periodic, Dependent 
 from buildbot.sourcestamp import SourceStamp
+from buildbot.process import properties
 from buildbot import buildset
 import subprocess
 
@@ -90,16 +91,17 @@ class L10nMixin(object):
       log.msg("L10nMixin:: loaded locales' list")
       
       for locale in locales:
-        # Let's have an object with "locale" attribute set
-        obj = self.BuildDesc(locale)
-        # add the obj in each of the builder's queue
-        for key in self.scheduler.builderNames:
-            self.queue[key].insert(0, obj)
+        props = properties.Properties()
+        props.updateFromProperties(self.scheduler.properties)
+        #I do not know exactly what to pass as the source parameter
+        props.update(dict(locale=locale),'DependentL10n')
+        log.msg('Submitted '+locale+' locale')
         # let's submit the BuildSet for this locale
         self.scheduler.submitBuildSet(
             buildset.BuildSet(self.scheduler.builderNames,
                               self.NoMergeStamp(branch=self.scheduler.branch),
-                              self.scheduler.reason))
+                              self.scheduler.reason,
+                              properties = props))
 
   def getLocales(self): 
       """
