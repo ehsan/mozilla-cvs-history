@@ -620,6 +620,7 @@ class StagingRepositorySetupFactory(ReleaseFactory):
 
             self.addStep(ShellCommand,
              command=['bash', '-c', command],
+             description=['recreate', repoName],
              timeout=30*60 # 30 minutes
             )
 
@@ -772,6 +773,7 @@ class ReleaseTaggingFactory(ReleaseFactory):
              command=['hg', 'up', '-r',
                       WithProperties('%s', '%s-revision' % repoName)],
              workdir=repoName,
+             description=['update', repoName],
              haltOnFailure=True
             )
             # for build1 we need to create a branch
@@ -843,6 +845,7 @@ class ReleaseTaggingFactory(ReleaseFactory):
                       'ssh -l %s %s' % (hgUsername, sshKeyOption),
                       pushRepo],
              workdir=repoName,
+             description=['hg out', repoName]
             )
             self.addStep(ShellCommand,
              command=['hg', 'push', '-e',
@@ -978,25 +981,30 @@ class ReleaseUpdatesFactory(ReleaseFactory):
          command=['cvs', '-d', cvsroot, 'co', '-r', patcherToolsTag,
                   '-d', 'MozBuild',
                   'mozilla/tools/release/MozBuild'],
+         description=['checkout', 'MozBuild'],
          haltOnFailure=True
         )
         self.addStep(ShellCommand,
          command=['cvs', '-d', cvsroot, 'co', '-r', patcherToolsTag,
                   '-d' 'Bootstrap',
                   'mozilla/tools/release/Bootstrap/Util.pm'],
+         description=['checkout', 'Bootstrap/Util.pm'],
          haltOnFailure=True
         )
         self.addStep(ShellCommand,
          command=['cvs', '-d', cvsroot, 'co', '-d' 'patcher-configs',
                   'mozilla/tools/patcher-configs'],
+         description=['checkout', 'patcher-configs'],
          haltonFailure=True
         )
         self.addStep(ShellCommand,
          command=['hg', 'clone', '--rev', patcherToolsTag, buildTools],
+         description=['clone', 'build tools'],
          haltOnFailure=True
         )
         self.addStep(ShellCommand,
          command=['wget', '-O', 'shipped-locales', shippedLocales],
+         description=['get', 'shipped-locales'],
          haltOnFailure=True
         )
 
@@ -1010,10 +1018,12 @@ class ReleaseUpdatesFactory(ReleaseFactory):
             bumpCommand.append('-u')
         self.addStep(ShellCommand,
          command=bumpCommand,
+         description=['bump', patcherConfig],
          haltOnFailure=True
         )
         self.addStep(ShellCommand,
          command=['cvs', 'diff', '-u', patcherConfigFile],
+         description=['diff', patcherConfig]
         )
         if commitPatcherConfig:
             self.addStep(ShellCommand,
@@ -1023,6 +1033,7 @@ class ReleaseUpdatesFactory(ReleaseFactory):
                         (patcherConfig, oldVersion, appVersion, buildNumber)
                      ],
              workdir='build/patcher-configs',
+             description=['commit', patcherConfig],
              haltOnFailure=True
             )
         self.addStep(ShellCommand,
@@ -1055,6 +1066,7 @@ class ReleaseUpdatesFactory(ReleaseFactory):
                   'update',
                   '%s@%s:%s' % (stageUsername, stagingServer, candidatesDir)],
          workdir=marDir,
+         description=['upload', 'partial mars'],
          haltOnFailure=True
         )
         # It gets a little hairy down here
@@ -1076,6 +1088,7 @@ class ReleaseUpdatesFactory(ReleaseFactory):
              command=['rsync', '-av', localDir + '/',
                       '%s@%s:%s' % (ausUser, ausHost, snippetDir)],
              workdir=updateDir,
+             description=['upload', '%s snippets' % type],
              haltOnFailure=True
             )
 
@@ -1085,12 +1098,14 @@ class ReleaseUpdatesFactory(ReleaseFactory):
                  command=['ssh', '-l', ausUser, ausHost,
                           '~/bin/backupsnip %s' % remoteDir],
                  timeout=7200, # 2 hours
+                 description=['backupsnip'],
                  haltOnFailure=True
                 )
                 self.addStep(ShellCommand,
                  command=['ssh', '-l', ausUser, ausHost,
                           '~/bin/pushsnip %s' % remoteDir],
                  timeout=3600, # 1 hour
+                 description=['pushsnip'],
                  haltOnFailure=True
                 )
 
@@ -1105,5 +1120,6 @@ class ReleaseFinalVerification(ReleaseFactory):
         )
         self.addStep(ShellCommand,
          command=['bash', 'release/final-verification.sh',
-                  linuxConfig, macConfig, win32Config]
+                  linuxConfig, macConfig, win32Config],
+         description=['final-verification.sh']
         )
