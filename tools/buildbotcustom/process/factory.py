@@ -11,15 +11,18 @@ from buildbot.steps.source import CVS, Mercurial
 from buildbot.steps.transfer import FileDownload
 
 import buildbotcustom.steps.misc
+import buildbotcustom.steps.release
 import buildbotcustom.steps.test
 import buildbotcustom.steps.transfer
 import buildbotcustom.steps.updates
 reload(buildbotcustom.steps.misc)
+reload(buildbotcustom.steps.release)
 reload(buildbotcustom.steps.test)
 reload(buildbotcustom.steps.transfer)
 reload(buildbotcustom.steps.updates)
 
 from buildbotcustom.steps.misc import SetMozillaBuildProperties
+from buildbotcustom.steps.release import UpdateVerify
 from buildbotcustom.steps.test import AliveTest, CompareBloatLogs, \
   CompareLeakLogs, Codesighs, GraphServerPost
 from buildbotcustom.steps.transfer import MozillaStageUpload
@@ -594,6 +597,21 @@ class ReleaseFactory(BuildFactory):
         return '/home/ftp/pub/' + product + '/nightly/' + str(version) + \
                '-candidates/build' + str(buildNumber) + '/'
 
+    def getShippedLocales(self, mozillaCentral, baseTag, appName):
+        return '%s/raw-file/%s_RELEASE/%s/locales/shipped-locales' % \
+                 (mozillaCentral, baseTag, appName)
+
+    def getSshKeyOption(self, hgSshKey):
+        if hgSshKey:
+            return '-i %s' % hgSshKey
+        return hgSshKey
+
+    def makeLongVersion(self, version):
+        version = re.sub('a([0-9]+)$', ' Alpha \\1', version)
+        version = re.sub('b([0-9]+)$', ' Beta \\1', version)
+        version = re.sub('rc([0-9]+)$', ' RC \\1', version)
+        return version
+
 
 
 class StagingRepositorySetupFactory(ReleaseFactory):
@@ -726,9 +744,7 @@ class ReleaseTaggingFactory(ReleaseFactory):
             repoName = self.getRepoName(repo)
             pushRepo = self.getPushRepo(repo)
 
-            sshKeyOption = ''
-            if hgSshKey:
-                sshKeyOption = '-i %s' % hgSshKey
+            sshKeyOption = self.getSshKeyOption(hgSshKey)
 
             repoRevision = repositories[repo]['revision']
             bumpFiles = repositories[repo]['bumpFiles']
@@ -955,8 +971,8 @@ class ReleaseUpdatesFactory(ReleaseFactory):
         ReleaseFactory.__init__(self)
 
         patcherConfigFile = 'patcher-configs/%s' % patcherConfig
-        shippedLocales = '%s/raw-file/%s_RELEASE/%s/locales/shipped-locales' % \
-          (mozillaCentral, baseTag, appName)
+        shippedLocales = self.getShippedLocales(mozillaCentral, baseTag,
+                                                appName)
         candidatesDir = self.getCandidatesDir(productName, appVersion,
                                               buildNumber)
         updateDir = 'build/temp/%s/%s-%s' % \
@@ -1108,6 +1124,94 @@ class ReleaseUpdatesFactory(ReleaseFactory):
                  description=['pushsnip'],
                  haltOnFailure=True
                 )
+
+
+
+class UpdateVerifyFactory(ReleaseFactory):
+    def __init__(self, mozillaCentral, cvsroot, buildTools, patcherToolsTag,
+                 hgUsername, baseTag, appName, platform, productName,
+                 oldVersion, oldBuildNumber, version, buildNumber, ausServerUrl,
+                 stagingServer, verifyConfig, oldAppVersion=None,
+                 appVersion=None, hgSshKey=None):
+        ReleaseFactory.__init__(self)
+
+        if not oldAppVersion:
+            oldAppVersion = oldVersion
+        if not appVersion:
+            appVersion = version
+
+        oldLongVersion = self.makeLongVersion(oldVersion)
+        longVersion = self.makeLongVersion(version)
+        # Unfortunately we can't use the getCandidatesDir() function here
+        # because that returns it as a file path on the server and we need
+        # an http:// compatible path
+        oldCandidatesDir = \
+          '/pub/mozilla.org/%s/nightly/%s-candidates/build%s' % \
+            (productName, oldVersion, oldBuildNumber)
+
+        verifyConfigPath = 'release/updates/%s' % verifyConfig
+        shippedLocales = self.getShippedLocales(mozillaCentral, baseTag,
+                                                appName)
+        pushRepo = self.getPushRepo(buildTools)
+        sshKeyOption = self.getSshKeyOption(hgSshKey)
+
+        self.addStep(Mercurial,
+         mode='clobber',
+         repourl=buildTools
+        )
+        self.addStep(ShellCommand,
+         command=['cvs', '-d', cvsroot, 'co', '-r', patcherToolsTag,
+                  '-d', 'MozBuild',
+                  'mozilla/tools/release/MozBuild'],
+         description=['checkout', 'MozBuild'],
+         haltOnFailure=True
+        )
+        self.addStep(ShellCommand,
+         command=['cvs', '-d', cvsroot, 'co', '-r', patcherToolsTag,
+                  '-d', 'Bootstrap',
+                  'mozilla/tools/release/Bootstrap/Util.pm'],
+         description=['checkout', 'Bootstrap/Util.pm'],
+         haltOnFailure=True
+        )
+        self.addStep(ShellCommand,
+         command=['wget', '-O', 'shipped-locales', shippedLocales],
+         description=['get', 'shipped-locales'],
+         haltOnFailure=True
+        )
+        self.addStep(ShellCommand,
+         command=['perl', 'release/update-verify-bump.pl',
+                  '-o', platform, '-p', productName,
+                  '--old-version=%s' % oldVersion,
+                  '--old-app-version=%s' % oldAppVersion,
+                  '--old-long-version=%s' % oldLongVersion,
+                  '-v', version, '--app-version=%s' % appVersion,
+                  '--long-version=%s' % longVersion,
+                  '-n', str(buildNumber), '-a', ausServerUrl,
+                  '-s', stagingServer, '-c', verifyConfigPath,
+                  '-d', oldCandidatesDir, '-l', 'shipped-locales',
+                  '--pretty-candidates-dir'],
+         description=['bump', verifyConfig]
+        )
+        self.addStep(ShellCommand,
+         command=['hg', 'commit', '-m',
+                  'Automated configuration bump: ' + \
+                  '%s, from %s to %s build %s' % \
+                    (verifyConfig, oldVersion, version, buildNumber)],
+         description=['commit', verifyConfig],
+         haltOnFailure=True
+        )
+        self.addStep(ShellCommand,
+         command=['hg', 'push', '-e',
+                  'ssh -l %s %s' % (hgUsername, sshKeyOption),
+                  '-f', pushRepo],
+         description=['push updated', 'config'],
+         haltOnFailure=True
+        )
+        self.addStep(UpdateVerify,
+         command=['bash', 'verify.sh', '-c', verifyConfig],
+         workdir='build/release/updates',
+         description=['./verify.sh', verifyConfig]
+        )
 
 
 
