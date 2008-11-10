@@ -9,7 +9,7 @@ def get_l10n_repositories(file, l10nCentral, relbranch):
     """
     repositories = {}
     for localeLine in open(file).readlines():
-        locale, revision = localeLine.rstrip().split(' ')
+        locale, revision = localeLine.rstrip().split()
         if revision == 'FIXME':
             raise Exception('Found FIXME in %s for locale "%s"' % \
                            (file, locale))
