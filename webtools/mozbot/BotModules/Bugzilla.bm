@@ -296,7 +296,7 @@ sub FetchBug {
     return unless @ids;
     if ($subtype eq 'bug') {
         # Code taken from Bugzilla's xml.cgi
-        $uri = "$self->{'bugsURI'}show_bug.cgi?ctype=xml&excludefield=long_desc".join('', map { $_ = "&id=" . $_ } @ids);
+        $uri = "$self->{'bugsURI'}show_bug.cgi?ctype=xml&excludefield=long_desc&excludefield=attachmentdata&excludefield=cc".join('', map { $_ = "&id=" . $_ } @ids);
         $type = 'xml';
     } elsif ($subtype eq 'dwim') {
         # XXX should escape query string
