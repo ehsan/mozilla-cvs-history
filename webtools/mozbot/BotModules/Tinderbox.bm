@@ -264,7 +264,7 @@ sub CheckForUpdates {
                 foreach (@changes) {
                     $self->sayOrNotice($event, $_);
                 }
-                if (@output < 3) {
+                if (@output < $self->{'maxInChannel'}) {
                     foreach (@output) {
                         $self->sayOrNotice($event, $_);
                     }
