@@ -71,7 +71,7 @@ __END_OF_HTML__
 sub WritePage
 {
     my %args = @_;
-    my $patchLevel = "0";
+    my $patchLevel = "1";
     my $branch = "";
     my $identifier = "";
     my $description = "";
