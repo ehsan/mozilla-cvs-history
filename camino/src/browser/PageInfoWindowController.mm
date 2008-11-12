@@ -48,6 +48,8 @@
 
 #import "PageInfoWindowController.h"
 
+#import "NSString+Utils.h"
+
 
 static PageInfoWindowController* gSingletonPageInfoController;
 
@@ -171,7 +173,7 @@ static PageInfoWindowController* gSingletonPageInfoController;
 
   // general info
   [mPageTitleField setStringValue:[inBrowserView pageTitle]];
-  [mPageLocationField setStringValue:[inBrowserView currentURI]];
+  [mPageLocationField setStringValue:[[inBrowserView currentURI] unescapedURI]];
   NSDate* lastModDate = [inBrowserView pageLastModifiedDate];
 
   NSString* dateString = @"";

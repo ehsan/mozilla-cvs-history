@@ -349,4 +349,14 @@
   return ([self isEqualToString:@"about:blank"] || [self isEqualToString:@""]);
 }
 
+// Excluded character list comes from RFC2396 and by examining Safari's behaviour
+- (NSString*)unescapedURI
+{
+  NSString *unescapedURI = (NSString*)CFURLCreateStringByReplacingPercentEscapesUsingEncoding(kCFAllocatorDefault,
+                                                                            (CFStringRef)self,
+                                                                            CFSTR(" \"\';/?:@&=+$,#"),
+                                                                            kCFStringEncodingUTF8);
+  return unescapedURI ? [unescapedURI autorelease] : self;
+}
+
 @end

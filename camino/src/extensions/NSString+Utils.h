@@ -95,5 +95,7 @@ typedef enum
 
 // Returns true if the string represents a "blank" URL ("" or "about:blank")
 - (BOOL)isBlankURL;
+// Returns a URI that looks good in a location field
+- (NSString *)unescapedURI;
 
 @end

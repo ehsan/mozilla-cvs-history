@@ -2000,8 +2000,9 @@ public:
   if ([url isEqual:@"about:blank"])
     url = @""; // return;
 
-  [mURLBar setURI:url];
-  [mLocationSheetURLField setStringValue:url];
+  NSString* unescapedURI = [url unescapedURI];
+  [mURLBar setURI:unescapedURI];
+  [mLocationSheetURLField setStringValue:unescapedURI];
 
   if ([[self window] isMainWindow])
     [[PageInfoWindowController visiblePageInfoWindowController] updateFromBrowserView:[self activeBrowserView]];

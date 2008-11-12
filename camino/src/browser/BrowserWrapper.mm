@@ -748,14 +748,14 @@ NSString* const kBrowserInstanceClosedNotification = @"BrowserInstanceClosed";
 {
   NSString* viewSourcePrefix = @"view-source:";
   if ([inURL hasPrefix:viewSourcePrefix])
-    return [NSString stringWithFormat:NSLocalizedString(@"SourceOf", @""), [inURL substringFromIndex:[viewSourcePrefix length]]];
+    return [NSString stringWithFormat:NSLocalizedString(@"SourceOf", @""), [[inURL substringFromIndex:[viewSourcePrefix length]] unescapedURI]];
 
   if ([inTitle length] > 0)
     return inTitle;
 
   if (![inURL isEqualToString:@"about:blank"]) {
     if ([inURL hasPrefix:@"file://"])
-      return [inURL lastPathComponent];
+      return [[inURL lastPathComponent] unescapedURI];
 
     return inURL;
   }
