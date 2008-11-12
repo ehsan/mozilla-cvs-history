@@ -10,6 +10,7 @@ use MozBuild::Util qw(RunShellCommand);
 use base qw(Exporter);
 
 our @EXPORT_OK = qw(CvsCatfile CvsTag
+                    GetPushRepo
                     GetDiffFileList
                     GetFtpNightlyDir
                     LoadLocaleManifest
@@ -243,6 +244,23 @@ sub CvsTag {
     $cvsTagArgs{'output'} = $args{'output'} if (exists($args{'output'}));
 
     return RunShellCommand(%cvsTagArgs);
+}
+
+sub GetPushRepo {
+    my %args = @_;
+    my ($repo, $pushRepo);
+
+    # Required arguments
+    die "ASSERT: Bootstrap::Util::GetPushRepo(): null repo" if
+     (!exists($args{'repo'}));
+    $pushRepo = $repo = $args{'repo'};
+
+    $pushRepo =~ s/^https?/ssh/;
+    if ($pushRepo !~ m/^ssh/) {
+        die "ASSERT: Bootstrap::Util::GetPushRepo(): could not generate " .
+            "push repo for: $repo";
+    }
+    return $pushRepo;
 }
 
 sub GetDiffFileList {

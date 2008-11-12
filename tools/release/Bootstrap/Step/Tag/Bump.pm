@@ -81,10 +81,9 @@ sub Execute {
 
     # bug 449208 moved this logic to an external script to more easily
     # support both CVS and Mercurial based releases
-    $this->Shell(
-      cmd => 'hg',
-      cmdArgs => ['clone', $hgToolsRepo],
-      dir => catfile($buildTagDir)
+    $this->HgClone(
+      repo => $hgToolsRepo,
+      workDir => catfile($buildTagDir)
     );
     $this->Shell(
       cmd => 'perl',

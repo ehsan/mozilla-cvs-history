@@ -66,10 +66,9 @@ sub Execute {
     # bug 456400 moved the BumpPatcherConfig logic to an external script to
     # more easily support both CVS and Mercurial based releases
 
-    $this->Shell(
-      cmd => 'hg',
-      cmdArgs => ['clone', $hgToolsRepo],
-      dir => catfile($versionedConfigBumpDir)
+    $this->HgClone(
+      repo => $hgToolsRepo,
+      workDir => catfile($versionedConfigBumpDir)
     );
     $this->CvsCo(
       cvsroot => $mozillaCvsroot,

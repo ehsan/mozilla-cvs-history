@@ -7,10 +7,12 @@ package Bootstrap::Step;
 use IO::Handle;
 use File::Spec::Functions;
 use POSIX qw(strftime);
+use File::Basename;
+use File::Path;
 use File::Temp qw(tempfile);
 
 use Bootstrap::Config;
-use Bootstrap::Util qw(CvsCatfile);
+use Bootstrap::Util qw(CvsCatfile GetPushRepo);
 use MozBuild::Util qw(RunShellCommand Email);
 
 use base 'Exporter';
@@ -280,6 +282,67 @@ sub CvsCo {
     }
 
     $this->Shell(%cvsCoArgs);
+}
+
+sub HgClone {
+    my $this = shift;
+    my %args = @_;
+
+    # Required arguments
+    die "ASSERT: Bootstrap::Step::HgClone(): null repo" if
+     (!exists($args{'repo'}));
+    my $repo = $args{'repo'};
+
+    die "ASSERT: Bootstrap::Step::HgClone(): null workDir" if
+     (!exists($args{'workDir'}));
+    my $workDir = $args{'workDir'};
+
+    my $repoDir = catfile($workDir, basename($repo));
+    if (-e $repoDir) {
+        $this->Log(msg => $repoDir . ' exists, removing it.');
+        rmtree($repoDir);
+    }
+    $this->Shell(
+      cmd => 'hg',
+      cmdArgs => ['clone', $repo],
+      dir => $workDir
+    );
+}
+
+sub HgPush {
+    my $this = shift;
+    my %args = @_;
+    my $config = new Bootstrap::Config();
+
+    # Required arguments
+    die "ASSERT: Bootstrap::Step::HgPush(): null repo" if
+     (!exists($args{'repo'}));
+    my $repo = $args{'repo'};
+
+    die "ASSERT: Bootstrap::Step::HgPush(): null dir" if
+     (!exists($args{'workDir'}));
+    my $workDir = $args{'workDir'};
+
+    # Required config file variables
+    die "ASSERT: Bootstrap::Step::HgPush(): null hgSshKey" if
+     (! $config->Exists(sysvar => 'hgSshKey'));
+    my $hgSshKey = $config->Get(sysvar => 'hgSshKey');
+
+    die "ASSERT: Bootstrap::Step::HgPush(): null hgUsername" if
+     (! $config->Exists(var => 'hgUsername'));
+    my $hgUsername = $config->Get(var => 'hgUsername');
+
+    my $pushRepo = GetPushRepo(repo => $repo);
+
+    my @cmdArgs = ['push', '-e',
+                   'ssh -l ' . $hgUsername . ' -i "' . $hgSshKey . '"',
+                   $repo];
+
+    $this->Shell(
+      cmd => 'hg',
+      cmdArgs => @cmdArgs,
+      dir => $workDir
+    );
 }
 
 sub CreateCandidatesDir() {
