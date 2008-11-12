@@ -96,10 +96,12 @@
             ok(aFocusMgr.mIsFocusHandled,
                "Focus wasn't recieved for element with ID " + aFocusMgr.mName + ".");
 
-            var states = {}, extraStates = {};
-            aFocusMgr.mAcc.getFinalState(states, extraStates);
-            ok(states.value & nsIAccessibleStates.STATE_FOCUSED,
-               "No focused stated for element with ID " + aFocusMgr.mName + ".");
+            if (aFocusMgr.mName != "aria-link") {
+              var states = {}, extraStates = {};
+              aFocusMgr.mAcc.getFinalState(states, extraStates);
+              ok(states.value & nsIAccessibleStates.STATE_FOCUSED,
+                 "No focused state for element with ID " + aFocusMgr.mName + ".");
+            }
 
             aFocusMgr.mCallback();
           }, 0, this);
