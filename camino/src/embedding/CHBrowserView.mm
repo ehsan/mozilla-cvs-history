@@ -747,7 +747,10 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   presShell->RenderDocument(viewRect, PR_FALSE, PR_TRUE, NS_RGB(255, 255, 255), context);
 
   // Now transfer the context contents into an NSImage.
-  CGImageRef cgImage = CGBitmapContextCreateImage(surface->GetCGContext());
+  CGContextRef surfaceContext = surface->GetCGContext();
+  if (!surfaceContext)
+    return nil;
+  CGImageRef cgImage = CGBitmapContextCreateImage(surfaceContext);
   NSImage* snapshot = [[[NSImage alloc] initWithSize:snapshotSize] autorelease];
   NSRect imageRect = NSMakeRect(0, 0, snapshotSize.width, snapshotSize.height);
   [snapshot lockFocus];
