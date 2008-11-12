@@ -62,6 +62,7 @@ _TEST_FILES =\
 		test_nsIAccessibleTable_3.html \
 		test_nsIAccessibleTable_4.html \
 		test_nsIAccessibleTable_listboxes.xul \
+ 		test_nsIAccessNode_utils.html \
 		test_nsIAccessibleHyperLink.html \
 		test_nsIAccessibleHyperLink.xul \
 		test_nsIAccessibleHyperText.html \
