@@ -130,30 +130,88 @@ sub Verify {
 
     my $config = new Bootstrap::Config();
     my $logDir = $config->Get(sysvar => 'logDir');
-    my $version = $config->GetVersion(longName => 0);
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
+    my $hgToolsRepo = $config->Get(var => 'hgToolsRepo');
+    my $hgSshKey = $config->Get(sysvar => 'hgSshKey');
     my $verifyDir = $config->Get(var => 'verifyDir');
+    my $osname = $config->SystemInfo(var => 'osname');
     my $product = $config->Get(var => 'product');
+    my $appName = $config->Get(var => 'appName');
+    my $oldVersion = $config->GetOldVersion(longName => 0);
+    my $oldAppVersion = $config->GetOldAppVersion();
+    my $oldLongVersion = $config->GetOldVersion(longName => 1);
+    my $version = $config->GetVersion(longName => 0);
+    my $appVersion = $config->GetAppVersion();
+    my $longVersion = $config->GetVersion(longName => 1);
+    my $build = $config->Get(var => 'build');
+    my $oldBuild = $config->Get(var => 'oldBuild');
+    my $ausServerUrl = $config->Get(var => 'ausServerUrl');
+    my $stagingServer = $config->Get(var => 'stagingServer');
     my $verifyConfig = $config->Get(sysvar => 'verifyConfig');
+    my $linuxExtension = $config->GetLinuxExtension();
+
+    my $oldCandidatesDir = CvsCatfile('pub', 'mozilla.org', $product, 'nightly',
+                                     $oldVersion . '-candidates',
+                                     'build' . $oldBuild . '/');
+
+    my $oldBranchTag = uc($product).'_'.$oldVersion.'_RELEASE';
 
     # Create verification area.
     my $verifyDirVersion = catfile($verifyDir, $product . '-' . $version);
     MkdirWithPath(dir => $verifyDirVersion) 
       or die("Could not mkdir $verifyDirVersion: $!");
 
-    foreach my $dir ('updates', 'common') {
-        $this->CvsCo(cvsroot => $mozillaCvsroot,
-                     checkoutDir => $dir,
-                     modules => [CvsCatfile('mozilla', 'testing', 'release',
-                                            $dir)],
-                     logFile => catfile($logDir,
-                                 'updates_verify_checkout-' . $dir . '.log'),
-                     workDir => $verifyDirVersion
-        );
-    }
+    $this->HgClone(
+      repo => $hgToolsRepo,
+      workDir => $verifyDirVersion
+    );
+    $this->CvsCo(
+      cvsroot => $mozillaCvsroot,
+      modules => [CvsCatfile('mozilla', $appName, 'locales',
+                             'shipped-locales')],
+      tag => $oldBranchTag,
+      workDir => $verifyDirVersion,
+      checkoutDir => 'locales'
+    );
+    my $shippedLocales = catfile($verifyDirVersion, 'locales',
+                                 'shipped-locales');
+    my @args = (catfile($verifyDirVersion, 'tools', 'release',
+                        'update-verify-bump.pl'),
+            '-o', $osname,
+            '-p', $product,
+            '--old-version=' . $oldVersion,
+            '--old-app-version=' . $oldAppVersion,
+            '--old-long-version=' . $oldLongVersion,
+            '-v', $version,
+            '--app-version=' . $appVersion,
+            '--long-version=' . $longVersion,
+            '-n', $build,
+            '-a', $ausServerUrl,
+            '-s', $stagingServer,
+            '-c', catfile($verifyDirVersion, 'tools', 'release', 'updates',
+                          $verifyConfig),
+            '-d', $oldCandidatesDir,
+            '-e', $linuxExtension,
+            '-l', $shippedLocales
+    );
 
-    $this->BumpVerifyConfig();
-    
+    $this->Shell(
+      cmd => 'perl',
+      cmdArgs => \@args
+    );
+    $this->Shell(
+      cmd => 'hg',
+      cmdArgs => ['commit', '-m',
+                  '"Automated configuration bump, release for '
+                  . $product  . ' ' . $version . "build$build" . '"'],
+      logFile => catfile($logDir, 'update_verify-checkin.log'),
+      dir => catfile($verifyDirVersion, 'tools')
+    );
+    $this->HgPush(
+      repo => $hgToolsRepo,
+      workDir => catfile($verifyDirVersion, 'tools')
+    );
+
     # Customize updates.cfg to contain the channels you are interested in 
     # testing.
     
@@ -162,7 +220,7 @@ sub Verify {
       cmd => './verify.sh', 
       cmdArgs => ['-c', $verifyConfig],
       logFile => $verifyLog,
-      dir => catfile($verifyDirVersion, 'updates'),
+      dir => catfile($verifyDirVersion, 'tools', 'release', 'updates'),
       timeout => 36000,
     );
 
@@ -216,131 +274,6 @@ sub PermissionsAusCallback {
     } elsif (-d $dir) {
 	chmod(0775, $dir) or die("Couldn't chmod $dir to 775: $!");
     }
-}
-
-sub BumpVerifyConfig {
-    my $this = shift;
-
-    my $config = new Bootstrap::Config();
-    my $osname = $config->SystemInfo(var => 'osname');
-    my $product = $config->Get(var => 'product');
-    my $oldVersion = $config->GetOldVersion(longName => 0);
-    my $oldAppVersion = $config->GetOldAppVersion();
-    my $oldLongVersion = $config->GetOldVersion(longName => 1);
-    my $version = $config->GetVersion(longName => 0);
-    my $appVersion = $config->GetAppVersion();
-    my $build = $config->Get(var => 'build');
-    my $oldBuild = $config->Get(var => 'oldBuild');
-    my $appName = $config->Get(var => 'appName');
-    my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
-    my $verifyDir = $config->Get(var => 'verifyDir');
-    my $ausServerUrl = $config->Get(var => 'ausServerUrl');
-    my $stagingServer = $config->Get(var => 'stagingServer');
-    my $verifyConfig = $config->Get(sysvar => 'verifyConfig');
-    my $logDir = $config->Get(sysvar => 'logDir');
-    my $linuxExtension = $config->GetLinuxExtension();
-
-    my $verifyDirVersion = catfile($verifyDir, $product . '-' . $version);
-    my $configFile = catfile($verifyDirVersion, 'updates', $verifyConfig);
-
-    # NOTE - channel is hardcoded to betatest
-    my $channel = 'betatest';
-
-    # grab os-specific buildID file on FTP
-    my $candidateDir = CvsCatfile($config->GetFtpNightlyDir(), $oldVersion . '-candidates', 'build' . $oldBuild ) . '/';
-
-    my $buildID = $this->GetBuildIDFromFTP(os => $osname, releaseDir => $candidateDir);
-
-    my $buildTarget = undef;
-    my $releaseFile = undef;
-    my $nightlyFile = undef;
-    my $ftpOsname = undef;
-
-    if ($osname eq 'linux') {
-        $buildTarget = 'Linux_x86-gcc3';
-        $platform = 'linux';
-        $ftpOsname = 'linux-i686';
-        $releaseFile = $product.'-'.$oldVersion.'.tar.'.$linuxExtension;
-        $nightlyFile = $product.'-'.$appVersion.'.%locale%.linux-i686.tar.'.
-         $linuxExtension;
-    } elsif ($osname eq 'macosx') {
-        $buildTarget = 'Darwin_Universal-gcc3';
-        $platform = 'osx';
-        $ftpOsname = 'mac';
-        $releaseFile = ucfirst($product).' '.$oldLongVersion.'.dmg';
-        $nightlyFile = $product.'-'.$appVersion.'.%locale%.mac.dmg';
-    } elsif ($osname eq 'win32') {
-        $buildTarget = 'WINNT_x86-msvc';
-        $platform = 'win32';
-        $ftpOsname = 'win32';
-        $releaseFile = ucfirst($product).' Setup '.$oldLongVersion.'.exe';
-        $nightlyFile = $product.'-'.$appVersion.'.%locale%.win32.installer.exe';
-    } else {
-        die("ASSERT: unknown OS $osname");
-    }
-
-    open(FILE, "< $configFile") or die ("Could not open file $configFile: $!");
-    my @origFile = <FILE>;
-    close(FILE) or die ("Could not close file $configFile: $!");
-
-    my @strippedFile = ();
-    if ($origFile[0] =~ $oldVersion) {
-            $this->Log('msg' => "verifyConfig $configFile already bumped");
-            $this->Log('msg' => "removing previous config..");
-            # remove top two lines; the comment and the version config
-            splice(@origFile, 0, 2);
-            @strippedFile = @origFile;
-    } else {
-        # remove "from" and "to" vars from @origFile
-        for(my $i=0; $i < scalar(@origFile); $i++) {
-            my $line = $origFile[$i];
-            $line =~ s/from.*$//;
-            $strippedFile[$i] = $line;
-        }
-    }
-
-    my $localeFileTag = uc($product).'_'.$oldVersion.'_RELEASE';
-    $localeFileTag =~ s/\./_/g;
-    my $localeManifest = GetLocaleManifest(app => $appName,
-                                           cvsroot => $mozillaCvsroot,
-                                           tag => $localeFileTag);
-
-    my @locales = ();
-    foreach my $locale (keys(%{$localeManifest})) {
-        foreach my $allowedPlatform (@{$localeManifest->{$locale}}) {
-            if ($allowedPlatform eq $platform) {
-                push(@locales, $locale);
-            }
-        }
-    }
-
-    # add data for latest release
-    my @data = ("# $oldVersion $osname\n",
-                'release="' . $oldAppVersion . '" product="' . ucfirst($product) . 
-                '" platform="' .$buildTarget . '" build_id="' . $buildID . 
-                '" locales="' . join(' ', sort(@locales)) . '" channel="' . 
-                $channel . '" from="/' . $product . '/releases/' . 
-                $oldVersion . '/' . $ftpOsname . '/%locale%/' . $releaseFile .
-                '" aus_server="' . $ausServerUrl . '" ftp_server="' .
-                $stagingServer . '/pub/mozilla.org" to="/' . 
-                $product . '/nightly/' .  $version .  '-candidates/build' . 
-                $build . '/' . $nightlyFile . '"' .  "\n");
-
-    open(FILE, "> $configFile") or die ("Could not open file $configFile: $!");
-    print FILE @data;
-    print FILE @strippedFile;
-    close(FILE) or die ("Could not close file $configFile: $!");
-
-    $this->Shell(
-      cmd => 'cvs',
-      cmdArgs => ['-d', $mozillaCvsroot,
-                  'ci', '-m',
-                  '"Automated configuration bump, release for '
-                  . $product  . ' ' . $version . "build$build" . '"',
-                  $verifyConfig],
-      logFile => catfile($logDir, 'update_verify-checkin.log'),
-      dir => catfile($verifyDirVersion, 'updates')
-    );
 }
 
 sub Push {
