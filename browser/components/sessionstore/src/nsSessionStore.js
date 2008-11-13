@@ -1714,15 +1714,14 @@ SessionStoreService.prototype = {
       });
     }
     
+    let window = this.ownerDocument.defaultView;
     function restoreTextDataAndScrolling(aContent, aData, aPrefix) {
       restoreTextData(aContent, aPrefix);
       if (aData.innerHTML) {
-        aContent.setTimeout(
-              function(aHTML) {
-                if (aContent.document.designMode == "on") {
-                  aContent.document.body.innerHTML = aHTML;
-                }
-              }, 0, aData.innerHTML);
+        window.setTimeout(function() {
+          if (aContent.document.designMode == "on")
+            aContent.document.body.innerHTML = aData.innerHTML;
+        }, 0);
       }
       if (aData.scroll && /(\d+),(\d+)/.test(aData.scroll)) {
         aContent.scrollTo(RegExp.$1, RegExp.$2);
