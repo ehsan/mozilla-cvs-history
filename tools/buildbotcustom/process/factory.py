@@ -207,6 +207,13 @@ class MercurialBuildFactory(BuildFactory):
          env=self.env
         )
         self.addStep(ShellCommand,
+         command=['bash', '-c', 'rm -rf ../*-nightly/build'],
+         env = self.env,
+         description=['cleaning', 'old', 'builds'],
+         descriptionDone=['clean', 'old', 'builds'],
+         warnOnFailure=True,
+         flunkOnFailure=False)
+        self.addStep(ShellCommand,
          command="rm -rf %s/dist/firefox-* %s/dist/install/sea/*.exe " %
                   (self.objdir, self.objdir),
          env=self.env,
