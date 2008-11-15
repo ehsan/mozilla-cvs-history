@@ -2042,6 +2042,12 @@ sub mode {
     $event->{'bot'}->mode($channel, $mode, $arg);
 }
 
+sub kick {
+    my $self = shift;
+    my ($event, $channel, $who, $reason) = @_;
+    $event->{'bot'}->kick($channel, $who, $reason);
+}
+
 sub invite {
     my $self = shift;
     my ($event, $who, $channel) = @_;
