@@ -2707,7 +2707,7 @@ sub Told {
     } elsif ($self->isAdmin($event)) {
         if ($message =~ /^\s*(?:shutdown,?\s+please)\s*[?!.]*\s*$/osi) {
             $self->say($event, 'But of course. Have a nice day!');
-            my $reason = 'I was told to shutdown by '.$event->{'from'}.'. :-(';
+            my $reason = 'I was told to shutdown by '.$event->{'from'}.'. :-( ';
             # XXX should do something like &::do($event->{'bot'}, $event->{'_event'}, 'SpottedQuit'); # hack hack hack
             #     ...but it should have the right channel/nick/reason info
             # XXX we don't unload the modules here?
