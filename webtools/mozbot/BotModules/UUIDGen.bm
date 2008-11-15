@@ -17,6 +17,7 @@ sub Help {
     return {
         '' => 'This module is an interface to the uuidgen application.',
         'uuid' => 'Generates a UUID.',
+        'cid'  => 'Generates a UUID but outputs format suitable for components (CID).',
     };
 }
 
@@ -25,6 +26,8 @@ sub Told {
     my ($event, $message) = @_;
     if ($message =~ /^\s*uuid(?:[\s,!?]+please)?[\s,!?]*\s*$/osi) {
         $self->spawnChild($event, 'uuidgen', [], 'UUID', []);
+    } elsif ($message =~ /^\s*cid(?:[\s,!?]+please)?[\s,!?]*\s*$/osi) {
+        $self->spawnChild($event, 'uuidgen', [], 'CID', []);
     } else {
         return $self->SUPER::Told(@_);
     }
@@ -36,6 +39,27 @@ sub ChildCompleted {
     my $self = shift;
     my ($event, $type, $output, @data) = @_;
     if ($type eq 'UUID') {
+        chop($output);
+        $output .= " (/msg $nicks[$nick] cid for CID form)";
+        $self->say($event, $output);
+    } elsif ($type eq 'CID') {
+        # remove newline
+        chop($output);
+        my @split = split(/-/, $output);
+        $output = "{0x$split[0], 0x$split[1], 0x$split[2], {";
+
+        my @rest = $split[3] =~ m/(..)(..)/;
+        push(@rest, $split[4] =~ m/(..)(..)(..)(..)(..)(..)/);
+
+        foreach (@rest) {
+            $output .= "0x$_, ";
+        }
+
+        # remove the space and comma
+        chop($output);
+        chop($output);
+
+        $output .= "}}\n";
         $self->say($event, $output);
     } else {
         return $self->SUPER::ChildCompleted(@_);
