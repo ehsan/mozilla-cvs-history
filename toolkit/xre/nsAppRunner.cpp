@@ -854,7 +854,6 @@ nsXULAppInfo::WriteMinidumpForException(void* aExceptionInfo)
   return NS_ERROR_NOT_IMPLEMENTED;
 #endif
 }
-#endif
 
 NS_IMETHODIMP
 nsXULAppInfo::AppendObjCExceptionInfoToAppNotes(void* aException)
@@ -865,6 +864,7 @@ nsXULAppInfo::AppendObjCExceptionInfoToAppNotes(void* aException)
   return NS_ERROR_NOT_IMPLEMENTED;
 #endif
 }
+#endif // MOZ_CRASHREPORTER
 
 static const nsXULAppInfo kAppInfo;
 static NS_METHOD AppInfoConstructor(nsISupports* aOuter,
