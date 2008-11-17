@@ -15,18 +15,25 @@ import buildbotcustom.steps.release
 import buildbotcustom.steps.test
 import buildbotcustom.steps.transfer
 import buildbotcustom.steps.updates
+import buildbotcustom.unittest.steps
+import buildbotcustom.env
 reload(buildbotcustom.steps.misc)
 reload(buildbotcustom.steps.release)
 reload(buildbotcustom.steps.test)
 reload(buildbotcustom.steps.transfer)
 reload(buildbotcustom.steps.updates)
+reload(buildbotcustom.unittest.steps)
+reload(buildbotcustom.env)
 
-from buildbotcustom.steps.misc import SetMozillaBuildProperties
+from buildbotcustom.steps.misc import SetMozillaBuildProperties, TinderboxShellCommand
 from buildbotcustom.steps.release import UpdateVerify
 from buildbotcustom.steps.test import AliveTest, CompareBloatLogs, \
   CompareLeakLogs, Codesighs, GraphServerPost
 from buildbotcustom.steps.transfer import MozillaStageUpload
 from buildbotcustom.steps.updates import CreateCompleteUpdateSnippet
+from buildbotcustom.env import MozillaEnvironments
+
+import buildbotcustom.unittest.steps as unittest_steps
 
 
 class BootstrapFactory(BuildFactory):
@@ -1234,3 +1241,209 @@ class ReleaseFinalVerification(ReleaseFactory):
                   linuxConfig, macConfig, win32Config],
          description=['final-verification.sh']
         )
+
+class UnittestBuildFactory(BuildFactory):
+    def __init__(self, platform, config_repo_url, config_dir, branch, **kwargs):
+        BuildFactory.__init__(self, **kwargs)
+
+        self.config_repo_url = config_repo_url
+        self.config_dir = config_dir
+        self.branch = branch
+
+        env_map = {
+                'linux': 'linux-centos-unittest',
+                'macosx': 'mac-osx-unittest',
+                'win32': 'win32-vc8-mozbuild-unittest',
+                }
+
+        config_dir_map = {
+                'linux': 'linux-unittest',
+                'macosx': 'macosx-unittest',
+                'win32': 'win32-unittest',
+                }
+
+        self.platform = platform.split('-')[0].replace('64', '')
+        assert self.platform in ('linux', 'win32', 'macosx')
+
+        self.env = MozillaEnvironments[env_map[self.platform]]
+
+        if self.platform == 'win32':
+            self.addStep(TinderboxShellCommand, name="kill sh",
+             description='kill sh',
+             descriptionDone="killed sh",
+             command="pskill -t sh.exe",
+             workdir="D:\\Utilities"
+            )
+            self.addStep(TinderboxShellCommand, name="kill make",
+             description='kill make',
+             descriptionDone="killed make",
+             command="pskill -t make.exe",
+             workdir="D:\\Utilities"
+            )
+            self.addStep(TinderboxShellCommand, name="kill firefox",
+             description='kill firefox',
+             descriptionDone="killed firefox",
+             command="pskill -t firefox.exe",
+             workdir="D:\\Utilities"
+            )
+
+        self.addStep(ShellCommand,
+         command=['rm', '-rf', '../*-nightly/build'],
+         description=['cleaning', 'old', 'builds'],
+         descriptionDone=['clean', 'old', 'builds'],
+         warnOnFailure=True,
+         flunkOnFailure=False
+        )
+
+        self.addStep(Mercurial, mode='update',
+         baseURL='http://hg.mozilla.org/',
+         defaultBranch=self.branch
+        )
+
+        self.addPrintChangesetStep()
+
+        self.addStep(ShellCommand,
+         name="clean configs",
+         command=['rm', '-rf', 'mozconfigs'],
+         workdir='.'
+        )
+
+        self.addStep(ShellCommand,
+         name="buildbot configs",
+         command=['hg', 'clone', self.config_repo_url, 'mozconfigs'],
+         workdir='.'
+        )
+
+        self.addStep(ShellCommand, name="copy mozconfig",
+         command=['cp',
+                  'mozconfigs/%s/%s/mozconfig' % \
+                    (self.config_dir, config_dir_map[self.platform]),
+                  'build/.mozconfig'],
+         workdir='.'
+        )
+
+        # TODO: Do we need this special windows rule?
+        if self.platform == 'win32':
+            self.addStep(ShellCommand, name="mozconfig contents",
+             command=["type", ".mozconfig"]
+            )
+        else:
+            self.addStep(ShellCommand, name='mozconfig contents',
+             command=['cat', '.mozconfig']
+            )
+
+        # TODO: Do we need this special windows rule?
+        if self.platform == 'win32':
+            self.addStep(Compile,
+             command=["make", "-f", "client.mk", "build"],
+             timeout=60*20,
+             warningPattern=''
+            )
+        else:
+            self.addStep(Compile,
+             warningPattern='',
+             command=['make', '-f', 'client.mk', 'build']
+            )
+
+        # TODO: Do we need this special windows rule?
+        if self.platform == 'win32':
+            self.addStep(unittest_steps.MozillaCheck, warnOnWarnings=True,
+             workdir="build\\objdir",
+             timeout=60*5
+            )
+        else:
+            self.addStep(unittest_steps.MozillaCheck,
+             warnOnWarnings=True,
+             timeout=60*5,
+             workdir="build/objdir"
+            )
+
+        if self.platform == 'win32':
+            self.addStep(unittest_steps.CreateProfileWin,
+             warnOnWarnings=True,
+             workdir="build",
+             command = r'python testing\tools\profiles\createTestingProfile.py --clobber --binary objdir\dist\bin\firefox.exe',
+             clobber=True
+            )
+        else:
+            self.addStep(unittest_steps.CreateProfile,
+             warnOnWarnings=True,
+             workdir="build",
+             command = r'python testing/tools/profiles/createTestingProfile.py --clobber --binary objdir/dist/bin/firefox',
+             clobber=True
+            )
+
+        if self.platform == 'linux':
+            self.addStep(unittest_steps.MozillaUnixReftest, warnOnWarnings=True,
+             workdir="build/layout/reftests",
+             timeout=60*5
+            )
+            self.addStep(unittest_steps.MozillaUnixCrashtest, warnOnWarnings=True,
+             workdir="build/testing/crashtest"
+            )
+            self.addStep(unittest_steps.MozillaMochitest, warnOnWarnings=True,
+             workdir="build/objdir/_tests/testing/mochitest",
+             timeout=60*5
+            )
+            self.addStep(unittest_steps.MozillaMochichrome, warnOnWarnings=True,
+             workdir="build/objdir/_tests/testing/mochitest"
+            )
+            self.addStep(unittest_steps.MozillaBrowserChromeTest, warnOnWarnings=True,
+             workdir="build/objdir/_tests/testing/mochitest"
+            )
+            self.addStep(unittest_steps.MozillaA11YTest, warnOnWarnings=True,
+             workdir="build/objdir/_tests/testing/mochitest"
+            )
+        elif self.platform == 'macosx':
+            self.addStep(unittest_steps.MozillaOSXReftest, warnOnWarnings=True,
+             workdir="build/layout/reftests",
+             timeout=60*5
+            )
+            self.addStep(unittest_steps.MozillaOSXCrashtest, warnOnWarnings=True,
+             workdir="build/testing/crashtest"
+            )
+            self.addStep(unittest_steps.MozillaOSXMochitest, warnOnWarnings=True,
+             workdir="build/objdir/_tests/testing/mochitest",
+             timeout=60*5
+            )
+            self.addStep(unittest_steps.MozillaOSXMochichrome, warnOnWarnings=True,
+             workdir="build/objdir/_tests/testing/mochitest",
+             leakThreshold="8"
+            )
+            self.addStep(unittest_steps.MozillaOSXBrowserChromeTest, warnOnWarnings=True,
+             workdir="build/objdir/_tests/testing/mochitest"
+            )
+        elif self.platform == 'win32':
+            self.addStep(unittest_steps.MozillaWin32Reftest, warnOnWarnings=True,
+             workdir="build\\layout\\reftests",
+             timeout=60*5
+            )
+            self.addStep(unittest_steps.MozillaWin32Crashtest, warnOnWarnings=True,
+             workdir="build\\testing\\crashtest"
+            )
+            self.addStep(unittest_steps.MozillaWin32Mochitest, warnOnWarnings=True,
+             workdir="build\\objdir\\_tests\\testing\\mochitest",
+             timeout=60*5
+            )
+            # Can use the regular build step here. Perl likes the PATHs that way anyway.
+            self.addStep(unittest_steps.MozillaWin32Mochichrome, warnOnWarnings=True,
+             workdir="build\\objdir\\_tests\\testing\\mochitest"
+            )
+            self.addStep(unittest_steps.MozillaWin32BrowserChromeTest, warnOnWarnings=True,
+             workdir="build\\objdir\\_tests\\testing\\mochitest"
+            )
+            self.addStep(unittest_steps.MozillaWin32A11YTest, warnOnWarnings=True,
+             workdir="build\\objdir\\_tests\\testing\\mochitest"
+            )
+
+    def addPrintChangesetStep(self):
+        changesetLink = ''.join(['<a href=http://hg.mozilla.org/',
+            self.branch,
+            '/index.cgi/rev/%(got_revision)s title="Built from revision %(got_revision)s">rev:%(got_revision)s</a>'])
+        self.addStep(ShellCommand,
+         command=['echo', 'TinderboxPrint:', WithProperties(changesetLink)],
+        )
+
+    def addStep(self, *args, **kw):
+        kw.setdefault('env', self.env)
+        return BuildFactory.addStep(self, *args, **kw)
