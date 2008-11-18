@@ -56,6 +56,7 @@ __defineGetter__("PlacesUtils", function() {
 
 const LOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
+const GUID_ANNO = "placesInternal/GUID";
 const LMANNO_FEEDURI = "livemark/feedURI";
 const LMANNO_SITEURI = "livemark/siteURI";
 const ORGANIZER_FOLDER_ANNO = "PlacesOrganizer/OrganizerFolder";
@@ -206,11 +207,13 @@ var PlacesUIUtils = {
     var itemTitle = aData.title;
     var keyword = aData.keyword || null;
     var annos = aData.annos || [];
-    if (aExcludeAnnotations) {
-      annos = annos.filter(function(aValue, aIndex, aArray) {
-        return aExcludeAnnotations.indexOf(aValue.name) == -1;
-      });
-    }
+    // always exclude GUID when copying any item
+    var excludeAnnos = [GUID_ANNO];
+    if (aExcludeAnnotations)
+      excludeAnnos = excludeAnnos.concat(aExcludeAnnotations);
+    annos = annos.filter(function(aValue, aIndex, aArray) {
+      return excludeAnnos.indexOf(aValue.name) == -1;
+    });
     var childTxns = [];
     if (aData.dateAdded)
       childTxns.push(this.ptm.editItemDateAdded(null, aData.dateAdded));
@@ -301,6 +304,10 @@ var PlacesUIUtils = {
         childItems.push(this.ptm.editItemLastModified(null, aData.lastModified));
 
       var annos = aData.annos || [];
+      annos = annos.filter(function(aAnno) {
+        // always exclude GUID when copying any item
+        return aAnno.name != GUID_ANNO;
+      });
       return this.ptm.createFolder(aData.title, aContainer, aIndex, annos, childItems);
     }
   },
@@ -320,8 +327,9 @@ var PlacesUIUtils = {
         siteURI = PlacesUtils._uri(aAnno.value);
         return false;
       }
-      return true;
-    }, this);
+      // always exclude GUID when copying any item
+      return aAnno.name != GUID_ANNO;
+    });
     return this.ptm.createLivemark(feedURI, siteURI, aData.title, aContainer,
                                    aIndex, aData.annos);
   },
@@ -360,10 +368,8 @@ var PlacesUIUtils = {
         if (copy) {
           // Copying a child of a live-bookmark by itself should result
           // as a new normal bookmark item (bug 376731)
-          var copyBookmarkAnno =
-            this._getBookmarkItemCopyTransaction(data, container, index,
-                                                 ["livemark/bookmarkFeedURI"]);
-          return copyBookmarkAnno;
+          return this._getBookmarkItemCopyTransaction(data, container, index,
+                                                      ["livemark/bookmarkFeedURI"]);
         }
         else
           return this.ptm.moveItem(data.id, container, index);
