@@ -96,7 +96,7 @@
             ok(aFocusMgr.mIsFocusHandled,
                "Focus wasn't recieved for element with ID " + aFocusMgr.mName + ".");
 
-            if (aFocusMgr.mName != "aria-link") {
+            if ((aFocusMgr.mName != "aria-link") && (aFocusMgr.mName != "aria-link2")) {
               var states = {}, extraStates = {};
               aFocusMgr.mAcc.getFinalState(states, extraStates);
               ok(states.value & nsIAccessibleStates.STATE_FOCUSED,
