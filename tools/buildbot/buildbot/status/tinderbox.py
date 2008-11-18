@@ -145,7 +145,7 @@ class TinderboxMailNotifier(mail.MailNotifier):
             text += "%s tree: %s\n" % (t, self.tree)
         elif isinstance(self.tree, WithProperties):
             # interpolate the WithProperties instance, use that
-            text += "%s tree: %s\n" % (t, self.tree.render(build))
+            text += "%s tree: %s\n" % (t, build.getProperties().render(self.tree))
         else:
             raise Exception("tree is an unhandled value")    
 
