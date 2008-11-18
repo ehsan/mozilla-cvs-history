@@ -3974,6 +3974,10 @@ tc
 // td : http://en.wikipedia.org/wiki/.td
 td
 
+// tel: http://en.wikipedia.org/wiki/.tel
+// http://www.telnic.org/
+tel
+
 // tf : http://en.wikipedia.org/wiki/.tf
 tf
 
@@ -4184,6 +4188,7 @@ or.ug
 !icnet.uk
 !jet.uk
 !nel.uk
+!nhs.uk
 !nls.uk
 !national-library-scotland.uk
 !parliament.uk
