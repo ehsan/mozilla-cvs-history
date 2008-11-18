@@ -37,10 +37,15 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ldvector.c,v 1.17 2008/05/13 01:19:59 wtc%google.com Exp $ */
+/* $Id: ldvector.c,v 1.18 2008/11/18 19:48:23 rrelyea%redhat.com Exp $ */
+
+#ifdef FREEBL_NO_DEPEND
+extern int FREEBL_InitStubs(void);
+#endif
 
 #include "loader.h"
 #include "alghmac.h"
+
 
 static const struct FREEBLVectorStr vector = 
 {
@@ -250,6 +255,9 @@ FREEBL_GetVector(void)
     volatile char c;
 
     c = __nss_freebl_rcsid[0] + __nss_freebl_sccsid[0]; 
+#ifdef FREEBL_NO_DEPEND
+    FREEBL_InitStubs();
+#endif
     return &vector;
 }
 
