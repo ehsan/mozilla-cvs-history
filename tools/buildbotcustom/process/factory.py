@@ -590,6 +590,98 @@ class MercurialBuildFactory(BuildFactory):
 
 
 
+class RepackFactory(BuildFactory):
+    def __init__(self, branch, project, enUSBinaryURL, stageServer,
+                 stageUsername, uploadPath):
+        BuildFactory.__init__(self)
+
+        self.addStep(ShellCommand,
+         command=['rm', '-rf', branch+'/dist/upload'],
+         workdir='.',
+         haltOnFailure=True
+        )
+        self.addStep(ShellCommand,
+         command=['bash', '-c', 'rm -rf ../*-nightly/build'],
+         description=['cleaning', 'old', 'builds'],
+         descriptionDone=['clean', 'old', 'builds'],
+         warnOnFailure=True,
+         flunkOnFailure=False
+        )
+        self.addStep(ShellCommand,
+         command=['sh', '-c', 'mkdir -p l10n-central'],
+         descriptionDone='mkdir l10n-central',
+         workdir='.'
+        )
+        self.addStep(ShellCommand,
+         command=['sh', '-c', 'if [ -d '+branch+' ]; then ' +
+                  'hg -R '+branch+' pull -r tip ; ' +
+                  'else ' +
+                  'hg clone http://hg.mozilla.org/'+branch+'/ ; ' +
+                  'fi '
+                  '&& hg -R '+branch+' update'],
+         descriptionDone=branch+"'s source",
+         workdir='.',
+         haltOnFailure=True
+        )
+        self.addStep(ShellCommand,
+         command=['sh', '-c',
+          WithProperties('if [ -d %(locale)s ]; then ' +
+                         'hg -R %(locale)s pull -r tip ; ' +
+                         'else ' +
+                         'hg clone ' +
+                         'http://hg.mozilla.org/l10n-central/%(locale)s/ ; ' +
+                         'fi ' +
+                         '&& hg -R %(locale)s update')],
+         descriptionDone="locale's source",
+         workdir='l10n-central'
+        )
+        self.addStep(ShellCommand,
+         command=['make', '-f', 'client.mk', 'configure'],
+         env={'CONFIGURE_ARGS': '--enable-application=browser'},
+         haltOnFailure=True,
+         descriptionDone='autoconf',
+         workdir=branch
+        )
+        self.addStep(Compile,
+         command=['sh', '--',
+                  './configure', '--enable-application=browser',
+                  '--disable-compile-environment',
+                  '--with-l10n-base=../l10n-central'],
+         description='configure',
+         descriptionDone='configure done',
+         haltOnFailure=True,
+         workdir=branch
+        )
+        self.addStep(ShellCommand,
+         command=['make', 'wget-en-US'],
+         descriptionDone='wget en-US',
+         env={'EN_US_BINARY_URL': enUSBinaryURL},
+         haltOnFailure=True,
+         workdir=branch+'/browser/locales'
+        )
+        self.addStep(ShellCommand,
+         command=['make', WithProperties('installers-%(locale)s')],
+         env={'PKG_DMG_SOURCE': project},
+         haltOnFailure=True,
+         workdir=branch+'/browser/locales'
+        )
+        self.addStep(ShellCommand,
+         command=['make', WithProperties('prepare-upload-latest-%(locale)s')],
+         haltOnFailure=True,
+         workdir=branch+'/browser/locales'
+        )
+        self.addStep(ShellCommand,
+         name='upload locale',
+         command=['sh', '-c',
+                  'scp -i ~/.ssh/ffxbld_dsa -r * '+stageUsername+'@'+\
+                   stageServer+":"+uploadPath],
+         description='uploading packages',
+         descriptionDone='uploaded packages',
+         workdir=branch+'/dist/upload/latest'
+        )
+
+
+
 class ReleaseFactory(BuildFactory):
     def getPushRepo(self, repo):
         for proto in ('https', 'http'):
