@@ -1230,6 +1230,12 @@ class ReleaseUpdatesFactory(ReleaseFactory):
                  description=['pushsnip'],
                  haltOnFailure=True
                 )
+                # Wait for timeout on AUS's NFS caching to expire before
+                # attempting to test newly-pushed snippets
+                self.addStep(ShellCommand,
+                 command=['sleep','360'],
+                 description=['wait for live snippets']
+                )
 
 
 

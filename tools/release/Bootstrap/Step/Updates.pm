@@ -360,6 +360,9 @@ sub Push {
                   '/home/cltbld/bin/pushsnip', $pushDir . '-test'],
       logFile => $pushLog,
     );
+    # Wait for timeout on AUS's NFS caching to expire before
+    # attempting to test newly-pushed snippets
+    sleep(360);
 }
 
 sub Announce {
