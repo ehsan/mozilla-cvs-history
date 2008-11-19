@@ -184,6 +184,9 @@ _TEST_FILES = 	test_bug5141.html \
 		bug461735-redirect2.sjs \
 		bug461735-post-redirect.js \
 		test_bug461735.html \
+		test_bug458248.html \
+		file_bug458248.xml \
+		file_bug458248.xml^headers^ \
 	$(NULL)
 
 libs:: $(_TEST_FILES)
