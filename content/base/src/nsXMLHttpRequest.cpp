@@ -275,7 +275,8 @@ GetDocumentFromScriptContext(nsIScriptContext *aScriptContext)
 /////////////////////////////////////////////
 
 nsXMLHttpRequest::nsXMLHttpRequest()
-  : mState(XML_HTTP_REQUEST_UNINITIALIZED)
+  : mState(XML_HTTP_REQUEST_UNINITIALIZED),
+    mDenyResponseDataAccess(PR_FALSE)
 {
   nsLayoutStatics::AddRef();
 }
@@ -650,7 +651,8 @@ nsXMLHttpRequest::GetResponseXML(nsIDOMDocument **aResponseXML)
 {
   NS_ENSURE_ARG_POINTER(aResponseXML);
   *aResponseXML = nsnull;
-  if ((XML_HTTP_REQUEST_COMPLETED & mState) && mDocument) {
+  if (!mDenyResponseDataAccess &&
+      (XML_HTTP_REQUEST_COMPLETED & mState) && mDocument) {
     *aResponseXML = mDocument;
     NS_ADDREF(*aResponseXML);
   }
@@ -787,7 +789,8 @@ NS_IMETHODIMP nsXMLHttpRequest::GetResponseText(nsAString& aResponseText)
 
   aResponseText.Truncate();
 
-  if (mState & (XML_HTTP_REQUEST_COMPLETED |
+  if (!mDenyResponseDataAccess &&
+      mState & (XML_HTTP_REQUEST_COMPLETED |
                 XML_HTTP_REQUEST_INTERACTIVE)) {
     rv = ConvertBodyToText(aResponseText);
   }
@@ -876,6 +879,12 @@ nsXMLHttpRequest::GetAllResponseHeaders(char **_retval)
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = nsnull;
 
+  if (mDenyResponseDataAccess) {
+    *_retval = ToNewCString(EmptyCString());
+    
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIHttpChannel> httpChannel = GetCurrentHttpChannel();
 
   if (httpChannel) {
@@ -906,7 +915,7 @@ nsXMLHttpRequest::GetResponseHeader(const nsACString& header,
 
   nsCOMPtr<nsIHttpChannel> httpChannel = GetCurrentHttpChannel();
 
-  if (httpChannel) {
+  if (!mDenyResponseDataAccess && httpChannel) {
     rv = httpChannel->GetResponseHeader(header, _retval);
   }
 
@@ -1215,6 +1224,8 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
   rv = NS_NewChannel(getter_AddRefs(mChannel), uri, nsnull, loadGroup, nsnull,
                      loadFlags);
   if (NS_FAILED(rv)) return rv;
+
+  mDenyResponseDataAccess = PR_FALSE;
 
   // Check if we're doing a cross-origin request.
   if (IsSystemPrincipal(mPrincipal)) {
@@ -2267,7 +2278,11 @@ nsXMLHttpRequest::OnChannelRedirect(nsIChannel *aOldChannel,
 
     rv = nsContentUtils::GetSecurityManager()->
       CheckSameOriginURI(oldURI, newURI, PR_TRUE);
-    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (NS_FAILED(rv)) {
+      mDenyResponseDataAccess = PR_TRUE;
+      return rv;
+    }
   }
 
   if (mChannelEventSink) {
