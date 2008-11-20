@@ -145,6 +145,9 @@ class MercurialBuildFactory(BuildFactory):
         self.createSnippet = createSnippet
         self.doCleanup = doCleanup
 
+        # short name can be inferred from the full branch name
+        self.shortName = self.branch.split('/')[-1]
+
         if self.uploadPackages:
             assert stageServer and stageUsername and stageSshKey
             assert stageBasePath
@@ -171,7 +174,7 @@ class MercurialBuildFactory(BuildFactory):
         self.platform = platform.split('-')[0].replace('64', '')
         assert self.platform in ('linux', 'win32', 'macosx')
 
-        self.logUploadDir = 'tinderbox-builds/%s-%s/' % (self.branch,
+        self.logUploadDir = 'tinderbox-builds/%s-%s/' % (self.shortName,
                                                          self.platform)
         # now, generate the steps
         #  regular dep builds (no clobber, no leaktest):
@@ -465,7 +468,7 @@ class MercurialBuildFactory(BuildFactory):
          releaseToLatest=releaseToLatest,
          releaseToDated=releaseToDated,
          releaseToTinderboxBuilds=True,
-         tinderboxBuildsDir='%s-%s' % (self.branch, self.platform),
+         tinderboxBuildsDir='%s-%s' % (self.shortName, self.platform),
          dependToDated=self.dependToDated
         )
         
@@ -535,7 +538,7 @@ class MercurialBuildFactory(BuildFactory):
     def addUpdateSteps(self):
         self.addStep(CreateCompleteUpdateSnippet,
          objdir='build/%s' % self.objdir,
-         milestone=self.branch,
+         milestone=self.shortName,
          baseurl='%s/nightly' % self.downloadBaseURL
         )
         self.addStep(ShellCommand,
@@ -1393,7 +1396,7 @@ class UnittestBuildFactory(BuildFactory):
          flunkOnFailure=False
         )
 
-        self.addStep(Mercurial, mode='update',
+        self.addStepNoEnv(Mercurial, mode='update',
          baseURL='http://hg.mozilla.org/',
          defaultBranch=self.branch
         )
@@ -1544,4 +1547,7 @@ class UnittestBuildFactory(BuildFactory):
 
     def addStep(self, *args, **kw):
         kw.setdefault('env', self.env)
+        return BuildFactory.addStep(self, *args, **kw)
+
+    def addStepNoEnv(self, *args, **kw):
         return BuildFactory.addStep(self, *args, **kw)
