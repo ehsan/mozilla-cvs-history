@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3gthr.c,v 1.8 2008/11/20 00:45:25 nelson%bolyard.com Exp $ */
+/* $Id: ssl3gthr.c,v 1.9 2008/11/20 07:37:25 nelson%bolyard.com Exp $ */
 
 #include "cert.h"
 #include "ssl.h"
@@ -204,11 +204,8 @@ ssl3_GatherCompleteHandshake(sslSocket *ss, int flags)
 	cText.version = (ss->gs.hdr[1] << 8) | ss->gs.hdr[2];
 	cText.buf     = &ss->gs.inbuf;
 	rv = ssl3_HandleRecord(ss, &cText, &ss->gs.buf);
-	if (ss->recvdCloseNotify) {
-	    return 0;
-	}
 	if (rv < 0) {
-	    return rv;
+	    return ss->recvdCloseNotify ? 0 : rv;
 	}
     } while (ss->ssl3.hs.ws != idle_handshake && ss->gs.buf.len == 0);
 
