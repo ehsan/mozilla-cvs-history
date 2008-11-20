@@ -472,7 +472,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 - (void) dealloc
 {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
-  [[PreferenceManager sharedInstance] removeObserver:self forPref:kGeckoPrefInlineLocationBarAutocomplete];
+  [[PreferenceManager sharedInstanceDontCreate] removeObserver:self forPref:kGeckoPrefInlineLocationBarAutocomplete];
   [self cleanup];
   [super dealloc];
 }
