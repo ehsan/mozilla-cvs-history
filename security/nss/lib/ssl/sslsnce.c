@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsnce.c,v 1.46 2008/09/30 03:53:01 nelson%bolyard.com Exp $ */
+/* $Id: sslsnce.c,v 1.47 2008/11/20 04:39:59 nelson%bolyard.com Exp $ */
 
 /* Note: ssl_FreeSID() in sslnonce.c gets used for both client and server 
  * cache sids!
@@ -75,7 +75,7 @@
  */
 #include "seccomon.h"
 
-#if (defined(XP_UNIX) || defined(XP_WIN32) || defined (XP_OS2) || defined(XP_BEOS)) && !defined(_WIN32_WCE)
+#if (defined(XP_UNIX) || defined(XP_WIN32) || defined (XP_OS2) || defined(XP_BEOS))
 
 #include "cert.h"
 #include "ssl.h"
