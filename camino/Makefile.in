@@ -143,6 +143,46 @@ STRINGS_FILES = \
 	$(NULL)
 GENERATED_STRINGS_FILES = $(patsubst %,generated/%,$(STRINGS_FILES))
 
+GECKO_STRINGS_FILES = \
+	resources/localized/English.lproj/communicator_locale_typeaheadfind_properties.strings \
+	resources/localized/English.lproj/global-region_locale_region_properties.strings \
+	resources/localized/English.lproj/global_locale_appstrings_properties.strings \
+	resources/localized/English.lproj/global_locale_charsetTitles_properties.strings \
+	resources/localized/English.lproj/global_locale_commonDialogs_properties.strings \
+	resources/localized/English.lproj/global_locale_config_properties.strings \
+	resources/localized/English.lproj/global_locale_css_properties.strings \
+	resources/localized/English.lproj/global_locale_dialog_properties.strings \
+	resources/localized/English.lproj/global_locale_dom_dom_properties.strings \
+	resources/localized/English.lproj/global_locale_global-strres_properties.strings \
+	resources/localized/English.lproj/global_locale_keys_properties.strings \
+	resources/localized/English.lproj/global_locale_languageNames_properties.strings \
+	resources/localized/English.lproj/global_locale_layout_HtmlForm_properties.strings \
+	resources/localized/English.lproj/global_locale_layout_MediaDocument_properties.strings \
+	resources/localized/English.lproj/global_locale_layout_errors_properties.strings \
+	resources/localized/English.lproj/global_locale_layout_xmlparser_properties.strings \
+	resources/localized/English.lproj/global_locale_nsHelperAppDlg_properties.strings \
+	resources/localized/English.lproj/global_locale_nsProgressDialog_properties.strings \
+	resources/localized/English.lproj/global_locale_nsTreeSorting_properties.strings \
+	resources/localized/English.lproj/global_locale_nsWebBrowserPersist_properties.strings \
+	resources/localized/English.lproj/global_locale_plugins_properties.strings \
+	resources/localized/English.lproj/global_locale_printPageSetup_properties.strings \
+	resources/localized/English.lproj/global_locale_printdialog_properties.strings \
+	resources/localized/English.lproj/global_locale_printing_properties.strings \
+	resources/localized/English.lproj/global_locale_prompts_properties.strings \
+	resources/localized/English.lproj/global_locale_regionNames_properties.strings \
+	resources/localized/English.lproj/global_locale_security_caps_properties.strings \
+	resources/localized/English.lproj/global_locale_storage_properties.strings \
+	resources/localized/English.lproj/global_locale_tabbrowser_properties.strings \
+	resources/localized/English.lproj/global_locale_xbl_properties.strings \
+	resources/localized/English.lproj/global_locale_xslt_xslt_properties.strings \
+	resources/localized/English.lproj/global_locale_xul_properties.strings \
+	resources/localized/English.lproj/necko_locale_necko_properties.strings \
+	resources/localized/English.lproj/pipnss_locale_nsserrors_properties.strings \
+	resources/localized/English.lproj/pipnss_locale_pipnss_properties.strings \
+	resources/localized/English.lproj/pipnss_locale_security_properties.strings \
+	$(NULL)
+GENERATED_GECKO_STRINGS_FILES = $(patsubst %,generated/%,$(GECKO_STRINGS_FILES))
+
 ifdef MOZ_DEBUG
 BUILDSTYLE	= Development
 else
@@ -240,6 +280,16 @@ $(GENERATED_STRINGS_FILES): \
 	mkdir -p $(dir $@)
 	iconv -f UTF-8 -t UTF-16 $< > $@
 
+# Generate UTF-16 with BOM strings files from Gecko properties files.  On Mac
+# OS X, iconv seems always to output big-endian when asked for UTF-16 with a
+# BOM, which is what AppleGlot seems to require.  In a real auto-generate 
+# system, this rule would also fix comments, escape quotes and reformat 
+# strings.
+$(GENERATED_GECKO_STRINGS_FILES): \
+  generated/%.strings: $(srcdir)/%.strings.in
+	mkdir -p $(dir $@)
+	iconv -f UTF-8 -t UTF-16 $< > $@
+
 # The "grep -lFx" construct in these rules will only touch the file if the
 # contents are changing.  The file's timestamp will be preserved when the
 # contents aren't changing, reducing unnecessary build activity.
@@ -264,11 +314,15 @@ $(PLATFORM_INI_FILE): $(PLATFORM_BUILD_ID_FILE) $(PLATFORM_VERSION_FILE)
 
 # The embed-replacements rsync is done for both srcdir and objdir builds
 # to avoid adding CVS stuff to embed.jar.
+# In a real auto-generate system, $(GENERATED_GECKO_STRINGS_FILES) would
+# need to be called after the embed-replacements rsync (which would itself
+# be followed by a .properties extraction rule).
 libs:: \
   generated/resources/application/all-camino.js \
   generated/Info-Camino.plist \
   generated/resources/localized/English.lproj/InfoPlist.strings \
   $(GENERATED_STRINGS_FILES) \
+  $(GENERATED_GECKO_STRINGS_FILES) \
   $(PLATFORM_INI_FILE)
 	$(RSYNC_ALL) $(srcdir)/embed-replacements/ embed-replacements.tmp
 	cd embed-replacements.tmp && \
