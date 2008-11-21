@@ -38,7 +38,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.93 2008/11/20 03:52:22 nelson%bolyard.com Exp $
+ * $Id: certdb.c,v 1.94 2008/11/21 21:02:39 wtc%google.com Exp $
  */
 
 #include "nssilock.h"
@@ -2374,7 +2374,7 @@ CERT_FixupEmailAddr(const char *emailAddr)
  * NOTE - don't allow encode of govt-approved or invisible bits
  */
 SECStatus
-CERT_DecodeTrustString(CERTCertTrust *trust, char *trusts)
+CERT_DecodeTrustString(CERTCertTrust *trust, const char *trusts)
 {
     unsigned int i;
     unsigned int *pflags;
