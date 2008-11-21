@@ -33,11 +33,11 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslmutex.c,v 1.21 2008/11/20 04:39:59 nelson%bolyard.com Exp $ */
+/* $Id: sslmutex.c,v 1.22 2008/11/21 21:00:13 wtc%google.com Exp $ */
 
 #include "seccomon.h"
 /* This ifdef should match the one in sslsnce.c */
-#if (defined(XP_UNIX) || defined(XP_WIN32) || defined (XP_OS2) || defined(XP_BEOS))
+#if defined(XP_UNIX) || defined(XP_WIN32) || defined (XP_OS2) || defined(XP_BEOS)
 
 #include "sslmutex.h"
 #include "prerr.h"
