@@ -585,10 +585,18 @@ class MercurialBuildFactory(BuildFactory):
         # until we have dwarf support we need to clean this up so we don't
         # fill up the disk
         if self.platform.startswith("macosx"):
+            # For regular OS X builds the "objdir" passed in is objdir/ppc
+            # For leak test builds the "objdir" passed in is objdir.
+            # To properly cleanup we need to make sure we're in 'objdir',
+            # otherwise we miss the entire i386 dir in the normal case
+            # We can't just run this in the srcdir because there are other files
+            # most notably hg metadata which have the same extensions
+            baseObjdir = self.objdir.split('/')[0]
             self.addStep(ShellCommand,
-             command=['find', '-E', '.', '-iregex',
-                      '.*\.(i|s|mii|ii)$', '-exec', 'rm', '{}', ';'],
-             workdir='build/%s' % self.objdir
+             command=['find', '-d', '-E', '.', '-iregex',
+                      '.*\.(mi|i|s|mii|ii|deps)$',
+                      '-exec', 'rm', '-rf', '{}', ';'],
+             workdir='build/%s' % baseObjdir
             )
 
 
