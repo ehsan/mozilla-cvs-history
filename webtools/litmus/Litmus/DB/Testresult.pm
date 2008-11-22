@@ -233,7 +233,8 @@ sub getTestResults($\@\@$) {
             $where .= " AND sg.subgroup_id=" . $criterion->{'value'};
         } elsif ($criterion->{'field'} eq 'subgroup_name') {
             $where .= " AND sg.name='" . $criterion->{'value'} . "'";
-        } elsif ($criterion->{'field'} eq 'testcase') {
+        } elsif ($criterion->{'field'} eq 'testcase' or
+                 $criterion->{'field'} eq 'testcase_id') {
             $where .= " AND tr.testcase_id=" . $criterion->{'value'};
         } elsif ($criterion->{'field'} eq 'platform') {
             $where .= " AND pl.platform_id=" . $criterion->{'value'};
@@ -506,7 +507,7 @@ SELECT COUNT(tr.testcase_id) AS num_results, tr.testresult_id, tr.testcase_id,
        t.summary, MAX(tr.submission_time) AS most_recent,
        MAX(tr.testresult_id) AS max_id 
 FROM test_results tr, testcases t, test_result_status_lookup trsl 
-WHERE trsl.class_name='fail' AND
+WHERE trsl.class_name=? AND
       tr.result_status_id=trsl.result_status_id AND
       tr.testcase_id=t.testcase_id
 GROUP BY tr.testcase_id 
@@ -516,7 +517,7 @@ ORDER BY num_results DESC, tr.testresult_id DESC
     my $dbh = Litmus::DBI->db_ReadOnly();
     my $sth = $dbh->prepare($sql);
     my $pager = __PACKAGE__->pager($limit_value,$page);
-    $sth->execute();
+    $sth->execute($status);
     my @rows = $pager->sth_to_objects($sth);
     
     return \@rows, $pager;
