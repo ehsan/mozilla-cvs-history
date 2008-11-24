@@ -1123,7 +1123,12 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
   [self setShortcut:[aDict objectForKey:BMFolderShortcutKey]];
   [self setUUID:[aDict objectForKey:BMUUIDKey]];
 
-  unsigned int flag = [[aDict objectForKey:BMFolderTypeKey] unsignedIntValue];
+  // iCab has the same key, but with a string value. Bail if we hit that case,
+  // since we don't support iCab 4+ (plist) bookmark import.
+  id folderTypeObject = [aDict objectForKey:BMFolderTypeKey];
+  if ([folderTypeObject isKindOfClass:[NSString class]])
+    return NO;
+  unsigned int flag = [folderTypeObject unsignedIntValue];
   // on the off chance we've imported somebody else's bookmarks after startup,
   // we need to clear any super special flags on it.  if we have a shared bookmark manager,
   // we're not in startup, so clear things out.
