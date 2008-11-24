@@ -603,7 +603,7 @@ class MercurialBuildFactory(BuildFactory):
 
 class RepackFactory(BuildFactory):
     def __init__(self, branch, project, enUSBinaryURL, stageServer,
-                 stageUsername, uploadPath):
+                 stageUsername, uploadPath, repoPath):
         BuildFactory.__init__(self)
 
         self.addStep(ShellCommand,
@@ -627,7 +627,7 @@ class RepackFactory(BuildFactory):
          command=['sh', '-c', 'if [ -d '+branch+' ]; then ' +
                   'hg -R '+branch+' pull -r tip ; ' +
                   'else ' +
-                  'hg clone http://hg.mozilla.org/'+branch+'/ ; ' +
+                  'hg clone http://hg.mozilla.org/'+repoPath+'/ ; ' +
                   'fi '
                   '&& hg -R '+branch+' update'],
          descriptionDone=branch+"'s source",
