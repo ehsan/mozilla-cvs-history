@@ -458,7 +458,7 @@ class MercurialBuildFactory(BuildFactory):
         self.addStep(MozillaStageUpload,
          objdir=self.objdir,
          username=self.stageUsername,
-         milestone=self.branch,
+         milestone=self.shortName,
          remoteHost=self.stageServer,
          remoteBasePath=self.stageBasePath,
          platform=self.platform,
