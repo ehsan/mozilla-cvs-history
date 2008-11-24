@@ -606,9 +606,9 @@ void nsDownloadListener::QuarantineDownload() {
   }
 
   if (!quarantineProperties) {
-    // If quarantine properties don't already exist, create a new dictionary
-    // with enough room for the keys we're adding.
-    quarantineProperties = [NSMutableDictionary dictionaryWithCapacity:3];
+    // If quarantine properties don't already exist then the file isn't
+    // quarantined, so bail.
+    return;
   }
 
   // The system is nice enough to set values for kLSQuarantineAgentNameKey,
