@@ -39,18 +39,26 @@ class L10nMixin(object):
   to generate build objects as specified per list of locales
   """
 
-  def __init__(self, scheduler, locales,
-               localesURL = None,
-               repoType   = 'cvs',
-               cvsRoot    = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot'):
+  def __init__(self, scheduler,
+               repoPath    = None,
+               repoType    = 'cvs', baseTag = 'tip',
+               localesFile = None,
+               cvsRoot     = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot',
+               locales     = None):
       self.scheduler = scheduler
       self.repoType = repoType
       # set a default localesURL accordingly to the repoType if none has been set 
-      if not localesURL and repoType.find('hg') >= 0:
-         self.localesURL = "http://hg.mozilla.org/mozilla-central/raw-file/tip/browser/locales/all-locales" 
-      elif not localesURL and repoType.find('cvs') >= 0:
-         self.localesURL = "mozilla/browser/locales/all-locales"
-      self.CVSROOT = cvsRoot
+      if repoType.find('hg') >= 0:
+        if not localesFile:
+          localesFile = "browser/locales/all-locales"          
+        self.localesURL = "http://hg.mozilla.org/%s/raw-file/%s/%s" \
+                          % (repoPath, baseTag, localesFile)
+      elif repoType.find('cvs') >= 0:
+        if not localesFile:
+          self.localesURL = "mozilla/browser/locales/all-locales"
+        else:
+          self.localesURL = localesFile
+          
       # we are going to have a queue per builder attached to the scheduler
       self.queue = {} 
       for builderName in scheduler.builderNames:
@@ -89,7 +97,6 @@ class L10nMixin(object):
       Let's fill the queues per builder and submit the BuildSets per each locale
       """
       log.msg("L10nMixin:: loaded locales' list")
-      
       for locale in locales:
         props = properties.Properties()
         props.updateFromProperties(self.scheduler.properties)
@@ -112,18 +119,23 @@ class L10nMixin(object):
         log.msg('L10nMixin.getLocales():: The user has set a list of locales')
         return self.locales
       else:
+        log.msg("L10nMixin:: Getting locales from: "+self.localesURL)
         if self.repoType.find('cvs') >= 0:
-           args = ['cvs', '-q', '-d', self.CVSROOT, 'co', '-p', self.localesURL]
+           args = ['cvs', '-q', '-d', self.cvsRoot, 'co', '-p', self.localesURL]
            # communicate() returns a tuple - stdio, stderr
            # the output of cvs has a '\n' element at the end
            # a last '' string is generated that we get rid of
-           return subprocess.Popen( args, stdout=subprocess.PIPE).communicate()[0].split('\n')[0:-1]
-        else: #the repoType is 'hg'
-           #getPage returns a defered that will return a string
+           return (lambda lines: [line.split(' ')[0] for line in lines]) \
+                    (subprocess.Popen(args, stdout=subprocess.PIPE).communicate()[0].split('\n')[0:-1])
+        else: # the repoType is 'hg'
+           # getPage returns a defered that will return a string
            d = getPage(self.localesURL, timeout = 5 * 60)
-           def _getLocalesList(data):
-               return filter(None, data.split()) 
-           d.addCallback(_getLocalesList)
+           # we expect that getPage will return the output of "all-locales"
+           # or "shipped-locales" or any file that contains a locale per line
+           # in the begining of the line e.g. "en-GB" or "ja linux win32"
+           # this code will only care about the first argument appearing in the line
+           d.addCallback(lambda data: [line.split(' ')[0] \
+                         for line in data.split("\n") if line])
            return d
 
   def createL10nBuilds(self):
@@ -158,7 +170,7 @@ class NightlyL10n(Nightly):
                    'dayOfWeek', 'branch')
   
   def __init__(self, name,  builderNames, minute=0, hour='*', dayOfMonth='*', month='*', dayOfWeek='*', 
-               repoType=None, localesURL=None, 
+               repoType=None, repoPath=None, baseTag=None, localesFile=None,
                branch=None, cvsRoot=None, locales=None):
     
     Nightly.__init__(self, name, builderNames, minute, hour, dayOfMonth, month, dayOfWeek, branch)
@@ -166,17 +178,17 @@ class NightlyL10n(Nightly):
     # TODO: change repoType=None to repoType when fixed
     if not repoType:
         repoType = 'cvs'
-    self.helper = L10nMixin(self, locales, cvsRoot, repoType,
-                            localesURL)
+    self.helper = L10nMixin(self,
+                            repoType = repoType, repoPath = repoPath,
+                            baseTag = baseTag,
+                            localesFile = localesFile,
+                            cvsRoot = cvsRoot,
+                            locales = locales)
   
   def doPeriodicBuild(self):
-    #Schedule the next run (as in Nightly's doPeriodicBuild)
+    # Schedule the next run (as in Nightly's doPeriodicBuild)
     self.setTimer()
     self.helper.createL10nBuilds()
-  
-  #This function is used by the custom made Build class
-  def getNextLocale(self, builderName):
-    return self.helper.getLocale(builderName) 
 
 class DependentL10n(Dependent):
   """
@@ -187,19 +199,21 @@ class DependentL10n(Dependent):
   compare_attrs = ('name', 'upstream', 'builders')
 
   def __init__(self, name, upstream, builderNames,
-               repoType, localesURL=None,
+               repoType, repoPath=None,
+               baseTag='tip', localesFile=None,
                cvsRoot=None, locales=None):
       Dependent.__init__(self, name, upstream, builderNames)
       # The next two lines has been added because of:
       # _cbLoadedLocales's BuildSet submit needs them
       self.branch = None 
       self.reason = None
-      self.helper = L10nMixin(self, locales, cvsRoot, repoType, localesURL)
+      self.helper = L10nMixin(self,
+                              repoType = repoType, repoPath = repoPath,
+                              baseTag = baseTag,
+                              localesFile = localesFile,
+                              cvsRoot = cvsRoot,
+                              locales = locales)
 
   # ss is the source stamp that we don't use currently
   def upstreamBuilt(self, ss):
       self.helper.createL10nBuilds()
-
-  #This function is used by the custom made Build class
-  def getNextLocale(self, builderName):
-    return self.helper.getLocale(builderName)
