@@ -209,6 +209,7 @@
 "Downloads" = "Downloads";
 "Fill Form" = "Fill Form";
 "ShowHistory" = "History";
+"TabOverview" = "Tab Overview";
 
 /* Customize Sheet Labels (where different) */
 "Go Back" = "Go Back";
@@ -245,6 +246,8 @@
 "DownloadsToolTip" = "Show the Downloads window";
 "FillFormToolTip" = "Fill fields on this page with your Address Book information";
 "ShowHistoryToolTip" = "Show recently visited pages";
+"ShowTabOverviewToolTip" = "Show Tab Overview";
+"HideTabOverviewToolTip" = "Hide Tab Overview";
 "ScriptItemToolTipFormat" = "Run script “%@”";
 
 /* Alternate menu items for Reload */

@@ -48,6 +48,8 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		000D0A9C0ED9BD8100A6C2F0 /* tabOverview.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 000D0A980ED9BD7000A6C2F0 /* tabOverview.tiff */; };
+		000D0A9D0ED9BD8100A6C2F0 /* tabOverview.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 000D0A980ED9BD7000A6C2F0 /* tabOverview.tiff */; };
 		001D4A260D75B0B100464BE4 /* MoveCommand.mm in Sources */ = {isa = PBXBuildFile; fileRef = 001D4A250D75B0B100464BE4 /* MoveCommand.mm */; };
 		001D4A270D75B0B100464BE4 /* MoveCommand.mm in Sources */ = {isa = PBXBuildFile; fileRef = 001D4A250D75B0B100464BE4 /* MoveCommand.mm */; };
 		001FFD970C795D4500D9C2C8 /* contenteditable.css in Copy Gecko Resources */ = {isa = PBXBuildFile; fileRef = 001FFD930C795D3300D9C2C8 /* contenteditable.css */; };
@@ -2259,6 +2261,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		000D0A980ED9BD7000A6C2F0 /* tabOverview.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = tabOverview.tiff; path = resources/images/toolbar/tabOverview.tiff; sourceTree = "<group>"; };
 		0017874B0E6B3BFB00583A98 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = English; path = resources/localized/English.lproj/Localizable.strings.in; sourceTree = "<group>"; };
 		0017874E0E6B3C7500583A98 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = English; path = resources/localized/English.lproj/CertificateDialogs.strings.in; sourceTree = "<group>"; };
 		001787500E6B3C7500583A98 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = English; path = resources/localized/English.lproj/InfoPlist.strings.in; sourceTree = "<group>"; };
@@ -4350,6 +4353,7 @@
 				3FEBB43B089DA88B00BD8373 /* history.tiff */,
 				B3757F860E5D0FE70006EDF1 /* pageBigger.tiff */,
 				B3757F870E5D0FE70006EDF1 /* pageSmaller.tiff */,
+				000D0A980ED9BD7000A6C2F0 /* tabOverview.tiff */,
 			);
 			name = "Toolbar-Browser";
 			sourceTree = "<group>";
@@ -5299,6 +5303,7 @@
 				DE40448D0ED09D1E00057E17 /* global_locale_xslt_xslt_properties.strings in Resources */,
 				DE40448E0ED09D1E00057E17 /* global_locale_nsTreeSorting_properties.strings in Resources */,
 				DE40448F0ED09D1E00057E17 /* global_locale_languageNames_properties.strings in Resources */,
+ 				000D0A9C0ED9BD8100A6C2F0 /* tabOverview.tiff in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5527,6 +5532,7 @@
 				DE4044690ED09D1E00057E17 /* global_locale_xslt_xslt_properties.strings in Resources */,
 				DE40446A0ED09D1E00057E17 /* global_locale_nsTreeSorting_properties.strings in Resources */,
 				DE40446B0ED09D1E00057E17 /* global_locale_languageNames_properties.strings in Resources */,
+ 				000D0A9D0ED9BD8100A6C2F0 /* tabOverview.tiff in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

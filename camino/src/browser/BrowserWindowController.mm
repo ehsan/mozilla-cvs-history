@@ -166,6 +166,7 @@ static NSString* const SendURLToolbarItemIdentifier     = @"Send URL Toolbar Ite
 static NSString* const DLManagerToolbarItemIdentifier   = @"Download Manager Toolbar Item";
 static NSString* const FormFillToolbarItemIdentifier    = @"Form Fill Toolbar Item";
 static NSString* const HistoryToolbarItemIdentifier     = @"History Toolbar Item";
+static NSString* const TabOverviewToolbarItemIdentifier = @"Tab Overview Toolbar Item";
 
 int TabBarVisiblePrefChangedCallback(const char* pref, void* data);
 
@@ -1278,6 +1279,7 @@ public:
                                                         DLManagerToolbarItemIdentifier,
                                                         FormFillToolbarItemIdentifier,
                                                         HistoryToolbarItemIdentifier,
+                                                        TabOverviewToolbarItemIdentifier,
                                                         nil];
   // Add script items and return.
   return [predefinedItems arrayByAddingObjectsFromArray:[ToolbarScriptItem scriptItemIdentifiers]];
@@ -1576,6 +1578,14 @@ public:
     [toolbarItem setTarget:self];
     [toolbarItem setAction:@selector(manageHistory:)];
   }
+  else if ([itemIdent isEqual:TabOverviewToolbarItemIdentifier]) {
+    [toolbarItem setLabel:NSLocalizedString(@"TabOverview", nil)];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"TabOverview", nil)];
+    [toolbarItem setToolTip:NSLocalizedString(@"ShowTabOverviewToolTip", nil)];
+    [toolbarItem setImage:[NSImage imageNamed:@"tabOverview"]];
+    [toolbarItem setTarget:self];
+    [toolbarItem setAction:@selector(toggleTabThumbnailView:)];
+  }
   else if ([itemIdent hasPrefix:kScriptItemIdentifierPrefix]) {
     toolbarItem = [[[ToolbarScriptItem alloc] initWithItemIdentifier:itemIdent] autorelease];
   }
@@ -1655,6 +1665,14 @@ public:
 
     return (![self bookmarkManagerIsVisible] || [self canHideBookmarks]) &&
            ![mContentView tabThumbnailGridViewIsVisible];
+  }
+  else if (action == @selector(toggleTabThumbnailView:)) {
+    if ([mContentView tabThumbnailGridViewIsVisible])
+      [theItem setToolTip:NSLocalizedString(@"HideTabOverviewToolTip", nil)];
+    else
+      [theItem setToolTip:NSLocalizedString(@"ShowTabOverviewToolTip", nil)];
+
+    return YES;
   }
 
   return [self validateActionBySelector:action];
