@@ -47,8 +47,12 @@ class ShellCommandReportTimeout(ShellCommand):
     """We subclass ShellCommand so that we can bubble up the timeout errors
     to tinderbox that normally only get appended to the buildbot slave logs.
     """
+    def __init__(self, **kwargs):
+	self.my_shellcommand = ShellCommand
+	ShellCommand.__init__(self, **kwargs)
+
     def evaluateCommand(self, cmd):
-        superResult = ShellCommand.evaluateCommand(self, cmd)
+        superResult = self.my_shellcommand.evaluateCommand(self, cmd)
         for line in cmd.logs['stdio'].readlines(channel=HEADER):
             if "command timed out" in line:
                 self.addCompleteLog('timeout',
@@ -190,6 +194,10 @@ class MozillaCheck(ShellCommandReportTimeout):
     description = ["checking"]
     descriptionDone = ["check complete"]
     command = ["make", "-k", "check"]
+
+    def __init__(self, **kwargs):
+	self.super_class = ShellCommandReportTimeout
+	ShellCommandReportTimeout.__init__(self, **kwargs)
    
     def createSummary(self, log):
         passCount = 0
@@ -203,7 +211,7 @@ class MozillaCheck(ShellCommandReportTimeout):
         self.addCompleteLog('summary', summary)
     
     def evaluateCommand(self, cmd):
-        superResult = ShellCommandReportTimeout.evaluateCommand(self, cmd)
+        superResult = self.super_class.evaluateCommand(self, cmd)
         if SUCCESS != superResult:
             return WARNINGS
         if None != re.search('TEST-UNEXPECTED-', cmd.logs['stdio'].getText()):
@@ -215,6 +223,10 @@ class MozillaReftest(ShellCommandReportTimeout):
     name = "reftest"
     description = ["reftest"]
     descriptionDone = ["reftest complete"]
+
+    def __init__(self, **kwargs):
+	self.super_class = ShellCommandReportTimeout
+	ShellCommandReportTimeout.__init__(self, **kwargs)
    
     def createSummary(self, log):
         testCount = 0
@@ -240,7 +252,7 @@ class MozillaReftest(ShellCommandReportTimeout):
         self.addCompleteLog('summary', summary)
     
     def evaluateCommand(self, cmd):
-        superResult = ShellCommandReportTimeout.evaluateCommand(self, cmd)
+        superResult = self.super_class.evaluateCommand(self, cmd)
         if SUCCESS != superResult:
             return WARNINGS
         if re.search('TEST-UNEXPECTED-', cmd.logs['stdio'].getText()):
@@ -305,6 +317,7 @@ class MozillaMochitest(ShellCommandReportTimeout):
         if leakThreshold:
             self.command.append("--leak-threshold=" + str(leakThreshold))
         ShellCommandReportTimeout.__init__(self, **kwargs)    
+	self.super_class = ShellCommandReportTimeout
     
     def createSummary(self, log):
         passCount = 0
@@ -325,7 +338,7 @@ class MozillaMochitest(ShellCommandReportTimeout):
         self.addCompleteLog('summary', summary)
     
     def evaluateCommand(self, cmd):
-        superResult = ShellCommandReportTimeout.evaluateCommand(self, cmd)
+        superResult = self.super_class.evaluateCommand(self, cmd)
         if SUCCESS != superResult:
             return WARNINGS
         if re.search('TEST-UNEXPECTED-', cmd.logs['stdio'].getText()):
@@ -366,6 +379,7 @@ class MozillaMochichrome(ShellCommandReportTimeout):
         if leakThreshold:
             self.command.append("--leak-threshold=" + str(leakThreshold))
         ShellCommandReportTimeout.__init__(self, **kwargs)    
+	self.super_class = ShellCommandReportTimeout
     
     def createSummary(self, log):
         passCount = 0
@@ -386,7 +400,7 @@ class MozillaMochichrome(ShellCommandReportTimeout):
         self.addCompleteLog('summary', summary)
     
     def evaluateCommand(self, cmd):
-        superResult = ShellCommandReportTimeout.evaluateCommand(self, cmd)
+        superResult = self.super_class.evaluateCommand(self, cmd)
         if SUCCESS != superResult:
             return WARNINGS
         if re.search('TEST-UNEXPECTED-', cmd.logs['stdio'].getText()):
@@ -430,6 +444,7 @@ class MozillaBrowserChromeTest(ShellCommandReportTimeout):
         if leakThreshold:
             self.command.append("--leak-threshold=" + str(leakThreshold))
         ShellCommandReportTimeout.__init__(self, **kwargs)    
+	self.super_class = ShellCommandReportTimeout
     
     def createSummary(self, log):
         passCount = 0
@@ -450,7 +465,7 @@ class MozillaBrowserChromeTest(ShellCommandReportTimeout):
         self.addCompleteLog('summary', summary)
     
     def evaluateCommand(self, cmd):
-        superResult = ShellCommandReportTimeout.evaluateCommand(self, cmd)
+        superResult = self.super_class.evaluateCommand(self, cmd)
         if SUCCESS != superResult:
             return WARNINGS
         if re.search('TEST-UNEXPECTED-', cmd.logs['stdio'].getText()):
