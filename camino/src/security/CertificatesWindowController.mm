@@ -82,11 +82,9 @@
 - (void)backupPanelDidEnd:(NSSavePanel *)sheet returnCode:(int)returnCode contextInfo:(void *)contextInfo;
 
 - (void)importPanelDidEnd:(NSOpenPanel *)sheet returnCode:(int)returnCode contextInfo:(void *)contextInfo;
-- (void)restorePanelDidEnd:(NSOpenPanel *)sheet returnCode:(int)returnCode contextInfo:(void *)contextInfo;
 
 - (void)deleteCertificates:(NSArray*)inCertItems;
 - (void)performBackup:(NSDictionary*)backupParams;
-- (void)performRestore:(NSString*)inFilePath;
 - (void)performImport:(NSString*)inFilePath;
 
 - (void)certificateChanged:(NSNotification*)inNotification;
@@ -535,34 +533,24 @@ static CertificatesWindowController* gCertificatesWindowController;
   [self backupCertificates:selectedCerts];
 }
 
-- (IBAction)restoreCertificates:(id)sender
-{
-  NSOpenPanel* theOpenPanel = [NSOpenPanel openPanel];
-  
-  [theOpenPanel beginSheetForDirectory:nil
-                                  file:nil
-                                 types:[NSArray arrayWithObjects:@"p12", @"pfx", @"pkcs12", nil]
-                        modalForWindow:[self window]
-                         modalDelegate:self
-                        didEndSelector:@selector(restorePanelDidEnd:returnCode:contextInfo:)
-                           contextInfo:NULL];
-
-}
-
 
 - (IBAction)importCertificates:(id)sender
 {
   NSOpenPanel* theOpenPanel = [NSOpenPanel openPanel];
-  
+
+  NSArray* certExtensions = [NSArray arrayWithObjects:
+                              // website/CA certs
+                              @"crt", @"cert", @"cer", @"pem", @"der", @"p7b", @"pkcs7",
+                              // personal certs (keep synced with performImport: extension check)
+                              @"p12", @"pfx", @"pkcs12",
+                              nil];
   [theOpenPanel beginSheetForDirectory:nil
                                   file:nil
-                                 types:[NSArray arrayWithObjects:@"crt", @"cert", @"cer", @"pem", @"der", @"p7b", @"pkcs7", nil]
+                                 types:certExtensions
                         modalForWindow:[self window]
                          modalDelegate:self
                         didEndSelector:@selector(importPanelDidEnd:returnCode:contextInfo:)
                            contextInfo:NULL];
-
-
 }
 
 #pragma mark -
@@ -810,16 +798,6 @@ static CertificatesWindowController* gCertificatesWindowController;
   [selectedCerts release];
 }
 
-- (void)restorePanelDidEnd:(NSOpenPanel *)sheet returnCode:(int)returnCode contextInfo:(void *)contextInfo
-{
-  if (returnCode == NSAlertDefaultReturn)
-  {
-    // pop out to the main event loop, so that the various password dialogs
-    // show after the save sheet has gone away
-    [self performSelector:@selector(performRestore:) withObject:[sheet filename] afterDelay:0];
-  }
-}
-
 - (void)importPanelDidEnd:(NSOpenPanel *)sheet returnCode:(int)returnCode contextInfo:(void *)contextInfo
 {
   if (returnCode == NSAlertDefaultReturn)
@@ -852,23 +830,6 @@ static CertificatesWindowController* gCertificatesWindowController;
   delete [] certList;
 }
 
-
-- (void)performRestore:(NSString*)inFilePath
-{
-  nsCOMPtr<nsILocalFile> destFile;
-  NS_NewNativeLocalFile(nsDependentCString([inFilePath fileSystemRepresentation]), PR_TRUE, getter_AddRefs(destFile));
-  if (!destFile) return;
-  
-  nsCOMPtr<nsIX509CertDB> certDB = do_GetService("@mozilla.org/security/x509certdb;1");
-  if (certDB)
-  {
-    nsresult rv = certDB->ImportPKCS12File(nsnull /* any token */, destFile);
-    NSLog(@"ImportPKCS12File returned %X", rv);
-  }
-  
-  [self reloadCertData];
-}
-
 - (void)performImport:(NSString*)inFilePath
 {
   nsCOMPtr<nsILocalFile> destFile;
@@ -876,11 +837,21 @@ static CertificatesWindowController* gCertificatesWindowController;
   if (!destFile) return;
   
   nsCOMPtr<nsIX509CertDB> certDB = do_GetService("@mozilla.org/security/x509certdb;1");
-  if (certDB)
-  {
-    // import certs that match the viewed type (why not import them all?)
-    nsresult rv = certDB->ImportCertsFromFile(nsnull /* any token */, destFile, [self selectedCertType]);
-    NSLog(@"ImportCertsFromFile returned %X", rv);
+  if (certDB) {
+    NSString* extension = [inFilePath pathExtension];
+    nsresult rv;
+    if ([extension caseInsensitiveCompare:@"p12"] == NSOrderedSame ||
+        [extension caseInsensitiveCompare:@"pfx"] == NSOrderedSame ||
+        [extension caseInsensitiveCompare:@"pkcs12"] == NSOrderedSame)
+    {
+      rv = certDB->ImportPKCS12File(nsnull /* any token */, destFile);
+    }
+    else {
+      // import certs that match the viewed type (why not import them all?)
+      rv = certDB->ImportCertsFromFile(nsnull /* any token */, destFile, [self selectedCertType]);
+    }
+    if (!NS_SUCCEEDED(rv))
+      NSLog(@"Import of certificate '%@' returned %X", inFilePath, rv);
   }
   
   [self reloadCertData];
