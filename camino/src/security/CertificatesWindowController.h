@@ -66,8 +66,6 @@
 - (IBAction)backupSelectedCertificates:(id)sender;
 - (IBAction)backupAllCertificates:(id)sender;
 
-- (IBAction)restoreCertificates:(id)sender;
-
 - (IBAction)importCertificates:(id)sender;
 
 @end
