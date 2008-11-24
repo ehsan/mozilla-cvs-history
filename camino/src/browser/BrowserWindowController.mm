@@ -5060,6 +5060,24 @@ public:
 - (IBAction)toggleTabThumbnailView:(id)sender
 {
   [mContentView toggleTabThumbnailGridView];
+  if ([mContentView tabThumbnailGridViewIsVisible]) {
+    // If either of the toolbar fields is in the middle of an edit, end the edit
+    // by focusing the window.
+    NSText* locationFieldEditor = [mURLBar fieldEditor];
+    NSText* searchFieldEditor = [[self window] fieldEditor:NO forObject:mSearchBar];
+    NSResponder* currentFirstResponder = [[self window] firstResponder];
+    if ((locationFieldEditor && currentFirstResponder == locationFieldEditor) ||
+        (searchFieldEditor && currentFirstResponder == searchFieldEditor))
+    {
+      [[self window] makeFirstResponder:[self window]];
+    }
+    [mURLBar setEditable:NO];
+    [mSearchBar setEditable:NO];
+  }
+  else {
+    [mURLBar setEditable:YES];
+    [mSearchBar setEditable:YES];
+  }
 }
 
 @end
