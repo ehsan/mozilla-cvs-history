@@ -61,19 +61,36 @@ NS_IMETHODIMP CHStringBundleOverride::GetStringFromName(const nsACString& url, c
    * service to replace the string. If not, then the |nsIStringBundle| will use the string
    * defined in the bundled chrome resource.
    */
-  NSString* keyStr = [NSString stringWith_nsACString:key];
-  NSString* tableName = [NSString stringWith_nsACString:url];
-  // Stip off the chrome:// prefix (9 characters) if it's there
-  if ([tableName hasPrefix:@"chrome://"])
-    tableName = [tableName substringFromIndex:9];
-  NSCharacterSet* replacementSet = [NSCharacterSet characterSetWithCharactersInString:@"/."];
-  tableName = [tableName stringByReplacingCharactersInSet:replacementSet
-                                               withString:@"_"];
-  NSString* overrideStr = NSLocalizedStringFromTable(keyStr, tableName, nil);  
-  if (!overrideStr || [overrideStr isEqualToString:keyStr])
+  @try {
+    // Create an autorelease pool, since this may be called on a background thread.
+    NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
+
+    NSString* keyStr = [NSString stringWith_nsACString:key];
+    NSString* tableName = [NSString stringWith_nsACString:url];
+    // Stip off the chrome:// prefix (9 characters) if it's there
+    if ([tableName hasPrefix:@"chrome://"])
+      tableName = [tableName substringFromIndex:9];
+    NSCharacterSet* replacementSet = [NSCharacterSet characterSetWithCharactersInString:@"/."];
+    tableName = [tableName stringByReplacingCharactersInSet:replacementSet
+                                                 withString:@"_"];
+    NSString* overrideStr = NSLocalizedStringFromTable(keyStr, tableName, nil);  
+    if (!overrideStr || [overrideStr isEqualToString:keyStr]) {
+      [pool release];
+      return NS_ERROR_FAILURE;
+    }
+      
+    [overrideStr assignTo_nsAString:aRetVal];
+
+    [pool release];
+  }
+  @catch (id exception) {
+    // Note that we may leak the autorelease pool if this happens on a
+    // background thread, but there's not really a safe way to handle that
+    // case; see the discussion at:
+    // http://lists.apple.com/archives/objc-language//2007/Aug/msg00023.html
+    NSLog(@"Exception caught in CHStringBundleOverride::GetStringFromName %@", exception);
     return NS_ERROR_FAILURE;
-    
-  [overrideStr assignTo_nsAString:aRetVal];
+  }
   return NS_OK;
 }
 
