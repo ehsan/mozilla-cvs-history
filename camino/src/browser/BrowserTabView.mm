@@ -49,19 +49,9 @@
 #import "BrowserWindowController.h"
 #import "MainController.h"
 
-
 NSString* const kTabBarBackgroundDoubleClickedNotification = @"kTabBarBackgroundDoubleClickedNotification";
 
-
-//////////////////////////
-//     NEEDS IMPLEMENTED : Implement drag tracking for moving tabs around.
-//  Implementation hints : Track drags ;)
-//                       : Change tab controlTint to indicate drag location?
-//				   		 : Move tab titles around when dragging.
-//////////////////////////
-
 @interface BrowserTabView (Private)
-- (void)showOrHideTabsAsAppropriate;
 - (NSArray*)urlsFromPasteboard:(NSPasteboard*)pasteboard;
 @end
 
@@ -105,8 +95,9 @@ NSString* const kTabBarBackgroundDoubleClickedNotification = @"kTabBarBackground
 {
   // creating a new tab means clearing the jumpback tab.
   [self setJumpbackTab:nil];
-  
+
   [super addTabViewItem:tabViewItem];
+  [mTabBar tabViewAddedTabViewItem:(BrowserTabViewItem*)tabViewItem];
   [self showOrHideTabsAsAppropriate];
 }
 
@@ -125,6 +116,7 @@ NSString* const kTabBarBackgroundDoubleClickedNotification = @"kTabBarBackground
   // the "select to the right" behavior. 
   
   // make sure the tab view is removed
+  int indexOfClosedItem = [self indexOfTabViewItem:tabViewItem];
   [(BrowserTabViewItem *)tabViewItem willBeRemoved];
   if ([self selectedTabViewItem] == tabViewItem) {
     BOOL tabJumpbackPref = [[PreferenceManager sharedInstance] getBooleanPref:kGeckoPrefEnableTabJumpback
@@ -136,10 +128,12 @@ NSString* const kTabBarBackgroundDoubleClickedNotification = @"kTabBarBackground
       [self selectNextTabViewItem:self];
   }
   [super removeTabViewItem:tabViewItem];
-  [self showOrHideTabsAsAppropriate];
-  
+
   // clear the jumpback tab, it's served its purpose
   [self setJumpbackTab:nil];
+
+  [mTabBar tabViewClosedTabViewItem:(BrowserTabViewItem*)tabViewItem atIndex:indexOfClosedItem];
+  [self showOrHideTabsAsAppropriate];
 }
 
 - (void)insertTabViewItem:(NSTabViewItem *)tabViewItem atIndex:(int)index
@@ -237,8 +231,8 @@ NSString* const kTabBarBackgroundDoubleClickedNotification = @"kTabBarBackground
 // Only to be used with the 2 types of tab view which we use in Camino.
 - (void)showOrHideTabsAsAppropriate
 {
-  // don't bother if we're not visible
-  if (mVisible) {
+  // don't bother if we're not visible or if there is a tab dragging.
+  if (mVisible && ![mTabBar tabIsCurrentlyDragging]) {
     BOOL tabVisibilityChanged = NO;
     BOOL tabsVisible = [mTabBar isVisible];
     int numItems = [[self tabViewItems] count];

@@ -90,4 +90,6 @@ extern NSString* const kTabBarBackgroundDoubleClickedNotification;
 - (void)setJumpbackTab:(BrowserTabViewItem*)inTab;
 - (BrowserTabViewItem*)jumpbackTab;
 
+- (void)showOrHideTabsAsAppropriate;
+
 @end

@@ -987,6 +987,8 @@
 		B3128A120E5D14C8009F0595 /* pageBigger.tiff in Resources */ = {isa = PBXBuildFile; fileRef = B3757F860E5D0FE70006EDF1 /* pageBigger.tiff */; };
 		B3128A130E5D14CD009F0595 /* pageSmaller.tiff in Resources */ = {isa = PBXBuildFile; fileRef = B3757F870E5D0FE70006EDF1 /* pageSmaller.tiff */; };
 		B3128A140E5D14CE009F0595 /* pageSmaller.tiff in Resources */ = {isa = PBXBuildFile; fileRef = B3757F870E5D0FE70006EDF1 /* pageSmaller.tiff */; };
+		C713F0900E9AF7DB002313B3 /* CHSlidingViewAnimation.m in Sources */ = {isa = PBXBuildFile; fileRef = C713F08E0E9AF7DB002313B3 /* CHSlidingViewAnimation.m */; };
+		C713F0910E9AF7DB002313B3 /* CHSlidingViewAnimation.m in Sources */ = {isa = PBXBuildFile; fileRef = C713F08E0E9AF7DB002313B3 /* CHSlidingViewAnimation.m */; };
 		C79573880D35314D0028A773 /* XMLSearchPluginParser.mm in Sources */ = {isa = PBXBuildFile; fileRef = C79573840D35314D0028A773 /* XMLSearchPluginParser.mm */; };
 		C795738A0D35314D0028A773 /* OpenSearchParser.mm in Sources */ = {isa = PBXBuildFile; fileRef = C79573860D35314D0028A773 /* OpenSearchParser.mm */; };
 		C795738C0D35314D0028A773 /* XMLSearchPluginParser.mm in Sources */ = {isa = PBXBuildFile; fileRef = C79573840D35314D0028A773 /* XMLSearchPluginParser.mm */; };
@@ -2610,6 +2612,8 @@
 		A7FD31C90466004E00A80196 /* libsuitetypeaheadfind.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsuitetypeaheadfind.a; path = ../extensions/typeaheadfind/src/libsuitetypeaheadfind.a; sourceTree = SOURCE_ROOT; };
 		B3757F860E5D0FE70006EDF1 /* pageBigger.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = pageBigger.tiff; path = resources/images/toolbar/pageBigger.tiff; sourceTree = "<group>"; };
 		B3757F870E5D0FE70006EDF1 /* pageSmaller.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = pageSmaller.tiff; path = resources/images/toolbar/pageSmaller.tiff; sourceTree = "<group>"; };
+		C713F08E0E9AF7DB002313B3 /* CHSlidingViewAnimation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CHSlidingViewAnimation.m; path = src/extensions/CHSlidingViewAnimation.m; sourceTree = "<group>"; };
+		C713F08F0E9AF7DB002313B3 /* CHSlidingViewAnimation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CHSlidingViewAnimation.h; path = src/extensions/CHSlidingViewAnimation.h; sourceTree = "<group>"; };
 		C79573840D35314D0028A773 /* XMLSearchPluginParser.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = XMLSearchPluginParser.mm; path = src/websearch/XMLSearchPluginParser.mm; sourceTree = "<group>"; };
 		C79573850D35314D0028A773 /* XMLSearchPluginParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = XMLSearchPluginParser.h; path = src/websearch/XMLSearchPluginParser.h; sourceTree = "<group>"; };
 		C79573860D35314D0028A773 /* OpenSearchParser.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = OpenSearchParser.mm; path = src/websearch/OpenSearchParser.mm; sourceTree = "<group>"; };
@@ -3610,6 +3614,8 @@
 				0F7EAA9609326B770082C3EA /* AutoSizingTextField.m */,
 				00BBBC830D66C13400C2D916 /* CHGradient.h */,
 				00BBBC840D66C13400C2D916 /* CHGradient.m */,
+				C713F08F0E9AF7DB002313B3 /* CHSlidingViewAnimation.h */,
+				C713F08E0E9AF7DB002313B3 /* CHSlidingViewAnimation.m */,
 				F583E3C203B8228F01A80166 /* CHStackView.h */,
 				F583E3BF03B8228701A80166 /* CHStackView.m */,
 				F5FDF166031AF47301DE816D /* DraggableImageAndTextCell.h */,
@@ -5775,6 +5781,7 @@
 				33819AD70D938A3B00CA9F52 /* GeckoPrefConstants.mm in Sources */,
 				0095FACA0D9C99880039B3D8 /* CHBrowserView+Spelling.mm in Sources */,
 				336234490E6BC2FB00DD5373 /* HTMLBookmarkConverter.m in Sources */,
+				C713F0900E9AF7DB002313B3 /* CHSlidingViewAnimation.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5957,6 +5964,7 @@
 				33819AD80D938A3B00CA9F52 /* GeckoPrefConstants.mm in Sources */,
 				0095FAC90D9C99880039B3D8 /* CHBrowserView+Spelling.mm in Sources */,
 				336234480E6BC2FB00DD5373 /* HTMLBookmarkConverter.m in Sources */,
+				C713F0910E9AF7DB002313B3 /* CHSlidingViewAnimation.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -24,6 +24,7 @@
  *   Aaron Schulman <aschulm@gmail.com>
  *   Desmond Elliott <d.elliott@inf.ed.ac.uk>
  *   Ian Leue <froodian@gmail.com>
+ *   Sean Murphy <murph@seanmurph.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -46,12 +47,14 @@
 #import "BrowserTabViewItem.h"
 #import "TabButtonView.h"
 #import "RolloverImageButton.h"
+#import "BrowserWrapper.h"
 
 #import "NSArray+Utils.h"
 #import "NSImage+Utils.h"
 #import "NSMenu+Utils.h"
 #import "NSPasteboard+Utils.h"
 #import "NSView+Utils.h"
+#import "CHSlidingViewAnimation.h"
 
 @interface BrowserTabBarView(TabBarViewPrivate)
 
@@ -68,13 +71,23 @@
 -(BrowserTabViewItem *)tabViewItemUnderMouse;
 -(NSString*)view:(NSView*)view stringForToolTip:(NSToolTipTag)tag point:(NSPoint)point userData:(void*)userData;
 -(NSButton*)newOverflowButtonForImageNamed:(NSString*)imageName;
--(void)setLeftMostVisibleTabIndex:(int)index;
+-(void)setLeftmostVisibleTabIndex:(int)index;
 -(NSButton*)scrollButtonAtPoint:(NSPoint)clickPoint;
 -(BOOL)tabIndexIsVisible:(int)index;
 -(void)setOverflowButtonsVisible:(BOOL)visible;
 -(float)verticalOriginForButtonWithHeight:(float)height;
 -(void)scrollLeft:(id)sender;
 -(void)scrollRight:(id)sender;
+-(int)rightmostVisibleTabIndex;
+-(void)slideTabButtonsAroundCurrentDragPosition;
+-(void)saveTabButtonFramesForDragging;
+-(TabButtonView*)tabButtonAtIndex:(int)index;
+-(NSWindow*)newFloatingWindowForDraggedTab;
+-(void)slidingTabAnimationEnded:(NSNotification*)aNotification;
+-(void)calculateOverflowTabValues;
+-(BOOL)isReorderingTabViewItemsDuringDrag;
+-(void)setReorderingTabViewItemsDuringDrag:(BOOL)flag;
+-(void)currentlyDraggingTabClosed;
 
 @end
 
@@ -91,6 +104,8 @@ static const int kTabDragThreshold = 3;           // distance a drag must go bef
 
 static const float kScrollButtonDelay = 0.4;      // how long a button must be held before we start scrolling
 static const float kScrollButtonInterval = 0.15;  // time (in seconds) between firing scroll actions
+
+const int kEscapeKeyCode = 53;
 
 -(id)initWithFrame:(NSRect)frame 
 {
@@ -119,6 +134,12 @@ static const float kScrollButtonInterval = 0.15;  // time (in seconds) between f
   [self setVisible:NO];
   // this needs to be called again since our tabview should be non-nil now
   [self rebuildTabBar];
+  // When background tabs are finished sliding around the dragging one, we need to perform
+  // certain actions like updating the divider images.
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(slidingTabAnimationEnded:) 
+                                               name:kSlidingTabAnimationFinishedNotification
+                                             object:nil];
 }
 
 -(void)dealloc
@@ -130,6 +151,10 @@ static const float kScrollButtonInterval = 0.15;  // time (in seconds) between f
 
   [mBackgroundImage release];
   [mButtonDividerImage release];
+  [mDraggingTab release];
+  [mDraggingTabWindow release];
+  [mSavedTabFrames release];
+  [mCurrentlySlidingTabs release];
 
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   [super dealloc];
@@ -137,16 +162,24 @@ static const float kScrollButtonInterval = 0.15;  // time (in seconds) between f
 
 -(void)drawRect:(NSRect)rect 
 {
-  // determine the frame of the active tab button and fill the rest of the bar in with the background
-  TabButtonView* activeTabButton = [(BrowserTabViewItem *)[mTabView selectedTabViewItem] buttonView];
-  NSRect activeTabButtonFrame = [activeTabButton superview] ? [activeTabButton frame]
-                                                            : NSMakeRect(0, 0, 0, 0);
-  [self drawTabBarBackgroundInRect:rect withActiveTabRect:activeTabButtonFrame];
+  // Determine the active tab rect, and draw the tab background in the rest of the bar.
+  NSRect activeTabRect;
+  if ([self tabIsCurrentlyDragging]) {
+    activeTabRect = NSZeroRect;
+  }
+  else {
+    TabButtonView* activeTabButton = [(BrowserTabViewItem *)[mTabView selectedTabViewItem] buttonView];
+    activeTabRect = [activeTabButton superview] ? [activeTabButton frame]
+                                                : NSMakeRect(0, 0, 0, 0);
+  }
+  [self drawTabBarBackgroundInRect:[self bounds] withActiveTabRect:activeTabRect];
 
   NSRect tabsRect = [self tabsRect];
   // Draw the leftmost button image divider (right sides are drawn by the buttons themselves).
   // A divider is not needed if the leftmost button is selected.
-  if ([mTabView indexOfTabViewItem:[mTabView selectedTabViewItem]] != mLeftMostVisibleTabIndex) {
+  TabButtonView* firstTabButton = [(BrowserTabViewItem *)[mTabView tabViewItemAtIndex:mLeftMostVisibleTabIndex] buttonView];
+  if ([mTabView indexOfTabViewItem:[mTabView selectedTabViewItem]] != mLeftMostVisibleTabIndex &&
+      ([firstTabButton slideAnimationDirection] == eSlideAnimationDirectionNone)) {
     [mButtonDividerImage compositeToPoint:NSMakePoint(NSMinX(tabsRect), 0)
                                 operation:NSCompositeSourceOver];
   }
@@ -200,6 +233,44 @@ static const float kScrollButtonInterval = 0.15;  // time (in seconds) between f
     [[NSNotificationCenter defaultCenter] postNotificationName:kTabBarBackgroundDoubleClickedNotification
                                                         object:mTabView];
   }
+}
+
+- (NSDragOperation)draggingSourceOperationMaskForLocal:(BOOL)isLocal
+{
+  // We don't want our invisible dragged tab tracking image to indicate anything on screen
+  // to show the cursor is dragging something other than the moving tab.
+  return NSDragOperationNone;
+}
+
+- (void)mouseDragged:(NSEvent*)theEvent
+{
+  if ([self tabIsCurrentlyDragging])
+    return;
+
+  NSPoint clickLocation = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+  TabButtonView* activeTabButton = [self buttonAtPoint:clickLocation];
+
+  // When a tab is dragged to the edge, the tab is not allowed to move off the bar, but the mouse
+  // keeps moving. We want to prevent moving the tab again until the mouse gets back to the original
+  // location on the tab where the drag started.
+  NSPoint pointOnDraggingTab = [activeTabButton convertPoint:clickLocation fromView:self];
+  mHorizontalGrabOffset = pointOnDraggingTab.x;
+
+  // To have more control over the dragged tab image (e.g. restricting the drag to horiz movement)
+  // we actually have Cocoa drag an empty image, and then move a floating window around based upon
+  // the NSDraggingSource methods.
+  [self dragImage:[[[NSImage alloc] initWithSize:NSMakeSize(1, 1)] autorelease]
+               at:clickLocation
+           offset:NSZeroSize 
+            event:theEvent 
+       pasteboard:nil
+           source:self 
+        slideBack:NO];
+}
+
+- (TabButtonView*)tabButtonAtIndex:(int)index
+{
+  return [(BrowserTabViewItem*)[mTabView tabViewItemAtIndex:index] buttonView];
 }
 
 // Returns the scroll button at the specified point, if there is one.
@@ -317,6 +388,9 @@ static const float kScrollButtonInterval = 0.15;  // time (in seconds) between f
 // should be called when tabs are first shown.
 -(void)rebuildTabBar
 {
+  if ([self tabIsCurrentlyDragging])
+    return;
+
   [self loadImages];
 
   [self unregisterTabButtonsForTracking];
@@ -453,7 +527,7 @@ static const float kScrollButtonInterval = 0.15;  // time (in seconds) between f
     mNumberOfVisibleTabs = (int)floor(widthOfTabBar / kMinTabWidth);
     widthOfATab = floor(widthOfTabBar / mNumberOfVisibleTabs);
     if (mNumberOfVisibleTabs + mLeftMostVisibleTabIndex > numberOfTabs)
-      [self setLeftMostVisibleTabIndex:(numberOfTabs - mNumberOfVisibleTabs)];
+      [self setLeftmostVisibleTabIndex:(numberOfTabs - mNumberOfVisibleTabs)];
     if (keepCurrentTabVisible && selectedTab)
       [self scrollTabIndexToVisible:selectedTabIndex];
   }
@@ -486,14 +560,15 @@ static const float kScrollButtonInterval = 0.15;  // time (in seconds) between f
       tabRect.size.width += 1.0;
     }
     [tabButton setFrame:tabRect];
-    [tabButton setDrawsDivider:YES];
+    [tabButton setDrawsLeftDivider:NO];
+    [tabButton setDrawsRightDivider:YES];
     nextTabXOrigin += NSWidth(tabRect);
   }
 
   if (selectedTab) {
-    [[selectedTab buttonView] setDrawsDivider:NO];
+    [[selectedTab buttonView] setDrawsRightDivider:NO];
     if (selectedTabIndex >= 1 && [self tabIndexIsVisible:selectedTabIndex])
-      [[(BrowserTabViewItem*)[mTabView tabViewItemAtIndex:(selectedTabIndex - 1)] buttonView] setDrawsDivider:NO];
+      [[(BrowserTabViewItem*)[mTabView tabViewItemAtIndex:(selectedTabIndex - 1)] buttonView] setDrawsRightDivider:NO];
   }
 
   [self setNeedsDisplay:YES];
@@ -617,7 +692,7 @@ static const float kScrollButtonInterval = 0.15;  // time (in seconds) between f
     numberOfTabsToScroll = MIN(tabsHiddenToTheLeft, mNumberOfVisibleTabs);
 
   if (tabsHiddenToTheLeft > 0)
-    [self setLeftMostVisibleTabIndex:(mLeftMostVisibleTabIndex - numberOfTabsToScroll)];
+    [self setLeftmostVisibleTabIndex:(mLeftMostVisibleTabIndex - numberOfTabsToScroll)];
 }
 
 -(void)scrollRight:(id)aSender
@@ -632,7 +707,7 @@ static const float kScrollButtonInterval = 0.15;  // time (in seconds) between f
     numberOfTabsToScroll = MIN(tabsHiddenToTheRight, mNumberOfVisibleTabs);
 
   if (tabsHiddenToTheRight > 0)
-    [self setLeftMostVisibleTabIndex:(mLeftMostVisibleTabIndex + numberOfTabsToScroll)];
+    [self setLeftmostVisibleTabIndex:(mLeftMostVisibleTabIndex + numberOfTabsToScroll)];
 }
 
 // Scrolls the tab bar to make index visible
@@ -640,15 +715,15 @@ static const float kScrollButtonInterval = 0.15;  // time (in seconds) between f
 {
   // if it's to the left of screen, make it leftmost
   if (index < mLeftMostVisibleTabIndex)
-    [self setLeftMostVisibleTabIndex:index];
+    [self setLeftmostVisibleTabIndex:index];
   // if it's to the right of screen, make it rightmost
   else if (index >= mLeftMostVisibleTabIndex + mNumberOfVisibleTabs)
-    [self setLeftMostVisibleTabIndex:(index - mNumberOfVisibleTabs + 1)];
+    [self setLeftmostVisibleTabIndex:(index - mNumberOfVisibleTabs + 1)];
 }
 
 // Sets the left most visible tab index to the value specified and rebuilds the 
 // tab bar. Should not be called before performing necessary sanity checks.
--(void)setLeftMostVisibleTabIndex:(int)index
+-(void)setLeftmostVisibleTabIndex:(int)index
 {
   if (index != mLeftMostVisibleTabIndex) {
     mLeftMostVisibleTabIndex = index;
@@ -699,6 +774,9 @@ static const float kScrollButtonInterval = 0.15;  // time (in seconds) between f
 // Does not actually remove the view from the hierarchy; simply hides it.
 -(void)setVisible:(BOOL)show
 {
+  if ([self tabIsCurrentlyDragging])
+    return;
+
   // only change anything if the new state is different from the current state
   if (show && [self isHidden]) {
     [self setHidden:NO];
@@ -710,6 +788,11 @@ static const float kScrollButtonInterval = 0.15;  // time (in seconds) between f
     // destroy tracking rects
     [self unregisterTabButtonsForTracking];
   }
+}    
+
+- (int)rightmostVisibleTabIndex
+{
+  return mLeftMostVisibleTabIndex + mNumberOfVisibleTabs - 1;
 }
 
 - (void)updateKeyViewLoop
@@ -780,7 +863,7 @@ static const float kScrollButtonInterval = 0.15;  // time (in seconds) between f
       [[self window] makeFirstResponder:firstResponder];
   }
 }
-    
+
 #pragma mark -
 
 // NSDraggingDestination destination methods
@@ -815,6 +898,426 @@ static const float kScrollButtonInterval = 0.15;  // time (in seconds) between f
   [self setNeedsDisplay:YES];
 
   return [mTabView handleDrop:sender onTab:nil];
+}
+
+# pragma mark -
+
+- (void)draggedImage:(NSImage *)anImage beganAt:(NSPoint)aPoint
+{
+  [mDraggingTab release];
+  mDraggingTab = [[(BrowserTabViewItem *)[mTabView selectedTabViewItem] buttonView] retain];
+  int indexOfDraggingTab = [mTabView indexOfTabViewItem:[mTabView selectedTabViewItem]];
+
+  // Represent the dragged tab with a floating borderless child window.
+  [mDraggingTabWindow release];
+  mDraggingTabWindow = [self newFloatingWindowForDraggedTab];
+  [[self window] addChildWindow:mDraggingTabWindow ordered:NSWindowAbove];
+
+  mTabIsCurrentlyDragging = YES;
+  mEmptyTabPlaceholderIndex = indexOfDraggingTab;
+  mDraggingTabOriginalIndex = indexOfDraggingTab;
+
+  if (!mCurrentlySlidingTabs)
+    mCurrentlySlidingTabs = [[NSMutableArray alloc] init];
+  else
+    [mCurrentlySlidingTabs removeAllObjects];
+
+  [mDraggingTab removeFromSuperview];
+
+  // When the drag begins, set the dividers on surrounding tabs we need immediately.
+  if (indexOfDraggingTab > 0)
+    [[self tabButtonAtIndex:(indexOfDraggingTab - 1)] setDrawsRightDivider:YES];
+  if (indexOfDraggingTab < ([self rightmostVisibleTabIndex]))
+    [[self tabButtonAtIndex:(indexOfDraggingTab + 1)] setDrawsLeftDivider:YES];
+
+  [self saveTabButtonFramesForDragging];
+  [self unregisterTabButtonsForTracking];
+}
+
+// Create a borderless floating window, with an image of the dragged tab as its content view
+// to move around on screen representing the dragged tab.
+// The caller owns the reference to the returned window.
+- (NSWindow*)newFloatingWindowForDraggedTab;
+{
+  NSRect draggingTabButtonFrame = [mDraggingTab frame];
+
+  // Create an image representation of the dragged tab.
+  [self lockFocus];
+  NSBitmapImageRep* tabImageRep = 
+    [[[NSBitmapImageRep alloc] initWithFocusedViewRect:draggingTabButtonFrame] autorelease];
+  [self unlockFocus];
+  NSImage* draggedTabImage = [[[NSImage alloc] initWithSize:[tabImageRep size]] autorelease];
+  [draggedTabImage addRepresentation:tabImageRep];
+
+  // Convert the tab's frame to screen coordinates.
+  NSPoint tabOriginInWindowCoords = [self convertPoint:draggingTabButtonFrame.origin toView:nil];
+  NSPoint tabOriginInScreenCoords = [[self window] convertBaseToScreen:tabOriginInWindowCoords];
+  NSRect draggedTabWindowFrame = {tabOriginInScreenCoords, draggingTabButtonFrame.size};
+
+  NSWindow* draggedTabWindow = [[NSWindow alloc] initWithContentRect:draggedTabWindowFrame
+                                                   styleMask:NSBorderlessWindowMask
+                                                     backing:NSBackingStoreBuffered
+                                                       defer:NO];
+
+  // Embed an image view in the window, containing the image of the dragging tab.
+  NSRect imageViewFrame = {NSZeroPoint, draggingTabButtonFrame.size};
+  NSImageView* imageView = [[[NSImageView alloc] initWithFrame:imageViewFrame] autorelease];
+  [imageView setImage:draggedTabImage];
+
+  [draggedTabWindow setContentView:imageView];
+
+  return draggedTabWindow;
+}
+
+- (void)draggedImage:(NSImage *)draggedImage movedTo:(NSPoint)screenPoint
+{
+  // The dragged tab is represented by a floating window; move the window
+  // to reflect the new location of the dragged image.
+
+  // If the dragging tab closed, the invisible drag image is still moving around since
+  // there's no way to force AppKit to end a drag.
+  if (!mTabIsCurrentlyDragging)
+    return;
+
+  float deltaX = [[NSApp currentEvent] deltaX];
+  if (deltaX == 0.0)
+    return;
+
+  NSPoint currentTabWindowLocation = [mDraggingTabWindow frame].origin;
+
+  NSRect tabsRect = [self tabsRect];
+  NSPoint leftmostTabBarLocationInWindowCoords = [self convertPoint:tabsRect.origin toView:nil];
+  NSPoint rightmostTabBarLocationInWindowCoords = [self convertPoint:NSMakePoint(NSMaxX(tabsRect), NSMaxY(tabsRect)) toView:nil];
+
+  // Since we're manipulating the dragged tab window's origin, retrieve the tab bar boundaries
+  // in screen coordinates.
+  float minAllowedTabXLocation = [[self window] convertBaseToScreen:leftmostTabBarLocationInWindowCoords].x;
+  float maxAllowedTabXLocation = [[self window] convertBaseToScreen:rightmostTabBarLocationInWindowCoords].x;
+  maxAllowedTabXLocation -= [mDraggingTabWindow frame].size.width;
+
+  // If the dragged tab is at either end of tab bar, and the mouse kept moving far away from
+  // where the tab was stopped, wait to drag again until the mouse is under the original location
+  // in the tab where the drag started.  
+  if ((currentTabWindowLocation.x == minAllowedTabXLocation &&
+       screenPoint.x < (minAllowedTabXLocation + mHorizontalGrabOffset)) ||
+      (currentTabWindowLocation.x == maxAllowedTabXLocation &&
+       screenPoint.x > (maxAllowedTabXLocation + mHorizontalGrabOffset)))
+  {
+    return;
+  }
+
+  // Calculate the dragged tab window's new position.
+  NSPoint newDragggedTabLocation = NSMakePoint(currentTabWindowLocation.x + deltaX, currentTabWindowLocation.y);
+
+  // Ensure the tab is not dragged out of the tab bar's boundaries.
+  if (newDragggedTabLocation.x <= minAllowedTabXLocation)
+    newDragggedTabLocation.x = minAllowedTabXLocation;
+  else if (newDragggedTabLocation.x > maxAllowedTabXLocation)
+    newDragggedTabLocation.x = maxAllowedTabXLocation;
+  [mDraggingTabWindow setFrameOrigin:newDragggedTabLocation];
+
+  [self slideTabButtonsAroundCurrentDragPosition];
+}
+
+- (void)slideTabButtonsAroundCurrentDragPosition
+{
+  // Convert the dragged tab window's origin to the tab bar's coordinate system.
+  NSPoint draggedTabWindowOrigin = [mDraggingTabWindow frame].origin;
+  draggedTabWindowOrigin = [[self window] convertScreenToBase:draggedTabWindowOrigin];
+  draggedTabWindowOrigin = [self convertPoint:draggedTabWindowOrigin fromView:nil];
+  NSRect draggedTabFrameInTabBarCoords = {draggedTabWindowOrigin, [mDraggingTabWindow frame].size};
+
+  // Determine which tab button is under the middle of the dragged tab.
+  NSPoint midDraggedTab = NSMakePoint(NSMidX(draggedTabFrameInTabBarCoords), NSMidY(draggedTabFrameInTabBarCoords));
+  TabButtonView* tabButtonUnderDrag = [self buttonAtPoint:midDraggedTab];
+
+  // If there's nothing under the drag, we have to first make sure we're not on the right
+  // after all of the tabs.  Otherwise, we're under the empty spot.
+  TabButtonView* lastVisibleTabButton = [self tabButtonAtIndex:[self rightmostVisibleTabIndex]];
+  if (!tabButtonUnderDrag && NSMinX(draggedTabFrameInTabBarCoords) > NSMaxX([lastVisibleTabButton frame]))
+    tabButtonUnderDrag = lastVisibleTabButton;
+  else if (!tabButtonUnderDrag)
+    return;
+
+  BOOL draggedTabMovingRight = ([[NSApp currentEvent] deltaX] > 0);
+
+  // Check if the tab we're under is already moving in the correct direction.
+  ESlideAnimationDirection tabSlideDirection = [tabButtonUnderDrag slideAnimationDirection];
+  if (draggedTabMovingRight && tabSlideDirection == eSlideAnimationDirectionLeft)
+    return;
+  else if (!draggedTabMovingRight && tabSlideDirection == eSlideAnimationDirectionRight)
+    return;
+
+  int indexOfTabUnderDrag = [mTabView indexOfTabViewItem:[tabButtonUnderDrag tabViewItem]];
+
+  if (indexOfTabUnderDrag == mEmptyTabPlaceholderIndex)
+    return;
+
+  // Find all tabs between the one we're over and the available spot and slide them out of the way.
+  int currentTabIndex = indexOfTabUnderDrag;
+  while ((draggedTabMovingRight && currentTabIndex > mEmptyTabPlaceholderIndex) || 
+         (!draggedTabMovingRight && currentTabIndex < mEmptyTabPlaceholderIndex))
+  {
+    TabButtonView* tabButton = [self tabButtonAtIndex:currentTabIndex];
+
+    // If we're moving to the right, tell the tab to our right to draw its divider.
+    if (draggedTabMovingRight && (currentTabIndex < [self rightmostVisibleTabIndex])) {
+      TabButtonView* nextTabButton = [self tabButtonAtIndex:(currentTabIndex + 1)];
+      [nextTabButton setDrawsLeftDivider:YES];
+    }
+
+    // Determine where this tab will move to.
+    int destinationTabIndex = draggedTabMovingRight ? currentTabIndex - 1 : currentTabIndex + 1;
+    NSPoint newTabLocation = [[mSavedTabFrames objectAtIndex:destinationTabIndex] rectValue].origin;
+
+    [mCurrentlySlidingTabs addObject:tabButton];
+
+    [tabButton slideToLocation:newTabLocation];
+
+    if (draggedTabMovingRight)
+      currentTabIndex--;
+    else
+      currentTabIndex++;
+  }
+
+  mEmptyTabPlaceholderIndex = indexOfTabUnderDrag;
+
+  // Update the BrowserTabView to reflect where the dragged image currently will be dropped.
+  BrowserTabViewItem* draggedTabViewItem = [[[mDraggingTab tabViewItem] retain] autorelease];
+  [self setReorderingTabViewItemsDuringDrag:YES];
+  [mTabView removeTabViewItem:draggedTabViewItem];
+  [mTabView insertTabViewItem:draggedTabViewItem atIndex:mEmptyTabPlaceholderIndex];
+  [mTabView selectTabViewItem:draggedTabViewItem];
+  [self setReorderingTabViewItemsDuringDrag:NO];
+}
+
+- (void)draggedImage:(NSImage *)anImage endedAt:(NSPoint)aPoint operation:(NSDragOperation)operation
+{
+  // If the dragged tab closed during the drag, it has already been removed and cleaned up.
+  if (![self tabIsCurrentlyDragging])
+    return;
+
+  // Calculate the destination frame in Tab Bar coords, then convert it to screen coords
+  // to position the dragged tab window.
+  NSRect draggedTabDestinationFrame = NSZeroRect;
+
+  // If the drag ended by the escape key being pressed, make the tab go back to the index
+  // where it originally started dragging from instead.
+  NSEvent *currentEvent = [NSApp currentEvent];
+  if ([currentEvent type] == NSKeyDown && [currentEvent keyCode] == kEscapeKeyCode) {
+    draggedTabDestinationFrame = [[mSavedTabFrames objectAtIndex:mDraggingTabOriginalIndex] rectValue];
+    BrowserTabViewItem* draggedTabViewItem = [[[mDraggingTab tabViewItem] retain] autorelease];
+    [self setReorderingTabViewItemsDuringDrag:YES];
+    [mTabView removeTabViewItem:draggedTabViewItem];
+    [mTabView insertTabViewItem:draggedTabViewItem atIndex:mDraggingTabOriginalIndex];
+    [mTabView selectTabViewItem:draggedTabViewItem];
+    [self setReorderingTabViewItemsDuringDrag:NO];
+  }
+  else {
+    draggedTabDestinationFrame = [[mSavedTabFrames objectAtIndex:mEmptyTabPlaceholderIndex] rectValue];
+  }
+
+  NSPoint destOriginInWindowCoords = [self convertPoint:draggedTabDestinationFrame.origin
+                                                 toView:nil];
+  NSPoint destOriginInScreenCoords = [[self window] convertBaseToScreen:destOriginInWindowCoords];
+  draggedTabDestinationFrame.origin = destOriginInScreenCoords;
+
+  // Animate the dragged tab into its proper position.
+  CHSlidingViewAnimation *slidingWindowAnimation = [[CHSlidingViewAnimation alloc] initWithAnimationTarget:mDraggingTabWindow];
+  [slidingWindowAnimation setDuration:0.2];
+  [slidingWindowAnimation setFrameRate:0.0];
+  [slidingWindowAnimation setAnimationBlockingMode:NSAnimationNonblocking];
+  [slidingWindowAnimation setAnimationCurve:NSAnimationEaseInOut];
+  [slidingWindowAnimation setDelegate:self];
+  [slidingWindowAnimation setStartLocation:[mDraggingTabWindow frame].origin];
+  [slidingWindowAnimation setEndLocation:draggedTabDestinationFrame.origin];
+  [slidingWindowAnimation startAnimation];
+  // The animation retains itself, will perform a release when the animation is finished.
+  [slidingWindowAnimation release];
+}
+
+// Called when a background tab has finished sliding out of the way of the
+// dragging tab.
+- (void)slidingTabAnimationEnded:(NSNotification*)aNotification
+{
+  TabButtonView* animatedTab = (TabButtonView*)[aNotification object];
+  int animatedTabIndex = [mTabView indexOfTabViewItem:[animatedTab tabViewItem]];
+
+  [mCurrentlySlidingTabs removeObjectIdenticalTo:animatedTab];
+
+  // Update the tab divider images.
+
+  // If there is a tab to the right of the animated one and we finished animating (meaning we sit 
+  // right next to it), take away its left divider.
+  if (animatedTabIndex < [self rightmostVisibleTabIndex] &&
+      [[[aNotification userInfo] valueForKey:kSlidingTabAnimationFinishedCompletelyKey] boolValue] == YES) {
+    TabButtonView* nextTabButton = [self tabButtonAtIndex:(animatedTabIndex + 1)];
+    [nextTabButton setDrawsLeftDivider:NO];
+  }
+
+  // Draw a left divider if this tab is to the right of the available tab spot.
+  // (The drag may have ended before this tab's animation did, so also ensure there
+  // is a tab dragging.)
+  if ([self tabIsCurrentlyDragging] && animatedTabIndex == (mEmptyTabPlaceholderIndex + 1))
+    [animatedTab setDrawsLeftDivider:YES];
+  else
+    [animatedTab setDrawsLeftDivider:NO];
+
+  if ([mCurrentlySlidingTabs count] == 0 && ![self tabIsCurrentlyDragging])
+    [self performSelectorOnMainThread:@selector(rebuildTabBar) withObject:nil waitUntilDone:YES];
+}
+
+// Called when the dragging tab has been released and is finished animating into its
+// proper location.
+- (void)animationDidEnd:(NSAnimation *)animation
+{
+  mTabIsCurrentlyDragging = NO;
+
+  // We need to rebuild the tab bar after the drag is over, but if there are still background
+  // tabs animating, just throw only the dragged tab button back on the tab bar and when
+  // the background tab animation is finished it will rebuild the bar.
+  if ([mCurrentlySlidingTabs count] > 0) {
+    [mDraggingTab setFrame:[[mSavedTabFrames objectAtIndex:mEmptyTabPlaceholderIndex] rectValue]];
+    [self addSubview:mDraggingTab];
+  }
+  else {
+    [self rebuildTabBar];
+  }
+
+  [[self window] removeChildWindow:mDraggingTabWindow];
+  // To prevent a rare crash when clicking on the dragged tab window right when it's being removed,
+  // do not immediately release it.  (The crash is because of Gecko's NSWindow -sendEvent method swizzling
+  // calling firstResponder on our deallocated floating tab window.)
+  [mDraggingTabWindow performSelector:@selector(autorelease) withObject:nil afterDelay:2.0];
+  [mDraggingTabWindow orderOut:self];
+  mDraggingTabWindow = nil;
+  [mDraggingTab release];
+  mDraggingTab = nil;
+
+  // If this is the only tab button, have the tab view perform the logic about showing and hiding
+  // the bar and enabling the close button.
+  if ([mTabView numberOfTabViewItems] == 1)
+    [mTabView showOrHideTabsAsAppropriate];
+}
+
+- (void)saveTabButtonFramesForDragging
+{
+  // Our tabs do not all have a consistent size (when scrolling tabs, some extra space is spread 
+  // out over a few of the leftmost ones).  We need to save the actual frames of the tabs to
+  // reference later, rather than just calculating based on index and width.
+
+  if (!mSavedTabFrames)
+    mSavedTabFrames = [[NSMutableArray alloc] init];
+
+  [mSavedTabFrames removeAllObjects];
+
+  NSEnumerator* tabViewItemEnum = [[mTabView tabViewItems] objectEnumerator];
+  BrowserTabViewItem* tabViewItem;
+
+  while ((tabViewItem = [tabViewItemEnum nextObject])) {
+    TabButtonView* currentTabButton = (TabButtonView*)[tabViewItem buttonView];
+    NSValue* currentFrameValue = [NSValue valueWithRect:[currentTabButton frame]];
+    [mSavedTabFrames addObject:currentFrameValue];
+  }
+}
+
+- (void)currentlyDraggingTabClosed
+{
+  mTabIsCurrentlyDragging = NO;
+
+  [mCurrentlySlidingTabs makeObjectsPerformSelector:@selector(stopSliding)];
+
+  [[self window] removeChildWindow:mDraggingTabWindow];
+
+  [mDraggingTab release];
+  mDraggingTab = nil;
+  [mDraggingTabWindow release];
+  mDraggingTabWindow = nil;
+
+  [self performSelector:@selector(rebuildTabBar) withObject:nil afterDelay:0.0];
+}
+
+-(void)tabViewClosedTabViewItem:(BrowserTabViewItem*)closedTabViewItem atIndex:(int)indexOfClosedItem
+{
+  // If we are currently dragging a tab, we need to know right away about a closed tab item
+  // and move the others around appropriately.
+
+  if (![self tabIsCurrentlyDragging] || [self isReorderingTabViewItemsDuringDrag])
+    return;
+
+  if ([closedTabViewItem isEqual:[mDraggingTab tabViewItem]]) {
+    [self currentlyDraggingTabClosed];
+    return;
+  }
+
+  if (indexOfClosedItem == mEmptyTabPlaceholderIndex)
+    return;
+
+  if ([self tabIndexIsVisible:indexOfClosedItem])
+    mNumberOfVisibleTabs--;
+
+  if (indexOfClosedItem < mEmptyTabPlaceholderIndex)
+    mEmptyTabPlaceholderIndex--;
+
+  // Find all visible tabs to the right of the removed one, and slide them to the left to fill empty spots.
+  for (int currentTabIndex = indexOfClosedItem; currentTabIndex <= [self rightmostVisibleTabIndex]; currentTabIndex++) {
+    if (currentTabIndex == mEmptyTabPlaceholderIndex) {
+      continue;
+    }
+    else if (currentTabIndex == (mEmptyTabPlaceholderIndex + 1)) {
+      // Slide the tab after the empty spot two spaces to the left, because the empty needs to remain
+      // in the same location.
+      TabButtonView* tabButtonAfterPlaceholder = [self tabButtonAtIndex:currentTabIndex];
+      [tabButtonAfterPlaceholder slideToLocation:[[mSavedTabFrames objectAtIndex:currentTabIndex - 1] rectValue].origin];
+      continue;
+    }
+
+    TabButtonView* tabButton = [self tabButtonAtIndex:currentTabIndex];
+    [tabButton slideToLocation:[[mSavedTabFrames objectAtIndex:currentTabIndex] rectValue].origin];
+  }
+
+  // If there was a tab to the right of the empty placeholder, we need to move the empty index since
+  // it was actually slid to before the empty spot.
+  if (indexOfClosedItem <= mEmptyTabPlaceholderIndex &&
+      mEmptyTabPlaceholderIndex < (mNumberOfVisibleTabs - 1))
+  {
+    mEmptyTabPlaceholderIndex++;
+  }
+
+  // Update the BrowserTabView to reflect where the dragged image currently will be dropped.
+  BrowserTabViewItem* draggedTabViewItem = [[[mDraggingTab tabViewItem] retain] autorelease];
+  [self setReorderingTabViewItemsDuringDrag:YES];
+  [mTabView removeTabViewItem:draggedTabViewItem];
+  [mTabView insertTabViewItem:draggedTabViewItem atIndex:mEmptyTabPlaceholderIndex];
+  [mTabView selectTabViewItem:draggedTabViewItem];
+  [self setReorderingTabViewItemsDuringDrag:NO];
+}
+
+-(void)tabViewAddedTabViewItem:(BrowserTabViewItem*)addedTabViewItem
+{
+  if (![self tabIsCurrentlyDragging])
+    return;
+
+  // If we're dragging, add the new tab rect to the saved frames collection.
+  NSRect lastTabButtonFrame = [[mSavedTabFrames lastObject] rectValue];
+  NSRect frameForNewButton = lastTabButtonFrame;
+  frameForNewButton.origin.x += lastTabButtonFrame.size.width;
+  [mSavedTabFrames addObject:[NSValue valueWithRect:frameForNewButton]];
+}
+
+- (BOOL)isReorderingTabViewItemsDuringDrag
+{
+  return mIsReorganizingTabViewItems;
+}
+
+- (void)setReorderingTabViewItemsDuringDrag:(BOOL)flag
+{
+  mIsReorganizingTabViewItems = flag;
+}
+
+-(BOOL)tabIsCurrentlyDragging
+{
+  return mTabIsCurrentlyDragging;
 }
 
 @end

@@ -41,6 +41,18 @@
 @class BrowserTabViewItem;
 @class TruncatingTextAndImageCell;
 @class RolloverImageButton;
+@class CHSlidingViewAnimation;
+
+typedef enum {
+  eSlideAnimationDirectionLeft,
+  eSlideAnimationDirectionRight,
+  eSlideAnimationDirectionNone
+} ESlideAnimationDirection;
+
+extern NSString *const kSlidingTabAnimationFinishedNotification;
+// Key in the |kSlidingTabAnimationFinishedNotification| user info dictionary to inform observers
+// if the sliding tab animation was aborted before it finished.
+extern NSString *const kSlidingTabAnimationFinishedCompletelyKey;
 
 // A view for visible tab buttons; there is a one-to-one correspondence between
 // a BrowserTabViewItem and a TabButtonView.
@@ -59,7 +71,10 @@
   BOOL                          mMouseWithin;
   BOOL                          mIsDragTarget;
   BOOL                          mSelectTabOnMouseUp;
-  BOOL                          mNeedsDivider;
+  BOOL                          mNeedsLeftDivider;
+  BOOL                          mNeedsRightDivider;
+  ESlideAnimationDirection      mSlideAnimationDirection;
+  CHSlidingViewAnimation*       mViewAnimation;     // strong ref
 }
 
 - (id)initWithFrame:(NSRect)frameRect andTabItem:(BrowserTabViewItem*)tabViewItem;
@@ -78,13 +93,20 @@
 
 - (RolloverImageButton*)closeButton;
 
-// Enable or disable draving of a right-side divider.
-- (void)setDrawsDivider:(BOOL)drawsDivider;
+// Enable or disable drawing of the dividers.
+- (void)setDrawsLeftDivider:(BOOL)drawsLeftDivider;
+- (void)setDrawsRightDivider:(BOOL)drawsRightDivider;
 
 // Start and stop the tab loading animation.
 - (void)startLoadAnimation;
 - (void)stopLoadAnimation;
 
+// Smoothly animates the tab button to a new location.
+- (void)slideToLocation:(NSPoint)newLocation;
+- (void)stopSliding;
+
+// The current direction the tab is sliding in.
+- (ESlideAnimationDirection)slideAnimationDirection;
 
 // TODO: The following three methods should be removed from the public
 // interface, and all tracking should be handled internally to the class

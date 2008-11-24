@@ -48,6 +48,7 @@
 #import "RolloverImageButton.h"
 #import "TruncatingTextAndImageCell.h"
 
+#import "CHSlidingViewAnimation.h"
 
 static const int kTabLeftMargin = 4;
 static const int kTabRightMargin = 4;
@@ -55,17 +56,24 @@ static const int kTabBottomPad = 4;      // unusable bottom space on the tab
 static const int kTabCloseButtonPad = 2; // distance between close button and label
 static const int kTabSelectOffset = 1;   // amount to drop everything down when selected
 
+static const float kSlidingTabAnimationDuration = 0.4f;
+
 static NSImage* sTabLeft = nil;
 static NSImage* sTabRight = nil;
 static NSImage* sActiveTabBg = nil;
 static NSImage* sTabMouseOverBg = nil;
 static NSImage* sTabButtonDividerImage = nil;
 
+NSString *const kSlidingTabAnimationFinishedNotification = @"SlidingTabAnimationFinishedNotificationName";
+NSString *const kSlidingTabAnimationFinishedCompletelyKey = @"SlidingTabAnimationDidFinishCompletely";
+
 @interface TabButtonView (Private)
 
 - (void)repositionSubviews;
 - (void)setDragTarget:(BOOL)isDragTarget;
 + (void)loadImages;
+- (void)setSlideAnimationDirection:(ESlideAnimationDirection)animationDirection;
+- (void)finishAnimation:(NSNumber*)animationFinishedCompletely;
 
 @end
 
@@ -116,6 +124,8 @@ static NSImage* sTabButtonDividerImage = nil;
     [self setAutoresizesSubviews:NO];
     [self repositionSubviews];
 
+    mSlideAnimationDirection = eSlideAnimationDirectionNone;
+
     [self registerForDraggedTypes:[NSArray arrayWithObjects:
                                    kCaminoBookmarkListPBoardType, kWebURLsWithTitlesPboardType,
                                    NSStringPboardType, NSFilenamesPboardType, NSURLPboardType, nil]];
@@ -130,6 +140,7 @@ static NSImage* sTabButtonDividerImage = nil;
   [mCloseButton release];
   [mLoadingIndicator removeFromSuperview];
   [mLoadingIndicator release];
+  [mViewAnimation release];
   [super dealloc];
 }
 
@@ -188,9 +199,16 @@ static NSImage* sTabButtonDividerImage = nil;
   [self setNeedsDisplayInRect:mLabelRect];
 }
 
--(void)setDrawsDivider:(BOOL)drawsDivider
+- (void)setDrawsLeftDivider:(BOOL)drawsLeftDivider
 {
-  mNeedsDivider = drawsDivider;
+  mNeedsLeftDivider = drawsLeftDivider;
+  [self setNeedsDisplay:YES];
+}
+
+- (void)setDrawsRightDivider:(BOOL)drawsRightDivider
+{
+  mNeedsRightDivider = drawsRightDivider;
+  [self setNeedsDisplay:YES];
 }
 
 - (void)setCloseButtonEnabled:(BOOL)isEnabled
@@ -256,7 +274,13 @@ static NSImage* sTabButtonDividerImage = nil;
 
   NSRect tabRect = [self bounds];
 
-  if (mNeedsDivider) {
+  if (mNeedsLeftDivider) {
+    NSPoint dividerOrigin = NSMakePoint(NSMinX(tabRect), 0);
+    [sTabButtonDividerImage compositeToPoint:dividerOrigin
+                                   operation:NSCompositeSourceOver];
+  }
+
+  if (mNeedsRightDivider) {
     tabRect.size.width -= [sTabButtonDividerImage size].width;
     NSPoint dividerOrigin = NSMakePoint(NSMaxX(tabRect), 0);
     [sTabButtonDividerImage compositeToPoint:dividerOrigin
@@ -451,8 +475,8 @@ static NSImage* sTabButtonDividerImage = nil;
   NSPoint localPoint = [self convertPoint:[theEvent locationInWindow] fromView:nil];
 
   if (!NSPointInRect(localPoint, iconRect) || ![mTabViewItem draggable])
-    return;
-
+    [super mouseDragged:theEvent];
+  
   // only initiate the drag if the original mousedown was in the right place...
   // implied by mSelectTabOnMouseUp
   if (mSelectTabOnMouseUp) {
@@ -632,6 +656,104 @@ static NSImage* sTabButtonDividerImage = nil;
   {
     [super keyDown:theEvent];
   }
+}
+
+#pragma mark -
+
+- (void)setSlideAnimationDirection:(ESlideAnimationDirection)animationDirection
+{
+  mSlideAnimationDirection = animationDirection;
+}
+
+- (ESlideAnimationDirection)slideAnimationDirection;
+{
+  return mSlideAnimationDirection;
+}
+
+- (void)slideToLocation:(NSPoint)newLocation
+{
+  NSPoint currentLocation = [self frame].origin;
+
+  // Avoid sliding if we're already moving in the same direction.
+  if (mSlideAnimationDirection == eSlideAnimationDirectionRight && 
+      newLocation.x > currentLocation.x)
+  {
+    return;
+  }
+
+  if ([mViewAnimation isAnimating])
+    [mViewAnimation stopAnimation];
+
+  [self setDrawsLeftDivider:YES];
+  [self setDrawsRightDivider:YES];
+
+  if (!mViewAnimation) {
+    mViewAnimation = [[CHSlidingViewAnimation alloc] initWithAnimationTarget:self];
+    [mViewAnimation setDuration:kSlidingTabAnimationDuration];
+    [mViewAnimation setFrameRate:0.0f]; // 0.0 -> Go as fast as possible.
+    [mViewAnimation setAnimationBlockingMode:NSAnimationNonblockingThreaded];
+    [mViewAnimation setAnimationCurve:NSAnimationEaseInOut];
+    [mViewAnimation setDelegate:self];
+  }
+
+  [mViewAnimation setStartLocation:currentLocation];
+  [mViewAnimation setEndLocation:newLocation];
+
+  if (newLocation.x > currentLocation.x)
+    [self setSlideAnimationDirection:eSlideAnimationDirectionRight];
+  else
+    [self setSlideAnimationDirection:eSlideAnimationDirectionLeft];
+
+  // Our tooltip rects remain stuck in the original location when animating,
+  // so we need to disable them when animating.
+  [self setToolTip:nil];
+  [mCloseButton setToolTip:nil];
+
+  [mViewAnimation startAnimation];
+}
+
+- (void)stopSliding
+{
+  [mViewAnimation stopAnimation];
+}
+
+// Note: If the animation's blocking mode is set to |NSAnimationNonblockingThreaded|,
+// this delegate method will be called on a background thread.
+- (void)animationDidStop:(NSAnimation*)animation
+{
+  [self performSelectorOnMainThread:@selector(finishAnimation:) 
+                         withObject:[NSNumber numberWithBool:NO]
+                      waitUntilDone:YES];
+}
+
+// Note: If the animation's blocking mode is set to |NSAnimationNonblockingThreaded|,
+// this delegate method will be called on a background thread.
+- (void)animationDidEnd:(NSAnimation*)animation
+{
+  [self performSelectorOnMainThread:@selector(finishAnimation:) 
+                         withObject:[NSNumber numberWithBool:YES]
+                      waitUntilDone:YES];
+}
+
+- (void)finishAnimation:(NSNumber*)animationFinishedCompletely;
+{
+  [self setSlideAnimationDirection:eSlideAnimationDirectionNone];
+
+  NSDictionary *notificationUserInfo = 
+    [NSDictionary dictionaryWithObject:animationFinishedCompletely 
+                                forKey:kSlidingTabAnimationFinishedCompletelyKey];
+  [[NSNotificationCenter defaultCenter] postNotificationName:kSlidingTabAnimationFinishedNotification
+                                                      object:self
+                                                    userInfo:notificationUserInfo];
+
+  // Restore the tool tips that were disabled while animating.
+  [self setToolTip:[mLabelCell stringValue]];
+  [mCloseButton setToolTip:NSLocalizedString(@"CloseTabButtonHelpText", nil)];
+
+  // NSAnimation does not seem to clean up threads appropriately. Creating a new animation
+  // each time prevents our thread count from getting out of control.
+  [mViewAnimation release];
+  mViewAnimation = nil;
 }
 
 @end

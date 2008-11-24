@@ -68,6 +68,16 @@
   int               mNumberOfVisibleTabs;        // Number of tab view items drawn in the tab bar
 
   NSView*           mNextExternalKeyView; // The next key view after the tab bar, as set from within Interface Builder.
+
+  BOOL              mTabIsCurrentlyDragging;
+  int               mEmptyTabPlaceholderIndex;   // The empty spot where the dragged tab will be inserted at.
+  TabButtonView*    mDraggingTab;           // strong
+  NSWindow*         mDraggingTabWindow;     // strong
+  float             mHorizontalGrabOffset;  // To know when to start dragging when the mouse moves away from the tab.
+  NSMutableArray*   mSavedTabFrames;        // strong
+  int               mDraggingTabOriginalIndex;
+  BOOL              mIsReorganizingTabViewItems;
+  NSMutableArray*   mCurrentlySlidingTabs;  // strong
 }
 
 // destroy the tab bar and recreate it from the tabview
@@ -81,5 +91,8 @@
 -(void)setVisible:(BOOL)show;
 -(void)scrollTabIndexToVisible:(int)index;
 - (void)updateKeyViewLoop;
+-(BOOL)tabIsCurrentlyDragging;
+-(void)tabViewClosedTabViewItem:(BrowserTabViewItem*)closedTabViewItem atIndex:(int)indexOfClosedItem;
+-(void)tabViewAddedTabViewItem:(BrowserTabViewItem*)addedTabViewItem;
 
 @end

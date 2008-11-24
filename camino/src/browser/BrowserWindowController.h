@@ -112,7 +112,6 @@ typedef enum  {
 @class ExtendedSplitView;
 @class WebSearchField;
 
-
 @interface BrowserWindowController : NSWindowController<BrowserUIDelegate, BrowserUICreationDelegate>
 {
   IBOutlet BrowserTabView*    mTabBrowser;
