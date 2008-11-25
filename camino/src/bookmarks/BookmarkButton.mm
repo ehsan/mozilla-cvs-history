@@ -127,6 +127,9 @@
     else
       [self setAction:@selector(showFolderPopupAction:)];
   }
+  // set the middle-click action
+  [(DraggableImageAndTextCell*)[self cell] setMiddleClickAction:@selector(openBookmarkInNewTabOrWindow:)];
+
   [self setTitle:[aItem title]];
   [self setImage:[aItem icon]];
   [self setTarget:self];
@@ -193,6 +196,16 @@
   BOOL reverseBGPref = ([aSender keyEquivalentModifierMask] & NSShiftKeyMask) != 0;
 
   [[NSApp delegate] loadBookmark:item withBWC:brController openBehavior:eBookmarkOpenBehavior_NewWindow reverseBgToggle:reverseBGPref];
+}
+
+// Respects the middle-click pref
+-(IBAction)openBookmarkInNewTabOrWindow:(id)aSender
+{
+  BrowserWindowController* brController = [[self window] windowController];
+  BookmarkItem *item = [self bookmarkItem];
+  BOOL reverseBGPref = ([[NSApp currentEvent] modifierFlags] & NSShiftKeyMask) != 0;
+
+  [[NSApp delegate] loadBookmark:item withBWC:brController openBehavior:eBookmarkOpenBehavior_NewPreferred reverseBgToggle:reverseBGPref];
 }
 
 - (IBAction)copyURLs:(id)aSender
@@ -277,6 +290,11 @@
   [super mouseDown:aEvent];
   if ([[self cell] lastClickHoldTimedOut])
     [self showFolderPopup:aEvent];
+}
+
+- (void)otherMouseDown:(NSEvent*)aEvent
+{
+  [[self cell] trackOtherMouse:aEvent inRect:[self bounds] ofView:self untilMouseUp:YES];
 }
 
 - (unsigned int)draggingSourceOperationMaskForLocal:(BOOL)localFlag

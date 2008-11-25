@@ -37,11 +37,6 @@
 
 #import "DraggableImageAndTextCell.h"
 
-@interface DraggableImageAndTextCell(Private)
-- (NSAttributedString*)savedStandardTitle;
-- (void)setSavedStandardTitle:(NSAttributedString*)title;
-@end
-
 @implementation DraggableImageAndTextCell
 
 + (BOOL)prefersTrackingUntilMouseUp
@@ -52,38 +47,17 @@
 - (id)initTextCell:(NSString*)aString
 {
   if ((self = [super initTextCell:aString])) {
-    mIsDraggable = NO;
     mClickHoldTimeoutSeconds = 60.0 * 60.0 * 24.0;
-    mLastClickHoldTimedOut = NO;
   }
   return self;
-}
-
-- (void)dealloc
-{
-  [mSavedStandardTitle release];
-  [super dealloc];
-}
-
-- (NSAttributedString*)savedStandardTitle
-{
-  return mSavedStandardTitle;
-}
-
-- (void)setSavedStandardTitle:(NSAttributedString*)title
-{
-  [mSavedStandardTitle autorelease];
-  mSavedStandardTitle = [title retain];
 }
 
 // Overridden to give the title text a drop shadow when the button is highlighted
 - (void)highlight:(BOOL)highlighted withFrame:(NSRect)cellFrame inView:(NSView*)controlView
 {
   if ([[self title] length] > 0) {
-    if (highlighted) {
-      [self setSavedStandardTitle:[self attributedTitle]];
-      
-      NSMutableDictionary* info = [[[self savedStandardTitle] attributesAtIndex:0 effectiveRange:NULL] mutableCopy];
+    if (highlighted && !mHasShadow) {
+      NSMutableDictionary* info = [[[self attributedTitle] attributesAtIndex:0 effectiveRange:NULL] mutableCopy];
       NSShadow* shadow = [[NSShadow alloc] init];
       [shadow setShadowBlurRadius:1];
       [shadow setShadowOffset:NSMakeSize(0, -1)];
@@ -94,10 +68,16 @@
       [info release];
       [self setAttributedTitle:shadowedTitle];
       [shadowedTitle release];
+      mHasShadow = YES;
     }
-    else {
-      [self setAttributedTitle:[self savedStandardTitle]];
-      [self setSavedStandardTitle:nil];
+    else if (!highlighted && mHasShadow){
+      NSMutableDictionary* info = [[[self attributedTitle] attributesAtIndex:0 effectiveRange:NULL] mutableCopy];
+      [info removeObjectForKey:NSShadowAttributeName];
+      NSAttributedString* unshadowedTitle = [[NSAttributedString alloc] initWithString:[self title] attributes:info];
+      [info release];
+      [self setAttributedTitle:unshadowedTitle];
+      [unshadowedTitle release];
+      mHasShadow = NO;
     }
   }
   
@@ -119,6 +99,11 @@
   mClickHoldAction = inAltAction;
 }
 
+- (void)setMiddleClickAction:(SEL)inAction
+{
+  mMiddleClickAction = inAction;
+}
+
 #pragma mark -
 
 - (BOOL)isDraggable
@@ -133,11 +118,11 @@
 
 - (BOOL)startTrackingAt:(NSPoint)startPoint inView:(NSView*)controlView
 {
-  if (!mIsDraggable)
-    return [super startTrackingAt:startPoint inView:controlView];
+  if (mIsDraggable)
+    mTrackingStart = startPoint;
 
-  mTrackingStart = startPoint;
-  return YES; //[super startTrackingAt:startPoint inView:controlView];
+  [super startTrackingAt:startPoint inView:controlView];
+  return YES;
 }
 
 - (BOOL)continueTracking:(NSPoint)lastPoint at:(NSPoint)currentPoint inView:(NSView*)controlView
@@ -156,7 +141,10 @@
 
 #define kDragThreshold 4.0
 
-- (BOOL)trackMouse:(NSEvent*)theEvent inRect:(NSRect)cellFrame ofView:(NSView*)controlView untilMouseUp:(BOOL)untilMouseUp
+- (BOOL)trackMouse:(NSEvent*)theEvent
+            inRect:(NSRect)cellFrame
+            ofView:(NSView*)controlView
+      untilMouseUp:(BOOL)untilMouseUp
 {
   mLastClickHoldTimedOut = NO;
 
@@ -200,19 +188,64 @@
       break;
 
     lastWindowLocation = curWindowLocation;
-  }  
+  }
 
-  if (lastEvent == NSLeftMouseUp)
-    [(NSControl*)controlView sendAction:[self action] to:[self target]];
-  else if (mLastClickHoldTimedOut && mClickHoldAction) {
+  if (mLastClickHoldTimedOut && mClickHoldAction) {
     [self stopTracking:lastWindowLocation at:curWindowLocation inView:controlView mouseIsUp:NO];
     [(NSControl*)controlView sendAction:mClickHoldAction to:[self target]];
     return YES;
   }
 
+  if (lastEvent == NSLeftMouseUp)
+    [(NSControl*)controlView sendAction:[self action] to:[self target]];
+
   [self stopTracking:lastWindowLocation at:curWindowLocation inView:controlView mouseIsUp:(lastEvent == NSLeftMouseUp)];
   return YES;  // XXX fix me
 }
 
+- (BOOL)trackOtherMouse:(NSEvent*)theEvent
+                 inRect:(NSRect)cellFrame
+                 ofView:(NSView*)controlView
+           untilMouseUp:(BOOL)untilMouseUp
+{
+  NSPoint lastWindowLocation  = [theEvent locationInWindow];
+  NSPoint curWindowLocation   = lastWindowLocation;
+  BOOL mouseInsideCell;
+  
+  if ([theEvent type] == NSOtherMouseDown)
+    [self highlight:YES withFrame:cellFrame inView:controlView];
+  
+  if (![self startTrackingAt:curWindowLocation inView:controlView])
+    return NO;
+  
+  while(1) {
+    NSEvent* event = [NSApp nextEventMatchingMask:(NSOtherMouseDraggedMask | NSOtherMouseUpMask)
+                                        untilDate:[NSDate distantFuture]
+                                           inMode:NSEventTrackingRunLoopMode
+                                          dequeue:YES];
+    curWindowLocation = [event locationInWindow];
+
+    mouseInsideCell = NSPointInRect([controlView convertPoint:curWindowLocation fromView:nil], cellFrame);
+
+    if (![self continueTracking:lastWindowLocation at:curWindowLocation inView:controlView])
+      return NO;
+
+    if ([event type] == NSOtherMouseDragged) {
+      [self highlight:mouseInsideCell withFrame:cellFrame inView:controlView];
+    } else if ([event type] == NSOtherMouseUp) {
+      [self highlight:NO withFrame:cellFrame inView:controlView];
+      break;
+    }
+
+    lastWindowLocation = curWindowLocation;
+  }
+
+  if (mouseInsideCell)
+    [(NSControl*)controlView sendAction:mMiddleClickAction to:[self target]];
+
+  [self stopTracking:lastWindowLocation at:curWindowLocation inView:controlView mouseIsUp:YES];
+  return (untilMouseUp || mouseInsideCell);
+}
+    
 @end
 
