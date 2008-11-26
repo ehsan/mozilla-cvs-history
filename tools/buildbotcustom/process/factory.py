@@ -594,7 +594,7 @@ class MercurialBuildFactory(BuildFactory):
             baseObjdir = self.objdir.split('/')[0]
             self.addStep(ShellCommand,
              command=['find', '-d', '-E', '.', '-iregex',
-                      '.*\.(mi|i|s|mii|ii|deps)$',
+                      '.*\.(mi|i|s|mii|ii)$',
                       '-exec', 'rm', '-rf', '{}', ';'],
              workdir='build/%s' % baseObjdir
             )
