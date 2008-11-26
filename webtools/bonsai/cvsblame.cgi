@@ -73,7 +73,8 @@ my $SubHead = '';
 my @src_roots = getRepositoryList();
 
 # Add doctype to trigger IE6 standards mode:
-print '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">\n';
+print '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+';
 
 # Init byrd's 'feature' to allow html in comments
 #
