@@ -26,7 +26,7 @@ reload(buildbotcustom.unittest.steps)
 reload(buildbotcustom.env)
 
 from buildbotcustom.steps.misc import SetMozillaBuildProperties, TinderboxShellCommand
-from buildbotcustom.steps.release import UpdateVerify
+from buildbotcustom.steps.release import UpdateVerify, L10nVerifyMetaDiff
 from buildbotcustom.steps.test import AliveTest, CompareBloatLogs, \
   CompareLeakLogs, Codesighs, GraphServerPost
 from buildbotcustom.steps.transfer import MozillaStageUpload
@@ -1565,3 +1565,119 @@ class UnittestBuildFactory(BuildFactory):
 
     def addStepNoEnv(self, *args, **kw):
         return BuildFactory.addStep(self, *args, **kw)
+
+
+class L10nVerifyFactory(ReleaseFactory):
+    def __init__(self, cvsroot, buildTools,
+                stagingServer, productName,
+                 appVersion, buildNumber,
+                 oldAppVersion, oldBuildNumber,
+                 verifyDir='verify',
+                 linuxExtension='bz2'):
+
+        ReleaseFactory.__init__(self)
+
+        productDir = 'build/%s/%s-%s' % (verifyDir, 
+                                         productName,
+                                         appVersion)
+        verifyDirVersion = '%s/tools/release/l10n' % productDir
+
+        # Remove existing verify dir 
+        self.addStep(ShellCommand,
+         description=['remove', 'verify', 'dir'],
+         descriptionDone=['removed', 'verify', 'dir'],
+         command=['rm', '-rf', verifyDir],
+         haltOnFailure=True,
+        )
+
+        self.addStep(ShellCommand,
+         description=['(re)create', 'verify', 'dir'],
+         descriptionDone=['(re)created', 'verify', 'dir'],
+         command=['bash', '-c', 'mkdir -p ' + verifyDirVersion], 
+         haltOnFailure=True,
+        )
+        
+        # check out l10n verification scripts
+        self.addStep(ShellCommand,
+         command=['hg', 'clone', buildTools, 'tools'],
+         workdir=productDir,
+         description=['clone', 'build tools'],
+         haltOnFailure=True
+        )
+        
+        # Download current release
+        self.addStep(ShellCommand,
+         description=['download', 'current', 'release'],
+         descriptionDone=['downloaded', 'current', 'release'],
+         command=['rsync',
+                  '-Lav', 
+                  '-e', 'ssh', 
+                  '--include=*.dmg',
+                  '--include=*.exe',
+                  '--include=*.tar.%s' % linuxExtension,
+                  '--exclude=*',
+                  '%s:/home/ftp/pub/%s/nightly/%s-candidates/build%s/*' %
+                   (stagingServer, productName, appVersion, str(buildNumber)),
+                  '%s-%s-build%s/' % (productName, 
+                                      appVersion, 
+                                      str(buildNumber))
+                  ],
+         workdir=verifyDirVersion,
+         haltOnFailure=True,
+         timeout=60*60
+        )
+
+        # Download previous release
+        self.addStep(ShellCommand,
+         description=['download', 'previous', 'release'],
+         descriptionDone =['downloaded', 'previous', 'release'],
+         command=['rsync',
+                  '-Lav', 
+                  '-e', 'ssh', 
+                  '--include=*.dmg',
+                  '--include=*.exe',
+                  '--include=*.tar.%s' % linuxExtension,
+                  '--exclude=*',
+                  '%s:/home/ftp/pub/%s/nightly/%s-candidates/build%s/*' %
+                   (stagingServer, 
+                    productName, 
+                    oldAppVersion,
+                    str(oldBuildNumber)),
+                  '%s-%s-build%s/' % (productName, 
+                                      oldAppVersion,
+                                      str(oldBuildNumber))
+                  ],
+         workdir=verifyDirVersion,
+         haltOnFailure=True,
+         timeout=60*60
+        )
+
+        currentProduct = '%s-%s-build%s' % (productName, 
+                                            appVersion,
+                                            str(buildNumber))
+        previousProduct = '%s-%s-build%s' % (productName, 
+                                             oldAppVersion,
+                                             str(oldBuildNumber))
+
+        for product in [currentProduct, previousProduct]:
+            self.addStep(ShellCommand,
+                         description=['(re)create', 'product', 'dir'],
+                         descriptionDone=['(re)created', 'product', 'dir'],
+                         command=['bash', '-c', 'mkdir -p %s/%s' % (verifyDirVersion, product)], 
+                         workdir='.',
+                         haltOnFailure=True,
+                        )
+            self.addStep(ShellCommand,
+                         description=['verify', 'l10n', product],
+                         descriptionDone=['verified', 'l10n', product],
+                         command=["bash", "-c", 
+                                  "./verify_l10n.sh " + product],
+                         workdir=verifyDirVersion,
+                         haltOnFailure=True,
+                        )
+
+        self.addStep(L10nVerifyMetaDiff,
+                     currentProduct=currentProduct,
+                     previousProduct=previousProduct,
+                     workdir=verifyDirVersion,
+                     )
