@@ -217,7 +217,9 @@ class MercurialBuildFactory(BuildFactory):
          env=self.env
         )
         self.addStep(ShellCommand,
-         command=['bash', '-c', 'rm -rf ../../*-nightly/build'],
+         command=['bash', '-c',
+             'find .. -maxdepth 2 -type d -path "*-nightly/build" -print -exec rm -rf {} \;'],
+         workdir='.',
          env = self.env,
          description=['cleaning', 'old', 'builds'],
          descriptionDone=['clean', 'old', 'builds'],
@@ -612,7 +614,9 @@ class RepackFactory(BuildFactory):
          haltOnFailure=True
         )
         self.addStep(ShellCommand,
-         command=['bash', '-c', 'rm -rf ../../*-nightly/build'],
+         command=['bash', '-c',
+             'find .. -maxdepth 2 -type d -path "*-nightly/build" -not -path "*-l10n-nightly/build" -print -exec rm -rf {} \;'],
+         workdir='.',
          description=['cleaning', 'old', 'builds'],
          descriptionDone=['clean', 'old', 'builds'],
          warnOnFailure=True,
@@ -1397,7 +1401,9 @@ class UnittestBuildFactory(BuildFactory):
             )
 
         self.addStep(ShellCommand,
-         command=['rm', '-rf', '../../*-nightly/build'],
+         command=['bash', '-c',
+             'find .. -maxdepth 2 -type d -path "*-nightly/build" -print -exec rm -rf {} \;'],
+         workdir='.',
          description=['cleaning', 'old', 'builds'],
          descriptionDone=['clean', 'old', 'builds'],
          warnOnFailure=True,
