@@ -635,7 +635,7 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
     // the cache should use the original URI?  See bug 89419.
     nsCOMPtr<nsIURI> originalURI;
     channel->GetOriginalURI(getter_AddRefs(originalURI));
-    request->Init(originalURI, loadGroup, channel, entry, thread, aCX);
+    request->Init(originalURI, channel, channel, entry, thread, aCX);
 
     ProxyListener *pl = new ProxyListener(static_cast<nsIStreamListener *>(request));
     if (!pl) {
@@ -963,7 +963,7 @@ NS_IMETHODIMP imgCacheValidator::OnStartRequest(nsIRequest *aRequest, nsISupport
   // the cache should use the original URI?  See bug 89419.
   nsCOMPtr<nsIURI> originalURI;
   channel->GetOriginalURI(getter_AddRefs(originalURI));
-  request->Init(originalURI, aRequest, channel, entry, NS_GetCurrentThread(), mContext);
+  request->Init(originalURI, channel, channel, entry, NS_GetCurrentThread(), mContext);
 
   ProxyListener *pl = new ProxyListener(static_cast<nsIStreamListener *>(request));
   if (!pl) {

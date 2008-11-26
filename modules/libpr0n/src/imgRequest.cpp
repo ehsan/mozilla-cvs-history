@@ -992,7 +992,7 @@ imgRequest::OnChannelRedirect(nsIChannel *oldChannel, nsIChannel *newChannel, PR
 
   RemoveFromCache();
 
-  mChannel = nsnull;
+  mChannel = newChannel;
 
   nsCOMPtr<nsIURI> uri;
   newChannel->GetURI(getter_AddRefs(uri));
