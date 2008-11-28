@@ -954,10 +954,17 @@ class ReleaseTaggingFactory(ReleaseFactory):
                  workdir=repoName
                 )
                 self.addStep(ShellCommand,
+                 # mozilla-central and other developer repositories have a
+                 # 'CLOSED TREE' hook on them which rejects commits when the
+                 # tree is declared closed. It is very common for us to tag
+                 # and branch when the tree is in this state. Adding the 
+                 # 'CLOSED TREE' string at the end will force the hook to
+                 # let us commit regardless of the tree state.
                  command=['hg', 'commit', '-u', hgUsername, '-m',
                           'Automated checkin: version bump remove "pre" ' + \
                           ' from version number for ' + productName + ' ' + \
-                          appVersion + ' release on ' + relbranchName],
+                          appVersion + ' release on ' + relbranchName + ' ' + \
+                          'CLOSED TREE'],
                  workdir=repoName,
                  description=['commit %s' % repoName],
                  haltOnFailure=True
