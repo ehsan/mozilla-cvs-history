@@ -1,6 +1,11 @@
 from buildbot.status.builder import FAILURE, SUCCESS, WARNINGS
 from buildbot.steps.shell import ShellCommand
 
+import buildbotcustom.steps.misc
+reload(buildbotcustom.steps.misc)
+
+from buildbotcustom.steps.misc import TinderboxShellCommand
+
 class UpdateVerify(ShellCommand):
     def evaluateCommand(self, cmd):
         for line in cmd.logs['stdio'].getText().split("\n"):
@@ -9,7 +14,7 @@ class UpdateVerify(ShellCommand):
 
         return SUCCESS
 
-class L10nVerifyMetaDiff(ShellCommand):
+class L10nVerifyMetaDiff(TinderboxShellCommand):
     """Run the l10n verification script.
     """
     name='l10n metadiff'
@@ -28,17 +33,16 @@ class L10nVerifyMetaDiff(ShellCommand):
             self.command=['diff', '-r',
                           '%s/diffs' % currentProduct,
                           '%s/diffs' % previousProduct]
-        ShellCommand.__init__(self, **kwargs)
+        TinderboxShellCommand.__init__(self, ignoreCodes=[0,1], **kwargs)
     
     def evaluateCommand(self, cmd):
-        superResult = ShellCommand.evaluateCommand(self, cmd)
         fileWarnings = self.getProperty('fileWarnings')
         if fileWarnings and len(fileWarnings) > 0:
             return WARNINGS
         '''We ignore failures here on purpose, since diff will 
            return 1(FAILURE) if it actually finds anything to output.
         '''
-        return SUCCESS
+        return TinderboxShellCommand.evaluateCommand(self, cmd)
     
     def createSummary(self, log):
         fileWarnings = []

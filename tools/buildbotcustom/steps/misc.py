@@ -50,12 +50,26 @@ class TinderboxShellCommand(ShellCommand):
     haltOnFailure = False
     
     """This step is really just a 'do not care' buildstep for executing a
-       slave command and ignoring the results.
-       Always returns SUCCESS
+       slave command and ignoring the results. If ignoreCodes is passed,
+       only exit codes listed in it will be ignored. If ignoreCodes is not
+       passed, all exit codes will be ignored.
     """
+    def __init__(self, ignoreCodes=None, **kwargs):
+       ShellCommand.__init__(self, **kwargs)
+       self.ignoreCodes = ignoreCodes
+       self.addFactoryArguments(ignoreCodes=ignoreCodes)
     
     def evaluateCommand(self, cmd):
-       return SUCCESS
+       # Ignore all return codes
+       if not self.ignoreCodes:
+          return SUCCESS
+       else:
+          # Ignore any of the return codes we're told to
+          if cmd.rc in self.ignoreCodes:
+             return SUCCESS
+          # If the return code is something else, fail
+          else:
+             return FAILURE
 
 class GetHgRevision(ShellCommand):
     """Retrieves the revision from a Mercurial repository. Builds based on

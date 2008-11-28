@@ -1158,9 +1158,10 @@ class ReleaseUpdatesFactory(ReleaseFactory):
          description=['bump', patcherConfig],
          haltOnFailure=True
         )
-        self.addStep(ShellCommand,
+        self.addStep(TinderboxShellCommand,
          command=['cvs', 'diff', '-u', patcherConfigFile],
-         description=['diff', patcherConfig]
+         description=['diff', patcherConfig],
+         ignoreCodes=[1]
         )
         if commitPatcherConfig:
             self.addStep(ShellCommand,
