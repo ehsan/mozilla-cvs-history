@@ -605,7 +605,7 @@ class MercurialBuildFactory(BuildFactory):
 
 class RepackFactory(BuildFactory):
     def __init__(self, branch, project, enUSBinaryURL, stageServer,
-                 stageUsername, uploadPath, repoPath):
+                 stageUsername, uploadPath, repoPath, l10nRepoPath):
         BuildFactory.__init__(self)
 
         self.addStep(ShellCommand,
@@ -623,8 +623,8 @@ class RepackFactory(BuildFactory):
          flunkOnFailure=False
         )
         self.addStep(ShellCommand,
-         command=['sh', '-c', 'mkdir -p l10n-central'],
-         descriptionDone='mkdir l10n-central',
+         command=['sh', '-c', 'mkdir -p %s' % l10nRepoPath],
+         descriptionDone='mkdir '+ l10nRepoPath,
          workdir='.'
         )
         self.addStep(ShellCommand,
@@ -644,7 +644,7 @@ class RepackFactory(BuildFactory):
                          'hg -R %(locale)s pull -r tip ; ' +
                          'else ' +
                          'hg clone ' +
-                         'http://hg.mozilla.org/l10n-central/%(locale)s/ ; ' +
+                         'http://hg.mozilla.org/'+l10nRepoPath+'/%(locale)s/ ; ' +
                          'fi ' +
                          '&& hg -R %(locale)s update')],
          descriptionDone="locale's source",
