@@ -131,6 +131,31 @@ if ($c->param) {
             push @where, { field => 'end_date',
                            value => $end_date};
             $where_criteria .= "Date between '$start_date' and '$end_date'<br/>";
+        } elsif ($param eq 'vetted_end_date') {
+          # Ignore if we also have a start date.
+          next if ($c->param('vetted_start_date'));
+          my $vetted_end_date = $c->param($param);
+          $vetted_end_date =~ s/[^0-9A-Za-z ]/ /g; 
+          push @where, { field => 'vetted_end_date',
+                         value => $vetted_end_date};
+          $where_criteria .= "Vetted before '$vetted_end_date'<br/>"
+        } elsif ($param eq 'vetted_start_date') {
+          my $vetted_start_date = $c->param($param);
+          $vetted_start_date =~ s/[^0-9A-Za-z ]/ /g; 
+          my $vetted_end_date;
+          # Use 'now' as the default end date.
+          if ($c->param('vetted_end_date') and $c->param('vetted_end_date') ne '') {
+            $vetted_end_date = $c->param('vetted_end_date');
+            $vetted_end_date =~ s/[^0-9A-Za-z ]/ /g;
+          } else {
+            $vetted_end_date = 'Now';
+          }
+          push @where, { field => 'vetted_start_date',
+                         value => $vetted_start_date};
+          push @where, { field => 'vetted_end_date',
+                         value => $vetted_end_date};
+          $where_criteria .= "Vetted after '$vetted_start_date'<br/>";
+          $where_criteria .= "Vetted before '$vetted_end_date'<br/>"
         } elsif ($param eq 'trusted_only') {
             my $value = $c->param($param);
             if ($value ne 'all') {

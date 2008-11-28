@@ -400,6 +400,9 @@ sub getSortFields()
                          display_string => "Testcase ID#"},
                        { name => "testgroup", 
                          display_string => "Testgroup"},
+                       { name => "vetted_date", 
+                         display_string => "Vetted Date"},
+
                        );
     return \@sort_fields;
 }

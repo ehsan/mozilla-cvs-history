@@ -39,7 +39,7 @@
   var comments = new Array();
   [% subscript=0 %]
   [% FOREACH result=results %]
-  comments[[% subscript | js %]] = "[% IF result.comments %][% FOREACH comment=result.comments %][% IF loop.count>1 %]<hr/>[% END %]<p class='comment'><b>[% IF show_admin %]<a href=\"mailto:[% comment.user.email | html | email | js %]\">[% END %][% comment.user.getDisplayName | html | email | js %][% IF show_admin %]</a>[% END %]<br/>[% comment.submission_time.strftime("%Y-%m-%d&nbsp;%T") %]</b><br/>[% commenticon | none %]&nbsp;[% comment.comment | js | html %]<br/></p>[% END %][% END %]";
+  comments[[% subscript | js %]] = "[% IF result.comments %][% FOREACH comment=result.comments %][% IF loop.count>1 %]<hr/>[% END %]<p class='comment'><b>[% IF show_admin %]<a href=\"mailto:[% comment.user.email | html | email | js %]\">[% END %][% comment.user.getDisplayName | html | email | js %][% IF show_admin %]</a>[% END %]<br/>[% comment.submission_time %]</b><br/>[% commenticon | none %]&nbsp;[% comment.comment | js | html %]<br/></p>[% END %][% END %]";
   [% subscript=subscript+1 %]
   [% END %]
 </script>

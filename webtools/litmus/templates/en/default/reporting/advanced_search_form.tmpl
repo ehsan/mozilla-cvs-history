@@ -120,19 +120,19 @@ Limit your search to specific values of visible fields.
   <div class="section-content">
 <table class="advanced-search">
 <tr>
-<td width="40%" colspan="2" class="instructions">Display only results between these two dates.<br/><br/>NOTE: the preferred format for dates is YYYYMMDDhhmmss, although the search engine will do its best (within reason) to parse dates from whatever is submitted using the <a href="http://search.cpan.org/~sbeck/DateManip-5.44/Manip.pod#ParseDateString">Date::Manip</a> syntax.</td>
+<td width="40%" colspan="2" class="instructions"><a name="date_search_instructions">Display only results between these two dates.</a><br/><br/>NOTE: the preferred format for dates is YYYYMMDDhhmmss, although the search engine will do its best (within reason) to parse dates from whatever is submitted using the <a href="http://search.cpan.org/~sbeck/DateManip-5.44/Manip.pod#ParseDateString">Date::Manip</a> syntax.</td>
 <td align="center" rowspan="3"><strong>OR</strong></td>
 <td width="40%" colspan="2" class="instructions">Choose a preset timespan.</td>
 </tr>
 <tr>
 <td class="heading">Start Date:</td>
-<td><input type="text" name="start_date" value="" /></td>
+<td><input type="text" id="start_date" name="start_date" value="" /></td>
 <td class="heading">Timespan:</td>
 <td>[% INCLUDE form_widgets/select_timespan.tmpl %]</td>
 </tr>
 <tr>
 <td class="heading">End Date:</td>
-<td><input type="text" name="end_date" value="Now" /></td>
+<td><input type="text" id="end_date" name="end_date" value="Now" /></td>
 </tr>
 </table>
   </div>
@@ -273,6 +273,20 @@ Admin-specific limiting criteria go here. These criteria are not available to re
 <tr>
 <td class="heading">&nbsp;&nbsp;By Validity:</td>
 <td><input type="radio" id="valid_only_valid" name="valid_only" value="1" checked /><label for="valid_only_valid">&nbsp;Valid</label> <input type="radio" id="valid_only_invalid" name="valid_only" value="0E0" /><label for="valid_only_invalid">&nbsp;Invalid</label> <input type="radio" id="valid_only_all" name="valid_only" value="all" /><label for="valid_only_all">&nbsp;All</label></td>
+</tr>
+<tr>
+<td colspan="2"><hr/></td>
+</tr>
+<tr>
+<td class="heading">Limit by Date Vetted:</td>
+<td>The <a href="#date_search_instructions">instructions above for searching by date</a> apply here too.<br/>Note: limiting by date vetted implies searching for vetted reports.</td>
+</tr>
+<td class="heading">&nbsp;&nbsp;Start Date:</td>
+<td><input type="text" id="vetted_start_date" name="vetted_start_date" value="" onchange="toggleVettingStatus();" /></td>
+</tr>
+<tr>
+<td class="heading">&nbsp;&nbsp;End Date:</td>
+<td><input type="text" id="vetted_end_date" name="vetted_end_date" value="" onchange="toggleVettingStatus();" /></td>
 </tr>
 </table>
   </div>

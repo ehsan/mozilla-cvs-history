@@ -313,6 +313,22 @@ sub getTestResults($\@\@$) {
             } else {
                 $where .= " AND tr.submission_time<=$end_timestamp";
             }
+        } elsif ($criterion->{'field'} eq 'vetted_start_date') {
+            my $start_timestamp = &Date::Manip::UnixDate(&Date::Manip::ParseDateString($criterion->{'value'}),"%q");
+            if ($start_timestamp !~ /^\d\d\d\d\d\d\d\d\d\d\d\d\d\d$/) {
+                Litmus::Error::logError("Unable to parse a valid start date from '$criterion->{'value'},' ignoring.",
+                                        caller(0));
+            } else {
+                $where .= " AND tr.vetted_timestamp>=$start_timestamp";
+            }
+        } elsif ($criterion->{'field'} eq 'vetted_end_date') {
+            my $end_timestamp = &Date::Manip::UnixDate(&Date::Manip::ParseDateString($criterion->{'value'}),"%q");
+            if ($end_timestamp !~ /^\d\d\d\d\d\d\d\d\d\d\d\d\d\d$/) {
+                Litmus::Error::logError("Unable to parse a valid end date from '$criterion->{'value'},' ignoring.",
+                                        caller(0));;
+            } else {
+                $where .= " AND tr.vetted_timestamp<=$end_timestamp";
+            }    
         } elsif ($criterion->{'field'} eq 'timespan') {
             next if ($criterion->{'value'} eq 'all');
             my $day_delta = $criterion->{'value'};
@@ -359,6 +375,8 @@ sub getTestResults($\@\@$) {
 
         if ($criterion->{'field'} eq 'created') {
             $order_by .= "tr.submission_time $criterion->{'direction'},";
+        } elsif ($criterion->{'field'} eq 'vetted_date') {
+            $order_by .= "tr.vetted_timestamp $criterion->{'direction'},";
         } elsif ($criterion->{'field'} eq 'product') {
             $order_by .= "pr.name $criterion->{'direction'},";
         } elsif ($criterion->{'field'} eq 'platform') {
