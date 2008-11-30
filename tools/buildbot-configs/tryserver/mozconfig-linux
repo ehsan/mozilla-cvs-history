@@ -9,3 +9,9 @@ mk_add_options AUTOCONF=/usr/local/bin/autoconf-2.13
 
 CC=/tools/gcc/bin/gcc
 CXX=/tools/gcc/bin/g++
+
+# for parity with cvs and buildbot configs, we're not currently generating 
+# symbols on this platform
+export CFLAGS="-gstabs+"
+export CXXFLAGS="-gstabs+"
+
