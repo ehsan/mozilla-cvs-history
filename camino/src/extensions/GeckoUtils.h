@@ -89,6 +89,10 @@ class GeckoUtils
 
     // Given a DOM Element, scroll the view so that the element is shown
     static void ScrollElementIntoView(nsIDOMElement* aElement);
+
+    // Returns whether or not a string contains the specified word. True if the string
+    // starts with "word ", ends with " word", contains " word ", or consists entirely of "word".
+    static PRBool StringContainsWord(nsAString& aString, const char* aWord, PRBool caseInsensitive);
 };
 
 /* Stack-based utility that will push a null JSContext onto the JS stack during the

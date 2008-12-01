@@ -398,3 +398,29 @@ void GeckoUtils::ScrollElementIntoView(nsIDOMElement* aElement)
                                             NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE);
 }
 
+PRBool GeckoUtils::StringContainsWord(nsAString& aString, const char* aWord, PRBool caseInsensitive)
+{
+  const nsStringComparator& comparator = caseInsensitive ? static_cast<const nsStringComparator&>(nsCaseInsensitiveStringComparator())
+                                                         : static_cast<const nsStringComparator&>(nsDefaultStringComparator());
+  nsAutoString source, word;
+  source.Assign(aString);
+  word.AssignASCII(aWord);
+  if (source.Length() < word.Length())
+    return PR_FALSE;
+
+  nsAutoString wordAsPrefix(word);
+  wordAsPrefix += ' ';
+  nsAutoString wordAsSuffix(word);
+  wordAsSuffix.Insert(' ', 0);
+  nsAutoString wordAsWord(wordAsSuffix);
+  wordAsWord += ' ';
+
+  if (source.Equals(word, comparator) ||
+      StringBeginsWith(source, wordAsPrefix, comparator) ||
+      StringEndsWith(source, wordAsSuffix, comparator) ||
+      (source.Find(NS_ConvertUTF16toUTF8(wordAsWord).get(), caseInsensitive, 0, -1) != kNotFound))
+  {
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}

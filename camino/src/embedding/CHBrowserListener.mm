@@ -40,6 +40,7 @@
 #import <ApplicationServices/ApplicationServices.h>
 
 #import "NSString+Gecko.h"
+#import "GeckoUtils.h"
 
 #import "mozView.h"
 
@@ -863,31 +864,53 @@ CHBrowserListener::GetLinkAttributeType(nsIDOMElement* inElement)
 {
   nsAutoString relAttribute;
   inElement->GetAttribute(NS_LITERAL_STRING("rel"), relAttribute);
-  
+
   // Favicon link type
   if (relAttribute.EqualsIgnoreCase("shortcut icon") || relAttribute.EqualsIgnoreCase("icon"))
     return eFavIconType;
-  
+
   // Search Plugin type
   if (relAttribute.Equals(NS_LITERAL_STRING("search")))
     return eSearchPluginType;
 
-  // Check for feed type next
-  nsAutoString typeAttribute;
-  inElement->GetAttribute(NS_LITERAL_STRING("type"), typeAttribute);
-  
-  // kinda ugly, but if we don't match any of these strings return
-  if (typeAttribute.Equals(NS_LITERAL_STRING("application/rssxml")) ||
-      typeAttribute.Equals(NS_LITERAL_STRING("application/rss+xml")) ||
-      typeAttribute.Equals(NS_LITERAL_STRING("application/atomxml")) ||
-      typeAttribute.Equals(NS_LITERAL_STRING("application/atom+xml")) ||
-      typeAttribute.Equals(NS_LITERAL_STRING("text/xml")) ||
-      typeAttribute.Equals(NS_LITERAL_STRING("application/xml")) ||
-      typeAttribute.Equals(NS_LITERAL_STRING("application/rdfxml")))
-  {
+  // Trim whitespace before doing feed checks. If we don't, we can get bogus results.
+  // We do this after the other checks because feed tags are more liberally defined than the others.
+  relAttribute.Trim(" \n\r\t");
+
+  // If the rel attribute contains the word "feed", it's a feed.
+  if (GeckoUtils::StringContainsWord(relAttribute, "feed", PR_TRUE)) {
     return eFeedType;
+  } // Otherwise, do some more testing to see what we have here. It might still be a feed.
+  else if (GeckoUtils::StringContainsWord(relAttribute, "alternate", PR_TRUE) &&
+           !GeckoUtils::StringContainsWord(relAttribute, "stylesheet", PR_TRUE))
+  {
+    // If the "rel" attribute contains "alternate" without containing "stylesheet"...
+    nsAutoString typeAttribute;
+    inElement->GetAttribute(NS_LITERAL_STRING("type"), typeAttribute);
+    typeAttribute.Trim(" \n\r\t"); // Trim whitespace before checking, as before.
+    // ...and the "type" attribute is "application/rss+xml" or "application/atom+xml", it's a feed.
+    if (typeAttribute.EqualsIgnoreCase("application/rss+xml") ||
+        typeAttribute.EqualsIgnoreCase("application/atom+xml"))
+    {
+      return eFeedType;
+    }
+
+    // We also want to allow a handful of obsolete feed tags that have a type of
+    // text/xml, appplication/xml, and application/rdf+xml as long as they have the word
+    // "RSS" somewhere in the title. Blogging software no longer creates feeds that look
+    // like this, so we should consider dropping this check entirely once Firefox 3.1 ships
+    // (since it won't support discovery of these feed tags any longer either).
+    if (typeAttribute.EqualsIgnoreCase("text/xml") ||
+        typeAttribute.EqualsIgnoreCase("application/xml") ||
+        typeAttribute.EqualsIgnoreCase("application/rdf+xml"))
+    {
+      nsAutoString titleAttribute;
+      inElement->GetAttribute(NS_LITERAL_STRING("title"), titleAttribute);
+      if (GeckoUtils::StringContainsWord(titleAttribute, "rss", PR_TRUE))
+        return eFeedType;
+    }
   }
-  
+
   return eOtherType;
 }
 
