@@ -131,7 +131,7 @@ var qaSetup = {
     passwd.value = qaPref.litmus.getPassword() || '';
     if (qaPref.litmus.getUsername()) {
       document.getElementById("qa-setup-account-haveaccount").selectedIndex=1;
-      document.getElementById('qa-setup-accountyes').style.display = '';
+      this.accountSetting(1);
     }
     document.getElementById('qa-setup-createaccount-iframe').src =
       litmus.baseURL+'extension.cgi?createAccount=1';
@@ -246,21 +246,24 @@ var qaSetup = {
 
   validateSysconfig : function() {
     var sysconfig;
+    var isok = false;
     try {
       sysconfig = new Sysconfig();
-    } catch (ex) {}
-
-    // only set prefs for things which differ from the automatically
-    // detected sysconfig for forward-compatibility
-    if (! sysconfig.platform == $('qa-setup-platform').selectedItem.label) {
-      qaPref.setPref(qaPref.prefBase+'.sysconfig.platform',
-            $('qa-setup-platform').selectedItem.label, 'char');
+      // only set prefs for things which differ from the automatically
+      // detected sysconfig for forward-compatibility
+      if (! sysconfig.platform == $('qa-setup-platform').selectedItem.label) {
+        qaPref.setPref(qaPref.prefBase+'.sysconfig.platform',
+              $('qa-setup-platform').selectedItem.label, 'char');
+      }
+      if (! sysconfig.opsys == $('qa-setup-opsys').selectedItem.label) {
+        qaPref.setPref(qaPref.prefBase+'.sysconfig.opsys',
+              $('qa-setup-opsys').selectedItem.label, 'char');
+      }
+      isok = true;
+    } catch (ex) {
+      qaTools.showErrorMessage(ex);
     }
-    if (! sysconfig.opsys == $('qa-setup-opsys').selectedItem.label) {
-      qaPref.setPref(qaPref.prefBase+'.sysconfig.opsys',
-            $('qa-setup-opsys').selectedItem.label, 'char');
-    }
-    return true;
+    return isok;
   },
 
   finish : function() {

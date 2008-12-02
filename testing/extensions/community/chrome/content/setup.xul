@@ -69,7 +69,7 @@
 </wizardpage>
 
 <wizardpage pageid="account" label="&qa.setup.accountheader;"
-            onpageshow="qaSetup.loadAccountSettings(); qaSetup.accountSetting('0');"
+            onpageshow="qaSetup.accountSetting('0'); qaSetup.loadAccountSettings();"
             onpageadvanced="return qaSetup.validateAccount();">
   <description>&qa.setup.accounttext;</description>
   <spacer height="20px" />

@@ -50,28 +50,28 @@ var qaTools = {
   loadJsonMenu : function(url, menulist, nameMethod, valueMethod, callback) {
     var d = loadJSONDoc(url);
     d.addErrback(function (err) {
-        if (err instanceof CancelledError) {
-          return;
-        }
-        dump(err);
-      });
+      if (err instanceof CancelledError) {
+        return;
+      }
+      dump(err);
+    });
     d.addCallback(function(obj) {
-        if (obj instanceof Array) {
-            for (var i=0; i<obj.length; i++) {
-                var item = obj[i];
-                if (! item) { continue; }
-                var newitem = menulist.appendItem(item[nameMethod],
-                                  item[valueMethod]);
-            }
-        } else {
-            var newitem = menulist.appendItem(obj[nameMethod], obj[valueMethod]);
-        }
-        // stash the JSON object in the userData attribute for
-        // later use (e.g. when filtering the list).
-        newitem.userData = item;
-        if (callback) {
-          callback();
-        }
+      if (obj instanceof Array) {
+          for (var i=0; i<obj.length; i++) {
+              var item = obj[i];
+              if (! item) { continue; }
+              var newitem = menulist.appendItem(item[nameMethod],
+                                item[valueMethod]);
+          }
+      } else {
+          var newitem = menulist.appendItem(obj[nameMethod], obj[valueMethod]);
+      }
+      // stash the JSON object in the userData attribute for
+      // later use (e.g. when filtering the list).
+      newitem.userData = item;
+      if (callback) {
+        callback();
+      }
     });
   },
   fetchFeed : function(url, callback) {
@@ -88,11 +88,11 @@ var qaTools = {
     function infoReceived() {
       var data = httpRequest.responseText;
       var ioService = Cc['@mozilla.org/network/io-service;1']
-                 .getService(Ci.nsIIOService);
+                      .getService(Ci.nsIIOService);
       var uri = ioService.newURI(url, null, null);
       if (data.length) {
         var processor = Cc["@mozilla.org/feed-processor;1"]
-                   .createInstance(Ci.nsIFeedProcessor);
+                       .createInstance(Ci.nsIFeedProcessor);
         try {
           processor.listener = new FeedResultListener;
           processor.parseFromString(data, uri);
@@ -114,12 +114,12 @@ var qaTools = {
     // do a xmlhttprequest sending data with the post method
     var req = getXMLHttpRequest();
     req.open("POST", url, true);
-      req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-      req.setRequestHeader("Content-length", data.length);
-      req.setRequestHeader("Connection", "close");
-      req = sendXMLHttpRequest(req, data);
-      req.addErrback(errback);
-      req.addCallback(callback);
+    req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    req.setRequestHeader("Content-length", data.length);
+    req.setRequestHeader("Connection", "close");
+    req = sendXMLHttpRequest(req, data);
+    req.addErrback(errback);
+    req.addCallback(callback);
   },
   showHideLoadingMessage : function(box, bool) {
     if (bool == true) { // show
@@ -140,47 +140,60 @@ var qaTools = {
       }
     }
   },
-    arrayify : function(obj) {
-        if (obj instanceof Array) {
-            return obj;
-        }
-        var newArray = new Array();
-        newArray[0] = obj;
-        return newArray;
-    },
-    writeSafeHTML : function(elementID, htmlstr) {
-        document.getElementById(elementID).innerHTML = "";  //clear it.
-        var gUnescapeHTML = Components.classes["@mozilla.org/feed-unescapehtml;1"].getService(Components.interfaces.nsIScriptableUnescapeHTML);
-        var context = document.getElementById(elementID);
-        var fragment = gUnescapeHTML.parseFragment(htmlstr, false, null, context);
-        context.appendChild(fragment);
-
-    },
-
-    assignLinkHandlers : function(node) {
-        var children = node.getElementsByTagName('a');
-        for (var i = 0; i < children.length; i++)
-           children[i].addEventListener("click", qaTools.handleLink, false);
-    },
-    assignLinkHandler : function(link) {
-        link.addEventListener("click", qaTools.handleLink, false);
-    },
-    handleLink : function(event) {
-        var url = this.href;
-        var type = qaPref.getPref("browser.link.open_newwindow", "int");
-        var where = "tab";
-        if (type == 2) where = "window";
-
-        openUILinkIn(url, where);
-        event.preventDefault(); // prevent it from simply following the href
-    },
-    makeUniqueArray : function(array) {
-        var RV = new Array();
-        for( var i = 0; i < array.length; i++ ) {
-            if( RV.indexOf(array[i]) < 0 ) { RV.push( array[i] ); }
-        }
-        return RV;
+  arrayify : function(obj) {
+    if (obj instanceof Array) {
+      return obj;
     }
+    var newArray = new Array();
+    newArray[0] = obj;
+    return newArray;
+  },
+  writeSafeHTML : function(elementID, htmlstr) {
+    document.getElementById(elementID).innerHTML = "";  //clear it.
+    var gUnescapeHTML = Components.classes["@mozilla.org/feed-unescapehtml;1"]
+                        .getService(Components.interfaces.nsIScriptableUnescapeHTML);
+    var context = document.getElementById(elementID);
+    var fragment = gUnescapeHTML.parseFragment(htmlstr, false, null, context);
+    context.appendChild(fragment);
+  },
+  assignLinkHandlers : function(node) {
+    var children = node.getElementsByTagName('a');
+    for (var i = 0; i < children.length; i++)
+      children[i].addEventListener("click", qaTools.handleLink, false);
+  },
+  assignLinkHandler : function(link) {
+    link.addEventListener("click", qaTools.handleLink, false);
+  },
+  handleLink : function(event) {
+    var url = this.href;
+    var type = qaPref.getPref("browser.link.open_newwindow", "int");
+    var where = "tab";
+    if (type == 2) where = "window";
+    openUILinkIn(url, where);
+    event.preventDefault(); // prevent it from simply following the href
+  },
+  makeUniqueArray : function(array) {
+    var RV = new Array();
+    for( var i = 0; i < array.length; i++ ) {
+        if( RV.indexOf(array[i]) < 0 ) { RV.push( array[i] ); }
+    }
+    return RV;
+  },
+  getString : function(aStringName, aParams) {
+    let stringBundle = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                                 .getService(Components.interfaces.nsIStringBundleService);
+    let props = stringBundle.createBundle("chrome://qa/locale/qa.properties");
+    if (aParams && aParams.length) {
+      return props.formatStringFromName(aStringName, aParams, aParams.length);
+    } else {
+      return props.GetStringFromName(aStringName);
+    }
+  },
+  showErrorMessage : function(error) {
+    let promptService= Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                       .getService(Components.interfaces.nsIPromptService);
+    promptService.alert(window, this.getString("qa.error.title"), error);
+  }
 };
 
 function getCleanText(inputText)

@@ -420,14 +420,16 @@
         // branch:
         // people switch branches, so we detect this even though it might
         // already be set in a pref
-    if ((/^3\.0/).exec(appinfo.version)) {
+    if ((/^3\.1/).exec(appinfo.version)) {
+      this.branch = '3.1 Branch';
+    } else if ((/^3\.0/).exec(appinfo.version)) {
       this.branch = '3.0 Branch';
     } else if ((/^2\.0/).exec(appinfo.version)) {
       this.branch = '2.0 Branch';
     } else if ((/^1\.5\./).exec(appinfo.version)) {
       this.branch = '1.5 Branch';
     }
-    if (! this.branch) { throw "branch" }
+    if (! this.branch) { throw "unknown branch" }
 
         // platform:
         if (! this.platform) {
