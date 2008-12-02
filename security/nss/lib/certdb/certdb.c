@@ -38,7 +38,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.94 2008/11/21 21:02:39 wtc%google.com Exp $
+ * $Id: certdb.c,v 1.95 2008/12/02 23:24:48 nelson%bolyard.com Exp $
  */
 
 #include "nssilock.h"
@@ -52,7 +52,6 @@
 #include "genname.h"
 #include "keyhi.h"
 #include "secitem.h"
-#include "mcom_db.h"
 #include "certdb.h"
 #include "prprf.h"
 #include "sechash.h"
