@@ -177,7 +177,7 @@ var bugzilla = {
         }
         var url = bugzilla.baseURL + "show_bug.cgi?id=" + $("qa-bugzilla-output-id").value;
 
-        var type = qaPref.getPref("browser.link.open_external", "int");
+        var type = qaPref.getPref("browser.link.open_newwindow", "int");
         var where = "tab";
         if (type == 2) where = "window";
 

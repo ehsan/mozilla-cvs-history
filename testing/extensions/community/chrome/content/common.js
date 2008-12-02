@@ -167,7 +167,7 @@ var qaTools = {
     },
     handleLink : function(event) {
         var url = this.href;
-        var type = qaPref.getPref("browser.link.open_external", "int");
+        var type = qaPref.getPref("browser.link.open_newwindow", "int");
         var where = "tab";
         if (type == 2) where = "window";
 
