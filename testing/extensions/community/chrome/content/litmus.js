@@ -272,7 +272,7 @@
         qaTools.assignLinkHandlers($('qa-testcase-steps'));
         qaTools.assignLinkHandlers($('qa-testcase-expected'));
 
-        if (testcase.regression_bug_id) {
+        if (testcase.regression_bug_id && (testcase.regression_bug_id != "0")) {
             bugzilla.loadBug(testcase.regression_bug_id);
         } else {
             var bugarray = bugzilla.findBugzillaLinks($("qa-testcase-expected"));
