@@ -35,7 +35,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-"""A set of functions to set up a Firefox browser with the correct
+"""A set of functions to set up a browser with the correct
    preferences and extensions in the given directory.
 
 """
@@ -62,7 +62,7 @@ elif platform.system() == "Darwin":
     from ffprofile_unix import *
 
 def PrefString(name, value, newline):
-  """Helper function to create a pref string for Firefox profile prefs.js
+  """Helper function to create a pref string for profile prefs.js
      in the form 'user_pref("name", value);<newline>'
 
   Args:
@@ -125,14 +125,14 @@ def CreateTempProfileDir(source_profile, prefs, extensions):
 
   return temp_dir, profile_dir
 
-def InstallInBrowser(firefox_path, dir_path):
+def InstallInBrowser(browser_path, dir_path):
   """
     Take the given directory and copies it to appropriate location in the given
-    firefox install
+    browser install
   """
-  # add the provided directory to the given firefox install
+  # add the provided directory to the given browser install
   fromfiles = glob.glob(os.path.join(dir_path, '*'))
-  todir = os.path.join(os.path.dirname(firefox_path), os.path.basename(os.path.normpath(dir_path)))
+  todir = os.path.join(os.path.dirname(browser_path), os.path.basename(os.path.normpath(dir_path)))
   for fromfile in fromfiles:
       if not os.path.isfile(os.path.join(todir, os.path.basename(fromfile))):
           shutil.copy(fromfile, todir)
@@ -140,21 +140,21 @@ def InstallInBrowser(firefox_path, dir_path):
       else:
           utils.debug("WARNING: file already installed (" + fromfile + ")")
 
-def InitializeNewProfile(firefox_path, profile_dir, init_url):
-  """Runs Firefox with the new profile directory, to negate any performance
+def InitializeNewProfile(browser_path, process, extra_args, profile_dir, init_url):
+  """Runs browser with the new profile directory, to negate any performance
      hit that could occur as a result of starting up with a new profile.  
-     Also kills the "extra" Firefox that gets spawned the first time Firefox
+     Also kills the "extra" browser that gets spawned the first time browser
      is run with a new profile.
 
   Args:
-    firefox_path: String containing the path to the Firefox exe
+    browser_path: String containing the path to the browser exe
     profile_dir: The full path to the profile directory to load
   """
   PROFILE_REGEX = re.compile('__metrics(.*)__metrics', re.DOTALL|re.MULTILINE)
   res = 1
-  cmd = ffprocess.GenerateFirefoxCommandLine(firefox_path, profile_dir, init_url)
+  cmd = ffprocess.GenerateBrowserCommandLine(browser_path, extra_args, profile_dir, init_url)
   (match, timed_out) = ffprocess.RunProcessAndWaitForOutput(cmd,
-                                                              'firefox',
+                                                              process,
                                                               PROFILE_REGEX,
                                                               30)
   if (not timed_out):

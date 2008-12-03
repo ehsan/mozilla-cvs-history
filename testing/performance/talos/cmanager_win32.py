@@ -46,7 +46,7 @@ class CounterManager:
     self.process = process
     self.registeredCounters = {}
     self.registerCounters(counters)
-    # PDH might need to be "refreshed" if it has been queried while Firefox
+    # PDH might need to be "refreshed" if it has been queried while the browser
     # is closed
     win32pdh.EnumObjects(None, None, 0, 1)
 
@@ -76,7 +76,7 @@ class CounterManager:
     return self.process
 
   def startMonitor(self):
-    # PDH might need to be "refreshed" if it has been queried while Firefox
+    # PDH might need to be "refreshed" if it has been queried while the browser
     # is closed
     win32pdh.EnumObjects(None, None, 0, 1)
 

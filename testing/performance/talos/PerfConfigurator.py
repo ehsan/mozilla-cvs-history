@@ -19,17 +19,7 @@ import time
 from datetime import datetime
 from os import path
 
-# TODO: maybe this should be searched for?
-# For Windows
-#masterIniSubpath = path.join("firefox", "extensions", "talkback@mozilla.org",
-#                             "components", "master.ini")
-# For Linux
-masterIniSubpath = path.join("firefox", "components", "talkback", "master.ini")
 masterIniSubpath = "application.ini"
-# For OS X
-# masterIniSubpath = path.join("*.app", "Contents", "MacOS", "extensions",
-#                              "talkback@mozilla.org", "components",
-#                              "talkback", "master.ini"
 defaultTitle = "qm-pxp01"
 
 help_message = '''
@@ -120,10 +110,10 @@ class PerfConfigurator:
         testMode = False
         for line in config:
             newline = line
-            if 'firefox:' in line:
-                newline = 'firefox: ' + self.exePath
+            if 'browser_path:' in line:
+                newline = 'browser_path: ' + self.exePath + '\n'
             if 'title:' in line:
-                newline = 'title: ' + self.title
+                newline = 'title: ' + self.title + '\n'
                 if self.testDate:
                     newline += '\n'
                     newline += 'testdate: "%s"\n' % self._getTimeFromTimeStamp()

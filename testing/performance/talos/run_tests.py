@@ -35,16 +35,6 @@
 #
 # ***** END LICENSE BLOCK *****
 
-"""Runs extension performance tests.
-
-   This file runs Ts (startup time) and Tp (page load time) tests
-   for an extension with different profiles.  It was originally
-   written for the Google Toolbar for Firefox; to make it work for
-   another extension modify get_xpi.py.  To change the preferences
-   that are set on the profiles that are tested, edit the arrays in
-   the main function below.
-"""
-
 __author__ = 'annie.sullivan@gmail.com (Annie Sullivan)'
 
 
@@ -252,7 +242,7 @@ def browserInfo(browser_config):
   """Get the buildid and changeset from the application.ini (if it exists)
   """
   appIniFileName = "application.ini"
-  appIniPath = os.path.join(os.path.dirname(browser_config['firefox']), appIniFileName)
+  appIniPath = os.path.join(os.path.dirname(browser_config['browser_path']), appIniFileName)
   if os.path.isfile(appIniPath):
     appIni = open(appIniPath)
     appIniContents = appIni.readlines()
@@ -314,7 +304,9 @@ def test_file(filename):
       sys.exit(0)
   browser_config = {'preferences'  : yaml_config['preferences'],
                     'extensions'   : yaml_config['extensions'],
-                    'firefox'      : yaml_config['firefox'],
+                    'browser_path' : yaml_config['browser_path'],
+                    'process'      : yaml_config['process'],
+                    'extra_args'   : yaml_config['extra_args'],
                     'branch'       : yaml_config['branch'],
                     'buildid'      : yaml_config['buildid'],
                     'profile_path' : yaml_config['profile_path'],
@@ -322,7 +314,7 @@ def test_file(filename):
                     'dirs'         : yaml_config['dirs'],
                     'init_url'     : yaml_config['init_url']}
   #normalize paths to work accross platforms
-  browser_config['firefox'] = os.path.normpath(browser_config['firefox'])
+  browser_config['browser_path'] = os.path.normpath(browser_config['browser_path'])
   if browser_config['profile_path'] != {}:
     browser_config['profile_path'] = os.path.normpath(browser_config['profile_path'])
   for dir in browser_config['dirs']:

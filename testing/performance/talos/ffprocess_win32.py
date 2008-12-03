@@ -43,12 +43,12 @@ import win32pipe
 import msvcrt
 
 
-def GenerateFirefoxCommandLine(firefox_path, profile_dir, url):
-  """Generates the command line for a process to run Firefox
+def GenerateBrowserCommandLine(browser_path, extra_args, profile_dir, url):
+  """Generates the command line for a process to run Browser
 
   Args:
-    firefox_path: String containing the path to the firefox exe to use
-    profile_dir: String containing the directory of the profile to run Firefox in
+    browser_path: String containing the path to the browser exe to use
+    profile_dir: String containing the directory of the profile to run Browser in
     url: String containing url to start with.
   """
 
@@ -57,7 +57,8 @@ def GenerateFirefoxCommandLine(firefox_path, profile_dir, url):
     profile_dir = profile_dir.replace('\\', '\\\\\\')
     profile_arg = '-profile %s' % profile_dir
 
-  cmd = '%s %s %s' % (firefox_path,
+  cmd = '%s %s %s %s' % (browser_path,
+                           extra_args,
                            profile_arg,
                            url)
   return cmd
@@ -78,7 +79,7 @@ def TerminateProcess(pid):
 
 def ProcessesWithNameExist(*process_names):
   """Returns true if there are any processes running with the
-     given name.  Useful to check whether a Firefox process is still running
+     given name.  Useful to check whether a Browser process is still running
 
   Args:
     process_name: String or strings containing the process name, i.e. "firefox"

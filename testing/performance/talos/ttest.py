@@ -82,24 +82,24 @@ RESULTS_TP_REGEX = re.compile('__start_tp_report(.*)__end_tp_report',
 RESULTS_GENERIC = re.compile('(.*)', re.DOTALL | re.MULTILINE)
 RESULTS_REGEX_FAIL = re.compile('__FAIL(.*)__FAIL', re.DOTALL|re.MULTILINE)
 
-def checkBrowserAlive():
+def checkBrowserAlive(browser_config):
   #is the browser actually up?
-  return (ffprocess.ProcessesWithNameExist("firefox") and not ffprocess.ProcessesWithNameExist("crashreporter", "talkback", "dwwin"))
+  return (ffprocess.ProcessesWithNameExist(browser_config['process']) and not ffprocess.ProcessesWithNameExist("crashreporter", "talkback", "dwwin"))
 
-def checkAllProcesses():
+def checkAllProcesses(browser_config):
   #is anything browser related active?
-  return ffprocess.ProcessesWithNameExist("firefox", "crashreporter", "talkback", "dwwin")
+  return ffprocess.ProcessesWithNameExist(browser_config['process'], "crashreporter", "talkback", "dwwin")
 
-def cleanupProcesses():
-  #kill any remaining firefox processes
-  ffprocess.TerminateAllProcesses("firefox", "crashreporter", "dwwin", "talkback")
+def cleanupProcesses(browser_config):
+  #kill any remaining browser processes
+  ffprocess.TerminateAllProcesses(browser_config['process'], "crashreporter", "dwwin", "talkback")
   #check if anything is left behind
-  if checkAllProcesses(): 
+  if checkAllProcesses(browser_config): 
     #this is for windows machines.  when attempting to send kill messages to win processes the OS
     # always gives the process a chance to close cleanly before terminating it, this takes longer
     # and we need to give it a little extra time to complete
     time.sleep(10)
-    if checkAllProcesses():
+    if checkAllProcesses(browser_config):
       raise talosError("failed to cleanup")
 
 def createProfile(browser_config):
@@ -116,15 +116,15 @@ def createProfile(browser_config):
 
 def initializeProfile(profile_dir, browser_config):
   if browser_config["profile_path"] != {}:
-      if not (ffsetup.InitializeNewProfile(browser_config['firefox'], profile_dir, browser_config['init_url'])):
+      if not (ffsetup.InitializeNewProfile(browser_config['browser_path'], browser_config['process'], browser_config['extra_args'], profile_dir, browser_config['init_url'])):
          raise talosError("failed to initialize browser")
       time.sleep(10)
-      if checkAllProcesses():
+      if checkAllProcesses(browser_config):
          raise talosError("browser failed to close after being initialized") 
 
 def cleanupProfile(dir, browser_config):
   # Delete the temp profile directory  Make it writeable first,
-  # because every once in a while Firefox seems to drop a read-only
+  # because every once in a while browser seems to drop a read-only
   # file into it.
   if browser_config["profile_path"] != {}:
     ffsetup.MakeDirectoryContentsWritable(dir)
@@ -149,23 +149,23 @@ def runTest(browser_config, test_config):
 
 
   try:
-    if checkAllProcesses():
-      utils.debug("firefox already running before testing started (unclean system)")
+    if checkAllProcesses(browser_config):
+      utils.debug(browser_config['process'] + " already running before testing started (unclean system)")
       raise talosError("system not clean")
   
-    # add any provided directories to the installed firefox
+    # add any provided directories to the installed browser
     for dir in browser_config['dirs']:
-      ffsetup.InstallInBrowser(browser_config['firefox'], browser_config['dirs'][dir])
+      ffsetup.InstallInBrowser(browser_config['browser_path'], browser_config['dirs'][dir])
    
     profile_dir, temp_dir = createProfile(browser_config)
     initializeProfile(profile_dir, browser_config)
     
-    utils.debug("initialized firefox")
+    utils.debug("initialized " + browser_config['process'])
   
     for i in range(test_config['cycles']):
       ffprocess.Sleep()
       # check to see if the previous cycle is still hanging around 
-      if (i > 0) and checkAllProcesses():
+      if (i > 0) and checkAllProcesses(browser_config):
         raise talosError("previous cycle still running")
       # Run the test 
       browser_results = ""
@@ -182,20 +182,20 @@ def runTest(browser_config, test_config):
       url = test_config['url']
       if 'url_mod' in test_config:
         url += eval(test_config['url_mod']) 
-      command_line = ffprocess.GenerateFirefoxCommandLine(browser_config['firefox'], profile_dir, url)
+      command_line = ffprocess.GenerateBrowserCommandLine(browser_config['browser_path'], browser_config['extra_args'], profile_dir, url)
   
       utils.debug("command line: " + command_line)
   
       process = subprocess.Popen(command_line, stdout=subprocess.PIPE, universal_newlines=True, shell=True, bufsize=0, env=os.environ)
       handle = process.stdout
   
-      #give firefox a chance to open
+      #give browser a chance to open
       # this could mean that we are losing the first couple of data points as the tests starts, but if we don't provide
       # some time for the browser to start we have trouble connecting the CounterManager to it
       ffprocess.Sleep()
       #set up the counters for this test
       if counters:
-        cm = CounterManager("firefox", counters)
+        cm = CounterManager(browser_config['process'], counters)
         cm.startMonitor()
       counter_results = {}
       for counter in counters:
@@ -248,7 +248,7 @@ def runTest(browser_config, test_config):
         if busted:
           raise talosError("browser crash")
         if (total_time % 60 == 0): 
-          if not checkBrowserAlive():
+          if not checkBrowserAlive(browser_config):
             busted = True
         
         if lastNoise > pagetimeout:
@@ -266,7 +266,7 @@ def runTest(browser_config, test_config):
       all_browser_results.append(browser_results)
       all_counter_results.append(counter_results)
      
-    cleanupProcesses() 
+    cleanupProcesses(browser_config) 
     cleanupProfile(temp_dir, browser_config)
 
     utils.restoreEnvironmentVars()
@@ -274,7 +274,7 @@ def runTest(browser_config, test_config):
     return (all_browser_results, all_counter_results)
   except:
     try:
-      cleanupProcesses()
+      cleanupProcesses(browser_config)
       if vars().has_key('temp_dir'):
         cleanupProfile(temp_dir, browser_config)
     except talosError, te:

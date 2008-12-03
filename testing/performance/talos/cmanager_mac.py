@@ -38,16 +38,6 @@
 #
 # ***** END LICENSE BLOCK *****
 
-"""A set of functions to run the Tp test.
-
-   The Tp test measures page load times in Firefox.  It does this with a
-   JavaScript script that opens a new window and cycles through page loads
-   from the local disk, timing each one.  The script dumps the sum of the
-   mean times to open each page, and the standard deviation, to standard out.
-   We can also measure performance attributes during the test.  See below for
-   what can be monitored
-"""
-
 __author__ = 'annie.sullivan@gmail.com (Annie Sullivan)'
 
 

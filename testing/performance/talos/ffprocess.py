@@ -57,8 +57,8 @@ elif platform.system() == "Darwin":
 
 
 def Sleep():
-  """Runs sync and sleeps for a few seconds between Firefox runs.
-     Otherwise "Firefox is already running.." errors occur
+  """Runs sync and sleeps for a few seconds between browser runs.
+     Otherwise 'browser' is already running.." errors occur
   """
   time.sleep(5)
 
