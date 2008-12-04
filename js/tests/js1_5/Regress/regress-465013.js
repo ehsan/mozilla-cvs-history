@@ -16,10 +16,10 @@
  *
  * The Initial Developer of the Original Code is
  * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
+ * Contributor(s): Brendan Eich
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,36 +35,40 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-322430.js';
+var gTestfile = 'regress-465013.js';
 //-----------------------------------------------------------------------------
-var BUGNUMBER = 322430;
-var summary = 'Remove deprecated with statement warning';
+var BUGNUMBER = 465013;
+var summary = '';
 var actual = '';
 var expect = '';
 
-printBugNumber(BUGNUMBER);
-printStatus (summary);
 
-options('strict');
-options('werror');
+//-----------------------------------------------------------------------------
+test();
+//-----------------------------------------------------------------------------
 
-expect = 'No Warning';
-
-try
+function test()
 {
-  var obj = {foo: 'baz'};
+  enterFunc ('test');
+  printBugNumber(BUGNUMBER);
+  printStatus (summary);
  
-  // this must either be top level or must be
-  // evald since there is a bug in older versions
-  // that suppresses the |with| warning inside of a
-  // try catch block. doh!
-  eval('with (obj) { foo; }');
+  expect = 'bgcolor="dummy" quality="dummy" allowScriptAccess="dummy" ';
 
-  actual = 'No Warning';
-}
-catch(ex)
-{
-  actual = ex + '';
-}
+  jit(true);
 
-reportCompare(expect, actual, summary);
+  print((function(x) {
+        var ja = "";
+        var ka = {bgcolor:"#FFFFFF", quality:"high", allowScriptAccess:"always"};
+        for (var la in ka) {
+          ja +=[la] + "=\"" + x/*ka[la]*/ + "\" ";
+        }
+        return actual = ja;
+      })("dummy"));
+
+  jit(false);
+
+  reportCompare(expect, actual, summary);
+
+  exitFunc ('test');
+}

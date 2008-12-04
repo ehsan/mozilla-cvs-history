@@ -16,10 +16,10 @@
  *
  * The Initial Developer of the Original Code is
  * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
+ * Contributor(s): Igor Bukanov
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,36 +35,35 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-322430.js';
+var gTestfile = 'regress-464334.js';
 //-----------------------------------------------------------------------------
-var BUGNUMBER = 322430;
-var summary = 'Remove deprecated with statement warning';
+var BUGNUMBER = 464334;
+var summary = 'Do not assert: (size_t) (fp->regs->sp - fp->slots) <= fp->script->nslots';
 var actual = '';
 var expect = '';
 
-printBugNumber(BUGNUMBER);
-printStatus (summary);
 
-options('strict');
-options('werror');
+//-----------------------------------------------------------------------------
+test();
+//-----------------------------------------------------------------------------
 
-expect = 'No Warning';
-
-try
+function test()
 {
-  var obj = {foo: 'baz'};
+  enterFunc ('test');
+  printBugNumber(BUGNUMBER);
+  printStatus (summary);
  
-  // this must either be top level or must be
-  // evald since there is a bug in older versions
-  // that suppresses the |with| warning inside of a
-  // try catch block. doh!
-  eval('with (obj) { foo; }');
+  function g()
+  {
+    gc();
+  }
 
-  actual = 'No Warning';
-}
-catch(ex)
-{
-  actual = ex + '';
-}
+  var a = [];
+  for (var i = 0; i != 20; ++i)
+    a.push(i);
+  g.apply(this, a);
 
-reportCompare(expect, actual, summary);
+  reportCompare(expect, actual, summary);
+
+  exitFunc ('test');
+}

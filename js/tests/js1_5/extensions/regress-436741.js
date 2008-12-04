@@ -16,10 +16,10 @@
  *
  * The Initial Developer of the Original Code is
  * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
+ * Contributor(s): Jesse Ruderman
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,36 +35,34 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-322430.js';
+var gTestfile = 'regress-436741.js';
 //-----------------------------------------------------------------------------
-var BUGNUMBER = 322430;
-var summary = 'Remove deprecated with statement warning';
-var actual = '';
-var expect = '';
+var BUGNUMBER = 436741;
+var summary = 'Do not assert: OBJ_IS_NATIVE(obj)';
+var actual = 'No Crash';
+var expect = 'No Crash';
 
-printBugNumber(BUGNUMBER);
-printStatus (summary);
 
-options('strict');
-options('werror');
+//-----------------------------------------------------------------------------
+test();
+//-----------------------------------------------------------------------------
 
-expect = 'No Warning';
-
-try
+function test()
 {
-  var obj = {foo: 'baz'};
+  enterFunc ('test');
+  printBugNumber(BUGNUMBER);
+  printStatus (summary);
  
-  // this must either be top level or must be
-  // evald since there is a bug in older versions
-  // that suppresses the |with| warning inside of a
-  // try catch block. doh!
-  eval('with (obj) { foo; }');
+  if (typeof window == 'undefined')
+  {
+    print('This test is only meaningful in the browser.');
+  }
+  else
+  {
+    window.__proto__.__proto__ = [{}];
+    for (var j in window);
+  }
+  reportCompare(expect, actual, summary);
 
-  actual = 'No Warning';
+  exitFunc ('test');
 }
-catch(ex)
-{
-  actual = ex + '';
-}
-
-reportCompare(expect, actual, summary);

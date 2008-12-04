@@ -16,10 +16,10 @@
  *
  * The Initial Developer of the Original Code is
  * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
+ * Contributor(s): Jesse Ruderman
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,36 +35,28 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-322430.js';
+var gTestfile = 'regress-455973.js';
 //-----------------------------------------------------------------------------
-var BUGNUMBER = 322430;
-var summary = 'Remove deprecated with statement warning';
+var BUGNUMBER = 455973;
+var summary = 'Do not assert: !cx->throwing';
 var actual = '';
 var expect = '';
 
 printBugNumber(BUGNUMBER);
 printStatus (summary);
-
-options('strict');
-options('werror');
-
-expect = 'No Warning';
+ 
+jit(true);
 
 try
 {
-  var obj = {foo: 'baz'};
- 
-  // this must either be top level or must be
-  // evald since there is a bug in older versions
-  // that suppresses the |with| warning inside of a
-  // try catch block. doh!
-  eval('with (obj) { foo; }');
-
-  actual = 'No Warning';
+  for (let i = 0; i < 5; ++i) void (this["y" + i] = "");
+  this.__defineGetter__("z", function () { throw 2; });
+  for (let j = 0; j < 2; ++j) { [1 for each (q in this) if ('')]; } 
 }
 catch(ex)
 {
-  actual = ex + '';
 }
+
+jit(false);
 
 reportCompare(expect, actual, summary);

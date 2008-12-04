@@ -16,10 +16,10 @@
  *
  * The Initial Developer of the Original Code is
  * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
+ * Contributor(s): Brendan Eich
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,36 +35,44 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-322430.js';
+var gTestfile = 'regress-465220.js';
 //-----------------------------------------------------------------------------
-var BUGNUMBER = 322430;
-var summary = 'Remove deprecated with statement warning';
+var BUGNUMBER = 465220;
+var summary = 'Do not assert: anti-nesting';
 var actual = '';
 var expect = '';
 
-printBugNumber(BUGNUMBER);
-printStatus (summary);
 
-options('strict');
-options('werror');
+//-----------------------------------------------------------------------------
+test();
+//-----------------------------------------------------------------------------
 
-expect = 'No Warning';
-
-try
+function test()
 {
-  var obj = {foo: 'baz'};
+  enterFunc ('test');
+  printBugNumber(BUGNUMBER);
+  printStatus (summary);
+
+  expect = 'TypeError: can\'t convert o to primitive type';
+
+  jit(true);
  
-  // this must either be top level or must be
-  // evald since there is a bug in older versions
-  // that suppresses the |with| warning inside of a
-  // try catch block. doh!
-  eval('with (obj) { foo; }');
+  try
+  {
+    var o = {toString: function()(i > 2) ? this : "foo"};
+    var s = "";
+    for (var i = 0; i < 5; i++)
+      s += o + o;
+    print(s);
+    actual = 'No Exception';
+  }
+  catch(ex)
+  {
+    actual = 'TypeError: can\'t convert o to primitive type';
+  }
+  jit(false);
 
-  actual = 'No Warning';
-}
-catch(ex)
-{
-  actual = ex + '';
-}
+  reportCompare(expect, actual, summary);
 
-reportCompare(expect, actual, summary);
+  exitFunc ('test');
+}

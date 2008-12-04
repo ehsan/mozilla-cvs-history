@@ -16,10 +16,10 @@
  *
  * The Initial Developer of the Original Code is
  * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
+ * Contributor(s): Gavin Sharp
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,36 +35,67 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-322430.js';
+var gTestfile = 'regress-463782.js';
 //-----------------------------------------------------------------------------
-var BUGNUMBER = 322430;
-var summary = 'Remove deprecated with statement warning';
+var BUGNUMBER = 463782;
+var summary = 'Assertion failed: "need a way to EOT now, since this is trace end": 0';
 var actual = '';
 var expect = '';
 
 printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-options('strict');
-options('werror');
+jit(true);
 
-expect = 'No Warning';
-
-try
-{
-  var obj = {foo: 'baz'};
- 
-  // this must either be top level or must be
-  // evald since there is a bug in older versions
-  // that suppresses the |with| warning inside of a
-  // try catch block. doh!
-  eval('with (obj) { foo; }');
-
-  actual = 'No Warning';
+function dateCheck() {
+  return true;
 }
-catch(ex)
+function dateToString()
 {
-  actual = ex + '';
+  if (!this.dtsReturnValue)
+    this.dtsReturnValue = "200811080616";
+  return this.dtsReturnValue
+    }
+      
+function placeAd2() {
+  var adClasses = {
+    "": {
+    templateCheck: function () {
+        var foo = ({
+          allianz:{
+            where:["intl/turningpoints"],
+                when:["200805010000/200901010000"],
+                what:["!234x60", "!bigbox_2", "!leaderboard_2", "!88x31"]
+                },
+              trendMicro:{
+            where:["techbiz/tech/threatmeter"],
+                when:["200806110000/200812310000"],
+                what:["leaderboard"]
+                },
+              rolex_bb:{
+            where:["politics/transitions"],
+                when:["200811050000/200901312359"],
+                what:["!bigbox"]
+                }
+          });
+        
+        for (a in foo) {
+          if (dateCheck("", dateToString())) {
+            for (var c = 0; c < 1; c++) {
+            }
+          }
+        }
+        return true;
+      }
+    }
+  };
+      
+  adClasses[""].templateCheck();
 }
+
+placeAd2();
+
+jit(false);
 
 reportCompare(expect, actual, summary);
+
