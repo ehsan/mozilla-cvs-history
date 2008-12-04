@@ -906,13 +906,6 @@ class ReleaseTaggingFactory(ReleaseFactory):
              haltOnFailure=True,
              timeout=30*60 # 30 minutes
             )
-            self.addStep(ShellCommand,
-             command=['hg', 'up', '-r',
-                      WithProperties('%s', '%s-revision' % repoName)],
-             workdir=repoName,
-             description=['update', repoName],
-             haltOnFailure=True
-            )
             # for build1 we need to create a branch
             if buildNumber == 1 and not relbranchOverride:
                 # remember:
@@ -923,6 +916,13 @@ class ReleaseTaggingFactory(ReleaseFactory):
                 # note: we don't actually have to switch to the release branch
                 # to create tags, but it seems like a more sensible place to
                 # have those commits
+                self.addStep(ShellCommand,
+                 command=['hg', 'up', '-r',
+                          WithProperties('%s', '%s-revision' % repoName)],
+                 workdir=repoName,
+                 description=['update', repoName],
+                 haltOnFailure=True
+                )
                 self.addStep(ShellCommand,
                  command=['hg', 'branch', relbranchName],
                  workdir=repoName,
