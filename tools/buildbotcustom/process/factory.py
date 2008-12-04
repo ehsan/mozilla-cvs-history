@@ -169,7 +169,6 @@ class MercurialBuildFactory(BuildFactory):
         # platform can be things like: linux, win32-debug, macosx-release, etc.
         self.mozconfig = 'configs/%s/%s/mozconfig' % (self.configSubDir,
                                                       platform)
-        log.msg("\n\n" + self.mozconfig + "\n\n")
         # we don't need the extra cruft in 'platform' anymore
         self.platform = platform.split('-')[0].replace('64', '')
         assert self.platform in ('linux', 'win32', 'macosx')
