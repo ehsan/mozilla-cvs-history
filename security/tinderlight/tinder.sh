@@ -164,7 +164,7 @@ cvs_checkout()
     [ ${RET} -eq 0 ] || return ${RET}
 
     if [ -f ${DATADIR}.cvs ]; then
-        diff -U4 ${LOG_TMP} ${DATADIR}.cvs > /dev/null
+        diff -U4 ${LOG_TMP} ${DATADIR}.cvs | grep -i "Repository revision:" >> ${LOG_ALL}
         if [ $? -ne 0 ]; then 
             print_log "CVS change detected" 
             echo "TinderboxPrint:CVS change" >> ${LOG_ALL}
@@ -181,6 +181,7 @@ apply_patches()
     [ -z "${NSS_PATCH}" ] && return 0
 
     print_log "######## Applying patches ########"
+    echo "TinderboxPrint:Using patches" >> ${LOG_ALL}
 
     for PDATA in ${NSS_PATCH}; do
         PDIR=$(echo ${PDATA} | cut -d: -f1)
