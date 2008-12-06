@@ -504,4 +504,4 @@
 "OpenExternalHandlerOpenButon" = "Open with “%@”";
 "OpenExternalHandlerCancelButton" = "Don’t Open";
 "NoExternalHandlerTitle" = "Unknown link type";
-"NoExternalHandlerText" = "Camino cannot open “%@” links, and there are no applications installed that can open “%@” links.";
+"NoExternalHandlerText" = "Camino cannot open “%@” links, and there are no other applications installed that can open these links.";
