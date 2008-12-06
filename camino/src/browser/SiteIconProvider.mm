@@ -391,7 +391,7 @@ NeckoCacheHelper::ClearCache()
     }
   }
 
-  BOOL gotImageData = loadOK && (faviconImage != nil);
+  BOOL gotImageData = (loadOK || isFile) && (faviconImage != nil);
   if (NS_SUCCEEDED(status) && !gotImageData) // error status indicates that load was attempted from cache
     [self addToMissedIconsCache:inURI withExpirationSeconds:SITE_ICON_EXPIRATION_SECONDS];
 
