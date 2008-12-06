@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import "NSString+Gecko.h"
+#import "NSString+Utils.h"
 
 #import <AppKit/AppKit.h>
 #import "AutoCompleteDataSource.h"
@@ -129,7 +130,7 @@
   else if ([aColumnIdentifier isEqualToString:@"col1"]) {
     nsCAutoString value;
     item->GetURL(value);
-    result = [NSString stringWith_nsACString:value];
+    result = [[NSString stringWith_nsACString:value] unescapedURI];
   } else if ([aColumnIdentifier isEqualToString:@"col2"]) {
     nsAutoString titleStr;
     item->GetTitle(titleStr);
