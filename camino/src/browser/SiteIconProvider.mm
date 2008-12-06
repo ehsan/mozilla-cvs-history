@@ -396,6 +396,21 @@ NeckoCacheHelper::ClearCache()
     [self addToMissedIconsCache:inURI withExpirationSeconds:SITE_ICON_EXPIRATION_SECONDS];
 
   if (gotImageData) {
+    // We only want one representation that is greater than or
+    // equal to 16x16, and it should be the smallest one of those.
+    if ([[faviconImage representations] count] > 1) {
+      NSEnumerator* repEnumerator = [[faviconImage representations] objectEnumerator];
+      NSImageRep* bestRep = [repEnumerator nextObject];
+      NSImageRep* aRep;
+      while ((aRep = [repEnumerator nextObject])) {
+        float aWidth = [aRep size].width;
+        if ((aWidth > 15.99) && (aWidth < [bestRep size].width)) {
+          [faviconImage removeRepresentation:bestRep];
+          bestRep = aRep;
+        }
+      }
+    }
+
     [faviconImage setDataRetained:YES];
     [faviconImage setScalesWhenResized:YES];
     [faviconImage setSize:NSMakeSize(16, 16)];
