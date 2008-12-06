@@ -700,8 +700,10 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   nsCOMPtr<nsIDOMWindow> domWindow = [self contentWindow];
   if (!domWindow)
     return nil;
-  int pageWidth;
-  int pageHeight;
+  // GetIntrinsicSize can fail, in which case pageWidth and pageHeight aren't
+  // set, so default to the viewport.
+  int pageWidth = viewportSize.width;
+  int pageHeight = viewportSize.height;
   GeckoUtils::GetIntrinsicSize(domWindow, &pageWidth, &pageHeight);
   // Enforce a non-zero size, since Gecko gets very angry with a zero-sized
   // Quartz surface.
