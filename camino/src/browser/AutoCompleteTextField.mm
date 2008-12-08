@@ -41,6 +41,7 @@
 
 #import "NSString+Utils.h"
 #import "NSString+Gecko.h"
+#import "NSTextView+Utils.h"
 
 #import "AutoCompleteTextField.h"
 #import "AutoCompleteDataSource.h"
@@ -83,7 +84,6 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
 
 - (void) startSearch:(NSString*)aString complete:(BOOL)aComplete;
 - (void) performSearch;
-- (BOOL) caretIsAtEndOfLine;
 - (void) dataReady:(nsIAutoCompleteResults*)aResults status:(AutoCompleteStatus)aStatus;
 - (void) searchTimer:(NSTimer *)aTimer;
 
@@ -604,12 +604,6 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
     if (NS_FAILED(rv))
       NSLog(@"Unable to perform autocomplete lookup");
   }
-}
-
-- (BOOL)caretIsAtEndOfLine
-{
-  NSRange selectedLocation = [[self fieldEditor] selectedRange];
-  return (selectedLocation.length == 0) && (selectedLocation.location == [[self stringValue] length]);
 }
 
 - (void) dataReady:(nsIAutoCompleteResults*)aResults status:(AutoCompleteStatus)aStatus
@@ -1186,7 +1180,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
       [self completeSelectedResult];
       return YES;
     }
-    else if ([self caretIsAtEndOfLine]) {
+    else if ([textView caretIsAtEndOfLine]) {
       [self startSearch:[self stringValue] complete:YES];
       return YES;
     }

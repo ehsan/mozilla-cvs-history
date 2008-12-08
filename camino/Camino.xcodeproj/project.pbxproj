@@ -993,6 +993,8 @@
 		C795738A0D35314D0028A773 /* OpenSearchParser.mm in Sources */ = {isa = PBXBuildFile; fileRef = C79573860D35314D0028A773 /* OpenSearchParser.mm */; };
 		C795738C0D35314D0028A773 /* XMLSearchPluginParser.mm in Sources */ = {isa = PBXBuildFile; fileRef = C79573840D35314D0028A773 /* XMLSearchPluginParser.mm */; };
 		C795738E0D35314D0028A773 /* OpenSearchParser.mm in Sources */ = {isa = PBXBuildFile; fileRef = C79573860D35314D0028A773 /* OpenSearchParser.mm */; };
+		C7AB1EA00EEC5FEB0053A08A /* NSTextView+Utils.m in Sources */ = {isa = PBXBuildFile; fileRef = C7AB1E9E0EEC5FEB0053A08A /* NSTextView+Utils.m */; };
+		C7AB1EA10EEC5FEB0053A08A /* NSTextView+Utils.m in Sources */ = {isa = PBXBuildFile; fileRef = C7AB1E9E0EEC5FEB0053A08A /* NSTextView+Utils.m */; };
 		C7FF536C0D35281F00194776 /* search_editor_bottom_background.png in Resources */ = {isa = PBXBuildFile; fileRef = C7FF536A0D35281F00194776 /* search_editor_bottom_background.png */; };
 		C7FF536D0D35281F00194776 /* search_editor_action.png in Resources */ = {isa = PBXBuildFile; fileRef = C7FF536B0D35281F00194776 /* search_editor_action.png */; };
 		C7FF536E0D35281F00194776 /* search_editor_bottom_background.png in Resources */ = {isa = PBXBuildFile; fileRef = C7FF536A0D35281F00194776 /* search_editor_bottom_background.png */; };
@@ -2618,6 +2620,8 @@
 		C79573850D35314D0028A773 /* XMLSearchPluginParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = XMLSearchPluginParser.h; path = src/websearch/XMLSearchPluginParser.h; sourceTree = "<group>"; };
 		C79573860D35314D0028A773 /* OpenSearchParser.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = OpenSearchParser.mm; path = src/websearch/OpenSearchParser.mm; sourceTree = "<group>"; };
 		C79573870D35314D0028A773 /* OpenSearchParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OpenSearchParser.h; path = src/websearch/OpenSearchParser.h; sourceTree = "<group>"; };
+		C7AB1E9E0EEC5FEB0053A08A /* NSTextView+Utils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSTextView+Utils.m"; path = "src/extensions/NSTextView+Utils.m"; sourceTree = "<group>"; };
+		C7AB1E9F0EEC5FEB0053A08A /* NSTextView+Utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSTextView+Utils.h"; path = "src/extensions/NSTextView+Utils.h"; sourceTree = "<group>"; };
 		C7FF536A0D35281F00194776 /* search_editor_bottom_background.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = search_editor_bottom_background.png; path = chrome/search_editor_bottom_background.png; sourceTree = "<group>"; };
 		C7FF536B0D35281F00194776 /* search_editor_action.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = search_editor_action.png; path = chrome/search_editor_action.png; sourceTree = "<group>"; };
 		C7FF53710D35285400194776 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = resources/localized/English.lproj/SearchEngineEditor.nib; sourceTree = "<group>"; };
@@ -4419,18 +4423,20 @@
 				33FBAAFA0C84D0CA00DD459E /* NSString+Gecko.mm */,
 				F558099D02F22168015DF512 /* NSString+Utils.h */,
 				33FBAAFB0C84D0CA00DD459E /* NSString+Utils.m */,
-				F541495A02711A8301A80166 /* NSToolbar+Utils.h */,
-				F541495B02711A8301A80166 /* NSToolbar+Utils.m */,
+				C7AB1E9F0EEC5FEB0053A08A /* NSTextView+Utils.h */,
+				C7AB1E9E0EEC5FEB0053A08A /* NSTextView+Utils.m */,
 				0F84BF1608862E4B00E23BC4 /* NSThread+Utils.h */,
 				0F84BF1208862E3E00E23BC4 /* NSThread+Utils.m */,
+				F541495A02711A8301A80166 /* NSToolbar+Utils.h */,
+				F541495B02711A8301A80166 /* NSToolbar+Utils.m */,
 				335639060C84DAC100DC4D06 /* NSURL+Utils.h */,
 				3FE4ECE9082C2D89003BF39E /* NSURL+Utils.m */,
 				F527C90203BCD43601A80166 /* NSView+Utils.h */,
 				F527C90303BCD43601A80166 /* NSView+Utils.m */,
 				0F08FB1408D37DA90022DD45 /* NSWorkspace+Utils.h */,
 				0F08FB1708D37DB30022DD45 /* NSWorkspace+Utils.m */,
-				DE70BE6E0CBC7CB400C1CC63 /* ToolbarScriptItem.mm */,
 				DE70BE6F0CBC7CB400C1CC63 /* ToolbarScriptItem.h */,
+				DE70BE6E0CBC7CB400C1CC63 /* ToolbarScriptItem.mm */,
 			);
 			name = Categories;
 			sourceTree = "<group>";
@@ -5309,7 +5315,7 @@
 				DE40448D0ED09D1E00057E17 /* global_locale_xslt_xslt_properties.strings in Resources */,
 				DE40448E0ED09D1E00057E17 /* global_locale_nsTreeSorting_properties.strings in Resources */,
 				DE40448F0ED09D1E00057E17 /* global_locale_languageNames_properties.strings in Resources */,
- 				000D0A9C0ED9BD8100A6C2F0 /* tabOverview.tiff in Resources */,
+				000D0A9C0ED9BD8100A6C2F0 /* tabOverview.tiff in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5538,7 +5544,7 @@
 				DE4044690ED09D1E00057E17 /* global_locale_xslt_xslt_properties.strings in Resources */,
 				DE40446A0ED09D1E00057E17 /* global_locale_nsTreeSorting_properties.strings in Resources */,
 				DE40446B0ED09D1E00057E17 /* global_locale_languageNames_properties.strings in Resources */,
- 				000D0A9D0ED9BD8100A6C2F0 /* tabOverview.tiff in Resources */,
+				000D0A9D0ED9BD8100A6C2F0 /* tabOverview.tiff in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5782,6 +5788,7 @@
 				0095FACA0D9C99880039B3D8 /* CHBrowserView+Spelling.mm in Sources */,
 				336234490E6BC2FB00DD5373 /* HTMLBookmarkConverter.m in Sources */,
 				C713F0900E9AF7DB002313B3 /* CHSlidingViewAnimation.m in Sources */,
+				C7AB1EA00EEC5FEB0053A08A /* NSTextView+Utils.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5965,6 +5972,7 @@
 				0095FAC90D9C99880039B3D8 /* CHBrowserView+Spelling.mm in Sources */,
 				336234480E6BC2FB00DD5373 /* HTMLBookmarkConverter.m in Sources */,
 				C713F0910E9AF7DB002313B3 /* CHSlidingViewAnimation.m in Sources */,
+				C7AB1EA10EEC5FEB0053A08A /* NSTextView+Utils.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

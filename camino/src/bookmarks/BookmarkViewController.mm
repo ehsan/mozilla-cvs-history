@@ -49,6 +49,7 @@
 #import "NSSplitView+Utils.h"
 #import "NSView+Utils.h"
 #import "NSMenu+Utils.h"
+#import "NSTextView+Utils.h"
 
 #import "BookmarkManager.h"
 #import "BookmarkInfoController.h"
@@ -176,6 +177,7 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
 {
   // we know this is still alive, because we release the last ref below
   [mBookmarksEditingView setDelegate:nil];
+  [mSearchField setDelegate:nil];
 
   [[NSNotificationCenter defaultCenter] removeObserver:self];
 
@@ -219,6 +221,7 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
 - (void)awakeFromNib
 {
   [mBookmarksEditingView setDelegate:self];
+  [mSearchField setDelegate:self];
 
   // retain views that we remove from the hierarchy
   [mBookmarksHostView retain];
@@ -1961,6 +1964,47 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
 {
 }
 
+//
+// -control:textView:doCommandBySelector:
+// NSControl delegate
+// 
+// Bring up the search field's menu if the down arrow key is pressed when the
+// caret is at the end of the input text.
+//
+- (BOOL)control:(NSControl *)control textView:(NSTextView *)textView doCommandBySelector:(SEL)command
+{
+  BOOL result = NO;
+  if (command == @selector(moveDown:) && [textView caretIsAtEndOfLine] &&
+      (control == mSearchField))
+  {
+    NSWindow *controlWindow = [control window];
+    NSPoint searchButtonPointInWindow = [control convertPoint:NSMakePoint(0, 0)
+                                                       toView:[controlWindow contentView]];
+    NSEvent *clickEvent;
+    clickEvent = [NSEvent mouseEventWithType:NSLeftMouseDown
+                                    location:searchButtonPointInWindow
+                               modifierFlags:0
+                                   timestamp:GetCurrentEventTime()
+                                windowNumber:[controlWindow windowNumber]
+                                     context:[controlWindow graphicsContext]
+                                 eventNumber:0
+                                  clickCount:1
+                                    pressure:0];
+    [NSApp postEvent:clickEvent atStart:NO];
+    clickEvent = [NSEvent mouseEventWithType:NSLeftMouseUp
+                                    location:searchButtonPointInWindow
+                               modifierFlags:0
+                                   timestamp:GetCurrentEventTime()
+                                windowNumber:[controlWindow windowNumber]
+                                     context:[controlWindow graphicsContext]
+                                 eventNumber:0
+                                  clickCount:1
+                                    pressure:0];
+    [NSApp postEvent:clickEvent atStart:NO];
+    result = YES;
+  }
+  return result;
+}
 
 #pragma mark -
 

@@ -46,6 +46,7 @@
 #import "NSMenu+Utils.h"
 #import "NSPasteboard+Utils.h"
 #import "NSWorkspace+Utils.h"
+#import "NSTextView+Utils.h"
 
 #import "BrowserWindowController.h"
 #import "BrowserWindow.h"
@@ -4896,6 +4897,47 @@ public:
     [mBrowserView setBrowserActive:newResponderIsGecko];
 }
 
+//
+// -control:textView:doCommandBySelector:
+// NSControl delegate method
+// 
+// Bring up the search field's menu if the down arrow key is pressed when the
+// caret is at the end of the input text.
+//
+- (BOOL)control:(NSControl *)control textView:(NSTextView *)textView doCommandBySelector:(SEL)command
+{
+  BOOL result = NO;
+  if (command == @selector(moveDown:) && [textView caretIsAtEndOfLine] &&
+      (control == mSearchBar || control == mSearchSheetTextField))
+  {
+    NSWindow *controlWindow = [control window];
+    NSPoint searchButtonPointInWindow = [control convertPoint:NSMakePoint(0, 0)
+                                                       toView:[controlWindow contentView]];
+    NSEvent *clickEvent;
+    clickEvent = [NSEvent mouseEventWithType:NSLeftMouseDown
+                                    location:searchButtonPointInWindow
+                               modifierFlags:0
+                                   timestamp:GetCurrentEventTime()
+                                windowNumber:[controlWindow windowNumber]
+                                     context:[controlWindow graphicsContext]
+                                 eventNumber:0
+                                  clickCount:1
+                                    pressure:0];
+    [NSApp postEvent:clickEvent atStart:NO];
+    clickEvent = [NSEvent mouseEventWithType:NSLeftMouseUp
+                                    location:searchButtonPointInWindow
+                               modifierFlags:0
+                                   timestamp:GetCurrentEventTime()
+                                windowNumber:[controlWindow windowNumber]
+                                     context:[controlWindow graphicsContext]
+                                 eventNumber:0
+                                  clickCount:1
+                                    pressure:0];
+    [NSApp postEvent:clickEvent atStart:NO];
+    result = YES;
+  }
+  return result;
+}
 
 - (PageProxyIcon*)proxyIconView
 {
