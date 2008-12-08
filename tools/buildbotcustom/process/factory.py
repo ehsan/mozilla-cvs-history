@@ -1357,9 +1357,10 @@ class ReleaseFinalVerification(ReleaseFactory):
          repourl=buildTools
         )
         self.addStep(ShellCommand,
-         command=['bash', 'release/final-verification.sh',
+         command=['bash', 'final-verification.sh',
                   linuxConfig, macConfig, win32Config],
-         description=['final-verification.sh']
+         description=['final-verification.sh'],
+         workdir='build/release'
         )
 
 class UnittestBuildFactory(BuildFactory):
