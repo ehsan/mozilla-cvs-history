@@ -209,7 +209,8 @@ class MercurialBuildFactory(BuildFactory):
             self.addStep(ShellCommand,
              command=['rm', '-rf', 'build'],
              env=self.env,
-             workdir='.'
+             workdir='.',
+             timeout=60*60 # 1 hour
             )
         self.addStep(ShellCommand,
          command=['echo', WithProperties('Building on: %(slavename)s')],
@@ -223,7 +224,9 @@ class MercurialBuildFactory(BuildFactory):
          description=['cleaning', 'old', 'builds'],
          descriptionDone=['clean', 'old', 'builds'],
          warnOnFailure=True,
-         flunkOnFailure=False)
+         flunkOnFailure=False,
+         timeout=60*60 # 1 hour
+        )
         self.addStep(ShellCommand,
          command="rm -rf %s/dist/firefox-* %s/dist/install/sea/*.exe " %
                   (self.objdir, self.objdir),
@@ -243,7 +246,7 @@ class MercurialBuildFactory(BuildFactory):
          mode='update',
          baseURL=self.sourceRepo,
          defaultBranch=self.branch,
-         timeout=30*60, # 30 minutes
+         timeout=60*60, # 1 hour
         )
         if self.buildRevision:
             self.addStep(ShellCommand,
@@ -577,7 +580,8 @@ class MercurialBuildFactory(BuildFactory):
             self.addStep(ShellCommand,
              command=['rm', '-rf', 'build'],
              env=self.env,
-             workdir='.'
+             workdir='.',
+             timeout=60*60 # 1 hour
             )
             # no need to clean-up temp files if we clobber the whole directory
             return
