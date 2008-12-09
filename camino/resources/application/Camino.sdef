@@ -54,8 +54,7 @@
 			<property name="titled" code="ptit" description="Whether the window has a title bar." type="boolean" access="r">
 				<cocoa key="hasTitleBar"/>
 			</property>
-			<!-- the type is supposed to be "integer" -->
-			<property name="index" code="pidx" description="The index of the window in the back-to-front window ordering." type="number">
+			<property name="index" code="pidx" description="The index of the window in the back-to-front window ordering." type="integer">
 				<cocoa key="orderedIndex"/>
 			</property>
 			<property name="floating" code="isfl" description="Whether the window floats." type="boolean" access="r">
