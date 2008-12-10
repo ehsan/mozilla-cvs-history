@@ -35,7 +35,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sechash.h,v 1.6 2008/12/10 22:48:02 julien.pierre.bugs%sun.com Exp $ */
+/* $Id: sechash.h,v 1.7 2008/12/10 22:48:03 rrelyea%redhat.com Exp $ */
 
 #include "seccomon.h"
 #include "hasht.h"
@@ -80,6 +80,8 @@ extern const SECHashObject * HASH_GetHashObject(HASH_HashType type);
 extern const SECHashObject * HASH_GetHashObjectByOidTag(SECOidTag hashOid);
 
 extern HASH_HashType HASH_GetHashTypeByOidTag(SECOidTag hashOid);
+extern SECOidTag HASH_GetHashOidTagByHMACOidTag(SECOidTag hmacOid);
+extern SECOidTag HASH_GetHMACOidTagByHashOidTag(SECOidTag hashOid);
 
 SEC_END_PROTOS
 
