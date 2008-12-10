@@ -92,13 +92,13 @@ def checkAllProcesses(browser_config):
 
 def cleanupProcesses(browser_config):
   #kill any remaining browser processes
-  ffprocess.TerminateAllProcesses(browser_config['process'], "crashreporter", "dwwin", "talkback")
+  ffprocess.TerminateAllProcesses(browser_config['browser_wait'], browser_config['process'], "crashreporter", "dwwin", "talkback")
   #check if anything is left behind
   if checkAllProcesses(browser_config): 
     #this is for windows machines.  when attempting to send kill messages to win processes the OS
     # always gives the process a chance to close cleanly before terminating it, this takes longer
     # and we need to give it a little extra time to complete
-    time.sleep(10)
+    time.sleep(browser_config['browser_wait'])
     if checkAllProcesses(browser_config):
       raise talosError("failed to cleanup")
 
@@ -116,9 +116,9 @@ def createProfile(browser_config):
 
 def initializeProfile(profile_dir, browser_config):
   if browser_config["profile_path"] != {}:
-      if not (ffsetup.InitializeNewProfile(browser_config['browser_path'], browser_config['process'], browser_config['extra_args'], profile_dir, browser_config['init_url'])):
+      if not (ffsetup.InitializeNewProfile(browser_config['browser_path'], browser_config['process'], browser_config['browser_wait'], browser_config['extra_args'], profile_dir, browser_config['init_url'])):
          raise talosError("failed to initialize browser")
-      time.sleep(10)
+      time.sleep(browser_config['browser_wait'])
       if checkAllProcesses(browser_config):
          raise talosError("browser failed to close after being initialized") 
 
@@ -163,7 +163,7 @@ def runTest(browser_config, test_config):
     utils.debug("initialized " + browser_config['process'])
   
     for i in range(test_config['cycles']):
-      ffprocess.Sleep()
+      time.sleep(browser_config['browser_wait']) #wait out the browser closing
       # check to see if the previous cycle is still hanging around 
       if (i > 0) and checkAllProcesses(browser_config):
         raise talosError("previous cycle still running")
@@ -192,7 +192,7 @@ def runTest(browser_config, test_config):
       #give browser a chance to open
       # this could mean that we are losing the first couple of data points as the tests starts, but if we don't provide
       # some time for the browser to start we have trouble connecting the CounterManager to it
-      ffprocess.Sleep()
+      time.sleep(browser_config['browser_wait'])
       #set up the counters for this test
       if counters:
         cm = CounterManager(browser_config['process'], counters)

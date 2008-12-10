@@ -54,22 +54,14 @@ elif platform.system() in ("Windows", "Microsoft"):
 elif platform.system() == "Darwin":
     from ffprocess_mac import *
 
-
-
-def Sleep():
-  """Runs sync and sleeps for a few seconds between browser runs.
-     Otherwise 'browser' is already running.." errors occur
-  """
-  time.sleep(5)
-
-
-def RunProcessAndWaitForOutput(command, process_name, output_regex, timeout):
+def RunProcessAndWaitForOutput(command, process_name, browser_wait, output_regex, timeout):
   """Runs the given process and waits for the output that matches the given
      regular expression.  Stops if the process exits early or times out.
 
   Args:
     command: String containing command to run
     process_name: Name of the process to run, in case it has to be killed
+    browser_wait: Amount of time allowed for the browser to cleanly close
     output_regex: Regular expression to check against each output line.
                   If the output matches, the process is terminated and 
                   the function returns.
@@ -101,12 +93,12 @@ def RunProcessAndWaitForOutput(command, process_name, output_regex, timeout):
     if result:
       try:
         return_val = result.group(1)
-        TerminateAllProcesses(process_name)
+        TerminateAllProcesses(browser_wait, process_name)
         return (return_val, False)
       except IndexError:
         # Didn't really match
         pass
 
   # Timed out.
-  TerminateAllProcesses(process_name)
+  TerminateAllProcesses(browser_wait, process_name)
   return (None, True)

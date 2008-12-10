@@ -140,7 +140,7 @@ def InstallInBrowser(browser_path, dir_path):
       else:
           utils.debug("WARNING: file already installed (" + fromfile + ")")
 
-def InitializeNewProfile(browser_path, process, extra_args, profile_dir, init_url):
+def InitializeNewProfile(browser_path, process, browser_wait, extra_args, profile_dir, init_url):
   """Runs browser with the new profile directory, to negate any performance
      hit that could occur as a result of starting up with a new profile.  
      Also kills the "extra" browser that gets spawned the first time browser
@@ -155,6 +155,7 @@ def InitializeNewProfile(browser_path, process, extra_args, profile_dir, init_ur
   cmd = ffprocess.GenerateBrowserCommandLine(browser_path, extra_args, profile_dir, init_url)
   (match, timed_out) = ffprocess.RunProcessAndWaitForOutput(cmd,
                                                               process,
+                                                              browser_wait,
                                                               PROFILE_REGEX,
                                                               30)
   if (not timed_out):

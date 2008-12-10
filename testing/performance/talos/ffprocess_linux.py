@@ -112,7 +112,7 @@ def ProcessesWithNameExist(*process_names):
   return False
 
 
-def TerminateProcess(pid):
+def TerminateProcess(pid, timeout):
   """Helper function to terminate a process, given the pid
 
   Args:
@@ -121,13 +121,13 @@ def TerminateProcess(pid):
   try:
     if ProcessesWithNameExist(str(pid)):
       os.kill(pid, signal.SIGTERM)
-      time.sleep(5)
+      time.sleep(timeout)
       if ProcessesWithNameExist(str(pid)):
         os.kill(pid, signal.SIGKILL)
   except OSError, (errno, strerror):
     print 'WARNING: failed os.kill: %s : %s' % (errno, strerror)
 
-def TerminateAllProcesses(*process_names):
+def TerminateAllProcesses(timeout, *process_names):
   """Helper function to terminate all processes with the given process name
 
   Args:
@@ -139,7 +139,7 @@ def TerminateAllProcesses(*process_names):
   for process_name in process_names:
     pids = GetPidsByName(process_name)
     for pid in pids:
-      TerminateProcess(pid)
+      TerminateProcess(pid, timeout)
 
 
 def NonBlockingReadProcessOutput(handle):
