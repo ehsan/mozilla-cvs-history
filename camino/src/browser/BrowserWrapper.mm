@@ -61,13 +61,7 @@
 #include "ContentClickListener.h"
 
 #include "nsCOMPtr.h"
-
-#ifdef MOZILLA_1_8_BRANCH
-#include "nsIArray.h"
-#else
 #include "nsIMutableArray.h"
-#endif
-
 #include "nsIArray.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
