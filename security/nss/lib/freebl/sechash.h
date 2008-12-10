@@ -35,6 +35,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+/* $Id: sechash.h,v 1.5 2008/12/10 22:48:01 gerv%gerv.net Exp $ */
 
 #include "seccomon.h"
 #include "hasht.h"
