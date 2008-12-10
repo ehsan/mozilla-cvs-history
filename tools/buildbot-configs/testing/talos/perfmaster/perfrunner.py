@@ -484,8 +484,8 @@ class TalosFactory(BuildFactory):
                                flunkOnFailure=False,
                                warnOnFailure=False,
                                workdir='.',
-                               description="reboot after 5 test runs",
-                               command=["python", "count_and_reboot.py", "-f", "../talos_count.txt", "-n", "5", "-z"],
+                               description="reboot after 1 test run",
+                               command=["python", "count_and_reboot.py", "-f", "../talos_count.txt", "-n", "1", "-z"],
                                env=MozillaEnvironments[envName])
 
 
