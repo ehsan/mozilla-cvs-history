@@ -32,7 +32,7 @@
  *
  * hasht.h - public data structures for the hashing library
  *
- * $Id: hasht.h,v 1.3 2008/12/10 22:47:59 wtc%netscape.com Exp $
+ * $Id: hasht.h,v 1.4 2008/12/10 22:48:00 nelsonb%netscape.com Exp $
  */
 
 #ifndef _HASHT_H_
@@ -47,10 +47,13 @@ typedef struct HASHContextStr HASHContext;
  * NOTE the order must match the definition of SECHashObjects[]!
  */
 typedef enum {
-    HASH_AlgNULL = 0,
-    HASH_AlgMD2 = 1,
-    HASH_AlgMD5 = 2,
-    HASH_AlgSHA1 = 3,
+    HASH_AlgNULL   = 0,
+    HASH_AlgMD2    = 1,
+    HASH_AlgMD5    = 2,
+    HASH_AlgSHA1   = 3,
+    HASH_AlgSHA256 = 4,
+    HASH_AlgSHA384 = 5,
+    HASH_AlgSHA512 = 6,
     HASH_AlgTOTAL
 } HASH_HashType;
 
@@ -60,6 +63,10 @@ typedef enum {
 #define MD2_LENGTH	16
 #define MD5_LENGTH	16
 #define SHA1_LENGTH	20
+#define SHA256_LENGTH 	32
+#define SHA384_LENGTH 	48
+#define SHA512_LENGTH 	64
+#define HASH_LENGTH_MAX SHA512_LENGTH
 
 /*
  * Structure to hold hash computation info and routines
