@@ -1006,7 +1006,8 @@ class ReleaseTaggingFactory(ReleaseFactory):
 
 
 class SingleSourceFactory(ReleaseFactory):
-    def __init__(self, repository, productName, appVersion, baseTag):
+    def __init__(self, repository, productName, appVersion, baseTag,
+                 autoconfDirs=['.']):
         ReleaseFactory.__init__(self)
         repoName = self.getRepoName(repository)
         pushRepo = self.getPushRepo(repository)
@@ -1056,11 +1057,12 @@ class SingleSourceFactory(ReleaseFactory):
          description=['delete metadata'],
          haltOnFailure=True
         )
-        self.addStep(ShellCommand,
-         command=['autoconf-2.13'],
-         workdir=repoName,
-         haltOnFailure=True
-        )
+        for dir in autoconfDirs:
+            self.addStep(ShellCommand,
+             command=['autoconf-2.13'],
+             workdir='%s/%s' % (repoName, dir),
+             haltOnFailure=True
+            )
         self.addStep(ShellCommand,
          command=['tar', '-cjf', sourceTarball, repoName],
          workdir='.',
