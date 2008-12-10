@@ -34,7 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
- 
+
 #import "SecurityPane.h"
 
 #import "GeckoPrefConstants.h"
@@ -71,7 +71,6 @@ const unsigned int kAskEveryTimeMatrixRowValue        = 1;
     else if ([certificateBehavior isEqual:kPersonalCertificateAlwaysAsk])
       [mCertificateBehavior selectCellAtRow:kAskEveryTimeMatrixRowValue column:0];
   }
-
 }
 
 - (void)willSelect
@@ -88,7 +87,7 @@ const unsigned int kAskEveryTimeMatrixRowValue        = 1;
 // clickEnableViewMixed:
 // clickEnableLeaveEncrypted:
 //
-// Set prefs for warnings/alerts wrt secure sites
+// Set prefs for warnings/alerts wrt secure sites.
 //
 
 - (IBAction)clickEnableViewMixed:(id)sender
@@ -113,7 +112,7 @@ const unsigned int kAskEveryTimeMatrixRowValue        = 1;
 
 - (IBAction)showCertificates:(id)sender
 {
-  // we'll just fire off a notification and let the application show the UI
+  // We'll just fire off a notification and let the application show the UI.
   NSDictionary* userInfoDict = [NSDictionary dictionaryWithObject:[mLeaveEncrypted window]  // any view's window
                                                            forKey:@"parent_window"];
   [[NSNotificationCenter defaultCenter] postNotificationName:@"ShowCertificatesNotification"

@@ -43,7 +43,7 @@
 
 @interface OrgMozillaCaminoPreferenceHistory : PreferencePaneBase
 {
-  IBOutlet NSTextField *textFieldHistoryDays;
+  IBOutlet NSTextField* textFieldHistoryDays;
 }
 
 - (IBAction)historyDaysModified:(id)sender;

@@ -58,7 +58,7 @@ static const int kDefaultExpireDays = 9;
 
 @implementation NonNegativeIntegerFormatter
 
-- (NSString *)stringForObjectValue:(id)anObject
+- (NSString*)stringForObjectValue:(id)anObject
 {
   // Normally we could just return [anObject stringValue], but since the pref is
   // being read after the formatter is set, this raises an exception if we do that.
@@ -66,13 +66,13 @@ static const int kDefaultExpireDays = 9;
   return [anObject isKindOfClass:[NSNumber class]] ? [anObject stringValue] : @"";
 }
 
-- (BOOL)getObjectValue:(id *)anObject forString:(NSString *)string errorDescription:(NSString **)error
+- (BOOL)getObjectValue:(id*)anObject forString:(NSString*)string errorDescription:(NSString**)error
 {
   *anObject = [NSNumber numberWithInt:[string intValue]];
   return YES;
 }
 
-- (BOOL)isPartialStringValid:(NSString *)partialString newEditingString:(NSString **)newString errorDescription:(NSString **)error
+- (BOOL)isPartialStringValid:(NSString*)partialString newEditingString:(NSString**)newString errorDescription:(NSString**)error
 {
   NSCharacterSet* nonDigitSet = [[NSCharacterSet decimalDigitCharacterSet] invertedSet];
   if ([partialString rangeOfCharacterFromSet:nonDigitSet].location != NSNotFound) {
@@ -99,7 +99,7 @@ static const int kDefaultExpireDays = 9;
   int expireDays = [self getIntPref:kGeckoPrefHistoryLifetimeDays withSuccess:&gotPref];
   if (!gotPref)
     expireDays = kDefaultExpireDays;
-  
+
   [textFieldHistoryDays setIntValue:expireDays];
 }
 
@@ -113,7 +113,7 @@ static const int kDefaultExpireDays = 9;
   [self setPref:kGeckoPrefHistoryLifetimeDays toInt:[sender intValue]];
 }
 
-// Clear the user's disk cache
+// Clear the user's disk cache.
 - (IBAction)clearDiskCache:(id)aSender
 {
   NSAlert* clearCacheAlert = [[[NSAlert alloc] init] autorelease];
@@ -130,7 +130,7 @@ static const int kDefaultExpireDays = 9;
                                 contextInfo:nil];
 }
 
-// use the browser history service to clear out the user's global history
+// Use the browser history service to clear out the user's global history.
 - (IBAction)clearGlobalHistory:(id)sender
 {
   NSAlert* clearGlobalHistoryAlert = [[[NSAlert alloc] init] autorelease];
@@ -138,7 +138,7 @@ static const int kDefaultExpireDays = 9;
   [clearGlobalHistoryAlert setInformativeText:NSLocalizedString(@"ClearHistoryMessage", nil)];
   [clearGlobalHistoryAlert addButtonWithTitle:NSLocalizedString(@"ClearHistoryButtonText", nil)];
   NSButton* dontClearButton = [clearGlobalHistoryAlert addButtonWithTitle:NSLocalizedString(@"DontClearButtonText", nil)];
-  [dontClearButton setKeyEquivalent:@"\e"]; // escape
+  [dontClearButton setKeyEquivalent:@"\e"]; // Escape
 
   [clearGlobalHistoryAlert setAlertStyle:NSCriticalAlertStyle];
   [clearGlobalHistoryAlert beginSheetModalForWindow:[textFieldHistoryDays window]
@@ -149,7 +149,7 @@ static const int kDefaultExpireDays = 9;
 
 #pragma mark -
 
-- (void)clearDiskCacheAlertDidEnd:(NSAlert *)alert returnCode:(int)returnCode contextInfo:(void *)contextInfo
+- (void)clearDiskCacheAlertDidEnd:(NSAlert*)alert returnCode:(int)returnCode contextInfo:(void*)contextInfo
 {
   if (returnCode == NSAlertFirstButtonReturn) {
     nsCOMPtr<nsICacheService> cacheServ (do_GetService("@mozilla.org/network/cache-service;1"));
@@ -158,7 +158,7 @@ static const int kDefaultExpireDays = 9;
   }
 }
 
-- (void)clearGlobalHistoryAlertDidEnd:(NSAlert *)alert returnCode:(int)returnCode contextInfo:(void *)contextInfo
+- (void)clearGlobalHistoryAlertDidEnd:(NSAlert*)alert returnCode:(int)returnCode contextInfo:(void*)contextInfo
 {
   if (returnCode == NSAlertFirstButtonReturn) {
     nsCOMPtr<nsIBrowserHistory> hist (do_GetService("@mozilla.org/browser/global-history;2"));

@@ -44,7 +44,7 @@
 
 @implementation OrgMozillaCaminoPreferenceTabs
 
-- (id)initWithBundle:(NSBundle *)bundle
+- (id)initWithBundle:(NSBundle*)bundle
 {
   self = [super initWithBundle:bundle];
   return self;
@@ -85,8 +85,9 @@
 
 - (IBAction)checkboxClicked:(id)sender
 {
-  if (sender == mCheckboxOpenTabsForCommand)
+  if (sender == mCheckboxOpenTabsForCommand) {
     [self setPref:kGeckoPrefOpenTabsForMiddleClick toBoolean:([sender state] == NSOnState)];
+  }
   else if (sender == mCheckboxOpenTabsForExternalLinks) {
     [sender setAllowsMixedState:NO];
     [self setPref:kGeckoPrefExternalLoadBehavior toInt:([sender state] == NSOnState ? kExternalLoadOpensNewTab
@@ -98,11 +99,12 @@
                                                  : kSingleWindowModeUseNewWindow;
     [self setPref:kGeckoPrefSingleWindowModeTargetBehavior toInt:newState];
   }
-
-  else if (sender == mCheckboxLoadTabsInBackground)
+  else if (sender == mCheckboxLoadTabsInBackground) {
     [self setPref:kGeckoPrefOpenTabsInBackground toBoolean:([sender state] == NSOnState)];
-  else if (sender == mTabBarVisiblity)
+  }
+  else if (sender == mTabBarVisiblity) {
     [self setPref:kGeckoPrefAlwaysShowTabBar toBoolean:([sender state] == NSOnState)];
+  }
 }
 
 @end

@@ -92,11 +92,11 @@ const int kSortReverse = 1;
 #pragma mark -
 
 @interface NSString(HostSortComparator)
-- (NSComparisonResult)reverseHostnameCompare:(NSString *)otherString;
+- (NSComparisonResult)reverseHostnameCompare:(NSString*)otherString;
 @end
 
 @implementation NSString(HostSortComparator)
-- (NSComparisonResult)reverseHostnameCompare:(NSString *)otherString {
+- (NSComparisonResult)reverseHostnameCompare:(NSString*)otherString {
   NSArray* selfComponents = [self componentsSeparatedByString:@"."];
   NSArray* otherStringComponents = [otherString componentsSeparatedByString:@"."];
   int selfIndex = [selfComponents count] - 1;
@@ -154,7 +154,8 @@ const int kSortReverse = 1;
     acceptCookies = kCookieAcceptAll;
   [self mapCookiePrefToGUI:acceptCookies];
 
-  // lifetimePolicy now controls asking about cookies, despite being totally unintuitive
+  // The lifetimePolicy pref now controls asking about cookies,
+  // despite being totally unintuitive.
   int lifetimePolicy = [self getIntPref:kGeckoPrefCookieLifetimePolicy
                             withSuccess:&gotPref];
   if (!gotPref)
@@ -231,8 +232,8 @@ const int kSortReverse = 1;
            deleteAction:@selector(removeCookies:)];
 
   // This is an artifact of something weird in the nib; if the table is
-  // rebuilt (or the nib is otherwise fixed) this can be removed).
-  // XXX This may have been 10.2-specific, so it may be removable now.
+  // rebuilt (or the nib is otherwise fixed), this can be removed.
+  // XXX This still happens in 10.5 with our current nib.
   NSArray* columns = [mCookiesTable tableColumns];
   if (columns) {
     int numColumns = [columns count];
@@ -305,7 +306,7 @@ const int kSortReverse = 1;
   [removeAllCookiesAlert setInformativeText:[self localizedStringForKey:@"RemoveAllCookiesWarning"]];
   [removeAllCookiesAlert addButtonWithTitle:[self localizedStringForKey:@"Remove All Cookies"]];
   NSButton* dontRemoveButton = [removeAllCookiesAlert addButtonWithTitle:[self localizedStringForKey:@"DontRemoveButtonText"]];
-  [dontRemoveButton setKeyEquivalent:@"\e"]; // escape
+  [dontRemoveButton setKeyEquivalent:@"\e"]; // Escape
 
   [removeAllCookiesAlert setAlertStyle:NSCriticalAlertStyle];
 
@@ -331,7 +332,7 @@ const int kSortReverse = 1;
 
 - (IBAction)removeCookiesAndBlockSites:(id)aSender
 {
-  // Block the sites.
+  // Block the sites...
   CHPermissionManager* permManager = [CHPermissionManager permissionManager];
   NSArray* selectedSites = [self selectedCookieSites];
   NSEnumerator* sitesEnum = [selectedSites objectEnumerator];
@@ -342,13 +343,13 @@ const int kSortReverse = 1;
                       type:CHPermissionTypeCookie];
   }
 
-  // Then remove the cookies.
+  // ...then remove the cookies.
   [self removeCookies:aSender];
 }
 
 - (NSArray*)selectedCookieSites
 {
-  // the set does the uniquifying for us
+  // The set does the uniquifying for us.
   NSMutableSet* selectedHostsSet = [[[NSMutableSet alloc] init] autorelease];
   NSIndexSet* selectedIndexes = [mCookiesTable selectedRowIndexes];
   for (unsigned int index = [selectedIndexes lastIndex];
@@ -395,8 +396,8 @@ const int kSortReverse = 1;
 
 - (NSString*)permissionsBlockingNameForCookieHostname:(NSString*)inHostname
 {
-  // if the host string starts with a '.', remove it (because this is
-  // how the permissions manager looks up hosts)
+  // If the host string starts with a '.', remove it (because this is
+  // how the permissions manager looks up hosts).
   if ([inHostname hasPrefix:@"."])
     inHostname = [inHostname substringFromIndex:1];
   return inHostname;
@@ -447,7 +448,7 @@ const int kSortReverse = 1;
     mPermissions = [[NSMutableArray alloc] init];
 }
 
-// Note that this operates only a single row (enforced by menu validation),
+// Note that this operates only on a single row (enforced by menu validation),
 // unlike many of the other context menu actions.
 - (IBAction)expandCookiePermission:(id)aSender
 {
@@ -470,7 +471,7 @@ const int kSortReverse = 1;
   // Add the new general policy.
   [permManager setPolicy:policy forHost:superdomain type:CHPermissionTypeCookie];
 
-  // Re-applying the filter will take care of refreshing the cache
+  // Re-applying the filter will take care of refreshing the cache.
   [self filterCookiesPermissionsWithString:[mPermissionFilterField stringValue]];
   [self sortByColumn:[mPermissionsTable highlightedTableColumn]];
   [mPermissionsTable reloadData];
@@ -638,7 +639,8 @@ const int kSortReverse = 1;
   if ([mKeychainExclusionsTable numberOfRows] > 0) {
     int rowToSelect = [selectedIndexes lastIndex] - ([selectedIndexes count] - 1);
     if ((rowToSelect < 0) ||
-        (rowToSelect >= [mKeychainExclusionsTable numberOfRows])) {
+        (rowToSelect >= [mKeychainExclusionsTable numberOfRows]))
+    {
       rowToSelect = [mKeychainExclusionsTable numberOfRows] - 1;
     }
     [mKeychainExclusionsTable selectRow:rowToSelect byExtendingSelection:NO];
@@ -674,9 +676,11 @@ const int kSortReverse = 1;
   int numRows = 0;
   if (aTableView == mPermissionsTable) {
     numRows = [mPermissions count];
-  } else if (aTableView == mCookiesTable) {
+  }
+  else if (aTableView == mCookiesTable) {
     numRows = [mCookies count];
-  } else if (aTableView == mKeychainExclusionsTable) {
+  }
+  else if (aTableView == mKeychainExclusionsTable) {
     numRows = [mKeychainExclusions count];
   }
 
@@ -700,14 +704,16 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
     if ([[aTableColumn identifier] isEqualToString:@"isSecure"]) {
       BOOL secure = [[mCookies objectAtIndex:rowIndex] isSecure];
       return [self localizedStringForKey:(secure ? @"yes": @"no")];
-    } else if ([[aTableColumn identifier] isEqualToString:@"expiresDate"]) {
+    }
+    else if ([[aTableColumn identifier] isEqualToString:@"expiresDate"]) {
       NSHTTPCookie* cookie = [mCookies objectAtIndex:rowIndex];
       BOOL isSessionCookie = [cookie isSessionOnly];
       // If it's a session cookie, set the expiration date to the epoch,
       // so the custom formatter can display a localized string.
       return isSessionCookie ? [NSDate dateWithTimeIntervalSince1970:0]
                              : [cookie expiresDate];
-    } else {
+    }
+    else {
       return [[mCookies objectAtIndex:rowIndex] valueForKey:[aTableColumn identifier]];
     }
   }
@@ -756,8 +762,8 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
   mSortedAscending = YES;
   [self sortByColumn:[table tableColumnWithIdentifier:sortKey]];
 
-  // ensure a row is selected (cocoa doesn't do this for us, but will keep
-  // us from unselecting a row once one is set; go figure).
+  // Ensure a row is selected. Cocoa doesn't do this for us, but will keep
+  // us from unselecting a row once one is set; go figure.
   if ([table numberOfRows] > 0)
     [table selectRow:0 byExtendingSelection:NO];
 }
@@ -838,14 +844,14 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
   [mKeychainExclusions sortUsingDescriptors:sortDescriptors];
 }
 
-- (void)updateSortIndicatorWithColumn:(NSTableColumn *)tableColumn
+- (void)updateSortIndicatorWithColumn:(NSTableColumn*)tableColumn
 {
   NSTableView* table = [tableColumn tableView];
   NSTableColumn* oldColumn = [table highlightedTableColumn];
   if (oldColumn)
     [table setIndicatorImage:nil inTableColumn:oldColumn];
 
-  NSImage *sortIndicator = [NSImage imageNamed:(mSortedAscending ? @"NSAscendingSortIndicator"
+  NSImage* sortIndicator = [NSImage imageNamed:(mSortedAscending ? @"NSAscendingSortIndicator"
                                                                  : @"NSDescendingSortIndicator")];
   [table setIndicatorImage:sortIndicator inTableColumn:tableColumn];
   [table setHighlightedTableColumn:tableColumn];
@@ -853,7 +859,7 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
 
 // NSTableView delegate methods
 
-- (void)tableView:(NSTableView *)aTableView didClickTableColumn:(NSTableColumn *)aTableColumn
+- (void)tableView:(NSTableView*)aTableView didClickTableColumn:(NSTableColumn*)aTableColumn
 {
   // reverse the sort if clicking again on the same column
   if (aTableColumn == [aTableView highlightedTableColumn])
@@ -901,7 +907,7 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
 // Delegate method for the filter search fields. Watches for an Enter or
 // Return in the filter, and passes it off to the sheet to trigger the default
 // button to dismiss the sheet.
-- (void)controlTextDidEndEditing:(NSNotification *)aNotification {
+- (void)controlTextDidEndEditing:(NSNotification*)aNotification {
   id source = [aNotification object];
   if (!(source == mCookiesFilterField || source == mPermissionFilterField ||
         source == mKeychainExclusionsFilterField)) {
@@ -926,7 +932,7 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
 {
   NSString* filterString = [sender stringValue];
 
-  // reinitialize the data source in case user deleted or replaced a letter
+  // Reinitialize the data source in case user deleted or replaced a letter.
   NSTableView* activeTable = nil;
   if (sender == mCookiesFilterField) {
     [self filterCookiesWithString:filterString];
@@ -975,7 +981,7 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
 
   for (int i = [mCookies count] - 1; i >= 0; --i) {
     NSString* host = [[mCookies objectAtIndex:i] domain];
-    // Only search by host; other fields are probably not interesting to users
+    // Only search by host; other fields are probably not interesting to users.
     if ([host rangeOfString:inFilterString].location == NSNotFound)
       [mCookies removeObjectAtIndex:i];
   }
@@ -1002,7 +1008,7 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
   if (action == @selector(removeCookies:))
     return ([mCookiesTable numberOfSelectedRows] > 0);
 
-  // only allow "remove all" when there are items and when not filtering
+  // Only allow "remove all" when there are items and when we're not filtering.
   if (action == @selector(removeAllCookies:))
     return ([mCookiesTable numberOfRows] > 0 &&
             [[mCookiesFilterField stringValue] length] == 0);
@@ -1058,7 +1064,7 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
   if (action == @selector(removeCookiePermissions:))
     return ([mPermissionsTable numberOfSelectedRows] > 0);
 
-  // only allow "remove all" when there are items and when not filtering
+  // Only allow "remove all" when there are items and when we're not filtering.
   if (action == @selector(removeAllCookiePermissions:))
     return ([mPermissionsTable numberOfRows] > 0 &&
             [[mPermissionFilterField stringValue] length] == 0);
@@ -1070,7 +1076,7 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
 
   if (action == @selector(removeAllKeychainExclusions:)) {
     // Only allow "Remove All..." when there are items to remove, and when
-    // no filer is applied.
+    // no filter is applied.
     return ([mKeychainExclusionsTable numberOfRows] > 0 &&
             [[mKeychainExclusionsFilterField stringValue] length] == 0);
   }

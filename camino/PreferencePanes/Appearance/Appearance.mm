@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
- 
+
 #import "Appearance.h"
 
 #import "GeckoPrefConstants.h"
@@ -48,9 +48,9 @@
 - (void)loadFontPrefs;
 - (void)saveFontPrefs;
 
-- (NSMutableDictionary *)makeDictFromPrefsForFontType:(NSString*)fontType andRegion:(NSString*)regionCode;
-- (NSMutableDictionary *)makeDefaultFontTypeDictFromPrefsForRegion:(NSString*)regionCode;
-- (NSMutableDictionary *)makeFontSizesDictFromPrefsForRegion:(NSString*)regionCode;
+- (NSMutableDictionary*)makeDictFromPrefsForFontType:(NSString*)fontType andRegion:(NSString*)regionCode;
+- (NSMutableDictionary*)makeDefaultFontTypeDictFromPrefsForRegion:(NSString*)regionCode;
+- (NSMutableDictionary*)makeFontSizesDictFromPrefsForRegion:(NSString*)regionCode;
 
 - (NSMutableDictionary*)settingsForCurrentRegion;
 - (NSString*)defaultProportionalFontTypeForCurrentRegion;
@@ -68,11 +68,11 @@
 
 - (NSFont*)fontOfType:(NSString*)fontType fromDict:(NSDictionary*)regionDict;
 
-- (void)setFontSampleOfType:(NSString *)fontType withFont:(NSFont*)font andDict:(NSDictionary*)regionDict;
+- (void)setFontSampleOfType:(NSString*)fontType withFont:(NSFont*)font andDict:(NSDictionary*)regionDict;
 - (void)saveFont:(NSFont*)font toDict:(NSMutableDictionary*)regionDict forType:(NSString*)fontType;
 
-- (void)updateFontSampleOfType:(NSString *)fontType;
-- (NSTextField*)fontSampleForType:(NSString *)fontType;
+- (void)updateFontSampleOfType:(NSString*)fontType;
+- (NSTextField*)fontSampleForType:(NSString*)fontType;
 - (NSString*)fontSizeType:(NSString*)fontType;
 
 - (void)buildFontPopup:(NSPopUpButton*)popupButton;
@@ -110,12 +110,12 @@
   [mPrefPane changeFont:sender];
 }
 
-- (BOOL)fontManager:(id)theFontManager willIncludeFont:(NSString *)fontName
+- (BOOL)fontManager:(id)theFontManager willIncludeFont:(NSString*)fontName
 {
   return [mPrefPane fontManager:theFontManager willIncludeFont:fontName];
 }
 
-- (unsigned int)validModesForFontPanel:(NSFontPanel *)fontPanel
+- (unsigned int)validModesForFontPanel:(NSFontPanel*)fontPanel
 {
   return [mPrefPane validModesForFontPanel:fontPanel];
 }
@@ -135,7 +135,7 @@
   [super dealloc];
 }
 
-- (id)initWithBundle:(NSBundle *)bundle
+- (id)initWithBundle:(NSBundle*)bundle
 {
   self = [super initWithBundle:bundle];
   mFontButtonForEditor = nil;
@@ -175,7 +175,7 @@
   [self saveFontPrefs];
 }
 
-- (void)tabView:(NSTabView *)tabView didSelectTabViewItem:(NSTabViewItem *)tabViewItem
+- (void)tabView:(NSTabView*)tabView didSelectTabViewItem:(NSTabViewItem*)tabViewItem
 {
 }
 
@@ -184,8 +184,8 @@
   NSBundle* prefBundle = [NSBundle bundleForClass:[self class]];
   NSString* resPath = [prefBundle pathForResource:@"RegionMapping" ofType:@"plist"];
 
-  // we use the dictionaries in this array as temporary storage of font
-  // values until the pane is unloaded, at which time they are saved
+  // We use the dictionaries in this array as temporary storage of font
+  // values until the pane is unloaded, at which time they are saved.
   [mRegionMappingTable release];
   mRegionMappingTable = [[NSArray arrayWithContentsOfFile:resPath] retain];
 
@@ -211,13 +211,13 @@
   const char* prefName = NULL;
   
   if (sender == mBackgroundColorWell)
-  	prefName = kGeckoPrefPageBackgroundColor;
+    prefName = kGeckoPrefPageBackgroundColor;
   else if (sender == mTextColorWell)
-  	prefName = kGeckoPrefPageForegroundColor;
+    prefName = kGeckoPrefPageForegroundColor;
   else if (sender == mUnvisitedLinksColorWell)
-  	prefName = kGeckoPrefLinkColor;
+    prefName = kGeckoPrefLinkColor;
   else if (sender == mVisitedLinksColorWell)
-  	prefName = kGeckoPrefVisitedLinkColor;
+    prefName = kGeckoPrefVisitedLinkColor;
 
   if (prefName)
     [self setPref:prefName toColor:[sender color]];
@@ -225,11 +225,11 @@
 
 - (IBAction)proportionalFontChoiceButtonClicked:(id)sender
 {
-  NSFontManager *fontManager = [NSFontManager sharedFontManager];
+  NSFontManager* fontManager = [NSFontManager sharedFontManager];
 
   NSString* defaultFontType = [self defaultProportionalFontTypeForCurrentRegion];
 
-  NSFont *newFont = [[self fontSampleForType:defaultFontType] font];
+  NSFont* newFont = [[self fontSampleForType:defaultFontType] font];
   mFontButtonForEditor = mChooseProportionalFontButton;
   [fontManager setSelectedFont:newFont isMultiple:NO];
   [[fontManager fontPanel:YES] makeKeyAndOrderFront:self];
@@ -237,8 +237,8 @@
 
 - (IBAction)monospaceFontChoiceButtonClicked:(id)sender
 {
-  NSFontManager *fontManager = [NSFontManager sharedFontManager];
-  NSFont *newFont = [[self fontSampleForType:@"monospace"] font];
+  NSFontManager* fontManager = [NSFontManager sharedFontManager];
+  NSFont* newFont = [[self fontSampleForType:@"monospace"] font];
   mFontButtonForEditor = mChooseMonospaceFontButton;
   [fontManager setSelectedFont:newFont isMultiple:NO];
   [[fontManager fontPanel:YES] makeKeyAndOrderFront:self];
@@ -258,8 +258,8 @@
 - (void)loadFontPrefs
 {
   for (unsigned int i = 0; i < [mRegionMappingTable count]; i++) {
-    NSMutableDictionary	*regionDict = [mRegionMappingTable objectAtIndex:i];
-    NSString *regionCode = [regionDict objectForKey:@"code"];
+    NSMutableDictionary* regionDict = [mRegionMappingTable objectAtIndex:i];
+    NSString* regionCode = [regionDict objectForKey:@"code"];
     
     /*
       For each region in the array, there is a dictionary of 
@@ -274,7 +274,7 @@
             }
           sans-serif = {
               fontfamily =
-              missing  = 		// set if a font is missing
+              missing  =      // set if a font is missing
             }
           monospace =   {
               fontfamily =
@@ -296,25 +296,25 @@
       
         }
     */
-    NSString *regionName = NSLocalizedStringFromTableInBundle(regionCode, @"RegionNames",
+    NSString* regionName = NSLocalizedStringFromTableInBundle(regionCode, @"RegionNames",
         [NSBundle bundleForClass:[self class]], @"");
     [regionDict setObject:regionName forKey:@"region"];
     
-    NSMutableDictionary *serifDict = [self makeDictFromPrefsForFontType:@"serif" andRegion:regionCode];
+    NSMutableDictionary* serifDict = [self makeDictFromPrefsForFontType:@"serif" andRegion:regionCode];
     [regionDict setObject:serifDict forKey:@"serif"];
 
-    NSMutableDictionary	*sanssDict = [self makeDictFromPrefsForFontType:@"sans-serif" andRegion:regionCode];
+    NSMutableDictionary* sanssDict = [self makeDictFromPrefsForFontType:@"sans-serif" andRegion:regionCode];
     [regionDict setObject:sanssDict forKey:@"sans-serif"];
 
-    NSMutableDictionary *monoDict = [self makeDictFromPrefsForFontType:@"monospace" andRegion:regionCode];
+    NSMutableDictionary* monoDict = [self makeDictFromPrefsForFontType:@"monospace" andRegion:regionCode];
     [regionDict setObject:monoDict forKey:@"monospace"];
 
     // font sizes dict
-    NSMutableDictionary *sizesDict = [self makeFontSizesDictFromPrefsForRegion:regionCode];
+    NSMutableDictionary* sizesDict = [self makeFontSizesDictFromPrefsForRegion:regionCode];
     [regionDict setObject:sizesDict forKey:@"fontsize"];
 
     // default font type dict
-    NSMutableDictionary *defaultFontTypeDict = [self makeDefaultFontTypeDictFromPrefsForRegion:regionCode];
+    NSMutableDictionary* defaultFontTypeDict = [self makeDefaultFontTypeDictFromPrefsForRegion:regionCode];
     [regionDict setObject:defaultFontTypeDict forKey:@"defaultFontType"];
   }
 }
@@ -325,20 +325,20 @@
     return;
 
   for (unsigned int i = 0; i < [mRegionMappingTable count]; i++) {
-    NSMutableDictionary	*regionDict = [mRegionMappingTable objectAtIndex:i];
+    NSMutableDictionary* regionDict = [mRegionMappingTable objectAtIndex:i];
     [self saveAllFontPrefsForRegion:regionDict];
   }
 }
 
 #pragma mark -
 
-- (NSMutableDictionary *)makeDictFromPrefsForFontType:(NSString*)fontType andRegion:(NSString*)regionCode
+- (NSMutableDictionary*)makeDictFromPrefsForFontType:(NSString*)fontType andRegion:(NSString*)regionCode
 {
-  NSMutableDictionary *fontDict = [NSMutableDictionary dictionaryWithCapacity:1];
-  NSString *fontPrefName = [NSString stringWithFormat:@"font.name.%@.%@", fontType, regionCode];
+  NSMutableDictionary* fontDict = [NSMutableDictionary dictionaryWithCapacity:1];
+  NSString* fontPrefName = [NSString stringWithFormat:@"font.name.%@.%@", fontType, regionCode];
 
   BOOL gotPref;
-  NSString *fontName = [self getStringPref:[fontPrefName UTF8String] withSuccess:&gotPref];
+  NSString* fontName = [self getStringPref:[fontPrefName UTF8String] withSuccess:&gotPref];
 
   if (gotPref)
     [fontDict setObject:fontName forKey:@"fontfamily"];
@@ -346,13 +346,13 @@
   return fontDict;
 }
 
-- (NSMutableDictionary *)makeDefaultFontTypeDictFromPrefsForRegion:(NSString*)regionCode
+- (NSMutableDictionary*)makeDefaultFontTypeDictFromPrefsForRegion:(NSString*)regionCode
 {
-  NSMutableDictionary *fontTypeDict = [NSMutableDictionary dictionaryWithCapacity:1];
-  NSString *prefName = [NSString stringWithFormat:@"font.default.%@", regionCode];
+  NSMutableDictionary* fontTypeDict = [NSMutableDictionary dictionaryWithCapacity:1];
+  NSString* prefName = [NSString stringWithFormat:@"font.default.%@", regionCode];
 
   BOOL gotPref;
-  NSString *fontType = [self getStringPref:[prefName UTF8String] withSuccess:&gotPref];
+  NSString* fontType = [self getStringPref:[prefName UTF8String] withSuccess:&gotPref];
 
   if (gotPref)
     [fontTypeDict setObject:fontType forKey:@"type"];
@@ -360,13 +360,13 @@
   return fontTypeDict;
 }
 
-- (NSMutableDictionary *)makeFontSizesDictFromPrefsForRegion:(NSString*)regionCode
+- (NSMutableDictionary*)makeFontSizesDictFromPrefsForRegion:(NSString*)regionCode
 {
-  NSMutableDictionary *fontDict = [NSMutableDictionary dictionaryWithCapacity:2];
+  NSMutableDictionary* fontDict = [NSMutableDictionary dictionaryWithCapacity:2];
 
-  NSString *variableSizePref = [NSString stringWithFormat:@"font.size.variable.%@", regionCode];
-  NSString *fixedSizePref = [NSString stringWithFormat:@"font.size.fixed.%@", regionCode];
-  NSString *minSizePref = [NSString stringWithFormat:@"font.minimum-size.%@", regionCode];
+  NSString* variableSizePref = [NSString stringWithFormat:@"font.size.variable.%@", regionCode];
+  NSString* fixedSizePref = [NSString stringWithFormat:@"font.size.fixed.%@", regionCode];
+  NSString* minSizePref = [NSString stringWithFormat:@"font.minimum-size.%@", regionCode];
 
   BOOL gotFixed, gotVariable, gotMinSize;
   int variableSize = [self getIntPref:[variableSizePref UTF8String] withSuccess:&gotVariable];
@@ -402,14 +402,14 @@
 
 - (void)saveFontNamePrefsForRegion:(NSDictionary*)regionDict forFontType:(NSString*)fontType
 {
-  NSString *regionCode = [regionDict objectForKey:@"code"];
+  NSString* regionCode = [regionDict objectForKey:@"code"];
 
   if (!regionDict || !fontType || !regionCode) return;
 
   NSDictionary* fontTypeDict = [regionDict objectForKey:fontType];
   
-  NSString *fontName = [fontTypeDict objectForKey:@"fontfamily"];
-  NSString *fontPrefName = [NSString stringWithFormat:@"font.name.%@.%@", fontType, regionCode];
+  NSString* fontName = [fontTypeDict objectForKey:@"fontfamily"];
+  NSString* fontPrefName = [NSString stringWithFormat:@"font.name.%@.%@", fontType, regionCode];
 
   if (fontName)
     [self setPref:[fontPrefName UTF8String] toString:fontName];
@@ -420,11 +420,11 @@
 
 - (void)saveFontSizePrefsForRegion:(NSDictionary*)regionDict
 {
-  NSString *regionCode = [regionDict objectForKey:@"code"];
+  NSString* regionCode = [regionDict objectForKey:@"code"];
   
-  NSString *variableSizePref = [NSString stringWithFormat:@"font.size.variable.%@", regionCode];
-  NSString *fixedSizePref = [NSString stringWithFormat:@"font.size.fixed.%@", regionCode];
-  NSString *minSizePref = [NSString stringWithFormat:@"font.minimum-size.%@", regionCode];
+  NSString* variableSizePref = [NSString stringWithFormat:@"font.size.variable.%@", regionCode];
+  NSString* fixedSizePref = [NSString stringWithFormat:@"font.size.fixed.%@", regionCode];
+  NSString* minSizePref = [NSString stringWithFormat:@"font.minimum-size.%@", regionCode];
 
   NSDictionary* fontSizeDict = [regionDict objectForKey:@"fontsize"];
 
@@ -451,10 +451,10 @@
 
 - (void)saveDefaultFontTypePrefForRegion:(NSDictionary*)regionDict
 {
-  NSString *regionCode = [regionDict objectForKey:@"code"];
+  NSString* regionCode = [regionDict objectForKey:@"code"];
   
-  NSString *prefName = [NSString stringWithFormat:@"font.default.%@", regionCode];
-  NSString *value = [[regionDict objectForKey:@"defaultFontType"] objectForKey:@"type"];
+  NSString* prefName = [NSString stringWithFormat:@"font.default.%@", regionCode];
+  NSString* value = [[regionDict objectForKey:@"defaultFontType"] objectForKey:@"type"];
 
   // If the preferences were reset to defaults, this key could be gone.
   if (value)
@@ -475,7 +475,7 @@
 
 // The exposed "Use My Fonts" pref has reverse logic from the internal pref 
 // (when mUseMyFontsCheckbox == 1, use_document_fonts == 0).  These private accessor methods allow code
-// elsewhere to use the exposed pref's logic
+// elsewhere to use the exposed pref's logic.
 - (BOOL)useMyFontsPref
 {
   BOOL gotPref;
@@ -492,8 +492,8 @@
 
 - (void)saveFont:(NSFont*)font toDict:(NSMutableDictionary*)regionDict forType:(NSString*)fontType
 {
-  NSMutableDictionary *fontTypeDict = [regionDict objectForKey:fontType];
-  NSMutableDictionary *fontSizeDict = [regionDict objectForKey:@"fontsize"];
+  NSMutableDictionary* fontTypeDict = [regionDict objectForKey:fontType];
+  NSMutableDictionary* fontSizeDict = [regionDict objectForKey:@"fontsize"];
   
   if (font)
   {
@@ -507,46 +507,47 @@
  
 - (NSFont*)fontOfType:(NSString*)fontType fromDict:(NSDictionary*)regionDict
 {
-  NSDictionary	*fontTypeDict = [regionDict objectForKey:fontType];
-  NSDictionary	*fontSizeDict = [regionDict objectForKey:@"fontsize"];
+  NSDictionary* fontTypeDict = [regionDict objectForKey:fontType];
+  NSDictionary* fontSizeDict = [regionDict objectForKey:@"fontsize"];
 
-  NSString *fontName = [fontTypeDict objectForKey:@"fontfamily"];
+  NSString* fontName = [fontTypeDict objectForKey:@"fontfamily"];
   int fontSize = [[fontSizeDict objectForKey:[self fontSizeType:fontType]] intValue];
   
-  NSFont *returnFont = nil;
+  NSFont* returnFont = nil;
   
   if (fontName && fontSize > 0) {
-    // we can't use [NSFont fontWithName] here, because we only store font
-    // family names in the prefs file. So use the font manager instead
+    // We can't use [NSFont fontWithName] here, because we only store font
+    // family names in the prefs file. So use the font manager instead of
     // returnFont = [NSFont fontWithName:fontName size:fontSize];
     returnFont = [[NSFontManager sharedFontManager] fontWithFamily:fontName traits:0 weight:5 size:fontSize];
-  } else if (fontName) {
+  }
+  else if (fontName) {
     // no size
     returnFont = [[NSFontManager sharedFontManager] fontWithFamily:fontName traits:0 weight:5 size:16.0];
   }
   
-  // if still no font, get defaults
+  // If we still have no font, get defaults.
   if (fontName == nil && returnFont == nil)
     returnFont = ([fontType isEqualToString:@"monospace"]) ?
               [NSFont userFixedPitchFontOfSize:14.0] :
               [NSFont userFontOfSize:16.0];
 
-  // we return nil if the font was not found
+  // We return nil if the font was not found!
   return returnFont;
 }
 
 - (void)setupFontSamplesFromDict:(NSDictionary*)regionDict
 {
   // For proportional, show either serif or sans-serif font,
-  // per region's default-font-type (font.default.%regionCode% pref)
-  NSString *defaultFontType = [[regionDict objectForKey:@"defaultFontType"] objectForKey:@"type"];
+  // per region's default-font-type (font.default.%regionCode% pref).
+  NSString* defaultFontType = [[regionDict objectForKey:@"defaultFontType"] objectForKey:@"type"];
   [self setupFontSampleOfType:defaultFontType fromDict:regionDict];
   [self setupFontSampleOfType:@"monospace" fromDict:regionDict];
 }
 
 - (void)setupFontSampleOfType:(NSString*)fontType fromDict:(NSDictionary*)regionDict
 {
-  NSFont *foundFont = [self fontOfType:fontType fromDict:regionDict];
+  NSFont* foundFont = [self fontOfType:fontType fromDict:regionDict];
   [self setFontSampleOfType:fontType withFont:foundFont andDict:regionDict];
 }
 
@@ -554,42 +555,38 @@
 // because they happen to have been constructed as mutableDictionaries. This
 // API (and likely others in this class) should be re-worked to either remove or
 // enforce that assumption.
-- (void)setFontSampleOfType:(NSString *)fontType withFont:(NSFont*)font andDict:(NSDictionary*)regionDict
+- (void)setFontSampleOfType:(NSString*)fontType withFont:(NSFont*)font andDict:(NSDictionary*)regionDict
 {
-  // font may be nil here, in which case the font is missing, and we construct
+  // Font may be nil here, in which case the font is missing, and we construct
   // a string to display from the dict.
-  NSMutableDictionary *fontTypeDict = [regionDict objectForKey:fontType];
+  NSMutableDictionary* fontTypeDict = [regionDict objectForKey:fontType];
 
-  NSTextField *sampleCell = [self fontSampleForType:fontType];
-  NSString *displayString = nil;
+  NSTextField* sampleCell = [self fontSampleForType:fontType];
+  NSString* displayString = nil;
   
-  if (font == nil)
-  {
-    if (regionDict)
-    {
-      NSDictionary *fontSizeDict = [regionDict objectForKey:@"fontsize"];
-      NSString *fontName = [fontTypeDict objectForKey:@"fontfamily"];
+  if (font == nil) {
+    if (regionDict) {
+      NSDictionary* fontSizeDict = [regionDict objectForKey:@"fontsize"];
+      NSString* fontName = [fontTypeDict objectForKey:@"fontfamily"];
       int fontSize = [[fontSizeDict objectForKey:[self fontSizeType:fontType]] intValue];
 
       displayString = [NSString stringWithFormat:@"%@, %dpx %@", fontName, fontSize, [self localizedStringForKey:@"Missing"]];
       font = [NSFont userFontOfSize:14.0];
 
-      // set the missing flag in the dict
+      // Set the missing flag in the dict.
       if (![fontTypeDict objectForKey:@"missing"] || ![[fontTypeDict objectForKey:@"missing"] boolValue])
         [fontTypeDict setObject:[NSNumber numberWithBool:YES] forKey:@"missing"];
     }
-    else
-    {
+    else {
       // should never happen
       displayString = [self localizedStringForKey:@"FontMissing"];
       font = [NSFont userFontOfSize:16.0];
     }
   }
-  else
-  {
+  else {
     displayString = [NSString stringWithFormat:@"%@, %dpx", [font familyName], (int)[font pointSize]];
     
-    // make sure we don't have a missing entry
+    // Make sure we don't have a "missing" entry.
     [fontTypeDict removeObjectForKey:@"missing"];
   }
   
@@ -600,21 +597,21 @@
   [sampleCell setStringValue:displayString];
 }
 
-- (void)updateFontSampleOfType:(NSString *)fontType
+- (void)updateFontSampleOfType:(NSString*)fontType
 {
   NSMutableDictionary* regionDict = [self settingsForCurrentRegion];
   if (!regionDict) return;
 
-  NSTextField *sampleCell = [self fontSampleForType:fontType];
-  NSFont *sampleFont = [[NSFontManager sharedFontManager] convertFont:[sampleCell font]];
+  NSTextField* sampleCell = [self fontSampleForType:fontType];
+  NSFont* sampleFont = [[NSFontManager sharedFontManager] convertFont:[sampleCell font]];
 
-  // save the font in the dictionaries
+  // Save the font in the dictionaries...
   [self saveFont:sampleFont toDict:regionDict forType:fontType];
-  // and update the sample
+  // ...and update the sample.
   [self setFontSampleOfType:fontType withFont:sampleFont andDict:regionDict];
 }
 
-- (NSTextField*)fontSampleForType:(NSString *)fontType
+- (NSTextField*)fontSampleForType:(NSString*)fontType
 {
   if ([fontType isEqualToString:@"serif"] || [fontType isEqualToString:@"sans-serif"])
     return mFontSampleProportional;
@@ -639,7 +636,7 @@
   if (!regionDict) return;
 
   NSString* defaultFontType = [self defaultProportionalFontTypeForCurrentRegion];
-  // make sure the 'proportional' label matches
+  // Make sure the "proportional" label matches.
   NSString* propLabelString = [NSString stringWithFormat:[self localizedStringForKey:@"ProportionalLabelFormat"],
                                                          [self localizedStringForKey:defaultFontType]];
   [mProportionalSampleLabel setStringValue:propLabelString];
@@ -670,14 +667,14 @@ const int kDefaultFontSansSerifTag = 1;
                                                        [regionDict objectForKey:@"region"]];
   [mAdvancedFontsLabel setStringValue:advancedLabel];
   
-  // set up the dialog for the current region
+  // Set up the dialog for the current region.
   [self setupFontPopup:mSerifFontPopup forType:@"serif" fromDict:regionDict];
   [self setupFontPopup:mSansSerifFontPopup forType:@"sans-serif" fromDict:regionDict];
   [self setupFontPopup:mMonospaceFontPopup forType:@"monospace" fromDict:regionDict];
   
-  // setup min size popup
+  // set up min size popup
   int itemIndex = 0;
-  NSMutableDictionary *fontSizeDict = [regionDict objectForKey:@"fontsize"];
+  NSMutableDictionary* fontSizeDict = [regionDict objectForKey:@"fontsize"];
   NSNumber* minSize = [fontSizeDict objectForKey:@"minimum"];
   if (minSize) {
     itemIndex = [mMinFontSizePopup indexOfItemWithTag:[minSize intValue]];
@@ -693,10 +690,10 @@ const int kDefaultFontSansSerifTag = 1;
   mFontPanelWasVisible = [[NSFontPanel sharedFontPanel] isVisible];
   [[NSFontPanel sharedFontPanel] orderOut:nil];
   
-	[NSApp beginSheet:mAdvancedFontsDialog
-        modalForWindow:[mTabView window] // any old window accessor
-        modalDelegate:self
-        didEndSelector:@selector(advancedFontsSheetDidEnd:returnCode:contextInfo:)
+  [NSApp beginSheet:mAdvancedFontsDialog
+     modalForWindow:[mTabView window] // any old window accessor
+      modalDelegate:self
+     didEndSelector:@selector(advancedFontsSheetDidEnd:returnCode:contextInfo:)
         contextInfo:NULL];
 }
 
@@ -711,11 +708,11 @@ const int kDefaultFontSansSerifTag = 1;
   [self getFontFromPopup:mMonospaceFontPopup forType:@"monospace" intoDict:regionDict];
 
   int minSize = [[mMinFontSizePopup selectedItem] tag];
-  // a value of 0 indicates 'none'; we'll clear the pref on save
-  NSMutableDictionary *fontSizeDict = [regionDict objectForKey:@"fontsize"];
+  // A value of 0 indicates "none"; we'll clear the pref on save.
+  NSMutableDictionary* fontSizeDict = [regionDict objectForKey:@"fontsize"];
   [fontSizeDict setObject:[NSNumber numberWithInt:(int)minSize] forKey:@"minimum"];
 
-  // save the default font type
+  // Save the default font type.
   NSMutableDictionary* defaultFontTypeDict = [regionDict objectForKey:@"defaultFontType"];
   NSString* defaultFontType = ([[mDefaultFontMatrix selectedCell] tag] == kDefaultFontSerifTag) ? @"serif" : @"sans-serif";
   [defaultFontTypeDict setObject:defaultFontType forKey:@"type"];
@@ -723,7 +720,7 @@ const int kDefaultFontSansSerifTag = 1;
   [mAdvancedFontsDialog orderOut:self];
   [NSApp endSheet:mAdvancedFontsDialog];
 
-  // apply the changes for the current region
+  // Apply the changes for the current region.
   [self saveAllFontPrefsForRegion:regionDict];
 
   [self updateFontPreviews];
@@ -752,7 +749,7 @@ const int kDefaultFontSansSerifTag = 1;
   [self clearPref:kGeckoPrefLinkColor];
   [self clearPref:kGeckoPrefVisitedLinkColor];
   
-  // update the UI of the Appearance pane
+  // update UI
   int state;
   state = [self getBooleanPref:kGeckoPrefUnderlineLinks withSuccess:NULL] ? NSOnState : NSOffState;
   [mUnderlineLinksCheckbox setState:state];
@@ -768,13 +765,12 @@ const int kDefaultFontSansSerifTag = 1;
 // Reset the Fonts tab to application factory defaults.
 - (IBAction)resetFontsToDefaults:(id)sender
 {
-  // clear all the preferences for the font regions
-  for (unsigned int i = 0; i < [mRegionMappingTable count]; i++)
-  {
+  // Clear all the preferences for the various font regions.
+  for (unsigned int i = 0; i < [mRegionMappingTable count]; i++) {
     NSMutableDictionary* regionDict = [mRegionMappingTable objectAtIndex:i];
     // NSString* regionCode = [regionDict objectForKey:@"code"];
     
-    // for each region, we reset the dictionaries to be empty.
+    // For each region, we reset the dictionaries to be empty.
     [regionDict setObject:[NSMutableDictionary dictionary] forKey:@"serif"];
     [regionDict setObject:[NSMutableDictionary dictionary] forKey:@"sans-serif"];
     [regionDict setObject:[NSMutableDictionary dictionary] forKey:@"monospace"];
@@ -784,21 +780,21 @@ const int kDefaultFontSansSerifTag = 1;
   
   [self clearPref:kGeckoPrefUsePageFonts];
 
-  // commit the changes
-  // first, we clear the preferences by saving them. This clears the values that are returned by
+  // Commit the changes:
+  // First, we clear the preferences by saving them. This clears the values that are returned by
   // -[self getPref:].
   [self saveFontPrefs];
   // Since the rest of the Appearance code doesn't access the prefs by getPref directly,
   // we need to re-store the default preference values in the region dicts.
   [self loadFontPrefs];
   
-  // Update the UI of the Appearance pane
-  // order is important here -- syncing the font panel depends on the font previews being correct.
+  // Update the UI. Order is important here -- syncing the font panel depends on the
+  // font previews being correct.
   [self updateFontPreviews];
   [mUseMyFontsCheckbox setState:[self useMyFontsPref]];
 }
 
-- (void)advancedFontsSheetDidEnd:(NSWindow *)sheet returnCode:(int)returnCode contextInfo:(void  *)contextInfo
+- (void)advancedFontsSheetDidEnd:(NSWindow*)sheet returnCode:(int)returnCode contextInfo:(void*)contextInfo
 {
 }
 
@@ -811,10 +807,11 @@ const int kMissingFontPopupItemTag = 9999;
   
   [self buildFontPopup:popupButton];
 
-  // check to see if the font exists
-  NSFont *foundFont = nil;
-  if (defaultValue)
+  // Check to see if the font exists.
+  NSFont* foundFont = nil;
+  if (defaultValue) {
     foundFont = [[NSFontManager sharedFontManager] fontWithFamily:defaultValue traits:0 weight:5 size:16.0];
+  }
   else {
     foundFont = [fontType isEqualToString:@"monospace"]
                       ? [NSFont userFixedPitchFontOfSize:16.0]
@@ -833,8 +830,9 @@ const int kMissingFontPopupItemTag = 9999;
     NSString* itemTitle = [NSString stringWithFormat:@"%@ %@", defaultValue, [self localizedStringForKey:@"Missing"]];
     [missingFontItem setTitle:itemTitle];
     [popupButton selectItem:missingFontItem];
-  } else {
-    // remove the missing item if it exists
+  }
+  else {
+    // Remove the missing item if it exists.
     NSMenuItem* missingFontItem = [[popupButton menu] itemWithTag:kMissingFontPopupItemTag];
     if (missingFontItem)
       [[popupButton menu] removeItem: missingFontItem];
@@ -860,8 +858,8 @@ const int kMissingFontPopupItemTag = 9999;
   while ([menu numberOfItems] > 0)
     [menu removeItemAtIndex:0];
 
-  NSArray*	fontList = [[NSFontManager sharedFontManager] availableFontFamilies];
-  NSArray*  sortedFontList = [fontList sortedArrayUsingSelector:@selector(caseInsensitiveCompare:)];
+  NSArray* fontList = [[NSFontManager sharedFontManager] availableFontFamilies];
+  NSArray* sortedFontList = [fontList sortedArrayUsingSelector:@selector(caseInsensitiveCompare:)];
   
   for (unsigned int i = 0; i < [sortedFontList count]; i ++) {
     NSString* fontFamilyName = [sortedFontList objectAtIndex:i];
@@ -888,8 +886,9 @@ const int kMissingFontPopupItemTag = 9999;
       }
       
       [newItem setSubmenu:familySubmenu];
-    } else {
-      // use the name from the font family info?
+    }
+    else {
+      // Should we use the name from the font family info?
     }
 #endif
 
@@ -903,10 +902,8 @@ const int kMissingFontPopupItemTag = 9999;
 
 - (id)fieldEditorForObject:(id)inObject
 {
-  if (inObject == mFontSampleProportional)
-  {
-    if (!mPropSampleFieldEditor)
-    {
+  if (inObject == mFontSampleProportional) {
+    if (!mPropSampleFieldEditor) {
       SampleTextView* propFieldEditor = [[SampleTextView alloc] initWithFrame:[inObject bounds]];
       [propFieldEditor setPrefPane:self];
       [propFieldEditor setFieldEditor:YES];
@@ -916,10 +913,8 @@ const int kMissingFontPopupItemTag = 9999;
       
     return mPropSampleFieldEditor;
   }
-  else if (inObject == mFontSampleMonospace)
-  {
-    if (!mMonoSampleFieldEditor)
-    {
+  else if (inObject == mFontSampleMonospace) {
+    if (!mMonoSampleFieldEditor) {
       SampleTextView* monoFieldEditor = [[SampleTextView alloc] initWithFrame:[inObject bounds]];
       [monoFieldEditor setPrefPane:self];
       [monoFieldEditor setFieldEditor:YES];
@@ -935,7 +930,7 @@ const int kMissingFontPopupItemTag = 9999;
 
 - (void)changeFont:(id)sender
 {
-  // ignore font panel changes if the advanced panel is up
+  // Ignore font panel changes if the advanced panel is up.
   if ([mAdvancedFontsDialog isVisible])
     return;
   
@@ -954,17 +949,15 @@ const int kMissingFontPopupItemTag = 9999;
   [self saveFontSizePrefsForRegion:regionDict];
 }
 
-- (BOOL)fontManager:(id)theFontManager willIncludeFont:(NSString *)fontName
+- (BOOL)fontManager:(id)theFontManager willIncludeFont:(NSString*)fontName
 {
-  // filter out fonts for the selected language
-  //NSLog(@"willIncludeFont:%@", fontName);
+  // Filter out fonts for the selected language.
   return YES;
 }
 
-// this allows us to hide the font face panel
-- (unsigned int)validModesForFontPanel:(NSFontPanel *)fontPanel
+- (unsigned int)validModesForFontPanel:(NSFontPanel*)fontPanel
 {
-  // hide the face panel
+  // Hide the font face panel.
   return (NSFontPanelStandardModesMask & ~NSFontPanelFaceModeMask);
 }
 

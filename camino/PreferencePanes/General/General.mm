@@ -87,7 +87,7 @@
     [checkboxAutoUpdate setToolTip:NSLocalizedString(@"AutoUpdateDisabledToolTip", @"")];
   }
 
-  // register notification if the default feed viewer is changed in the FeedServiceController
+  // Register for notification when the default feed viewer is changed in the FeedServiceController.
   [[NSNotificationCenter defaultCenter] addObserver:self
                                            selector:@selector(updateDefaultFeedViewerMenu)
                                                name:kDefaultFeedViewerChanged
@@ -129,8 +129,8 @@
 - (void) didUnselect
 {
   [self setPref:kGeckoPrefHomepageURL toString:[textFieldHomePage stringValue]];
-  
-  // ensure that the prefs exist
+
+  // Ensure that the prefs exist.
   [self setPref:kGeckoPrefNewWindowStartPage toInt:[checkboxNewWindowBlank state] ? kStartPageHome : kStartPageBlank];
   [self setPref:kGeckoPrefNewTabStartPage toInt:[checkboxNewTabBlank state] ? kStartPageHome : kStartPageBlank];
 }
@@ -194,20 +194,20 @@
   return [self getStringPref:kGeckoPrefHomepageURL withSuccess:&gotPref];
 }
 
-// called when the users changes the selection in the default browser menu
+// called when the user changes the selection in the default browser menu
 - (IBAction)defaultBrowserChange:(id)sender
 {
   [[AppListMenuFactory sharedAppListMenuFactory] validateAndRegisterDefaultBrowser:[sender representedObject]];
   [self updateDefaultBrowserMenu];
 }
 
--(IBAction)defaultFeedViewerChange:(id)sender
+- (IBAction)defaultFeedViewerChange:(id)sender
 {
   [[AppListMenuFactory sharedAppListMenuFactory] validateAndRegisterDefaultFeedViewer:[sender representedObject]];
   [self updateDefaultFeedViewerMenu];
 }
 
--(IBAction)runOpenDialogToSelectBrowser:(id)sender
+- (IBAction)runOpenDialogToSelectBrowser:(id)sender
 {
   NSOpenPanel *op = [NSOpenPanel openPanel];
   [op setCanChooseDirectories:NO];
@@ -221,7 +221,7 @@
                  contextInfo:nil];
 }
 
--(IBAction)runOpenDialogToSelectFeedViewer:(id)sender
+- (IBAction)runOpenDialogToSelectFeedViewer:(id)sender
 {
   NSOpenPanel *op = [NSOpenPanel openPanel];
   [op setCanChooseDirectories:NO];
@@ -240,14 +240,14 @@
   if (returnCode == NSOKButton) {
     NSString *chosenBundleID = [[NSWorkspace sharedWorkspace] identifierForBundle:[[sheet URLs] objectAtIndex:0]];
     if (chosenBundleID) {
-      // add this browser to a list of apps we should always consider as browsers
+      // Add this browser to a list of apps we should always consider as browsers...
       NSMutableArray *userChosenBundleIDs = [NSMutableArray arrayWithCapacity:2];
       [userChosenBundleIDs addObjectsFromArray:[[NSUserDefaults standardUserDefaults] objectForKey:kUserChosenBrowserUserDefaultsKey]];
       if (![userChosenBundleIDs containsObject:chosenBundleID]) {
         [userChosenBundleIDs addObject:chosenBundleID];
         [[NSUserDefaults standardUserDefaults] setObject:userChosenBundleIDs forKey:kUserChosenBrowserUserDefaultsKey];
       }
-      // make it the default browser
+      // ...and make it the default browser.
       [[NSWorkspace sharedWorkspace] setDefaultBrowserWithIdentifier:chosenBundleID];
     }
   }
@@ -259,24 +259,25 @@
   if (returnCode == NSOKButton) {
     NSString* chosenBundleID = [[NSWorkspace sharedWorkspace] identifierForBundle:[[sheet URLs] objectAtIndex:0]];
     if (chosenBundleID) {
-      // add this browser to a list of apps we should always consider as browsers
+      // Add this browser to a list of apps we should always consider as feed viewers...
       NSMutableArray* userChosenBundleIDs = [NSMutableArray arrayWithCapacity:2];
       [userChosenBundleIDs addObjectsFromArray:[[NSUserDefaults standardUserDefaults] objectForKey:kUserChosenFeedViewerUserDefaultsKey]];
       if (![userChosenBundleIDs containsObject:chosenBundleID]) {
         [userChosenBundleIDs addObject:chosenBundleID];
         [[NSUserDefaults standardUserDefaults] setObject:userChosenBundleIDs forKey:kUserChosenFeedViewerUserDefaultsKey];
       }
-      // set the default feed viewer
+      // and make it the default feed viewer.
       [[NSWorkspace sharedWorkspace] setDefaultFeedViewerWithIdentifier:chosenBundleID];
       [self updateDefaultFeedViewerMenu];
     }
   }
-  // The open action was cancelled, re-select the default application
-  else
+  else {
+    // The open action was cancelled, so re-select the default application.
     [defaultFeedViewerPopUp selectItemAtIndex:0];
+  }
 }
 
--(void)updateDefaultBrowserMenu
+- (void)updateDefaultBrowserMenu
 {
   [[AppListMenuFactory sharedAppListMenuFactory] buildBrowserAppsMenuForPopup:defaultBrowserPopUp 
                                                                     andAction:@selector(defaultBrowserChange:) 
@@ -284,7 +285,7 @@
                                                                     andTarget:self];
 }
 
--(void)updateDefaultFeedViewerMenu
+- (void)updateDefaultFeedViewerMenu
 {
   [[AppListMenuFactory sharedAppListMenuFactory] buildFeedAppsMenuForPopup:defaultFeedViewerPopUp
                                                                  andAction:@selector(defaultFeedViewerChange:)

@@ -42,7 +42,7 @@
 @interface OrgMozillaCaminoPreferenceGeneral : PreferencePaneBase
 {
   IBOutlet NSTextField*   textFieldHomePage;
-  
+
   IBOutlet NSButton*      checkboxNewTabBlank;
   IBOutlet NSButton*      checkboxNewWindowBlank;
   IBOutlet NSPopUpButton* defaultBrowserPopUp;
@@ -62,12 +62,12 @@
 - (IBAction)checkDefaultBrowserOnLaunchClicked:(id)sender;
 - (IBAction)autoUpdateCheckboxClicked:(id)sender;
 
-// method to be called so that when the default feed viewer is modified
-// in FeedServiceController, we can rebuild the list here as well.
--(void)updateDefaultFeedViewerMenu;
+// called when the default feed viewer is modified in FeedServiceController
+// so we can rebuild the list here as well
+- (void)updateDefaultFeedViewerMenu;
 
--(IBAction)defaultFeedViewerChange:(id)sender;
--(IBAction)runOpenDialogToSelectBrowser:(id)sender;
--(IBAction)runOpenDialogToSelectFeedViewer:(id)sender;
+- (IBAction)defaultFeedViewerChange:(id)sender;
+- (IBAction)runOpenDialogToSelectBrowser:(id)sender;
+- (IBAction)runOpenDialogToSelectFeedViewer:(id)sender;
 
 @end

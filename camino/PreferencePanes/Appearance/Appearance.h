@@ -76,14 +76,14 @@
   IBOutlet NSTextField*   mAdvancedFontsLabel;
 
   IBOutlet NSMatrix*      mDefaultFontMatrix;
-  
+
   NSArray*                mRegionMappingTable;
-  
+
   NSButton*               mFontButtonForEditor;
-  
+
   NSTextView*             mPropSampleFieldEditor;
   NSTextView*             mMonoSampleFieldEditor;
-  
+
   BOOL                    mFontPanelWasVisible;
 }
 

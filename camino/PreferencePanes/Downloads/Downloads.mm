@@ -43,7 +43,7 @@
 #import "GeckoPrefConstants.h"
 #import "PreferenceManager.h"
 
-// handly stack-based class to start and stop an Internet Config session
+// handy stack-based class to start and stop an Internet Config session
 class StInternetConfigSession
 {
 public:
@@ -54,15 +54,15 @@ public:
   {
     mStartedOK = (::ICStart(&mICInstance, inSignature) == noErr);
   }
-  
+
   ~StInternetConfigSession()
   {
     if (mStartedOK)
       ::ICStop(mICInstance);
   }
-  
+
   bool        Available() const { return mStartedOK;  }
-  ICInstance  Instance() const  { return mICInstance; }
+  ICInstance  Instance()  const { return mICInstance; }
 
 private:
 
@@ -81,7 +81,7 @@ private:
 
 @implementation OrgMozillaCaminoPreferenceDownloads
 
-- (id)initWithBundle:(NSBundle *)bundle
+- (id)initWithBundle:(NSBundle*)bundle
 {
   self = [super initWithBundle:bundle];
   return self;
@@ -102,7 +102,7 @@ private:
   NSString* downloadFolderDesc = [[PreferenceManager sharedInstance] downloadDirectoryPath];
   if ([downloadFolderDesc length] == 0)
     downloadFolderDesc = [self localizedStringForKey:@"MissingDlFolder"];
-  
+
   [self setupDownloadMenuWithPath:downloadFolderDesc];
 }
 
@@ -123,17 +123,17 @@ private:
   if (!inNewFolder)
     return;
 
-  // it would be nice to use PreferenceManager, but I don't want to drag
-  // all that code into the plugin
+  // It would be nice to use PreferenceManager, but I don't want to drag
+  // all that code into the plugin.
   StInternetConfigSession icSession('MOZC');
   if (!icSession.Available())
     return;
-  
-  // make a ICFileSpec out of our path and shove it into IC. This requires
+
+  // Make a ICFileSpec out of our path and shove it into IC. This requires
   // creating an FSSpec and an alias.
   FSRef fsRef;
   Boolean isDir;
-  OSStatus error = ::FSPathMakeRef((UInt8 *)[inNewFolder fileSystemRepresentation], &fsRef, &isDir);
+  OSStatus error = ::FSPathMakeRef((UInt8*)[inNewFolder fileSystemRepresentation], &fsRef, &isDir);
   if (error != noErr)
     return;
 
@@ -144,10 +144,9 @@ private:
 
   AliasHandle alias = nil;
   error = ::FSNewAlias(nil, &fsRef, &alias);
-  
-  // copy the data out of our variables into the ICFileSpec and hand it to IC.
-  if (error == noErr && alias)
-  {
+
+  // Copy the data out of our variables into the ICFileSpec and hand it to IC.
+  if (error == noErr && alias) {
     long headerSize = offsetof(ICFileSpec, alias);
     long aliasSize = ::GetHandleSize((Handle)alias);
     ICFileSpec* realbuffer = (ICFileSpec*) calloc(headerSize + aliasSize, 1);
@@ -167,21 +166,21 @@ private:
   NSMenuItem* placeholder = [mDownloadFolder itemAtIndex:0];
   if (!placeholder)
     return;
-  
-  // get the Finder icon and scale it down to 16x16
+
+  // Get the Finder icon and scale it down to 16x16.
   NSImage* icon = [[NSWorkspace sharedWorkspace] iconForFile:inDLPath];
   [icon setScalesWhenResized:YES];
   [icon setSize:NSMakeSize(16.0, 16.0)];
 
-  // set the title to the leaf name and the icon to what we gathered above
+  // Set the title to the leaf name and the icon to what we gathered above.
   [placeholder setTitle:[[NSFileManager defaultManager] displayNameAtPath:inDLPath]];
   [placeholder setImage:icon];
-  
-  // ensure first item is selected
+
+  // Ensure the first item is selected.
   [mDownloadFolder selectItemAtIndex:0];
 }
 
-// display a file picker sheet allowing the user to set their new download folder
+// Display a file picker sheet allowing the user to set their new download folder.
 - (IBAction)chooseDownloadFolder:(id)sender
 {
   NSString* oldDLFolder = [[PreferenceManager sharedInstance] downloadDirectoryPath];
@@ -191,26 +190,30 @@ private:
   [panel setAllowsMultipleSelection:NO];
   [panel setCanCreateDirectories:YES];
   [panel setPrompt:NSLocalizedString(@"ChooseDirectoryOKButton", @"")];
-  
-  [panel beginSheetForDirectory:oldDLFolder file:nil types:nil modalForWindow:[mDownloadFolder window]
-           modalDelegate:self didEndSelector:@selector(openPanelDidEnd:returnCode:contextInfo:)
-           contextInfo:nil];
+
+  [panel beginSheetForDirectory:oldDLFolder
+                           file:nil
+                          types:nil
+                 modalForWindow:[mDownloadFolder window]
+                  modalDelegate:self
+                 didEndSelector:@selector(openPanelDidEnd:returnCode:contextInfo:)
+                    contextInfo:nil];
 }
 
 //
-// Set the download removal policy
+// Set the download removal policy.
 //
 - (IBAction)chooseDownloadRemovalPolicy:(id)sender
 {
-  // The three options in the popup contains tags 0-2, set the pref according to the 
+  // The three options in the popup contains tags 0-2; set the pref according to the
   // selected menu item's tag.
   int selectedTagValue = [mDownloadRemovalPolicy selectedTag];
   [self setPref:kGeckoPrefDownloadCleanupPolicy toInt:selectedTagValue];
 }
 
-// called when the user closes the open panel sheet for selecting a new d/l folder.
-// if they clicked ok, change the IC pref and re-display the new choice in the
-// popup menu
+// This is called when the user closes the open panel sheet for selecting a new d/l folder.
+// If they clicked ok, change the IC pref and re-display the new choice in the
+// popup menu.
 - (void)openPanelDidEnd:(NSOpenPanel*)sheet returnCode:(int)returnCode contextInfo:(void*)contextInfo
 {
   if (returnCode == NSOKButton) {
@@ -221,8 +224,9 @@ private:
     // update the menu
     [self setupDownloadMenuWithPath:newPath];
   }
-  else
+  else {
     [mDownloadFolder selectItemAtIndex:0];
+  }
 }
 
 @end
