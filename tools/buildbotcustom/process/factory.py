@@ -1531,15 +1531,15 @@ class UnittestBuildFactory(BuildFactory):
             self.addStep(unittest_steps.MozillaOSXCrashtest, warnOnWarnings=True,
              workdir="build/testing/crashtest"
             )
-            self.addStep(unittest_steps.MozillaOSXMochitest, warnOnWarnings=True,
+            self.addStep(unittest_steps.MozillaMochitest, warnOnWarnings=True,
              workdir="build/objdir/_tests/testing/mochitest",
              timeout=60*5
             )
-            self.addStep(unittest_steps.MozillaOSXMochichrome, warnOnWarnings=True,
+            self.addStep(unittest_steps.MozillaMochichrome, warnOnWarnings=True,
              workdir="build/objdir/_tests/testing/mochitest",
              leakThreshold="8"
             )
-            self.addStep(unittest_steps.MozillaOSXBrowserChromeTest, warnOnWarnings=True,
+            self.addStep(unittest_steps.MozillaBrowserChromeTest, warnOnWarnings=True,
              workdir="build/objdir/_tests/testing/mochitest"
             )
         elif self.platform == 'win32':
@@ -1550,18 +1550,18 @@ class UnittestBuildFactory(BuildFactory):
             self.addStep(unittest_steps.MozillaWin32Crashtest, warnOnWarnings=True,
              workdir="build\\testing\\crashtest"
             )
-            self.addStep(unittest_steps.MozillaWin32Mochitest, warnOnWarnings=True,
+            self.addStep(unittest_steps.MozillaMochitest, warnOnWarnings=True,
              workdir="build\\objdir\\_tests\\testing\\mochitest",
              timeout=60*5
             )
             # Can use the regular build step here. Perl likes the PATHs that way anyway.
-            self.addStep(unittest_steps.MozillaWin32Mochichrome, warnOnWarnings=True,
+            self.addStep(unittest_steps.MozillaMochichrome, warnOnWarnings=True,
              workdir="build\\objdir\\_tests\\testing\\mochitest"
             )
-            self.addStep(unittest_steps.MozillaWin32BrowserChromeTest, warnOnWarnings=True,
+            self.addStep(unittest_steps.MozillaBrowserChromeTest, warnOnWarnings=True,
              workdir="build\\objdir\\_tests\\testing\\mochitest"
             )
-            self.addStep(unittest_steps.MozillaWin32A11YTest, warnOnWarnings=True,
+            self.addStep(unittest_steps.MozillaA11YTest, warnOnWarnings=True,
              workdir="build\\objdir\\_tests\\testing\\mochitest"
             )
 
