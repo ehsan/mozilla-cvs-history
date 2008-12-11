@@ -612,8 +612,11 @@ class RepackFactory(BuildFactory):
         BuildFactory.__init__(self)
 
         self.addStep(ShellCommand,
-         command=['rm', '-rf', branch+'/dist/upload'],
-         workdir='.',
+         command=['sh', '-c',
+                  'if [ -d '+branch+'/dist/upload ]; then ' +
+                  'rm -rf '+branch+'/dist/upload; ' +
+                  'fi'],
+         workdir='build',
          haltOnFailure=True
         )
         self.addStep(ShellCommand,
@@ -628,7 +631,7 @@ class RepackFactory(BuildFactory):
         self.addStep(ShellCommand,
          command=['sh', '-c', 'mkdir -p %s' % l10nRepoPath],
          descriptionDone='mkdir '+ l10nRepoPath,
-         workdir='.'
+         workdir='build'
         )
         self.addStep(ShellCommand,
          command=['sh', '-c', 'if [ -d '+branch+' ]; then ' +
@@ -638,7 +641,7 @@ class RepackFactory(BuildFactory):
                   'fi '
                   '&& hg -R '+branch+' update'],
          descriptionDone=branch+"'s source",
-         workdir='.',
+         workdir='build',
          haltOnFailure=True
         )
         self.addStep(ShellCommand,
@@ -651,14 +654,14 @@ class RepackFactory(BuildFactory):
                          'fi ' +
                          '&& hg -R %(locale)s update')],
          descriptionDone="locale's source",
-         workdir='l10n-central'
+         workdir='build/l10n-central'
         )
         self.addStep(ShellCommand,
          command=['make', '-f', 'client.mk', 'configure'],
          env={'CONFIGURE_ARGS': '--enable-application=browser'},
          haltOnFailure=True,
          descriptionDone='autoconf',
-         workdir=branch
+         workdir='build/'+branch
         )
         self.addStep(Compile,
          command=['sh', '--',
@@ -668,25 +671,25 @@ class RepackFactory(BuildFactory):
          description='configure',
          descriptionDone='configure done',
          haltOnFailure=True,
-         workdir=branch
+         workdir='build/'+branch
         )
         self.addStep(ShellCommand,
          command=['make', 'wget-en-US'],
          descriptionDone='wget en-US',
          env={'EN_US_BINARY_URL': enUSBinaryURL},
          haltOnFailure=True,
-         workdir=branch+'/browser/locales'
+         workdir='build/'+branch+'/browser/locales'
         )
         self.addStep(ShellCommand,
          command=['make', WithProperties('installers-%(locale)s')],
          env={'PKG_DMG_SOURCE': project},
          haltOnFailure=True,
-         workdir=branch+'/browser/locales'
+         workdir='build/'+branch+'/browser/locales'
         )
         self.addStep(ShellCommand,
          command=['make', WithProperties('prepare-upload-latest-%(locale)s')],
          haltOnFailure=True,
-         workdir=branch+'/browser/locales'
+         workdir='build/'+branch+'/browser/locales'
         )
         self.addStep(ShellCommand,
          name='upload locale',
@@ -695,7 +698,7 @@ class RepackFactory(BuildFactory):
                    stageServer+":"+uploadPath],
          description='uploading packages',
          descriptionDone='uploaded packages',
-         workdir=branch+'/dist/upload/latest'
+         workdir='build/'+branch+'/dist/upload/latest'
         )
 
 
