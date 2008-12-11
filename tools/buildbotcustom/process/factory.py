@@ -100,19 +100,75 @@ class BootstrapFactory(BuildFactory):
         )
 
 
+class MozillaBuildFactory(BuildFactory):
+    ignore_dirs = [
+            'info',
+            'repo_setup',
+            'tag',
+            'source',
+            'updates',
+            'final_verification',
+            'l10n_verification',
+            'mac_update_verify',
+            'mac_build'
+            'win32_update_verify',
+            'win32_build',
+            'linux_update_verify',
+            'linux_build',
+            ]
 
-class MercurialBuildFactory(BuildFactory):
-    def __init__(self, env, objdir, platform, branch, sourceRepo, configRepo,
-                 configSubDir, profiledBuild, mozconfig, buildRevision=None,
-                 stageServer=None, stageUsername=None, stageGroup=None,
-                 stageSshKey=None, stageBasePath=None, ausBaseUploadDir=None,
-                 updatePlatform=None, downloadBaseURL=None, ausUser=None,
-                 ausHost=None, nightly=False, leakTest=False, codesighs=True,
+    def __init__(self, buildToolsRepo, buildSpace=0, **kwargs):
+        BuildFactory.__init__(self, **kwargs)
+
+        self.buildToolsRepo = buildToolsRepo
+        self.buildSpace = buildSpace
+
+        self.addPreBuildCleanupSteps()
+
+    def addPreBuildCleanupSteps(self):
+        if self.buildSpace > 0:
+            self.addStep(ShellCommand,
+             command=['bash', '-c',
+              'if [ ! -d tools ]; then hg clone %s; fi' % self.buildToolsRepo],
+             description=['clone', 'build tools'],
+             workdir='.'
+            )
+            self.addStep(ShellCommand,
+             command=['hg', 'pull', '-u'],
+             description=['update', 'build tools'],
+             workdir='tools',
+            )
+
+            command = ['python', 'tools/buildfarm/maintenance/purge_builds.py',
+                 '-s', str(self.buildSpace)]
+
+            for i in self.ignore_dirs:
+                command.extend(["-n", i])
+            command.append("..")
+
+            self.addStep(ShellCommand,
+             command=command,
+             description=['cleaning', 'old', 'builds'],
+             descriptionDone=['clean', 'old', 'builds'],
+             warnOnFailure=True,
+             flunkOnFailure=False,
+             workdir='.',
+             timeout=3600, # One hour, because Windows is slow
+            )
+
+class MercurialBuildFactory(MozillaBuildFactory):
+    def __init__(self, env, objdir, platform, branch, sourceRepo, buildToolsRepo,
+                 configRepo, configSubDir, profiledBuild, mozconfig,
+                 buildRevision=None, stageServer=None, stageUsername=None,
+                 stageGroup=None, stageSshKey=None, stageBasePath=None,
+                 ausBaseUploadDir=None, updatePlatform=None,
+                 downloadBaseURL=None, ausUser=None, ausHost=None,
+                 nightly=False, leakTest=False, codesighs=True,
                  graphServer=None, graphSelector=None, graphBranch=None,
                  baseName=None, uploadPackages=True, uploadSymbols=True,
                  dependToDated=True, createSnippet=False, doCleanup=True,
-                 **kwargs):
-        BuildFactory.__init__(self, **kwargs)
+                 buildSpace=0, **kwargs):
+        MozillaBuildFactory.__init__(self, buildToolsRepo, buildSpace, **kwargs)
         self.env = env
         self.objdir = objdir
         self.platform = platform
@@ -211,17 +267,6 @@ class MercurialBuildFactory(BuildFactory):
         self.addStep(ShellCommand,
          command=['echo', WithProperties('Building on: %(slavename)s')],
          env=self.env
-        )
-        self.addStep(ShellCommand,
-         command=['bash', '-c',
-             'find .. -maxdepth 2 -type d -path "*-nightly/build" -print -exec rm -rf {} \;'],
-         workdir='.',
-         env = self.env,
-         description=['cleaning', 'old', 'builds'],
-         descriptionDone=['clean', 'old', 'builds'],
-         warnOnFailure=True,
-         flunkOnFailure=False,
-         timeout=60*60 # 1 hour
         )
         self.addStep(ShellCommand,
          command="rm -rf %s/dist/firefox-* %s/dist/install/sea/*.exe " %
@@ -602,10 +647,22 @@ class MercurialBuildFactory(BuildFactory):
 
 
 
-class RepackFactory(BuildFactory):
+class RepackFactory(MozillaBuildFactory):
+    # Override ignore_dirs so that we don't delete l10n nightly builds
+    # before running a l10n nightly build
+    ignore_dirs = MozillaBuildFactory.ignore_dirs + [
+            'mozilla-central-macosx-l10n-nightly',
+            'mozilla-central-linux-l10n-nightly',
+            'mozilla-central-win32-l10n-nightly',
+            'mozilla-1.9.1-macosx-l10n-nightly',
+            'mozilla-1.9.1-linux-l10n-nightly',
+            'mozilla-1.9.1-win32-l10n-nightly',
+    ]
+
     def __init__(self, branch, project, enUSBinaryURL, stageServer,
-                 stageUsername, uploadPath, repoPath, l10nRepoPath):
-        BuildFactory.__init__(self)
+                 stageUsername, uploadPath, repoPath, l10nRepoPath,
+                 buildToolsRepo, buildSpace):
+        MozillaBuildFactory.__init__(self, buildToolsRepo, buildSpace)
 
         self.addStep(ShellCommand,
          command=['sh', '-c',
@@ -615,15 +672,7 @@ class RepackFactory(BuildFactory):
          workdir='build',
          haltOnFailure=True
         )
-        self.addStep(ShellCommand,
-         command=['bash', '-c',
-             'find .. -maxdepth 2 -type d -path "*-nightly/build" -not -path "*-l10n-nightly/build" -print -exec rm -rf {} \;'],
-         workdir='.',
-         description=['cleaning', 'old', 'builds'],
-         descriptionDone=['clean', 'old', 'builds'],
-         warnOnFailure=True,
-         flunkOnFailure=False
-        )
+
         self.addStep(ShellCommand,
          command=['sh', '-c', 'mkdir -p %s' % l10nRepoPath],
          descriptionDone='mkdir '+ l10nRepoPath,
@@ -1368,10 +1417,9 @@ class ReleaseFinalVerification(ReleaseFactory):
          workdir='build/release'
         )
 
-class UnittestBuildFactory(BuildFactory):
-    def __init__(self, platform, config_repo_url, config_dir, branch, **kwargs):
-        BuildFactory.__init__(self, **kwargs)
-
+class UnittestBuildFactory(MozillaBuildFactory):
+    def __init__(self, platform, config_repo_url, config_dir, branch,
+                 buildToolsRepo, buildSpace, **kwargs):
         self.config_repo_url = config_repo_url
         self.config_dir = config_dir
         self.branch = branch
@@ -1393,6 +1441,8 @@ class UnittestBuildFactory(BuildFactory):
 
         self.env = MozillaEnvironments[env_map[self.platform]]
 
+        MozillaBuildFactory.__init__(self, buildToolsRepo, buildSpace, **kwargs)
+
         if self.platform == 'win32':
             self.addStep(TinderboxShellCommand, name="kill sh",
              description='kill sh',
@@ -1412,16 +1462,6 @@ class UnittestBuildFactory(BuildFactory):
              command="pskill -t firefox.exe",
              workdir="D:\\Utilities"
             )
-
-        self.addStep(ShellCommand,
-         command=['bash', '-c',
-             'find .. -maxdepth 2 -type d -path "*-nightly/build" -print -exec rm -rf {} \;'],
-         workdir='.',
-         description=['cleaning', 'old', 'builds'],
-         descriptionDone=['clean', 'old', 'builds'],
-         warnOnFailure=True,
-         flunkOnFailure=False
-        )
 
         self.addStepNoEnv(Mercurial, mode='update',
          baseURL='http://hg.mozilla.org/',
