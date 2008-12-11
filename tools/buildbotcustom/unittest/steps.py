@@ -358,20 +358,6 @@ class MozillaMochitest(ShellCommandReportTimeout):
             return WARNINGS
         return SUCCESS
 
-class MozillaWin32Mochitest(MozillaMochitest):
-    command = ["python",
-               "runtests.py",
-               "--autorun",
-               "--console-level=INFO",
-               "--close-when-done"]
-
-class MozillaOSXMochitest(MozillaMochitest):
-    command = ["python",
-               "runtests.py",
-               "--autorun",
-               "--console-level=INFO",
-               "--close-when-done"]
-
 class MozillaMochichrome(ShellCommandReportTimeout):
     name = "mochichrome"
     warnOnFailure = True
@@ -427,23 +413,6 @@ class MozillaMochichrome(ShellCommandReportTimeout):
             return WARNINGS
         return SUCCESS
     
-
-class MozillaWin32Mochichrome(MozillaMochichrome):
-   command = ["python",
-              "runtests.py",
-              "--chrome",
-              "--autorun",
-              "--console-level=INFO",
-              "--close-when-done"]
-
-class MozillaOSXMochichrome(MozillaMochichrome):
-   command = ["python",
-              "runtests.py",
-              "--chrome",
-              "--autorun",
-              "--console-level=INFO",
-              "--close-when-done"]
-
 class MozillaBrowserChromeTest(ShellCommandReportTimeout):
     name = "browser chrome test"
     warnOnFailure = True
@@ -451,7 +420,6 @@ class MozillaBrowserChromeTest(ShellCommandReportTimeout):
     descriptionDone = ["browser chrome test complete"]
     command = ["python",
                "runtests.py",
-               "--appname=../../../dist/bin/firefox",
                "--autorun",
                "--browser-chrome", 
                "--close-when-done"]
@@ -497,22 +465,6 @@ class MozillaBrowserChromeTest(ShellCommandReportTimeout):
             return WARNINGS
         return SUCCESS
     
-class MozillaWin32BrowserChromeTest(MozillaBrowserChromeTest):
-    command = ["python",
-               "runtests.py",
-               "--appname=..\\..\\..\\dist\\bin\\firefox.exe",
-               "--autorun",
-               "--browser-chrome",
-               "--close-when-done"]
-
-class MozillaOSXBrowserChromeTest(MozillaBrowserChromeTest):
-    command = ["python",
-               "runtests.py",
-               "--appname=../../../dist/Minefield.app/Contents/MacOS/firefox",
-               "--autorun",
-               "--browser-chrome",
-               "--close-when-done"]
-
 class MozillaA11YTest(MozillaMochichrome):
     name = "a11y test"
     warnOnFailure = True
@@ -543,19 +495,6 @@ class MozillaA11YTest(MozillaMochichrome):
             summary +=  str(passCount) + "/" + str(failCount) + "/" + str(todoCount) + "\n"
         self.addCompleteLog('summary', summary)
     
-
-class MozillaWin32A11YTest(MozillaA11YTest):
-   command = ['python runtests.py --appname=..\\..\\..\\dist\\bin\\firefox.exe --a11y --autorun --console-level=INFO --close-when-done']
-
-class MozillaOSXA11YTest(MozillaA11YTest):
-   command = ["python",
-              "runtests.py",
-              "--appname=../../../dist/Minefield.app/Contents/MacOS/firefox",
-              "--a11y",
-              "--autorun",
-              "--console-level=INFO",
-              "--close-when-done"]
-
 class CreateProfile(ShellCommandReportTimeout):
     name = "create profile"
     warnOnFailure = True
