@@ -103,7 +103,7 @@ class BootstrapFactory(BuildFactory):
 
 class MercurialBuildFactory(BuildFactory):
     def __init__(self, env, objdir, platform, branch, sourceRepo, configRepo,
-                 configSubDir, profiledBuild, mozconfig, buildRevision=None,
+                 configSubDir, profiledBuild, buildRevision=None,
                  stageServer=None, stageUsername=None, stageGroup=None,
                  stageSshKey=None, stageBasePath=None, ausBaseUploadDir=None,
                  updatePlatform=None, downloadBaseURL=None, ausUser=None,
@@ -162,9 +162,13 @@ class MercurialBuildFactory(BuildFactory):
             self.ausFullUploadDir = '%s/%s/%%(buildid)s/en-US' % \
               (self.ausBaseUploadDir, self.updatePlatform)
 
-        self.mozconfig = 'configs/%s/%s/mozconfig' % (self.configSubDir,
-                                                      mozconfig)
 
+        # platform actually contains more than just the platform...
+        # we need that to figure out which mozconfig to use
+        # but for other purposes we only need to know linux/win32/macosx
+        # platform can be things like: linux, win32-debug, macosx-release, etc.
+        self.mozconfig = 'configs/%s/%s/mozconfig' % (self.configSubDir,
+                                                      platform)
         # we don't need the extra cruft in 'platform' anymore
         self.platform = platform.split('-')[0].replace('64', '')
         assert self.platform in ('linux', 'win32', 'macosx')
@@ -272,7 +276,7 @@ class MercurialBuildFactory(BuildFactory):
          haltOnFailure=True
         )
         self.addStep(ShellCommand,
-         # cp configs/mozilla2/$platform/$repo/$type/mozconfig .mozconfig
+         # cp configs/mozilla2/$platform/mozconfig .mozconfig
          command=['cp', self.mozconfig, '.mozconfig'],
          description=['copying', 'mozconfig'],
          descriptionDone=['copy', 'mozconfig'],
@@ -1380,9 +1384,9 @@ class UnittestBuildFactory(BuildFactory):
                 }
 
         config_dir_map = {
-                'linux': 'linux/%s/unittest' % branch,
-                'macosx': 'macosx/%s/unittest' % branch,
-                'win32': 'win32/%s/unittest' % branch,
+                'linux': 'linux-unittest',
+                'macosx': 'macosx-unittest',
+                'win32': 'win32-unittest',
                 }
 
         self.platform = platform.split('-')[0].replace('64', '')
@@ -1444,7 +1448,6 @@ class UnittestBuildFactory(BuildFactory):
                   'mozconfigs/%s/%s/mozconfig' % \
                     (self.config_dir, config_dir_map[self.platform]),
                   'build/.mozconfig'],
-         description=['copy mozconfig'],
          workdir='.'
         )
 
