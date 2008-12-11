@@ -34,12 +34,14 @@ cvsCoLog = "cvsco.log"
 tboxClobberCvsCoLog = "tbox-CLOBBER-cvsco.log"
 buildbotClobberCvsCoLog = "buildbot-CLOBBER-cvsco.log"
 
-def summaryText(passCount, failCount, knownFailCount=None):
+def summaryText(passCount, failCount, knownFailCount=None, leaked=False):
     knownFail = ""
     if knownFailCount is not None:
         knownFail = "/%d" % knownFailCount
+    if leaked:
+        knownFail += " LEAK"
     summary = "%d/%d%s" % (passCount, failCount, knownFail)
-    if failCount > 0:
+    if failCount > 0 or leaked:
         summary = '<em class="testfail">%s</em>' % summary
     return summary
 
@@ -323,6 +325,7 @@ class MozillaMochitest(ShellCommandReportTimeout):
         passCount = 0
         failCount = 0
         todoCount = 0
+        leaked = False
         for line in log.readlines():
             if "INFO Passed:" in line:
                 passCount = int(line.split()[-1])
@@ -330,11 +333,17 @@ class MozillaMochitest(ShellCommandReportTimeout):
                 failCount = int(line.split()[-1])
             if "INFO Todo:" in line:
                 todoCount = int(line.split()[-1])
+            if "during test execution" in line and \
+              "runtests-leaks" in line and \
+              "TEST-UNEXPECTED-FAIL" in line:
+                match = re.search(r"leaked (\d+) bytes during test execution", line)
+                assert match is not None
+                leaked = int(match.group(1)) != 0
         summary = "TinderboxPrint: mochitest<br/>"
         if not (passCount + failCount + todoCount):
             summary += "FAIL\n"
         else:
-            summary +=  summaryText(passCount,failCount,todoCount) + "\n"
+            summary += summaryText(passCount, failCount, todoCount, leaked) + "\n"
         self.addCompleteLog('summary', summary)
     
     def evaluateCommand(self, cmd):
@@ -385,6 +394,7 @@ class MozillaMochichrome(ShellCommandReportTimeout):
         passCount = 0
         failCount = 0
         todoCount = 0
+        leaked = False
         for line in log.readlines():
             if "INFO Passed:" in line:
                 passCount = int(line.split()[-1])
@@ -392,11 +402,17 @@ class MozillaMochichrome(ShellCommandReportTimeout):
                 failCount = int(line.split()[-1])
             if "INFO Todo:" in line:
                 todoCount = int(line.split()[-1])
+            if "during test execution" in line and \
+              "runtests-leaks" in line and \
+              "TEST-UNEXPECTED-FAIL" in line:
+                match = re.search(r"leaked (\d+) bytes during test execution", line)
+                assert match is not None
+                leaked = int(match.group(1)) != 0
         summary = "TinderboxPrint: chrome<br/>"
         if not (passCount + failCount + todoCount):
             summary += "FAIL\n"
         else:
-            summary +=  summaryText(passCount,failCount,todoCount) + "\n"
+            summary += summaryText(passCount, failCount, todoCount, leaked) + "\n"
         self.addCompleteLog('summary', summary)
     
     def evaluateCommand(self, cmd):
@@ -450,6 +466,7 @@ class MozillaBrowserChromeTest(ShellCommandReportTimeout):
         passCount = 0
         failCount = 0
         todoCount = 0
+        leaked = False
         for line in log.readlines():
             if "Pass:" in line:
                 passCount = int(line.split()[-1])
@@ -457,11 +474,17 @@ class MozillaBrowserChromeTest(ShellCommandReportTimeout):
                 failCount = int(line.split()[-1])
             if "Todo:" in line:
                 todoCount = int(line.split()[-1])
+            if "during test execution" in line and \
+              "runtests-leaks" in line and \
+              "TEST-UNEXPECTED-FAIL" in line:
+                match = re.search(r"leaked (\d+) bytes during test execution", line)
+                assert match is not None
+                leaked = int(match.group(1)) != 0
         summary = "TinderboxPrint: browser<br/>"
         if not (passCount + failCount + todoCount):
             summary += "FAIL\n"
         else:
-            summary +=  summaryText(passCount,failCount,todoCount) + "\n"
+            summary += summaryText(passCount, failCount, todoCount, leaked) + "\n"
         self.addCompleteLog('summary', summary)
     
     def evaluateCommand(self, cmd):
