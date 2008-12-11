@@ -133,7 +133,11 @@ class CompareBloatLogs(ShellCommand):
 
     def evaluateCommand(self, cmd):
         superResult = ShellCommand.evaluateCommand(self, cmd)
-        leaks = self.getProperty('leaks')
+        try:
+            leaks = self.getProperty('leaks')
+        except:
+            log.msg("Could not find build property: leaks")
+            return FAILURE
         if leaks and int(leaks) > 0:
             return WARNINGS
         return superResult
@@ -215,8 +219,15 @@ class CompareLeakLogs(ShellCommand):
 
     def evaluateCommand(self, cmd):
         superResult = ShellCommand.evaluateCommand(self, cmd)
-        leakStats = self.getProperty('leakStats')
-        if leakStats['new']['leaks'] and int(leakStats['new']['leaks']) > int(self.leakFailureThreshold):
+        try:
+            leakStats = self.getProperty('leakStats')
+        except:
+            log.msg("Could not find build property: leakStats")
+            return FAILURE
+        if leakStats and \
+           leakStats['new'] and \
+           leakStats['new']['leaks'] and \
+           int(leakStats['new']['leaks']) > int(self.leakFailureThreshold):
             return WARNINGS
         return superResult
             
