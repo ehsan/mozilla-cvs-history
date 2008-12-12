@@ -52,6 +52,9 @@
 // but that requires linkage and extra search paths.
 static NSString* XPCOMShutDownNotificationName = @"XPCOMShutDown";
 
+// This is the OS notification name to make the Dock icon for the downloads folder bounce.
+static NSString* const DownloadFinishedOSNotificationName = @"com.apple.DownloadFileFinished";
+
 enum {
   kLabelTagFilename = 1000,
   kLabelTagStatus,
@@ -383,6 +386,13 @@ enum {
       [mProgressWindowController removeDownload:self suppressRedraw:NO];
     else if (!mDownloadFailed)
       [self setupFileSystemNotification];
+
+    // Sending this notification makes the Dock icon (if it exists)
+    // for the folder containing the downloaded file bounce.
+    if (!mUserCancelled && !mDownloadFailed) {
+      [[NSDistributedNotificationCenter defaultCenter]
+       postNotificationName:DownloadFinishedOSNotificationName object:mDestPath];
+    }
   }
 }
 
