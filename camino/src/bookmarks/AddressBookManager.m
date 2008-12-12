@@ -76,33 +76,61 @@
     [mAddressBookFolder deleteChild:[mAddressBookFolder objectAtIndex:0]];
   // fill address book with people.  could probably do this smarter,
   // but it's a start for now.
-  ABAddressBook *ab = [ABAddressBook sharedAddressBook];
-  NSEnumerator *peopleEnumerator = [[ab people] objectEnumerator];
+  ABAddressBook* ab = [ABAddressBook sharedAddressBook];
+  NSEnumerator* peopleEnumerator = [[ab people] objectEnumerator];
   ABPerson* person;
-  NSString *name = nil, *homepage = nil;
   while ((person = [peopleEnumerator nextObject])) {
-    // |kABHomePageProperty| is depricated on Tiger, look for the new property first and then
-    // the old one (as the old one is present but no longer updated by ABook).
+    // |kABHomePageProperty| is deprecated on Tiger. Look for the new property first and then
+    // the old one (as the old one is still present, just no longer updated).
     ABMultiValue* urls = [person valueForProperty:kABURLsProperty];
-    homepage = [urls valueAtIndex:[urls indexForIdentifier:[urls primaryIdentifier]]];
+    NSString* homepage = [urls valueAtIndex:[urls indexForIdentifier:[urls primaryIdentifier]]];
     if (!homepage)
       homepage = [person valueForProperty:kABHomePageProperty];
     if ([homepage length] > 0) {
+      NSString* name = nil;
       NSString* firstName = [person valueForProperty:kABFirstNameProperty];
       NSString* lastName = [person valueForProperty:kABLastNameProperty];
+
       if (firstName || lastName) {
         if (!firstName)
           name = lastName;
         else if (!lastName)
           name = firstName;
-        else
-          name = [NSString stringWithFormat:@"%@ %@", firstName, lastName];
+        else {
+          // Build the name string in a l10n-friendly manner: respect the name ordering flag if present,
+          // or use the Address Book's default pref otherwise.
+          int nameOrderFlag = [[person valueForProperty:kABPersonFlags] intValue] & kABNameOrderingMask;
+          if (nameOrderFlag == kABDefaultNameOrdering)
+            nameOrderFlag = [ab defaultNameOrdering];
+
+          if (nameOrderFlag == kABLastNameFirst)
+            name = [NSString stringWithFormat:@"%@ %@", lastName, firstName];
+          else // Default to the standard in the English-speaking world.
+            name = [NSString stringWithFormat:@"%@ %@", firstName, lastName];
+        }
       }
-      else {
-        name = [person valueForProperty:kABOrganizationProperty];
-        if (!name)
-          name = NSLocalizedString(@"<No Name>", nil);
+
+      int personShowAsFlag = [[person valueForProperty:kABPersonFlags] intValue] & kABShowAsMask;
+
+      if (personShowAsFlag == kABShowAsCompany) {
+        NSString* company = [person valueForProperty:kABOrganizationProperty];
+        if (!company)
+          company = NSLocalizedString(@"<No Company Name>", nil);
+
+        if (name) {
+          name = [NSString stringWithFormat:NSLocalizedString(@"CompanyCardWithPersonNameFormat", @""),
+                                            company,
+                                            name];
+        }
+        else {
+          name = [NSString stringWithFormat:@"%@", company];
+        }
       }
+      
+      // We ought to have something by now, but if not, use the placeholder.
+      if (!name)
+        name = NSLocalizedString(@"<No Name>", nil);
+
       [mAddressBookFolder appendChild:[Bookmark bookmarkWithTitle:name
                                                               url:homepage
                                                         lastVisit:nil]];

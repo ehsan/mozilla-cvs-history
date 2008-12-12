@@ -360,6 +360,12 @@
 "Updated Bookmarks" = "Updated Bookmarks";
 "Rendezvous" = "Bonjour";
 "Address Book" = "Address Book";
+/* Used when no person name is found for an Address Book smart bookmark */
+"<No Name>" = "<No Name>";
+/* Used when no company name is found for an Address Book smart bookmark based on a Company card */
+"<No Company Name>" = "<No Company Name>";
+/* Used for a Company card that has a person's name associated with it (e.g. "Google (John Doe)") */
+"CompanyCardWithPersonNameFormat" = "%1$@ (%2$@)";
 
 /*Bookmark context menus*/
 "Open in New Window" = "Open in New Window";
