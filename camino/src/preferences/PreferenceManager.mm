@@ -225,21 +225,21 @@ WriteVersion(nsIFile* aProfileDir, const nsACString& aVersion,
 
 #pragma mark -
 
-// 
-// PrefChangeObserver.
-// 
-// We create one of these each time someone adds a pref observer
-// 
+//
+// PrefChangeObserver
+//
+// We create one of these each time someone adds a pref observer.
+//
 class PrefChangeObserver : public nsIObserver
 {
 public:
                         PrefChangeObserver(id inObject)  // inObject can be nil
                         : mObject(inObject)
                         {}
-                        
+
   virtual               ~PrefChangeObserver()
                         {}
-  
+
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
@@ -280,15 +280,15 @@ PrefChangeObserver::Observe(nsISupports* aSubject, const char* aTopic, const PRU
 
   NSDictionary* userInfoDict = [NSDictionary dictionaryWithObject:[NSString stringWithPRUnichars:aSomeData]
                                                            forKey:kPrefChangedPrefNameUserInfoKey];
-  
+
   [[NSNotificationCenter defaultCenter] postNotificationName:kPrefChangedNotificationName
                                                       object:mObject
                                                     userInfo:userInfoDict];
   return NS_OK;
 }
 
-// little wrapper for the C++ observer class, which takes care of registering
-// and unregistering the observer.
+// This is a little wrapper for the C++ observer class,
+// which takes care of registering and unregistering the observer.
 @interface PrefChangeObserverOwner : CHISupportsOwner
 {
 @private
@@ -356,7 +356,7 @@ static BOOL gMadePrefManager;
 #endif
     gSharedInstance = [[PreferenceManager alloc] init];
   }
-    
+
   return gSharedInstance;
 }
 
@@ -369,17 +369,17 @@ static BOOL gMadePrefManager;
 {
   if ((self = [super init])) {
     mRunLoopSource = NULL;
-    
+
     [self registerNotificationListener];
 
     if ([self initMozillaPrefs] == NO) {
-      // we should never get here
-      NSLog (@"Failed to initialize mozilla prefs");
+      // We should never get here!
+      NSLog (@"Failed to initialize Mozilla prefs!");
     }
 
     [self initUpdatePrefs];
     [self cleanUpObsoletePrefs];
-    
+
     mDefaults = [NSUserDefaults standardUserDefaults];
   }
   return self;
@@ -398,7 +398,7 @@ static BOOL gMadePrefManager;
 - (void)termEmbedding:(NSNotification*)aNotification
 {
   NS_IF_RELEASE(mPrefs);
-  // remove our runloop observer
+  // Remove our runloop observer.
   if (mRunLoopSource) {
     CFRunLoopRemoveSource(CFRunLoopGetCurrent(), mRunLoopSource, kCFRunLoopCommonModes);
     CFRelease(mRunLoopSource);
@@ -411,14 +411,14 @@ static BOOL gMadePrefManager;
   [mPrefChangeObservers release];
   mPrefChangeObservers = nil;
 
-  // this will notify observers that the profile is about to go away.
+  // This will notify observers that the profile is about to go away.
   if (mProfileProvider) {
       mProfileProvider->Shutdown();
-      // directory service holds a strong ref to this as well.
+      // Directory service holds a strong ref to this as well.
       NS_RELEASE(mProfileProvider);
   }
 
-  // save prefs now, in case any termination listeners set prefs.
+  // Save prefs now, in case any termination listeners set prefs.
   [self savePrefsFile];
 
   [gSharedInstance release];
@@ -457,7 +457,7 @@ static BOOL gMadePrefManager;
 - (void)showLaunchFailureAndQuitWithErrorTitle:(NSString*)inTitleFormat errorMessage:(NSString*)inMessageFormat
 {
   NSString* applicationName = NSLocalizedStringFromTable(@"CFBundleName", @"InfoPlist", nil);
-  
+
   NSString* errorString   = [NSString stringWithFormat:inTitleFormat, applicationName];
   NSString* messageString = [NSString stringWithFormat:inMessageFormat, applicationName];
 
@@ -483,20 +483,20 @@ static BOOL gMadePrefManager;
     // This shouldn't be needed since we are initing XPCOM with this
     // directory but causes a (harmless) warning if not defined.
     setenv("MOZILLA_FIVE_HOME", binDirPath, 1);
-    
+
     // Check for a custom profile, first from -profile, then in the environment.
     NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
     const char* customProfilePath = [[defaults stringForKey:USER_DEFAULTS_PROFILE_KEY] fileSystemRepresentation];
     if (!customProfilePath)
       customProfilePath = getenv(CUSTOM_PROFILE_DIR);
-    
+
     // Based on whether a custom path is set, figure out what the
     // profile path should be.
     const char* profileDirectory;
     BOOL isCustomProfile = NO;
     if (!customProfilePath) {
       // If it isn't, we then check the 'mozProfileDirName' key in our Info.plist file
-      // and use the regular Application Support/<mozProfileDirName>, and Caches/<mozProfileDirName> 
+      // and use the regular Application Support/<mozProfileDirName>, and Caches/<mozProfileDirName>
       // folders.
       NSString* dirString = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"mozProfileDirName"];
       if (dirString)
@@ -512,11 +512,11 @@ static BOOL gMadePrefManager;
       profileDirectory = customProfilePath;
       isCustomProfile = YES;
     }
-    
-    // Supply our own directory service provider so we can control where
+
+    // Supply our own directory service provider, so we can control where
     // the registry and profiles are located.
     AppDirServiceProvider* provider = new AppDirServiceProvider(profileDirectory, isCustomProfile);
-    
+
     if (!provider) {
       [self showLaunchFailureAndQuitWithErrorTitle:NSLocalizedString(@"StartupFailureAlert", @"")
                                       errorMessage:NSLocalizedString(@"StartupFailureMsg", @"")];
@@ -565,12 +565,12 @@ static BOOL gMadePrefManager;
 
     if (!versionOK) {
       // This isn't the same version that previously used the selected
-      // profile.  Remove some caches from the profile, allowing them to
-      // be regenerated.  NS_InitEmbedding will reregister components,
-      // producing compreg.dat and xpti.dat.  Note that this occurs prior
+      // profile. Remove some caches from the profile, allowing them to
+      // be regenerated. NS_InitEmbedding will reregister components,
+      // generating compreg.dat and xpti.dat. Note that this occurs prior
       // to any profile lock check, because it's inconvenient to move the
-      // profile lock check up.  However, doing things this way should be
-      // harmless.  Note that WriteVersion isn't called until after the
+      // profile lock check up. However, doing things this way should be
+      // harmless. Note that WriteVersion isn't called until after the
       // profile lock check.
       nsCOMPtr<nsIFile> file;
       profileDir->Clone(getter_AddRefs(file));
@@ -599,13 +599,13 @@ static BOOL gMadePrefManager;
     rv = NS_InitEmbedding(binDir, dirProvider,
                           kPStaticModules, kStaticModuleCount);
     if (NS_FAILED(rv)) {
-      NSLog(@"Embedding init failed.");
+      NSLog(@"Embedding init failed!");
       [self showLaunchFailureAndQuitWithErrorTitle:NSLocalizedString(@"StartupFailureAlert", @"")
                                       errorMessage:NSLocalizedString(@"StartupFailureInitEmbeddingMsg", @"")];
       // not reached
       return NO;
     }
-    
+
     NSString* profilePath = [self profilePath];
     if (!profilePath) {
       NSLog(@"Failed to determine profile path!");
@@ -619,7 +619,7 @@ static BOOL gMadePrefManager;
     if (NS_FAILED(rv)) {
       [self showLaunchFailureAndQuitWithErrorTitle:NSLocalizedString(@"StartupFailureAlert", @"")
                                       errorMessage:NSLocalizedString(@"StartupFailureMsg", @"")];
-      
+
       // not reached
       return NO;
     }
@@ -646,16 +646,16 @@ static BOOL gMadePrefManager;
       // not reached
       return NO;
     }
-    
+
     mPrefs = prefs;
     NS_ADDREF(mPrefs);
-    
+
     [self syncMozillaPrefs];
 
     if (!versionOK)
       WriteVersion(profileDir, version, osABI, executable);
 
-    // send out initted notification
+    // Send out "embedding-initialized" notification.
     [[NSNotificationCenter defaultCenter] postNotificationName:InitEmbeddingNotificationName object:nil];
 
     return YES;
@@ -685,7 +685,7 @@ static BOOL gMadePrefManager;
   if (![[mainBundle objectForInfoDictionaryKey:@"SUEnableAutomaticChecks"] boolValue])
     return;
 
-  // Get the base auto-update manifest URL
+  // Get the base auto-update manifest URL.
   NSString* baseURL = [self getStringPref:kGeckoPrefUpdateURLOverride
                               withSuccess:NULL];
   if (![baseURL length])
@@ -722,10 +722,10 @@ static BOOL gMadePrefManager;
 - (void)cleanUpObsoletePrefs
 {
   NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-  
-  // remove old 0.8-era toolbar configuration prefs that are no longer functional
+
+  // Remove old 0.8-era toolbar configuration prefs that are no longer functional.
   [defaults removeObjectForKey:@"NSToolbar Configuration preferences.toolbar"];
-  
+
   // Avoid the General Prefs missing-icon problem for users who have migrated to 1.6+
   // from older versions who had changed the toolbar display prefs (with the now-removed widget).
   // When the widget was used to change the toolbar configuration, it saved the bundle IDs
@@ -737,8 +737,8 @@ static BOOL gMadePrefManager;
   [defaults setObject:prefsToolbarConfiguration forKey:@"NSToolbar Configuration preferences.toolbar.1"];
 }
 
-// Convert an Apple locale (or language with the dialect specified) from the form en_GB
-// to the en-gb form required for HTTP accept-language headers.
+// Convert an Apple locale (or language with the dialect specified) from the form "en_GB"
+// to the "en-gb" form required for HTTP accept-language headers.
 // If the locale isn't in the expected form we return nil. (Systems upgraded
 // from 10.1 report human readable locales (e.g. "English")).
 + (NSString*)convertLocaleToHTTPLanguage:(NSString*)inAppleLocale
@@ -782,8 +782,8 @@ static BOOL gMadePrefManager;
 
   mPrefs->SetIntPref("camino.prefs_version", kCurrentPrefsVersion);
 
-  // fix up the cookie prefs. If 'p3p' or 'accept foreign cookies' are on,
-  // remap them to something that chimera can deal with.
+  // Fix up the cookie prefs. If 'p3p' or 'accept foreign cookies' are on,
+  // remap them to something that Camino can deal with.
   PRInt32 acceptCookies = 0;
   static const char* kCookieBehaviorPref = kGeckoPrefCookieDefaultAcceptPolicy;
   mPrefs->GetIntPref(kCookieBehaviorPref, &acceptCookies);
@@ -797,12 +797,12 @@ static BOOL gMadePrefManager;
   [self setAcceptLanguagesPref];
   [self setLocalePref];
 
-  // load up the default stylesheet (is this the best place to do this?)
+  // Load up the default stylesheet. (Is this the best place to do this?)
   if ([self getBooleanPref:kGeckoPrefBlockAds withSuccess:NULL])
     [self refreshAdBlockingStyleSheet:YES];
 
-  // Load flashblock if enabled.  Test dependencies to avoid conflicts
-  BOOL flashBlockAllowed = [self isFlashBlockAllowed];	
+  // Load flashblock if enabled, and test dependencies to avoid conflicts.
+  BOOL flashBlockAllowed = [self isFlashBlockAllowed];
   if (flashBlockAllowed && [self getBooleanPref:kGeckoPrefBlockFlash withSuccess:NULL])
     [self refreshFlashBlockStyleSheet:YES];
 
@@ -821,14 +821,15 @@ static BOOL gMadePrefManager;
 
 - (void)setAcceptLanguagesPref
 {
-  // Determine if the user specified their own language override. If so
-  // use it. If not work out the languages from the system preferences.
+  // Determine if the user specified a language override. If so, use it;
+  // otherwise, work out the languages from the system preferences.
   BOOL userProvidedLangOverride = NO;
   NSString* userLanguageOverride = [self getStringPref:kGeckoPrefAcceptLanguagesOverride
                                            withSuccess:&userProvidedLangOverride];
 
-  if (userProvidedLangOverride && [userLanguageOverride length] > 0)
+  if (userProvidedLangOverride && [userLanguageOverride length] > 0) {
     [self setPref:kGeckoPrefAcceptLanguages toString:userLanguageOverride];
+  }
   else {
     NSUserDefaults* defs = [NSUserDefaults standardUserDefaults];
     NSArray* languages = [defs objectForKey:@"AppleLanguages"];
@@ -844,15 +845,18 @@ static BOOL gMadePrefManager;
         [acceptableLanguages addObject:language];
         if ((indexOfGenericEnglish == -1) && !englishDialectExists &&
             [language isEqualToString:@"en"])
+        {
           indexOfGenericEnglish = i;
-        else if (!englishDialectExists && [language hasPrefix:@"en-"])
+        }
+        else if (!englishDialectExists && [language hasPrefix:@"en-"]) {
           englishDialectExists = YES;
+        }
       }
       else {
-        // If we don't understand a language don't set any, rather than risk
-        // leaving the user with their n'th choice (which may be one Apple made
-        // and they don't actually read). Mainly occurs on systems upgraded
-        // from 10.1, see convertLocaleToHTTPLanguage().
+        // If we don't understand a language, don't set any, rather than risk
+        // leaving the user with their Nth choice (which may be one Apple made
+        // and they don't actually read). This mainly occurs on systems upgraded
+        // from 10.1; see convertLocaleToHTTPLanguage().
         NSLog(@"Unable to set languages - language '%@' not a valid ISO language identifier",
               [languages objectAtIndex:i]);
         languagesOkaySoFar = NO;
@@ -861,17 +865,17 @@ static BOOL gMadePrefManager;
 
     // Some servers will disregard a generic 'en', causing a fallback to a
     // subsequent language (see bug 300905). So if the user has only a generic
-    // 'en', convert it to 'en-US', 'en'.
+    // 'en', insert 'en-US' before 'en'.
     if ((indexOfGenericEnglish != -1) && !englishDialectExists)
       [acceptableLanguages insertObject:@"en-US" atIndex:indexOfGenericEnglish];
 
-    // If we understood all the languages in the list set the accept-language
-    // header. Note that necko will determine quality factors itself.
+    // If we understood all the languages in the list, set the accept-language
+    // header. Note that Necko will determine quality factors itself.
     if (languagesOkaySoFar && [acceptableLanguages count] > 0) {
       // Gecko will only assign 10 unique qualilty factors, and duplicate
-      // quality factors breaks the user's ordering (which combined with the
+      // quality factors breaks the user's ordering (which, combined with the
       // 'en' issue above and the fact that Apple's default list has well over
-      // 10 languages means the wrong thing can happen with a default list).
+      // 10 languages, means the wrong thing can happen with a default list).
       if ([acceptableLanguages count] > 10) {
         NSRange dropRange = NSMakeRange(10, [acceptableLanguages count] - 10);
         [acceptableLanguages removeObjectsInRange:dropRange];
@@ -880,8 +884,8 @@ static BOOL gMadePrefManager;
       [self setPref:kGeckoPrefAcceptLanguages toString:acceptLangHeader];
     }
     else {
-      // Fall back to the "en-us, en" default from all-camino.js - clear
-      // any existing user pref
+      // Fall back to the "en-us, en" default from all-camino.js and clear
+      // any existing user pref.
       [self clearPref:kGeckoPrefAcceptLanguages];
     }
   }
@@ -889,13 +893,13 @@ static BOOL gMadePrefManager;
 
 - (void)setLocalePref
 {
-  // Use the user-selected pref for the user agent locale if it exists
+  // Use the user-selected pref for the user agent locale if it exists.
   NSString* uaLocale = [self getStringPref:kGeckoPrefUserAgentLocaleOverride
                                withSuccess:NULL];
 
   if (![uaLocale length]) {
     // Find the active localization nib's name and make sure it's in
-    // ab or ab-CD form
+    // "ab" or "ab-CD" form.
     NSArray* localizations = [[NSBundle mainBundle] preferredLocalizations];
     if ([localizations count]) {
       CFStringRef activeLocalization =
@@ -954,10 +958,10 @@ static void SCProxiesChangedCallback(SCDynamicStoreRef store, CFArrayRef changed
       mRunLoopSource = SCDynamicStoreCreateRunLoopSource(NULL, dynamicStoreRef, 0);
       if (mRunLoopSource) {
         CFRunLoopAddSource(CFRunLoopGetCurrent(), mRunLoopSource, kCFRunLoopCommonModes);
-        // we keep the ref to the source, so that we can remove it when the prefs manager is cleaned up.
+        // We keep the ref to the source, so that we can remove it when the prefs manager is cleaned up.
       }
     }
-    
+
     CFRelease(proxyIdentifier);
     CFRelease(keyList);
     CFRelease(dynamicStoreRef);
@@ -982,7 +986,7 @@ static void SCProxiesChangedCallback(SCDynamicStoreRef store, CFArrayRef changed
       gotProxy = YES;
     }
   }
-  
+
   return gotProxy;
 }
 
@@ -997,11 +1001,11 @@ typedef enum EProxyConfig {
 
 - (void)readSystemProxySettings
 {
-  // if the user has set kGeckoPrefProxyUsesSystemSettings to false, they want
-  // to specify their own proxies (or a PAC), so don't read the OS proxy settings
+  // If the user has set kGeckoPrefProxyUsesSystemSettings to false, they want
+  // to specify their own proxies (or a PAC), so don't read the OS proxy settings.
   if (![self getBooleanPref:kGeckoPrefProxyUsesSystemSettings withSuccess:NULL])
     return;
-  
+
   PRInt32 curProxyType, newProxyType;
   mPrefs->GetIntPref("network.proxy.type", &curProxyType);
   newProxyType = curProxyType;
@@ -1018,7 +1022,7 @@ typedef enum EProxyConfig {
   mPrefs->ClearUserPref("network.proxy.socks_port");
   mPrefs->ClearUserPref(kGeckoPrefProxyBypassList);
 
-  // get proxies from SystemConfiguration
+  // Get proxies from SystemConfiguration.
   NSDictionary* proxyConfigDict = (NSDictionary*)SCDynamicStoreCopyProxies(NULL);
   if (proxyConfigDict) {
     // look for PAC
@@ -1031,7 +1035,7 @@ typedef enum EProxyConfig {
     }
     else {
       BOOL gotAProxy = NO;
-      
+
       gotAProxy |= [self updateOneProxy:proxyConfigDict protocol:@"http"
                               proxyEnableKey:(NSString*)kSCPropNetProxiesHTTPEnable
                                  proxyURLKey:(NSString*)kSCPropNetProxiesHTTPProxy
@@ -1051,7 +1055,7 @@ typedef enum EProxyConfig {
                               proxyEnableKey:(NSString*)kSCPropNetProxiesGopherEnable
                                  proxyURLKey:(NSString*)kSCPropNetProxiesGopherProxy
                                 proxyPortKey:(NSString*)kSCPropNetProxiesGopherPort];
-      
+
       gotAProxy |= [self updateOneProxy:proxyConfigDict protocol:@"socks"
                               proxyEnableKey:(NSString*)kSCPropNetProxiesSOCKSEnable
                                  proxyURLKey:(NSString*)kSCPropNetProxiesSOCKSProxy
@@ -1068,11 +1072,11 @@ typedef enum EProxyConfig {
         }
       }
       else {
-        // no proxy hosts found; turn them off
+        // No proxy hosts found, so turn them off.
         newProxyType = eProxyConfig_Direct;
       }
     }
-    
+
     [proxyConfigDict release];
   }
 
@@ -1091,45 +1095,45 @@ typedef enum EProxyConfig {
 - (void)flashBlockPrefChanged:(NSNotification*)inNotification
 {
   BOOL allowed = [self isFlashBlockAllowed];
- 
+
   BOOL flashBlockEnabled = allowed && [self getBooleanPref:kGeckoPrefBlockFlash withSuccess:NULL];
   [self refreshFlashBlockStyleSheet:flashBlockEnabled];
 }
 
-// this will reload the sheet if it's already registered, or unload it if the 
-// param is NO
+// This will reload the ad-blocking style sheet if it's already registered, or unload it if the
+// param is NO.
 - (void)refreshAdBlockingStyleSheet:(BOOL)inLoad
 {
-  // the the uri of the sheet in our bundle
+  // the URL of the stylesheet in our bundle
   NSString* cssFilePath = [[NSBundle mainBundle] pathForResource:@"ad_blocking" ofType:@"css"];
   if (![[NSFileManager defaultManager] isReadableFileAtPath:cssFilePath]) {
     NSLog(@"ad_blocking.css file not found; ad blocking will be disabled");
     return;
   }
-  
+
   nsresult rv;
   nsCOMPtr<nsILocalFile> cssFile;
   rv = NS_NewNativeLocalFile(nsDependentCString([cssFilePath fileSystemRepresentation]), PR_TRUE, getter_AddRefs(cssFile));
   if (NS_FAILED(rv))
     return;
-  
+
   nsCOMPtr<nsIURI> cssFileURI;
   rv = NS_NewFileURI(getter_AddRefs(cssFileURI), cssFile);
   if (NS_FAILED(rv))
     return;
-  
+
   [self refreshStyleSheet:cssFileURI load:inLoad];
 }
 
-// this will reload the flashblock sheet if it's already registered, or unload it if the 
-// param is NO
+// This will reload the Flashblock sheet if it's already registered, or unload it if the
+// param is NO.
 - (void)refreshFlashBlockStyleSheet:(BOOL)inLoad
 {
-  // the the uri of the flashblock sheet in the chrome path
+  // the URI of the Flashblock sheet in the chrome path
   nsCOMPtr<nsIURI> cssFileURI;
   nsresult rv = NS_NewURI(getter_AddRefs(cssFileURI), "chrome://flashblock/content/flashblock.css");
   if (NS_FAILED(rv))
-    return; 
+    return;
 
   [self refreshStyleSheet:cssFileURI load:inLoad];
 }
@@ -1144,7 +1148,7 @@ typedef enum EProxyConfig {
   ssService->SheetRegistered(cssFileURI, nsIStyleSheetService::USER_SHEET, &alreadyRegistered);
   if (alreadyRegistered)
     ssService->UnregisterSheet(cssFileURI, nsIStyleSheetService::USER_SHEET);
-  
+
   if (inLoad)
     ssService->LoadAndRegisterSheet(cssFileURI, nsIStyleSheetService::USER_SHEET);
 }
@@ -1168,24 +1172,24 @@ typedef enum EProxyConfig {
   } else {
     if (outSuccess) *outSuccess = NO;
   }
-  
+
   return prefValue;
 }
 
 - (NSColor*)getColorPref:(const char*)prefName withSuccess:(BOOL*)outSuccess
 {
-  // colors are stored in HTML-like #FFFFFF strings
+  // Colors are stored in hex (e.g. #FFFFFF) strings
   NSString* colorString = [self getStringPref:prefName withSuccess:outSuccess];
   NSColor*  returnColor = [NSColor blackColor];
 
   if ([colorString hasPrefix:@"#"] && [colorString length] == 7) {
     unsigned int redInt, greenInt, blueInt;
     sscanf([colorString UTF8String], "#%02x%02x%02x", &redInt, &greenInt, &blueInt);
-    
+
     float redFloat    = ((float)redInt / 255.0);
     float greenFloat  = ((float)greenInt / 255.0);
     float blueFloat   = ((float)blueInt / 255.0);
-    
+
     returnColor = [NSColor colorWithCalibratedRed:redFloat green:greenFloat blue:blueFloat alpha:1.0f];
     if (outSuccess) *outSuccess = YES;
   }
@@ -1266,14 +1270,14 @@ typedef enum EProxyConfig {
     if (homepagePref && [homepagePref length] > 0 && ![homepagePref isEqualToString:@"HomePageDefault"])
       return homepagePref;
   }
-  
+
   return @"about:blank";
 }
 
 //
 // -profilePath
 //
-// Returns the path for our post 0.8 profiles.
+// Returns the path for our post-0.8 profiles.
 // We no longer have distinct profiles. The profile dir is the same as
 // NS_APP_USER_PROFILES_ROOT_DIR - imposed by our own AppDirServiceProvider. Will
 // return |nil| if there is a problem.
@@ -1317,14 +1321,14 @@ typedef enum EProxyConfig {
 
   NSString* prefName = [NSString stringWithUTF8String:inPrefName];
 
-  // get the array of pref observers for this pref
+  // Get the array of pref observers for this pref.
   NSMutableArray* existingObservers = [mPrefChangeObservers objectForKey:prefName];
   if (!existingObservers) {
     existingObservers = [NSMutableArray arrayWithCapacity:1];
     [mPrefChangeObservers setObject:existingObservers forKey:prefName];
   }
 
-  // look for an existing observer with this target object
+  // Look for an existing observer with this target object.
   NSEnumerator* observersEnum = [existingObservers objectEnumerator];
   PrefChangeObserverOwner* curValue;
   while ((curValue = [observersEnum nextObject])) {
@@ -1332,7 +1336,7 @@ typedef enum EProxyConfig {
       return;   // found it; nothing to do
   }
 
-  // if it doesn't exist, make one
+  // If it doesn't exist, make one.
   PrefChangeObserverOwner* observerOwner = [[PrefChangeObserverOwner alloc] initWithPrefName:prefName object:inObject];
   [existingObservers addObject:observerOwner];    // takes ownership
   [observerOwner release];
@@ -1343,10 +1347,10 @@ typedef enum EProxyConfig {
   NSEnumerator* observerArraysEnum = [mPrefChangeObservers objectEnumerator];
   NSMutableArray* curArray;
   while ((curArray = [observerArraysEnum nextObject])) {
-    // look for an existing observer with this target object
+    // Look for an existing observer with this target object.
     NSEnumerator* observersEnum = [curArray objectEnumerator];
     PrefChangeObserverOwner* prefObserverOwner = nil;
-    
+
     PrefChangeObserverOwner* curValue;
     while ((curValue = [observersEnum nextObject])) {
       if ([curValue hasObject:inObject]) {
@@ -1354,9 +1358,9 @@ typedef enum EProxyConfig {
         break;
       }
     }
-    
+
     if (prefObserverOwner)
-      [curArray removeObjectIdenticalTo:prefObserverOwner];   // this should release it and unregister the observer
+      [curArray removeObjectIdenticalTo:prefObserverOwner];   // This should release it and unregister the observer.
   }
 }
 
@@ -1368,10 +1372,10 @@ typedef enum EProxyConfig {
   if (!existingObservers)
     return;
 
-  // look for an existing observer with this target object
+  // Look for an existing observer with this target object.
   NSEnumerator* observersEnum = [existingObservers objectEnumerator];
   PrefChangeObserverOwner* prefObserverOwner = nil;
-  
+
   PrefChangeObserverOwner* curValue;
   while ((curValue = [observersEnum nextObject])) {
     if ([curValue hasObject:inObject]) {
@@ -1379,20 +1383,20 @@ typedef enum EProxyConfig {
       break;
     }
   }
-  
+
   if (prefObserverOwner)
-    [existingObservers removeObjectIdenticalTo:prefObserverOwner];   // this should release it and unregister the observer
+    [existingObservers removeObjectIdenticalTo:prefObserverOwner];   // This should release it and unregister the observer.
 }
 
 //
 // isFlashBlockAllowed
 //
-// Checks whether FlashBlock can be enabled
-// FlashBlock only allowed if javascript and plug-ins enabled
+// Checks whether FlashBlock can be enabled.
+// FlashBlock only allowed if JavaScript and plug-ins are both enabled.
 // NOTE: This code is duplicated in WebFeatures.mm since the FlashBlock checkbox
-// settings are done by WebFeatures and stylesheet loading is done by PreferenceManager
+// settings are done by WebFeatures and stylesheet loading is done by PreferenceManager.
 //
--(BOOL) isFlashBlockAllowed
+- (BOOL)isFlashBlockAllowed
 {
   BOOL gotPref = NO;
   BOOL jsEnabled = [self getBooleanPref:kGeckoPrefEnableJavascript withSuccess:&gotPref] && gotPref;
