@@ -91,8 +91,8 @@
 
 @end
 
-static const float kTabBarDefaultHeight = 22.0;
-static const float kTabBottomPad = 4.0;           // height of the padding below tabs
+static const float kTabBarDefaultHeight = 24.0;
+static const float kTabBottomPad = 5.0;           // height of the padding below tabs
 
 @implementation BrowserTabBarView
 

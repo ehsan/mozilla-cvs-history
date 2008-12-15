@@ -127,6 +127,8 @@
     mLabelStringWidth = cellWidth;
   }
   
+  // shift the text slightly to vertically align it with the site icon
+  textRect.origin.y -= 1.0;
   [mTruncLabelString drawInRect:textRect withAttributes:cellAttributes];
 }
 

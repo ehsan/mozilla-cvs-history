@@ -245,7 +245,7 @@ NSString *const kSlidingTabAnimationFinishedCompletelyKey = @"SlidingTabAnimatio
 // called when the tab is selected or unselected.
 - (void)repositionSubviews
 {
-  const float kTextHeight = 15.0; // XXX this probably shouldn't be hard-coded
+  const float kTextHeight = 16.0; // XXX this probably shouldn't be hard-coded
 
   // center based on the larger of the two heights if there's a difference
   NSRect tabRect = [self bounds];
