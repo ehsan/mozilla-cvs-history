@@ -33,7 +33,6 @@ package Litmus::DB::SecurityGroup;
 
 use strict;
 use Litmus::Config;
-use Litmus::Memoize;
 use base 'Litmus::DBI';
 
 Litmus::DB::SecurityGroup->table('security_groups');
@@ -103,13 +102,11 @@ sub selected {
 }
 
 # this can persist across mod_perl requests:
-memoize('getSuperUserGroup', persist=>1);
 sub getSuperUserGroup {
 	my $self = shift;
 	my @rows = __PACKAGE__->search(name => "Litmus Super Administrators");
 	return $rows[0];
 }
-memoize('getRunDayGroup', persist=>1);
 sub getRunDayGroup {
 	my $self = shift;
 	my @rows = __PACKAGE__->search(name => "Litmus Test Run/Test Day Administrators");

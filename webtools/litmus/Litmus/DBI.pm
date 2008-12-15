@@ -153,7 +153,6 @@ use Class::DBI;
 use DBI;
 use Encode qw( encode_utf8 decode_utf8 );
 use Litmus::Config;
-use Litmus::Memoize;
 use utf8;
 
 use base qw( Exporter Class::Data::Inheritable Class::DBI::mysql );
@@ -195,7 +194,6 @@ sub column_alias {
 # here's where the actual work happens. We consult our alias list 
 # (as created by calls to column_alias()) and substitute the 
 # database column if we find a match
-memoize('find_column', persist=>1);
 sub find_column {
     my $self = shift;
     my $wanted = shift;

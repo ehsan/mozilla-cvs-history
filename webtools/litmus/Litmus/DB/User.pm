@@ -34,7 +34,6 @@ package Litmus::DB::User;
 
 use strict;
 use Litmus::Config;
-use Litmus::Memoize;
 use base 'Litmus::DBI';
 
 Litmus::DB::User->table('users');
@@ -171,7 +170,6 @@ sub getRealPasswd {
 }
 
 #########################################################################
-memoize('getDisplayName');
 sub getDisplayName() {
   my $self = shift;
   
@@ -227,7 +225,6 @@ __PACKAGE__->set_sql(userInProductAdminGroup => q{
 });
 
 # returns true if the user is a member of $group, otherwise false
-memoize('inGroup');
 sub inGroup {
 	my $self = shift;
 	my $group = shift;
@@ -238,7 +235,6 @@ sub inGroup {
 	return 0;
 }
 
-memoize('isSuperUser');
 sub isSuperUser {
 	my $self = shift;
 	if ($self->inGroup(Litmus::DB::SecurityGroup->getSuperUserGroup)) {
@@ -249,7 +245,6 @@ sub isSuperUser {
 	}
 }
 
-memoize('isRunDayAdmin');
 sub isRunDayAdmin {
 	my $self = shift;
 	if ($self->inGroup(Litmus::DB::SecurityGroup->getRunDayGroup()) ||
@@ -263,7 +258,6 @@ sub isRunDayAdmin {
 
 # returns true if the user is a superuser or a member of any product admin group
 # (to determine whether to show any admin controls)
-memoize('isInAdminGroup');
 sub isInAdminGroup {
 	my $self = shift;
 	my @rows = $self->search_userInAnyAdminGroup($self);
@@ -274,7 +268,6 @@ sub isInAdminGroup {
 }
 
 # returns true if the user is an admin of $product or is a superuser
-memoize('isProductAdmin');
 sub isProductAdmin {
 	my $self = shift;
 	my $product = shift;

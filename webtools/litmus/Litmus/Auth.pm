@@ -42,7 +42,6 @@ require Exporter;
 use Litmus::Error;
 use Litmus::DB::User;
 use Litmus::DB::PasswordResets;
-use Litmus::Memoize;
 use Litmus::Mailer;
 
 use CGI;
