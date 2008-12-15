@@ -200,6 +200,7 @@ my $serverRestrictsIRCNames = '';
 my $serverExpectsValidUsername = '';
 my $username = 0; # makes the username default to the pid ($USERNAME)
 my @modulenames = ('General', 'Greeting', 'Infobot', 'Parrot');
+my $umode;
 
 # - which variables can be saved.
 &registerConfigVariables(
@@ -226,6 +227,7 @@ my @modulenames = ('General', 'Greeting', 'Infobot', 'Parrot');
     [\$serverRestrictsIRCNames, 'simpleIRCNameServer'],
     [\$serverExpectsValidUsername, 'validUsernameServer'],
     [\$ssl, 'ssl'],
+    [\$umode, 'umode'],
     [\$Mails::smtphost, 'smtphost'],
 );
 
@@ -390,7 +392,7 @@ sub connect {
         422, # nomotd
     ], \&on_connect);
 
-    $bot->add_handler('welcome', \&on_set_nick); # when we connect, to get our nick
+    $bot->add_handler('welcome', \&on_welcome); # when we connect, to get our nick/umode
     $bot->add_global_handler([ # when to change nick name
         'erroneusnickname',
         433, # ERR_NICKNAMEINUSE
@@ -475,6 +477,14 @@ sub on_whois {
 }
 
 my ($nickFirstTried, $nickHadProblem, $nickProblemEscalated) = (0, 0, 0);
+
+# this is called for the welcome message (001) it calls on_set_nick to
+# get our nick and on_set_umode to set our umode once we have a nick
+sub on_welcome {
+    my ($self, $event) = @_;
+    on_set_nick($self, $event);
+    on_set_umode($self, $event);
+}
 
 # this is called both for the welcome message (001) and by the on_nick handler
 sub on_set_nick {
@@ -573,6 +583,16 @@ sub on_nick_taken {
     &debug("now going to try nick '$nicks[$nick]'");
     &Configuration::Save($cfgfile, &configStructure(\$nick, \@nicks));
     $self->nick($nicks[$nick]);
+}
+
+#called by on_welcome after we get our nick
+sub on_set_umode {
+    my ($self, $event) = @_;
+    # set usermode for the bot
+    if ($umode) {
+        &debug("using umode: '$umode'");
+        $self->mode($self->nick, $umode);
+    }
 }
 
 # called when we connect.
@@ -2588,6 +2608,9 @@ sub Set {
                 }
             }
         }
+    } elsif ($variable eq 'umode') {
+        $self->mode($event, $nicks[$nick], $value, '');
+        $self->say($event, "Attempted to change current umode to '$value'.");
     }
     return $self->SUPER::Set($event, $variable, $value);
 }
