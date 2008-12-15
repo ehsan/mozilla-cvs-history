@@ -60,6 +60,7 @@ static NSString* const kProgressWindowFrameSaveName = @"ProgressWindow";
 -(NSArray*)selectedProgressViewControllers;
 -(ProgressViewController*)progressViewControllerAtIndex:(unsigned)inIndex;
 -(void)deselectDownloads:(NSArray*)downloads;
+-(void)removeSelectedDownloads:(BOOL)byDeleting;
 -(void)scrollIntoView:(ProgressViewController*)controller;
 -(void)killDownloadTimer;
 -(void)setupDownloadTimer;
@@ -73,7 +74,7 @@ static NSString* const kProgressWindowFrameSaveName = @"ProgressWindow";
 -(void)removeSuccessfulDownloads;
 -(BOOL)shouldRemoveDownloadsOnQuit;
 -(NSString*)downloadsPlistPath;
-- (void)setToolTipForToolbarItem:(NSToolbarItem *)theItem;
+-(void)setToolTipForToolbarItem:(NSToolbarItem*)theItem;
 
 @end
 
@@ -88,7 +89,7 @@ static id gSharedProgressController = nil;
   if (gSharedProgressController == nil) {
     gSharedProgressController = [[ProgressDlgController alloc] init];
   }
-  
+
   return gSharedProgressController;
 }
 
@@ -106,12 +107,12 @@ static id gSharedProgressController = nil;
     // it would be nice if we could get the frame from the name, and then
     // mess with it before setting it.
     [[self window] setFrameUsingName:kProgressWindowFrameSaveName];
-    
+
     // these 2 bools prevent the app from locking up when the termination modal sheet
     // is running and a download completes
     mAwaitingTermination = NO;
     mShouldCloseWindow   = NO;
-    
+
     // we "know" that the superview of the stack view is a CHFlippedShrinkWrapView
     // (it has to be, because NSScrollViews have to contain a flipped view)
     if ([[mStackView superview] respondsToSelector:@selector(setNoIntrinsicPadding)])
@@ -132,10 +133,10 @@ static id gSharedProgressController = nil;
   [toolbar setDelegate:self];
   [toolbar setAllowsUserCustomization:YES];
   [toolbar setAutosavesConfiguration:YES];
-  [[self window] setToolbar:toolbar];    
-  
+  [[self window] setToolbar:toolbar];
+
   mFileChangeWatcher = [[FileChangeWatcher alloc] init];
-  
+
   // load the saved instances to mProgressViewControllers array
   [self loadProgressViewControllers];
 }
@@ -172,78 +173,58 @@ static id gSharedProgressController = nil;
     NSBeep();
 }
 
-//
-// Take care of selecting a download instance to replace the selection being removed
-//
--(void)setSelectionForRemovalOfItems:(NSArray*) selectionToRemove
+// Removes downloads from the view; also deletes corresponding files if |byDeleting|.
+-(void)removeSelectedDownloads:(BOOL)byDeleting
 {
-  // take care of selecting a download instance to replace the selection being removed
   NSArray* selected = [self selectedProgressViewControllers];
   unsigned int selectedCount = [selected count];
   if (selectedCount == 0) return;
-  
-  unsigned int indexOfLastSelection = [mProgressViewControllers indexOfObject:[selected lastObject]];
-  // if dl instance after last selection exists, select it or look for something else to select
-  if ((indexOfLastSelection + 1) < [mProgressViewControllers count]) {
-    [(ProgressViewController*)[mProgressViewControllers objectAtIndex:(indexOfLastSelection + 1)] setSelected:YES];
-  }
-  else { // find the first unselected DL instance before the last one marked for removal and select it
-         // use an int in the loop, not unsigned because we might make it negative
-    for (int i = ([mProgressViewControllers count] - 1); i >= 0; i--)
-    {
-      ProgressViewController* curProgressViewController = [mProgressViewControllers objectAtIndex:i];
-      if (![curProgressViewController isSelected])
-      {
-        [curProgressViewController setSelected:YES];
-        break;
-      }
+
+  // Prepare to select download following the last selected download.
+  // We add 1 to get following download; then subtract |selectedCount| since
+  // this many downloads preceding the to-be-selected one have been removed.
+  mSelectionPivotIndex = [mProgressViewControllers indexOfObject:[selected lastObject]] + 1 - selectedCount;
+
+  // now remove stuff
+  for (unsigned int i = 0; i < selectedCount; i++)
+  {
+    ProgressViewController* progressController = [selected objectAtIndex:i];
+    // If we are not deleting, then we need to check if the download is active.
+    // Otherwise, we don't need to check if active; the toolbar/menu validates.
+    // Note that if we are deleting and the file was moved without the controller
+    // noticing, the move to trash will fail, but cause it to notice that the
+    // file is missing.  Leave it in the list (now showing missing) so the user
+    // doesn't think it was successfully trashed.
+    if ((byDeleting && [progressController deleteFile]) ||
+        (!byDeleting && ![progressController isActive])) {
+      [self removeDownload:progressController suppressRedraw:YES];
     }
   }
-  
-  mSelectionPivotIndex = -1; // nothing is selected any more so nothing to pivot on
+
+  // Select the pivot download.
+  if ([mProgressViewControllers count] != 0) {
+    // Ensure that that pivot index is in the range of the array.
+    mSelectionPivotIndex = MIN(mSelectionPivotIndex, (int)[mProgressViewControllers count] - 1);
+    [(ProgressViewController*)[mProgressViewControllers objectAtIndex:mSelectionPivotIndex] setSelected:YES];
+  }
+  else {
+    mSelectionPivotIndex = -1;
+  }
+
+  [self rebuildViews];
+  [self saveProgressViewControllers];
 }
 
 // remove all selected instances, don't remove anything that is active as a guard against bad things
 -(IBAction)remove:(id)sender
 {
-  NSArray* selected = [self selectedProgressViewControllers];
-  unsigned int selectedCount = [selected count];
-  
-  [self setSelectionForRemovalOfItems:selected];
-  
-  // now remove stuff
-  for (unsigned int i = 0; i < selectedCount; i++)
-  {
-    ProgressViewController* selProgressViewController = [selected objectAtIndex:i];
-    if (![selProgressViewController isActive])
-      [self removeDownload:selProgressViewController suppressRedraw:YES];
-  }
-  
-  [self rebuildViews];
-  [self saveProgressViewControllers];
+  [self removeSelectedDownloads:NO];
 }
 
 // delete the selected download(s), moving files to trash and clearing them from the list
 -(IBAction)deleteDownloads:(id)sender
 {
-  NSArray* selected = [self selectedProgressViewControllers];
-  unsigned int selectedCount = [selected count];
-  
-  [self setSelectionForRemovalOfItems:selected];
-  
-  // now remove stuff, don't need to check if active, the toolbar/menu validates
-  for (unsigned int i = 0; i < selectedCount; i++) {
-    ProgressViewController* progressController = [selected objectAtIndex:i];
-    // if the file was moved without the controller noticing, the move to trash
-    // will fail, but cause it to notice that the file is missing. Leave it in
-    // the list (now showing missing) so the user doesn't think it was
-    // successfully trashed.
-    if ([progressController deleteFile])
-      [self removeDownload:progressController suppressRedraw:YES];
-  }
-  
-  [self rebuildViews];
-  [self saveProgressViewControllers];
+  [self removeSelectedDownloads:YES];
 }
 
 -(IBAction)pause:(id)sender
@@ -258,17 +239,29 @@ static id gSharedProgressController = nil;
   [self rebuildViews];  // because we swap in a different progress view
 }
 
-// remove all inactive instances
+// Remove all inactive instances.
 -(IBAction)cleanUpDownloads:(id)sender
 {
+  unsigned int pivotShift = 0;
+  // We loop over the downloads in reverse order so that removing a download
+  // does not affect the indices of the downloads we haven't yet looked at.
   for (int i = [mProgressViewControllers count] - 1; i >= 0; i--)
   {
     ProgressViewController* curProgressViewController = [mProgressViewControllers objectAtIndex:i];
-    if ((![curProgressViewController isActive]) || [curProgressViewController isCanceled])
+    if ((![curProgressViewController isActive]) || [curProgressViewController isCanceled]) {
       [self removeDownload:curProgressViewController suppressRedraw:YES];
+
+      if (mSelectionPivotIndex == i) {
+        mSelectionPivotIndex = -1;
+      }
+      else if (i < mSelectionPivotIndex) {
+        pivotShift++;
+      }
+    }
   }
-  mSelectionPivotIndex = -1;
-  
+
+  mSelectionPivotIndex -= pivotShift;
+
   [self rebuildViews];
   [self saveProgressViewControllers];
 }
@@ -277,6 +270,8 @@ static id gSharedProgressController = nil;
 // this is used for the browser reset function
 -(void)clearAllDownloads
 {
+  // We loop over the downloads in reverse order so that removing a download
+  // does not affect the indices of the downloads we haven't yet looked at.
   for (int i = [mProgressViewControllers count] - 1; i >= 0; i--)
   {
     ProgressViewController* curProgressViewController = [mProgressViewControllers objectAtIndex:i];
@@ -286,7 +281,7 @@ static id gSharedProgressController = nil;
     [self removeDownload:curProgressViewController suppressRedraw:YES];
   }
   mSelectionPivotIndex = -1;
-  
+
   [self rebuildViews];
   [self saveProgressViewControllers];
 }
@@ -294,9 +289,17 @@ static id gSharedProgressController = nil;
 -(void)updateSelectionOfDownload:(ProgressViewController*)selectedDownload
                     withBehavior:(DownloadSelectionBehavior)behavior
 {
-  int indexOfSelectedDownload = (int)[mProgressViewControllers indexOfObject:selectedDownload];
-
+  int indexOfSelectedDownload = (int)[mProgressViewControllers indexOfObjectIdenticalTo:selectedDownload];
   NSArray* currentlySelectedDownloads = [self selectedProgressViewControllers];
+
+  if (indexOfSelectedDownload == NSNotFound) {
+    if (behavior == DownloadSelectExclusively) {
+      [self deselectDownloads:currentlySelectedDownloads];
+      mSelectionPivotIndex = -1;
+    }
+
+    return;
+  }
 
   switch (behavior) {
     case DownloadSelectExclusively:
@@ -305,26 +308,24 @@ static id gSharedProgressController = nil;
       mSelectionPivotIndex = indexOfSelectedDownload;
       break;
 
+    // Select all downloads between clicked download and pivot download (inclusive).
     case DownloadSelectByExtending:
       if (mSelectionPivotIndex == -1 || [currentlySelectedDownloads count] == 0) {
         mSelectionPivotIndex = indexOfSelectedDownload;
       }
       else {
         [self deselectDownloads:currentlySelectedDownloads];
-        if (indexOfSelectedDownload <= mSelectionPivotIndex) {
-          for (int i = indexOfSelectedDownload; i <= mSelectionPivotIndex; i++)
-            [(ProgressViewController*)[mProgressViewControllers objectAtIndex:i] setSelected:YES];
-        }
-        else if (indexOfSelectedDownload > mSelectionPivotIndex) {
-          for (int i = mSelectionPivotIndex; i <= indexOfSelectedDownload; i++)
-            [(ProgressViewController*)[mProgressViewControllers objectAtIndex:i] setSelected:YES];
+        int minSelectedIndex = MIN(indexOfSelectedDownload, mSelectionPivotIndex);
+        int maxSelectedIndex = MAX(indexOfSelectedDownload, mSelectionPivotIndex);
+        for (int i = minSelectedIndex; i <= maxSelectedIndex; i++) {
+          [(ProgressViewController*)[mProgressViewControllers objectAtIndex:i] setSelected:YES];
         }
       }
       break;
 
     case DownloadSelectByInverting:
       if ([selectedDownload isSelected]) {
-        // if this was at the pivot index set the pivot index to -1
+        // If this was at the pivot index, clear the pivot index.
         if (indexOfSelectedDownload == mSelectionPivotIndex)
           mSelectionPivotIndex = -1;
       }
@@ -362,7 +363,7 @@ static id gSharedProgressController = nil;
           if ([[mProgressViewControllers objectAtIndex:i] isSelected]) {
             break;
           }
-        }      
+        }
         // deselect everything if the shift key isn't a modifier
         if (!shiftKeyDown)
           [self deselectDownloads:[self selectedProgressViewControllers]];
@@ -485,7 +486,7 @@ static id gSharedProgressController = nil;
       [[mScrollView contentView] scrollToPoint:instanceFrame.origin];
     }
     else { // if the dl instance is at least partly below visible rect
-      // take  instance's frame origin y, subtract content view height, 
+      // take instance's frame origin y, subtract content view height,
       // add instance view height, no parenthesizing
       NSPoint adjustedPoint = NSMakePoint(0, (instanceFrame.origin.y - NSHeight([[mScrollView contentView] frame])) + NSHeight(instanceFrame));
       [[mScrollView contentView] scrollToPoint:adjustedPoint];
@@ -499,7 +500,7 @@ static id gSharedProgressController = nil;
   if (![[self window] isVisible]) {
     [self showWindow:nil]; // make sure the window is visible
   }
-  
+
   // a common cause of user confusion is the window being visible but behind other windows. They
   // have no idea the download was successful, and click the link two or three times before
   // looking around to see what happened. We always want the download window to come to the
@@ -508,14 +509,13 @@ static id gSharedProgressController = nil;
   BOOL bringToFront = [[PreferenceManager sharedInstance] getBooleanPref:kGeckoPrefFocusDownloadManagerOnDownload withSuccess:&gotPref];
   if (gotPref && bringToFront)
     [[self window] makeKeyAndOrderFront:self];
-  
+
   [self rebuildViews];
   [self setupDownloadTimer];
-  
-  // downloads should be individually selected when initiated
-  [self deselectDownloads:[self selectedProgressViewControllers]];
-  [(ProgressViewController*)progressDisplay setSelected:YES];
-  
+
+  // Downloads should be individually selected when initiated.
+  [self updateSelectionOfDownload:progressDisplay withBehavior:DownloadSelectExclusively];
+
   // make sure new download is visible
   [self scrollIntoView:progressDisplay];
 }
@@ -537,7 +537,7 @@ static id gSharedProgressController = nil;
   {
     [self showErrorSheetForDownload:progressDisplay withStatus:status];
   }
-  
+
   [self saveProgressViewControllers];
 }
 
@@ -562,10 +562,10 @@ static id gSharedProgressController = nil;
 {
   NSString* errorMsgFmt = NSLocalizedString(@"DownloadErrorMsgFmt", @"");
   NSString* errorExplString = nil;
-  
+
   NSString* destFilePath = [progressDisplay destinationPath];
   NSString* fileName = [destFilePath displayNameOfLastPathComponent];
-  
+
   NSString* errorMsg = [NSString stringWithFormat:errorMsgFmt, fileName];
 
   switch (inStatus)
@@ -577,7 +577,7 @@ static id gSharedProgressController = nil;
         errorExplString = [NSString stringWithFormat:fmtString, [destFilePath volumeNamePathComponent]];
       }
       break;
-      
+
     case NS_ERROR_FILE_ACCESS_DENIED:
       {
         NSString* fmtString = NSLocalizedString(@"DownloadErrorDestinationWriteProtectedFmt", @"");
@@ -595,7 +595,7 @@ static id gSharedProgressController = nil;
       }
       break;
   }
-  
+
   NSBeginAlertSheet(errorMsg,
                     nil,    // default button ("OK")
                     nil,    // alt button (none)
@@ -620,12 +620,12 @@ static id gSharedProgressController = nil;
   // band-aid, but this logic should really be reworked.
   [[progressDisplay retain] autorelease];
   [mProgressViewControllers removeObject:progressDisplay];
-  
+
   if ([mProgressViewControllers count] == 0) {
     // Stop doing stuff if there aren't any downloads going on
     [self killDownloadTimer];
   }
-  
+
   if (!suppressRedraw)
     [self rebuildViews];
 }
@@ -639,7 +639,7 @@ static id gSharedProgressController = nil;
 {
   unsigned numViews = [mProgressViewControllers count];
   int numActive = 0;
-  
+
   for (unsigned int i = 0; i < numViews; i++) {
     if ([[mProgressViewControllers objectAtIndex:i] isActive]) {
       ++numActive;
@@ -717,7 +717,7 @@ static id gSharedProgressController = nil;
     if (sheetResult == NSAlertDefaultReturn)
     {
       mAwaitingTermination = NO;
-      
+
       // Check to see if a request to close the download window was made while the modal sheet was running.
       // If so, close the download window according to the user's pref.
       if (mShouldCloseWindow)
@@ -725,11 +725,11 @@ static id gSharedProgressController = nil;
         [self maybeCloseWindow];
         mShouldCloseWindow = NO;
       }
-      
+
       shouldTerminate = NO;
     }
   }
-  
+
   return shouldTerminate ? NSTerminateNow : NSTerminateCancel;
 }
 
@@ -740,9 +740,9 @@ static id gSharedProgressController = nil;
   // Check the download item removal policy here to see if downloads should be removed when camino quits.
   if ([self shouldRemoveDownloadsOnQuit])
     [self removeSuccessfulDownloads];
-  
+
   // Since the pref is not set to remove the downloads when Camino quits, save them here before the app terminates.
-  else  
+  else
     [self saveProgressViewControllers];
 }
 
@@ -755,14 +755,14 @@ static id gSharedProgressController = nil;
 {
   unsigned int arraySize = [mProgressViewControllers count];
   NSMutableArray* downloadArray = [[[NSMutableArray alloc] initWithCapacity:arraySize] autorelease];
-  
+
   NSEnumerator* downloadsEnum = [mProgressViewControllers objectEnumerator];
   ProgressViewController* curController;
   while ((curController = [downloadsEnum nextObject]))
   {
-    [downloadArray addObject:[curController downloadInfoDictionary]]; 
+    [downloadArray addObject:[curController downloadInfoDictionary]];
   }
-  
+
   // now save the array
   [downloadArray writeToFile:[self downloadsPlistPath] atomically: YES];
 }
@@ -770,7 +770,7 @@ static id gSharedProgressController = nil;
 -(void)loadProgressViewControllers
 {
   NSArray*  downloads = [NSArray arrayWithContentsOfFile:[self downloadsPlistPath]];
-  
+
   if (downloads)
   {
     NSEnumerator* downloadsEnum = [downloads objectEnumerator];
@@ -782,7 +782,7 @@ static id gSharedProgressController = nil;
       [mProgressViewControllers addObject:curController];
       [curController release];
     }
-    
+
     [self rebuildViews];
   }
 }
@@ -800,25 +800,24 @@ static id gSharedProgressController = nil;
 // Remove the successful downloads from the downloads list
 -(void)removeSuccessfulDownloads
 {
-  NSEnumerator* downloadsEnum = [mProgressViewControllers objectEnumerator];
-  ProgressViewController* curProgView = nil;
-  
-  while ((curProgView = [downloadsEnum nextObject]))
+  // We loop over the downloads in reverse order so that removing a download
+  // does not affect the indices of the downloads we haven't yet looked at.
+  for (int i = [mProgressViewControllers count] - 1; i >= 0; i--)
   {
-    // Remove successful downloads from the list
-    if ([curProgView hasSucceeded])
-      [mProgressViewControllers removeObject:curProgView];
+    // Remove successful downloads from the list.
+    if ([[mProgressViewControllers objectAtIndex:i] hasSucceeded])
+      [mProgressViewControllers removeObjectAtIndex:i];
   }
-  
+
   [self saveProgressViewControllers];
 }
 
 // Return true if the pref is set to remove downloads when the application quits
 -(BOOL)shouldRemoveDownloadsOnQuit
 {
-  int downloadRemovalPolicy = [[PreferenceManager sharedInstance] getIntPref:kGeckoPrefDownloadCleanupPolicy 
+  int downloadRemovalPolicy = [[PreferenceManager sharedInstance] getIntPref:kGeckoPrefDownloadCleanupPolicy
                                                                  withSuccess:NULL];
-  
+
   return downloadRemovalPolicy == kRemoveDownloadsOnQuit ? YES : NO;
 }
 
@@ -876,7 +875,7 @@ static id gSharedProgressController = nil;
     if ([curController isCanceled] || ![curController fileExists])
       return NO;
   }
-  
+
   return YES;
 }
 
@@ -889,7 +888,7 @@ static id gSharedProgressController = nil;
     if ([curController isActive] || [curController isCanceled] || ![curController fileExists])
       return NO;
   }
-  
+
   return YES;
 }
 
@@ -902,7 +901,7 @@ static id gSharedProgressController = nil;
     if ([curController isPaused] || ![curController isActive])
       return NO;
   }
-  
+
   return YES;
 }
 
@@ -915,7 +914,7 @@ static id gSharedProgressController = nil;
     if (![curController isPaused] || ![curController isActive])
       return NO;
   }
-  
+
   return YES;
 }
 
@@ -955,10 +954,10 @@ static id gSharedProgressController = nil;
   [theItem setLabel:NSLocalizedString(@"dlPauseButtonLabel", nil)];
   [theItem setPaletteLabel:NSLocalizedString(@"dlPauseButtonLabel", nil)];
   [theItem setImage:[NSImage imageNamed:@"dl_pause"]];
-  
+
   if ([self shouldAllowPauseAction]) {
     [theItem setAction:@selector(pause:)];
-    
+
     return [[self window] isKeyWindow]; // if not key window, dont enable
   }
   else if ([self shouldAllowResumeAction]) {
@@ -966,7 +965,7 @@ static id gSharedProgressController = nil;
     [theItem setPaletteLabel:NSLocalizedString(@"dlResumeButtonLabel", nil)];
     [theItem setAction:@selector(resume:)];
     [theItem setImage:[NSImage imageNamed:@"dl_resume"]];
-    
+
     return [[self window] isKeyWindow]; // if not key window, dont enable
   }
   else {
@@ -1004,7 +1003,7 @@ static id gSharedProgressController = nil;
   if (action == @selector(remove:)) {
     return [self shouldAllowRemoveAction] && [[self window] isKeyWindow];
   }
-  else if (action == @selector(open:)) { 
+  else if (action == @selector(open:)) {
     return [self shouldAllowOpenAction];
   }
   else if (action == @selector(reveal:)) {
@@ -1142,16 +1141,16 @@ static id gSharedProgressController = nil;
   NSSize scrollFrameSize = [NSScrollView frameSizeForContentSize:[mStackView bounds].size
                                          hasHorizontalScroller:NO hasVerticalScroller:YES borderType:NSNoBorder];
   float frameDelta = (curScrollFrameSize.height - scrollFrameSize.height);
-  
+
   // don't get vertically smaller than the default window size
   if ((windowFrame.size.height - frameDelta) < mDefaultWindowSize.height) {
     frameDelta = windowFrame.size.height - mDefaultWindowSize.height;
   }
-  
+
   windowFrame.size.height -= frameDelta;
   windowFrame.origin.y    += frameDelta; // maintain top
   windowFrame.size.width  = mDefaultWindowSize.width;
-  
+
   // cocoa will ensure that the window fits onscreen for us
   return windowFrame;
 }
@@ -1165,25 +1164,25 @@ static id gSharedProgressController = nil;
 - (NSArray*)subviewsForStackView:(CHStackView *)stackView
 {
   NSMutableArray* viewsArray = [NSMutableArray arrayWithCapacity:[mProgressViewControllers count]];
-  
+
   unsigned int numViews = [mProgressViewControllers count];
   for (unsigned int i = 0; i < numViews; i ++)
     [viewsArray addObject:[((ProgressViewController*)[mProgressViewControllers objectAtIndex:i]) view]];
-  
+
   return viewsArray;
 }
 
 #pragma mark -
 
 /*
- Just create a progress view, but don't display it (otherwise the URL fields etc. 
+ Just create a progress view, but don't display it (otherwise the URL fields etc.
                                                     are just blank)
  */
 -(id <CHDownloadProgressDisplay>)createProgressDisplay
 {
   ProgressViewController* newController = [[[ProgressViewController alloc] initWithWindowController:self] autorelease];
   [mProgressViewControllers addObject:newController];
-  
+
   return newController;
 }
 
