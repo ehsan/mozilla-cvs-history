@@ -100,6 +100,7 @@ public:
 protected:
   nsresult HandleBlockedPopupEvent(nsIDOMEvent* inEvent);
   nsresult HandleLinkAddedEvent(nsIDOMEvent* inEvent);
+  nsresult HandleFlashblockCheckEvent(nsIDOMEvent* inEvent);
   void HandleFaviconLink(nsIDOMElement* inElement);
   void HandleFeedLink(nsIDOMElement* inElement);
   void HandleSearchPluginLink(nsIDOMElement* inElement);

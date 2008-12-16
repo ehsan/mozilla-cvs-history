@@ -59,6 +59,7 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIWidget.h"
 #include "nsIPrefBranch.h"
+#include "nsIDOMNSEventTarget.h"
 
 // Printing
 #include "nsIWebBrowserPrint.h"
@@ -280,6 +281,17 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
       rv = eventTarget->AddEventListener(NS_LITERAL_STRING("DOMLinkAdded"),
                                          static_cast<nsIDOMEventListener*>(_listener), PR_FALSE);
       NS_ASSERTION(NS_SUCCEEDED(rv), "AddEventListener failed");
+
+      // Register the CHBrowserListener to listen for flashblock whitelist checks.
+      // Need to use an nsIDOMNSEventTarget since flashblockCheckLoad is untrusted
+      nsCOMPtr<nsIDOMNSEventTarget> nsEventTarget = do_QueryInterface(eventTarget);
+      if (nsEventTarget)
+      {
+        rv = nsEventTarget->AddEventListener(NS_LITERAL_STRING("flashblockCheckLoad"),
+                                             static_cast<nsIDOMEventListener*>(_listener),
+                                             PR_TRUE, PR_TRUE);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "AddEventListener failed: flashblockCheckLoad");
+      }
 
       rv = eventTarget->AddEventListener(NS_LITERAL_STRING("command"),
                                          static_cast<nsIDOMEventListener*>(_listener), PR_FALSE);

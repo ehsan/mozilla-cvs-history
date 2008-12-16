@@ -94,6 +94,131 @@ enum StatusPriority {
 };
 
 NSString* const kBrowserInstanceClosedNotification = @"BrowserInstanceClosed";
+static NSString* const kFlashBlockWhitelistChangedNotificationName = @"FlashBlockWhitelistChanged";
+
+//
+// interface FlashblockWhitelistManager
+//
+// A singleton class to manage list of sites where Flash is allowed
+// when otherwise Flash is blocked
+//
+
+@interface FlashblockWhitelistManager : NSObject
+{
+  NSString*                 mFlashblockWhitelistPref;      // STRONG
+  NSMutableArray*           mFlashblockWhitelistSites;     // STRONG
+}
+
+// Returns the shared FlashblockWhitelistManager instance.
++ (FlashblockWhitelistManager*)sharedInstance;
+
+// Loads whitelisted sites from preference
+- (void)reloadWhitelistSites;
+
+// Checks if Flash is allowed for the site
+- (BOOL)isFlashAllowedForSite:(NSString*)site;
+
+@end
+
+static FlashblockWhitelistManager* sFlashblockWhitelistManager = nil;
+
+@implementation FlashblockWhitelistManager
+
++ (FlashblockWhitelistManager*)sharedInstance
+{
+  if (!sFlashblockWhitelistManager)
+    sFlashblockWhitelistManager = [[self alloc] init];
+
+  return sFlashblockWhitelistManager;
+}
+
+- (id)init
+{
+  [self reloadWhitelistSites];
+
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(reloadWhitelistSites)
+                                               name:kFlashBlockWhitelistChangedNotificationName
+                                             object:nil];
+
+  return self;
+}
+
+// Currently dealloc won't be called since there is no callback to tell the instance
+// that the application is shutting down. But nothing happens here that isn't already
+// taken care of when the application closes, so we don't need to enforce calling this.
+- (void)dealloc
+{
+  [mFlashblockWhitelistPref release];
+  [mFlashblockWhitelistSites release];
+
+  sFlashblockWhitelistManager = nil;
+
+  [[NSNotificationCenter defaultCenter] removeObserver:self];
+
+  [super dealloc];
+}
+
+- (void)reloadWhitelistSites
+{
+  NSString* whitelistPref = [[PreferenceManager sharedInstance] getStringPref:"flashblock.whitelist" withSuccess:NULL];
+
+  // Update array of whitelisted sites only if the preference has changed
+  if (!mFlashblockWhitelistPref || ![mFlashblockWhitelistPref isEqualToString:whitelistPref]) {
+    [mFlashblockWhitelistPref release];
+    mFlashblockWhitelistPref = [whitelistPref retain];
+
+    if (!mFlashblockWhitelistSites)
+      mFlashblockWhitelistSites = [[NSMutableArray alloc] init];
+    else
+      [mFlashblockWhitelistSites removeAllObjects];
+
+    // Whitelist is a string with format:
+    //  siteA.com,www.siteB.com,*.siteC.com
+    NSArray* whitelistSites = [mFlashblockWhitelistPref componentsSeparatedByString:@","];
+    NSEnumerator* prefEnumerator = [whitelistSites objectEnumerator];
+    NSString* prefSite;
+    while ((prefSite = [prefEnumerator nextObject])) {
+      // Require at least one '.' so that an entry of 'com' or an empty string won't
+      // match every site.
+      if ([prefSite rangeOfString:@"."].location == NSNotFound)
+        continue;
+
+      prefSite = [[prefSite lowercaseString] stringByTrimmingCharactersInSet:
+                                               [NSCharacterSet whitespaceAndNewlineCharacterSet]];
+
+      // Goal: For 'site.com' whitelist, match www.site.com and site.com, but not thesite.com.
+      // Strategy: Append '.' to whitelist strings, then match the end of the site string
+      //   with the whitelist strings.  This will prevent 'site.com' from matching the end of
+      // thesite.com but will match site.com and www.site.com.If site string is not in proper
+      // format, it will (gracefully) not match.
+      if ([prefSite rangeOfString:@"*."].location == 0)
+        prefSite = [prefSite substringFromIndex:1];
+      else
+        prefSite = [@"." stringByAppendingString:prefSite];
+
+      [mFlashblockWhitelistSites addObject:prefSite];
+    }
+  }
+}
+
+- (BOOL)isFlashAllowedForSite:(NSString*)site
+{
+  // As above, add "." to the beginning of site so that site.com will match a whitelist
+  // of site.com that has been saved in the array as '.site.com'
+  site = [@"." stringByAppendingString:site];
+
+  NSEnumerator* enumerator = [mFlashblockWhitelistSites objectEnumerator];
+  NSString* whitelistSite;
+  while ((whitelistSite = [enumerator nextObject])) {
+    if ([site hasSuffix:whitelistSite])
+      return YES;
+  }
+
+  return NO;
+}
+
+@end
 
 @interface BrowserWrapper(Private)
 
@@ -812,6 +937,22 @@ NSString* const kBrowserInstanceClosedNotification = @"BrowserInstanceClosed";
     [self addBlockedPopupViewAndDisplay];
     [mDelegate showPopupBlocked:YES];
   }
+}
+
+//
+// - onFlashblockCheck:
+//
+// Called when Flashblock sends a notification to check whether Flash should
+// be allowed for a URL. Flash is allowed if PreventDefault() is called on the event.
+//
+- (void)onFlashblockCheck:(nsIDOMEvent*)inEvent
+{
+  NSString* currentHost = [mBrowserView pageLocationHost];
+
+  if ([[FlashblockWhitelistManager sharedInstance] isFlashAllowedForSite:currentHost])
+    inEvent->PreventDefault();
+
+  inEvent->StopPropagation();
 }
 
 // Called when a "shortcut icon" link element is noticed

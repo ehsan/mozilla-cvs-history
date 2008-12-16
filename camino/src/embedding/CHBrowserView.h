@@ -88,6 +88,8 @@ class nsIDOMNSEvent;
 - (void)onHideTooltip;
 // Called when a popup is blocked
 - (void)onPopupBlocked:(nsIDOMPopupBlockedEvent*)data;
+// Called when flashblock whitelist is checked
+- (void)onFlashblockCheck:(nsIDOMEvent*)inEvent;
 // Called when a "shortcut icon" link element is noticed
 - (void)onFoundShortcutIcon:(NSString*)inIconURI;
 // Called when a feed link element is noticed

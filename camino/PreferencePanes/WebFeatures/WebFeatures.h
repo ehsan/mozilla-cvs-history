@@ -53,6 +53,7 @@
   IBOutlet NSButton*      mEnableAdBlocking;
   IBOutlet NSButton*      mPreventAnimation;
   IBOutlet NSButton*      mEditWhitelist;
+  IBOutlet NSButton*      mEditFlashblockWhitelist;
   IBOutlet NSButton*      mEnableFlashBlock;
   IBOutlet NSButton*      mEnableAnnoyanceBlocker;
   IBOutlet NSPopUpButton* mTabBehaviorPopup;
@@ -62,6 +63,13 @@
   IBOutlet NSTableColumn*       mPolicyColumn;
   IBOutlet NSTextField*         mAddField;
   IBOutlet NSButton*            mAddButton;
+
+  IBOutlet id                   mFlashblockWhitelistPanel;
+  IBOutlet ExtendedTableView*   mFlashblockWhitelistTable;
+  IBOutlet NSTextField*         mAddFlashblockField;
+  IBOutlet NSButton*            mAddFlashblockButton;
+  NSMutableArray*               mFlashblockSites;        // STRONG
+  NSCharacterSet*               mFlashblockSiteCharSet;  // STRONG
 
   NSMutableArray* mCachedPermissions;		// cached list for speed, STRONG
 }
@@ -73,6 +81,7 @@
 -(IBAction) clickEnableAdBlocking:(id)sender;
 -(IBAction) clickPreventAnimation:(id)sender;
 -(IBAction) editWhitelist:(id)sender;
+-(IBAction) editFlashblockWhitelist:(id)sender;
 -(IBAction) clickEnableFlashBlock:(id)sender;
 
 -(IBAction) clickEnableAnnoyanceBlocker:(id)sender;
@@ -85,6 +94,11 @@
 -(IBAction) removeWhitelistSite:(id)aSender;
 -(IBAction) addWhitelistSite:(id)sender;
 -(void) editWhitelistSheetDidEnd:(NSWindow *)sheet returnCode:(int)returnCode contextInfo:(void  *)contextInfo;
+
+// Flashblock whitelist sheet methods
+-(IBAction) editFlashblockWhitelistDone:(id)aSender;
+-(IBAction) removeFlashblockWhitelistSite:(id)aSender;
+-(IBAction) addFlashblockWhitelistSite:(id)Sender;
 
 // data source informal protocol (NSTableDataSource)
 - (int)numberOfRowsInTableView:(NSTableView *)aTableView;

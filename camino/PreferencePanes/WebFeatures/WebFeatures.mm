@@ -49,6 +49,7 @@
 // need to match the strings in PreferenceManager.mm
 static NSString* const AdBlockingChangedNotificationName = @"AdBlockingChanged";
 static NSString* const kFlashBlockChangedNotificationName = @"FlashBlockChanged";
+static NSString* const kFlashBlockWhitelistChangedNotificationName = @"FlashBlockWhitelistChanged";
 
 // for annoyance blocker prefs
 const int kAnnoyancePrefNone = 1;
@@ -62,6 +63,9 @@ const int kAnnoyancePrefSome = 3;
 - (int)preventAnimationCheckboxState;
 - (BOOL)isFlashBlockAllowed;
 - (void)updateFlashBlock;
+- (BOOL)isValidFlashblockSite:(NSString*)aSite;
+- (void)populateFlashblockCache;
+- (void)saveFlashblockWhitelist;
 - (void)populatePermissionCache;
 
 @end
@@ -72,6 +76,8 @@ const int kAnnoyancePrefSome = 3;
 {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
 
+  [mFlashblockSites release];
+  [mFlashblockSiteCharSet release];
   [super dealloc];
 }
 
@@ -125,6 +131,10 @@ const int kAnnoyancePrefSome = 3;
   if (flashBlockAllowed) {
     BOOL enableFlashBlock = [self getBooleanPref:kGeckoPrefBlockFlash withSuccess:NULL];
     [mEnableFlashBlock setState:(enableFlashBlock ? NSOnState : NSOffState)];
+    [mEditFlashblockWhitelist setEnabled:enableFlashBlock];
+  }
+  else {
+    [mEditFlashblockWhitelist setEnabled:NO];
   }
 
   // Set tab focus popup.
@@ -200,6 +210,7 @@ const int kAnnoyancePrefSome = 3;
 {
   [self setPref:kGeckoPrefBlockFlash toBoolean:([sender state] == NSOnState)];
   [[NSNotificationCenter defaultCenter] postNotificationName:kFlashBlockChangedNotificationName object:nil];
+  [mEditFlashblockWhitelist setEnabled:[sender state]];
 }
 
 //
@@ -312,20 +323,130 @@ const int kAnnoyancePrefSome = 3;
   [mAddField setStringValue:@""];
 }
 
+// Flashblock Whitelist methods
+- (void)populateFlashblockCache
+{
+  // Create the array to hold Flashblock sites
+  if (!mFlashblockSites)
+    mFlashblockSites = [[NSMutableArray alloc] init];
+  else
+    [mFlashblockSites removeAllObjects];
+
+  // Always reload pref since user may have manually edited list
+  // The whitelist pref is a string with format:
+  //  siteA.com,www.siteB.com,*.siteC.com
+  NSArray* whitelistArray = [[self getStringPref:"flashblock.whitelist" withSuccess:NULL]
+                                componentsSeparatedByString:@","];
+
+  NSEnumerator* enumerator = [whitelistArray objectEnumerator];
+  NSString* site;
+  while ((site = [enumerator nextObject])) {
+    site = [site stringByRemovingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    if ([self isValidFlashblockSite:site])
+      [mFlashblockSites addObject:site];
+  }
+
+  // Write correctly formatted sites to prefs so that we stay in sync
+  if ([whitelistArray count] != [mFlashblockSites count])
+    [self saveFlashblockWhitelist];
+}
+
+- (void)saveFlashblockWhitelist
+{
+  NSString* siteString = [mFlashblockSites componentsJoinedByString:@","];
+  [self setPref:"flashblock.whitelist" toString:siteString];
+
+  // Send a notification that the whitelist settings have been changed
+  [[NSNotificationCenter defaultCenter] postNotificationName:kFlashBlockWhitelistChangedNotificationName object:nil];
+}
+
+- (IBAction)editFlashblockWhitelist:(id)aSender
+{
+  [self populateFlashblockCache];
+
+  [NSApp beginSheet:mFlashblockWhitelistPanel
+     modalForWindow:[mEditFlashblockWhitelist window]   // any old window accessor
+      modalDelegate:self
+     didEndSelector:nil
+        contextInfo:NULL];
+
+  [mFlashblockWhitelistTable setDeleteAction:@selector(removeFlashblockWhitelistSite:)];
+  [mFlashblockWhitelistTable setTarget:self];
+
+  [mAddButton setEnabled:NO];
+  [mAddFlashblockField setStringValue:@""];
+}
+
+- (IBAction)editFlashblockWhitelistDone:(id)aSender
+{
+  [mFlashblockSites removeAllObjects];
+
+  [mFlashblockSiteCharSet release];
+  mFlashblockSiteCharSet = nil;
+
+  [mFlashblockWhitelistPanel orderOut:self];
+  [NSApp endSheet:mFlashblockWhitelistPanel];
+}
+
+- (IBAction)removeFlashblockWhitelistSite:(id)aSender
+{
+  int row = [mFlashblockWhitelistTable selectedRow];
+  if (row < 0)
+    return;
+
+  [mFlashblockSites removeObjectAtIndex:row];
+  [self saveFlashblockWhitelist];
+  [mFlashblockWhitelistTable reloadData];
+}
+
+- (IBAction)addFlashblockWhitelistSite:(id)sender
+{
+  NSString* site = [[mAddFlashblockField stringValue] stringByRemovingCharactersInSet:
+                      [NSCharacterSet whitespaceAndNewlineCharacterSet]];
+
+  // Remove any protocol specifier (eg. "http://")
+  NSRange protocolRange = [site rangeOfString:@"://"];
+  if (protocolRange.location != NSNotFound)
+    site = [site substringFromIndex:(protocolRange.location + protocolRange.length)];
+
+  // Only add a Flashblock whitelist site if it's properly formatted and not already added
+  if ([self isValidFlashblockSite:site] && ![mFlashblockSites containsObject:site]) {
+    [mFlashblockSites addObject:site];
+    [self saveFlashblockWhitelist];
+    [mFlashblockWhitelistTable reloadData];
+
+    [mAddFlashblockField setStringValue:@""];
+    [mAddFlashblockButton setEnabled:NO];
+  }
+  else {
+    NSBeep();
+  }
+
+}
+
 // data source informal protocol (NSTableDataSource)
 - (int)numberOfRowsInTableView:(NSTableView *)aTableView
 {
-  return [mCachedPermissions count];
+  if (aTableView == mWhitelistTable)
+    return [mCachedPermissions count];
+
+  // otherwise aTableView == mFlashblockWhitelistTable
+  return [mFlashblockSites count];
 }
 
 - (id)tableView:(NSTableView *)aTableView objectValueForTableColumn:(NSTableColumn *)aTableColumn row:(int)rowIndex
 {
   id retVal = nil;
-  CHPermission* permission = [mCachedPermissions objectAtIndex:rowIndex];
-  if (aTableColumn == mPolicyColumn)
-    retVal = [NSNumber numberWithInt:(([permission policy] == CHPermissionAllow) ? 0 : 1)];
-  else // host column
-    retVal = [permission host];
+  if (aTableView == mWhitelistTable) {
+    CHPermission* permission = [mCachedPermissions objectAtIndex:rowIndex];
+    if (aTableColumn == mPolicyColumn)
+      retVal = [NSNumber numberWithInt:(([permission policy] == CHPermissionAllow) ? 0 : 1)];
+    else // host column
+      retVal = [permission host];
+  }
+  else { // aTableView == mFlashblockWhitelistTable
+    retVal = [mFlashblockSites objectAtIndex:rowIndex];
+  }
 
   return retVal;
 }
@@ -345,7 +466,12 @@ const int kAnnoyancePrefSome = 3;
 
 - (void)controlTextDidChange:(NSNotification*)notification
 {
-  [mAddButton setEnabled:[[mAddField stringValue] length] > 0];
+  id textField = [notification object];
+
+  if (textField == mAddField)
+    [mAddButton setEnabled:[[mAddField stringValue] length] > 0];
+  else // textField == mAddFlashblockField
+    [mAddFlashblockButton setEnabled:[[mAddFlashblockField stringValue] length] > 0];
 }
 
 //
@@ -477,9 +603,52 @@ const int kAnnoyancePrefSome = 3;
 
   // FlashBlock preference is enabled.  Checkbox is on if FlashBlock also allowed
   [mEnableFlashBlock setState:(allowed ? NSOnState : NSOffState)];
+  [mEditFlashblockWhitelist setEnabled:allowed];
  
   // Always send a notification, dependency verification is done by receiver.
   [[NSNotificationCenter defaultCenter] postNotificationName:kFlashBlockChangedNotificationName object:nil];
+}
+
+//
+// isValidFlashblockSite
+//
+// Returns true if string contains a valid site (*.site.com or site.com)
+//
+- (BOOL)isValidFlashblockSite:(NSString*)aSite
+{
+  if ([aSite length] == 0)
+    return NO;
+
+  // Reuse character string for hostname validation since it's expensive to make.
+  if (!mFlashblockSiteCharSet) {
+    NSMutableCharacterSet* charSet = [[[NSCharacterSet alphanumericCharacterSet] mutableCopy] autorelease];
+    [charSet addCharactersInString:@"-_"];
+    mFlashblockSiteCharSet = [charSet copy];
+  }
+
+  // Site may begin with '*.', in which case drop the first 2 characters.
+  if ([aSite rangeOfString:@"*."].location == 0)
+    aSite = [aSite substringFromIndex:2];
+
+  // Split string on '.' and check components for valid string.
+  NSArray* subdomains = [aSite componentsSeparatedByString:@"."];
+
+  // There must be at least two components (eg. something.com)
+  if ([subdomains count] < 2)
+    return NO;
+
+  NSEnumerator* enumerator = [subdomains objectEnumerator];
+  NSString* subdomain;
+  while ((subdomain = [enumerator nextObject])) {
+    if ([subdomain length] == 0)
+      return NO;
+    NSScanner* scanner = [NSScanner scannerWithString:subdomain];
+    [scanner scanCharactersFromSet:mFlashblockSiteCharSet intoString:NULL];
+    if (![scanner isAtEnd])
+      return NO;
+  }
+
+  return YES;
 }
 
 @end

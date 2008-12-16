@@ -1431,6 +1431,10 @@ KeychainFormSubmitObserver::Notify(nsIDOMHTMLFormElement* formNode, nsIDOMWindow
 {
 }
 
+- (void)onFlashblockCheck:(nsIDOMEvent*)inEvent
+{
+}
+
 - (void)onFoundShortcutIcon:(NSString*)inIconURI
 {
 }

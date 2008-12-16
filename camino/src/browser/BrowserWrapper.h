@@ -263,6 +263,7 @@ extern NSString* const kBrowserInstanceClosedNotification;
 - (void)onSecurityStateChange:(unsigned long)newState;
 - (void)onShowTooltip:(NSPoint)where withText:(NSString*)text;
 - (void)onHideTooltip;
+- (void)onFlashblockCheck:(nsIDOMEvent*)inEvent;
 - (void)onFeedDetected:(NSString*)inFeedURI feedTitle:(NSString*)inFeedTitle;
 
 // CHBrowserContainer messages

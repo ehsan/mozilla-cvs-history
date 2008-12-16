@@ -816,6 +816,9 @@ CHBrowserListener::HandleEvent(nsIDOMEvent* inEvent)
   if (eventType.Equals(NS_LITERAL_STRING("DOMLinkAdded")))
     return HandleLinkAddedEvent(inEvent);
 
+  if (eventType.Equals(NS_LITERAL_STRING("flashblockCheckLoad")))
+    return HandleFlashblockCheckEvent(inEvent);
+
   if (eventType.Equals(NS_LITERAL_STRING("command")))
     return HandleXULCommandEvent(inEvent);
 
@@ -855,6 +858,14 @@ CHBrowserListener::HandleLinkAddedEvent(nsIDOMEvent* inEvent)
     HandleFeedLink(linkElement);
   else if (linkAttrType == eSearchPluginType)
     HandleSearchPluginLink(linkElement);
+
+  return NS_OK;
+}
+
+nsresult
+CHBrowserListener::HandleFlashblockCheckEvent(nsIDOMEvent* inEvent)
+{
+  [mContainer onFlashblockCheck:inEvent];
 
   return NS_OK;
 }
