@@ -66,16 +66,12 @@ MozillaEnvironments['win32-ref-platform'] = {
     "SDKDIR": 'D:\\sdks\\v6.0'
 }
 
-### unittest-1.9 environments
-
-MozillaEnvironments['linux-fc6-unittest'] = {
-    "DISPLAY": ':2',
-    "MOZ_NO_REMOTE": '1'
-}
+### unittest environments
 
 MozillaEnvironments['linux-centos-unittest'] = {
     "MOZ_NO_REMOTE": '1',
-    "CVS_RSH": 'ssh'
+    "CVS_RSH": 'ssh',
+    "DISPLAY": ':2',
 }
 
 MozillaEnvironments['mac-osx-unittest'] = {
