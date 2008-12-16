@@ -30,6 +30,7 @@ sub Initialise {
     my $self = shift;
     my $retval = $self->SUPER::Initialise(@_);
     my ($throw_away) = $self->GetBugLog();
+    $throw_away->truncate(0) if $throw_away;
     $throw_away->close() if $throw_away;
     return $retval;
 }
