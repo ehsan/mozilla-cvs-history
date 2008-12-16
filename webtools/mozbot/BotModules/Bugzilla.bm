@@ -73,6 +73,8 @@ sub RegisterConfig {
         # by using 'all'.
         ['reportComponent', 1, 1, ['all']],
         ['mutes', 1, 1, ''],  # "channel channel channel"
+		# Optionally skip fetching the bug details for automatic notifications
+		['reportBugDetails', 1, 1, 1] 
     );
 }
 
@@ -660,7 +662,9 @@ sub CheckForBugMail {
                         $bugids = $bug_id . " " . $bugids;
                     }
                     if ($bugids ne '') {
-                        $self->FetchBug($event, $bugids, 'bug');
+                        if ($self->{'reportBugDetails'}) {
+                            $self->FetchBug($event, $bugids, 'bug');
+                        }
                     }
                     $said_to{$channel} = 1;
                     $said_bug{$channel . $bug_id} = 1;
