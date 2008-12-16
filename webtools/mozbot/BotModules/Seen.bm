@@ -1,0 +1,246 @@
+# -*- Mode: perl; tab-width: 4; indent-tabs-mode: nil; -*-
+################################
+# Seen Module                  #
+################################
+
+package BotModules::Seen;
+use vars qw(@ISA);
+@ISA = qw(BotModules);
+use AnyDBM_File;
+use Fcntl;
+1;
+
+# SpottedNickChange would be a nice one to do if you 
+# can solve the problem of working out which channel
+# to say stuff in...
+
+# database for seen data
+our $seen = {'times' => {}, 'states' => {}};
+# the times that the relevant nicks were last seen active
+tie(%{$seen->{'times'}}, 'AnyDBM_File', 'seen-times', O_RDWR|O_CREAT, 0666);
+# what the relevant nicks were last seen doing
+tie(%{$seen->{'states'}}, 'AnyDBM_File', 'seen-states', O_RDWR|O_CREAT, 0666);
+
+sub Help {
+    my $self = shift;
+    my ($event) = @_;
+    return {
+        'seen' => 'Says how long it\'s been since the last time someone was seen. Syntax: seen victim',
+    };
+}
+
+# RegisterConfig - Called when initialised, should call registerVariables
+sub RegisterConfig {
+    my $self = shift;
+    $self->SUPER::RegisterConfig(@_);
+    $self->registerVariables(
+      # [ name, save?, settable? ]
+        ['overrides', 1, 1, {'therapist' => 'Look, dude, I\'m feeling fine, mm\'k?'}], # canned responses
+        ['maxLines', 1, 1, 5],
+    );
+}
+
+sub Told {
+    my $self = shift;
+    my ($event, $message) = @_;
+    my $now = $event->{'time'};
+    $self->{'_lastSpoken'}->{$event->{'user'}} = $now;
+    if ($event->{'channel'} ne '') {
+        my $channel = $event->{'channel'};
+        $seen->{'times'}->{lc $event->{'from'}} = $now;
+        $seen->{'states'}->{lc $event->{'from'}} = "saying '$message' to me in $channel.";
+    }
+
+    if ($message =~ /^\s*!?seen\s+(\S+?)[\s?.!]*$/osi) {
+        $self->DoSeen($event, $1);
+    } else {
+        return $self->SUPER::Told(@_);
+    }
+    return 0; # we've dealt with it, no need to do anything else.
+}
+
+sub Heard {
+    my $self = shift;
+    my ($event, $message) = @_;
+    if ($event->{'channel'} ne '') {
+        my $channel = $event->{'channel'};
+        $seen->{'times'}->{lc $event->{'from'}} = $event->{'time'};
+        $seen->{'states'}->{lc $event->{'from'}} = "saying '$message' in $channel.";
+    }
+
+    if ($message =~ /^\s*!seen\s+(\S+)\s*$/osi) {
+        $self->DoSeen($event, $1);
+    } else {
+        return $self->SUPER::Heard(@_);
+    }
+    return 0; # we've dealt with it, no need to do anything else.
+}
+
+sub Felt {
+    my $self = shift;
+    my ($event, $message) = @_;
+    if ($event->{'channel'} ne '') {
+        my $nick = $event->{'from'};
+        my $channel = $event->{'channel'};
+        $seen->{'times'}->{lc $event->{'from'}} = $event->{'time'};
+        $seen->{'states'}->{lc $event->{'from'}} = "saying '* $nick $message' in $channel.";
+    } else {
+        return $self->SUPER::Felt(@_);
+    }
+    return 0; # we've dealt with it, no need to do anything else.
+}
+
+sub Saw {
+    my $self = shift;
+    my ($event, $message) = @_;
+    if ($event->{'channel'} ne '') {
+        my $nick = $event->{'from'};
+        my $channel = $event->{'channel'};
+        $seen->{'times'}->{lc $event->{'from'}} = $event->{'time'};
+        $seen->{'states'}->{lc $event->{'from'}} = "saying '* $nick $message' in $channel.";
+    } else {
+        return $self->SUPER::Felt(@_);
+    }
+    return 0; # we've dealt with it, no need to do anything else.
+}
+
+# SpottedNickChange - Called when someone changes nick
+sub SpottedNickChange {
+    my $self = shift;
+    my ($event, $from, $to) = @_;
+    $seen->{'times'}->{lc $event->{'from'}} = $event->{'time'};
+    $seen->{'states'}->{lc $event->{'from'}} = "changing nick to $to.";
+    return $self->SUPER::SpottedNickChange(@_);
+}
+
+sub DoSeen {
+    my $self = shift;
+    my ($event, $who) = @_;
+    my $pattern;
+    if (lc $who eq lc $event->{'from'}) {
+        $self->say($event, 'You\'re right here, duh!');
+    } elsif (lc $who eq lc $event->{'nick'}) {
+        $self->say($event, 'I\'m right here, duh!');
+    } elsif (defined($self->{'overrides'}->{$who})) {
+        $self->say($event, $self->{'overrides'}->{$who});
+    } else {
+        my $regexp;
+        my @nicksToList;
+        if ($who =~ m!/(.*)/!) {
+          $regexp = $1;
+          @nicksToList = grep(/$regexp/i, (keys %{$seen->{'times'}}));
+          $pattern = 1;
+        } else {
+          $regexp = quotemeta(lc $who);
+          $regexp =~ s/\\\*/.*/g; # replace the escaped * from quotemeta with a .*
+          @nicksToList = grep(/^$regexp$/, (keys %{$seen->{'times'}}));
+          $pattern = 0;
+        }
+
+        if (@nicksToList > $self->{'maxLines'}) { # if it's more than the set threshold, don't flood :)
+            $self->say($event,"There are more than $self->{'maxLines'} nicks matching that wildcard, please be more specific.");
+        } elsif (@nicksToList > 0) {
+            foreach my $nick (@nicksToList) {
+              my $seconds = $seen->{'times'}->{$nick};
+              $seconds = $event->{'time'} - $seconds;
+              my $time = '';
+              
+              if ($seconds > 90) {
+                my $minutes = int $seconds / 60;
+                $seconds %= 60;
+                if ($minutes > 90) {
+                    my $hours = int $minutes / 60;
+                    $minutes %= 60;
+                    if ($hours > 36) {
+                        my $days = int $hours / 24;
+                        $hours %= 24;
+                        if ($days > 10) {
+                            my $weeks = int $days / 7;
+                            $days %= 7;
+                            if ($weeks > 10) {
+                                # good god, nice connection
+                            }
+                            if ($weeks != 0) {
+                                if ($time ne '') {
+                                    $time .= ', ';
+                                }
+                                if ($weeks == 1) {
+                                    $time .= "$weeks week";
+                                } else {
+                                    $time .= "$weeks weeks";
+                                }
+                            }
+                        }
+                        if ($days != 0) {
+                            if ($time ne '') {
+                                $time .= ', ';
+                            }
+                            if ($days == 1) {
+                                $time .= "$days day";
+                            } else {
+                                $time .= "$days days";
+                            }
+                        }
+                    }
+                    if ($hours != 0) {
+                        if ($time ne '') {
+                            $time .= ', ';
+                        }
+                        if ($hours == 1) {
+                            $time .= "$hours hour";
+                        } else {
+                            $time .= "$hours hours";
+                        }
+                    }
+                }
+                if ($minutes != 0) {
+                    if ($time ne '') {
+                        $time .= ', ';
+                    }
+                    if ($minutes == 1) {
+                        $time .= "$minutes minute";
+                    } else {
+                        $time .= "$minutes minutes";
+                    }
+                }
+            }
+            if ($seconds == 0) {
+                if ($time eq '') {
+                    $time .= 'right about now';
+                } else {
+                    $time .= ' ago';
+                }
+            } else {
+                if ($time ne '') {
+                    $time .= ' and ';
+                }
+                if ($seconds == 1) {
+                    $time .= 'a second ago';
+                } elsif ($seconds == 2) {
+                    $time .= 'a couple of seconds ago';
+                } else {
+                    $time .= "$seconds seconds ago";
+                }
+            }
+              my $what = $seen->{'states'}->{$nick};
+              $self->say($event, "$nick was last seen $time, $what");
+            }
+        } else {
+            my $n = '';
+            if ($who =~ /^[aeiou]/o) {
+              $n = 'n';
+            }
+            
+            if ($pattern == 1) {
+              $self->say($event, "I've never seen anyone matching the pattern '$who', sorry.");
+            } else {
+                $self->say($event, "I've never seen a$n '$who', sorry.");
+            }
+        }
+    }
+}
+
+sub Unload {
+  untie(%{$seen->{'times'}});
+  untie(%{$seen->{'states'}});
+}
