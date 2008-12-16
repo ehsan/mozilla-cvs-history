@@ -107,6 +107,20 @@
   [super _editItem:dummy];
 }
 
+// This gets called when the user hits the Escape key.
+- (void)cancel:(id)sender
+{
+  if ([[[self window] firstResponder] isKindOfClass:[NSTextView class]] &&
+      [[self window] fieldEditor:NO forObject:nil] != nil)
+  {
+    // Store the active NSTextField so we can restore the firstResponder after aborting the edit.
+    NSTextField* activeTextField = [(NSTextView*)[[self window] firstResponder] delegate];
+    // We want to cancel any active text-field edits that might be going on.
+    [activeTextField abortEditing];
+    [[self window] makeFirstResponder:activeTextField];
+  }
+}
+
 //
 // Override implementation in ExtendedOutlineView so we can check whether an
 // item is selected or whether appropriate data is available on the clipboard.
