@@ -6,20 +6,7 @@
 package BotModules::Greeting;
 use vars qw(@ISA);
 @ISA = qw(BotModules);
-use AnyDBM_File;
-use Fcntl;
 1;
-
-# SpottedNickChange would be a nice one to do if you 
-# can solve the problem of working out which channel
-# to say stuff in...
-
-# database for seen data
-our $seen = {'times' => {}, 'states' => {}};
-# the times that the relevant nicks were last seen active
-tie(%{$seen->{'times'}}, 'AnyDBM_File', 'seen-times', O_RDWR|O_CREAT, 0666);
-# what the relevant nicks were last seen doing
-tie(%{$seen->{'states'}}, 'AnyDBM_File', 'seen-states', O_RDWR|O_CREAT, 0666);
 
 sub Help {
     my $self = shift;
@@ -30,7 +17,6 @@ sub Help {
         'bye' => 'To say goodbye to the bot.',
         'ping' => 'To check the bot is alive.',
         'status' => 'Gives the amount of time that the bot has been active.',
-        'seen' => 'Says how long it\'s been since the last time someone was seen. Syntax: seen victim',
     };
 }
 
@@ -89,7 +75,6 @@ sub RegisterConfig {
         ['lastEvil', 1, 0, 0], # when the last c++ insult took place
         ['assumeThanksTime', 1, 1, 10], # how long to assume that thanks are directed to us after hearing from them (seconds)
         ['_lastSpoken', 0, 0, {}], # who has spoken to us
-        ['seenOverrides', 1, 1, {'therapist' => 'Look, dude, I\'m feeling fine, mm\'k?'}], # canned responses
         ['source', 1, 1, 'http://lxr.mozilla.org/mozilla/source/webtools/mozbot/'], # reply to give for CTCP SOURCE
     );
 }
@@ -99,11 +84,6 @@ sub Told {
     my ($event, $message) = @_;
     my $now = $event->{'time'};
     $self->{'_lastSpoken'}->{$event->{'user'}} = $now;
-    if ($event->{'channel'} ne '') {
-        my $channel = $event->{'channel'};
-        $seen->{'times'}->{lc $event->{'from'}} = $now;
-        $seen->{'states'}->{lc $event->{'from'}} = "saying '$message' to me in $channel.";
-    }
     my $me = quotemeta($event->{'bot'}->nick);
     my $expandedme = join('+', split(//gos, $me)).'+';
     if ($message =~ /^\s*(?:(?:g[ood\']*\s*)?(?:mornin[g\']?|evenin[g\']?|afternoon|day)|hi|heya?|bonjour|hoi|w+a+[sz]+u+p+\?*|hello|lo|wb|welcome\s+back|greetings|yo(?:\s+yo)*(?:\s+du+de)?|m+[ayh]+(?:\s+m+a+i+n+)?\s+m+a+n+|d+u+d+e+)[?!1.\s]*(?::-?[\)Pp]\s*)*$/osi) {
@@ -170,8 +150,6 @@ sub Told {
         }
     } elsif ($message =~ /^\s*ping\s*$/osi) {
         $self->say($event, "$event->{'from'}: pong");
-    } elsif ($message =~ /^\s*!?seen\s+(\S+?)[\s?.!]*$/osi) {
-        $self->DoSeen($event, $1);
     } else {
         return $self->SUPER::Told(@_);
     }
@@ -181,11 +159,6 @@ sub Told {
 sub Heard {
     my $self = shift;
     my ($event, $message) = @_;
-    if ($event->{'channel'} ne '') {
-        my $channel = $event->{'channel'};
-        $seen->{'times'}->{lc $event->{'from'}} = $event->{'time'};
-        $seen->{'states'}->{lc $event->{'from'}} = "saying '$message' in $channel.";
-    }
     my $me = quotemeta($event->{'bot'}->nick);
     my $expandedme = join('+', split(//gos, $me)).'+';
     if ($message =~ /^\s*(?:(?:(?:(?:g[ood\']*\s*)?(?:mornin[g\']?|evenin[g\']?|afternoon|day)|hi|heya?|bonjour|hoi|w+a+[sz]+u+p+|hello|lo|wb|welcome\s+back|greetings|yo(?:\s+yo)*)\s+)?$expandedme[!1\s]*|o+h[\s,.!?]+look[\s,.!?]+a\s+$me[\s.!1]*)(?::-?[\)Pp]\s*)*$/si) {
@@ -239,8 +212,6 @@ sub Heard {
             $self->{'lastEvil'} = $event->{'time'};
             $self->Perform($event, 'evil'); # calls GetNext which calls saveConfig
         }
-    } elsif ($message =~ /^\s*!seen\s+(\S+)\s*$/osi) {
-        $self->DoSeen($event, $1);
     } else {
         return $self->SUPER::Heard(@_);
     }
@@ -250,12 +221,6 @@ sub Heard {
 sub Felt {
     my $self = shift;
     my ($event, $message) = @_;
-    if ($event->{'channel'} ne '') {
-        my $nick = $event->{'from'};
-        my $channel = $event->{'channel'};
-        $seen->{'times'}->{lc $event->{'from'}} = $event->{'time'};
-        $seen->{'states'}->{lc $event->{'from'}} = "saying '* $nick $message' in $channel.";
-    }
     my $me = quotemeta($event->{'bot'}->nick);
     if ($message =~ /^\s*(?:greets\s+$me|shakes\s+$me'?s\s+hand)[\s!1.]*$/si) {
         $self->Perform($event, 'greetings');
@@ -292,12 +257,6 @@ sub Felt {
 sub Saw {
     my $self = shift;
     my ($event, $message) = @_;
-    if ($event->{'channel'} ne '') {
-        my $nick = $event->{'from'};
-        my $channel = $event->{'channel'};
-        $seen->{'times'}->{lc $event->{'from'}} = $event->{'time'};
-        $seen->{'states'}->{lc $event->{'from'}} = "saying '* $nick $message' in $channel.";
-    }
     if ($message =~ /^\s*r+h+e(e+)t+s?[!1.\s]*$/osi) {
         if (($event->{'time'}-$self->{'lastrheet'}) > $self->{'rheetbuffer'}) {
            $self->say($event, "rhe$1$1t!");
@@ -322,15 +281,6 @@ sub SpottedJoin {
         $self->{'autoGreeted'}->{$user} = $event->{'time'};
     }
     return 1; # don't block other modules...
-}
-
-# SpottedNickChange - Called when someone changes nick
-sub SpottedNickChange {
-    my $self = shift;
-    my ($event, $from, $to) = @_;
-    $seen->{'times'}->{lc $event->{'from'}} = $event->{'time'};
-    $seen->{'states'}->{lc $event->{'from'}} = "changing nick to $to.";
-    return $self->SUPER::SpottedNickChange(@_);
 }
 
 sub CTCPPing {
@@ -406,112 +356,4 @@ sub PerformOnOther {
     $data =~ s/%source/$event->{'from'}/gos;
     $data =~ s/%target/$other/gos;
     $self->sayOrEmote($event, $data); 
-}
-
-sub DoSeen {
-    my $self = shift;
-    my ($event, $who) = @_;
-    if (lc $who eq lc $event->{'from'}) {
-        $self->say($event, 'You\'re right here, duh!');
-    } elsif (lc $who eq lc $event->{'nick'}) {
-        $self->say($event, 'I\'m right here, duh!');
-    } elsif (defined($self->{'seenOverrides'}->{$who})) {
-        $self->say($event, $self->{'seenOverrides'}->{$who});
-    } else {
-        my $seconds = $seen->{'times'}->{lc $who};
-        if (defined($seconds)) {
-            my $seconds = $event->{'time'} - $seconds;
-            my $time = '';
-            if ($seconds > 90) {
-                my $minutes = int $seconds / 60;
-                $seconds %= 60;
-                if ($minutes > 90) {
-                    my $hours = int $minutes / 60;
-                    $minutes %= 60;
-                    if ($hours > 36) {
-                        my $days = int $hours / 24;
-                        $hours %= 24;
-                        if ($days > 10) {
-                            my $weeks = int $days / 7;
-                            $days %= 7;
-                            if ($weeks > 10) {
-                                # good god, nice connection
-                            }
-                            if ($weeks != 0) {
-                                if ($time ne '') {
-                                    $time .= ', ';
-                                }
-                                if ($weeks == 1) {
-                                    $time .= "$weeks week";
-                                } else {
-                                    $time .= "$weeks weeks";
-                                }
-                            }
-                        }
-                        if ($days != 0) {
-                            if ($time ne '') {
-                                $time .= ', ';
-                            }
-                            if ($days == 1) {
-                                $time .= "$days day";
-                            } else {
-                                $time .= "$days days";
-                            }
-                        }
-                    }
-                    if ($hours != 0) {
-                        if ($time ne '') {
-                            $time .= ', ';
-                        }
-                        if ($hours == 1) {
-                            $time .= "$hours hour";
-                        } else {
-                            $time .= "$hours hours";
-                        }
-                    }
-                }
-                if ($minutes != 0) {
-                    if ($time ne '') {
-                        $time .= ', ';
-                    }
-                    if ($minutes == 1) {
-                        $time .= "$minutes minute";
-                    } else {
-                        $time .= "$minutes minutes";
-                    }
-                }
-            }
-            if ($seconds == 0) {
-                if ($time eq '') {
-                    $time .= 'right about now';
-                } else {
-                    $time .= ' ago';
-                }
-            } else {
-                if ($time ne '') {
-                    $time .= ' and ';
-                }
-                if ($seconds == 1) {
-                    $time .= 'a second ago';
-                } elsif ($seconds == 2) {
-                    $time .= 'a couple of seconds ago';
-                } else {
-                    $time .= "$seconds seconds ago";
-                }
-            }
-            my $what = $seen->{'states'}->{lc $who};
-            $self->say($event, "$who was last seen $time, $what");
-        } else {
-            my $n = '';
-            if ($who =~ /^[aeiou]/o) {
-                $n = 'n';
-            }
-            $self->say($event, "I've never seen a$n '$who', sorry.");
-        }
-    }
-}
-
-sub Unload {
-    untie(%{$seen->{'times'}});
-    untie(%{$seen->{'states'}});
 }
