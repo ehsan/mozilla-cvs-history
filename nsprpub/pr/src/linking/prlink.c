@@ -223,15 +223,7 @@ static int pr_ConvertUTF16toUTF8(LPCWSTR wname, LPSTR name, int len);
 /************************************************************************/
 
 #if !defined(USE_DLFCN) && !defined(HAVE_STRERROR)
-static char* errStrBuf = NULL;
 #define ERR_STR_BUF_LENGTH    20
-static char* errno_string(PRIntn oserr)
-{
-    if (errStrBuf == NULL)
-        errStrBuf = PR_MALLOC(ERR_STR_BUF_LENGTH);
-    PR_snprintf(errStrBuf, ERR_STR_BUF_LENGTH, "error %d", oserr);
-    return errStrBuf;
-}
 #endif
 
 static void DLLErrorInternal(PRIntn oserr)
@@ -247,7 +239,9 @@ static void DLLErrorInternal(PRIntn oserr)
 #elif defined(HAVE_STRERROR)
     error = strerror(oserr);  /* this should be okay */
 #else
-    error = errno_string(oserr);
+    char errStrBuf[ERR_STR_BUF_LENGTH];
+    PR_snprintf(errStrBuf, sizeof(errStrBuf), "error %d", oserr);
+    error = errStrBuf;
 #endif
     if (NULL != error)
         PR_SetErrorText(strlen(error), error);
@@ -382,10 +376,6 @@ void _PR_ShutdownLinker(void)
         free(_pr_currentLibPath);
         _pr_currentLibPath = NULL;
     }
-
-#if !defined(USE_DLFCN) && !defined(HAVE_STRERROR)
-    PR_DELETE(errStrBuf);
-#endif
 }
 #endif
 
