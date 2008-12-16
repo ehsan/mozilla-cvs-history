@@ -3616,7 +3616,7 @@ public:
 
   // Connect up the new view
   mBrowserView = [aTabViewItem view];
-  [mTabBrowser refreshTabBar:YES];
+  [mTabBrowser selectedTabChanged];
       
   // Make the new view the primary content area.
   [mBrowserView setDelegate:self];
@@ -3642,7 +3642,7 @@ public:
 - (void)tabViewDidChangeNumberOfTabViewItems:(NSTabView *)aTabView
 {
   [[NSApp delegate] delayedFixCloseMenuItemKeyEquivalents];
-  [mTabBrowser refreshTabBar:YES];
+  [mTabBrowser numberOfTabsChanged];
   // paranoia, to avoid stale mBrowserView pointer (since we don't own it)
   if ([aTabView numberOfTabViewItems] == 0)
     mBrowserView = nil;

@@ -56,9 +56,17 @@
 #import "NSView+Utils.h"
 #import "CHSlidingViewAnimation.h"
 
+
+enum ETabRebuildReason {
+  kTabRebuildForSelectionChange,
+  kTabRebuildForStructureChange
+};
+
 @interface BrowserTabBarView(TabBarViewPrivate)
 
--(void)layoutButtonsPreservingVisibility:(BOOL)preserveVisibility;
+-(void)rebuildTabBar:(ETabRebuildReason)reason;
+-(void)layoutButtonsPreservingVisibility:(BOOL)preserveVisibility
+                               forChange:(ETabRebuildReason)reason;
 -(void)loadImages;
 -(void)drawTabBarBackgroundInRect:(NSRect)rect withActiveTabRect:(NSRect)tabRect;
 -(void)drawTabBarBackgroundHiliteRectInRect:(NSRect)rect;
@@ -113,7 +121,7 @@ const int kEscapeKeyCode = 53;
   if (self) {
     mOverflowTabs = NO;
     // this will not likely have any result here
-    [self rebuildTabBar];
+    [self tabStructureChanged];
     [self registerForDraggedTypes:[NSArray arrayWithObjects: kCaminoBookmarkListPBoardType,
                                                              kWebURLsWithTitlesPboardType,
                                                              NSStringPboardType,
@@ -133,7 +141,7 @@ const int kEscapeKeyCode = 53;
   // start off with the tabs hidden, and allow our controller to show or hide as appropriate.
   [self setVisible:NO];
   // this needs to be called again since our tabview should be non-nil now
-  [self rebuildTabBar];
+  [self tabStructureChanged];
   // When background tabs are finished sliding around the dragging one, we need to perform
   // certain actions like updating the divider images.
   [[NSNotificationCenter defaultCenter] addObserver:self
@@ -199,7 +207,7 @@ const int kEscapeKeyCode = 53;
   [super setFrame:frameRect];
   // tab buttons probably need to be resized if the frame changes
   [self unregisterTabButtonsForTracking];
-  [self layoutButtonsPreservingVisibility:YES];
+  [self layoutButtonsPreservingVisibility:YES forChange:kTabRebuildForStructureChange];
   [self registerTabButtonsForTracking];
 }
 
@@ -384,9 +392,19 @@ const int kEscapeKeyCode = 53;
     mButtonDividerImage = [[NSImage imageNamed:@"tab_button_divider"] retain];
 }
 
+- (void)tabStructureChanged
+{
+  [self rebuildTabBar:kTabRebuildForStructureChange];
+}
+
+- (void)tabSelectionChanged
+{
+  [self rebuildTabBar:kTabRebuildForSelectionChange];
+}
+
 // construct the tab bar based on the current state of mTabView;
 // should be called when tabs are first shown.
--(void)rebuildTabBar
+-(void)rebuildTabBar:(ETabRebuildReason)reason;
 {
   if ([self tabIsCurrentlyDragging])
     return;
@@ -394,7 +412,7 @@ const int kEscapeKeyCode = 53;
   [self loadImages];
 
   [self unregisterTabButtonsForTracking];
-  [self layoutButtonsPreservingVisibility:NO];
+  [self layoutButtonsPreservingVisibility:NO forChange:reason];
   [self registerTabButtonsForTracking];
   [self updateKeyViewLoop];
 }
@@ -506,11 +524,13 @@ const int kEscapeKeyCode = 53;
 // remain visible in the new layout if it was previously. If it is NO, then the
 // tab may or may not stay visible in the new layout.
 -(void)layoutButtonsPreservingVisibility:(BOOL)preserveVisibility
+                               forChange:(ETabRebuildReason)reason
 {
   // before changing anything, get information about the current state
   BrowserTabViewItem* selectedTab = (BrowserTabViewItem*)[mTabView selectedTabViewItem];
   int selectedTabIndex = selectedTab ? [mTabView indexOfTabViewItem:selectedTab]
                                      : -1;
+  int oldLeftmostTabIndex = mLeftMostVisibleTabIndex;
   // if we aren't currently overflowing, or we were asked to preserve the
   // visibility of the current tab, make sure the current tab stays visible.
   BOOL keepCurrentTabVisible = !mOverflowTabs ||
@@ -527,7 +547,7 @@ const int kEscapeKeyCode = 53;
     mNumberOfVisibleTabs = (int)floor(widthOfTabBar / kMinTabWidth);
     widthOfATab = floor(widthOfTabBar / mNumberOfVisibleTabs);
     if (mNumberOfVisibleTabs + mLeftMostVisibleTabIndex > numberOfTabs)
-      [self setLeftmostVisibleTabIndex:(numberOfTabs - mNumberOfVisibleTabs)];
+      [self scrollTabIndexToVisible:(numberOfTabs - mNumberOfVisibleTabs)];
     if (keepCurrentTabVisible && selectedTab)
       [self scrollTabIndexToVisible:selectedTabIndex];
   }
@@ -537,14 +557,23 @@ const int kEscapeKeyCode = 53;
     widthOfATab = (widthOfATab > kMaxTabWidth ? kMaxTabWidth : widthOfATab);
   }
 
-  [self removeAllSubviews];
-  [self setOverflowButtonsVisible:mOverflowTabs];
+  // If we are doing nothing but changing the selection (without changing the
+  // visible tabs as a result), we don't need to do a full reconstruction. 
+  BOOL needsFullRebuild = (reason == kTabRebuildForStructureChange) ||
+                          (mLeftMostVisibleTabIndex != oldLeftmostTabIndex);
 
-  NSRect tabsRect = [self tabsRect];
   float extraWidth = 0.0;
-  if (widthOfATab < kMaxTabWidth)
-    extraWidth = NSWidth(tabsRect) - widthOfATab * mNumberOfVisibleTabs;
-  float nextTabXOrigin  = NSMinX(tabsRect);
+  float nextTabXOrigin = 0.0;
+  if (needsFullRebuild) {
+    [self removeAllSubviews];
+    [self setOverflowButtonsVisible:mOverflowTabs];
+
+    NSRect tabsRect = [self tabsRect];
+    if (widthOfATab < kMaxTabWidth)
+      extraWidth = NSWidth(tabsRect) - widthOfATab * mNumberOfVisibleTabs;
+    nextTabXOrigin = NSMinX(tabsRect);
+  }
+
   for (int i = 0; i < numberOfTabs; i++) {
     TabButtonView* tabButton = [(BrowserTabViewItem*)[mTabView tabViewItemAtIndex:i] buttonView];
 
@@ -552,17 +581,23 @@ const int kEscapeKeyCode = 53;
     if (i < mLeftMostVisibleTabIndex || i >= mLeftMostVisibleTabIndex + mNumberOfVisibleTabs)
       continue;
 
-    [self addSubview:tabButton];
-    NSRect tabRect = NSMakeRect(nextTabXOrigin, 0, widthOfATab, [self tabBarHeight]);
-    // spread the extra width from rounding tab sizes over the leftmost tabs.
-    if (extraWidth > 0.5) {
-      extraWidth -= 1.0;
-      tabRect.size.width += 1.0;
+    if (needsFullRebuild) {
+      [self addSubview:tabButton];
+      NSRect tabRect = NSMakeRect(nextTabXOrigin, 0, widthOfATab, [self tabBarHeight]);
+      // spread the extra width from rounding tab sizes over the leftmost tabs.
+      if (extraWidth > 0.5) {
+        extraWidth -= 1.0;
+        tabRect.size.width += 1.0;
+      }
+      [tabButton setFrame:tabRect];
+      nextTabXOrigin += NSWidth(tabRect);
+    } else {
+      // Tab buttons expect setFrame: to be called whenever their selection
+      // state changes, so call it even when it's not otherwise necessary.
+      [tabButton setFrame:[tabButton frame]];
     }
-    [tabButton setFrame:tabRect];
     [tabButton setDrawsLeftDivider:NO];
     [tabButton setDrawsRightDivider:YES];
-    nextTabXOrigin += NSWidth(tabRect);
   }
 
   if (selectedTab) {
@@ -727,7 +762,7 @@ const int kEscapeKeyCode = 53;
 {
   if (index != mLeftMostVisibleTabIndex) {
     mLeftMostVisibleTabIndex = index;
-    [self rebuildTabBar];
+    [self tabStructureChanged];
   }
 }
 
@@ -780,7 +815,7 @@ const int kEscapeKeyCode = 53;
   // only change anything if the new state is different from the current state
   if (show && [self isHidden]) {
     [self setHidden:NO];
-    [self rebuildTabBar];
+    [self tabStructureChanged];
     // set up tracking rects
     [self registerTabButtonsForTracking];
   } else if (!show && ![self isHidden]) { // being hidden
@@ -1164,7 +1199,7 @@ const int kEscapeKeyCode = 53;
     [animatedTab setDrawsLeftDivider:NO];
 
   if ([mCurrentlySlidingTabs count] == 0 && ![self tabIsCurrentlyDragging])
-    [self performSelectorOnMainThread:@selector(rebuildTabBar) withObject:nil waitUntilDone:YES];
+    [self performSelectorOnMainThread:@selector(tabStructureChanged) withObject:nil waitUntilDone:YES];
 }
 
 // Called when the dragging tab has been released and is finished animating into its
@@ -1181,7 +1216,7 @@ const int kEscapeKeyCode = 53;
     [self addSubview:mDraggingTab];
   }
   else {
-    [self rebuildTabBar];
+    [self tabStructureChanged];
   }
 
   [[self window] removeChildWindow:mDraggingTabWindow];
@@ -1234,7 +1269,7 @@ const int kEscapeKeyCode = 53;
   [mDraggingTabWindow release];
   mDraggingTabWindow = nil;
 
-  [self performSelector:@selector(rebuildTabBar) withObject:nil afterDelay:0.0];
+  [self performSelector:@selector(tabStructureChanged) withObject:nil afterDelay:0.0];
 }
 
 -(void)tabViewClosedTabViewItem:(BrowserTabViewItem*)closedTabViewItem atIndex:(int)indexOfClosedItem

@@ -63,6 +63,10 @@ extern NSString* const kTabBarBackgroundDoubleClickedNotification;
 - (BOOL)barAlwaysVisible;
 - (void)setBarAlwaysVisible:(BOOL)newSetting;
 
+// Notification that the tab state has changed.
+- (void)numberOfTabsChanged;
+- (void)selectedTabChanged;
+
 - (void)addTabForURL:(NSString*)aURL referrer:(NSString*)aReferrer inBackground:(BOOL)inBackground;
 
 - (BOOL)tabsVisible;
@@ -70,7 +74,6 @@ extern NSString* const kTabBarBackgroundDoubleClickedNotification;
 - (int)numberOfBookmarkableTabViewItems;
 - (int)indexOfTabViewItemWithURL:(NSString*)aURL;
 - (BrowserTabViewItem*)itemWithTag:(int)tag;
-- (void)refreshTabBar:(BOOL)rebuild;
 - (BOOL)isVisible;
 // inform the view that it will be shown or hidden; e.g. prior to showing or hiding the bookmarks
 - (void)setVisible:(BOOL)show;

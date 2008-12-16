@@ -215,17 +215,16 @@ NSString* const kTabBarBackgroundDoubleClickedNotification = @"kTabBarBackground
 /*** Instance Methods                   ***/
 /******************************************/
 
-// redraws the tab bar, rebuilding it if instructed
-- (void)refreshTabBar:(BOOL)rebuild
+- (void)numberOfTabsChanged
 {
-  // don't bother if it's not even visible
-  if ([self tabsVisible]) {
-    if (rebuild) {
-      [mTabBar rebuildTabBar];
-    } else {
-      [mTabBar setNeedsDisplay:YES];
-    }
-  }
+  if ([self tabsVisible])
+    [mTabBar tabStructureChanged];
+}
+
+- (void)selectedTabChanged
+{
+  if ([self tabsVisible])
+    [mTabBar tabSelectionChanged];
 }
 
 // Only to be used with the 2 types of tab view which we use in Camino.

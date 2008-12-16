@@ -80,8 +80,11 @@
   NSMutableArray*   mCurrentlySlidingTabs;  // strong
 }
 
-// destroy the tab bar and recreate it from the tabview
--(void)rebuildTabBar;
+// Should be called when the number, order, or visible range of tabs is changed.
+- (void)tabStructureChanged;
+// Should be called when only the selected tab has changed.
+- (void)tabSelectionChanged;
+
 // return the height the tab bar should be
 -(float)tabBarHeight;
 -(BrowserTabViewItem*)tabViewItemAtPoint:(NSPoint)location;
