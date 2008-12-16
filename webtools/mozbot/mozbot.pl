@@ -63,7 +63,6 @@
 # XXX throttle nick changing and away setting (from module API)
 # XXX compile self before run
 # XXX parse mode (+o, etc)
-# XXX customise gender
 # XXX optimisations
 # XXX maybe should catch hangup signal and go to background?
 # XXX protect the bot from DOS attacks causing server overload
@@ -200,6 +199,7 @@ my $serverRestrictsIRCNames = '';
 my $serverExpectsValidUsername = '';
 my $username = 0; # makes the username default to the pid ($USERNAME)
 my @modulenames = ('General', 'Greeting', 'Infobot', 'Parrot');
+my $gender = 'female'; #changed to female by special request
 my $umode;
 
 # - which variables can be saved.
@@ -228,6 +228,7 @@ my $umode;
     [\$serverExpectsValidUsername, 'validUsernameServer'],
     [\$ssl, 'ssl'],
     [\$umode, 'umode'],
+    [\$gender, 'gender'],
     [\$Mails::smtphost, 'smtphost'],
 );
 
@@ -891,7 +892,7 @@ sub on_cpong {
 sub on_gender {
     my ($self, $event) = @_;
     my $nick = $event->nick;
-    $self->ctcp_reply($nick, 'female'); # changed to female by special request
+    $self->ctcp_reply($nick, $gender);
 }
 
 # on_nick: A nick changed -- was it ours?
