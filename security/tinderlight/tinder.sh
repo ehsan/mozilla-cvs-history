@@ -164,8 +164,8 @@ cvs_checkout()
     [ ${RET} -eq 0 ] || return ${RET}
 
     if [ -f ${DATADIR}.cvs ]; then
-        diff -U4 ${LOG_TMP} ${DATADIR}.cvs | grep -i "Repository revision:" >> ${LOG_ALL}
-        if [ $? -ne 0 ]; then 
+        diff -U4 ${DATADIR}.cvs ${LOG_TMP} | grep -i "Repository revision:" >> ${LOG_ALL}
+        if [ $? -eq 0 ]; then 
             print_log "CVS change detected" 
             echo "TinderboxPrint:CVS change" >> ${LOG_ALL}
         fi
