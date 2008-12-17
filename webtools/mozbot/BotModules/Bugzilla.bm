@@ -73,8 +73,8 @@ sub RegisterConfig {
         # by using 'all'.
         ['reportComponent', 1, 1, ['all']],
         ['mutes', 1, 1, ''],  # "channel channel channel"
-		# Optionally skip fetching the bug details for automatic notifications
-		['reportBugDetails', 1, 1, 1] 
+        # Optionally skip fetching the bug details for automatic notifications
+        ['reportBugDetails', 1, 1, 1]
     );
 }
 
