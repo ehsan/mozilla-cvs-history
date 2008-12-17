@@ -203,7 +203,7 @@ sub parse_diffs ($) {
     my @body = @$body_lines;
 
     my %changes = ();
-
+    my $order = 0;
     # Read in the What | Removed | Added table.
     # End|of|table will never get run
     my @diff_table = grep (/^.*\|.*\|.*$/, @body);
@@ -222,6 +222,7 @@ sub parse_diffs ($) {
 
         # If we have a field name in the What field.
         if ($what) {
+            $order++;
             # If this is a two-line "What" field...
             if( grep($what =~ $_, UNWRAP_WHAT) ) {
                 # Then we need to grab the next line right now.
@@ -246,7 +247,7 @@ sub parse_diffs ($) {
                 }
             }
 
-            $changes{$what} = [$removed, $added];
+            $changes{$order} = [$what, $removed, $added];
             debug_print("Filed as $what: $removed => $added");
 
             # We only set $prev_what if we actually had a $what to put in it.
@@ -254,12 +255,13 @@ sub parse_diffs ($) {
         }
         # Otherwise we're getting data from a previous What.
         else {
-            my $new_removed = append_diffline($changes{$prev_what}[0],
+            my $prev_what = $changes{$order}[0];
+            my $new_removed = append_diffline($changes{$order}[1],
                 $prev_removed, $removed, WIDTH_REMOVED);
-            my $new_added   = append_diffline($changes{$prev_what}[1],
+            my $new_added   = append_diffline($changes{$order}[2],
                 $prev_added, $added, WIDTH_ADDED);
 
-            $changes{$prev_what} = [$new_removed, $new_added];
+            $changes{$order} = [$prev_what, $new_removed, $new_added];
             debug_print("Filed as $prev_what: $removed => $added");
         }
 
@@ -419,9 +421,10 @@ sub generate_log ($) {
 
     # And now we handle changes by going over all the diffs, one by one.
     my %diffs = %{$bug_info->{'diffs'}};
-    foreach my $field (keys %diffs) {
-        my $old = $diffs{$field}[0];
-        my $new = $diffs{$field}[1];
+    foreach my $id (sort(keys %diffs)) {
+        my $field = $diffs{$id}[0];
+        my $old = $diffs{$id}[1];
+        my $new = $diffs{$id}[2];
 
         # For attachments, we don't want to include the bug number in
         # the output.
