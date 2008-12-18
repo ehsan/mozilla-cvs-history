@@ -1419,10 +1419,11 @@ class ReleaseFinalVerification(ReleaseFactory):
 
 class UnittestBuildFactory(MozillaBuildFactory):
     def __init__(self, platform, config_repo_url, config_dir, branch,
-                 buildToolsRepo, buildSpace, **kwargs):
+                 repoPath, buildToolsRepo, buildSpace, **kwargs):
         self.config_repo_url = config_repo_url
         self.config_dir = config_dir
         self.branch = branch
+        self.repoPath = repoPath
 
         env_map = {
                 'linux': 'linux-centos-unittest',
@@ -1465,7 +1466,7 @@ class UnittestBuildFactory(MozillaBuildFactory):
 
         self.addStepNoEnv(Mercurial, mode='update',
          baseURL='http://hg.mozilla.org/',
-         defaultBranch=self.branch
+         defaultBranch=self.repoPath
         )
 
         self.addPrintChangesetStep()
