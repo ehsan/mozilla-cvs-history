@@ -1515,6 +1515,14 @@ class UnittestBuildFactory(MozillaBuildFactory):
              command=['make', '-f', 'client.mk', 'build']
             )
 
+        if self.platform == 'macosx':
+            self.addStep(ShellCommand,
+             command="if [ -d Shiretoko.app ]; then " + \
+                     "ln -s Shiretoko.app Minefield.app; " + \
+                     "fi",
+             workdir="build/objdir/dist"
+            )
+
         # TODO: Do we need this special windows rule?
         if self.platform == 'win32':
             self.addStep(unittest_steps.MozillaCheck, warnOnWarnings=True,
