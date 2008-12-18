@@ -72,6 +72,7 @@ sub RegisterConfig {
         ['evil', 1, 1, ['c++ is evil', '/me mumbles something about c++ being evil', 'c++ is e-- ah, nevermind.', 'c++ sucks', '/me frowns at %']],
         ['evilIndex', 1, 1, 0],
         ['evilBackoffTime', 1, 1, 36000], # how long to not insult c++ (10 hours by default)
+        ['evilMute', 1, 1, []], # channels to disable evil in, * for all channels
         ['lastEvil', 1, 0, 0], # when the last c++ insult took place
         ['assumeThanksTime', 1, 1, 10], # how long to assume that thanks are directed to us after hearing from them (seconds)
         ['_lastSpoken', 0, 0, {}], # who has spoken to us
@@ -208,7 +209,8 @@ sub Heard {
             $self->{'lastrheet'} = $event->{'time'};
         }
     } elsif ($message =~ /^.+\s+c\+\+\s+.+$/osi) {
-        if (($event->{'time'} - $self->{'lastEvil'}) > $self->{'evilBackoffTime'}) {
+        if (!(grep {$_ eq '*' or lc($_) eq $event->{'channel'}} @{$self->{'evilMute'}}) &&
+            ($event->{'time'} - $self->{'lastEvil'}) > $self->{'evilBackoffTime'}) {
             $self->{'lastEvil'} = $event->{'time'};
             $self->Perform($event, 'evil'); # calls GetNext which calls saveConfig
         }
