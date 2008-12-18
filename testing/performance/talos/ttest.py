@@ -274,6 +274,8 @@ def runTest(browser_config, test_config):
     return (all_browser_results, all_counter_results)
   except:
     try:
+      if counters:
+        cm.stopMonitor()
       cleanupProcesses(browser_config)
       if vars().has_key('temp_dir'):
         cleanupProfile(temp_dir, browser_config)
