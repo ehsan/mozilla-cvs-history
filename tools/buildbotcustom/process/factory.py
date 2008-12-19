@@ -1517,8 +1517,8 @@ class UnittestBuildFactory(MozillaBuildFactory):
 
         if self.platform == 'macosx':
             self.addStep(ShellCommand,
-             command="if [ -d Shiretoko.app ]; then " + \
-                     "ln -s Shiretoko.app Minefield.app; " + \
+             command="if [[ -d Shiretoko.app && ! -e Minefield.app ]]; " + \
+                     "then ln -s Shiretoko.app Minefield.app; " + \
                      "fi",
              workdir="build/objdir/dist"
             )
