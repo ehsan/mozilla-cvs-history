@@ -51,6 +51,7 @@ Test.prototype = {
   },
 
   onStopRequest: function(request, context, status) {
+    dump("status: " + status + ", from cache: " + this._isFromCache + ", hit server: " + gHitServer + "\n");
     do_check_eq(Components.isSuccessCode(status), this.expectSuccess);
     do_check_eq(this._isFromCache, this.readFromCache);
     do_check_eq(gHitServer, this.hitServer);
