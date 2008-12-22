@@ -1418,12 +1418,13 @@ class ReleaseFinalVerification(ReleaseFactory):
         )
 
 class UnittestBuildFactory(MozillaBuildFactory):
-    def __init__(self, platform, config_repo_url, config_dir, branch,
-                 repoPath, buildToolsRepo, buildSpace, **kwargs):
+    def __init__(self, platform, brand_name, config_repo_url, config_dir,
+                 branch, repoPath, buildToolsRepo, buildSpace, **kwargs):
         self.config_repo_url = config_repo_url
         self.config_dir = config_dir
         self.branch = branch
         self.repoPath = repoPath
+        self.brand_name = brand_name
 
         env_map = {
                 'linux': 'linux-centos-unittest',
@@ -1515,14 +1516,6 @@ class UnittestBuildFactory(MozillaBuildFactory):
              command=['make', '-f', 'client.mk', 'build']
             )
 
-        if self.platform == 'macosx':
-            self.addStep(ShellCommand,
-             command="if [[ -d Shiretoko.app && ! -e Minefield.app ]]; " + \
-                     "then ln -s Shiretoko.app Minefield.app; " + \
-                     "fi",
-             workdir="build/objdir/dist"
-            )
-
         # TODO: Do we need this special windows rule?
         if self.platform == 'win32':
             self.addStep(unittest_steps.MozillaCheck, warnOnWarnings=True,
@@ -1573,12 +1566,11 @@ class UnittestBuildFactory(MozillaBuildFactory):
              workdir="build/objdir/_tests/testing/mochitest"
             )
         elif self.platform == 'macosx':
-            self.addStep(unittest_steps.MozillaOSXReftest, warnOnWarnings=True,
-             workdir="build/layout/reftests",
-             timeout=60*5
+            self.addStep(unittest_steps.MozillaOSXReftest, brand_name=self.brand_name,
+             warnOnWarnings=True, workdir="build/layout/reftests", timeout=60*5
             )
-            self.addStep(unittest_steps.MozillaOSXCrashtest, warnOnWarnings=True,
-             workdir="build/testing/crashtest"
+            self.addStep(unittest_steps.MozillaOSXCrashtest, brand_name=self.brand_name,
+             warnOnWarnings=True, workdir="build/testing/crashtest"
             )
             self.addStep(unittest_steps.MozillaMochitest, warnOnWarnings=True,
              workdir="build/objdir/_tests/testing/mochitest",
