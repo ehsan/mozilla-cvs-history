@@ -270,12 +270,14 @@ class MozillaUnixReftest(MozillaReftest):
                "reftest.list"]
 
 class MozillaOSXReftest(MozillaReftest):
-    command = ["../../objdir/dist/Minefield.app/Contents/MacOS/firefox",
-               "-console",
-               "-P",
-               "default",
-               "-reftest",
-               "reftest.list"]
+    def __init__(self, brand_name, **kwargs):
+        MozillaReftest.__init__(self, **kwargs)
+        self.command = ["../../objdir/dist/%s.app/Contents/MacOS/firefox" % brand_name,
+                        "-console",
+                        "-P",
+                        "default",
+                        "-reftest",
+                        "reftest.list"]
 
 class MozillaWin32Reftest(MozillaReftest):
     command = [r'..\..\objdir\dist\bin\firefox.exe -P default -reftest reftest.list']
@@ -294,12 +296,14 @@ class MozillaUnixCrashtest(MozillaCrashtest):
                "crashtests.list"]
 
 class MozillaOSXCrashtest(MozillaCrashtest):
-    command = ["../../objdir/dist/Minefield.app/Contents/MacOS/firefox",
-               "-console",
-               "-P",
-               "default",
-               "-reftest",
-               "crashtests.list"]
+    def __init__(self, brand_name, **kwargs):
+        MozillaCrashtest.__init__(self, **kwargs)
+        self.command = ["../../objdir/dist/%s.app/Contents/MacOS/firefox" % brand_name,
+                        "-console",
+                        "-P",
+                        "default",
+                        "-reftest",
+                        "crashtests.list"]
 
 class MozillaWin32Crashtest(MozillaCrashtest):
     command = [r'..\..\objdir\dist\bin\firefox.exe -P default -reftest crashtests.list']
