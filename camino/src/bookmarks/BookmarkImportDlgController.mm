@@ -92,8 +92,14 @@
 
   mozPath = [self saltedBookmarkPathForProfile:@"~/Library/Mozilla/Profiles/default/"];
   if (mozPath)
-    [self tryAddImportFromBrowser:@"Netscape/Mozilla" withBookmarkPath:mozPath];
+    [self tryAddImportFromBrowser:@"Netscape/Mozilla/SeaMonkey 1.x" withBookmarkPath:mozPath];
 
+  // SeaMonkey 1.x used the same profile as Netscape/Mozilla; SeaMonkey 2
+  // introduced a unique profile location.
+  mozPath = [self saltedBookmarkPathForProfile:@"~/Library/Application Support/SeaMonkey/Profiles/"];
+  if (mozPath)
+    [self tryAddImportFromBrowser:@"SeaMonkey 2" withBookmarkPath:mozPath];
+  
   // Try Firefox from different locations in the reverse order of their introduction
   mozPath = [self saltedBookmarkPathForProfile:@"~/Library/Application Support/Firefox/Profiles/"];
   if (!mozPath)
