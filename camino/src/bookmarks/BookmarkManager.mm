@@ -475,10 +475,15 @@ static BookmarkManager* gBookmarkManager = nil;
 - (BookmarkFolder *)dockMenuFolder
 {
   BookmarkFolder *folder = [self findDockMenuFolderInFolder:[self bookmarkRoot]];
-  if (folder)
+  if (folder) {
     return folder;
-  else
-    return [self top10Folder];
+  }
+  else {
+    // Set the default in addition to returning it
+    BookmarkFolder* defaultDockMenu = [self top10Folder];
+    [defaultDockMenu setIsDockMenu:YES];
+    return defaultDockMenu;
+  }
 }
 
 - (BookmarkFolder *)findDockMenuFolderInFolder:(BookmarkFolder *)aFolder
