@@ -143,6 +143,20 @@ def chunk_list(val_list):
     val_list = val_list[end:len(val_list)]
   return chunks
 
+def filesizeformat(bytes):
+    """
+    Format the value like a 'human-readable' file size (i.e. 13 KB, 4.1 MB, 102
+    bytes, etc).
+    """
+    bytes = float(bytes)
+    if bytes < 1024:
+        return "%dB" % (bytes)
+    if bytes < 1024 * 1024:
+        return "%.1fKB" % (bytes / 1024)
+    if bytes < 1024 * 1024 * 1024:
+        return "%.1fMB" % (bytes / (1024 * 1024))
+    return "%.1fGB" % (bytes / (1024 * 1024 * 1024))
+
 def send_to_graph(results_server, results_link, title, date, browser_config, results):
   tbox = title
   url_format = "http://%s/%s"
@@ -227,7 +241,10 @@ def send_to_graph(results_server, results_link, title, date, browser_config, res
     if linkName in ('tp_pbytes', 'tp_%cpu'):
       continue
     if float(values[2]) > 0:
-      linkName += ": " + str(values[2])
+      if linkName in ('tp_memset', 'tp_RSS',): #measured in bytes
+        linkName += ": " + filesizeformat(values[2])
+      else:
+        linkName += ": " + str(values[2])
       url = url_format % (results_server, values[0])
       link = link_format % (url, linkName)
       first_results = first_results + "\nRETURN:" + link + "<br>"
