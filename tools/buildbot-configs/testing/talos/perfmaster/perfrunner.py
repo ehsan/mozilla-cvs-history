@@ -385,11 +385,10 @@ class TalosFactory(BuildFactory):
                            description="Cleanup",
                            command=cleanCmd,
                            env=MozillaEnvironments[envName])
-        if buildBranch == "1.9":
-            self.addStep(FileDownload,
-                               mastersrc="scripts/count_and_reboot.py",
-                               slavedest="count_and_reboot.py",
-                               workdir=".")
+        self.addStep(FileDownload,
+                           mastersrc="scripts/count_and_reboot.py",
+                           slavedest="count_and_reboot.py",
+                           workdir=".")
         self.addStep(ShellCommand,
                            command=["cvs", "-d", cvsRoot, "co", "-d", "talos",
                                     "mozilla/testing/performance/talos"],
@@ -479,14 +478,13 @@ class TalosFactory(BuildFactory):
                            haltOnFailure=False,
                            command=talosCmd,
                            env=MozillaEnvironments[envName])
-        if buildBranch == "1.9":
-            self.addStep(ShellCommand,
-                               flunkOnFailure=False,
-                               warnOnFailure=False,
-                               workdir='.',
-                               description="reboot after 1 test run",
-                               command=["python", "count_and_reboot.py", "-f", "../talos_count.txt", "-n", "1", "-z"],
-                               env=MozillaEnvironments[envName])
+        self.addStep(ShellCommand,
+                           flunkOnFailure=False,
+                           warnOnFailure=False,
+                           workdir='.',
+                           description="reboot after 1 test run",
+                           command=["python", "count_and_reboot.py", "-f", "../talos_count.txt", "-n", "1", "-z"],
+                           env=MozillaEnvironments[envName])
 
 
 def main(argv=None):
