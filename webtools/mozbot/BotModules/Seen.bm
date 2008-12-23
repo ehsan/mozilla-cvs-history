@@ -125,18 +125,32 @@ sub DoSeen {
         $self->say($event, $self->{'overrides'}->{$who});
     } else {
         my $regexp;
-        my @nicksToList;
-        if ($who =~ m!/(.*)/!) {
+        my @nicksToList = ();
+        if ($who =~ m!^/(\S+)/$!) {  # shouldn't allow mix and match or blank RE or spaces.
           $regexp = $1;
-          @nicksToList = grep(/$regexp/i, (keys %{$seen->{'times'}}));
+            my $re = $self->sanitizeRegexp($regexp);  # security + safety first!
+            $re = qr/$re/i; #precompile for performance
+            if ('' =~ $re){ # will match everything, throw error.
+                $self->say($event, 'That pattern matches everything, please be more specific.');
+                return;
+            }
+            @nicksToList = grep {$_ =~ $re} (keys %{$seen->{'times'}});
           $pattern = 1;
         } else {
+            if ($who =~ /\*/){  # no point going through the motions if there's no wildcard.
           $regexp = quotemeta(lc $who);
-          $regexp =~ s/\\\*/.*/g; # replace the escaped * from quotemeta with a .*
-          @nicksToList = grep(/^$regexp$/, (keys %{$seen->{'times'}}));
+                $regexp =~ s/\\\*/\\S*/g; # replace the escaped * from quotemeta with a \S*  (XXX wanted: the ? wildcard)
+                my $re = qr/^$regexp$/;
+                if ('' =~ $re){ # will match everything, throw error.
+                    $self->say($event, 'That pattern matches everything, please be more specific.');
+                    return;
+                }
+                @nicksToList = grep {$_ =~ $re} (keys %{$seen->{'times'}});
+            } else {
+                @nicksToList = (lc $who) if defined($seen->{'times'}{lc $who}); # short circuit for the majority of uses
+            }
           $pattern = 0;
         }
-
         if (@nicksToList > $self->{'maxLines'}) { # if it's more than the set threshold, don't flood :)
             $self->say($event,"There are more than $self->{'maxLines'} nicks matching that wildcard, please be more specific.");
         } elsif (@nicksToList > 0) {
