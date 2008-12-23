@@ -290,11 +290,21 @@ function plLoadHandler(evt) {
   if (timeout > 0) { 
     clearTimeout(timeoutEvent);
   }
+
+  var docElem = frames["content"].document.documentElement;
+  var width;
+  if ("getBoundingClientRect" in docElem) {
+    width = docElem.getBoundingClientRect().width;
+  } else if ("offsetWidth" in docElem) {
+    width = docElem.offsetWidth;
+  }
+
   var end_time = Date.now();
   var time = (end_time - start_time);
 
   // does this page want to do its own timing?
   // if so, we shouldn't be here
+
   if (plPageFlags() & TEST_DOES_OWN_TIMING) {
     dumpLine("tp: Bubbling onload handler used with page that does its own timing?");
     plStop(true);
