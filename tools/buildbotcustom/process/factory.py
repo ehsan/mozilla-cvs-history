@@ -647,7 +647,7 @@ class MercurialBuildFactory(MozillaBuildFactory):
 
 
 
-class RepackFactory(MozillaBuildFactory):
+class BaseRepackFactory(MozillaBuildFactory):
     # Override ignore_dirs so that we don't delete l10n nightly builds
     # before running a l10n nightly build
     ignore_dirs = MozillaBuildFactory.ignore_dirs + [
@@ -659,10 +659,18 @@ class RepackFactory(MozillaBuildFactory):
             'mozilla-1.9.1-win32-l10n-nightly',
     ]
 
-    def __init__(self, branch, project, enUSBinaryURL, stageServer,
-                 stageUsername, uploadPath, repoPath, l10nRepoPath,
-                 buildToolsRepo, buildSpace):
-        MozillaBuildFactory.__init__(self, buildToolsRepo, buildSpace)
+    def __init__(self, sourceRepo, branch, project, repoPath, l10nRepoPath,
+                 stageServer, stageUsername, stageSshKey=None, **kwargs):
+        MozillaBuildFactory.__init__(self, **kwargs)
+
+        self.sourceRepo = sourceRepo
+        self.branch = branch
+        self.project = project
+        self.repoPath = repoPath
+        self.l10nRepoPath = l10nRepoPath
+        self.stageServer = stageServer
+        self.stageUsername = stageUsername
+        self.stageSshKey = stageSshKey
 
         self.addStep(ShellCommand,
          command=['sh', '-c',
@@ -676,18 +684,15 @@ class RepackFactory(MozillaBuildFactory):
         self.addStep(ShellCommand,
          command=['sh', '-c', 'mkdir -p %s' % l10nRepoPath],
          descriptionDone='mkdir '+ l10nRepoPath,
-         workdir='build'
-        )
-        self.addStep(ShellCommand,
-         command=['sh', '-c', 'if [ -d '+branch+' ]; then ' +
-                  'hg -R '+branch+' pull -r tip ; ' +
-                  'else ' +
-                  'hg clone http://hg.mozilla.org/'+repoPath+'/ ; ' +
-                  'fi '
-                  '&& hg -R '+branch+' update'],
-         descriptionDone=branch+"'s source",
          workdir='build',
-         haltOnFailure=True
+         flunkOnFailure=False
+        )
+        self.addStep(Mercurial,
+         mode='update',
+         baseURL=sourceRepo,
+         defaultBranch=repoPath,
+         workdir='build/'+branch,
+         timeout=30*60 # 30 minutes
         )
         self.addStep(ShellCommand,
          command=['sh', '-c',
@@ -695,55 +700,109 @@ class RepackFactory(MozillaBuildFactory):
                          'hg -R %(locale)s pull -r tip ; ' +
                          'else ' +
                          'hg clone ' +
-                         'http://hg.mozilla.org/'+l10nRepoPath+'/%(locale)s/ ; ' +
-                         'fi ' +
-                         '&& hg -R %(locale)s update')],
+                         sourceRepo+'/'+l10nRepoPath+'/%(locale)s/ ; ' +
+                         'fi')],
          descriptionDone="locale's source",
-         workdir='build/l10n-central'
+         workdir='build/' + l10nRepoPath
+        )
+
+        # call out to subclass hooks to do any necessary setup
+        self.updateSources()
+        self.getMozconfig()
+
+        self.addStep(ShellCommand,
+         command=['bash', '-c', 'autoconf-2.13'],
+         haltOnFailure=True,
+         descriptionDone=['autoconf'],
+         workdir='build/'+branch
         )
         self.addStep(ShellCommand,
-         command=['make', '-f', 'client.mk', 'configure'],
-         env={'CONFIGURE_ARGS': '--enable-application=browser'},
+         command=['bash', '-c', 'autoconf-2.13'],
          haltOnFailure=True,
-         descriptionDone='autoconf',
-         workdir='build/'+branch
+         descriptionDone=['autoconf js/src'],
+         workdir='build/'+branch+'/js/src'
         )
         self.addStep(Compile,
          command=['sh', '--',
                   './configure', '--enable-application=browser',
-                  '--disable-compile-environment',
-                  '--with-l10n-base=../l10n-central'],
+                  '--with-l10n-base=../%s' % l10nRepoPath],
          description='configure',
          descriptionDone='configure done',
          haltOnFailure=True,
          workdir='build/'+branch
         )
+        for dir in ('nsprpub', 'config'):
+            self.addStep(ShellCommand,
+             command=['make'],
+             workdir='build/'+self.branch+'/'+dir,
+             description=['make ' + dir],
+             haltOnFailure=True
+            )
+
+        self.downloadBuilds()
+        self.doRepack()
+
+        uploadEnv = self.env.copy() # pick up any env variables in our subclass
+        uploadEnv.update({
+            'AB_CD': WithProperties('%(locale)s'),
+            'UPLOAD_HOST': stageServer,
+            'UPLOAD_USER': stageUsername,
+            'UPLOAD_TO_TEMP': '1',
+            'POST_UPLOAD_CMD': self.postUploadCmd # defined in subclasses
+        })
+        if stageSshKey:
+            uploadEnv['UPLOAD_SSH_KEY'] = '~/.ssh/%s' % stageSshKey
+        self.addStep(ShellCommand,
+         command=['make', WithProperties('l10n-upload-%(locale)s')],
+         env=uploadEnv,
+         workdir='build/'+branch+'/browser/locales'
+        )
+
+
+
+class NightlyRepackFactory(BaseRepackFactory):
+    def __init__(self, enUSBinaryURL, **kwargs):
+        self.enUSBinaryURL = enUSBinaryURL
+        # Unfortunately, we can't call BaseRepackFactory.__init__() before this
+        # because it needs self.postUploadCmd set
+        assert 'project' in kwargs
+        assert 'branch' in kwargs
+        uploadDir = '%s-l10n' % kwargs['branch']
+        self.postUploadCmd = '/home/ffxbld/bin/post_upload.py ' + \
+                             '-p %s ' % kwargs['project'] + \
+                             '-b %s ' % uploadDir + \
+                             '--release-to-latest'
+
+        self.env = {}
+
+        BaseRepackFactory.__init__(self, **kwargs)
+
+    def updateSources(self):
+        self.addStep(ShellCommand,
+         command=['hg', 'up', '-C', '-r', 'default'],
+         description='update workdir',
+         workdir=WithProperties('build/' + self.l10nRepoPath + '%(locale)s'),
+         haltOnFailure=True
+        )
+
+    def getMozconfig(self):
+        pass
+
+    def downloadBuilds(self):
         self.addStep(ShellCommand,
          command=['make', 'wget-en-US'],
          descriptionDone='wget en-US',
-         env={'EN_US_BINARY_URL': enUSBinaryURL},
+         env={'EN_US_BINARY_URL': self.enUSBinaryURL},
          haltOnFailure=True,
-         workdir='build/'+branch+'/browser/locales'
+         workdir='build/'+self.branch+'/browser/locales'
         )
+
+    def doRepack(self):
         self.addStep(ShellCommand,
          command=['make', WithProperties('installers-%(locale)s')],
-         env={'PKG_DMG_SOURCE': project},
+         env={'PKG_DMG_SOURCE': self.project},
          haltOnFailure=True,
-         workdir='build/'+branch+'/browser/locales'
-        )
-        self.addStep(ShellCommand,
-         command=['make', WithProperties('prepare-upload-latest-%(locale)s')],
-         haltOnFailure=True,
-         workdir='build/'+branch+'/browser/locales'
-        )
-        self.addStep(ShellCommand,
-         name='upload locale',
-         command=['sh', '-c',
-                  'scp -i ~/.ssh/ffxbld_dsa -r * '+stageUsername+'@'+\
-                   stageServer+":"+uploadPath],
-         description='uploading packages',
-         descriptionDone='uploaded packages',
-         workdir='build/'+branch+'/dist/upload/latest'
+         workdir='build/'+self.branch+'/browser/locales'
         )
 
 
@@ -783,6 +842,138 @@ class ReleaseFactory(BuildFactory):
         version = re.sub('b([0-9]+)$', ' Beta \\1', version)
         version = re.sub('rc([0-9]+)$', ' RC \\1', version)
         return version
+
+
+
+class ReleaseRepackFactory(BaseRepackFactory, ReleaseFactory):
+    def __init__(self, configRepo, configSubDir, mozconfig, platform,
+                 buildRevision, appVersion, buildNumber, **kwargs):
+        self.configRepo = configRepo
+        self.configSubDir = configSubDir
+        self.platform = platform
+        self.buildRevision = buildRevision
+        self.appVersion = appVersion
+        self.buildNumber = buildNumber
+        self.env = {'MOZ_PKG_PRETTYNAMES': '1'} # filled out in downloadBuilds
+
+        self.mozconfig = 'configs/%s/%s/mozconfig' % (configSubDir, mozconfig)
+
+        assert 'project' in kwargs
+        # TODO: better place to put this/call this
+        self.postUploadCmd = '/home/ffxbld/bin/post_upload.py ' + \
+                             '-p %s ' % kwargs['project'] + \
+                             '-v %s ' % self.appVersion + \
+                             '-n %s ' % self.buildNumber + \
+                             '--release-to-candidates-dir'
+        BaseRepackFactory.__init__(self, **kwargs)
+
+    def updateSources(self):
+        self.addStep(ShellCommand,
+         command=['hg', 'up', '-C', '-r', self.buildRevision],
+         workdir='build/'+self.branch,
+         description=['update %s' % self.branch, 'to %s' % self.buildRevision],
+         haltOnFailure=True
+        )
+        self.addStep(ShellCommand,
+         command=['hg', 'up', '-C', '-r', self.buildRevision],
+         workdir=WithProperties('build/' + self.l10nRepoPath + '/%(locale)s'),
+         description=['update to', self.buildRevision]
+        )
+
+    def getMozconfig(self):
+        self.addStep(ShellCommand,
+         command=['rm', '-rf', 'configs'],
+         description=['remove', 'configs'],
+         workdir='build/'+self.branch,
+         haltOnFailure=True
+        )
+        self.addStep(ShellCommand,
+         command=['hg', 'clone', self.configRepo, 'configs'],
+         description=['checkout', 'configs'],
+         workdir='build/'+self.branch,
+         haltOnFailure=True
+        )
+        self.addStep(ShellCommand,
+         # cp configs/mozilla2/$platform/mozconfig .mozconfig
+         command=['cp', self.mozconfig, '.mozconfig'],
+         description=['copy mozconfig'],
+         workdir='build/'+self.branch,
+         haltOnFailure=True
+        )
+        self.addStep(ShellCommand,
+         command=['cat', '.mozconfig'],
+         workdir='build/'+self.branch
+        )
+
+    def downloadBuilds(self):
+        # OMG CLEAN THIS SHIT UP
+        # We need to know the absolute path to the input builds when we repack,
+        # so we need retrieve at run-time as a build property
+        self.addStep(SetProperty,
+         command=['bash', '-c', 'pwd'],
+         property='srcdir',
+         workdir='build/'+self.branch
+        )
+
+        candidatesDir = 'http://%s' % self.stageServer + \
+                        '/pub/mozilla.org/firefox/nightly' + \
+                        '/%s-candidates/build%s' % (self.appVersion,
+                                                    self.buildNumber)
+        longAppVersion = self.makeLongVersion(self.appVersion)
+
+        # This block sets platform specific data that our wget command needs.
+        #  build is mapping between the local and remote filenames
+        #  platformDir is the platform specific directory builds are contained
+        #    in on the stagingServer.
+        # This block also sets the necessary environment variables that the
+        # doRepack() steps rely on to locate their source build.
+        builds = {}
+        platformDir = None
+        if self.platform.startswith('linux'):
+            platformDir = 'linux-i686'
+            builds['firefox.tar.bz2'] = 'firefox-%s.tar.bz2' % self.appVersion
+            self.env['ZIP_IN'] = WithProperties('%(srcdir)s/firefox.tar.bz2')
+        elif self.platform.startswith('macosx'):
+            platformDir = 'mac'
+            builds['firefox.dmg'] = 'Firefox %s.dmg' % longAppVersion
+            self.env['ZIP_IN'] = WithProperties('%(srcdir)s/firefox.dmg')
+        elif self.platform.startswith('win32'):
+            platformDir = 'unsigned/win32'
+            builds['firefox.zip'] = 'firefox-%s.zip' % self.appVersion
+            builds['firefox.exe'] = 'Firefox Setup %s.exe' % longAppVersion
+            self.env['ZIP_IN'] = WithProperties('%(srcdir)s/firefox.zip')
+            self.env['WIN32_INSTALLER_IN'] = \
+              WithProperties('%(srcdir)s/firefox.exe')
+        else:
+            raise "Unsupported platform"
+
+        for name in builds:
+            self.addStep(ShellCommand,
+             command=['wget', '-O', name, '--no-check-certificate',
+                      '%s/%s/en-US/%s' % (candidatesDir, platformDir,
+                                          builds[name])],
+             workdir='build/'+self.branch,
+             haltOnFailure=True
+            )
+        
+
+    def doRepack(self):
+        # Because we're generating updates we need to build the libmar tools
+        for dir in ('nsprpub', 'config', 'modules/libmar'):
+            self.addStep(ShellCommand,
+             command=['make'],
+             workdir='build/'+self.branch+'/'+dir,
+             description=['make ' + dir],
+             haltOnFailure=True
+            )
+
+        self.env.update({'MOZ_MAKE_COMPLETE_MAR': '1'})
+        self.addStep(ShellCommand,
+         command=['make', WithProperties('installers-%(locale)s')],
+         env=self.env,
+         haltOnFailure=True,
+         workdir='build/'+self.branch+'/browser/locales'
+        )
 
 
 
