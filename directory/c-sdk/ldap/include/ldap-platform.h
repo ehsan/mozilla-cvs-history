@@ -72,14 +72,7 @@ extern "C" {
 
 #ifdef XP_OS2
 #include <sys/select.h>
-#endif
-#ifdef XP_OS2_EMX
-/*
- * EMX-specific tweaks:
- *    o Use stricmp instead of strcmpi.
- */
-#define strcmpi stricmp
-#endif
+#endif /* XP_OS2 */
 
 /*
  * LDAP_API macro definition:
