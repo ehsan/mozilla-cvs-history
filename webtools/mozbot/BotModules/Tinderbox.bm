@@ -27,6 +27,8 @@ sub RegisterConfig {
         ['mutes', 1, 1, {}],  # tree -> "channel channel channel"
         ['states', 1, 1, {'success' => 'Success', 'testfailed' => 'Test Failed', 'busted' => 'Burning', }],
         ['maxInChannel', 1, 1, 5], # maximum number of lines to report in a channel
+        ['tinderboxURI', 1, 1, "http://tinderbox.mozilla.org/"], # base URL for Tinderbox
+        ['isTinderbox2', 1, 1, 0], # whether this is tinderbox2 or not
     );
 }
 
@@ -131,9 +133,16 @@ sub GetTrees {
     my $self = shift;
     my ($event, $requested, @mode) = @_;
     my @trees = @{$self->{'trees'}};
-    local $" = ','; # XXX %-escape this 
-    my $uri = "http://tinderbox.mozilla.org/showbuilds.cgi?quickparse=1&tree=@trees";
-    $self->getURI($event, $uri, $requested, @mode);
+    if ($self->{'isTinderbox2'}) {
+        foreach (@trees) {
+            my $uri = $self->{'tinderboxURI'} . $_ . "/quickparse.html";
+            $self->getURI($event, $uri, $requested, @mode);
+        }
+    } else {
+        local $" = ','; # XXX %-escape this 
+        my $uri = $self->{'tinderboxURI'} . "showbuilds.cgi?quickparse=1&tree=@trees";
+        $self->getURI($event, $uri, $requested, @mode);
+    }
 }
 
 sub GotURI {
