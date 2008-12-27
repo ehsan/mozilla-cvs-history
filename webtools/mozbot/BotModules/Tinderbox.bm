@@ -234,12 +234,12 @@ sub CheckForUpdates {
                             push(@changes, "$tree: '$build' has changed state from $self->{'states'}->{$self->{'tinderboxStates'}->{$tree}->{$build}->{'previous'}} to $self->{'states'}->{$self->{'tinderboxStates'}->{$tree}->{$build}->{'current'}}.");
                         }
                     } else {
-                        push(@newBuilds, "New build added to $tree: $build (status: $self->{'states'}->{$self->{'tinderboxStates'}->{$tree}->{$build}->{'current'}}).");
+                        push(@newBuilds, "$tree: Build '$build' added to tinderbox. (Status: $self->{'states'}->{$self->{'tinderboxStates'}->{$tree}->{$build}->{'current'}}).");
                     }
                 } else {
                     # build has dissappeared!
                     delete($self->{'tinderboxStates'}->{$tree}->{$build});
-                    push(@lostBuilds, "Build '$build' has dropped from the '$tree' tinderbox.");
+                    push(@lostBuilds, "$tree: Build '$build' has dropped from tinderbox.");
                 }
             }
         } # else tree doesn't exist
