@@ -176,6 +176,27 @@ sub GotURI {
                 $self->{'states'}->{$state} = $state unless defined($self->{'states'}->{$state});
             } # else unsupported type XXX
         }
+        
+        #If a Tinderbox tree is configured without Bonsai, it lacks a state line and doesn't
+        # appear properly in the trees output (even though machine state changes work.)
+        # Work around this by setting a default state of Unknown to trees w/o a state line.
+        my $state = "unknown";
+        foreach my $tree (keys(%{$self->{'tinderboxStates'}})) {
+            if (!defined($self->{'treeStates'}->{$tree})) {
+                $self->{'treeStates'}->{$tree}->{'current'} = $state;
+                $self->{'treeStates'}->{$tree}->{'lastupdate'} = $now;
+                if (defined($self->{'treeStates'}->{$tree}->{'current'})) {
+                    $self->{'treeStates'}->{$tree}->{'previous'} = $self->{'treeStates'}->{$tree}->{'current'};
+                }
+                $self->{'states'}->{$state} = $state unless defined($self->{'states'}->{$state});
+            }
+            #Update timestamps on trees we're 'managing' state on.
+            if (($self->{'treeStates'}->{$tree}->{'current'} eq $state) and 
+                ($self->{'treeStates'}->{$tree}->{'lastupdate'} < $now)) {
+                $self->{'treeStates'}->{$tree}->{'lastupdate'} = $now;
+            }
+        }
+        
         $self->CheckForUpdates($event, $requested);
         if ($requested == 1) {
             $self->ReportState($event, @mode);
