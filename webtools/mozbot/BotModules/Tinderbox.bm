@@ -53,8 +53,8 @@ sub Help {
                    'long, medium, short, terse (how much detail to include), and <tree> is the name of the tree to show (or a regexp matching it).',
     );
     if ($self->isAdmin($event)) {
-        $commands{'mute'} = 'Disable reporting of a tree in a channel. (Only does something if the given tree exists.) Syntax: mute <tree> in <channel>';
-        $commands{'unmute'} = 'Enable reporting of a tree in a channel. By default, trees are reported in all channels that the module is active in. Syntax: unmute <tree> in <channel>';
+        $commands{'mute'} = 'Disable reporting of a tree in a channel. (Only does something if the given tree exists.) Syntax: mute tinderbox <tree> in <channel>';
+        $commands{'unmute'} = 'Enable reporting of a tree in a channel. By default, trees are reported in all channels that the module is active in. Syntax: unmute tinderbox <tree> in <channel>';
     }
     return \%commands;
 }
@@ -96,7 +96,7 @@ sub Told {
     } elsif ($message =~ /^\s*qt(?:\s+(.+?))?\s*$/osi) {       
         $self->GetTrees($event, 1, defined($1) ? $1 : 0, 1, 1);
     } elsif ($self->isAdmin($event)) {
-        if ($message =~ /^\s*mute\s+(\S+?)\s+in\s+(\S+?)\s*$/osi) {
+        if ($message =~ /^\s*mute tinderbox\s+(\S+?)\s+in\s+(\S+?)\s*$/osi) {
             my $tree = $1 eq 'Tinderbox' ? '' : $1;
             my $treeName = $tree eq '' ? 'all trees' : "trees named $tree";
             if (($tree eq '') or (grep $_ eq $tree, @{$self->{'trees'}})) {
@@ -106,7 +106,7 @@ sub Told {
             } else {
                 $self->say($event, "$event->{'from'}: There is no tree called $tree is there?.");
             }
-        } elsif ($message =~ /^\s*unmute\s+(\S+?)\s+in\s+(\S+?)\s*$/osi) {
+        } elsif ($message =~ /^\s*unmute tinderbox\s+(\S+?)\s+in\s+(\S+?)\s*$/osi) {
             my $tree = $1 eq 'Tinderbox' ? '' : $1;
             my $treeName = $tree eq '' ? 'all trees' : "trees named $tree";
             if (($tree eq '') or (grep $_ eq $tree, @{$self->{'trees'}})) {
