@@ -10,6 +10,20 @@
 INTRODUCTION
 ------------
 
-Forget it.
+Running mozbot on windows is officially unsupported, and does not
+work at all when using ActiveState Perl, as it does not support
+forking which mozbot uses extensively.
+
+However, mozbot runs successfully on Windows with Cygwin Perl. Tested
+on Microsoft Windows XP and Windows Server 2003, Perl 5.8.4 and higher,
+including 5.10. Windows Vista and Windows Server 2008 may also work, but
+have not been tested, you're on your own.
+
+Once you have Cygwin (http://www.cygwin.com) installed with the Perl
+package, follow the instructions in the INSTALL file. You will need
+to use CPAN and install the required modules for mozbot to work
+properly.
+
+Your mileage may vary, it may not work at all for you. Good luck.
 
 -- end --
