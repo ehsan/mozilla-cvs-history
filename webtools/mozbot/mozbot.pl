@@ -123,6 +123,9 @@ use Carp qw(cluck confess);
 use Configuration; # internal
 use Mails; # internal
 
+# Net::IRC 0.74+ require Time::HiRes, if its missing, Net::IRC will fail with
+# a "No method called "time" for object." error during mozbot startup.
+
 # Note: Net::SMTP is also used, see the sendmail function in Mails.
 
 # force flushing
