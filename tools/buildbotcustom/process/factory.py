@@ -1246,14 +1246,34 @@ class ReleaseTaggingFactory(ReleaseFactory):
 
 class SingleSourceFactory(ReleaseFactory):
     def __init__(self, repository, productName, appVersion, baseTag,
+                 stagingServer, stageUsername, stageSshKey, buildNumber,
                  autoconfDirs=['.']):
         ReleaseFactory.__init__(self)
         repoName = self.getRepoName(repository)
         pushRepo = self.getPushRepo(repository)
         releaseTag = '%s_RELEASE' % (baseTag)
-        bundleFile = '../%s-%s.bundle' % (productName, appVersion)
-        sourceTarball = '%s-%s-source.tar.bz2' % (productName, appVersion)
+        bundleFile = 'source/%s-%s.bundle' % (productName, appVersion)
+        sourceTarball = 'source/%s-%s-source.tar.bz2' % (productName,
+                                                         appVersion)
+        # '-c' is for "release to candidates dir"
+        postUploadCmd = 'python ~/bin/post_upload.py -p %s -v %s -n %s -c' % \
+          (productName, appVersion, buildNumber)
+        uploadEnv = {'UPLOAD_HOST': stagingServer,
+                     'UPLOAD_USER': stageUsername,
+                     'UPLOAD_SSH_KEY': '~/.ssh/%s' % stageSshKey,
+                     'UPLOAD_TO_TMP': '1',
+                     'POST_UPLOAD_CMD': postUploadCmd}
 
+        self.addStep(ShellCommand,
+         command=['rm', '-rf', 'source'],
+         workdir='.',
+         haltOnFailure=True
+        )
+        self.addStep(ShellCommand,
+         command=['mkdir', 'source'],
+         workdir='.',
+         haltOnFailure=True
+        )
         self.addStep(ShellCommand,
          command=['hg', 'clone', repository, repoName],
          workdir='.',
@@ -1283,10 +1303,10 @@ class SingleSourceFactory(ReleaseFactory):
          haltOnFailure=True
         )
         self.addStep(ShellCommand,
-         command=['hg', 'bundle', '--base', 'null',
+         command=['hg', '-R', repoName, 'bundle', '--base', 'null',
                   '-r', WithProperties('%(revision)s'),
                   bundleFile],
-         workdir=repoName,
+         workdir='.',
          description=['create bundle'],
          haltOnFailure=True
         )
@@ -1308,7 +1328,14 @@ class SingleSourceFactory(ReleaseFactory):
          description=['create tarball'],
          haltOnFailure=True
         )
-        # TODO: upload files
+        self.addStep(ShellCommand,
+         command=['python', '%s/build/upload.py' % repoName,
+                  '--base-path', '.',
+                  bundleFile, sourceTarball],
+         workdir='.',
+         env=uploadEnv,
+         description=['upload files'],
+        )
 
 
 
