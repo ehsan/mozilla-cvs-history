@@ -157,11 +157,11 @@ class MozillaBuildFactory(BuildFactory):
             )
 
 class MercurialBuildFactory(MozillaBuildFactory):
-    def __init__(self, env, objdir, platform, branch, sourceRepo, buildToolsRepo,
-                 configRepo, configSubDir, profiledBuild, mozconfig,
-                 buildRevision=None, stageServer=None, stageUsername=None,
-                 stageGroup=None, stageSshKey=None, stageBasePath=None,
-                 ausBaseUploadDir=None, updatePlatform=None,
+    def __init__(self, env, objdir, platform, branch, sourceRepo,
+                 buildToolsRepo, configRepo, configSubDir, profiledBuild,
+                 mozconfig, buildRevision=None, stageServer=None,
+                 stageUsername=None, stageGroup=None, stageSshKey=None,
+                 stageBasePath=None, ausBaseUploadDir=None, updatePlatform=None,
                  downloadBaseURL=None, ausUser=None, ausHost=None,
                  nightly=False, leakTest=False, codesighs=True,
                  graphServer=None, graphSelector=None, graphBranch=None,
@@ -476,12 +476,14 @@ class MercurialBuildFactory(MozillaBuildFactory):
     def addUploadSteps(self):
         self.addStep(ShellCommand,
          command=['make', 'package'],
+         env=self.env,
          workdir='build/%s' % self.objdir,
          haltOnFailure=True
         )
         if self.platform.startswith("win32"):
          self.addStep(ShellCommand,
              command=['make', 'installer'],
+             env=self.env,
              workdir='build/%s' % self.objdir,
              haltOnFailure=True
          )
@@ -489,33 +491,15 @@ class MercurialBuildFactory(MozillaBuildFactory):
          self.addStep(ShellCommand,
              command=['make', '-C',
                       '%s/tools/update-packaging' % self.objdir],
+             env=self.env,
              haltOnFailure=True
          )
         self.addStep(SetMozillaBuildProperties,
          objdir='build/%s' % self.objdir
         )
-        releaseToLatest = False
-        releaseToDated = False
-        if self.nightly:
-            releaseToLatest=True
-            releaseToDated=True
 
-        self.addStep(MozillaStageUpload,
-         objdir=self.objdir,
-         username=self.stageUsername,
-         milestone=self.shortName,
-         remoteHost=self.stageServer,
-         remoteBasePath=self.stageBasePath,
-         platform=self.platform,
-         group=self.stageGroup,
-         sshKey=self.stageSshKey,
-         uploadCompleteMar=self.createSnippet,
-         releaseToLatest=releaseToLatest,
-         releaseToDated=releaseToDated,
-         releaseToTinderboxBuilds=True,
-         tinderboxBuildsDir='%s-%s' % (self.shortName, self.platform),
-         dependToDated=self.dependToDated
-        )
+        # Call out to a subclass to do the actual uploading
+        self.doUpload()
         
     def addCodesighsSteps(self):
         self.addStep(ShellCommand,
@@ -644,6 +628,71 @@ class MercurialBuildFactory(MozillaBuildFactory):
                       '-exec', 'rm', '-rf', '{}', ';'],
              workdir='build/%s' % baseObjdir
             )
+
+
+
+class NightlyBuildFactory(MercurialBuildFactory):
+    def doUpload(self):
+        releaseToLatest = False
+        releaseToDated = False
+        if self.nightly:
+            releaseToLatest=True
+            releaseToDated=True
+
+        self.addStep(MozillaStageUpload,
+         objdir=self.objdir,
+         username=self.stageUsername,
+         milestone=self.shortName,
+         remoteHost=self.stageServer,
+         remoteBasePath=self.stageBasePath,
+         platform=self.platform,
+         group=self.stageGroup,
+         sshKey=self.stageSshKey,
+         uploadCompleteMar=self.createSnippet,
+         releaseToLatest=releaseToLatest,
+         releaseToDated=releaseToDated,
+         releaseToTinderboxBuilds=True,
+         tinderboxBuildsDir='%s-%s' % (self.shortName, self.platform),
+         dependToDated=self.dependToDated
+        )
+
+
+
+class ReleaseBuildFactory(MercurialBuildFactory):
+    def __init__(self, productName, appVersion, buildNumber, **kwargs):
+        self.productName = productName
+        self.appVersion = appVersion
+        self.buildNumber = buildNumber
+
+        # Make sure MOZ_PKG_PRETTYNAMES is on
+        kwargs['env']['MOZ_PKG_PRETTYNAMES'] = '1'
+        MercurialBuildFactory.__init__(self, **kwargs)
+
+    def doUpload(self):
+        self.addStep(ShellCommand,
+         command=WithProperties('echo buildID=%(buildid)s > ' + \
+                                '%s_info.txt' % self.platform),
+         workdir='build/%s/dist' % self.objdir
+        )
+
+        uploadEnv = self.env.copy()
+        uploadEnv.update({'UPLOAD_HOST': self.stageServer,
+                          'UPLOAD_USER': self.stageUsername,
+                          'UPLOAD_TO_TEMP': '1',
+                          'UPLOAD_EXTRA_FILES': '%s_info.txt' % self.platform})
+        if self.stageSshKey:
+            uploadEnv['UPLOAD_SSH_KEY'] = '~/.ssh/%s' % self.stageSshKey
+        
+        uploadEnv['POST_UPLOAD_CMD'] = '/home/ffxbld/bin/post_upload.py ' + \
+                                       '-p %s ' % self.productName + \
+                                       '-v %s ' % self.appVersion + \
+                                       '-n %s ' % self.buildNumber + \
+                                       '--release-to-candidates-dir'
+        self.addStep(ShellCommand,
+         command=['make', 'upload'],
+         env=uploadEnv,
+         workdir='build/%s' % self.objdir
+        )
 
 
 
