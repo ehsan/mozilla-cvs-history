@@ -302,6 +302,7 @@ sub getNewTestcases() {
   my $self = shift;
   my $num_days = shift;
   my $match_limit = shift;
+  my $product_id = shift;
   
   if (!$num_days) {
     $num_days = $default_num_days;
@@ -310,11 +311,17 @@ sub getNewTestcases() {
   if (!$match_limit) {
     $match_limit = $default_match_limit;
   }
-  
+ 
+  my $product_comparison = "";
+  if ($product_id) {
+    $product_comparison = " AND tc.product_id=$product_id ";
+  }
+
   __PACKAGE__->set_sql(NewTestcases => qq{
 				          SELECT tc.testcase_id, tc.summary, tc.creation_date, tc.last_updated, u.email
                                           FROM testcases tc, users u
                                           WHERE tc.creation_date>=?
+                                          $product_comparison
                                           AND tc.author_id=u.user_id
                                           ORDER BY tc.creation_date DESC
                                           LIMIT $match_limit
@@ -330,6 +337,7 @@ sub getRecentlyUpdated() {
   my $self = shift;
   my $num_days = shift;
   my $match_limit = shift;
+  my $product_id = shift;
   
   if (!$num_days) {
     $num_days = $default_num_days;
@@ -338,11 +346,17 @@ sub getRecentlyUpdated() {
   if (!$match_limit) {
     $match_limit = $default_match_limit;
   }
+
+  my $product_comparison = "";
+  if ($product_id) {
+    $product_comparison = " AND tc.product_id=$product_id ";
+  }
   
   __PACKAGE__->set_sql(RecentlyUpdated => qq{
                                              SELECT tc.testcase_id, tc.summary, tc.creation_date, tc.last_updated, u.email
                                              FROM testcases tc, users u
                                              WHERE tc.last_updated>=? AND tc.last_updated>tc.creation_date
+                                             $product_comparison
                                              AND tc.author_id=u.user_id
                                              ORDER BY tc.last_updated DESC
                                              LIMIT $match_limit
