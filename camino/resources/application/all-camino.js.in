@@ -205,3 +205,6 @@ pref("app.update.url", "%APP_UPDATE_URL%");
 
 // obey OS font size threshold for disabling text smoothing
 pref("gfx.use_text_smoothing_setting", true);
+
+// force <select>s to display as Aqua rather than honor author styles
+pref("camino.use_aqua_selects", true);

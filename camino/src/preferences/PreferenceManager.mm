@@ -216,6 +216,7 @@ WriteVersion(nsIFile* aProfileDir, const nsACString& aVersion,
 
 - (void)refreshAdBlockingStyleSheet:(BOOL)inLoad;
 - (void)refreshFlashBlockStyleSheet:(BOOL)inLoad;
+- (void)refreshAquaSelectStyleSheet:(BOOL)inLoad;
 - (void)refreshStyleSheet:(nsIURI *)cssFileURI load:(BOOL)inLoad;
 - (BOOL)isFlashBlockAllowed;
 
@@ -806,6 +807,21 @@ static BOOL gMadePrefManager;
   if (flashBlockAllowed && [self getBooleanPref:kGeckoPrefBlockFlash withSuccess:NULL])
     [self refreshFlashBlockStyleSheet:YES];
 
+  // Load the stylesheet to force Aqua <select>s.
+  if ([self getBooleanPref:kGeckoPrefForceAquaSelects withSuccess:NULL])
+    [self refreshAquaSelectStyleSheet:YES];
+
+  // Register a Gecko pref observer to watch for changes via about:config.
+  // We do this here rather than in |-registerNotificationListener:| because
+  // the Gecko pref observer component isn't set up then.  |-xpcomTerminate:|
+  // automatically cleans up the Gecko pref observer, and |-dealloc:| 
+  // automatically cleans up the NSNotificationCenter observer.
+  [self addObserver:self forPref:kGeckoPrefForceAquaSelects];
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(aquaSelectPrefChanged:)
+                                               name:kPrefChangedNotificationName
+                                             object:self];
+
   // Make sure the homepage has been set up.
   nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(mPrefs);
   if (prefBranch) {
@@ -1100,6 +1116,12 @@ typedef enum EProxyConfig {
   [self refreshFlashBlockStyleSheet:flashBlockEnabled];
 }
 
+- (void)aquaSelectPrefChanged:(NSNotification*)inNotification
+{
+  BOOL aquaSelectEnabled = [self getBooleanPref:kGeckoPrefForceAquaSelects withSuccess:NULL];
+  [self refreshAquaSelectStyleSheet:aquaSelectEnabled];
+}
+
 // This will reload the ad-blocking style sheet if it's already registered, or unload it if the
 // param is NO.
 - (void)refreshAdBlockingStyleSheet:(BOOL)inLoad
@@ -1132,6 +1154,31 @@ typedef enum EProxyConfig {
   // the URI of the Flashblock sheet in the chrome path
   nsCOMPtr<nsIURI> cssFileURI;
   nsresult rv = NS_NewURI(getter_AddRefs(cssFileURI), "chrome://flashblock/content/flashblock.css");
+  if (NS_FAILED(rv))
+    return;
+
+  [self refreshStyleSheet:cssFileURI load:inLoad];
+}
+
+// This will reload the Aqua <select> style sheet if it's already registered, or unload it if the
+// param is NO.
+- (void)refreshAquaSelectStyleSheet:(BOOL)inLoad
+{
+  // the URL of the stylesheet in our bundle
+  NSString* cssFilePath = [[NSBundle mainBundle] pathForResource:@"aquaSelect" ofType:@"css"];
+  if (![[NSFileManager defaultManager] isReadableFileAtPath:cssFilePath]) {
+    NSLog(@"aquaSelect.css file not found; <select>s will honor author styles");
+    return;
+  }
+
+  nsresult rv;
+  nsCOMPtr<nsILocalFile> cssFile;
+  rv = NS_NewNativeLocalFile(nsDependentCString([cssFilePath fileSystemRepresentation]), PR_TRUE, getter_AddRefs(cssFile));
+  if (NS_FAILED(rv))
+    return;
+
+  nsCOMPtr<nsIURI> cssFileURI;
+  rv = NS_NewFileURI(getter_AddRefs(cssFileURI), cssFile);
   if (NS_FAILED(rv))
     return;
 

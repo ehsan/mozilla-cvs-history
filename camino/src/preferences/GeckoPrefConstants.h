@@ -296,6 +296,9 @@ extern const char* const kGeckoPrefLinkColor;                          // color
 // The default visited link color
 extern const char* const kGeckoPrefVisitedLinkColor;                   // color
 
+// Controls whether <select>s are forced to Aqua instead of honoring author styles
+extern const char* const kGeckoPrefForceAquaSelects;                   // bool
+
 #pragma mark User Agent
 
 // The application version to use in the user agent

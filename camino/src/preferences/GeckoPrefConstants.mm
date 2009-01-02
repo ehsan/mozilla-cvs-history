@@ -191,6 +191,7 @@ const char* const kGeckoPrefPageBackgroundColor = "browser.display.background_co
 const char* const kGeckoPrefPageForegroundColor = "browser.display.foreground_color";
 const char* const kGeckoPrefLinkColor = "browser.anchor_color";
 const char* const kGeckoPrefVisitedLinkColor = "browser.visited_color";
+const char* const kGeckoPrefForceAquaSelects = "camino.use_aqua_selects";
 
 #pragma mark User Agent
 
