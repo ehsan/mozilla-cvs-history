@@ -830,7 +830,7 @@ class NightlyRepackFactory(BaseRepackFactory):
         self.addStep(ShellCommand,
          command=['hg', 'up', '-C', '-r', 'default'],
          description='update workdir',
-         workdir=WithProperties('build/' + self.l10nRepoPath + '%(locale)s'),
+         workdir=WithProperties('build/' + self.l10nRepoPath + '/%(locale)s'),
          haltOnFailure=True
         )
 
