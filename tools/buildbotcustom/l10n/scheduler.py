@@ -47,6 +47,7 @@ class L10nMixin(object):
                locales     = None):
       self.scheduler = scheduler
       self.repoType = repoType
+      self.cvsRoot = cvsRoot
       # set a default localesURL accordingly to the repoType if none has been set 
       if repoType.find('hg') >= 0:
         if not localesFile:
