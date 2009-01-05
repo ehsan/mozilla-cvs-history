@@ -1844,8 +1844,7 @@ class UnittestBuildFactory(MozillaBuildFactory):
              timeout=60*5
             )
             self.addStep(unittest_steps.MozillaMochichrome, warnOnWarnings=True,
-             workdir="build/objdir/_tests/testing/mochitest",
-             leakThreshold="8"
+             workdir="build/objdir/_tests/testing/mochitest"
             )
             self.addStep(unittest_steps.MozillaBrowserChromeTest, warnOnWarnings=True,
              workdir="build/objdir/_tests/testing/mochitest"
