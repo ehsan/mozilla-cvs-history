@@ -927,7 +927,6 @@ class ReleaseRepackFactory(BaseRepackFactory, ReleaseFactory):
         )
 
     def downloadBuilds(self):
-        # OMG CLEAN THIS SHIT UP
         # We need to know the absolute path to the input builds when we repack,
         # so we need retrieve at run-time as a build property
         self.addStep(SetProperty,
