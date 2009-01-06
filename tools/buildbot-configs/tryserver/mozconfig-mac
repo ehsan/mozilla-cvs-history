@@ -4,8 +4,8 @@ fi
 
 # for parity with cvs and buildbot configs, we're not currently generating 
 # symbols on this platform
-export CFLAGS="-gstabs -gfull -save-temps"
-export CXXFLAGS="-gstabs -gfull -save-temps"
+export CFLAGS="-gdwarf-2"
+export CXXFLAGS="-gdwarf-2"
 
 mk_add_options MOZ_CO_PROJECT=browser
 mk_add_options MOZ_MAKE_FLAGS="-j4"
