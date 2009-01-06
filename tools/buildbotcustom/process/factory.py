@@ -534,35 +534,6 @@ class MercurialBuildFactory(MozillaBuildFactory):
           '%s:%s/%s' % (self.stageServer, self.stageBasePath,
                         self.logUploadDir)]
         )
-        self.addStep(ShellCommand,
-         command=['wget', '-O', 'codesize-base-old.log',
-          'http://%s/pub/mozilla.org/firefox/%s/codesize-base.log' %\
-           (self.stageServer, self.logUploadDir)],
-         workdir='.',
-         env=self.env
-        )
-        self.addStep(Codesighs,
-         objdir=self.objdir,
-         platform=self.platform,
-         type='base',
-         env=self.env
-        )
-        self.addStep(GraphServerPost,
-         server=self.graphServer,
-         selector=self.graphSelector,
-         branch=self.graphBranch,
-         resultsname=self.baseName
-        )
-        self.addStep(ShellCommand,
-         command=['cat', '../codesize-base-diff.log']
-        )
-        self.addStep(ShellCommand,
-         command=['scp', '-o', 'User=%s' % self.stageUsername,
-          '-o', 'IdentityFile=~/.ssh/%s' % self.stageSshKey,
-          '../codesize-base.log',
-          '%s:%s/%s' % (self.stageServer, self.stageBasePath,
-                        self.logUploadDir)]
-        )
 
     def addUpdateSteps(self):
         self.addStep(CreateCompleteUpdateSnippet,
