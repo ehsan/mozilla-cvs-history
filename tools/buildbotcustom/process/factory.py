@@ -775,7 +775,8 @@ class BaseRepackFactory(MozillaBuildFactory):
         self.addStep(ShellCommand,
          command=['make', WithProperties('l10n-upload-%(locale)s')],
          env=uploadEnv,
-         workdir='build/'+branch+'/browser/locales'
+         workdir='build/'+branch+'/browser/locales',
+         flunkOnFailure=True
         )
 
 
