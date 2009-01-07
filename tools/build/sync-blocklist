@@ -3,7 +3,7 @@
 # 2008-05-09 - Copied from sync-configure (nthomas) 
 # 2008-10-21 - Check size to avoid checking in empty blocklists (dtownsend)
 
-URL='https://addons.mozilla.org/blocklist/1/%7Bec8030f7-c20a-464f-9b0e-13a3a9e97384%7D/3.0/'
+URL='https://addons.mozilla.org/blocklist/3/%7Bec8030f7-c20a-464f-9b0e-13a3a9e97384%7D/3.0/Firefox/20090105024647/blocklist-sync/en-US/nightly/blocklist-sync/default/default/'
 
 CVS="/usr/bin/cvs"
 CVSROOT='cltbld@cvs.mozilla.org:/cvsroot'
