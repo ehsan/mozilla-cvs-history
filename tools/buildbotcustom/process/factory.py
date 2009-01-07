@@ -1845,7 +1845,7 @@ class UnittestBuildFactory(MozillaBuildFactory):
 
     def addPrintChangesetStep(self):
         changesetLink = ''.join(['<a href=http://hg.mozilla.org/',
-            self.branch,
+            self.repoPath,
             '/index.cgi/rev/%(got_revision)s title="Built from revision %(got_revision)s">rev:%(got_revision)s</a>'])
         self.addStep(ShellCommand,
          command=['echo', 'TinderboxPrint:', WithProperties(changesetLink)],
