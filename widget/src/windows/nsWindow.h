@@ -323,7 +323,7 @@ protected:
   UINT                    MapFromNativeToDOM(UINT aNativeKeyCode);
 
 
-  BOOL                    OnInputLangChange(HKL aHKL, LRESULT *oResult);
+  BOOL                    OnInputLangChange(HKL aHKL);
   BOOL                    OnIMEChar(BYTE aByte1, BYTE aByte2, LPARAM aKeyState);
   BOOL                    OnIMEComposition(LPARAM  aGCS);
   BOOL                    OnIMECompositionFull();
@@ -340,6 +340,9 @@ protected:
   void                    ResolveIMECaretPos(nsWindow* aClient,
                                              nsRect&   aEventResult,
                                              nsRect&   aResult);
+  PRBool                  ConvertToANSIString(const nsAFlatString& aStr,
+                                              UINT aCodePage,
+                                              nsACString& aANSIStr);
 
   virtual PRBool          DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode,
                             const nsTArray<nsAlternativeCharCode>* aAlternativeChars,
@@ -396,7 +399,6 @@ protected:
   static PRBool     sIMEIsComposing;
   static PRBool     sIMEIsStatusChanged;
 
-  static DWORD      sIMEProperty;
   static nsString*  sIMECompUnicode;
   static PRUint8*   sIMEAttributeArray;
   static PRInt32    sIMEAttributeArrayLength;
@@ -466,7 +468,6 @@ protected:
   HIMC          mOldIMC;
   PRUint32      mIMEEnabled;
 
-  static HKL    gKeyboardLayout;
   static PRBool gSwitchKeyboardLayout;
 
   HKL           mLastKeyboardLayout;
