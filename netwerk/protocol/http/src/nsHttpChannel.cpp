@@ -1075,6 +1075,9 @@ nsHttpChannel::DoReplaceWithProxy(nsIProxyInfo* pi)
     if (NS_FAILED(rv))
         return rv;
 
+    // Make sure to do this _after_ calling OnChannelRedirect
+    newChannel->SetOriginalURI(mOriginalURI);
+
     // open new channel
     rv = newChannel->AsyncOpen(mListener, mListenerContext);
     if (NS_FAILED(rv))
@@ -2264,7 +2267,6 @@ nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI,
     if (mConnectionInfo->UsingSSL())
         newLoadFlags &= ~INHIBIT_PERSISTENT_CACHING;
 
-    newChannel->SetOriginalURI(mOriginalURI);
     newChannel->SetLoadGroup(mLoadGroup); 
     newChannel->SetNotificationCallbacks(mCallbacks);
     newChannel->SetLoadFlags(newLoadFlags);
@@ -2435,6 +2437,9 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
     rv = gHttpHandler->OnChannelRedirect(this, newChannel, redirectFlags);
     if (NS_FAILED(rv))
         return rv;
+
+    // Make sure to do this _after_ calling OnChannelRedirect
+    newChannel->SetOriginalURI(mOriginalURI);    
 
     // And now, the deprecated way
     nsCOMPtr<nsIHttpEventSink> httpEventSink;

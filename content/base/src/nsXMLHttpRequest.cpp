@@ -2279,6 +2279,17 @@ nsXMLHttpRequest::OnChannelRedirect(nsIChannel *aOldChannel,
     rv = nsContentUtils::GetSecurityManager()->
       CheckSameOriginURI(oldURI, newURI, PR_TRUE);
 
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIURI> newOrigURI;
+      rv = aNewChannel->GetOriginalURI(getter_AddRefs(newOrigURI));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (newOrigURI != newURI) {
+        rv = nsContentUtils::GetSecurityManager()->
+          CheckSameOriginURI(oldURI, newOrigURI, PR_TRUE);
+      }
+    }
+
     if (NS_FAILED(rv)) {
       mDenyResponseDataAccess = PR_TRUE;
       return rv;
