@@ -1852,7 +1852,7 @@ NS_IMETHODIMP
 HTMLContentSink::SetParser(nsIParser* aParser)
 {
   NS_PRECONDITION(aParser, "Should have a parser here!");
-  mParser = aParser;
+  mParser = do_QueryInterface(aParser);
   return NS_OK;
 }
 
