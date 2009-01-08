@@ -187,6 +187,8 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug458248.html \
 		file_bug458248.xml \
 		file_bug458248.xml^headers^ \
+		test_bug380418.html \
+		test_bug380418.html^headers^ \
 	$(NULL)
 
 libs:: $(_TEST_FILES)
