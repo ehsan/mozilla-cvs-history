@@ -106,6 +106,7 @@ MozillaEnvironments['mozbuild'] = {
             'C:\\mozilla-build\\xemacs\\XEmacs-21.4.19\\i586-pc-win32;' + \
             'C:\\mozilla-build\\info-zip;' + \
             'C:\\mozilla-build\\nsis-2.22;' + \
+            'D:\\mozilla-build\\nsis-2.33u;' + \
             '.;' + \
             'C:\\mozilla-build\\msys\\bin;' + \
             'C:\\Python24;' + \

@@ -53,6 +53,7 @@ MozillaEnvironments['win32-ref-platform'] = {
             'd:\\mozilla-build\\info-zip;' + \
             'd:\\mozilla-build\\wget;' + \
             'd:\\mozilla-build\\nsis-2.22;',
+            'D:\\mozilla-build\\nsis-2.33u;' + \
             'd:\\sdks\\v6.0\\bin'
     "INCLUDE": 'D:\\sdks\\v6.0\\include;' + \
                'D:\\sdks\\v6.0\\include\\atl;' + \
@@ -154,6 +155,7 @@ MozillaEnvironments['win32-vc8-mozbuild-unittest'] = {
             'D:\\mozilla-build\\xemacs\\XEmacs-21.4.19\\i586-pc-win32;' + \
             'D:\\mozilla-build\\info-zip;' + \
             'D:\\mozilla-build\\nsis-2.22;' + \
+            'D:\\mozilla-build\\nsis-2.33u;' + \
             '.;' + \
             'D:\\mozilla-build\\msys\\bin;' + \
             'D:\\mozilla-build\\python25;' + \
