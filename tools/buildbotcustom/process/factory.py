@@ -1281,7 +1281,7 @@ class SingleSourceFactory(ReleaseFactory):
         uploadEnv = {'UPLOAD_HOST': stagingServer,
                      'UPLOAD_USER': stageUsername,
                      'UPLOAD_SSH_KEY': '~/.ssh/%s' % stageSshKey,
-                     'UPLOAD_TO_TMP': '1',
+                     'UPLOAD_TO_TEMP': '1',
                      'POST_UPLOAD_CMD': postUploadCmd}
 
         self.addStep(ShellCommand,
