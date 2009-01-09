@@ -640,6 +640,13 @@ class ReleaseBuildFactory(MercurialBuildFactory):
         MercurialBuildFactory.__init__(self, **kwargs)
 
     def doUpload(self):
+        # Make sure the complete MAR has been generated
+        self.addStep(ShellCommand,
+            command=['make', '-C',
+                     '%s/tools/update-packaging' % self.objdir],
+            env=self.env,
+            haltOnFailure=True
+        )
         self.addStep(ShellCommand,
          command=WithProperties('echo buildID=%(buildid)s > ' + \
                                 '%s_info.txt' % self.platform),
