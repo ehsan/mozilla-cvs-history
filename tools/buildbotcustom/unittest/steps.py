@@ -345,7 +345,7 @@ class MozillaMochitest(ShellCommandReportTimeout):
                 leaked = int(match.group(1)) != 0
         summary = "TinderboxPrint: mochitest<br/>"
         if not (passCount + failCount + todoCount):
-            summary += "FAIL\n"
+            summary += '<em class="testfail">FAIL</em>\n'
         else:
             summary += summaryText(passCount, failCount, todoCount, leaked) + "\n"
         self.addCompleteLog('summary', summary)
@@ -400,7 +400,7 @@ class MozillaMochichrome(ShellCommandReportTimeout):
                 leaked = int(match.group(1)) != 0
         summary = "TinderboxPrint: chrome<br/>"
         if not (passCount + failCount + todoCount):
-            summary += "FAIL\n"
+            summary += '<em class="testfail">FAIL</em>\n'
         else:
             summary += summaryText(passCount, failCount, todoCount, leaked) + "\n"
         self.addCompleteLog('summary', summary)
@@ -454,7 +454,7 @@ class MozillaBrowserChromeTest(ShellCommandReportTimeout):
                 leaked = int(match.group(1)) != 0
         summary = "TinderboxPrint: browser<br/>"
         if not (passCount + failCount + todoCount):
-            summary += "FAIL\n"
+            summary += '<em class="testfail">FAIL</em>\n'
         else:
             summary += summaryText(passCount, failCount, todoCount, leaked) + "\n"
         self.addCompleteLog('summary', summary)
@@ -494,7 +494,7 @@ class MozillaA11YTest(MozillaMochichrome):
                 todoCount = int(line.split()[-1])
         summary = "TinderboxPrint: a11y<br/>"
         if not (passCount + failCount + todoCount):
-            summary += "FAIL\n"
+            summary += '<em class="testfail">FAIL</em>\n'
         else:
             summary +=  str(passCount) + "/" + str(failCount) + "/" + str(todoCount) + "\n"
         self.addCompleteLog('summary', summary)
