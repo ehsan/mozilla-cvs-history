@@ -110,7 +110,7 @@ class MozillaBuildFactory(BuildFactory):
             'final_verification',
             'l10n_verification',
             'mac_update_verify',
-            'mac_build'
+            'mac_build',
             'win32_update_verify',
             'win32_build',
             'linux_update_verify',
