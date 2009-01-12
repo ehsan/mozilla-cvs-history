@@ -34,15 +34,17 @@ cvsCoLog = "cvsco.log"
 tboxClobberCvsCoLog = "tbox-CLOBBER-cvsco.log"
 buildbotClobberCvsCoLog = "buildbot-CLOBBER-cvsco.log"
 
+def emphasizeFailureText(text):
+    return '<em class="testfail">%s</em>' % text
+
 def summaryText(passCount, failCount, knownFailCount=None, leaked=False):
-    knownFail = ""
-    if knownFailCount is not None:
-        knownFail = "/%d" % knownFailCount
+    summary = "%d/%d" % (passCount, failCount)
+    if knownFailCount != None:
+        summary += "/%d" % knownFailCount
+    if failCount > 0:
+        summary = emphasizeFailureText(summary)
     if leaked:
-        knownFail += " LEAK"
-    summary = "%d/%d%s" % (passCount, failCount, knownFail)
-    if failCount > 0 or leaked:
-        summary = '<em class="testfail">%s</em>' % summary
+        summary += " %s" % emphasizeFailureText("LEAK")
     return summary
 
 class ShellCommandReportTimeout(ShellCommand):
@@ -60,8 +62,8 @@ class ShellCommandReportTimeout(ShellCommand):
                 self.addCompleteLog('timeout',
                                     'buildbot.slave.commands.TimeoutError: ' +
                                     line +
-                                    "TinderboxPrint: " +
-                                    self.name + ' <em class="testfail">timeout</em><br/>\n')
+                                    "TinderboxPrint: " + self.name + " " +
+                                    emphasizeFailureText("timeout") + "<br/>\n")
                 return WARNINGS
         return superResult
 
@@ -231,26 +233,32 @@ class MozillaReftest(ShellCommandReportTimeout):
 	ShellCommandReportTimeout.__init__(self, **kwargs)
    
     def createSummary(self, log):
-        testCount = 0
-        passCount = 0
-        failCount = 0
-        knownFailCount = 0
+        # Counts.
+        successfulCount = -1
+        unexpectedCount = -1
+        knownProblemsCount = -1
+        # Regular expression for result summary details.
+        infoRe = re.compile(r"REFTEST INFO \| (Successful|Unexpected|Known problems): (\d+) \(")
+        # Process the log.
         for line in log.readlines():
-            if "REFTEST" not in line:
+            m = infoRe.match(line)
+            # Skip non-matching lines.
+            if m == None:
                 continue
-            if "IMAGE" in line:
-                continue
-            if "(EXPECTED RANDOM)" in line:
-                continue
-            testCount += 1
-            if "TEST-UNEXPECTED-" in line:
-                failCount += 1
-                continue
-            if "TEST-KNOWN-FAIL" in line:
-                knownFailCount += 1
-            else:
-                passCount += 1
-        summary = "TinderboxPrint: " + self.name + "<br/>" + summaryText(passCount, failCount, knownFailCount) + "\n"
+            # Set the counts.
+            r = m.group(1)
+            if r == "Successful":
+                successfulCount = int(m.group(2))
+            elif r == "Unexpected":
+                unexpectedCount = int(m.group(2))
+            elif r == "Known problems":
+                knownProblemsCount = int(m.group(2))
+        # Add the summary.
+        summary = "TinderboxPrint: %s<br/>" % self.name
+        if successfulCount < 0 or unexpectedCount < 0 or knownProblemsCount < 0:
+            summary += "%s\n" % emphasizeFailureText("FAIL")
+        else:
+            summary += "%s\n" % summaryText(successfulCount, unexpectedCount, knownProblemsCount)
         self.addCompleteLog('summary', summary)
     
     def evaluateCommand(self, cmd):
@@ -345,7 +353,7 @@ class MozillaMochitest(ShellCommandReportTimeout):
                 leaked = int(match.group(1)) != 0
         summary = "TinderboxPrint: mochitest<br/>"
         if not (passCount + failCount + todoCount):
-            summary += '<em class="testfail">FAIL</em>\n'
+            summary += "%s\n" % emphasizeFailureText("FAIL")
         else:
             summary += summaryText(passCount, failCount, todoCount, leaked) + "\n"
         self.addCompleteLog('summary', summary)
@@ -400,7 +408,7 @@ class MozillaMochichrome(ShellCommandReportTimeout):
                 leaked = int(match.group(1)) != 0
         summary = "TinderboxPrint: chrome<br/>"
         if not (passCount + failCount + todoCount):
-            summary += '<em class="testfail">FAIL</em>\n'
+            summary += "%s\n" % emphasizeFailureText("FAIL")
         else:
             summary += summaryText(passCount, failCount, todoCount, leaked) + "\n"
         self.addCompleteLog('summary', summary)
@@ -454,7 +462,7 @@ class MozillaBrowserChromeTest(ShellCommandReportTimeout):
                 leaked = int(match.group(1)) != 0
         summary = "TinderboxPrint: browser<br/>"
         if not (passCount + failCount + todoCount):
-            summary += '<em class="testfail">FAIL</em>\n'
+            summary += "%s\n" % emphasizeFailureText("FAIL")
         else:
             summary += summaryText(passCount, failCount, todoCount, leaked) + "\n"
         self.addCompleteLog('summary', summary)
@@ -494,7 +502,7 @@ class MozillaA11YTest(MozillaMochichrome):
                 todoCount = int(line.split()[-1])
         summary = "TinderboxPrint: a11y<br/>"
         if not (passCount + failCount + todoCount):
-            summary += '<em class="testfail">FAIL</em>\n'
+            summary += "%s\n" % emphasizeFailureText("FAIL")
         else:
             summary +=  str(passCount) + "/" + str(failCount) + "/" + str(todoCount) + "\n"
         self.addCompleteLog('summary', summary)
