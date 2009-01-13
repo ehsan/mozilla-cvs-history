@@ -37,14 +37,20 @@ buildbotClobberCvsCoLog = "buildbot-CLOBBER-cvsco.log"
 def emphasizeFailureText(text):
     return '<em class="testfail">%s</em>' % text
 
-def summaryText(passCount, failCount, knownFailCount=None, leaked=False):
+# Some test suites (like TUnit) may not (yet) have the |knownFailCount| feature.
+# Some test suites (like TUnit and Reftest) may not (yet) have the |leaked| feature.
+# Expected values for |leaked|: False, no leak; True, leaked; None, report failure.
+def summaryText(passCount, failCount, knownFailCount = None, leaked = False):
+    # Format the tests counts.
     summary = "%d/%d" % (passCount, failCount)
     if knownFailCount != None:
         summary += "/%d" % knownFailCount
+    # Check whether all tests succeeded.
     if failCount > 0:
         summary = emphasizeFailureText(summary)
-    if leaked:
-        summary += " %s" % emphasizeFailureText("LEAK")
+    # Format the leak status.
+    if leaked != False:
+        summary += "&nbsp;%s" % emphasizeFailureText((leaked and "LEAK") or "FAIL")
     return summary
 
 class ShellCommandReportTimeout(ShellCommand):
