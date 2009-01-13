@@ -269,24 +269,9 @@ class CompareLeakLogs(ShellCommand):
         slug = "Lk: %s, MH: %s, A: %s" % (lk, mh, a)
         logText = ""
         if self.testname.startswith("current"):
-            logText += tinderboxPrint(lkTestname,
-                                      "Total Bytes malloc'ed and not free'd",
-                                      0,
-                                      "bytes",
-                                      lkAbbr,
-                                      lk)
-            logText += tinderboxPrint(mhTestname,
-                                      "Maximum Heap Size",
-                                      0,
-                                      "bytes",
-                                      mhAbbr,
-                                      mh)
-            logText += tinderboxPrint(aTestname,
-                                      "Allocations - number of calls to malloc and friends",
-                                      0,
-                                      "count",
-                                      aAbbr,
-                                      a)
+            logText += "TinderboxPrint: Lk:%s\n" % lk
+            logText += "TinderboxPrint: MH:%s\n" % mh
+            logText += "TinderboxPrint: A:%s\n" % a
         else:
             logText += "Lk: %s\nMH: %s\nA: %s\n" % (lk, mh, a)
 
