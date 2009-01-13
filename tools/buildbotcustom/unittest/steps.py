@@ -260,15 +260,15 @@ class MozillaReftest(ShellCommandReportTimeout):
         else:
             summary += "%s\n" % summaryText(successfulCount, unexpectedCount, knownProblemsCount)
         self.addCompleteLog('summary', summary)
-    
+
     def evaluateCommand(self, cmd):
         superResult = self.super_class.evaluateCommand(self, cmd)
-        if SUCCESS != superResult:
-            return WARNINGS
-        if re.search('TEST-UNEXPECTED-', cmd.logs['stdio'].getText()):
+        # Assume that having the "Unexpected: 0" line means the tests run completed.
+        if SUCCESS != superResult or \
+           not re.search(r"^REFTEST INFO \| Unexpected: 0 \(", cmd.logs["stdio"].getText(), re.MULTILINE):
             return WARNINGS
         return SUCCESS
-    
+
 class MozillaUnixReftest(MozillaReftest):
     command = ["../../objdir/dist/bin/run-mozilla.sh",
                "../../objdir/dist/bin/firefox",
