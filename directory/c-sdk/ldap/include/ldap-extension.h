@@ -638,6 +638,8 @@ LDAP_API(int) LDAP_CALL ldap_memcache_set( LDAP *ld, LDAPMemCache *cache );
 LDAP_API(int) LDAP_CALL ldap_memcache_get( LDAP *ld, LDAPMemCache **cachep );
 LDAP_API(void) LDAP_CALL ldap_memcache_flush( LDAPMemCache *cache, char *dn,
         int scope );
+LDAP_API(void) LDAP_CALL ldap_memcache_flush_results( LDAPMemCache *cache,
+        char *dn, int scope );
 LDAP_API(void) LDAP_CALL ldap_memcache_destroy( LDAPMemCache *cache );
 LDAP_API(void) LDAP_CALL ldap_memcache_update( LDAPMemCache *cache );
 
