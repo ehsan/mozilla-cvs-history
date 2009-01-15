@@ -284,6 +284,7 @@ class MozillaUnixReftest(MozillaReftest):
                "reftest.list"]
 
 class MozillaOSXReftest(MozillaReftest):
+    # Add support for |brand_name| argument.
     def __init__(self, brand_name, **kwargs):
         MozillaReftest.__init__(self, **kwargs)
         self.command = ["../../objdir/dist/%s.app/Contents/MacOS/firefox" % brand_name,
@@ -310,6 +311,7 @@ class MozillaUnixCrashtest(MozillaCrashtest):
                "crashtests.list"]
 
 class MozillaOSXCrashtest(MozillaCrashtest):
+    # Add support for |brand_name| argument.
     def __init__(self, brand_name, **kwargs):
         MozillaCrashtest.__init__(self, **kwargs)
         self.command = ["../../objdir/dist/%s.app/Contents/MacOS/firefox" % brand_name,
@@ -325,8 +327,6 @@ class MozillaWin32Crashtest(MozillaCrashtest):
 class MozillaMochitest(ShellCommandReportTimeout):
     name = "mochitest"
     warnOnFailure = True
-    description = ["mochitest"]
-    descriptionDone = ["mochitest complete"]
     command = ["python",
                "runtests.py",
                "--autorun",
@@ -334,6 +334,8 @@ class MozillaMochitest(ShellCommandReportTimeout):
                "--close-when-done"]
     
     def __init__(self, leakThreshold=None, **kwargs):
+        self.description = [self.name + " test"]
+        self.descriptionDone = [self.description[0] + " complete"]
         if leakThreshold:
             self.command.append("--leak-threshold=" + str(leakThreshold))
         ShellCommandReportTimeout.__init__(self, **kwargs)    
@@ -357,7 +359,7 @@ class MozillaMochitest(ShellCommandReportTimeout):
                 match = re.search(r"leaked (\d+) bytes during test execution", line)
                 assert match is not None
                 leaked = int(match.group(1)) != 0
-        summary = "TinderboxPrint: mochitest<br/>"
+        summary = "TinderboxPrint: %s<br/>" % self.name
         if not (passCount + failCount + todoCount):
             summary += "%s\n" % emphasizeFailureText("FAIL")
         else:
@@ -376,78 +378,19 @@ class MozillaMochitest(ShellCommandReportTimeout):
             return WARNINGS
         return SUCCESS
 
-class MozillaMochichrome(ShellCommandReportTimeout):
+class MozillaMochichrome(MozillaMochitest):
     name = "mochichrome"
-    warnOnFailure = True
-    description = ["mochichrome"]
-    descriptionDone = ["mochichrome complete"]
-    command = ["python",
-              "runtests.py",
-              "--chrome",
-              "--autorun",
-              "--console-level=INFO",
-              "--close-when-done"]
-    
-    def __init__(self, leakThreshold=None, **kwargs):
-        if leakThreshold:
-            self.command.append("--leak-threshold=" + str(leakThreshold))
-        ShellCommandReportTimeout.__init__(self, **kwargs)    
-	self.super_class = ShellCommandReportTimeout
-    
-    def createSummary(self, log):
-        passCount = 0
-        failCount = 0
-        todoCount = 0
-        leaked = False
-        for line in log.readlines():
-            if "INFO Passed:" in line:
-                passCount = int(line.split()[-1])
-            if "INFO Failed:" in line:
-                failCount = int(line.split()[-1])
-            if "INFO Todo:" in line:
-                todoCount = int(line.split()[-1])
-            if "during test execution" in line and \
-              "runtests-leaks" in line and \
-              "TEST-UNEXPECTED-FAIL" in line:
-                match = re.search(r"leaked (\d+) bytes during test execution", line)
-                assert match is not None
-                leaked = int(match.group(1)) != 0
-        summary = "TinderboxPrint: chrome<br/>"
-        if not (passCount + failCount + todoCount):
-            summary += "%s\n" % emphasizeFailureText("FAIL")
-        else:
-            summary += summaryText(passCount, failCount, todoCount, leaked) + "\n"
-        self.addCompleteLog('summary', summary)
-    
-    def evaluateCommand(self, cmd):
-        superResult = self.super_class.evaluateCommand(self, cmd)
-        if SUCCESS != superResult:
-            return WARNINGS
-        if re.search('TEST-UNEXPECTED-', cmd.logs['stdio'].getText()):
-            return WARNINGS
-        if re.search('FAIL Exited', cmd.logs['stdio'].getText()):
-            return WARNINGS
-        if not re.search('TEST-PASS', cmd.logs['stdio'].getText()):
-            return WARNINGS
-        return SUCCESS
-    
-class MozillaBrowserChromeTest(ShellCommandReportTimeout):
-    name = "browser chrome test"
-    warnOnFailure = True
-    description = ["browser chrome test"]
-    descriptionDone = ["browser chrome test complete"]
-    command = ["python",
-               "runtests.py",
-               "--autorun",
-               "--browser-chrome", 
-               "--close-when-done"]
-    
-    def __init__(self, leakThreshold=None, **kwargs):
-        if leakThreshold:
-            self.command.append("--leak-threshold=" + str(leakThreshold))
-        ShellCommandReportTimeout.__init__(self, **kwargs)    
-	self.super_class = ShellCommandReportTimeout
-    
+    command = MozillaMochitest.command + [
+               "--chrome",
+              ]
+
+class MozillaBrowserChromeTest(MozillaMochitest):
+    name = "browserchrome"
+    command = MozillaMochitest.command + [
+               "--browser-chrome",
+              ]
+
+    # Support result summary format which differs from MozillaMochitest's.
     def createSummary(self, log):
         passCount = 0
         failCount = 0
@@ -472,7 +415,8 @@ class MozillaBrowserChromeTest(ShellCommandReportTimeout):
         else:
             summary += summaryText(passCount, failCount, todoCount, leaked) + "\n"
         self.addCompleteLog('summary', summary)
-    
+
+    # Support result summary format which differs from MozillaMochitest's.
     def evaluateCommand(self, cmd):
         superResult = self.super_class.evaluateCommand(self, cmd)
         if SUCCESS != superResult:
@@ -482,37 +426,13 @@ class MozillaBrowserChromeTest(ShellCommandReportTimeout):
         if re.search('FAIL Exited', cmd.logs['stdio'].getText()):
             return WARNINGS
         return SUCCESS
-    
-class MozillaA11YTest(MozillaMochichrome):
-    name = "a11y test"
-    warnOnFailure = True
-    description = ["a11y test"]
-    descriptionDone = ["a11y test complete"]
-    command = ["python",
-               "runtests.py",
-               "--console-level=INFO",
-               "--autorun",
-               "--a11y", 
-               "--close-when-done"]
-    
-    def createSummary(self, log):
-        passCount = 0
-        failCount = 0
-        todoCount = 0
-        for line in log.readlines():
-            if "INFO Passed:" in line:
-                passCount = int(line.split()[-1])
-            if "INFO Failed:" in line:
-                failCount = int(line.split()[-1])
-            if "INFO Todo:" in line:
-                todoCount = int(line.split()[-1])
-        summary = "TinderboxPrint: a11y<br/>"
-        if not (passCount + failCount + todoCount):
-            summary += "%s\n" % emphasizeFailureText("FAIL")
-        else:
-            summary +=  str(passCount) + "/" + str(failCount) + "/" + str(todoCount) + "\n"
-        self.addCompleteLog('summary', summary)
-    
+
+class MozillaA11YTest(MozillaMochitest):
+    name = "a11y"
+    command = MozillaMochitest.command + [
+               "--a11y",
+              ]
+
 class CreateProfile(ShellCommandReportTimeout):
     name = "create profile"
     warnOnFailure = True
