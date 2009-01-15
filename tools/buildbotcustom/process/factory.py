@@ -704,6 +704,7 @@ class BaseRepackFactory(MozillaBuildFactory):
                   'if [ -d '+branch+'/dist/upload ]; then ' +
                   'rm -rf '+branch+'/dist/upload; ' +
                   'fi'],
+         description="rm dist/upload",
          workdir='build',
          haltOnFailure=True
         )
@@ -714,11 +715,16 @@ class BaseRepackFactory(MozillaBuildFactory):
          workdir='build',
          flunkOnFailure=False
         )
-        self.addStep(Mercurial,
-         mode='update',
-         baseURL=sourceRepo,
-         defaultBranch=repoPath,
-         workdir='build/'+branch,
+        self.addStep(ShellCommand,
+         command=['sh', '-c',
+          WithProperties('if [ -d '+branch+' ]; then ' +
+                         'hg -R '+branch+' pull -r tip ; ' +
+                         'else ' +
+                         'hg clone ' +
+                         sourceRepo+'/'+repoPath+' ; ' +
+                         'fi')],
+         descriptionDone="en-US's source",
+         workdir='build/',
          timeout=30*60 # 30 minutes
         )
         self.addStep(ShellCommand,
