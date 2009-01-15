@@ -361,6 +361,9 @@ def test_file(filename):
       sys.exit(0)
     utils.debug("Received test results: " + " ".join(browser_dump))
     results[testname] = [browser_dump, counter_dump]
+    # If we're doing CSV, write this test immediately (bug 419367)
+    if csv_dir != '':
+      send_to_csv(csv_dir, {testname : results[testname]})
     utils.stamped_msg("Completed test " + testname, "Stopped")
   utils.stamped_msg(title, "Stopped")
 
@@ -370,8 +373,6 @@ def test_file(filename):
     utils.stamped_msg("Sending results", "Started")
     send_to_graph(results_server, results_link, title, date, browser_config, results)
     utils.stamped_msg("Completed sending results", "Stopped")
-  if csv_dir != '':
-    send_to_csv(csv_dir, results)
   
 if __name__=='__main__':
   optlist, args = getopt.getopt(sys.argv[1:], 'dn', ['debug', 'noisy'])
