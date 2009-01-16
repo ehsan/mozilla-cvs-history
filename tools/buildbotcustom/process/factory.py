@@ -834,7 +834,6 @@ class NightlyRepackFactory(BaseRepackFactory):
     def doRepack(self):
         self.addStep(ShellCommand,
          command=['make', WithProperties('installers-%(locale)s')],
-         env={'PKG_DMG_SOURCE': self.project},
          haltOnFailure=True,
          workdir='build/'+self.branch+'/browser/locales'
         )
