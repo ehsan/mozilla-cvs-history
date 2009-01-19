@@ -3,17 +3,19 @@ from urlparse import urljoin
 # This file contains misc. helper function that don't make sense to put in
 # other files. For example, functions that are called in a master.cfg
 
-def get_l10n_repositories(file, l10nCentral, relbranch):
+def get_l10n_repositories(file, l10nRepoPath, relbranch):
     """Reads in a list of locale names and revisions for their associated
        repository from 'file'.
     """
+    if not l10nRepoPath.endswith('/'):
+        l10nRepoPath = l10nRepoPath + '/'
     repositories = {}
     for localeLine in open(file).readlines():
         locale, revision = localeLine.rstrip().split()
         if revision == 'FIXME':
             raise Exception('Found FIXME in %s for locale "%s"' % \
                            (file, locale))
-        locale = urljoin(l10nCentral, locale)
+        locale = urljoin(l10nRepoPath, locale)
         repositories[locale] = {
             'revision': revision,
             'relbranchOverride': relbranch,
