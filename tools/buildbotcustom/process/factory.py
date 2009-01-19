@@ -1709,6 +1709,10 @@ class UnittestBuildFactory(MozillaBuildFactory):
              workdir="D:\\Utilities"
             )
 
+        self.addStep(ShellCommand,
+         command=['echo', WithProperties('Building on: %(slavename)s')],
+         env=self.env
+        )
         self.addStepNoEnv(Mercurial, mode='update',
          baseURL='http://%s/' % self.hgHost,
          defaultBranch=self.repoPath
