@@ -109,12 +109,15 @@ class MozillaBuildFactory(BuildFactory):
             'updates',
             'final_verification',
             'l10n_verification',
-            'mac_update_verify',
-            'mac_build',
+            'macosx_update_verify',
+            'macosx_build',
+            'macosx_repack',
             'win32_update_verify',
             'win32_build',
+            'win32_repack',
             'linux_update_verify',
             'linux_build',
+            'linux_repack'
             ]
 
     def __init__(self, hgHost, repoPath, buildToolsRepoPath, buildSpace=0,
@@ -1053,7 +1056,7 @@ class StagingRepositorySetupFactory(ReleaseFactory):
 class ReleaseTaggingFactory(ReleaseFactory):
     def __init__(self, repositories, productName, appName, appVersion,
                  milestone, baseTag, buildNumber, hgUsername, hgSshKey=None,
-                 **kwargs):
+                 buildSpace=1.5, **kwargs):
         """Repositories looks like this:
             repositories[name]['revision']: changeset# or tag
             repositories[name]['relbranchOverride']: branch name
@@ -1107,7 +1110,8 @@ class ReleaseTaggingFactory(ReleaseFactory):
 
         """
         # MozillaBuildFactory needs the 'repoPath' argument, but we don't
-        ReleaseFactory.__init__(self, repoPath='nothing', **kwargs)
+        ReleaseFactory.__init__(self, repoPath='nothing', buildSpace=buildSpace,
+                                **kwargs)
 
         # extremely basic validation, to catch really dumb configurations
         assert len(repositories) > 0, \
@@ -1276,8 +1280,8 @@ class ReleaseTaggingFactory(ReleaseFactory):
 class SingleSourceFactory(ReleaseFactory):
     def __init__(self, productName, appVersion, baseTag, stagingServer,
                  stageUsername, stageSshKey, buildNumber, autoconfDirs=['.'],
-                 **kwargs):
-        ReleaseFactory.__init__(self, **kwargs)
+                 buildSpace=1, **kwargs):
+        ReleaseFactory.__init__(self, buildSpace=buildSpace, **kwargs)
         releaseTag = '%s_RELEASE' % (baseTag)
         bundleFile = 'source/%s-%s.bundle' % (productName, appVersion)
         sourceTarball = 'source/%s-%s-source.tar.bz2' % (productName,
@@ -1371,7 +1375,7 @@ class ReleaseUpdatesFactory(ReleaseFactory):
                  appName, productName, appVersion, oldVersion, buildNumber,
                  ftpServer, bouncerServer, stagingServer, useBetaChannel,
                  stageUsername, stageSshKey, ausUser, ausHost,
-                 commitPatcherConfig=True, **kwargs):
+                 commitPatcherConfig=True, buildSpace=8, **kwargs):
         """cvsroot: The CVSROOT to use when pulling patcher, patcher-configs,
                     Bootstrap/Util.pm, and MozBuild. It is also used when
                     commiting the version-bumped patcher config so it must have
@@ -1388,7 +1392,7 @@ class ReleaseUpdatesFactory(ReleaseFactory):
                                 the bumped patcher config file will be
                                 commited to the CVS repository.
         """
-        ReleaseFactory.__init__(self, **kwargs)
+        ReleaseFactory.__init__(self, buildSpace=buildSpace, **kwargs)
 
         patcherConfigFile = 'patcher-configs/%s' % patcherConfig
         shippedLocales = self.getShippedLocales(self.repository, baseTag,
@@ -1560,8 +1564,9 @@ class UpdateVerifyFactory(ReleaseFactory):
     def __init__(self, cvsroot, patcherToolsTag, hgUsername, baseTag, appName,
                  platform, productName, oldVersion, oldBuildNumber, version,
                  buildNumber, ausServerUrl, stagingServer, verifyConfig,
-                 oldAppVersion=None, appVersion=None, hgSshKey=None, **kwargs):
-        ReleaseFactory.__init__(self, **kwargs)
+                 oldAppVersion=None, appVersion=None, hgSshKey=None,
+                 buildSpace=.3, **kwargs):
+        ReleaseFactory.__init__(self, buildSpace=buildSpace, **kwargs)
 
         if not oldAppVersion:
             oldAppVersion = oldVersion
@@ -1863,9 +1868,10 @@ class UnittestBuildFactory(MozillaBuildFactory):
 class L10nVerifyFactory(ReleaseFactory):
     def __init__(self, cvsroot, stagingServer, productName, appVersion,
                  buildNumber, oldAppVersion, oldBuildNumber, verifyDir='verify',
-                 linuxExtension='bz2', **kwargs):
+                 linuxExtension='bz2', buildSpace=14, **kwargs):
         # MozillaBuildFactory needs the 'repoPath' argument, but we don't
-        ReleaseFactory.__init__(self, repoPath='nothing', **kwargs)
+        ReleaseFactory.__init__(self, repoPath='nothing', buildSpace=buildSpace,
+                                **kwargs)
 
         productDir = 'build/%s/%s-%s' % (verifyDir, 
                                          productName,
