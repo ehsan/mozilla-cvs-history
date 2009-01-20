@@ -88,7 +88,7 @@ class GetHgRevision(ShellCommand):
             mod = rev.find('+')
             if mod != -1:
                 rev = rev[:mod]
-                self.setProprety('hg_modified', True)
+                self.setProperty('hg_modified', True)
             self.setProperty('hg_revision', rev)
         except:
             log.msg("Could not find hg revision")
