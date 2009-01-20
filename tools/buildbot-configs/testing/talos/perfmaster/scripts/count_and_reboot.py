@@ -55,4 +55,6 @@ if __name__ == '__main__':
     if increment_count(options.countfile) >= options.maxcount:
         if options.zero:
             open(options.countfile, "w").write("0\n")
+        print "Reached max number of runs before reboot required, restarting machine..." 
+        sys.stdout.flush()
         reboot()
