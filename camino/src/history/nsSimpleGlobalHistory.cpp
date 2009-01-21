@@ -1078,7 +1078,9 @@ nsSimpleGlobalHistory::GetRowValue(nsIMdbRow *aRow, mdb_column aCol,
   if (!yarn.mYarn_Fill || !yarn.mYarn_Buf)
     return NS_OK;
 
-  PR_sscanf((const char*)yarn.mYarn_Buf, "%lld", aResult);
+  long long ld;
+  PR_sscanf((const char*)yarn.mYarn_Buf, "%lld", &ld);
+  *aResult = ld;
 
   return NS_OK;
 }
