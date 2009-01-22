@@ -117,8 +117,9 @@ enum {
 - (BOOL)readCaminoPListBookmarks:(NSDictionary *)plist;
 - (BOOL)readSafariPListBookmarks:(NSDictionary *)plist;
 
-// these are "import" methods that import into a subfolder.
-- (BOOL)importHTMLFile:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder;
+// Import methods that return a new folder, or nil on failure.
+- (BookmarkFolder*)importHTMLFile:(NSString *)pathToFile;
+// Import methods that import into a subfolder (old style; to be converted to the above).
 - (BOOL)importPropertyListFile:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder;
 - (void)importBookmarksThreadReturn:(NSDictionary *)aDict;
 
@@ -1482,14 +1483,13 @@ static BookmarkManager* gBookmarkManager = nil;
 - (void)importBookmarksThreadEntry:(NSDictionary *)aDict
 {
   NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
-  BOOL success = TRUE;
+  BOOL success = YES;
   int currentFile = 0;
   NSArray *pathArray = [aDict objectForKey:kBookmarkImportPathIndentifier];
   NSArray *titleArray = [aDict objectForKey:kBookmarkImportNewFolderNameIdentifier];
   NSString *pathToFile;
   NSString *aTitle;
-  BookmarkFolder *topImportFolder = [[BookmarkFolder alloc] init];
-  BookmarkFolder *importFolder = topImportFolder;
+  BookmarkFolder *topImportFolder = nil;
 
   NSEnumerator *pathEnumerator = [pathArray objectEnumerator];
   NSEnumerator *titleEnumerator = [titleArray objectEnumerator];
@@ -1497,25 +1497,35 @@ static BookmarkManager* gBookmarkManager = nil;
   [self startSuppressingChangeNotifications];
 
   while (success && (pathToFile = [pathEnumerator nextObject])) {
-    if (!importFolder)
-      importFolder = [[BookmarkFolder alloc] init];
+    BookmarkFolder *importFolder = [[[BookmarkFolder alloc] init] autorelease];
 
     // TODO: Once Opera and Plist importing have been moved to the new style,
-    // reorganize this loop not to have importFolder and eliminate the
-    // intermediate import*File:intoFolder: methods.
+    // reorganize this loop not to pre-allocate importFolder, and to use the
+    // nil-ness of importFolder as the success indication.
     NSString *extension = [[pathToFile pathExtension] lowercaseString];
-    if ([extension isEqualToString:@""]) // we'll go out on a limb here
+    if ([extension isEqualToString:@""]) { // we'll go out on a limb here
       success = [self readOperaFile:pathToFile intoFolder:importFolder];
-    else if ([extension isEqualToString:@"html"] || [extension isEqualToString:@"htm"])
-      success = [self importHTMLFile:pathToFile intoFolder:importFolder];
-    else if ([extension isEqualToString:@"plist"] || !success)
+    }
+    else if ([extension isEqualToString:@"html"] || [extension isEqualToString:@"htm"]) {
+      BookmarkFolder* htmlImportRoot = [self importHTMLFile:pathToFile];
+      if (htmlImportRoot) {
+        success = YES;
+        importFolder = htmlImportRoot;
+      }
+    }
+    else if ([extension isEqualToString:@"plist"] || !success) {
       success = [self importPropertyListFile:pathToFile intoFolder:importFolder];
+    }
     // we don't know the extension, or we failed to load.  we'll take another
     // crack at it trying everything we know.
     if (!success) {
       success = [self readOperaFile:pathToFile intoFolder:importFolder];
       if (!success) {
-        success = [self importHTMLFile:pathToFile intoFolder:importFolder];
+        BookmarkFolder* htmlImportRoot = [self importHTMLFile:pathToFile];
+        if (htmlImportRoot) {
+          success = YES;
+          importFolder = htmlImportRoot;
+        }
       }
     }
 
@@ -1526,14 +1536,20 @@ static BookmarkManager* gBookmarkManager = nil;
 
     [importFolder setTitle:aTitle];
 
-    if (importFolder != topImportFolder) {
+    // The first folder will be top level, and the rest nested underneath it.
+    // TODO: This was the existing behavior, but when we improve the feedback
+    // for import failures we should do something better here.
+    if (topImportFolder)
       [topImportFolder appendChild:importFolder];
-      [importFolder release];
-    }
+    else
+      topImportFolder = [importFolder retain];
 
-    importFolder = nil;
     currentFile++;
   }
+
+  // If somehow we imported nothing, return an empty folder.
+  if (!topImportFolder)
+    topImportFolder = [[BookmarkFolder alloc] init];
 
   [self stopSuppressingChangeNotifications];
 
@@ -1632,21 +1648,21 @@ static BookmarkManager* gBookmarkManager = nil;
 }
 
 
-- (BOOL)importHTMLFile:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder
+- (BookmarkFolder*)importHTMLFile:(NSString *)pathToFile
 {
   BookmarkItem* importRoot = [[HTMLBookmarkConverter htmlBookmarkConverter] bookmarksFromFile:pathToFile];
   if (!importRoot)
-    return NO;
+    return nil;
   if ([importRoot isKindOfClass:[BookmarkFolder class]]) {
-    NSEnumerator* importEnumerator = [[(BookmarkFolder*)importRoot children] objectEnumerator];
-    BookmarkItem* item;
-    while ((item = [importEnumerator nextObject]))
-      [aFolder appendChild:item];
+    return (BookmarkFolder*)importRoot;
   }
   else {
-    [aFolder appendChild:importRoot];
+    // TODO: once the other imports are using the new style, make them all
+    // return a BookmarkItem and push this handling up into the caller.
+    BookmarkFolder* newFolder = [[[BookmarkFolder alloc] init] autorelease];
+    [newFolder appendChild:importRoot];
+    return newFolder;
   }
-  return YES;
 }
 
 - (BOOL)importPropertyListFile:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder
