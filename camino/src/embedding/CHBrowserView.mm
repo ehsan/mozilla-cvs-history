@@ -1562,7 +1562,8 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 {
   nsIDocShell* docShell = [self docShell];
   nsIContentViewer* cv = NULL;
-  docShell->GetContentViewer(&cv);		// addrefs
+  if (docShell)
+    docShell->GetContentViewer(&cv);		// addrefs
   return cv;
 }
 
