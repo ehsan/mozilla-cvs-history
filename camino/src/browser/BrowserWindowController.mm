@@ -114,7 +114,6 @@
 #include "nsNetUtil.h"
 #include "nsIPref.h"
 
-#include "nsIClipboardCommands.h"
 #include "nsICommandManager.h"
 #include "nsICommandParams.h"
 #include "nsIWebBrowser.h"
@@ -4639,18 +4638,36 @@ public:
 
 - (IBAction)copyImageLocation:(id)sender
 {
-  nsCOMPtr<nsIWebBrowser> webBrowser = dont_AddRef([[[self browserWrapper] browserView] webBrowser]);
-  nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(webBrowser));
-  if (clipboard)
-    clipboard->CopyImageLocation();
+  nsCOMPtr<nsIDOMHTMLImageElement> imgElement(do_QueryInterface(mDataOwner->mContextMenuNode));
+  if (imgElement) {
+    nsAutoString url;
+    imgElement->GetSrc(url);
+
+    NSString* urlString = [NSString stringWith_nsAString:url];
+    NSPasteboard* pboard = [NSPasteboard pasteboardWithName:NSGeneralPboard];
+
+    [pboard declareURLPasteboardWithAdditionalTypes:[NSArray array] owner:self];
+    [pboard setDataForURL:urlString title:nil];
+  }
 }
 
 - (IBAction)copyLinkLocation:(id)aSender
 {
-  nsCOMPtr<nsIWebBrowser> webBrowser = dont_AddRef([[[self browserWrapper] browserView] webBrowser]);
-  nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(webBrowser));
-  if (clipboard)
-    clipboard->CopyLinkLocation();
+  if (!mDataOwner->mContextMenuNode)
+    return;
+
+  nsCOMPtr<nsIDOMElement> linkContent;
+  nsAutoString href;
+  GeckoUtils::GetEnclosingLinkElementAndHref(mDataOwner->mContextMenuNode, getter_AddRefs(linkContent), href);
+
+  if (!linkContent || href.IsEmpty())
+    return;
+
+  NSString* hrefString = [NSString stringWith_nsAString:href];
+  NSPasteboard* pboard = [NSPasteboard pasteboardWithName:NSGeneralPboard];
+
+  [pboard declareURLPasteboardWithAdditionalTypes:[NSArray array] owner:self];
+  [pboard setDataForURL:hrefString title:nil];
 }
 
 - (IBAction)viewOnlyThisImage:(id)aSender
