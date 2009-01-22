@@ -342,6 +342,26 @@ static OSStatus MenuEventHandler(EventHandlerCallRef inHandlerCallRef, EventRef 
   return 2;
 }
 
+- (void)updateCommandKeyAlternatesForMenuItem:(NSMenuItem *)inMenuItem
+{
+  int itemIndex = [self indexOfItem:inMenuItem];
+  // If the item is not in this menu, there's nothing to update.
+  if (itemIndex == -1)
+    return;
+
+  id representedObject = [inMenuItem representedObject];
+  itemIndex++;
+  while (itemIndex < [self numberOfItems]) {
+    NSMenuItem* altItem = [self itemAtIndex:itemIndex];
+    if ([altItem representedObject] != representedObject)
+      break;
+
+    [altItem setTitle:[inMenuItem title]];
+    [altItem setImage:[inMenuItem image]];
+    itemIndex++;
+  }
+}
+
 @end
 
 

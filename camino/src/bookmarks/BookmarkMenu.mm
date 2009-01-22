@@ -309,6 +309,9 @@ const long kOpenInTabsTag = 0xBEEF;
 
   if (changeFlags & kBookmarkItemIconChangedMask)
     [theMenuItem setImage:[changedItem icon]];
+
+  if ((changeFlags & kBookmarkItemTitleChangedMask) || (changeFlags & kBookmarkItemIconChangedMask))
+    [self updateCommandKeyAlternatesForMenuItem:theMenuItem];
 }
 
 @end

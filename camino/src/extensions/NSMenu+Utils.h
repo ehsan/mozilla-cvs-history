@@ -82,6 +82,9 @@
 // the input param. Returns the number of alternates added.
 - (int)addCommandKeyAlternatesForMenuItem:(NSMenuItem *)inMenuItem;
 
+// Update the Command and Command-Shift alternate menu items for a given menu item.
+- (void)updateCommandKeyAlternatesForMenuItem:(NSMenuItem*)inMenuItem;
+
 @end
 
 
