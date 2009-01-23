@@ -182,6 +182,8 @@ class Build:
         self.currentStep = None
         self.slaveEnvironment = {}
 
+        self.terminate = False
+
     def setBuilder(self, builder):
         """
         Set the given builder as our builder.
@@ -450,7 +452,15 @@ class Build:
         is complete."""
         if not self.steps:
             return None
-        return self.steps.pop(0)
+        if self.terminate:
+            while True:
+                s = self.steps.pop(0)
+                if s.alwaysRun:
+                    return s
+                if not self.steps:
+                    return None
+        else:
+            return self.steps.pop(0)
 
     def startNextStep(self):
         try:
@@ -470,8 +480,8 @@ class Build:
             return # build was interrupted, don't keep building
         terminate = self.stepDone(results, step) # interpret/merge results
         if terminate:
-            return self.allStepsDone()
-        self.startNextStep()
+            self.terminate = True
+        return self.startNextStep()
 
     def stepDone(self, result, step):
         """This method is called when the BuildStep completes. It is passed a
