@@ -506,7 +506,8 @@ const int kAnnoyancePrefSome = 3;
 // pref. Since we may not be able to show the actual pref, we err on the side
 // of showing an over-inclusive item.
 //
-- (int)popupIndexForCurrentTabFocusPref {
+- (int)popupIndexForCurrentTabFocusPref
+{
   int tabFocusValue = [self getIntPref:kGeckoPrefTabFocusBehavior withSuccess:NULL];
   if (tabFocusValue & kTabFocusesLinks)
     return 2;
