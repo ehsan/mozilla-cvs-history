@@ -63,6 +63,12 @@ This is a quick guide for installing the tinderbox server.
 		<FilesMatch "\.(dat)$">
 			Deny from all
 		</FilesMatch>
+		# Allow cross-site XMLHttpRequests for quickparse.txt
+		<FilesMatch "^quickparse\.txt$">
+			<IfModule mod_headers.c>
+				Header set Access-Control-Allow-Origin "*"
+			</IfModule>
+		</FilesMatch>
 	</Directory>
 	<DirectoryMatch /var/www/html/tinderbox/(data|examples)>
 		Deny from all
