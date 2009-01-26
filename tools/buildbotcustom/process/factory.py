@@ -320,8 +320,8 @@ class MercurialBuildFactory(MozillaBuildFactory):
              command=['hg', 'identify', '-i'],
              property='got_revision'
             )
-        changesetLink = '<a href=%s/%s/index.cgi/rev' % (self.hgHost,
-                                                         self.repoPath)
+        changesetLink = '<a href=http://%s/%s/index.cgi/rev' % (self.hgHost,
+                                                                self.repoPath)
         changesetLink += '/%(got_revision)s title="Built from revision %(got_revision)s">rev:%(got_revision)s</a>'
         self.addStep(ShellCommand,
          command=['echo', 'TinderboxPrint:', WithProperties(changesetLink)]
