@@ -76,14 +76,14 @@ autoflush STDERR 1;
 use vars qw($PID_FILE
             $DEFAULT_HASH_TYPE
             $DEFAULT_CVSROOT
-            $DEFAULT_MOZILLA_CENTRAL
+            $DEFAULT_HGROOT
             $DEFAULT_SCHEMA_VERSION $CURRENT_SCHEMA_VERSION
             $ST_SIZE );
 
 $PID_FILE = 'patcher2.pid';
 $DEFAULT_HASH_TYPE = 'SHA1';
 $DEFAULT_CVSROOT = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
-$DEFAULT_MOZILLA_CENTRAL = 'http://hg.mozilla.org/mozilla-central';
+$DEFAULT_HGROOT  = 'http://hg.mozilla.org/mozilla-central';
 
 $DEFAULT_SCHEMA_VERSION = 0;
 $CURRENT_SCHEMA_VERSION = 1;
@@ -200,16 +200,20 @@ sub BuildTools {
     if ($fromHg) {
         { # When we're building out of Mercurial this pulls the entire
           # repository.
-            printf("Cloning mozilla-central and updating to $toolsRevision\n");
-            my $mc = $ENV{'MOZILLA_CENTRAL'} || $DEFAULT_MOZILLA_CENTRAL;
+            my $hgRoot = $ENV{'HGROOT'} || $DEFAULT_HGROOT;
+            printf("Cloning $hgRoot and updating to $toolsRevision\n");
 
-            my $cloneArgs = ["clone", "-r", $toolsRevision, $mc, "mozilla"];
-
+            my $cloneArgs = ["clone", $hgRoot, "mozilla"];
             run_shell_command(cmd => 'hg',
                               cmdArgs => $cloneArgs,
                               timeout => 3600);
 
-            printf("\n\nClone complete.\n");
+            my $updateArgs = ["-R", "mozilla", "update", "-r", $toolsRevision];
+            run_shell_command(cmd => 'hg',
+                              cmdArgs => $updateArgs,
+                              timeout => 1800);
+
+            printf("\n\nPull complete.\n");
         }
     } else {
         { # When we're building out of CVS this *only* pulls client.mk

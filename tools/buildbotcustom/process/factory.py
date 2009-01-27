@@ -1484,7 +1484,7 @@ class ReleaseUpdatesFactory(ReleaseFactory):
                   '--app=%s' % productName,
                   '--config=%s' % patcherConfigFile],
          description=['patcher:', 'build tools'],
-         env={'MOZILLA_CENTRAL': self.repository},
+         env={'HGROOT': self.repository},
          haltOnFailure=True
         )
         self.addStep(ShellCommand,
