@@ -45,6 +45,7 @@
 @class KeychainService;
 @class BrowserWindowController;
 @class SharedMenusObj;
+@class GrowlController;
 @class PreferenceManager;
 @class MVPreferencesController;
 @class SUUpdater;
@@ -104,6 +105,8 @@ typedef enum EBookmarkOpenBehavior
     NSString*               mStartURL;
 
     SharedMenusObj*         mSharedMenusObj;
+    GrowlController*        mGrowlController;
+
     NSMutableDictionary*    mCharsets;
 }
 

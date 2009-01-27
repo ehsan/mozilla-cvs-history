@@ -205,6 +205,7 @@ GARBAGE_DIRS += \
 	$(DIST)/$(APP_NAME).app \
 	embed-replacements.tmp \
 	generated \
+	growl/build \
 	sharedmenuscocoa/build \
 	sparkle/build \
 	$(NULL)
@@ -225,13 +226,16 @@ ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
 	ln -fs $(srcdir)/config
 	ln -fs $(srcdir)/PreferencePanes
 	ln -fs $(srcdir)/Info-*.plist .
-	mkdir -p sharedmenuscocoa sparkle
+	mkdir -p sharedmenuscocoa sparkle growl
 	bash -O extglob -c \
 	  "ln -fs $(ABS_topsrcdir)/camino/sharedmenuscocoa/!(CVS|*.xcodeproj|build) sharedmenuscocoa"
 	$(RSYNC_ALL) $(ABS_topsrcdir)/camino/sharedmenuscocoa/*.xcodeproj sharedmenuscocoa
 	bash -O extglob -c \
 	  "ln -fs $(ABS_topsrcdir)/camino/sparkle/!(CVS|*.xcodeproj|build) sparkle"
 	$(RSYNC_ALL) $(ABS_topsrcdir)/camino/sparkle/*.xcodeproj sparkle
+	bash -O extglob -c \
+	  "ln -fs $(ABS_topsrcdir)/camino/growl/!(CVS|*.xcodeproj|build) growl"
+	$(RSYNC_ALL) $(ABS_topsrcdir)/camino/growl/*.xcodeproj growl
 endif
 
 # Generate files which need to pull version numbers or dates from other files

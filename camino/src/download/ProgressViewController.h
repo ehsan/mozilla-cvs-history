@@ -62,6 +62,15 @@ typedef enum {
   DownloadSelectByExtending
 } DownloadSelectionBehavior;
 
+// Names of notifications we will post on download-related events
+extern NSString* const kDownloadStartedNotificationName;
+extern NSString* const kDownloadFailedNotificationName;
+extern NSString* const kDownloadCompleteNotificationName;
+
+// Names of keys for objects passed in these notifications
+extern NSString* const kDownloadNotificationFilenameKey;
+extern NSString* const kDownloadNotificationTimeElapsedKey;
+
 //
 // interface ProgressViewController
 //
@@ -77,6 +86,8 @@ typedef enum {
   IBOutlet ProgressView *mProgressView;      // in-progress view, STRONG ref
   IBOutlet ProgressView *mCompletedView;     // completed view, STRONG ref
   
+  unsigned int    mUniqueIdentifier;      // unique identifier for a given session
+
   BOOL            mIsFileSave;
   BOOL            mUserCancelled;
   BOOL            mDownloadFailed;
@@ -132,6 +143,7 @@ typedef enum {
 -(void)setSelected:(BOOL)inSelected;
 
 -(NSDictionary*)downloadInfoDictionary;
+-(unsigned int)uniqueIdentifier;
 
 -(NSMenu*)contextualMenu;
 

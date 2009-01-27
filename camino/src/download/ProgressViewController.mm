@@ -55,6 +55,15 @@ static NSString* XPCOMShutDownNotificationName = @"XPCOMShutDown";
 // This is the OS notification name to make the Dock icon for the downloads folder bounce.
 static NSString* const DownloadFinishedOSNotificationName = @"com.apple.DownloadFileFinished";
 
+// Names of notifications we will post on download-related events
+NSString* const kDownloadStartedNotificationName = @"DownloadStartedNotificationName";
+NSString* const kDownloadFailedNotificationName = @"DownloadFailedNotificationName";
+NSString* const kDownloadCompleteNotificationName = @"DownloadCompleteNotificationName";
+
+// Names of keys for objects passed in these notifications
+NSString* const kDownloadNotificationFilenameKey = @"DownloadNotificationFilenameKey";
+NSString* const kDownloadNotificationTimeElapsedKey = @"DownloadNotificationTimeElapsedKey";
+
 enum {
   kLabelTagFilename = 1000,
   kLabelTagStatus,
@@ -64,6 +73,7 @@ enum {
 
 @interface ProgressViewController(ProgressViewControllerPrivate)
 
++(unsigned int)getNextIdentifier;
 -(void)viewDidLoad;
 -(void)setupFileSystemNotification;
 -(void)unsubscribeFileSystemNotification;
@@ -152,6 +162,18 @@ enum {
   return [NSString stringWithFormat:@"%.1f GB",bytes];
 }
 
++(unsigned int)getNextIdentifier
+{
+  static unsigned int identifier = 0;
+  unsigned int toReturn;
+  // Not sure if there is a need for thread-safety here, but better safe than sorry.
+  @synchronized(self) {
+    // Store the old value, and increment for next time.
+    toReturn = identifier++;
+  }
+  return toReturn;
+}
+
 #pragma mark -
 
 -(id)init
@@ -159,6 +181,7 @@ enum {
   if ((self = [super init]))
   {
     [NSBundle loadNibNamed:@"ProgressView" owner:self];
+    mUniqueIdentifier = [ProgressViewController getNextIdentifier];
   }
   return self;
 }
@@ -347,6 +370,12 @@ enum {
 {
   mStartTime = [[NSDate alloc] init];
   [self refreshDownloadInfo];
+
+  NSDictionary* userInfo = [NSDictionary dictionaryWithObject:mDestPath
+                                                       forKey:kDownloadNotificationFilenameKey];
+  [[NSNotificationCenter defaultCenter] postNotificationName:kDownloadStartedNotificationName
+                                                      object:self
+                                                    userInfo:userInfo];
 }
 
 // Move the downloaded file to the trash.
@@ -392,6 +421,19 @@ enum {
     if (!mUserCancelled && !mDownloadFailed) {
       [[NSDistributedNotificationCenter defaultCenter]
        postNotificationName:DownloadFinishedOSNotificationName object:mDestPath];
+    }
+
+    // Notify any listeners (currently, just Growl) if the download completed or failed.
+    if (!mUserCancelled) {
+      NSDictionary* userInfo = [NSDictionary dictionaryWithObjectsAndKeys:
+                                mDestPath, kDownloadNotificationFilenameKey,
+                                [NSNumber numberWithDouble: mDownloadTime], kDownloadNotificationTimeElapsedKey,
+                                nil];
+
+      NSString* name = mDownloadFailed ? kDownloadFailedNotificationName : kDownloadCompleteNotificationName;
+      [[NSNotificationCenter defaultCenter] postNotificationName:name
+                                                          object:self
+                                                        userInfo:userInfo];
     }
   }
 }
@@ -586,6 +628,7 @@ enum {
   mDownloadSize = [[aDict valueForKey:@"downloadSize"] longLongValue];
   mCurrentProgress = [[aDict valueForKey:@"currentProgress"] longLongValue];
   mDownloadTime = [[aDict valueForKey:@"downloadTime"] doubleValue];
+  mIsSelected = [[aDict valueForKey:@"isSelected"] boolValue];
   
   // set as cancel if sizes dont match up
   if (mDownloadSize != mCurrentProgress)
@@ -604,8 +647,14 @@ enum {
   [dict setObject:[NSNumber numberWithLongLong: mDownloadSize] forKey:@"downloadSize"];
   [dict setObject:[NSNumber numberWithLongLong: mCurrentProgress] forKey:@"currentProgress"];
   [dict setObject:[NSNumber numberWithDouble: mDownloadTime] forKey:@"downloadTime"];
+  [dict setObject:[NSNumber numberWithBool: mIsSelected] forKey:@"isSelected"];
   
   return dict;
+}
+
+-(unsigned int)uniqueIdentifier
+{
+  return mUniqueIdentifier;
 }
 
 -(NSString*)representedFilePath

@@ -286,6 +286,17 @@ static id gSharedProgressController = nil;
   [self saveProgressViewControllers];
 }
 
+-(ProgressViewController*)downloadWithIdentifier:(unsigned int)identifier
+{
+  NSEnumerator* downloadsEnum = [mProgressViewControllers objectEnumerator];
+  ProgressViewController* curController;
+  while ((curController = [downloadsEnum nextObject])) {
+    if ([curController uniqueIdentifier] == identifier)
+      return curController;
+  }
+  return nil;
+}
+
 -(void)updateSelectionOfDownload:(ProgressViewController*)selectedDownload
                     withBehavior:(DownloadSelectionBehavior)behavior
 {
@@ -737,7 +748,7 @@ static id gSharedProgressController = nil;
 // Either save the progress view's or remove them according to the download removal pref.
 -(void)applicationWillTerminate
 {
-  // Check the download item removal policy here to see if downloads should be removed when camino quits.
+  // Check the download item removal policy here to see if downloads should be removed when Camino quits.
   if ([self shouldRemoveDownloadsOnQuit])
     [self removeSuccessfulDownloads];
 
@@ -817,8 +828,7 @@ static id gSharedProgressController = nil;
 {
   int downloadRemovalPolicy = [[PreferenceManager sharedInstance] getIntPref:kGeckoPrefDownloadCleanupPolicy
                                                                  withSuccess:NULL];
-
-  return downloadRemovalPolicy == kRemoveDownloadsOnQuit ? YES : NO;
+  return (downloadRemovalPolicy == kRemoveDownloadsOnQuit);
 }
 
 // Get the downloads.plist path

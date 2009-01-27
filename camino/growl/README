@@ -1,0 +1,8 @@
+Growl is a BSD-licensed framework that allows applications to provide 
+notifications to users.  See http://www.growl.info/ for more information about
+Growl. The Growl framework is shipped inside Camino's bundle, and some glue
+code is included in Camino itself.
+
+This is Growl 1.1.4 (4886) from http://www.growl.info/files/source/Growl-1.1.4-src.tar.bz2
+with the following changes:
+- Only the source files needed to build the "Growl.framework" target have been included.

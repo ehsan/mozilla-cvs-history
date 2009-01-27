@@ -63,6 +63,7 @@
 #import "BrowserTabView.h"
 #import "CHBrowserService.h"
 #import "UserDefaults.h"
+#import "GrowlController.h"
 #import "KeychainService.h"
 #import "RemoteDataProvider.h"
 #import "ProgressDlgController.h"
@@ -156,6 +157,9 @@ NSString* const kPreviousSessionTerminatedNormallyKey = @"PreviousSessionTermina
     [NSApp setServicesProvider:self];
     // Initialize shared menu support
     mSharedMenusObj = [[SharedMenusObj alloc] init];
+
+    // Initialize growl support
+    mGrowlController = [[GrowlController alloc] init];
   }
   return self;
 }
@@ -166,6 +170,8 @@ NSString* const kPreviousSessionTerminatedNormallyKey = @"PreviousSessionTermina
 
   // Terminate shared menus
   [mSharedMenusObj release];
+
+  [mGrowlController release];
 
   [mKeychainService release];
 

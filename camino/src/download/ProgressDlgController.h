@@ -106,6 +106,8 @@
 -(IBAction)pause:(id)sender;
 -(IBAction)resume:(id)sender;
 
+-(ProgressViewController*)downloadWithIdentifier:(unsigned int)identifier;
+
 -(void)updateSelectionOfDownload:(ProgressViewController*)selectedDownload
                     withBehavior:(DownloadSelectionBehavior)behavior;
 
