@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: softoken.h,v 1.20 2008/11/19 00:16:56 julien.pierre.boogz%sun.com Exp $ */
+/* $Id: softoken.h,v 1.21 2009/01/27 23:13:21 rrelyea%redhat.com Exp $ */
 
 #ifndef _SOFTOKEN_H_
 #define _SOFTOKEN_H_
@@ -189,7 +189,8 @@ unsigned long sftk_MapKeySize(CK_KEY_TYPE keyType);
 */
 extern PRBool sftk_audit_enabled;
 
-extern void sftk_LogAuditMessage(NSSAuditSeverity severity, const char *msg);
+extern void sftk_LogAuditMessage(NSSAuditSeverity severity, 
+				 NSSAuditType, const char *msg);
 
 extern void sftk_AuditCreateObject(CK_SESSION_HANDLE hSession,
 			CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulCount,
