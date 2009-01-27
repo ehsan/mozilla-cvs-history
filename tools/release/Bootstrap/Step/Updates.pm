@@ -154,7 +154,9 @@ sub Verify {
                                      $oldVersion . '-candidates',
                                      'build' . $oldBuild . '/');
 
-    my $oldBranchTag = uc($product).'_'.$oldVersion.'_RELEASE';
+    my $oldTagVersion = $oldVersion;
+    $oldTagVersion =~ s/\./_/g;
+    my $oldBranchTag = uc($product).'_'.$oldTagVersion.'_RELEASE';
 
     # Create verification area.
     my $verifyDirVersion = catfile($verifyDir, $product . '-' . $version);
