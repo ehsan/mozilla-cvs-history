@@ -865,7 +865,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
     BrowserWrapper* wrapper = [(BrowserWindowController*)parentWindowController browserWrapper];
 
     if (![wrapper isEmpty])
-      url = [wrapper currentURI];
+      url = [[wrapper currentURI] unescapedURI];
   }
 
   if (!url)
