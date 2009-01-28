@@ -5388,8 +5388,7 @@ nsDocShell::DetachEditorFromWindow(nsISHEntry *aSHEntry)
 void
 nsDocShell::DetachEditorFromWindow()
 {
-    if (mOSHE)
-        DetachEditorFromWindow(mOSHE);
+    DetachEditorFromWindow(mOSHE);
 }
 
 nsresult
