@@ -149,4 +149,10 @@
   [[self delegate] deleteBookmarks:aSender];
 }
 
+- (BOOL)shouldCollapseAutoExpandedItemsForDeposited:(BOOL)deposited
+{
+  return YES;
+}
+
+
 @end
