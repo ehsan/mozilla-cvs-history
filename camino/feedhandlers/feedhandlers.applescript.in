@@ -42,7 +42,7 @@ main.scpt, since this breaks unify.
 *)
 
 property caminoApp : "Camino"
-property feedProtocols : {"feed", "feeds"}
+property feedProtocols : {"feed"}
 property httpProtocols : {"http", "https"}
 
 on open location inURL
