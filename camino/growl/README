@@ -6,3 +6,4 @@ code is included in Camino itself.
 This is Growl 1.1.4 (4886) from http://www.growl.info/files/source/Growl-1.1.4-src.tar.bz2
 with the following changes:
 - Only the source files needed to build the "Growl.framework" target have been included.
+- Commented out the SDK declarations in Growl.xcodeproj to support mozconfig-based configurations.

@@ -4193,7 +4193,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.3;
 				PRECOMPS_INCLUDE_HEADERS_FROM_BUILT_PRODUCTS_DIR = NO;
-				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
+				/* SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk; */
 				WARNING_CFLAGS = (
 					"-W",
 					"-Wall",
@@ -4238,8 +4238,8 @@
 				MACOSX_DEPLOYMENT_TARGET_i386 = 10.4;
 				MACOSX_DEPLOYMENT_TARGET_ppc = 10.3;
 				PRECOMPS_INCLUDE_HEADERS_FROM_BUILT_PRODUCTS_DIR = NO;
-				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
-				SDKROOT_i386 = /Developer/SDKs/MacOSX10.4u.sdk;
+				/* SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk; */
+				/* SDKROOT_i386 = /Developer/SDKs/MacOSX10.4u.sdk; */
 				SEPARATE_STRIP = YES;
 				WARNING_CFLAGS = (
 					"-W",
