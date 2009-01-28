@@ -157,6 +157,7 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 #include "nsCycleCollector.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsIContentPolicy.h"
+#include "nsIPropertyBag2.h"
 
 #include "nsFrameLoader.h"
 
@@ -1199,6 +1200,16 @@ nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
   }
 
   ResetToURI(uri, aLoadGroup, principal);
+
+  nsCOMPtr<nsIPropertyBag2> bag = do_QueryInterface(aChannel);
+  if (bag) {
+    nsCOMPtr<nsIURI> baseURI;
+    bag->GetPropertyAsInterface(NS_LITERAL_STRING("baseURI"),
+                                NS_GET_IID(nsIURI), getter_AddRefs(baseURI));
+    if (baseURI) {
+      mDocumentBaseURI = baseURI;
+    }
+  }
 
   mChannel = aChannel;
 }
