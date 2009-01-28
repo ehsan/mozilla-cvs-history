@@ -41,6 +41,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 
+#import "NSString+Utils.h"
 #import "NSView+Utils.h"
 
 #import "ProgressViewController.h"
@@ -851,8 +852,9 @@ enum {
 {
   [mSourceURL autorelease];
   mSourceURL = [aSourceURL copy];
-  [mProgressView setToolTip:mSourceURL];
-  [mCompletedView setToolTip:mSourceURL];
+  NSString* toolTipString = [mSourceURL unescapedURI];
+  [mProgressView setToolTip:toolTipString];
+  [mCompletedView setToolTip:toolTipString];
   //[self tryToSetFinderComments];
 }
 

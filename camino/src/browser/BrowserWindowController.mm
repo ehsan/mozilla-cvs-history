@@ -1684,7 +1684,7 @@ public:
 - (NSString *)locationToolTipWithFormat:(NSString *)format title:(NSString *)backTitle URL:(NSString *)backURL
 {
   if (backTitle && backURL) {
-    NSString* toolTipString = [NSString stringWithFormat:NSLocalizedString(format, nil), backTitle, backURL];
+    NSString* toolTipString = [NSString stringWithFormat:NSLocalizedString(format, nil), backTitle, [backURL unescapedURI]];
     // using "\n\n" as a tooltip string causes Cocoa to hang when displaying the tooltip,
     // so be paranoid about not doing that
     if (![toolTipString isEqualToString:@"\n\n"])

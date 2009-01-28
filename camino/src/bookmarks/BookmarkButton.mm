@@ -114,7 +114,7 @@
 
     NSString* tooltipString = [NSString stringWithFormat:NSLocalizedString(@"BookmarkButtonTooltipFormat", nil),
                                                 [bookmarkItem title],
-                                                [bookmarkItem url]];
+                                                [[bookmarkItem url] unescapedURI]];
     // using "\n\n" as a tooltip string causes Cocoa to hang when displaying the tooltip,
     // so be paranoid about not doing that
     if (![tooltipString isEqualToString:@"\n\n"])
