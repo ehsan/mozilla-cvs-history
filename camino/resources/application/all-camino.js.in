@@ -22,6 +22,7 @@
  * Contributor(s):
  *  Brian Ryner <bryner@brianryner.com>
  *  Smokey Ardisson <alqahira@ardisson.org>
+ *  Sean Murphy <murph@seanmurph.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -208,3 +209,42 @@ pref("gfx.use_text_smoothing_setting", true);
 
 // force <select>s to display as Aqua rather than honor author styles
 pref("camino.use_aqua_selects", true);
+
+// Prevent loading of suspected phishing sites
+pref("browser.safebrowsing.enabled", true);
+
+// Prevent loading of suspected malware sites
+pref("browser.safebrowsing.malware.enabled", true);
+
+// The active safe browsing data provider
+pref("browser.safebrowsing.dataProvider", 0);
+
+// Properties for the safe browsing data providers
+pref("browser.safebrowsing.provider.0.name", "Google");
+pref("browser.safebrowsing.provider.0.updateURL", "http://safebrowsing.clients.google.com/safebrowsing/downloads?client={moz:client}&appver={moz:version}&pver=2.2");
+pref("browser.safebrowsing.provider.0.gethashURL", "http://safebrowsing.clients.google.com/safebrowsing/gethash?client={moz:client}&appver={moz:version}&pver=2.2");
+pref("browser.safebrowsing.provider.0.keyURL", "https://sb-ssl.google.com/safebrowsing/newkey?client={moz:client}&appver={moz:version}&pver=2.2");
+pref("browser.safebrowsing.provider.0.reportURL", "http://safebrowsing.clients.google.com/safebrowsing/report?");
+
+// Safe browsing report pages
+pref("browser.safebrowsing.provider.0.reportGenericURL", "http://{moz:locale}.phish-generic.mozilla.com/?hl={moz:locale}");
+pref("browser.safebrowsing.provider.0.reportErrorURL", "http://{moz:locale}.phish-error.mozilla.com/?hl={moz:locale}");
+pref("browser.safebrowsing.provider.0.reportPhishURL", "http://{moz:locale}.phish-report.mozilla.com/?hl={moz:locale}");
+
+// Location to more information about the safe browsing feature
+pref("browser.safebrowsing.warning.infoURL", "http://en-us.www.mozilla.com/en-US/firefox/phishing-protection/");
+
+// Name of the about: page contributed by safebrowsing to handle display of error
+// pages on phishing/malware hits.
+pref("urlclassifier.alternate_error_page", "safebrowsingblocked");
+
+// The number of random entries to send with a gethash request.
+pref("urlclassifier.gethashnoise", 4);
+
+// The list of tables that use the gethash request to confirm partial results.
+pref("urlclassifier.gethashtables", "goog-phish-shavar,goog-malware-shavar");
+
+// If an urlclassifier table has not been updated in this number of seconds,
+// a gethash request will be forced to check that the result is still in
+// the database.
+pref("urlclassifier.confirm-age", 2700);

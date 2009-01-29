@@ -78,6 +78,7 @@
 #import "CHPermissionManager.h"
 #import "CmXULAppInfo.h"
 #import "AddSearchProviderHandler.h"
+#import "SafeBrowsingListManager.h"
 
 #include "nsCOMPtr.h"
 #include "nsEmbedAPI.h"
@@ -122,6 +123,7 @@ NSString* const kPreviousSessionTerminatedNormallyKey = @"PreviousSessionTermina
 - (void)showCertificatesNotification:(NSNotification*)inNotification;
 - (void)openPanelDidEnd:(NSOpenPanel*)inOpenPanel returnCode:(int)inReturnCode contextInfo:(void*)inContextInfo;
 - (void)loadApplicationPage:(NSString*)pageURL;
+- (void)setUpSafeBrowsing;
 
 @end
 
@@ -333,6 +335,7 @@ NSString* const kPreviousSessionTerminatedNormallyKey = @"PreviousSessionTermina
 
   [self checkForProblemAddOns];
   [self prelaunchHelperApps];
+  [self setUpSafeBrowsing];
 
   // open a new browser window if we don't already have one or we have a specific
   // start URL we need to show
@@ -678,6 +681,14 @@ NSString* const kPreviousSessionTerminatedNormallyKey = @"PreviousSessionTermina
 
   // dock bookmarks
   [self updateDockMenuBookmarkFolder];
+}
+
+- (void)setUpSafeBrowsing
+{
+  SafeBrowsingListManager *safeBrowsingService = [SafeBrowsingListManager sharedInstance];
+  [safeBrowsingService registerListWithName:@"goog-phish-shavar" type:eSafeBrowsingPhishingListType];
+  [safeBrowsingService registerListWithName:@"goog-malware-shavar" type:eSafeBrowsingMalwareListType];
+  [safeBrowsingService enableUpdateCheckingAccordingToPrefs];
 }
 
 #pragma mark -

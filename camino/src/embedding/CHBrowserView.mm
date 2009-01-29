@@ -435,6 +435,9 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   if (flags & NSLoadFlagsAllowThirdPartyFixup) {
     navFlags |= nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
   }
+  if (flags & NSLoadFlagsBypassClassifier) {
+    navFlags |= nsIWebNavigation::LOAD_FLAGS_BYPASS_CLASSIFIER;
+  }
 
   nsresult rv = nav->LoadURI(specStr.get(), navFlags, referrerURI, nsnull, nsnull);
   if (NS_FAILED(rv)) {

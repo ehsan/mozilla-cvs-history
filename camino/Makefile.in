@@ -49,6 +49,7 @@ DIRS = \
 	flashblock \
 	idl \
 	striptease \
+	safebrowsing \
 	$(NULL)
 
 APP_NAME	= Camino

@@ -5134,6 +5134,22 @@ public:
   }
 }
 
+- (void)runAwayFromSafeBrowsingBlockedSite
+{
+  if ([[mBrowserView browserView] canGoBack])
+    [self back:self];
+  else
+    [self home:self];
+}
+
+- (void)showSafeBrowsingInformation
+{
+  NSString *blockingInformationURL = 
+    [[PreferenceManager sharedInstance] getStringPref:kGeckoPrefSafeBrowsingInformationURL 
+                                          withSuccess:NULL];
+  [self loadURL:blockingInformationURL referrer:nil focusContent:YES allowPopups:NO];  
+}
+
 @end
 
 #pragma mark -

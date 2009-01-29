@@ -995,6 +995,18 @@
 		C795738E0D35314D0028A773 /* OpenSearchParser.mm in Sources */ = {isa = PBXBuildFile; fileRef = C79573860D35314D0028A773 /* OpenSearchParser.mm */; };
 		C7AB1EA00EEC5FEB0053A08A /* NSTextView+Utils.m in Sources */ = {isa = PBXBuildFile; fileRef = C7AB1E9E0EEC5FEB0053A08A /* NSTextView+Utils.m */; };
 		C7AB1EA10EEC5FEB0053A08A /* NSTextView+Utils.m in Sources */ = {isa = PBXBuildFile; fileRef = C7AB1E9E0EEC5FEB0053A08A /* NSTextView+Utils.m */; };
+		C7DE8DD70F30CFAC00CD3872 /* SafeBrowsingListManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = C7DE8DD30F30CFAC00CD3872 /* SafeBrowsingListManager.mm */; };
+		C7DE8DD80F30CFAC00CD3872 /* SafeBrowsingAboutModule.mm in Sources */ = {isa = PBXBuildFile; fileRef = C7DE8DD50F30CFAC00CD3872 /* SafeBrowsingAboutModule.mm */; };
+		C7DE8DD90F30CFAC00CD3872 /* SafeBrowsingListManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = C7DE8DD30F30CFAC00CD3872 /* SafeBrowsingListManager.mm */; };
+		C7DE8DDA0F30CFAC00CD3872 /* SafeBrowsingAboutModule.mm in Sources */ = {isa = PBXBuildFile; fileRef = C7DE8DD50F30CFAC00CD3872 /* SafeBrowsingAboutModule.mm */; };
+		C7DE8E2D0F30D27300CD3872 /* libcaminosafebrowsing.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C7DE8E2B0F30D27300CD3872 /* libcaminosafebrowsing.dylib */; };
+		C7DE8E2F0F30D2AD00CD3872 /* libcaminosafebrowsing.dylib in Copy Component Libraries */ = {isa = PBXBuildFile; fileRef = C7DE8E2B0F30D27300CD3872 /* libcaminosafebrowsing.dylib */; };
+		C7DE8E300F30D2C100CD3872 /* nsUrlClassifierListManager.js in Copy Component Libraries */ = {isa = PBXBuildFile; fileRef = C7DE8E150F30D14F00CD3872 /* nsUrlClassifierListManager.js */; };
+		C7DE8E310F30D2C100CD3872 /* nsUrlClassifierLib.js in Copy Component Libraries */ = {isa = PBXBuildFile; fileRef = C7DE8E160F30D14F00CD3872 /* nsUrlClassifierLib.js */; };
+		C7DE8E420F30D2FF00CD3872 /* url-classifier.xpt in Copy Component XPTs */ = {isa = PBXBuildFile; fileRef = C7DE8E260F30D1BC00CD3872 /* url-classifier.xpt */; };
+		C7DE8E430F30D32700CD3872 /* url-classifier.xpt in Copy Component XPTs */ = {isa = PBXBuildFile; fileRef = C7DE8E260F30D1BC00CD3872 /* url-classifier.xpt */; };
+		C7DE8E4B0F30D41500CD3872 /* nsUrlClassifierListManager.js in Copy Component Libraries */ = {isa = PBXBuildFile; fileRef = C7DE8E150F30D14F00CD3872 /* nsUrlClassifierListManager.js */; };
+		C7DE8E4C0F30D41500CD3872 /* nsUrlClassifierLib.js in Copy Component Libraries */ = {isa = PBXBuildFile; fileRef = C7DE8E160F30D14F00CD3872 /* nsUrlClassifierLib.js */; };
 		C7FF536C0D35281F00194776 /* search_editor_bottom_background.png in Resources */ = {isa = PBXBuildFile; fileRef = C7FF536A0D35281F00194776 /* search_editor_bottom_background.png */; };
 		C7FF536D0D35281F00194776 /* search_editor_action.png in Resources */ = {isa = PBXBuildFile; fileRef = C7FF536B0D35281F00194776 /* search_editor_action.png */; };
 		C7FF536E0D35281F00194776 /* search_editor_bottom_background.png in Resources */ = {isa = PBXBuildFile; fileRef = C7FF536A0D35281F00194776 /* search_editor_bottom_background.png */; };
@@ -1658,8 +1670,11 @@
 				3F44AD2B05BDFB9F00CB4B08 /* libsuitetypeaheadfind.dylib in Copy Component Libraries */,
 				0F518833088592020091F3FB /* libpermissions.dylib in Copy Component Libraries */,
 				DEC87B100C2882DC002EB106 /* libstoragecomps.dylib in Copy Component Libraries */,
+				C7DE8E2F0F30D2AD00CD3872 /* libcaminosafebrowsing.dylib in Copy Component Libraries */,
 				3F44AD2705BDFB9F00CB4B08 /* nsProxyAutoConfig.js in Copy Component Libraries */,
 				0098B1230CAEA77500DA0F2F /* nsHandlerService.js in Copy Component Libraries */,
+				C7DE8E300F30D2C100CD3872 /* nsUrlClassifierListManager.js in Copy Component Libraries */,
+				C7DE8E310F30D2C100CD3872 /* nsUrlClassifierLib.js in Copy Component Libraries */,
 			);
 			name = "Copy Component Libraries";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1698,6 +1713,8 @@
 			files = (
 				3F44AF4405BDFBA000CB4B08 /* nsProxyAutoConfig.js in Copy Component Libraries */,
 				0098B12A0CAEA81700DA0F2F /* nsHandlerService.js in Copy Component Libraries */,
+				C7DE8E4B0F30D41500CD3872 /* nsUrlClassifierListManager.js in Copy Component Libraries */,
+				C7DE8E4C0F30D41500CD3872 /* nsUrlClassifierLib.js in Copy Component Libraries */,
 			);
 			name = "Copy Component Libraries";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1769,6 +1786,7 @@
 				3F44AD1705BDFB9F00CB4B08 /* uconv.xpt in Copy Component XPTs */,
 				3F44AD1805BDFB9F00CB4B08 /* unicharutil.xpt in Copy Component XPTs */,
 				3F44AD1905BDFB9F00CB4B08 /* uriloader.xpt in Copy Component XPTs */,
+				C7DE8E420F30D2FF00CD3872 /* url-classifier.xpt in Copy Component XPTs */,
 				3F44AD1A05BDFB9F00CB4B08 /* xpcom_base.xpt in Copy Component XPTs */,
 				3F44AD1B05BDFB9F00CB4B08 /* xpcom_components.xpt in Copy Component XPTs */,
 				3F44AD1C05BDFB9F00CB4B08 /* xpcom_ds.xpt in Copy Component XPTs */,
@@ -2053,6 +2071,7 @@
 				3F44AF3705BDFBA000CB4B08 /* uconv.xpt in Copy Component XPTs */,
 				3F44AF3805BDFBA000CB4B08 /* unicharutil.xpt in Copy Component XPTs */,
 				3F44AF3905BDFBA000CB4B08 /* uriloader.xpt in Copy Component XPTs */,
+				C7DE8E430F30D32700CD3872 /* url-classifier.xpt in Copy Component XPTs */,
 				3F44AF3A05BDFBA000CB4B08 /* xpcom_base.xpt in Copy Component XPTs */,
 				3F44AF3B05BDFBA000CB4B08 /* xpcom_components.xpt in Copy Component XPTs */,
 				3F44AF3C05BDFBA000CB4B08 /* xpcom_ds.xpt in Copy Component XPTs */,
@@ -2758,6 +2777,14 @@
 		C79573870D35314D0028A773 /* OpenSearchParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OpenSearchParser.h; path = src/websearch/OpenSearchParser.h; sourceTree = "<group>"; };
 		C7AB1E9E0EEC5FEB0053A08A /* NSTextView+Utils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSTextView+Utils.m"; path = "src/extensions/NSTextView+Utils.m"; sourceTree = "<group>"; };
 		C7AB1E9F0EEC5FEB0053A08A /* NSTextView+Utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSTextView+Utils.h"; path = "src/extensions/NSTextView+Utils.h"; sourceTree = "<group>"; };
+		C7DE8DD30F30CFAC00CD3872 /* SafeBrowsingListManager.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SafeBrowsingListManager.mm; path = src/safebrowsing/SafeBrowsingListManager.mm; sourceTree = "<group>"; };
+		C7DE8DD40F30CFAC00CD3872 /* SafeBrowsingListManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SafeBrowsingListManager.h; path = src/safebrowsing/SafeBrowsingListManager.h; sourceTree = "<group>"; };
+		C7DE8DD50F30CFAC00CD3872 /* SafeBrowsingAboutModule.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SafeBrowsingAboutModule.mm; path = src/safebrowsing/SafeBrowsingAboutModule.mm; sourceTree = "<group>"; };
+		C7DE8DD60F30CFAC00CD3872 /* SafeBrowsingAboutModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SafeBrowsingAboutModule.h; path = src/safebrowsing/SafeBrowsingAboutModule.h; sourceTree = "<group>"; };
+		C7DE8E150F30D14F00CD3872 /* nsUrlClassifierListManager.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = nsUrlClassifierListManager.js; path = ../dist/bin/components/nsUrlClassifierListManager.js; sourceTree = SOURCE_ROOT; };
+		C7DE8E160F30D14F00CD3872 /* nsUrlClassifierLib.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = nsUrlClassifierLib.js; path = ../dist/bin/components/nsUrlClassifierLib.js; sourceTree = SOURCE_ROOT; };
+		C7DE8E260F30D1BC00CD3872 /* url-classifier.xpt */ = {isa = PBXFileReference; lastKnownFileType = file; name = "url-classifier.xpt"; path = "../dist/bin/components/url-classifier.xpt"; sourceTree = SOURCE_ROOT; };
+		C7DE8E2B0F30D27300CD3872 /* libcaminosafebrowsing.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.bundle"; name = libcaminosafebrowsing.dylib; path = ../dist/bin/components/libcaminosafebrowsing.dylib; sourceTree = SOURCE_ROOT; };
 		C7FF536A0D35281F00194776 /* search_editor_bottom_background.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = search_editor_bottom_background.png; path = chrome/search_editor_bottom_background.png; sourceTree = "<group>"; };
 		C7FF536B0D35281F00194776 /* search_editor_action.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = search_editor_action.png; path = chrome/search_editor_action.png; sourceTree = "<group>"; };
 		C7FF53710D35285400194776 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = resources/localized/English.lproj/SearchEngineEditor.nib; sourceTree = "<group>"; };
@@ -3395,6 +3422,7 @@
 				7B9A26190D411275008CDB39 /* libnssutil3.dylib in Frameworks */,
 				DE846DA90D84D03400009C6A /* libimgicon.a in Frameworks */,
 				DEFAA3440F241C1600BD51C1 /* Growl.framework in Frameworks */,
+				C7DE8E2D0F30D27300CD3872 /* libcaminosafebrowsing.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3453,6 +3481,7 @@
 				F512F52B02D1287F01072C9F /* Dialogs */,
 				3FBDC7D608252CD600D7F8E0 /* Form Fill */,
 				C7FF53690D3527F400194776 /* Web Search */,
+				C7DE8DD00F30CF8A00CD3872 /* Safe Browsing */,
 				335639250C84DF4F00DC4D06 /* UI Components */,
 				33563A6C0C84F44900DC4D06 /* Backend Components */,
 				F5571935022B401B010001CA /* Categories */,
@@ -3510,6 +3539,7 @@
 				0F5187C308858E620091F3FB /* libpermissions.dylib */,
 				DE62E42F0B72B3D200142851 /* libauth.dylib */,
 				DEC87B0F0C2882DC002EB106 /* libstoragecomps.dylib */,
+				C7DE8E2B0F30D27300CD3872 /* libcaminosafebrowsing.dylib */,
 			);
 			name = Components;
 			sourceTree = "<group>";
@@ -3579,6 +3609,7 @@
 				F6BD642101B3156701A962F7 /* uconv.xpt */,
 				F6BD642201B3156701A962F7 /* unicharutil.xpt */,
 				F6BD642301B3156701A962F7 /* uriloader.xpt */,
+				C7DE8E260F30D1BC00CD3872 /* url-classifier.xpt */,
 				F6BD63B401B3131201A962F7 /* webBrowser_core.xpt */,
 				3F7C6CC505B5B42E002FFFD3 /* widget.xpt */,
 				F6BD63B501B3131201A962F7 /* windowwatcher.xpt */,
@@ -4125,6 +4156,17 @@
 				33E1EA0E0D34550A00910BBD /* AddSearchProviderHandler.mm */,
 			);
 			name = UI;
+			sourceTree = "<group>";
+		};
+		C7DE8DD00F30CF8A00CD3872 /* Safe Browsing */ = {
+			isa = PBXGroup;
+			children = (
+				C7DE8DD40F30CFAC00CD3872 /* SafeBrowsingListManager.h */,
+				C7DE8DD30F30CFAC00CD3872 /* SafeBrowsingListManager.mm */,
+				C7DE8DD60F30CFAC00CD3872 /* SafeBrowsingAboutModule.h */,
+				C7DE8DD50F30CFAC00CD3872 /* SafeBrowsingAboutModule.mm */,
+			);
+			name = "Safe Browsing";
 			sourceTree = "<group>";
 		};
 		C7FF53690D3527F400194776 /* Web Search */ = {
@@ -4881,6 +4923,8 @@
 				33B777950C55851800A6D67F /* libmozlcms.dylib */,
 				F5461CBB03AAC25C01A96660 /* nsProxyAutoConfig.js */,
 				0098B11D0CAEA75700DA0F2F /* nsHandlerService.js */,
+				C7DE8E150F30D14F00CD3872 /* nsUrlClassifierListManager.js */,
+				C7DE8E160F30D14F00CD3872 /* nsUrlClassifierLib.js */,
 				0098B17F0CAEA9CF00DA0F2F /* XPCOMUtils.jsm */,
 				F5F14E9602A5A43A01A967F3 /* libwidget.rsrc */,
 				F5247C2F0228B5E7013DD99A /* Gecko Security */,
@@ -6081,6 +6125,8 @@
 				C713F0900E9AF7DB002313B3 /* CHSlidingViewAnimation.m in Sources */,
 				C7AB1EA00EEC5FEB0053A08A /* NSTextView+Utils.m in Sources */,
 				DE18FBFD0F2435F700325C11 /* GrowlController.mm in Sources */,
+				C7DE8DD70F30CFAC00CD3872 /* SafeBrowsingListManager.mm in Sources */,
+				C7DE8DD80F30CFAC00CD3872 /* SafeBrowsingAboutModule.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6266,6 +6312,8 @@
 				C713F0910E9AF7DB002313B3 /* CHSlidingViewAnimation.m in Sources */,
 				C7AB1EA10EEC5FEB0053A08A /* NSTextView+Utils.m in Sources */,
 				DE18FBFC0F2435F700325C11 /* GrowlController.mm in Sources */,
+				C7DE8DD90F30CFAC00CD3872 /* SafeBrowsingListManager.mm in Sources */,
+				C7DE8DDA0F30CFAC00CD3872 /* SafeBrowsingAboutModule.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -7350,6 +7398,7 @@
 					../gfx/cairo/cairo/src,
 					../gfx/cairo/libpixman/src,
 					../profile/dirserviceprovider/src,
+					../dist/bin/components,
 				);
 				OTHER_CFLAGS = (
 					"$(OTHER_CFLAGS)",
@@ -7380,6 +7429,7 @@
 					../gfx/cairo/cairo/src,
 					../gfx/cairo/libpixman/src,
 					../profile/dirserviceprovider/src,
+					../dist/bin/components,
 				);
 			};
 			name = Deployment;

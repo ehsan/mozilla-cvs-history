@@ -1,4 +1,3 @@
-#! /bin/sh
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -12,15 +11,14 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is the the Mozilla build system
+# The Original Code is just a lowly Makefile.
 #
-# The Initial Developer of the Original Code is
-# Ben Turner <mozilla@songbirdnest.com>
-#
-# Portions created by the Initial Developer are Copyright (C) 2007
+# The Initial Developer of the Original Code is Sean Murphy
+# Portions created by the Initial Developer are Copyright (C) 2008
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#  Sean Murphy <murph@seanmurph.com> (Original Author)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,13 +34,42 @@
 #
 # ***** END LICENSE BLOCK *****
 
-add_makefiles "
-camino/Makefile
-camino/IBPalette/Makefile
-camino/feedhandlers/Makefile
-camino/flashblock/Makefile
-camino/idl/Makefile
-camino/installer/Makefile
-camino/striptease/Makefile
-camino/safebrowsing/Makefile
-"
+DEPTH     = ../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE = camino
+LIBRARY_NAME = caminosafebrowsing
+SHORT_LIBNAME = caminosb
+EXPORT_LIBRARY = 1
+IS_COMPONENT = 1
+MODULE_NAME = CHSafeBrowsingModule
+LIBXUL_LIBRARY = 1
+
+REQUIRES = \
+  xpcom \
+  string \
+  docshell \
+  necko \
+  pipnss \
+  url-classifier \
+  $(NULL)
+
+CPPSRCS = CHSafeBrowsingModule.cpp
+
+LOCAL_INCLUDES = \
+  -I$(srcdir)/../../toolkit/components/url-classifier/src \
+  -I$(srcdir)/../../toolkit/components/build \
+  $(NULL)
+
+SHARED_LIBRARY_LIBS = ../../toolkit/components/url-classifier/src/$(LIB_PREFIX)urlclassifier_s.$(LIB_SUFFIX)
+
+EXTRA_DSO_LDOPTS = \
+  $(ZLIB_LIBS) \
+  $(MOZ_COMPONENT_LIBS) \
+  $(NULL)
+
+include $(topsrcdir)/config/rules.mk

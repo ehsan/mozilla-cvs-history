@@ -46,6 +46,7 @@
 #import "nsAboutBookmarks.h"
 #import "CHStringBundleOverride.h"
 #import "ContentDispatchChooser.h"
+#import "SafeBrowsingAboutModule.h"
 
 #include "nsIGenericFactory.h"
 
@@ -267,6 +268,12 @@ static const nsModuleComponentInfo gAppComponents[] = {
     NS_CONTENTDISPATCHCHOOSER_CID,
     NS_CONTENTDISPATCHCHOOSER_CONTRACTID,
     ContentDispatchChooserConstructor
+  },
+  {
+    "Safe Browsing Blocked Module",
+    CH_SAFEBROWSING_ABOUT_MODULE_CID,
+    NS_ABOUT_MODULE_CONTRACTID_PREFIX "safebrowsingblocked",
+    CHSafeBrowsingAboutModule::CreateSafeBrowsingAboutModule,
   },
 };
 

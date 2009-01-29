@@ -313,4 +313,17 @@ extern const char* const kGeckoPrefUserAgentLocaleOverride;            // string
 // An extra suffix for the user agent identifying the multilingual build
 extern const char* const kGeckoPrefUserAgentMultiLangAddition;         // string
 
+#pragma mark Safe Browsing
+
+extern NSString* const kGeckoPrefSafeBrowsingDataProviderName;          // string
+extern NSString* const kGeckoPrefSafeBrowsingDataProviderUpdateURL;     // string
+extern NSString* const kGeckoPrefSafeBrowsingDataProviderKeyURL;        // string
+extern NSString* const kGeckoPrefSafeBrowsingDataProviderReportURL;     // string
+extern NSString* const kGeckoPrefSafeBrowsingDataProviderGetHashURL;    // string
+
+extern const char* const kGeckoPrefSafeBrowsingInformationURL;          // string
+extern const char* const kGeckoPrefSafeBrowsingPhishingCheckingEnabled; // bool
+extern const char* const kGeckoPrefSafeBrowsingMalwareCheckingEnabled;  // bool
+extern const char* const kGeckoPrefSafeBrowsingDataProvider;            // int
+
 #pragma GCC visibility pop

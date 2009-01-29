@@ -1052,8 +1052,26 @@ static FlashblockWhitelistManager* sFlashblockWhitelistManager = nil;
 // if the command was sent from an error page overlay.
 - (void)performCommandForXULElementWithID:(NSString*)elementIdentifier onPage:(NSString*)pageURI
 {
-  if ([elementIdentifier isEqualToString:@"exceptionDialogButton"])
+  if ([elementIdentifier isEqualToString:@"exceptionDialogButton"]) {
     [mDelegate addCertificateOverrideForSite:[self currentURI]];
+  }
+  else if ([pageURI hasPrefix:@"about:safebrowsingblocked"]) {
+    if ([elementIdentifier isEqualToString:@"getMeOutButton"]) {
+      [mDelegate runAwayFromSafeBrowsingBlockedSite];
+    }
+    else if ([elementIdentifier isEqualToString:@"ignoreWarningButton"]) {
+      [self loadURI:[self currentURI] 
+           referrer:nil 
+              flags:NSLoadFlagsBypassClassifier 
+       focusContent:YES 
+        allowPopups:NO];
+    }
+    else if ([elementIdentifier isEqualToString:@"whyBlockedButton"]) {
+      // Note: pageURI can be examined for e=phishingBlocked or e=malwareBlocked
+      // to customize the blocking info location for each case...
+      [mDelegate showSafeBrowsingInformation];
+    }
+  }
 }
 
 - (BOOL)performKeyEquivalent:(NSEvent*)theEvent

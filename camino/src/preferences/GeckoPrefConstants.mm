@@ -200,6 +200,19 @@ const char* const kGeckoPrefUserAgentLocale = "general.useragent.locale";
 const char* const kGeckoPrefUserAgentLocaleOverride = "camino.useragent.locale";
 const char* const kGeckoPrefUserAgentMultiLangAddition = "general.useragent.extra.multilang";
 
+#pragma mark Safe Browsing
+
+NSString* const kGeckoPrefSafeBrowsingDataProviderName = @"browser.safebrowsing.provider.%i.name";
+NSString* const kGeckoPrefSafeBrowsingDataProviderUpdateURL = @"browser.safebrowsing.provider.%i.updateURL";
+NSString* const kGeckoPrefSafeBrowsingDataProviderKeyURL = @"browser.safebrowsing.provider.%i.keyURL";
+NSString* const kGeckoPrefSafeBrowsingDataProviderReportURL = @"browser.safebrowsing.provider.%i.reportURL";
+NSString* const kGeckoPrefSafeBrowsingDataProviderGetHashURL = @"browser.safebrowsing.provider.%i.gethashURL";
+
+const char* const kGeckoPrefSafeBrowsingInformationURL = "browser.safebrowsing.warning.infoURL";
+const char* const kGeckoPrefSafeBrowsingPhishingCheckingEnabled = "browser.safebrowsing.enabled";
+const char* const kGeckoPrefSafeBrowsingMalwareCheckingEnabled = "browser.safebrowsing.malware.enabled";
+const char* const kGeckoPrefSafeBrowsingDataProvider = "browser.safebrowsing.dataProvider";
+
 #pragma mark -
 #pragma mark Values
 
