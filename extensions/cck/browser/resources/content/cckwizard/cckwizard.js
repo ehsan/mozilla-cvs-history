@@ -167,9 +167,15 @@ function OpenCCKWizard()
      document.getElementById("saveOnExit").checked = gPrefBranch.getBoolPref("cck.save_on_exit");
    } catch (ex) {
    }
-   try {
-     document.getElementById("zipLocation").value = gPrefBranch.getCharPref("cck.path_to_zip");
-   } catch (ex) {
+   if (Components.interfaces.nsIZipWriter) {
+     document.getElementById("zipLocation").hidden = true;
+     document.getElementById("zipLocationLabel").hidden = true;
+     document.getElementById("zipLocationButton").hidden = true;
+   } else {
+     try {
+       document.getElementById("zipLocation").value = gPrefBranch.getCharPref("cck.path_to_zip");
+     } catch (ex) {
+     }
    }
    
 
@@ -1019,7 +1025,7 @@ function CreateCCK()
                          .createInstance(Components.interfaces.nsILocalFile);
   zipdir.initWithPath(currentconfigpath);
   zipdir.append("jar");
-  CCKZip("cck.jar", zipdir, "content");
+  CCKZip("cck.jar", zipdir, ["content"]);
   
 /* ---------- */
 
@@ -1127,7 +1133,7 @@ function CreateCCK()
   filename += ".xpi";
 
   CCKZip("cck.xpi", destdir,
-         "chrome", "components", "defaults", "platform", "searchplugins", "chrome.manifest", "install.rdf", "install.js", "cck.config");
+         ["chrome", "components", "defaults", "platform", "searchplugins", "chrome.manifest", "install.rdf", "install.js", "cck.config"]);
 
   var outputdir = Components.classes["@mozilla.org/file/local;1"]
                             .createInstance(Components.interfaces.nsILocalFile);
@@ -1157,10 +1163,16 @@ function CreateCCK()
     CCKCopyFile(destdir.path, packagedir);
 
     listbox = document.getElementById('bundleList');
+    
+    var files_to_zip = ["cck.xpi", "install.rdf"];
+    var tempfile = Components.classes["@mozilla.org/file/local;1"]
+                               .createInstance(Components.interfaces.nsILocalFile);
 
     for (var i=0; i < listbox.getRowCount(); i++) {    
       listitem = listbox.getItemAtIndex(i);
       CCKCopyFile(listitem.getAttribute("label"), packagedir);
+      tempfile.initWithPath(listitem.getAttribute("label"));
+      files_to_zip.push(tempfile.leafName);
     }
 
     CCKCopyChromeToFile("install.rdf.mip", packagedir)
@@ -1169,8 +1181,8 @@ function CreateCCK()
     packagedir.moveTo(packagedir.parent, "install.rdf");
 
     packagedir = packagedir.parent;
-
-    CCKZip("cck.zip", packagedir, "*.xpi", "*.jar", "install.rdf");
+    
+    CCKZip("cck.zip", packagedir, files_to_zip);
     packagedir.append("cck.zip");
     outputdir.append(filename);
     try {
@@ -1221,13 +1233,30 @@ function CCKCopyChromeToFile(chromefile, location)
   fos.close();
 }
 
+function zwRecurse(zipobj, dirobj, location) {
+  var entries = dirobj.directoryEntries;
+
+  while (entries.hasMoreElements()) {
+    var file = entries.getNext().QueryInterface(Components.interfaces.nsILocalFile);;
+    if (file.exists() && file.isDirectory()) {
+      zwRecurse(zipobj, file, location);
+    } else if (file.exists()) {
+      /* Remove beginning of path */
+      var path = file.path.replace(location.path, "");
+      /* Remove beginning slash */
+      path = path.substr(1);
+      zipobj.addEntryFile(path, Components.interfaces.nsIZipWriter.COMPRESSION_NONE, file, false);
+    }
+  }
+}
 
 /* This function creates a given zipfile in a given location */
 /* It takes as parameters the names of all the files/directories to be contained in the ZIP file */
 /* It works by creating a CMD file to generate the ZIP */
-/* unless we have the spiffy ZipWriterCompoent from maf.mozdev.org */
+/* or using the nsIZipWriter interface */
+/* files_to_zip is an array */
 
-function CCKZip(zipfile, location)
+function CCKZip(zipfile, location, files_to_zip)
 {
   var file = location.clone();
   file.append(zipfile);
@@ -1235,93 +1264,38 @@ function CCKZip(zipfile, location)
     file.remove(false);
   } catch (ex) {}
 
-  if ((document.getElementById("zipLocation").value == "") && Components.interfaces.IZipWriterComponent) {
+  if (Components.interfaces.nsIZipWriter) {
     var archivefileobj = location.clone();
     archivefileobj.append(zipfile);
-    var zipWriter = new Components.Constructor("@mozilla.org/zipwriter;1", "nsIZipWriter");
-    zipWriter.open(archivefileobj, 0x01 | 0x08 | 0x20);
-    for (var i=2; i < arguments.length; i++) {
+
+    var zipwriter = Components.Constructor("@mozilla.org/zipwriter;1", "nsIZipWriter");
+    var zipwriterobj = new zipwriter();
+    zipwriterobj.open(archivefileobj, 0x04 | 0x08 | 0x20);
+
+    for (var i=0; i < files_to_zip.length; i++) {
       var sourcepathobj = location.clone();
-      sourcepathobj.append(arguments[i]);
+      sourcepathobj.append(files_to_zip[i]);
       if (sourcepathobj.exists() && sourcepathobj.isDirectory()) {
-        var entries = sourcepathobj.directoryEntries;
-        while (entries.hasMoreElements()) {
-          zipentriestoadd.push(entries.getNext());
-          var foo = entries.getNext();
-          zipWriter.addEntryFile(foo.path, 9, foo, true);
-        }
+        zwRecurse(zipwriterobj, sourcepathobj, location);
       } else if (sourcepathobj.exists()) {
-          zipWriter.addEntryFile(sourcepathobj.path, 9, sourcepathobj, true);
+        /* Remove beginning of path */
+        var path = sourcepathobj.path.replace(location.path, "");
+        /* Remove beginning slash */
+        path = path.substr(1);
+      /* Convert backslashes to forward slashes */
+        path = path.replace(/\\/g, '/');
+        zipwriterobj.addEntryFile(path, Components.interfaces.nsIZipWriter.COMPRESSION_NONE, sourcepathobj, false);
       }
     }
-
-    
-
-    if (Components.interfaces.nsIZipWriter) {
-    } else if (Components.interfaces.IZipWriterComponent) {
-      try {
-        var zipwriterobj = Components.classes["@ottley.org/libzip/zip-writer;1"]
-                                     .createInstance(Components.interfaces.IZipWriterComponent);
-                                  
-        zipwriterobj.CURR_COMPRESS_LEVEL = Components.interfaces.IZipWriterComponent.COMPRESS_LEVEL9;
-          
-        var sourcepathobj = Components.classes["@mozilla.org/file/local;1"]
-                                      .createInstance(Components.interfaces.nsILocalFile);
-        sourcepathobj.initWithPath(location.path);
-    
-        zipwriterobj.init(archivefileobj);
-        
-        zipwriterobj.basepath = sourcepathobj;
-        
-        var zipentriestoadd = new Array();
-        
-        for (var i=2; i < arguments.length; i++) {
-          var sourcepathobj = location.clone();
-          sourcepathobj.append(arguments[i]);
-          if (sourcepathobj.exists() && sourcepathobj.isDirectory()) {
-            var entries = sourcepathobj.directoryEntries;
-    
-            while (entries.hasMoreElements()) {
-              zipentriestoadd.push(entries.getNext());
-            }
-          } else if (sourcepathobj.exists()) {
-              zipentriestoadd.push(sourcepathobj);
-          }
-        }
-        
-        // Add files depth first
-        while (zipentriestoadd.length > 0) {
-          var zipentry = zipentriestoadd.pop();
-          
-          zipentry.QueryInterface(Components.interfaces.nsILocalFile);
-         
-          if (!zipentry.isDirectory()) {
-            zipwriterobj.add(zipentry);
-          }
-          
-          if (zipentry.exists() && zipentry.isDirectory()) {
-            var entries = zipentry.directoryEntries;
-    
-            while (entries.hasMoreElements()) {
-              zipentriestoadd.push(entries.getNext());
-            }
-          }        
-        }
-    
-        zipwriterobj.commitUpdates();
-        return;
-      } catch (e) {
-        gPromptService.alert(window, "", "ZIPWriterComponent error - attempting ZIP");
-      }
-    }
+    zipwriterobj.close();
+    return;
   }
-  
+
   var zipLocation = document.getElementById("zipLocation").value;
   if (zipLocation.length == 0) {
     zipLocation = "zip";
   }
 
-  var platform = navigator.platform;
   var scriptfile = location.clone();
              
   if ((navigator.platform == "Win32") || (navigator.platform == "OS/2"))
@@ -1347,8 +1321,8 @@ function CCKZip(zipfile, location)
     line =  "\"" + zipLocation + "\" " + zipParams + " \"" + location.path + "\\" + zipfile + "\"";
   else
     line = zipLocation + " " + zipParams + " \"" + location.path + "/" + zipfile + "\"";  
-  for (var i=2; i < arguments.length; i++) {
-    line += " " + arguments[i];
+  for (var i=0; i < files_to_zip.length; i++) {
+    line += " " + files_to_zip[i];
   }
   line += "\n";
   fos.write(line, line.length);  
@@ -1989,6 +1963,7 @@ function CCKWriteInstallRDF(destdir)
   var creatorline =     "<em:creator>%creator%</em:creator>";
   var homepageURLline = "<em:homepageURL>%homepageURL%</em:homepageURL>";
   var updateURLline =   "<em:updateURL>%updateURL%</em:updateURL>";  
+  var updateKeyline =   "<em:updateKey>%updateKey%</em:updateKey>";  
   var iconURLline =     "<em:iconURL>chrome://cck/content/%iconURL%</em:iconURL>";
   var hiddenline =      "<em:hidden>true</em:hidden>";
   var lockedline =      "<em:locked>true</em:locked>";
@@ -2073,6 +2048,14 @@ function CCKWriteInstallRDF(destdir)
     str = str.replace(/%updateURL%/g, document.getElementById("updateURL").value);
   } else {
     str = str.replace(/%updateURLline%/g, "");
+  }
+
+  var updateKey = document.getElementById("updateKey").value;
+  if (updateKey && (updateKey.length > 0)) {
+    str = str.replace(/%updateKeyline%/g, updateKeyline);
+    str = str.replace(/%updateKey%/g, document.getElementById("updateKey").value);
+  } else {
+    str = str.replace(/%updateKeyline%/g, "");
   }
 
   var iconURL = document.getElementById("iconURL").value;

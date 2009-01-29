@@ -10,6 +10,7 @@ xmlns:em="http://www.mozilla.org/2004/em-rdf#">
         %creatorline%
         %homepageURLline%
         %updateURLline%
+        %updateKeyline%
         %iconURLline%
         %hiddenline%
         %lockedline%
