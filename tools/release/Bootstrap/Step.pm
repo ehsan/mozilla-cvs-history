@@ -336,7 +336,7 @@ sub HgPush {
 
     my @cmdArgs = ['push', '-e',
                    'ssh -l ' . $hgUsername . ' -i "' . $hgSshKey . '"',
-                   $repo];
+                   $pushRepo];
 
     $this->Shell(
       cmd => 'hg',
