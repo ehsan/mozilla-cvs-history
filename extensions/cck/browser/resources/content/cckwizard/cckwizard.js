@@ -1245,6 +1245,8 @@ function zwRecurse(zipobj, dirobj, location) {
       var path = file.path.replace(location.path, "");
       /* Remove beginning slash */
       path = path.substr(1);
+      /* Change backslashes to forward slashes */
+      path = path.replace(/\\/g, '/');
       zipobj.addEntryFile(path, Components.interfaces.nsIZipWriter.COMPRESSION_NONE, file, false);
     }
   }
