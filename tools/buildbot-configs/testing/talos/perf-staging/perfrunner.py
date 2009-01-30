@@ -699,6 +699,7 @@ class TalosFactory(BuildFactory):
         self.addStep(ShellCommand(
                            flunkOnFailure=False,
                            warnOnFailure=False,
+                           alwaysRun=True,
                            workdir='.',
                            description="reboot after 5 test runs",
                            command=["python", "count_and_reboot.py", "-f", "../talos_count.txt", "-n", "5", "-z"],
