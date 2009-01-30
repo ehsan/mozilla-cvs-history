@@ -3,12 +3,11 @@
 from twisted.python import log
 from buildbot import buildset
 from buildbot.scheduler import Scheduler
-from buildbot.process import step
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.factory import BuildFactory
 from buildbot.buildset import BuildSet
 from buildbot.sourcestamp import SourceStamp
-from buildbot.process.step import ShellCommand
+from buildbot.steps.shell import ShellCommand
 from buildbot.steps.transfer import FileDownload
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION
 import re, urllib, sys, os
@@ -75,16 +74,19 @@ class MozillaWget(ShellCommand):
     haltOnFailure = True
     
     def __init__(self, **kwargs):
-        self.changes = kwargs['build'].source.changes
         self.branch = "HEAD"
-        #a full path is always provided by the poller 
-        self.fileURL = self.changes[-1].links
-        self.filename = self.changes[-1].files[0]
         if 'branch' in kwargs:
             self.branch = kwargs['branch']
         if not 'command' in kwargs:
             kwargs['command'] = ["wget"]
         ShellCommand.__init__(self, **kwargs)
+
+    def setBuild(self, build):
+        ShellCommand.setBuild(self, build)
+        self.changes = build.source.changes
+        #a full path is always provided by the poller 
+        self.fileURL = self.changes[-1].links
+        self.filename = self.changes[-1].files[0]
     
     def getFilename(self):
         return self.filename
@@ -133,7 +135,7 @@ class MozillaInstallZip(ShellCommand):
             else:
                 return FAILURE
         if self.filename:
-            self.command.append(self.filename)
+            self.command = self.command[:] + [self.filename]
         ShellCommand.start(self)
     
     def evaluateCommand(self, cmd):
@@ -152,19 +154,21 @@ class MozillaUpdateConfig(ShellCommand):
    
     def __init__(self, **kwargs):
         self.addOptions = []
-        assert 'build' in kwargs
         assert 'executablePath' in kwargs
         assert 'branch' in kwargs
-        self.title = kwargs['build'].slavename
-        self.changes = kwargs['build'].source.changes
-        self.buildid = strftime("%Y%m%d%H%M", localtime(self.changes[-1].when))
         self.branch = kwargs['branch']
         self.exePath = kwargs['executablePath']
         if 'addOptions' in kwargs:
             self.addOptions = kwargs['addOptions']
-        if not 'command' in kwargs:
-            kwargs['command'] = ["python", "PerfConfigurator.py", "-v", "-e", self.exePath, "-t", self.title, "-b", self.branch, "-d", self.buildid, "-i", self.buildid] + self.addOptions
         ShellCommand.__init__(self, **kwargs)
+
+    def setBuild(self, build):
+        ShellCommand.setBuild(self, build)
+        self.title = build.slavename
+        self.changes = build.source.changes
+        self.buildid = strftime("%Y%m%d%H%M", localtime(self.changes[-1].when))
+        if not self.command:
+            self.setCommand(["python", "PerfConfigurator.py", "-v", "-e", self.exePath, "-t", self.title, "-b", self.branch, "-d", self.buildid, "-i", self.buildid] + self.addOptions)
 
     def describe(self, done=False):
         return ["Update config"]
@@ -242,7 +246,7 @@ class MozillaInstallTarBz2(ShellCommand):
         ShellCommand.__init__(self, **kwargs)
     
     def describe(self, done=False):
-        return ["Install tar.gz"]
+        return ["Install tar.bz2"]
     
     def start(self):
         if not self.filename:
@@ -251,7 +255,7 @@ class MozillaInstallTarBz2(ShellCommand):
             else:
                 return FAILURE
         if self.filename:
-            self.command.append(self.filename)
+            self.command = self.command[:] + [self.filename]
         ShellCommand.start(self)
     
     def evaluateCommand(self, cmd):
@@ -284,7 +288,7 @@ class MozillaInstallTarGz(ShellCommand):
             else:
                 return FAILURE
         if self.filename:
-            self.command.append(self.filename)
+            self.command = self.command[:] + [self.filename]
         ShellCommand.start(self)
     
     def evaluateCommand(self, cmd):
@@ -317,6 +321,7 @@ class MozillaInstallDmg(ShellCommand):
             else:
                 return FAILURE
 
+        self.command = self.command[:]
         for i in range(len(self.command)):
             if self.command[i] == "$FILENAME":
                 self.command[i] = self.filename
@@ -354,6 +359,7 @@ class MozillaInstallDmgEx(ShellCommand):
             else:
                 return FAILURE
 
+        self.command = self.command[:]
         for i in range(len(self.command)):
             if self.command[i] == "$FILENAME":
                 self.command[i] = self.filename
@@ -380,111 +386,112 @@ class TalosFactory(BuildFactory):
             cleanCmd = self.winClean
         else:
             cleanCmd = self.macClean
-        self.addStep(ShellCommand,
+        self.addStep(ShellCommand(
                            workdir=".",
                            description="Cleanup",
                            command=cleanCmd,
-                           env=MozillaEnvironments[envName])
-        self.addStep(FileDownload,
+                           env=MozillaEnvironments[envName]))
+        self.addStep(FileDownload(
                            mastersrc="scripts/count_and_reboot.py",
                            slavedest="count_and_reboot.py",
-                           workdir=".")
-        self.addStep(ShellCommand,
+                           workdir="."))
+        self.addStep(ShellCommand(
                            command=["cvs", "-d", cvsRoot, "co", "-d", "talos",
                                     "mozilla/testing/performance/talos"],
                            workdir=".",
                            description="checking out talos",
                            haltOnFailure=True,
                            flunkOnFailure=True,
-                           env=MozillaEnvironments[envName])
-        self.addStep(FileDownload,
+                           env=MozillaEnvironments[envName]))
+        self.addStep(FileDownload(
                            mastersrc="scripts/generate-tpcomponent.py",
                            slavedest="generate-tpcomponent.py",
-                           workdir="talos/page_load_test")
-        if customManifest <> '':
-            self.addStep(FileDownload,
+                           workdir="talos/page_load_test"))
+        if customManifest != '':
+            self.addStep(FileDownload(
                            mastersrc=customManifest,
                            slavedest="manifest.txt",
-                           workdir="talos/page_load_test")
-        self.addStep(ShellCommand,
+                           workdir="talos/page_load_test"))
+        self.addStep(ShellCommand(
                            command=["python", "generate-tpcomponent.py"],
                            workdir="talos/page_load_test",
                            description="setting up pageloader",
                            haltOnFailure=True,
                            flunkOnFailure=True,
-                           env=MozillaEnvironments[envName])
-        self.addStep(MozillaWget,
+                           env=MozillaEnvironments[envName]))
+        self.addStep(MozillaWget(
                            workdir=".",
                            branch=buildBranch,
-                           env=MozillaEnvironments[envName])
+                           env=MozillaEnvironments[envName]))
         #install the browser, differs based upon platform
         if OS == 'linux':
-            self.addStep(MozillaInstallTarBz2,
+            self.addStep(MozillaInstallTarBz2(
                                workdir=".",
                                branch=buildBranch,
                                haltOnFailure=True,
-                               env=MozillaEnvironments[envName])
+                               env=MozillaEnvironments[envName]))
         elif OS == 'linuxbranch': #special case for old linux builds
-            self.addStep(MozillaInstallTarGz,
+            self.addStep(MozillaInstallTarGz(
                            workdir=".",
                            branch=buildBranch,
                            haltOnFailure=True,
-                           env=MozillaEnvironments[envName])
+                           env=MozillaEnvironments[envName]))
         elif OS == 'win':
-            self.addStep(MozillaInstallZip,
+            self.addStep(MozillaInstallZip(
                                workdir=".",
                                branch=buildBranch,
                                haltOnFailure=True,
-                               env=MozillaEnvironments[envName]),
-            self.addStep(ShellCommand,
+                               env=MozillaEnvironments[envName]))
+            self.addStep(ShellCommand(
                                workdir="firefox/",
                                flunkOnFailure=False,
                                warnOnFailure=False,
                                description="chmod files (see msys bug)",
                                command=["chmod", "-v", "-R", "a+x", "."],
-                               env=MozillaEnvironments[envName])
+                               env=MozillaEnvironments[envName]))
         elif OS == 'tiger':
-            self.addStep(FileDownload,
+            self.addStep(FileDownload(
                            mastersrc="scripts/installdmg.sh",
                            slavedest="installdmg.sh",
-                           workdir=".")
-            self.addStep(MozillaInstallDmg,
+                           workdir="."))
+            self.addStep(MozillaInstallDmg(
                                workdir=".",
                                branch=buildBranch,
                                haltOnFailure=True,
-                               env=MozillaEnvironments[envName])
+                               env=MozillaEnvironments[envName]))
         else: #leopard
-            self.addStep(FileDownload,
+            self.addStep(FileDownload(
                            mastersrc="scripts/installdmg.ex",
                            slavedest="installdmg.ex",
-                           workdir=".")
-            self.addStep(MozillaInstallDmgEx,
+                           workdir="."))
+            self.addStep(MozillaInstallDmgEx(
                                workdir=".",
                                branch=buildBranch,
                                haltOnFailure=True,
-                               env=MozillaEnvironments[envName])
-        self.addStep(MozillaUpdateConfig,
+                               env=MozillaEnvironments[envName]))
+        self.addStep(MozillaUpdateConfig(
                            workdir="talos/",
                            branch=buildBranch,
                            haltOnFailure=True,
                            executablePath=buildPath,
                            addOptions=configOptions,
-                           env=MozillaEnvironments[envName])
-        self.addStep(MozillaRunPerfTests,
+                           env=MozillaEnvironments[envName]))
+        self.addStep(MozillaRunPerfTests(
                            warnOnWarnings=True,
                            workdir="talos/",
                            branch=buildBranch,
                            timeout=21600,
                            haltOnFailure=False,
                            command=talosCmd,
-                           env=MozillaEnvironments[envName])
-        self.addStep(ShellCommand,
+                           env=MozillaEnvironments[envName]))
+        self.addStep(ShellCommand(
                            flunkOnFailure=False,
                            warnOnFailure=False,
+                           alwaysRun=True,
                            workdir='.',
                            description="reboot after 1 test run",
                            command=["python", "count_and_reboot.py", "-f", "../talos_count.txt", "-n", "1", "-z"],
-                           env=MozillaEnvironments[envName])
+                           env=MozillaEnvironments[envName]))
 
 
 def main(argv=None):
