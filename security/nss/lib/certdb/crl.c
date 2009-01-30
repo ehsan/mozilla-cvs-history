@@ -37,7 +37,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.60 2008/10/31 23:02:36 alexei.volkov.bugs%sun.com Exp $
+ * $Id: crl.c,v 1.61 2009/01/30 19:54:45 alexei.volkov.bugs%sun.com Exp $
  */
  
 #include "cert.h"
@@ -1644,7 +1644,7 @@ static SECStatus DPCache_FetchFromTokens(CRLDPCache* cache, PRTime vfdate,
                     rv = CachedCrl_Destroy(returned);
                     returned = NULL;
                 }
-                else
+                else if (vfdate)
                 {
                     rv = CachedCrl_Verify(cache, returned, vfdate, wincx);
                 }
