@@ -68,7 +68,7 @@ class noMergeScheduler(Scheduler):
         # submit
         ss = noMergeSourceStamp(changes=changes)
         bs = buildset.BuildSet(self.builderNames, ss)
-        self.submit(bs)
+        self.submitBuildSet(bs)
 
 class ApacheDirectory:
     sortByDateString = "?C=M;O=A"
