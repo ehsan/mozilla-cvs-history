@@ -999,7 +999,6 @@
 		C7DE8DD80F30CFAC00CD3872 /* SafeBrowsingAboutModule.mm in Sources */ = {isa = PBXBuildFile; fileRef = C7DE8DD50F30CFAC00CD3872 /* SafeBrowsingAboutModule.mm */; };
 		C7DE8DD90F30CFAC00CD3872 /* SafeBrowsingListManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = C7DE8DD30F30CFAC00CD3872 /* SafeBrowsingListManager.mm */; };
 		C7DE8DDA0F30CFAC00CD3872 /* SafeBrowsingAboutModule.mm in Sources */ = {isa = PBXBuildFile; fileRef = C7DE8DD50F30CFAC00CD3872 /* SafeBrowsingAboutModule.mm */; };
-		C7DE8E2D0F30D27300CD3872 /* libcaminosafebrowsing.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C7DE8E2B0F30D27300CD3872 /* libcaminosafebrowsing.dylib */; };
 		C7DE8E2F0F30D2AD00CD3872 /* libcaminosafebrowsing.dylib in Copy Component Libraries */ = {isa = PBXBuildFile; fileRef = C7DE8E2B0F30D27300CD3872 /* libcaminosafebrowsing.dylib */; };
 		C7DE8E300F30D2C100CD3872 /* nsUrlClassifierListManager.js in Copy Component Libraries */ = {isa = PBXBuildFile; fileRef = C7DE8E150F30D14F00CD3872 /* nsUrlClassifierListManager.js */; };
 		C7DE8E310F30D2C100CD3872 /* nsUrlClassifierLib.js in Copy Component Libraries */ = {isa = PBXBuildFile; fileRef = C7DE8E160F30D14F00CD3872 /* nsUrlClassifierLib.js */; };
@@ -1041,6 +1040,7 @@
 		DE1EBDC30D066F5100BE9ECC /* mathfontSTIXSize1.properties in Copy Gecko Fonts */ = {isa = PBXBuildFile; fileRef = DE1EBDBB0D066F5100BE9ECC /* mathfontSTIXSize1.properties */; };
 		DE1EBDC40D066F5100BE9ECC /* mathfontSTIXNonUnicode.properties in Copy Gecko Fonts */ = {isa = PBXBuildFile; fileRef = DE1EBDBC0D066F5100BE9ECC /* mathfontSTIXNonUnicode.properties */; };
 		DE1EBDC50D066F5100BE9ECC /* mathfontStandardSymbolsL.properties in Copy Gecko Fonts */ = {isa = PBXBuildFile; fileRef = DE1EBDBD0D066F5100BE9ECC /* mathfontStandardSymbolsL.properties */; };
+		DE2AC7180F33EBAB009C0A42 /* libcaminosafebrowsing.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DE2AC6EC0F33EB8F009C0A42 /* libcaminosafebrowsing.a */; };
 		DE4044480ED09D1E00057E17 /* global_locale_printPageSetup_properties.strings in Resources */ = {isa = PBXBuildFile; fileRef = DE4044000ED09D1E00057E17 /* global_locale_printPageSetup_properties.strings */; };
 		DE4044490ED09D1E00057E17 /* global_locale_nsWebBrowserPersist_properties.strings in Resources */ = {isa = PBXBuildFile; fileRef = DE4044020ED09D1E00057E17 /* global_locale_nsWebBrowserPersist_properties.strings */; };
 		DE40444A0ED09D1E00057E17 /* global_locale_xul_properties.strings in Resources */ = {isa = PBXBuildFile; fileRef = DE4044040ED09D1E00057E17 /* global_locale_xul_properties.strings */; };
@@ -2805,6 +2805,7 @@
 		DE1EBDBB0D066F5100BE9ECC /* mathfontSTIXSize1.properties */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; name = mathfontSTIXSize1.properties; path = ../dist/bin/res/fonts/mathfontSTIXSize1.properties; sourceTree = SOURCE_ROOT; };
 		DE1EBDBC0D066F5100BE9ECC /* mathfontSTIXNonUnicode.properties */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; name = mathfontSTIXNonUnicode.properties; path = ../dist/bin/res/fonts/mathfontSTIXNonUnicode.properties; sourceTree = SOURCE_ROOT; };
 		DE1EBDBD0D066F5100BE9ECC /* mathfontStandardSymbolsL.properties */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; name = mathfontStandardSymbolsL.properties; path = ../dist/bin/res/fonts/mathfontStandardSymbolsL.properties; sourceTree = SOURCE_ROOT; };
+		DE2AC6EC0F33EB8F009C0A42 /* libcaminosafebrowsing.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcaminosafebrowsing.a; path = ../staticlib/components/libcaminosafebrowsing.a; sourceTree = SOURCE_ROOT; };
 		DE4044010ED09D1E00057E17 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = generated/resources/localized/English.lproj/global_locale_printPageSetup_properties.strings; sourceTree = "<group>"; };
 		DE4044030ED09D1E00057E17 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = generated/resources/localized/English.lproj/global_locale_nsWebBrowserPersist_properties.strings; sourceTree = "<group>"; };
 		DE4044050ED09D1E00057E17 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = generated/resources/localized/English.lproj/global_locale_xul_properties.strings; sourceTree = "<group>"; };
@@ -3422,7 +3423,7 @@
 				7B9A26190D411275008CDB39 /* libnssutil3.dylib in Frameworks */,
 				DE846DA90D84D03400009C6A /* libimgicon.a in Frameworks */,
 				DEFAA3440F241C1600BD51C1 /* Growl.framework in Frameworks */,
-				C7DE8E2D0F30D27300CD3872 /* libcaminosafebrowsing.dylib in Frameworks */,
+				DE2AC7180F33EBAB009C0A42 /* libcaminosafebrowsing.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4765,6 +4766,7 @@
 				DE62E4310B72B50C00142851 /* libauth.a */,
 				DEC87B140C288403002EB106 /* libstoragecomps.a */,
 				33B777E10C5588E500A6D67F /* libmozlcms.a */,
+				DE2AC6EC0F33EB8F009C0A42 /* libcaminosafebrowsing.a */,
 			);
 			name = "Gecko Static Components";
 			sourceTree = "<group>";

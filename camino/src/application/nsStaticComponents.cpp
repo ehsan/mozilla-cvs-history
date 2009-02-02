@@ -55,6 +55,7 @@
 #ifdef _BUILD_STATIC_BIN
 #define MODULES \
     MODULE(CmXULAppInfoModule) \
+    MODULE(CHSafeBrowsingModule) \
     MODULE(nsI18nModule) \
     MODULE(nsChardetModule) \
     MODULE(nsUConvModule) \
