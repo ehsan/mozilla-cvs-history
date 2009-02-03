@@ -999,6 +999,8 @@ function CreateCCK()
   } catch(ex) {}
   
   CCKWriteXULOverlay(destdir);
+  CCKWriteXULOverlayMac(destdir);
+  CCKWriteXULOverlayNonMac(destdir);
   CCKWriteDTD(destdir);
   CCKWriteCSS(destdir);
   CCKWriteProperties(destdir);
@@ -1126,14 +1128,13 @@ function CreateCCK()
   CCKCopyChromeToFile("chrome.manifest", destdir)
   CCKWriteInstallRDF(destdir);
          
-  CCKWriteInstallJS(destdir);
   var filename = document.getElementById("filename").value;
   if (filename.length == 0)
     filename = "cck";
   filename += ".xpi";
 
   CCKZip("cck.xpi", destdir,
-         ["chrome", "components", "defaults", "platform", "searchplugins", "chrome.manifest", "install.rdf", "install.js", "cck.config"]);
+         ["chrome", "components", "defaults", "platform", "searchplugins", "chrome.manifest", "install.rdf", "cck.config"]);
 
   var outputdir = Components.classes["@mozilla.org/file/local;1"]
                             .createInstance(Components.interfaces.nsILocalFile);
@@ -1374,14 +1375,6 @@ function CCKWriteXULOverlay(destdir)
   var tooltipXUL  = '  <button id="navigator-throbber" oncommand="goClickThrobber(\'browser.throbber.url\', event)" onclick="checkForMiddleClick(this, event);" tooltiptext="&throbber.tooltip;" disabled="false"/>\n';
   var titlebarXUL = '  <window id="main-window" titlemodifier="&mainWindow.titlemodifier;"/>\n';
 
-  var helpmenu1   = '  <menupopup id="menu_HelpPopup">\n';
-  var helpmenu2   = '    <menuseparator insertafter="aboutSeparator"/>\n';
-  var helpmenu3   = '    <menuitem label="&cckHelp.label;" insertafter="aboutSeparator"\n';
-  var helpmenu4   = '              accesskey="&cckHelp.accesskey;"\n';
-  var helpmenu5   = '              oncommand="openUILink(getCCKLink(\'cckhelp.url\'), event, false, true);"\n';
-  var helpmenu6   = '              onclick="checkForMiddleClick(this, event);"/>\n';
-  var helpmenu7   = '  </menupopup>\n';
-
   var file = destdir.clone();
   file.append("cck-browser-overlay.xul");
   try {
@@ -1415,6 +1408,90 @@ function CCKWriteXULOverlay(destdir)
       str = str.replace(/%window%/g, titlebarXUL);
   else
     str = str.replace(/%window%/g, "");
+
+  fos.write(str, str.length); 
+  fos.close();
+}
+function CCKWriteXULOverlayNonMac(destdir)
+{
+  var helpmenu1   = '  <menupopup id="menu_HelpPopup">\n';
+  var helpmenu2   = '    <menuseparator insertafter="aboutSeparator"/>\n';
+  var helpmenu3   = '    <menuitem label="&cckHelp.label;" insertafter="aboutSeparator"\n';
+  var helpmenu4   = '              accesskey="&cckHelp.accesskey;"\n';
+  var helpmenu5   = '              oncommand="openUILink(getCCKLink(\'cckhelp.url\'), event, false, true);"\n';
+  var helpmenu6   = '              onclick="checkForMiddleClick(this, event);"/>\n';
+  var helpmenu7   = '  </menupopup>\n';
+
+  var file = destdir.clone();
+  file.append("cck-browser-overlay-nonmac.xul");
+  try {
+    file.remove(false);                         
+  } catch (ex) {}
+  var fos = Components.classes["@mozilla.org/network/file-output-stream;1"]
+                      .createInstance(Components.interfaces.nsIFileOutputStream);
+
+  fos.init(file, -1, -1, false);
+  
+  var ioService=Components.classes["@mozilla.org/network/io-service;1"]
+                          .getService(Components.interfaces.nsIIOService);
+  var scriptableStream=Components.classes["@mozilla.org/scriptableinputstream;1"]
+                                 .getService(Components.interfaces.nsIScriptableInputStream);
+    
+  var channel=ioService.newChannel("chrome://cckwizard/content/srcfiles/cck-browser-overlay-menu.xul.in",null,null);
+  var input=channel.open();
+  scriptableStream.init(input);
+  var str=scriptableStream.read(input.available());
+  scriptableStream.close();
+  input.close();
+
+  var helpmenu = document.getElementById("HelpMenuCommandName").value;
+  if (helpmenu && (helpmenu.length > 0)) {
+    var helpmenuXUL = helpmenu1 + helpmenu2 + helpmenu3;
+    var helpmenuakey = document.getElementById("HelpMenuCommandAccesskey").value;
+    if (helpmenuakey && (helpmenuakey.length > 0)) {
+      helpmenuXUL += helpmenu4;
+    }
+    helpmenuXUL += helpmenu5 + helpmenu6 + helpmenu7;
+    str = str.replace(/%menupopup%/g, helpmenuXUL);
+  } else {
+    str = str.replace(/%menupopup%/g, "");
+  }    
+
+  fos.write(str, str.length); 
+  fos.close();
+}
+
+function CCKWriteXULOverlayMac(destdir)
+{
+  var helpmenu1   = '  <menupopup id="menu_HelpPopup">\n';
+  var helpmenu2   = '    <menuseparator/>\n';
+  var helpmenu3   = '    <menuitem label="&cckHelp.label;"\n';
+  var helpmenu4   = '              accesskey="&cckHelp.accesskey;"\n';
+  var helpmenu5   = '              oncommand="openUILink(getCCKLink(\'cckhelp.url\'), event, false, true);"\n';
+  var helpmenu6   = '              onclick="checkForMiddleClick(this, event);"/>\n';
+  var helpmenu7   = '  </menupopup>\n';
+
+  var file = destdir.clone();
+  file.append("cck-browser-overlay-mac.xul");
+  try {
+    file.remove(false);                         
+  } catch (ex) {}
+  var fos = Components.classes["@mozilla.org/network/file-output-stream;1"]
+                      .createInstance(Components.interfaces.nsIFileOutputStream);
+
+  fos.init(file, -1, -1, false);
+  
+  var ioService=Components.classes["@mozilla.org/network/io-service;1"]
+                          .getService(Components.interfaces.nsIIOService);
+  var scriptableStream=Components.classes["@mozilla.org/scriptableinputstream;1"]
+                                 .getService(Components.interfaces.nsIScriptableInputStream);
+    
+  var channel=ioService.newChannel("chrome://cckwizard/content/srcfiles/cck-browser-overlay-menu.xul.in",null,null);
+  var input=channel.open();
+  scriptableStream.init(input);
+  var str=scriptableStream.read(input.available());
+  scriptableStream.close();
+  input.close();
 
   var helpmenu = document.getElementById("HelpMenuCommandName").value;
   if (helpmenu && (helpmenu.length > 0)) {
@@ -2091,53 +2168,6 @@ function CCKWriteInstallRDF(destdir)
   cos.close();
   fos.close();
 }
-
-function CCKWriteInstallJS(destdir)
-{
-  var file = destdir.clone();
-  file.append("install.js");
-  try {
-    file.remove(false);                         
-  } catch (ex) {
-  }
-  var fos = Components.classes["@mozilla.org/network/file-output-stream;1"]
-                       .createInstance(Components.interfaces.nsIFileOutputStream);
-
-  fos.init(file, -1, -1, false);
-  var ioService=Components.classes["@mozilla.org/network/io-service;1"]
-    .getService(Components.interfaces.nsIIOService);
-  var scriptableStream=Components
-    .classes["@mozilla.org/scriptableinputstream;1"]
-    .getService(Components.interfaces.nsIScriptableInputStream);
-
-  var channel=ioService.newChannel("chrome://cckwizard/content/srcfiles/install.js.in",null,null);
-  var input=channel.open();
-  scriptableStream.init(input);
-  var str=scriptableStream.read(input.available());
-  scriptableStream.close();
-  input.close();
-
-  str = str.replace(/%id%/g, document.getElementById("id").value);
-  str = str.replace(/%name%/g, document.getElementById("name").value);
-
-  if (document.getElementById('browserPluginList').getRowCount() > 0)
-    str = str.replace(/%plugins%/g, 'addDirectory("", "%version%", "platform", cckextensiondir, "platform", true);');
-  else
-    str = str.replace(/%plugins%/g, '');
-
-  if (document.getElementById('searchEngineList').getRowCount() > 0)
-    str = str.replace(/%searchplugins%/g, 'addDirectory("", "%version%", "searchplugins", cckextensiondir, "searchplugins", true);');
-  else
-    str = str.replace(/%searchplugins%/g, '');
-    
-  str = str.replace(/%installrdf%/g, 'addFile("", "%version%", "install.rdf", cckextensiondir, "", true);');  
-
-  str = str.replace(/%version%/g, document.getElementById("version").value);
-  
-  fos.write(str, str.length); 
-  fos.close();
-}
-
 
 /* This function copies a source file to a destination directory, including */
 /* deleting the file at the destination if it exists */
