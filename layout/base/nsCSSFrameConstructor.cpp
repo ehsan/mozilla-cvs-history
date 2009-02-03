@@ -10677,6 +10677,14 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
       // Set the fieldset's initial child list
       newFrame->SetInitialChildList(nsnull, continuingAreaFrame);
     }
+  } else if (nsGkAtoms::legendFrame == frameType) {
+    newFrame = NS_NewLegendFrame(shell, styleContext);
+
+    if (newFrame) {
+      newFrame->Init(content, aParentFrame, aFrame);
+      // XXXbz should we be passing in a non-null aContentParentFrame?
+      nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
+    }
   } else {
     NS_NOTREACHED("unexpected frame type");
     *aContinuingFrame = nsnull;
