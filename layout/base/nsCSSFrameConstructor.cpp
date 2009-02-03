@@ -13485,6 +13485,8 @@ nsCSSFrameConstructor::ProcessPendingRestyles()
   }
   
   NS_PRECONDITION(mDocument, "No document?  Pshaw!\n");
+  NS_PRECONDITION(!nsContentUtils::IsSafeToRunScript(),
+                  "Missing a script blocker!");
 
   // Use the stack if we can, otherwise fall back on heap-allocation.
   nsAutoTArray<RestyleEnumerateData, RESTYLE_ARRAY_STACKSIZE> restyleArr;
@@ -13613,21 +13615,24 @@ nsCSSFrameConstructor::LazyGenerateChildrenEvent::Run()
     menuPopupFrame->SetGeneratedChildren();
 #endif
 
-    nsCSSFrameConstructor* fc = mPresShell->FrameConstructor();
-    fc->BeginUpdate();
+   {
+      nsAutoScriptBlocker scriptBlocker;
+      nsCSSFrameConstructor* fc = mPresShell->FrameConstructor();
+      fc->BeginUpdate();
 
-    nsFrameItems childItems;
-    nsFrameConstructorState state(mPresShell, nsnull, nsnull, nsnull);
-    nsresult rv = fc->ProcessChildren(state, mContent, frame, PR_FALSE,
-                                      childItems, PR_FALSE);
-    if (NS_FAILED(rv))
-      return rv;
+      nsFrameItems childItems;
+      nsFrameConstructorState state(mPresShell, nsnull, nsnull, nsnull);
+      nsresult rv = fc->ProcessChildren(state, mContent, frame, PR_FALSE,
+                                        childItems, PR_FALSE);
+      if (NS_FAILED(rv))
+        return rv;
 
-    fc->CreateAnonymousFrames(mContent->Tag(), state, mContent, frame,
-                              PR_FALSE, childItems);
-    frame->SetInitialChildList(nsnull, childItems.childList);
+      fc->CreateAnonymousFrames(mContent->Tag(), state, mContent, frame,
+                                PR_FALSE, childItems);
+      frame->SetInitialChildList(nsnull, childItems.childList);
 
-    fc->EndUpdate();
+      fc->EndUpdate();
+    }
 
     if (mCallback)
       mCallback(mContent, frame, mArg);

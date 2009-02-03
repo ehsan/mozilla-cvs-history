@@ -668,6 +668,8 @@ public:
   static nsresult GetElementsByClassNameHelper(nsINode* aRootNode,
                                                const nsAString& aClasses,
                                                nsIDOMNodeList** aReturn);
+
+  void InitializeFinalizeFrameLoaders();
 protected:
 
   /**
@@ -678,8 +680,6 @@ protected:
   static PRBool CheckGetElementByIdArg(const nsAString& aId);
 
   void DispatchContentLoadedEvents();
-
-  void InitializeFinalizeFrameLoaders();
 
   void RetrieveRelevantHeaders(nsIChannel *aChannel);
 
@@ -865,6 +865,7 @@ private:
 
   nsTArray<nsRefPtr<nsFrameLoader> > mInitializableFrameLoaders;
   nsTArray<nsRefPtr<nsFrameLoader> > mFinalizableFrameLoaders;
+  nsCOMPtr<nsIRunnable> mFrameLoaderRunner;
 };
 
 
