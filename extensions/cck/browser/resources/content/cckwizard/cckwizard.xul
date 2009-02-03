@@ -320,14 +320,33 @@
   <wizardpage label="&customizePartFour.label;">  
     <groupbox>
       <caption label="&allowedSites.caption;"/>
-        <description control="PopupAllowedSites">&popupAllowedSites.label;</description>
-        <vbox>
+      <description control="PopupAllowedSites">&popupAllowedSites.label;</description>
+      <vbox>
         <textbox id="PopupAllowedSites" flex="1"/>
-        </vbox>
-        <description control="InstallAllowedSites">&installAllowedSites.label;</description>
-        <vbox>
+      </vbox>
+      <description control="InstallAllowedSites">&installAllowedSites.label;</description>
+      <vbox>
         <textbox id="InstallAllowedSites" flex="1"/>
-        </vbox>
+      </vbox>
+      <description control="CookieAllowedSites">&cookieAllowedSites.label;</description>
+      <vbox>
+        <textbox id="CookieAllowedSites" flex="1"/>
+      </vbox>
+    </groupbox>
+    <groupbox>
+      <caption label="&deniedSites.caption;"/>
+      <description control="PopupDeniedSites">&popupDeniedSites.label;</description>
+      <vbox>
+        <textbox id="PopupDeniedSites" flex="1"/>
+      </vbox>
+      <description control="InstallDeniedSites">&installDeniedSites.label;</description>
+      <vbox>
+        <textbox id="InstallDeniedSites" flex="1"/>
+      </vbox>
+      <description control="CookieDeniedSites">&cookieDeniedSites.label;</description>
+      <vbox>
+        <textbox id="CookieDeniedSites" flex="1"/>
+      </vbox>
     </groupbox>
   </wizardpage>
 

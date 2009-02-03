@@ -237,12 +237,68 @@ CCKService.prototype={
     try {             
       installAllowedSites = bundle.GetStringFromName("InstallAllowedSites");
     } catch (ex) {}
-    if (popupAllowedSites) {
+    if (installAllowedSites) {
       var installAllowedSitesArray = installAllowedSites.split(",");
       for (var i=0; i < installAllowedSitesArray.length; i++) {
         try {
           var uri = ioService.newURI("http://" + installAllowedSitesArray[i], null, null);
           pm.add(uri, "install", 1);
+        } catch (ex) {}
+      }
+    }
+    
+    var cookieAllowedSites;
+    try {             
+      cookieAllowedSites = bundle.GetStringFromName("CookieAllowedSites");
+    } catch (ex) {}
+    if (cookieAllowedSites) {
+      var cookieAllowedSitesArray = cookieAllowedSites.split(",");
+      for (var i=0; i < cookieAllowedSitesArray.length; i++) {
+        try {
+          var uri = ioService.newURI("http://" + cookieAllowedSitesArray[i], null, null);
+          pm.add(uri, "cookie", 1);
+        } catch (ex) {}
+      }
+    }
+    
+    var popupDeniedSites;
+    try {
+      popupDeniedSites = bundle.GetStringFromName("PopupDeniedSites");
+    } catch (ex) {}
+    if (popupDeniedSites) {
+      var popupDeniedSitesArray = popupDeniedSites.split(",");
+      for (var i=0; i < popupDeniedSitesArray.length; i++) {
+        try {
+          var uri = ioService.newURI("http://" + popupDeniedSitesArray[i], null, null);
+          pm.add(uri, "popup", 2);
+        } catch (ex) {}
+      }
+    }
+      
+    var installDeniedSites;
+    try {             
+      installDeniedSites = bundle.GetStringFromName("InstallDeniedSites");
+    } catch (ex) {}
+    if (installDeniedSites) {
+      var installDeniedSitesArray = installDeniedSites.split(",");
+      for (var i=0; i < installDeniedSitesArray.length; i++) {
+        try {
+          var uri = ioService.newURI("http://" + installDeniedSitesArray[i], null, null);
+          pm.add(uri, "install", 2);
+        } catch (ex) {}
+      }
+    }
+    
+    var cookieDeniedSites;
+    try {             
+      cookieDeniedSites = bundle.GetStringFromName("CookieDeniedSites");
+    } catch (ex) {}
+    if (cookieDeniedSites) {
+      var cookieDeniedSitesArray = cookieDeniedSites.split(",");
+      for (var i=0; i < cookieDeniedSitesArray.length; i++) {
+        try {
+          var uri = ioService.newURI("http://" + cookieDeniedSitesArray[i], null, null);
+          pm.add(uri, "cookie", 2);
         } catch (ex) {}
       }
     }
