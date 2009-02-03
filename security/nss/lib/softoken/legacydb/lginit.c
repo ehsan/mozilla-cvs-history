@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: lginit.c,v 1.13 2009/02/03 05:34:44 julien.pierre.boogz%sun.com Exp $ */
+/* $Id: lginit.c,v 1.14 2009/02/03 23:18:48 julien.pierre.boogz%sun.com Exp $ */
 
 #include "lowkeyi.h"
 #include "pcert.h"
@@ -462,6 +462,8 @@ lg_getKeyDB(SDB *sdb)
     return lgdb_p->keyDB;
 }
 
+PRBool parentForkedAfterC_Initialize;
+
 void lg_SetForkState(PRBool forked)
 {
     parentForkedAfterC_Initialize = forked;
@@ -503,8 +505,6 @@ lg_CompareValues(const void *v1, const void *v2)
     PLHashNumber value2 = (PLHashNumber) v2;
     return (value1 == value2);
 }
-
-PRBool parentForkedAfterC_Initialize;
 
 /*
  * helper function to wrap a NSSLOWCERTCertDBHandle or a NSSLOWKEYDBHandle
