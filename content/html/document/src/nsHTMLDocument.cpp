@@ -84,7 +84,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsAttrName.h"
 #include "nsNodeUtils.h"
-
+#include "nsThreadUtils.h"
 #include "nsNetCID.h"
 #include "nsIIOService.h"
 #include "nsICookieService.h"
@@ -3747,13 +3747,24 @@ nsHTMLDocument::GetDesignMode(nsAString & aDesignMode)
 }
 
 void
+nsHTMLDocument::MaybeEditingStateChanged()
+{
+  if (mUpdateNestLevel == 0 && mContentEditableCount > 0 != IsEditingOn()) {
+    if (nsContentUtils::IsSafeToRunScript()) {
+      EditingStateChanged();
+    } else if (!mInDestructor) {
+      nsContentUtils::AddScriptRunner(
+        NS_NEW_RUNNABLE_METHOD(nsHTMLDocument, this, MaybeEditingStateChanged));
+    }
+  }
+}
+
+void
 nsHTMLDocument::EndUpdate(nsUpdateType aUpdateType)
 {
   nsDocument::EndUpdate(aUpdateType);
 
-  if (mUpdateNestLevel == 0 && mContentEditableCount > 0 != IsEditingOn()) {
-    EditingStateChanged();
-  }
+  MaybeEditingStateChanged();
 }
 
 nsresult

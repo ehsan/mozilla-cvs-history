@@ -669,7 +669,9 @@ public:
                                                const nsAString& aClasses,
                                                nsIDOMNodeList** aReturn);
 
-  void InitializeFinalizeFrameLoaders();
+  void MaybeInitializeFinalizeFrameLoaders();
+
+  void MaybeEndOutermostXBLUpdate();
 protected:
 
   /**
@@ -801,6 +803,8 @@ protected:
   // document was created entirely in memory
   PRPackedBool mHaveInputEncoding:1;
 
+  PRPackedBool mInXBLUpdate:1;
+
   PRUint8 mXMLDeclarationBits;
 
   PRUint8 mDefaultElementType;
@@ -865,7 +869,7 @@ private:
 
   nsTArray<nsRefPtr<nsFrameLoader> > mInitializableFrameLoaders;
   nsTArray<nsRefPtr<nsFrameLoader> > mFinalizableFrameLoaders;
-  nsCOMPtr<nsIRunnable> mFrameLoaderRunner;
+  nsRefPtr<nsRunnableMethod<nsDocument> > mFrameLoaderRunner;
 };
 
 
