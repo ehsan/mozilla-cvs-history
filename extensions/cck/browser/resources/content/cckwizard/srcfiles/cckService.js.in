@@ -15,10 +15,10 @@ const gIOService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOSe
 
 const gCCKBundle = gBundleService.createBundle("chrome://cck/content/cck.properties");
 
-function CCKService%OrganizationName%() {
+function CCKService() {
 }
 
-CCKService%OrganizationName%.prototype = {
+CCKService.prototype = {
 	bookmarks: null,
 	livemarks: null,
 	annoService: null,
@@ -373,5 +373,5 @@ CCKService%OrganizationName%.prototype = {
 }
 
 function NSGetModule(compMgr, fileSpec) {
-	return XPCOMUtils.generateModule([CCKService%OrganizationName%]);
+	return XPCOMUtils.generateModule([CCKService]);
 }
