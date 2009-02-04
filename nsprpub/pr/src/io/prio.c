@@ -45,6 +45,18 @@
 PRLock *_pr_flock_lock;
 PRCondVar *_pr_flock_cv;
 
+#ifdef WINCE
+/*
+ * There are no stdin, stdout, stderr in Windows CE.  INVALID_HANDLE_VALUE
+ * should cause all I/O functions on the handle to fail.
+ */
+static HANDLE GetStdHandle(DWORD nStdHandle)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return INVALID_HANDLE_VALUE;
+}
+#endif
+
 void _PR_InitIO(void)
 {
     const PRIOMethods *methods = PR_GetFileMethods();
@@ -54,7 +66,7 @@ void _PR_InitIO(void)
     _pr_flock_lock = PR_NewLock();
     _pr_flock_cv = PR_NewCondVar(_pr_flock_lock);
 
-#if defined(WIN32) && !defined(WINCE)
+#ifdef WIN32
     _pr_stdin = PR_AllocFileDesc((PROsfd)GetStdHandle(STD_INPUT_HANDLE),
             methods);
     _pr_stdout = PR_AllocFileDesc((PROsfd)GetStdHandle(STD_OUTPUT_HANDLE),
