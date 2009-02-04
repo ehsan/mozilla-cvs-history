@@ -847,33 +847,22 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
     }
 #endif /* XP_OS2 */
 
-#if defined(WIN32) || defined(WIN16)
+#ifdef WIN32
     {
     HINSTANCE h;
 
-#ifdef WIN32
-    if (flags & PR_LD_PATHW)
-        h = LoadLibraryW(wname);
-    else
-        h = LoadLibraryA(name);
-#else 
-    h = LoadLibrary(name);
-#endif
-    if (h < (HINSTANCE)HINSTANCE_ERROR) {
+    h = LoadLibraryW(wname);
+    if (h == NULL) {
         oserr = _MD_ERRNO();
         PR_DELETE(lm);
         goto unlock;
     }
-#ifdef WIN32
     lm->name = strdup(utf8name);
-#else
-    lm->name = strdup(name);
-#endif
     lm->dlh = h;
     lm->next = pr_loadmap;
     pr_loadmap = lm;
     }
-#endif /* WIN32 || WIN16 */
+#endif /* WIN32 */
 
 #if defined(XP_MACOSX) && defined(USE_MACH_DYLD)
     {
@@ -1763,24 +1752,35 @@ PR_GetLibraryFilePathname(const char *name, PRFuncPtr addr)
     }
     return result;
 #elif defined(WIN32)
-    HMODULE handle;
-    char module_name[MAX_PATH];
+    PRUnichar wname[MAX_PATH];
+    HMODULE handle = NULL;
+    PRUnichar module_name[MAX_PATH];
+    int len;
     char *result;
 
-    handle = GetModuleHandle(name);
+    if (MultiByteToWideChar(CP_ACP, 0, name, -1, wname, MAX_PATH)) {
+        handle = GetModuleHandleW(wname);
+    }
     if (handle == NULL) {
         PR_SetError(PR_LIBRARY_NOT_LOADED_ERROR, _MD_ERRNO());
         DLLErrorInternal(_MD_ERRNO());
         return NULL;
     }
-    if (GetModuleFileName(handle, module_name, sizeof module_name) == 0) {
+    if (GetModuleFileNameW(handle, module_name, MAX_PATH) == 0) {
         /* should not happen */
         _PR_MD_MAP_DEFAULT_ERROR(_MD_ERRNO());
         return NULL;
     }
-    result = PR_Malloc(strlen(module_name)+1);
+    len = WideCharToMultiByte(CP_ACP, 0, module_name, -1,
+                              NULL, 0, NULL, NULL);
+    if (len == 0) {
+        _PR_MD_MAP_DEFAULT_ERROR(_MD_ERRNO());
+        return NULL;
+    }
+    result = PR_Malloc(len * sizeof(PRUnichar));
     if (result != NULL) {
-        strcpy(result, module_name);
+        WideCharToMultiByte(CP_ACP, 0, module_name, -1,
+                            result, len, NULL, NULL);
     }
     return result;
 #elif defined(XP_OS2)

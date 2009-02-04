@@ -202,7 +202,7 @@ endif
 endif
 
 ifeq ($(OS_TARGET),WINCE)
-OS_LIBS		= Ws2.lib
+OS_LIBS		= ws2.lib
 endif
 
 ifeq ($(OS_TARGET),MacOSX)
