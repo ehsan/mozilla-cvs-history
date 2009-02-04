@@ -16,6 +16,7 @@ cckwizard.jar:
  content/cckwizard/ccklist.css                            (resources/content/cckwizard/ccklist.css)
  content/cckwizard/ccklist.xml                            (resources/content/cckwizard/ccklist.xml)
  content/cckwizard/search.js                              (resources/content/cckwizard/search.js)
+ content/cckwizard/srcfiles/cck-browser-overlay-menu.xul.in (resources/content/cckwizard/srcfiles/cck-browser-overlay-menu.xul.in)
  content/cckwizard/srcfiles/cck-browser-overlay.xul.in    (resources/content/cckwizard/srcfiles/cck-browser-overlay.xul.in)
  content/cckwizard/srcfiles/cck.dtd.in                    (resources/content/cckwizard/srcfiles/cck.dtd.in)
  content/cckwizard/srcfiles/cck.js.in                     (resources/content/cckwizard/srcfiles/cck.js.in)
