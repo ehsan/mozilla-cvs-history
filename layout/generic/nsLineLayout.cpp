@@ -178,13 +178,13 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
                "should no longer be using unconstrained widths");
 #ifdef DEBUG
   if ((aWidth != NS_UNCONSTRAINEDSIZE) && CRAZY_WIDTH(aWidth)) {
-//    NS_NOTREACHED("bad width");
+    NS_NOTREACHED("bad width");
     nsFrame::ListTag(stdout, mBlockReflowState->frame);
     printf(": Init: bad caller: width WAS %d(0x%x)\n",
            aWidth, aWidth);
   }
   if ((aHeight != NS_UNCONSTRAINEDSIZE) && CRAZY_HEIGHT(aHeight)) {
-//    NS_NOTREACHED("bad height");
+    NS_NOTREACHED("bad height");
     nsFrame::ListTag(stdout, mBlockReflowState->frame);
     printf(": Init: bad caller: height WAS %d(0x%x)\n",
            aHeight, aHeight);
