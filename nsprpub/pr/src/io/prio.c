@@ -54,7 +54,7 @@ void _PR_InitIO(void)
     _pr_flock_lock = PR_NewLock();
     _pr_flock_cv = PR_NewCondVar(_pr_flock_lock);
 
-#ifdef WIN32
+#if defined(WIN32) && !defined(WINCE)
     _pr_stdin = PR_AllocFileDesc((PROsfd)GetStdHandle(STD_INPUT_HANDLE),
             methods);
     _pr_stdout = PR_AllocFileDesc((PROsfd)GetStdHandle(STD_OUTPUT_HANDLE),
