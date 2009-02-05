@@ -58,6 +58,9 @@ configuration. Once 'localconfig' is populated with your database information,
 run the populatedb.pl again to populate the initial products, locales, etc... 
 There is no UI at present for doing this.
 
+The default database name is 'litmus.' If you want to change this, 
+you'll need to change the name in populatedb.sql *AND* localconfig.
+
   vi localconfig
   ./populatedb.pl -r
 
