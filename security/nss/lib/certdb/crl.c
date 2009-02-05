@@ -37,7 +37,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.61 2009/01/30 19:54:45 alexei.volkov.bugs%sun.com Exp $
+ * $Id: crl.c,v 1.62 2009/02/05 20:31:26 nelson%bolyard.com Exp $
  */
  
 #include "cert.h"
@@ -732,6 +732,10 @@ crl_storeCRL (PK11SlotInfo *slot,char *url,
 	    crl = newCrl;
 	    crl->slot = PK11_ReferenceSlot(slot);
 	    crl->pkcs11ID = oldCrl->pkcs11ID;
+	    if (oldCrl->url && !url)
+	        url = oldCrl->url;
+	    if (url)
+		crl->url = PORT_ArenaStrdup(crl->arena, url);
 	    goto done;
 	}
         if (!SEC_CrlIsNewer(&newCrl->crl,&oldCrl->crl)) {
@@ -754,7 +758,7 @@ crl_storeCRL (PK11SlotInfo *slot,char *url,
         }
 
         /* if we have a url in the database, use that one */
-        if (oldCrl->url) {
+        if (oldCrl->url && !url) {
 	    url = oldCrl->url;
         }
 
