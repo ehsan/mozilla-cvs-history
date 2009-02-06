@@ -163,9 +163,6 @@ public class SSLSecurityStatus {
     /**
      * Get a pretty string to show to a user, summarizing the contents
      * of this object
-     *
-     * @deprecated As of NSS 3.11, FORTEZZA is no longer supported.
-     * This is just a placeholder for backward compatibility.
      */
     public String toString() {
 	String statusString;
