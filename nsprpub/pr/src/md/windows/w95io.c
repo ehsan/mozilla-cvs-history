@@ -566,7 +566,7 @@ _MD_CloseFile(PROsfd osfd)
 #define GetFileFromDIR(d)       (d)->d_entry.cFileName
 #define FileIsHidden(d)	((d)->d_entry.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
 
-void FlipSlashes(char *cp, size_t len)
+static void FlipSlashes(char *cp, size_t len)
 {
     while (len-- > 0) {
         if (cp[0] == '/') {
@@ -576,7 +576,7 @@ void FlipSlashes(char *cp, size_t len)
     }
 } /* end FlipSlashes() */
 
-void FlipSlashesW(PRUnichar *cp, size_t len)
+static void FlipSlashesW(PRUnichar *cp, size_t len)
 {
     while (len-- > 0) {
         if (cp[0] == L'/') {
