@@ -1,4 +1,3 @@
-balsa-18branch|Depend
 production-prometheus-vm02|Depend
 bm-xserve05|Fx-Nightly
 bm-xserve02|Tb-Nightly
