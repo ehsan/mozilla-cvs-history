@@ -155,7 +155,11 @@ else
 ifeq ($(CPU_ARCH),ALPHA)
 DEFINES += -D_ALPHA_=1
 else
+ifeq ($(CPU_ARCH),x86_64)
+DEFINES += -D_AMD64_ -D_M_AMD64
+else
 CPU_ARCH = processor_is_undefined
+endif
 endif
 endif
 endif

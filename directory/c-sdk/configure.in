@@ -1574,6 +1574,12 @@ tools are selected during the Xcode/Developer Tools installation.])
 	    LIB_PREFIX=
 	    DLL_SUFFIX=dll
         
+        # Determine compiler version
+        CC_VERSION=`"${CC}" -v 2>&1 | grep Version | sed -e 's|.* Version ||' -e 's| .*||'`
+        _CC_MAJOR_VERSION=`echo $CC_VERSION | awk -F\. '{ print $1 }'`
+        _CC_MINOR_VERSION=`echo $CC_VERSION | awk -F\. '{ print $2 }'`
+        _MSC_VER=${_CC_MAJOR_VERSION}${_CC_MINOR_VERSION}
+
         CFLAGS="$CFLAGS -W3 -nologo -GF -Gy"
         DLLFLAGS='-OUT:"$@"'
         _DEBUG_FLAGS=-Z7
@@ -1612,6 +1618,11 @@ tools are selected during the Xcode/Developer Tools installation.])
             LDFLAGS="$LDFLAGS -DEBUG"
         fi
         
+        OS_DLLFLAGS='-nologo -DLL -SUBSYSTEM:WINDOWS'
+        if test "$_MSC_VER" -le "1200" -a -z "$MOZ_DEBUG_SYMBOLS"; then
+            OS_DLLFLAGS="$OS_DLLFLAGS -PDB:NONE"
+        fi
+
         if test "$OS_TARGET" = "WINNT"; then
             CFLAGS="$CFLAGS -GT"
             if test "$CPU_ARCH" = "x86"; then
@@ -1633,8 +1644,6 @@ tools are selected during the Xcode/Developer Tools installation.])
         AC_DEFINE(_PR_GLOBAL_THREADS_ONLY)
     fi
 
-    OS_DLLFLAGS='-nologo -DLL -SUBSYSTEM:WINDOWS -PDB:NONE'
-
     case "$OS_TARGET" in
     WINNT)
 	    ;;
@@ -1649,19 +1658,31 @@ tools are selected during the Xcode/Developer Tools installation.])
 
     case "$target_cpu" in
     i*86)
-	    AC_DEFINE(_X86_)
-        ;;
+	    if test -n "$USE_64"; then
+		AC_DEFINE(_AMD64_)
+		AC_DEFINE(_M_AMD64)
+	    else
+		AC_DEFINE(_X86_)
+	    fi
+	    ;;
     alpha)
 	    AC_DEFINE(_ALPHA_)
    	    ;;
     mips)
 	    AC_DEFINE(_MIPS_)
 	    ;;
+    x86_64)
+	    AC_DEFINE(_AMD64_)
+	    AC_DEFINE(_M_AMD64)
+	    ;;
     *)
 	    AC_DEFINE(_CPU_ARCH_NOT_DEFINED)
 	    ;;
     esac
 
+    if test -n "$USE_64"; then
+	AC_DEFINE(_WIN64)
+    fi
     ;;
 
 *-ncr-sysv*)
