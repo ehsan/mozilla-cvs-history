@@ -73,6 +73,14 @@ embed[source*=".xaml"]
 }
 
 /*
+ * Don't bind to activeX objects which Gecko doesn't recognize anyway.
+*/
+object[type="application/x-oleobject"]
+{
+ -moz-binding: none !important;
+}
+
+/*
  * Broken Objects.
 */
 object
