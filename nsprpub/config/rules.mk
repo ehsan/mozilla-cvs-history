@@ -401,7 +401,7 @@ endif
 
 ifdef NEED_ABSOLUTE_PATH
 PWD := $(shell pwd)
-# The quotes allow spaces in the absolute pathnames
+# The quotes allow absolute paths to contain spaces.
 pr_abspath = "$(if $(findstring :,$(1)),$(1),$(if $(filter /%,$(1)),$(1),$(PWD)/$(1)))"
 endif
 
