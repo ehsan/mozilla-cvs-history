@@ -66,6 +66,13 @@ static HANDLE CreateFileA(LPCSTR lpFileName,
                        dwFlagsAndAttributes, hTemplateFile);
 }
 
+/*
+ * We seem to call FindFirstFileA and FindNextFileA just to
+ * get the file names in a directory listing.  If so, the
+ * WIN32_FIND_DATAA structure could be defined to contain
+ * just the cFileName field, and the CopyFindFileDataW2A
+ * function could just copy/convert the cFileName field.
+ */
 typedef struct _WIN32_FIND_DATAA {
     DWORD dwFileAttributes;
     FILETIME ftCreationTime;
