@@ -45,7 +45,7 @@ use Date::Manip;
 use JSON -convert_blessed_universally;
 
 Litmus->init();
-Litmus::Auth::requireProductAdmin("edit_categories.cgi");
+Litmus::Auth::requireProductAdmin("manage_categories.cgi");
 
 my $c = Litmus->cgi();
 print $c->header();
