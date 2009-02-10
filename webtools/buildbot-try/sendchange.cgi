@@ -100,7 +100,7 @@ sub Process
     }
 
     # Using a patchFile
-    if ($type eq "patch" || $baseType eq "mozillacentral") {
+    if ($type eq "patch" || $baseType eq "mozillacentral" || $patchFile ne "") {
         if ($branch eq "" || $branch eq "trunk") {
             $branch = "HEAD";
         }
@@ -225,7 +225,7 @@ sub Process
 
     print INFO "submitter: $name\n";
     print INFO "type: $type\n";
-    if ($type eq "patch" || $baseType eq 'mozillacentral') {
+    if ($type eq "patch" || $baseType eq 'mozillacentral' || $patchFile ne "") {
         print INFO "patchFile: $patchFile\n";
         print INFO "patchLevel: $patchLevel\n";
         print INFO "branch: $branch\n";
