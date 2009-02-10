@@ -78,13 +78,22 @@ static const NSTimeInterval kDefaultAnimationDuration = 0.5;
                         waitUntilDone:NO];
   }
   else {
-    [mAnimationTarget setFrameOrigin:newPosition];
+    [self setNewPosition:[NSValue valueWithPoint:newPosition]];
   }
 }
 
 - (void)setNewPosition:(NSValue*)newPoint
 {
-  [mAnimationTarget setFrameOrigin:[newPoint pointValue]];
+  // If the animation target is a NSView subclass, setFrameOrigin does not automatically mark
+  // the view or its superview as needing display.
+  if ([mAnimationTarget isKindOfClass:[NSView class]]) {
+    [[mAnimationTarget superview] setNeedsDisplayInRect:[mAnimationTarget frame]];
+    [mAnimationTarget setFrameOrigin:[newPoint pointValue]];
+    [mAnimationTarget setNeedsDisplay:YES];
+  }
+  else {
+    [mAnimationTarget setFrameOrigin:[newPoint pointValue]];
+  }
 }
 
 - (void)stopAnimation
