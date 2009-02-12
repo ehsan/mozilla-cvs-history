@@ -39,7 +39,7 @@ package org.mozilla.jss.crypto;
 import java.io.UnsupportedEncodingException;
 
 /**
- * This is a proprietary NSS interface. It is used for encrypting
+ * This is a special-purpose interface for NSS. It is used for encrypting
  * data with a secret key stored in the NSS key database (which is in turn
  * protected with a password). It thus provides a quick, convenient way
  * to encrypt stuff your application wants to keep around for its own use:
