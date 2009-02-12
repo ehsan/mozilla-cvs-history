@@ -297,6 +297,11 @@ sub HgClone {
      (!exists($args{'workDir'}));
     my $workDir = $args{'workDir'};
 
+    my $tag;
+    if (exists($args{'tag'})) {
+        $tag = $args{'tag'};
+    }
+
     my $repoDir = catfile($workDir, basename($repo));
     if (-e $repoDir) {
         $this->Log(msg => $repoDir . ' exists, removing it.');
@@ -306,6 +311,39 @@ sub HgClone {
       cmd => 'hg',
       cmdArgs => ['clone', $repo],
       dir => $workDir
+    );
+ 
+    if ($tag) {        
+        $this->HgUpdate(
+            repoDir => $repoDir,
+            tag => $args{'tag'},
+        )
+    }
+}
+
+sub HgUpdate {
+    my $this = shift;
+    my %args = @_;
+
+    # Required arguments
+    die "ASSERT: Bootstrap::Step::HgUpdate(): null repoDir" if
+     (!exists($args{'repoDir'}));
+    my $repo = $args{'repoDir'};
+
+    die "ASSERT: Bootstrap::Step::HgUpdate(): repoDir doesn't exist" if
+     (! -e $repoDir);
+
+    if (!exists($args{'tag'}) or
+        $args{'tag'} =~ /^default$/i) {
+        # No need to update if no tag is set or we're using the default 
+        return;
+    }
+    my $tag = $args{'tag'};
+ 
+    $this->Shell(
+        cmd => 'hg',
+        cmdArgs => ['up', '-C', '-r', $tag],
+        dir => $repoDir            
     );
 }
 

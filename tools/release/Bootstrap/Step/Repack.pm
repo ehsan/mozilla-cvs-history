@@ -71,6 +71,8 @@ sub Verify {
     my $oldVersion = $config->GetOldVersion(longName => 0);
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
     my $verifyDir = $config->Get(var => 'verifyDir');
+    my $hgToolsRepo = $config->Get(var => 'hgToolsRepo');
+    my $hgToolsTag = $config->Get(var => 'hgToolsTag');
     my $stagingServer = $config->Get(var => 'stagingServer');
     my $linuxExtension = $config->GetLinuxExtension();
     my $buildTag = $productTag.'_BUILD'.$build;
@@ -82,17 +84,12 @@ sub Verify {
     MkdirWithPath(dir => $verifyDirVersion)
       or die("Cannot mkdir $verifyDirVersion: $!");
 
-    # check out l10n verification scripts
-    foreach my $dir ('common', 'l10n') {
-        $this->CvsCo(cvsroot => $mozillaCvsroot,
-                     checkoutDir => $dir,
-                     modules => [CvsCatfile('mozilla', 'testing', 'release',
-                                            $dir)],
-                     workDir => $verifyDirVersion,
-                     logFile => catfile($logDir,
-                                 'repack_checkout-l10n_verification.log')
-        );
-    }
+
+    $this->HgClone(
+      repo => $hgToolsRepo,
+      tag => $hgToolsTag,
+      workDir => $verifyDirVersion
+    );
 
     # Download current release
     $this->Shell(
@@ -107,7 +104,7 @@ sub Verify {
                   . '/nightly/' . $version . '-candidates/build' . $build . '/*',
                   $product . '-' . $version . '-build' . $build . '/',
                  ],
-      dir => catfile($verifyDirVersion, 'l10n'),
+      dir => catfile($verifyDirVersion, 'tools', 'release', 'l10n'),
       logFile => 
         catfile($logDir, 'repack_verify-download_' . $version . '.log'),
       timeout => 3600
@@ -127,7 +124,7 @@ sub Verify {
                   . $oldBuild . '/*',
                   $product . '-' . $oldVersion . '-build' . $oldBuild . '/',
                  ],
-      dir => catfile($verifyDirVersion, 'l10n'),
+      dir => catfile($verifyDirVersion, 'tools', 'release', 'l10n'),
       logFile => 
         catfile($logDir, 'repack_verify-download_' . $oldVersion . '.log'),
       timeout => 3600
@@ -143,7 +140,7 @@ sub Verify {
         $this->Shell(
           cmd => './verify_l10n.sh',
           cmdArgs => [$product],
-          dir => catfile($verifyDirVersion, 'l10n'),
+          dir => catfile($verifyDirVersion, 'tools', 'release', 'l10n'),
           logFile => catfile($logDir, 
                              'repack_' . $product . '-l10n_verification.log'),
         );
@@ -177,7 +174,7 @@ sub Verify {
                   catfile($oldProduct, 'diffs'),
                  ],
       ignoreExitValue => 1,
-      dir => catfile($verifyDirVersion, 'l10n'),
+      dir => catfile($verifyDirVersion, 'tools', 'release', 'l10n'),
       logFile => catfile($logDir, 'repack_metadiff-l10n_verification.log'),
     );
 }
