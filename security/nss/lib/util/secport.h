@@ -37,7 +37,7 @@
 /*
  * secport.h - portability interfaces for security libraries
  *
- * $Id: secport.h,v 1.17 2008/10/05 20:59:26 nelson%bolyard.com Exp $
+ * $Id: secport.h,v 1.18 2009/02/12 17:17:48 alexei.volkov.bugs%sun.com Exp $
  */
 
 #ifndef _SECPORT_H_
@@ -154,7 +154,7 @@ SEC_END_PROTOS
 
 /* Please, keep these defines sorted alphabetically.  Thanks! */
 
-#define PORT_Atoi 	atoi
+#define PORT_Atoi(buff)	(int)strtol(buff, NULL, 10)
 
 #define PORT_Memcmp 	memcmp
 #define PORT_Memcpy 	memcpy
