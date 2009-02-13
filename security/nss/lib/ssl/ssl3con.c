@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.114 2008/12/17 06:09:19 nelson%bolyard.com Exp $ */
+/* $Id: ssl3con.c,v 1.115 2009/02/13 05:23:23 nelson%bolyard.com Exp $ */
 
 #include "cert.h"
 #include "ssl.h"
@@ -905,7 +905,8 @@ ssl3_VerifySignedHashes(SSL3Hashes *hash, CERTCertificate *cert,
     case dsaKey:
 	hashItem.data = hash->sha;
 	hashItem.len = sizeof(hash->sha);
-	if (isTLS) {
+	/* Allow DER encoded DSA signatures in SSL 3.0 */
+	if (isTLS || buf->len != DSA_SIGNATURE_LEN) {
 	    signature = DSAU_DecodeDerSig(buf);
 	    if (!signature) {
 	    	PORT_SetError(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE);
