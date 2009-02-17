@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: drbg.c,v 1.1 2009/02/12 22:48:43 rrelyea%redhat.com Exp $ */
+/* $Id: drbg.c,v 1.2 2009/02/17 02:35:32 wtc%google.com Exp $ */
 
 #ifdef FREEBL_NO_DEPEND
 #include "stubs.h"
@@ -474,6 +474,9 @@ RNG_RandomUpdate(const void *data, size_t bytes)
 {
     SECStatus rv;
 
+    /* Make sure our assumption that size_t is unsigned is true */
+    PR_STATIC_ASSERT(((size_t)-1) > (size_t)1);
+
 #if defined(NS_PTR_GT_32) || (defined(NSS_USE_64) && !defined(NS_PTR_LE_32))
     /*
      * NIST 800-90 requires us to verify our inputs. This value can
@@ -498,16 +501,14 @@ RNG_RandomUpdate(const void *data, size_t bytes)
      *   NS_PTR_GT_32 will correct that mistake.
      */
 
+    PR_STATIC_ASSERT(sizeof(size_t) > 4);
+
     if (bytes > PRNG_MAX_ADDITIONAL_BYTES) {
 	bytes = PRNG_MAX_ADDITIONAL_BYTES;
     }
-    PR_STATIC_ASSERT(sizeof(size_t) > 4);
 #else
     PR_STATIC_ASSERT(sizeof(size_t) <= 4);
 #endif
-
-    /* Make sure our assumption that size_t is unsigned is true */
-    PR_STATIC_ASSERT(((size_t)-1) > (size_t)1);
 
     PZ_Lock(globalrng->lock);
     /* if we're passed more than our additionalCache, simply
