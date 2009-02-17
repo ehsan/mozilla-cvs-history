@@ -22,7 +22,7 @@ do
 		f) 
 			# data to check
 			DATAFILE=$OPTARG
-			if test -f $DATAFILE
+			if test -f $DATAFILE -o -d $DATAFILE
 			then
 				echo -n
 			else
