@@ -113,13 +113,24 @@ sub load_all_updates {
 # of %$client_info, or undef if there is no such version.
 sub latest_supported_update {
   my ($client_info, $updates) = @_;
+  # We'll only offer alpha/beta versions to users who already have
+  # some kind of non-release build (which will have an a, b, and/or pre).
+  # Someday we probably want to use a track-based system, but we don't yet.
+  my $include_betas = ($client_info->{version} =~ /[a-z]/);
   # Sort the updates from newest to oldest
   my @sorted_updates = sort { compare_versions($b->{Version}, $a->{Version}) } @$updates;
   # Then return the first one that meets the requirements
   for my $update (@sorted_updates) {
+    if (defined($update->{MinCaminoVersionString}) &&
+        (compare_versions($client_info->{version},
+                          $update->{MinCaminoVersionString}) < 0))
+    {
+      next;
+    }
     if (compare_versions($client_info->{os}, $update->{MinOSVersion}) >= 0 &&
         array_contains($update->{Intl}, $client_info->{intl}) &&
-        array_contains($update->{Arch}, $client_info->{arch}))
+        array_contains($update->{Arch}, $client_info->{arch}) &&
+        ($include_betas || ($update->{VersionString} !~ /[a-z]/))) 
     {
 			# Load the description in the approriate language
 			$update->{Description} = localized_description($update->{VersionString},
@@ -130,20 +141,41 @@ sub latest_supported_update {
   return;
 }
 
-# Performs a <=> style comparison on two versions of the form (\d+.)+
+# Performs a <=> style comparison on two OS or Camino versions
+# Versions are expected to be of the form (\d+.)+([ab]\d*)?(pre)?
 sub compare_versions {
   my ($a, $b) = @_;
+  # If it's a Camino version, split it into its component parts
+  my ($a_num, $a_stage, $a_nightly) = ($a =~ /^([\d.]+)([ab]\d*)?(pre)?/);
+  my ($b_num, $b_stage, $b_nightly) = ($b =~ /^([\d.]+)([ab]\d*)?(pre)?/);
+  # Sanity checks
+  return 0 if (!defined($a_num) && !defined($b_num));
+  return -1 if !defined($a_num);
+  return 1 if !defined($b_num);
   # Trim off any trailing 0's to get a canonical form
-  $a =~ s/(\.0+)+$//;
-  $b =~ s/(\.0+)+$//;
-  my @a_parts = split(/\./, $a);
-  my @b_parts = split(/\./, $b);
+  $a_num =~ s/(\.0+)+$//;
+  $b_num =~ s/(\.0+)+$//;
+  my @a_parts = split(/\./, $a_num);
+  my @b_parts = split(/\./, $b_num);
+  # As soon as we get a number difference, we're done.
   for (my $i = 0; $i < scalar(@a_parts) && $i < scalar (@b_parts); $i++) {
     my $comparison = $a_parts[$i] <=> $b_parts[$i];
     return $comparison if $comparison != 0;
   }
-  # If we got here without a decision, whichever has more parts is bigger
-  return $#a_parts <=> $#b_parts;
+  # If the first difference is an extra number, the one with the extra
+  # number is later (e.g., 10.5.1 > 10.5)
+  my $comparison = $#a_parts <=> $#b_parts;
+  return $comparison if $comparison != 0;
+  # If all the numbers match, is one an earlier stage? Convert undef
+  # to z since an alpha or beta of a number is earlier than just the number
+  # with no alpha or beta marker.
+  $a_stage = 'z' unless defined($a_stage);
+  $b_stage = 'z' unless defined($b_stage);
+  $comparison = $a_stage cmp $b_stage;
+  return $comparison if $comparison != 0;
+  # Still the same, eh? Then it all hinges on whether one is a nightly.
+  $comparison = !defined($a_nightly) <=> !defined($b_nightly);
+  return $comparison;
 }
 
 # Returns 1 if @$array contains $object, 0 otherwise.
