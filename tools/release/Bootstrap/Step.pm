@@ -328,7 +328,7 @@ sub HgUpdate {
     # Required arguments
     die "ASSERT: Bootstrap::Step::HgUpdate(): null repoDir" if
      (!exists($args{'repoDir'}));
-    my $repo = $args{'repoDir'};
+    my $repoDir = $args{'repoDir'};
 
     die "ASSERT: Bootstrap::Step::HgUpdate(): repoDir doesn't exist" if
      (! -e $repoDir);
