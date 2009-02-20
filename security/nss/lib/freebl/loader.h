@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: loader.h,v 1.24 2009/02/12 22:48:44 rrelyea%redhat.com Exp $ */
+/* $Id: loader.h,v 1.25 2009/02/20 01:00:55 rrelyea%redhat.com Exp $ */
 
 #ifndef _LOADER_H_
 #define _LOADER_H_ 1
@@ -522,21 +522,21 @@ struct FREEBLVectorStr {
  void ( * p_BL_SetForkState)(PRBool);
 
  SECStatus (* p_PRNGTEST_Instantiate)(const PRUint8 *entropy, 
-				      int entropy_len, 
+				      unsigned int entropy_len, 
 				      const PRUint8 *nonce, 
-				      int nonce_len,
+				      unsigned int nonce_len,
 				      const PRUint8 *personal_string, 
-				      int ps_len);
+				      unsigned int ps_len);
 
  SECStatus (* p_PRNGTEST_Reseed)(PRUint8 *entropy, 
-				 int entropy_len, 
+				 unsigned int entropy_len, 
 				 const PRUint8 *additional, 
-				 int additional_len);
+				 unsigned int additional_len);
 
  SECStatus (* p_PRNGTEST_Generate)(PRUint8 *bytes, 
-				   int byte_Len, 
+				   unsigned int byte_Len, 
 				   const PRUint8 *additional, 
-				   int additional_len);
+				   unsigned int additional_len);
 
  SECStatus (* p_PRNGTEST_Uninstantiate)(void);
    /* Version 3.011 came to here */

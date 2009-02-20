@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: loader.c,v 1.42 2009/02/12 22:48:43 rrelyea%redhat.com Exp $ */
+/* $Id: loader.c,v 1.43 2009/02/20 01:00:55 rrelyea%redhat.com Exp $ */
 
 #include "loader.h"
 #include "prmem.h"
@@ -1657,9 +1657,9 @@ void BL_SetForkState(PRBool forked)
 }
 
 SECStatus
-PRNGTEST_Instantiate(const PRUint8 *entropy, int entropy_len, 
-		const PRUint8 *nonce, int nonce_len,
-		const PRUint8 *personal_string, int ps_len)
+PRNGTEST_Instantiate(const PRUint8 *entropy, unsigned int entropy_len, 
+		const PRUint8 *nonce, unsigned int nonce_len,
+		const PRUint8 *personal_string, unsigned int ps_len)
 {
     if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
 	return SECFailure;
@@ -1669,8 +1669,8 @@ PRNGTEST_Instantiate(const PRUint8 *entropy, int entropy_len,
 }
 
 SECStatus
-PRNGTEST_Reseed(PRUint8 *entropy, int entropy_len, 
-		  const PRUint8 *additional, int additional_len)
+PRNGTEST_Reseed(PRUint8 *entropy, unsigned int entropy_len, 
+		  const PRUint8 *additional, unsigned int additional_len)
 {
     if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
 	return SECFailure;
@@ -1679,8 +1679,8 @@ PRNGTEST_Reseed(PRUint8 *entropy, int entropy_len,
 }
 
 SECStatus
-PRNGTEST_Generate(PRUint8 *bytes, int byte_Len, 
-		  const PRUint8 *additional, int additional_len)
+PRNGTEST_Generate(PRUint8 *bytes, unsigned int byte_Len, 
+		  const PRUint8 *additional, unsigned int additional_len)
 {
     if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
 	return SECFailure;

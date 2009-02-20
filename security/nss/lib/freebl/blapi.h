@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: blapi.h,v 1.30 2009/02/12 22:48:43 rrelyea%redhat.com Exp $ */
+/* $Id: blapi.h,v 1.31 2009/02/20 01:00:55 rrelyea%redhat.com Exp $ */
 
 #ifndef _BLAPI_H_
 #define _BLAPI_H_
@@ -1107,17 +1107,17 @@ FIPS186Change_ReduceModQForDSA(const unsigned char *w,
  * testing.
  */
 extern SECStatus
-PRNGTEST_Instantiate(const PRUint8 *entropy, int entropy_len, 
-		const PRUint8 *nonce, int nonce_len,
-		const PRUint8 *personal_string, int ps_len);
+PRNGTEST_Instantiate(const PRUint8 *entropy, unsigned int entropy_len, 
+		const PRUint8 *nonce, unsigned int nonce_len,
+		const PRUint8 *personal_string, unsigned int ps_len);
 
 extern SECStatus
-PRNGTEST_Reseed(PRUint8 *entropy, int entropy_len, 
-		  const PRUint8 *additional, int additional_len);
+PRNGTEST_Reseed(PRUint8 *entropy, unsigned int entropy_len, 
+		  const PRUint8 *additional, unsigned int additional_len);
 
 extern SECStatus
-PRNGTEST_Generate(PRUint8 *bytes, int byte_Len, 
-		  const PRUint8 *additional, int additional_len);
+PRNGTEST_Generate(PRUint8 *bytes, unsigned int byte_Len, 
+		  const PRUint8 *additional, unsigned int additional_len);
 
 extern SECStatus
 PRNGTEST_Uninstantiate(void);
