@@ -1,0 +1,184 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use File::Basename;
+use CGI qw(:standard);
+
+# The directory where the .update files describing update versions are kept
+my $update_def_dir = dirname($0)."/update/update-definitions";
+# The directory where version descriptions (mini release notes) are kept
+my $update_desc_dir = dirname($0)."/update/update-descriptions";
+
+
+sub main {
+  my $query = new CGI;
+
+  my %client_info = $query->Vars;
+  my @updates = load_all_updates();
+
+  # Make sure we have all the necessary arguments
+  unless (defined($client_info{os}) &&
+          defined($client_info{arch}))
+  {
+    print_appcast(undef);
+    return;
+  }
+  $client_info{intl} = 0 if !defined($client_info{intl});
+  $client_info{lang} = "en" if !defined($client_info{lang});
+
+  my $best_update = latest_supported_update(\%client_info, \@updates);
+  print_appcast($best_update);
+}
+
+sub print_appcast_header {
+  print header(-type => "text/xml", -charset => "utf-8");
+
+  print <<EOF;
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+  <channel>
+    <title>Camino Updates</title>
+    <link>http://caminobrowser.org</link>
+    <description>Camino Updates</description>
+    <language>en</language>
+EOF
+}
+
+sub print_appcast_footer {
+  print <<EOF;
+  </channel>
+</rss>
+EOF
+}
+
+# Prints an appcast containing the given update, or an empty appcast if no
+# update is given.
+sub print_appcast {
+  my ($update) = @_;
+
+  print_appcast_header();
+  if ($update) {
+    $update->{FileURL} =~ s/&/&amp;/g;
+
+    print <<EOF;
+    <item>
+      <title>Camino $update->{VersionString}</title>
+      <pubDate>$update->{Date}</pubDate>
+      <author>The Camino Project</author>
+      <description><![CDATA[
+        $update->{Description}
+      ]]></description>
+      <link>http://caminobrowser.org</link>
+      <enclosure url="$update->{FileURL}" length="$update->{FileSize}" sparkle:version="$update->{Version}" sparkle:shortVersionString="$update->{VersionString}" sparkle:dsaSignature="$update->{FileSignature}" type="application/octet-stream"/>
+    </item>
+EOF
+  }
+  print_appcast_footer();
+}
+
+# Reads the given file describing an update version, and returns the information
+# about it as a hash.
+sub load_update_definition {
+  my ($filepath) = @_;
+  my %update;
+  open INFILE, '<', $filepath or return;
+  while (my $line = <INFILE>) {
+    #skip comments
+    next if $line =~ /^#/;
+
+    if ($line =~ /(.*?[^ ])\s*=\s*(.*)$/) {
+      if (($1 eq "Arch") or ($1 eq "Intl")) {
+        my @values = split(/\s*,\s*/, $2);
+        $update{$1} = \@values;
+      } else {
+        $update{$1} = $2;
+      }
+    }
+  }
+  close INFILE;
+  return \%update;
+}
+
+# Returns an array containing the information about all available versions.
+sub load_all_updates {
+  my @updates;
+  for my $file (glob("$update_def_dir/*.update")) {
+    push @updates, load_update_definition($file);
+  }
+  return @updates;
+}
+
+# Returns the highest-version update from @$updates that meets the requirements
+# of %$client_info, or undef if there is no such version.
+sub latest_supported_update {
+  my ($client_info, $updates) = @_;
+  # Sort the updates from newest to oldest
+  my @sorted_updates = sort { compare_versions($b->{Version}, $a->{Version}) } @$updates;
+  # Then return the first one that meets the requirements
+  for my $update (@sorted_updates) {
+    if (compare_versions($client_info->{os}, $update->{MinOSVersion}) >= 0 &&
+        array_contains($update->{Intl}, $client_info->{intl}) &&
+        array_contains($update->{Arch}, $client_info->{arch}))
+    {
+			# Load the description in the approriate language
+			$update->{Description} = localized_description($update->{VersionString},
+																										 $client_info->{lang});
+      return $update;
+    }
+  }
+  return;
+}
+
+# Performs a <=> style comparison on two versions of the form (\d+.)+
+sub compare_versions {
+  my ($a, $b) = @_;
+  # Trim off any trailing 0's to get a canonical form
+  $a =~ s/(\.0+)+$//;
+  $b =~ s/(\.0+)+$//;
+  my @a_parts = split(/\./, $a);
+  my @b_parts = split(/\./, $b);
+  for (my $i = 0; $i < scalar(@a_parts) && $i < scalar (@b_parts); $i++) {
+    my $comparison = $a_parts[$i] <=> $b_parts[$i];
+    return $comparison if $comparison != 0;
+  }
+  # If we got here without a decision, whichever has more parts is bigger
+  return $#a_parts <=> $#b_parts;
+}
+
+# Returns 1 if @$array contains $object, 0 otherwise.
+sub array_contains {
+  my ($array, $object) = @_;
+  for my $array_entry (@$array) {
+    return 1 if $object eq $array_entry;
+  }
+  return 0;
+}
+
+# Get the description for the $version, in $language. If $language is
+# not available but a non-locale specific version is that will be used;
+# if no matching language is available, it will use English.
+sub localized_description {
+	my ($version, $language) = @_;
+	  $version =~ s/\s*Int.*$//;
+   my $description_file = "$update_desc_dir/$version-$language";
+	# If we don't have a match, try a non-locale match
+	if (!-e $description_file) {
+		$language =~ s/[-_]\w+$//;
+  	$description_file = "$update_desc_dir/$version-$language";
+	}
+	# Fall back to English if we don't have anything close
+	if (!-e $description_file) {
+  	$description_file = "$update_desc_dir/$version-en";
+	}
+	# If we really have nothing, then we're out of luck
+	return "" unless -e $description_file;
+
+	local $/;
+  open INFILE, '<', $description_file or return "";
+	my $description = <INFILE>;
+	close INFILE;
+	return $description;
+}
+
+main();
