@@ -219,6 +219,7 @@ class CounterManager(threading.Thread):
             self.registeredCounters[counter][0](self.pid))
         except:
           # if a counter throws an exception, remove it
-          self.unregisterCounters([counter])
+          #self.unregisterCounters([counter])
+          print "Error in collecting counter: " + counter
 
       time.sleep(self.pollInterval)

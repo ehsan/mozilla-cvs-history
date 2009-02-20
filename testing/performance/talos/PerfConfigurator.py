@@ -25,7 +25,7 @@ defaultTitle = "qm-pxp01"
 help_message = '''
 This is the buildbot performance runner's YAML configurator.bean
 
-USAGE: python PerfConfigurator.py --title title --executablePath path --configFilePath cpath --buildid id --branch branch --testDate date --resultsServer server --resultsLink link --activeTests testlist
+USAGE: python PerfConfigurator.py --title title --executablePath path --configFilePath cpath --buildid id --branch branch --testDate date --resultsServer server --resultsLink link --activeTests testlist --oldresultsServer oldserver --oldresultsLink oldlink --branchName branchFullName --fast
 
 example testlist: tp:tsspider:tdhtml:twinopen
 '''
@@ -36,6 +36,7 @@ class PerfConfigurator:
     outputName = ""
     title = ""
     branch = ""
+    branchName = ""
     buildid = ""
     currentDate = ""
     verbose = False
@@ -43,8 +44,11 @@ class PerfConfigurator:
     useId = False
     resultsServer = ''
     resultsLink = ''
+    oldresultsServer = ''
+    oldresultsLink = ''
     activeTests = ''
     noChrome = False
+    fast = False
     
     def _dumpConfiguration(self):
         """dump class configuration for convenient pickup or perusal"""
@@ -54,11 +58,14 @@ class PerfConfigurator:
         print " - configPath = " + self.configPath
         print " - outputName = " + self.outputName
         print " - branch = " + self.branch
+        print " - branchName = " + self.branchName
         print " - buildid = " + self.buildid
         print " - currentDate = " + self.currentDate
         print " - testDate = " + self.testDate
         print " - resultsServer = " + self.resultsServer
         print " - resultsLink = " + self.resultsLink
+        print " - oldresultsServer = " + self.oldresultsServer
+        print " - oldresultsLink = " + self.oldresultsLink
         print " - activeTests = " + self.activeTests
     
     def _getCurrentDateString(self):
@@ -120,6 +127,21 @@ class PerfConfigurator:
                 elif self.useId:
                     newline += '\n'
                     newline += 'testdate: "%s"\n' % self._getTimeFromBuildId()
+                if self.oldresultsServer:
+                    newline += '\n'
+                    newline += 'old_results_server: %s\n' % self.oldresultsServer
+                if self.oldresultsLink:
+                    newline += '\n'
+                    newline += 'old_results_link: %s\n' % self.oldresultsLink
+                if self.branchName: 
+                    newline += '\n'
+                    newline += 'branch_name: %s\n' % self.branchName
+                if self.noChrome:
+                    newline += '\n'
+                    newline += "test_name_extension: _nochrome\n"
+                if self.fast:
+                    newline += '\n'
+                    newline += "test_name_estension: _fast\n"
             if 'buildid:' in line:
                 newline = 'buildid: ' + buildidString
             if 'testbranch' in line:
@@ -162,6 +184,8 @@ class PerfConfigurator:
             self.title = kwargs['title']
         if 'branch' in kwargs:
             self.branch = kwargs['branch']
+        if 'branchName' in kwargs:
+            self.branchName = kwargs['branchName']
         if 'executablePath' in kwargs:
             self.exePath = kwargs['executablePath']
         if 'configFilePath' in kwargs:
@@ -178,10 +202,16 @@ class PerfConfigurator:
             self.resultsServer = kwargs['resultsServer']
         if 'resultsLink' in kwargs:
             self.resultsLink = kwargs['resultsLink']
+        if 'oldresultsServer' in kwargs:
+            self.oldresultsServer = kwargs['oldresultsServer']
+        if 'oldresultsLink' in kwargs:
+            self.oldresultsLink = kwargs['oldresultsLink']
         if 'activeTests' in kwargs:
             self.activeTests = kwargs['activeTests']
         if 'noChrome' in kwargs:
             self.noChrome = kwargs['noChrome']
+        if 'fast' in kwargs:
+            self.fast = kwargs['fast']
         self.currentDate = self._getCurrentDateString()
         if not self.buildid:
             self.buildid = self._getCurrentBuildId()
@@ -203,14 +233,18 @@ def main(argv=None):
     output = ""
     title = defaultTitle
     branch = ""
+    branchName = ""
     testDate = ""
     verbose = False
     buildid = ""
     useId = False
     resultsServer = ''
     resultsLink = ''
+    oldresultsServer = ''
+    oldresultsLink = ''
     activeTests = ''
     noChrome = False
+    fast = False
     
     if argv is None:
         argv = sys.argv
@@ -218,7 +252,7 @@ def main(argv=None):
         try:
             opts, args = getopt.getopt(argv[1:], "hvue:c:t:b:o:i:d:s:l:a:n", 
                 ["help", "verbose", "useId", "executablePath=", "configFilePath=", "title=", 
-                "branch=", "output=", "id=", "testDate=", "resultsServer=", "resultsLink=", "activeTests=", "noChrome"])
+                "branch=", "output=", "id=", "testDate=", "resultsServer=", "resultsLink=", "activeTests=", "noChrome", "oldresultsServer=", "oldresultsLink=", "branchName=", "fast"])
         except getopt.error, msg:
             raise Usage(msg)
         
@@ -236,6 +270,8 @@ def main(argv=None):
                 title = value
             if option in ("-b", "--branch"):
                 branch = value
+            if option in ("--branchName"):
+                branchName = value
             if option in ("-o", "--output"):
                 output = value
             if option in ("-i", "--id"):
@@ -248,10 +284,16 @@ def main(argv=None):
                 resultsServer = value
             if option in ("-l", "--resultsLink"):
                 resultsLink = value
+            if option in ("--oldresultsServer"):
+                oldresultsServer = value
+            if option in ("--oldresultsLink"):
+                oldresultsLink = value
             if option in ("-a", "--activeTests"):
                 activeTests = value
             if option in ("-n", "--noChrome"):
                 noChrome = True
+            if option in ("--fast"):
+                fast = True
         
     except Usage, err:
         print >> sys.stderr, sys.argv[0].split("/")[-1] + ": " + str(err.msg)
@@ -263,14 +305,18 @@ def main(argv=None):
                                     configFilePath=configPath,
                                     buildid=buildid,
                                     branch=branch,
+                                    branchName=branchName,
                                     verbose=verbose,
                                     testDate=testDate,
                                     outputName=output,
                                     useId=useId,
                                     resultsServer=resultsServer,
                                     resultsLink=resultsLink,
+                                    oldresultsServer=oldresultsServer,
+                                    oldresultsLink=oldresultsLink,
                                     activeTests=activeTests,
-                                    noChrome=noChrome)
+                                    noChrome=noChrome,
+                                    fast=fast)
     try:
         configurator.writeConfigFile()
     except Configuration, err:

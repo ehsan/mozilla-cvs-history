@@ -40,7 +40,16 @@ import os
 import time
 DEBUG = 0
 NOISY = 0
+START_TIME = 0
 saved_environment = {}
+
+def startTimer():
+  global START_TIME
+  START_TIME = time.time()
+
+def stopTimer():
+  stop_time = time.time()
+  return time.strftime("%H:%M:%S", time.gmtime(stop_time-START_TIME))
 
 def setdebug(val):
   global DEBUG
