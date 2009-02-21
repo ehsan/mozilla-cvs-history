@@ -71,10 +71,11 @@
 #if defined(XP_UNIX)
 #include <sys/time.h> /* for gettimeofday */
 #endif
-#if defined(WIN32)
+#if defined(WIN32) && !defined(WINCE)
 #include <sys/types.h>
 #include <sys/timeb.h>  /* for _ftime */
 #endif
+#include "nst_wince.h"
 
 #define DEFAULT_LEAD_TIME_SECS 5
 #define DEFAULT_TOLERANCE_MSECS 500
@@ -89,7 +90,11 @@ static PRIntervalTime tolerance;
 static struct timeval start_time_tv;
 #endif
 #if defined(WIN32)
+#if defined(WINCE)
+static DWORD start_time_tick;
+#else
 static struct _timeb start_time_tb;
+#endif
 #endif
 
 static void SleepThread(void *arg)
@@ -103,7 +108,7 @@ static void SleepThread(void *arg)
 #if defined(XP_UNIX)
     struct timeval end_time_tv;
 #endif
-#if defined(WIN32)
+#if defined(WIN32) && !defined(WINCE)
     struct _timeb end_time_tb;
 #endif
 
@@ -122,9 +127,13 @@ static void SleepThread(void *arg)
             + (end_time_tv.tv_usec - start_time_tv.tv_usec)/1000;
 #endif
 #if defined(WIN32)
+#if defined(WINCE)
+    elapsed_msecs = GetTickCount() - start_time_tick;
+#else
     _ftime(&end_time_tb);
     elapsed_msecs = 1000*(end_time_tb.time - start_time_tb.time)
             + (end_time_tb.millitm - start_time_tb.millitm);
+#endif
 #endif
 #if defined(XP_UNIX) || defined(WIN32)
     if (elapsed_msecs + tolerance_msecs < timeout_msecs
@@ -150,7 +159,7 @@ static void AcceptThread(void *arg)
 #if defined(XP_UNIX)
     struct timeval end_time_tv;
 #endif
-#if defined(WIN32)
+#if defined(WIN32) && !defined(WINCE)
     struct _timeb end_time_tb;
 #endif
     PRFileDesc *sock;
@@ -190,9 +199,13 @@ static void AcceptThread(void *arg)
             + (end_time_tv.tv_usec - start_time_tv.tv_usec)/1000;
 #endif
 #if defined(WIN32)
+#if defined(WINCE)
+    elapsed_msecs = GetTickCount() - start_time_tick;
+#else
     _ftime(&end_time_tb);
     elapsed_msecs = 1000*(end_time_tb.time - start_time_tb.time)
             + (end_time_tb.millitm - start_time_tb.millitm);
+#endif
 #endif
 #if defined(XP_UNIX) || defined(WIN32)
     if (elapsed_msecs + tolerance_msecs < timeout_msecs
@@ -222,7 +235,7 @@ static void PollThread(void *arg)
 #if defined(XP_UNIX)
     struct timeval end_time_tv;
 #endif
-#if defined(WIN32)
+#if defined(WIN32) && !defined(WINCE)
     struct _timeb end_time_tb;
 #endif
     PRFileDesc *sock;
@@ -265,9 +278,13 @@ static void PollThread(void *arg)
             + (end_time_tv.tv_usec - start_time_tv.tv_usec)/1000;
 #endif
 #if defined(WIN32)
+#if defined(WINCE)
+    elapsed_msecs = GetTickCount() - start_time_tick;
+#else
     _ftime(&end_time_tb);
     elapsed_msecs = 1000*(end_time_tb.time - start_time_tb.time)
             + (end_time_tb.millitm - start_time_tb.millitm);
+#endif
 #endif
 #if defined(XP_UNIX) || defined(WIN32)
     if (elapsed_msecs + tolerance_msecs < timeout_msecs
@@ -297,7 +314,7 @@ static void WaitCondVarThread(void *arg)
 #if defined(XP_UNIX)
     struct timeval end_time_tv;
 #endif
-#if defined(WIN32)
+#if defined(WIN32) && !defined(WINCE)
     struct _timeb end_time_tb;
 #endif
     PRLock *ml;
@@ -327,9 +344,13 @@ static void WaitCondVarThread(void *arg)
             + (end_time_tv.tv_usec - start_time_tv.tv_usec)/1000;
 #endif
 #if defined(WIN32)
+#if defined(WINCE)
+    elapsed_msecs = GetTickCount() - start_time_tick;
+#else
     _ftime(&end_time_tb);
     elapsed_msecs = 1000*(end_time_tb.time - start_time_tb.time)
             + (end_time_tb.millitm - start_time_tb.millitm);
+#endif
 #endif
 #if defined(XP_UNIX) || defined(WIN32)
     if (elapsed_msecs + tolerance_msecs < timeout_msecs
@@ -357,7 +378,7 @@ static void WaitMonitorThread(void *arg)
 #if defined(XP_UNIX)
     struct timeval end_time_tv;
 #endif
-#if defined(WIN32)
+#if defined(WIN32) && !defined(WINCE)
     struct _timeb end_time_tb;
 #endif
     PRMonitor *mon;
@@ -381,9 +402,13 @@ static void WaitMonitorThread(void *arg)
             + (end_time_tv.tv_usec - start_time_tv.tv_usec)/1000;
 #endif
 #if defined(WIN32)
+#if defined(WINCE)
+    elapsed_msecs = GetTickCount() - start_time_tick;
+#else
     _ftime(&end_time_tb);
     elapsed_msecs = 1000*(end_time_tb.time - start_time_tb.time)
             + (end_time_tb.millitm - start_time_tb.millitm);
+#endif
 #endif
 #if defined(XP_UNIX) || defined(WIN32)
     if (elapsed_msecs + tolerance_msecs < timeout_msecs
@@ -410,7 +435,7 @@ static void WaitCMonitorThread(void *arg)
 #if defined(XP_UNIX)
     struct timeval end_time_tv;
 #endif
-#if defined(WIN32)
+#if defined(WIN32) && !defined(WINCE)
     struct _timeb end_time_tb;
 #endif
     int dummy;
@@ -429,9 +454,13 @@ static void WaitCMonitorThread(void *arg)
             + (end_time_tv.tv_usec - start_time_tv.tv_usec)/1000;
 #endif
 #if defined(WIN32)
+#if defined(WINCE)
+    elapsed_msecs = GetTickCount() - start_time_tick;
+#else
     _ftime(&end_time_tb);
     elapsed_msecs = 1000*(end_time_tb.time - start_time_tb.time)
             + (end_time_tb.millitm - start_time_tb.millitm);
+#endif
 #endif
 #if defined(XP_UNIX) || defined(WIN32)
     if (elapsed_msecs + tolerance_msecs < timeout_msecs
@@ -507,7 +536,11 @@ int main(int argc, char **argv)
     gettimeofday(&start_time_tv, NULL);
 #endif
 #if defined(WIN32)
+#ifdef WINCE
+    start_time_tick = GetTickCount();
+#else
     _ftime(&start_time_tb);
+#endif
 #endif
     tolerance = PR_MillisecondsToInterval(tolerance_msecs);
 

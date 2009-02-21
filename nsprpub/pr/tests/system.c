@@ -41,6 +41,7 @@
 #include "prsystem.h"
 
 #include "plerror.h"
+#include "nst_wince.h"
 
 static char *tag[] =
 {
@@ -57,7 +58,7 @@ static PRSysInfo Incr(PRSysInfo *cmd)
     return (PRSysInfo)tmp;
 }  /* Incr */
 
-PRIntn main(PRIntn argc, char **argv)
+int main(int argc, char **argv)
 {
     PRStatus rv;
     PRSysInfo cmd;

@@ -64,6 +64,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "nst_wince.h"
 
 /* for getcwd */
 #if defined(XP_UNIX) || defined (XP_OS2) || defined(XP_BEOS)
@@ -125,7 +126,9 @@ static PRStatus MakeReceiver(Shared *shared)
     {
         char *argv[3];
         char path[1024 + sizeof("/tmoacc")];
-        (void)getcwd(path, sizeof(path));
+
+        getcwd(path, sizeof(path));
+
         (void)strcat(path, "/tmoacc");
 #ifdef XP_PC
         (void)strcat(path, ".exe");

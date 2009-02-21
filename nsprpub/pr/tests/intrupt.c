@@ -54,6 +54,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include "nst_wince.h"
 
 #ifdef XP_MAC
 #include "prlog.h"
@@ -335,7 +336,7 @@ void PR_CALLBACK Intrupt(void *arg)
     PR_DestroyLock(ml);    
 }  /* Intrupt */
 
-PRIntn main(PRIntn argc, char **argv)
+int main(int argc, char **argv)
 {
     PRThread *intrupt;
 	PLOptStatus os;

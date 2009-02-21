@@ -49,6 +49,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "nst_wince.h"
 
 #define DEFAULT_HOST_NAME "mcom.com"
 

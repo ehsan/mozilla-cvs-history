@@ -56,6 +56,7 @@
 
 #include <stdio.h>
 #include "nspr.h"
+#include "nst_wince.h"
 
 #define NUM_THREADS 1
 #define BASE_PORT   8000

@@ -51,6 +51,7 @@
 #include <prerror.h>
 #include <prlog.h>
 #include "plgetopt.h"
+#include "nst_wince.h"
 
 #define DIRNAME "xxxBug80884/"
 #define FILENAME "file80883"
@@ -69,7 +70,7 @@ static void Help( void )  {
                     );
 } /* --- end Help() */
 
-PRIntn main(PRIntn argc, char *argv[])
+int main(int argc, char **argv)
 {
     PLOptStatus os;
     PLOptState *opt = PL_CreateOptState(argc, argv, "dh");

@@ -45,6 +45,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "nst_wince.h"
 
 /* Byte sequence in network byte order */
 static unsigned char bytes_n[8] = { 1, 2, 3, 4, 5, 6, 7, 8 };
@@ -54,7 +55,7 @@ static PRUint16 s_h = 0x0102;
 static PRUint32 l_h = 0x01020304;
 static PRUint64 ll_h = LL_INIT(0x01020304, 0x05060708);
 
-int main()
+int main(int argc, char **argv)
 {
     union {
         PRUint16 s;

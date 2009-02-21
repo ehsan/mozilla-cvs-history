@@ -66,6 +66,7 @@ int main(void)
 #include <stdio.h>
 #include <unistd.h>
 #include <errno.h>
+#include "nst_wince.h"
 
 static void Test(void *arg)
 {
@@ -100,7 +101,7 @@ static void Test(void *arg)
     printf("write to broken pipe failed with EPIPE, as expected\n");
 }
 
-int main(void)
+int main(int argc, char **argv)
 {
     PRThread *thread;
 

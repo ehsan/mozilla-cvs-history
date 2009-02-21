@@ -47,6 +47,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "nst_wince.h"
 
 #ifdef XP_OS2
 #include <io.h>
@@ -101,7 +102,7 @@ static void Measure(void (*func)(void), const char *msg)
     printf("%40s: %6.2f usec avg, %d msec total\n", msg, d / count, tot);
 }
 
-void main(int argc, char **argv)
+int main(int argc, char **argv)
 {
     PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
     PR_STDIO_INIT();

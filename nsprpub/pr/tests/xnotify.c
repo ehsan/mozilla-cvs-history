@@ -49,6 +49,7 @@
 #include "prinit.h"
 #include "prinrval.h"
 #include "prthread.h"
+#include "nst_wince.h"
 
 static PRLock *ml = NULL;
 static PRIntervalTime base;
@@ -378,7 +379,7 @@ static PRIntn PR_CALLBACK RealMain( PRIntn argc, char **argv )
 }  /* main */
 
 
-PRIntn main(PRIntn argc, char **argv)
+int main(int argc, char **argv)
 {
     PRIntn rv;
     

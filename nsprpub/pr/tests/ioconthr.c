@@ -42,6 +42,7 @@
 
 #include "nspr.h"
 #include <stdio.h>
+#include "nst_wince.h"
 
 int num_threads = 10;  /* must be an even number */
 PRThreadScope thread_scope = PR_GLOBAL_THREAD;

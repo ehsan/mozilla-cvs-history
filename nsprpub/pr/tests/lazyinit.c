@@ -61,6 +61,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "nst_wince.h"
 
 static void PR_CALLBACK lazyEntry(void *arg)
 {
@@ -68,7 +69,7 @@ static void PR_CALLBACK lazyEntry(void *arg)
 }  /* lazyEntry */
 
 
-PRIntn main(PRIntn argc, char *argv[])
+int main(int argc, char **argv)
 {
     PRUintn pdkey;
     PRStatus status;

@@ -51,8 +51,9 @@
 #include "prprf.h"
 #include "prnetdb.h"
 #include "prerror.h"
+#include "nst_wince.h"
 
-int main()
+int main(int argc, char **argv)
 {
     PRFileDesc *prstderr = PR_GetSpecialFD(PR_StandardError);
     PRBool failed = PR_FALSE;

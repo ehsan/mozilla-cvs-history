@@ -60,6 +60,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "nst_wince.h"
 
 int _debug_on = 0;
 #define DPRINTF(arg) if (_debug_on) printf arg
@@ -998,7 +999,7 @@ default_threads, default_threads*2, default_threads*3, default_threads*4);
     return 0;
 }
 
-PRIntn main(PRIntn argc, char *argv[])
+int main(int argc, char **argv)
 {
     PRIntn rv;
     

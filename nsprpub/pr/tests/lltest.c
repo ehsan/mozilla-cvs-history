@@ -69,6 +69,7 @@
 
 #include "nspr.h"
 #include "plgetopt.h"
+#include "nst_wince.h"
 
 /* --- Local Definitions --- */
 #define ReportProgress(m) if (verboseMode) PR_fprintf(output, (m));
@@ -828,7 +829,7 @@ Initialize( PRIntn argc, char **argv )
     return(0);
 }    
 
-PRIntn main( int argc, char **argv )
+int main(int argc, char **argv)
 {
     PR_STDIO_INIT();
     output = PR_GetSpecialFD(PR_StandardError);

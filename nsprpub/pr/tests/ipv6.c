@@ -49,6 +49,7 @@
 #include "obsolete/probslet.h"
 
 #include <string.h>
+#include "nst_wince.h"
 
 #define DNS_BUFFER 100
 #define ADDR_BUFFER 100
@@ -109,7 +110,7 @@ static PRStatus PrintAddress(const PRNetAddr* address)
     return rv;
 }  /* PrintAddress */
 
-PRIntn main(PRIntn argc, char **argv)
+int main(int argc, char **argv)
 {
     PRStatus rv;
     PLOptStatus os;

@@ -61,13 +61,14 @@
 #include "prprf.h"
 
 #include <string.h>
+#include "nst_wince.h"
 
 #define BUF_SIZE 128
 
 PRIntn failed_already=0;
 PRIntn debug_mode;
 
-int main(    int     argc,    char   *argv[])
+int main(int argc, char **argv)
 {
     PRInt16 i16;
     PRIntn n;

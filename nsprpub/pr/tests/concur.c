@@ -57,6 +57,7 @@
 #endif
 
 #include <stdlib.h>
+#include "nst_wince.h"
 
 #define DEFAULT_RANGE 10
 #define DEFAULT_LOOPS 100
@@ -184,7 +185,7 @@ PRIntn PR_CALLBACK Concur(PRIntn argc, char **argv)
     return 0;
 } /* Concur */
 
-PRIntn main(PRIntn argc, char **argv)
+int main(int argc, char **argv)
 {
     PR_STDIO_INIT();
     return PR_Initialize(Concur, argc, argv, 0);

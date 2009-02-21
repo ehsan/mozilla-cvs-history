@@ -48,6 +48,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "nst_wince.h"
 
 PRBool debug_mode = PR_FALSE;
 
@@ -80,7 +81,7 @@ static PRStatus RunTest(const char *name, PRFuncPtr addr)
     return PR_SUCCESS;
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char **argv)
 {
     char *name;
     PRFuncPtr addr;

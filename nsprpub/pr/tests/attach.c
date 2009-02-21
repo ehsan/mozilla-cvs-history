@@ -87,6 +87,7 @@
 #elif defined(XP_BEOS)
 #include <kernel/OS.h>
 #endif
+#include "nst_wince.h"
 
 #define DEFAULT_COUNT 1000
 PRIntn failed_already=0;

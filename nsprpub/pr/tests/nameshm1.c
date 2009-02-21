@@ -103,6 +103,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <private/primpl.h>
+#include "nst_wince.h"
 
 #define SEM_NAME1 "/tmp/nameshmSEM1"
 #define SEM_NAME2 "/tmp/nameshmSEM2"
@@ -530,7 +531,7 @@ static void ClientServerTest( void )
     return;
 } /* end ClientServerTest() */
 
-PRIntn main(PRIntn argc, char *argv[])
+int main(int argc, char **argv)
 {
     {
         /*

@@ -56,12 +56,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "nst_wince.h"
 
 #define NUM_ITERATIONS 10
 
 static char *child_argv[] = { "pipepong2", NULL };
 
-int main()
+int main(int argc, char **argv)
 {
     PRFileDesc *in_pipe[2];
     PRFileDesc *out_pipe[2];

@@ -57,6 +57,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "nst_wince.h"
 
 #ifdef XP_OS2
 static char *child_argv[] = { "pipepong.exe", NULL };
@@ -66,7 +67,7 @@ static char *child_argv[] = { "pipepong", NULL };
 
 #define NUM_ITERATIONS 10
 
-int main()
+int main(int argc, char **argv)
 {
     PRFileDesc *in_pipe[2];
     PRFileDesc *out_pipe[2];

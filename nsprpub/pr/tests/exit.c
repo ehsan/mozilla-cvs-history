@@ -45,6 +45,7 @@
 #include "plgetopt.h"
 
 #include <stdlib.h>
+#include "nst_wince.h"
 
 static PRInt32 dally = 0;
 static PRFileDesc *err = NULL;
@@ -127,7 +128,7 @@ static PRIntn PR_CALLBACK RealMain(PRIntn argc, char **argv)
 }
 
 
-PRIntn main(PRIntn argc, char *argv[])
+int main(int argc, char **argv)
 {
     PRIntn rv;
     

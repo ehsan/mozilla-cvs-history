@@ -45,8 +45,9 @@
 #if !defined(WINNT)
 
 #include <stdio.h>
+#include "nst_wince.h"
 
-int main()
+int main(int argc, char **argv)
 {
     printf("This test is not relevant on this platform\n");
     return 0;
@@ -60,6 +61,7 @@ int main()
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "nst_wince.h"
 
 #define TEST_FILE_NAME "primblok.dat"
 
@@ -105,7 +107,7 @@ static void PR_CALLBACK IOThread(void *arg)
     InterlockedExchange(&iothread_done, 1);
 }
 
-int main()
+int main(int argc, char **argv)
 {
     PRThread *iothread;
 

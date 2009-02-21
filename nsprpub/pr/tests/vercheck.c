@@ -50,6 +50,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "nst_wince.h"
 
 /*
  * This release (4.8) is backward compatible with the
@@ -83,7 +84,7 @@ static char *incompatible_version[] = {
     "10.0", "11.1", "12.14.20"
 };
 
-int main()
+int main(int argc, char **argv)
 {
     int idx;
     int num_compatible = sizeof(compatible_version) / sizeof(char *);

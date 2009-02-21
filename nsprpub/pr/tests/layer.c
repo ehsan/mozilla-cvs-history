@@ -47,6 +47,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include "nst_wince.h"
 
 /*
 ** Testing layering of I/O
@@ -279,7 +280,7 @@ static Verbosity ChangeVerbosity(Verbosity verbosity, PRIntn delta)
     return (Verbosity)verbage;
 }  /* ChangeVerbosity */
 
-PRIntn main(PRIntn argc, char **argv)
+int main(int argc, char **argv)
 {
     PRStatus rv;
     PRIntn mits;

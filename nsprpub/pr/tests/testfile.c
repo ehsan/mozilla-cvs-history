@@ -56,6 +56,8 @@
 #include <errno.h>
 #endif /* XP_OS2 */
 
+#include "nst_wince.h"
+
 static int _debug_on = 0;
 
 #ifdef XP_MAC
@@ -64,6 +66,10 @@ static int _debug_on = 0;
 #define printf PR_LogPrint
 #define setbuf(x,y)
 extern void SetupMacPrintfLog(char *logFile);
+#endif
+
+#ifdef WINCE
+#define setbuf(x,y)
 #endif
 
 #ifdef XP_WIN
@@ -113,6 +119,9 @@ char *HIDDEN_FILE_NAME = ".hidden_pr_testfile";
 #endif
 buffer *in_buf, *out_buf;
 char pathname[256], renamename[256];
+#ifdef WINCE
+WCHAR wPathname[256];
+#endif
 #define TMPDIR_LEN	64
 char testdir[TMPDIR_LEN];
 static PRInt32 PR_CALLBACK DirTest(void *argunused);
@@ -741,6 +750,22 @@ HANDLE hfile;
     PR_Close(fd_file);
 
 	
+#elif defined(WINCE)
+	DPRINTF(("Creating hidden test file %s\n",pathname));
+    MultiByteToWideChar(CP_ACP, 0, pathname, -1, wPathname, 256); 
+	hfile = CreateFile(wPathname, GENERIC_READ,
+						FILE_SHARE_READ|FILE_SHARE_WRITE,
+						NULL,
+						CREATE_NEW,
+						FILE_ATTRIBUTE_HIDDEN,
+						NULL);
+	if (hfile == INVALID_HANDLE_VALUE) {
+		printf("testfile failed to create/open hidden file %s [0, %d]\n",
+				pathname, GetLastError());
+		return -1;
+	}
+	CloseHandle(hfile);
+						
 #elif defined(XP_PC) && defined(WIN32)
 	DPRINTF(("Creating hidden test file %s\n",pathname));
 	hfile = CreateFile(pathname, GENERIC_READ,
@@ -980,7 +1005,22 @@ int main(int argc, char **argv)
 		exit(2);
 	}
 #ifdef WIN32
+
+#ifdef WINCE
+    {
+        WCHAR tdir[TMPDIR_LEN];
+        len = GetTempPath(TMPDIR_LEN, tdir);
+        if ((len > 0) && (len < (TMPDIR_LEN - 6))) {
+            /*
+             * enough space for prdir
+             */
+            WideCharToMultiByte(CP_ACP, 0, tdir, -1, testdir, TMPDIR_LEN, 0, 0); 
+        }
+    }
+#else
 	len = GetTempPath(TMPDIR_LEN, testdir);
+#endif      /* WINCE */
+
 	if ((len > 0) && (len < (TMPDIR_LEN - 6))) {
 		/*
 		 * enough space for prdir
@@ -989,8 +1029,7 @@ int main(int argc, char **argv)
 		TEST_DIR = testdir;
 		printf("TEST_DIR = %s\n",TEST_DIR);
 	}
-	
-#endif
+#endif      /* WIN32 */
 
 	if (FileTest() < 0) {
 		printf("File Test failed\n");

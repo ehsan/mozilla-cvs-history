@@ -46,6 +46,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "nst_wince.h"
 
 PRIntn  debug = 0;
 PRIntn  verbose = 0;
@@ -67,7 +68,7 @@ static char * NewBuffer( size_t size )
     return(buf);
 } /* end NewBuffer() */
 
-PRIntn main(PRIntn argc, char *argv[])
+int main(int argc, char **argv)
 {
     char    *value;
     PRStatus    rc;

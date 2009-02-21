@@ -51,6 +51,7 @@
 #include <plerror.h>
 
 #include <stdlib.h>
+#include "nst_wince.h"
 
 #define DEFAULT_PORT 12273
 #define GET "GET / HTTP/1.0\n\n"
@@ -209,7 +210,7 @@ static void AcceptingThread(void *arg)
         PL_FPrintError(err_out, "PR_Close (server) failed");
 }  /* AcceptingThread */
 
-PRIntn main(PRIntn argc, char **argv)
+int main(int argc, char **argv)
 {
     PRHostEnt he;
     PRStatus status;

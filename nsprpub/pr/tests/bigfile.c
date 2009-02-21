@@ -44,6 +44,7 @@
 
 #include "plerror.h"
 #include "plgetopt.h"
+#include "nst_wince.h"
 
 #define DEFAULT_COUNT 10
 #define DEFAULT_FILESIZE 1
@@ -129,7 +130,7 @@ static void PrintInfo(PRFileInfo64 *info, const char *filename)
         output, "    creation: %s,\n    modify: %s\n", ctime, mtime);
 }  /* PrintInfo */
 
-PRIntn main(PRIntn argc, char **argv)
+int main(int argc, char **argv)
 {
     PRStatus rv;
     char *buffer;

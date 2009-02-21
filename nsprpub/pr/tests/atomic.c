@@ -38,6 +38,7 @@
 #include "prio.h"
 #include "prprf.h"
 #include "pratom.h"
+#include "nst_wince.h"
 
 /*
  * TODO: create a macro to generate the six lines of code that are repeated
@@ -47,7 +48,7 @@
  *     result |= !(EXPRESSION);
  */
 
-PRIntn main(PRIntn argc, char **argv)
+int main(int argc, char **argv)
 {
     PRInt32 rv, oldval, test, result = 0;
     PRFileDesc *output = PR_GetSpecialFD(PR_StandardOutput);

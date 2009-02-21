@@ -60,6 +60,7 @@
 #endif
 
 #include <stdlib.h>
+#include "nst_wince.h"
 
 #define INNER_LOOPS 100
 #define DEFAULT_LOOPS 100
@@ -263,7 +264,7 @@ PRIntn PR_CALLBACK Switch(PRIntn argc, char **argv)
     return ((failed) ? 1 : 0);
 }  /* Switch */
 
-PRIntn main(PRIntn argc, char **argv)
+int main(int argc, char **argv)
 {
     PRIntn result;
     PR_STDIO_INIT();

@@ -44,6 +44,7 @@
 
 #include "plerror.h"
 #include "plgetopt.h"
+#include "nst_wince.h"
 
 typedef union Overlay_i
 {
@@ -121,7 +122,7 @@ static PRIntn PR_CALLBACK RealMain(PRIntn argc, char **argv)
 }  /* main */
 
 
-PRIntn main(PRIntn argc, char *argv[])
+int main(int argc, char **argv)
 {
     PRIntn rv;
     

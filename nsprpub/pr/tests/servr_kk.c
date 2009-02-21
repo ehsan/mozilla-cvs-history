@@ -64,6 +64,7 @@
 #include "pprthred.h"
 
 #include <string.h>
+#include "nst_wince.h"
 
 #define PORT 15004
 #define THREAD_STACKSIZE 0

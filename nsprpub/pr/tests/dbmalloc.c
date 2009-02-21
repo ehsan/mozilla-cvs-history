@@ -53,6 +53,7 @@
 #include <time.h>
 #include <string.h>
 #include "nspr.h"
+#include "nst_wince.h"
 
 void
 usage
@@ -235,12 +236,7 @@ test
     return;
 }
 
-int
-main
-(
-    int     argc,
-    char   *argv[]
-)
+int main(int argc, char **argv)
 {
     int okay = 0;
     int multithread = 0;

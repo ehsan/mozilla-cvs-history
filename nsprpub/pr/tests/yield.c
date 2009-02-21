@@ -45,6 +45,7 @@
 #include "primpl.h"
 #include <os2.h>
 #endif
+#include "nst_wince.h"
 
 #define THREADS 10
 
@@ -65,7 +66,7 @@ threadmain(void *_id)
 
 }
 
-main()
+int main(int argc, char **argv)
 {
     int index;
     PRThread *a[THREADS];

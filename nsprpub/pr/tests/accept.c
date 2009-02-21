@@ -63,6 +63,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include "nst_wince.h"
 
 #include "plgetopt.h"
 #include "plerror.h"

@@ -53,6 +53,7 @@
 #include "plgetopt.h"
 
 #include <stdlib.h>
+#include "nst_wince.h"
 
 #define DEFAULT_THREADS 10
 #define DEFAULT_LOOPS 100

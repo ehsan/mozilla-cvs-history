@@ -62,6 +62,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "nst_wince.h"
 
 PRIntn failed_already=0;
 
@@ -273,10 +274,7 @@ pid_t PR_UnixFork1(void)
 
 #endif  /* PR_DCETHREADS */
 
-int main(
-int     argc,
-char   *argv[]
-)
+int main(int argc, char **argv)
 {
     pid_t pid;
 	int rv;

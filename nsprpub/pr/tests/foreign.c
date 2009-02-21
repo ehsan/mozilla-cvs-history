@@ -64,6 +64,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "nst_wince.h"
 
 static enum {
     thread_nspr, thread_pthread, thread_sproc, thread_win32
@@ -124,7 +125,7 @@ static PRUintn __stdcall windows_start(void *arg)
 }  /* windows_start */
 #endif /* defined(WIN32) */
 
-static PRStatus CreateThread(StartFn start, void *arg)
+static PRStatus NSPRPUB_TESTS_CreateThread(StartFn start, void *arg)
 {
     PRStatus rv;
 
@@ -218,7 +219,7 @@ static PRStatus CreateThread(StartFn start, void *arg)
         rv = PR_FAILURE;
     }
     return rv;
-}  /* CreateThread */
+}  /* NSPRPUB_TESTS_CreateThread */
 
 static void PR_CALLBACK lazyEntry(void *arg)
 {
@@ -325,7 +326,7 @@ static void OneShot(void *arg)
 	}
 }  /* OneShot */
 
-PRIntn main(PRIntn argc, char **argv)
+int main(int argc, char **argv)
 {
     PRStatus rv;
 	PRInt32	thread_cnt = DEFAULT_THREAD_COUNT;
@@ -366,7 +367,7 @@ PRIntn main(PRIntn argc, char **argv)
 
     while (thread_cnt-- > 0)
     {
-        rv = CreateThread(OneShot, (void*)thread_cnt);
+        rv = NSPRPUB_TESTS_CreateThread(OneShot, (void*)thread_cnt);
         PR_ASSERT(PR_SUCCESS == rv);
         PR_Sleep(PR_MillisecondsToInterval(5));
     }

@@ -45,6 +45,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "nst_wince.h"
 
 #ifdef XP_MAC
 #include "prlog.h"
@@ -146,7 +147,7 @@ static void Test(PRThreadScope scope1, PRThreadScope scope2)
     }
 }
 
-PRIntn main(PRIntn argc, char **argv)
+int main(int argc, char **argv)
 {
     PR_STDIO_INIT();
     lock = PR_NewLock();

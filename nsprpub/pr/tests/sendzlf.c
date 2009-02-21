@@ -53,6 +53,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "nst_wince.h"
 
 static void ClientThread(void *arg)
 {
@@ -184,7 +185,7 @@ static void ServerThread(void *arg)
     }
 }
 
-int main()
+int main(int argc, char **argv)
 {
     PRFileDesc *listenSock;
     PRThread *clientThread;

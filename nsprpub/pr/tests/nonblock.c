@@ -51,6 +51,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "nst_wince.h"
 
 #define NUMBER_ROUNDS 5
 
@@ -262,7 +263,7 @@ static PRIntn PR_CALLBACK RealMain( PRIntn argc, char **argv )
     return 0;
 }
 
-PRIntn main(PRIntn argc, char *argv[])
+int main(int argc, char **argv)
 {
     PRIntn rv;
     

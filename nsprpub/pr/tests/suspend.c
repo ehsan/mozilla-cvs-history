@@ -63,6 +63,8 @@ int main()
 extern void SetupMacPrintfLog(char *logFile);
 #endif
 
+#include "nst_wince.h"
+
 PRMonitor *mon;
 PRInt32 count;
 PRInt32 alive;
@@ -196,8 +198,7 @@ static void CreateThreadsKK(void)
 }
 
 
-void
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
     PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
     PR_STDIO_INIT();

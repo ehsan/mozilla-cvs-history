@@ -60,6 +60,7 @@
 #include "plgetopt.h"
 #include <stdio.h>
 #include <string.h>
+#include "nst_wince.h"
 
 #ifdef XP_MAC
 #define printf PR_LogPrint

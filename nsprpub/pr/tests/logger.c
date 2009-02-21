@@ -48,6 +48,7 @@
 #include "prinrval.h"
 
 #include <stdio.h>
+#include "nst_wince.h"
 
 #ifdef XP_MAC
 extern void SetupMacPrintfLog(char *logFile);
@@ -119,7 +120,7 @@ static void UserLogStuff( void )
 
 } /* end UserLogStuff() */
 
-int main(PRIntn argc, const char **argv)
+int main(int argc, char **argv)
 {
     PRThread *thread;
 

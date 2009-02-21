@@ -59,6 +59,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "nst_wince.h"
 
 static void PrintVersion(
     const char *msg, const PRVersion* info, PRIntn tab)

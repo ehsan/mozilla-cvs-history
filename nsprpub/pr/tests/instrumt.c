@@ -78,6 +78,7 @@
 #include <prtrace.h> 
 #include <prcountr.h> 
 #include <prolock.h> 
+#include "nst_wince.h"
 
 #define COUNT_LIMIT  (10 * ( 1024))
 
@@ -432,7 +433,7 @@ static void OrderedLockTest( void )
 } /* end OrderedLockTest() */
 
 
-PRIntn main(PRIntn argc, char *argv[])
+int main(int argc, char **argv)
 {
 #if defined(DEBUG) || defined(FORCE_NSPR_TRACE)
     PRUint32    counter;

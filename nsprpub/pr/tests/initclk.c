@@ -50,6 +50,7 @@
 #include "prlog.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "nst_wince.h"
 
 /* The timeouts, in milliseconds */
 #define SHORT_TIMEOUT 1000
@@ -65,7 +66,7 @@ void ThreadFunc(void *arg)
     PR_Unlock(lock1);
 }
 
-int main()
+int main(int argc, char **argv)
 {
     PRThread *thread;
     PRIntervalTime start, end;

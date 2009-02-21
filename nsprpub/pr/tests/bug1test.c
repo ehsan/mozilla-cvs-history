@@ -46,6 +46,7 @@ before leaving the critical section in _PR_CondWait in hwmon.c).
 #include "prinit.h"
 #include "prmon.h"
 #include "prlog.h"
+#include "nst_wince.h"
 
 typedef struct Arg_s
 {
@@ -246,7 +247,7 @@ static void padStack (int argc, char** argv)
   pseudoMain (argc, argv, pad);
 }
 
-void main (int argc, char **argv)
+int main(int argc, char **argv)
 {
   PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
   PR_STDIO_INIT();

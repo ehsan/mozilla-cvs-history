@@ -44,6 +44,7 @@
 #include "plgetopt.h"
 
 #include <stdlib.h>
+#include "nst_wince.h"
 
 static void PR_CALLBACK Thread(void *sleep)
 {
@@ -64,7 +65,7 @@ static void Help(void)
     PR_fprintf(err, "\t-h   This message and nothing else\n");
 }  /* Help */
 
-PRIntn main(PRIntn argc, char **argv)
+int main(int argc, char **argv)
 {
     PLOptStatus os;
     PRBool cleanup = PR_FALSE;

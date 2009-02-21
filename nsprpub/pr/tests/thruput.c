@@ -60,6 +60,8 @@
 #include "plerror.h"
 #include "plgetopt.h"
 
+#include "nst_wince.h"
+
 #define ADDR_BUFFER 100
 #define PORT_NUMBER 51877
 #define SAMPLING_INTERVAL 10
@@ -320,7 +322,7 @@ static void Help(void)
     PR_fprintf(err, "\t\tthe server and not act as a client.\n");
 }  /* Help */
 
-PRIntn main(PRIntn argc, char **argv)
+int main(int argc, char **argv)
 {
     PLOptStatus os;
     const char *server_name = NULL;

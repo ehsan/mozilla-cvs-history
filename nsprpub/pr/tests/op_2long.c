@@ -56,6 +56,7 @@
 #include <stdio.h>
 #include "plerror.h"
 #include "plgetopt.h"
+#include "nst_wince.h"
 
 #ifdef XP_MAC
 #include "prlog.h"

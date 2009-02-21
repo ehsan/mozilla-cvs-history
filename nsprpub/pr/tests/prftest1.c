@@ -60,6 +60,7 @@
 #include "prprf.h"
 
 #include <string.h>
+#include "nst_wince.h"
 
 #define BUF_SIZE 128
 
@@ -88,7 +89,7 @@ static void Test_Result (int result)
 		printf ("FAIL\n");
 }
 
-int main(    int     argc,    char   *argv[])
+int main(int argc, char **argv)
 {
     PRInt16 i16;
     PRIntn n;

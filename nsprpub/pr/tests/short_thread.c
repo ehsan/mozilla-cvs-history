@@ -38,6 +38,7 @@
 #include <stdio.h>
 #include "nspr.h"
 #include "plgetopt.h"
+#include "nst_wince.h"
 
 /*
  * Create a thread that exits right away; useful for testing race conditions in thread

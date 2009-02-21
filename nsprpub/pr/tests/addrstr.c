@@ -40,6 +40,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "nst_wince.h"
 
 const char *testaddrs[] = {
     "::", "::",
@@ -71,7 +72,7 @@ const char *badaddrs[] = {
 
 int failed_already = 0;
 
-int main()
+int main(int argc, char **argv)
 {
     const char **nexttestaddr = testaddrs;
     const char **nextbadaddr = badaddrs;

@@ -64,6 +64,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "nst_wince.h"
 
 #ifdef XP_MAC
 #include "prlog.h"
@@ -187,7 +188,7 @@ static PRIntn PR_CALLBACK RealMain( PRIntn argc, char **argv )
 }
 
 
-PRIntn main(PRIntn argc, char **argv)
+int main(int argc, char **argv)
 {
     PRIntn rv;
     

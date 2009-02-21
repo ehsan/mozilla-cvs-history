@@ -44,6 +44,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "nst_wince.h"
 
 /* Address string to convert */
 #define DEFAULT_IPV4_ADDR_STR "207.200.73.41"

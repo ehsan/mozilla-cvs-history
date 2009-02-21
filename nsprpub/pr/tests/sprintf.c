@@ -55,6 +55,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "nst_wince.h"
 
 #define countof(a) (sizeof(a)/sizeof(a[0]))
 

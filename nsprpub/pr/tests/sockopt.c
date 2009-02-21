@@ -47,6 +47,8 @@
 
 #include "plerror.h"
 
+#include "nst_wince.h"
+
 static PRFileDesc *err = NULL;
 static PRBool failed = PR_FALSE;
 
@@ -78,7 +80,7 @@ static PRSockOption Incr(PRSockOption *option)
     return (PRSockOption)val;
 }  /* Incr */
 
-PRIntn main(PRIntn argc, char *argv)
+int main(int argc, char **argv)
 {
     PRStatus rv;
     PRFileDesc *udp = PR_NewUDPSocket();

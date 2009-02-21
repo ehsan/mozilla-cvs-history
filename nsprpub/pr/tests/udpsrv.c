@@ -82,6 +82,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include "nst_wince.h"
 
 #ifdef XP_PC
 #define mode_t int

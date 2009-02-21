@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nspr.h"
+#include "nst_wince.h"
 
 #if defined(XP_UNIX) || defined(XP_OS2)
 
@@ -65,7 +66,7 @@ static void Other(void *unused)
     if (didit < 5) rv = 1;
 }
 
-PRIntn main ()
+int main(int argc, char **argv)
 {
     PRUint32 elapsed;
     PRThread *thread;

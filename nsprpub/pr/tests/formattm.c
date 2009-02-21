@@ -40,8 +40,9 @@
 #include "prtime.h"
 
 #include <stdio.h>
+#include "nst_wince.h"
 
-int main()
+int main(int argc, char **argv)
 {
     char buffer[256];
     char small_buffer[8];

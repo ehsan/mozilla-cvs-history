@@ -72,6 +72,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "nst_wince.h"
 
 static PRIntn debug_mode;
 static PRFileDesc *output;
@@ -231,7 +232,7 @@ static PRIntn PR_CALLBACK RealMain(int argc, char** argv)
 }
 
 
-PRIntn main(PRIntn argc, char *argv[])
+int main(int argc, char **argv)
 {
     PRIntn rv;
     

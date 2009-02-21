@@ -42,6 +42,7 @@
 
 #include "plerror.h"
 #include "plgetopt.h"
+#include "nst_wince.h"
 
 static PRFileDesc *err = NULL;
 
@@ -55,7 +56,7 @@ static void Help(void)
     PR_fprintf(err, "\t-h   This message and nothing else\n");
 }  /* Help */
 
-PRIntn main(PRIntn argc, char **argv)
+int main(int argc, char **argv)
 {
     PRStatus rv;
     PLOptStatus os;

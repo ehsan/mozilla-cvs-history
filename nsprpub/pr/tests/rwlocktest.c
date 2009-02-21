@@ -53,6 +53,7 @@
 #include "nspr.h"
 #include "plgetopt.h"
 #include "prrwlock.h"
+#include "nst_wince.h"
 
 static int _debug_on;
 static void rwtest(void *args);
@@ -72,7 +73,7 @@ PRFileDesc  *errhandle;
 #define	DEFAULT_LOOP_CNT	100
 #define	TEST_ARRAY_SIZE		100
 
-PRIntn main(PRIntn argc, char **argv)
+int main(int argc, char **argv)
 {
     PRInt32 cnt;
 	PRStatus rc;

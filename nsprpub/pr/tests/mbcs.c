@@ -71,6 +71,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "nst_wince.h"
 
 /*
 ** Test harness infrastructure
@@ -142,7 +143,7 @@ static void TraverseDirectory( unsigned char *dir )
 
 } /* end TraverseDirectory() */
 
-PRIntn main(PRIntn argc, char *argv[])
+int main(int argc, char **argv)
 {
     { /* get command line options */
         /*

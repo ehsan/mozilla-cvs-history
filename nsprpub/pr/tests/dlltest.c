@@ -64,6 +64,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "nst_wince.h"
 
 typedef PRIntn (PR_CALLBACK *GetFcnType)(void);
 typedef void (PR_CALLBACK *SetFcnType)(PRIntn);

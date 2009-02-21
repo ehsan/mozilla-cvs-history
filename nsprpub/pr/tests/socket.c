@@ -84,6 +84,10 @@ extern void SetupMacPrintfLog(char *logFile);
 
 #define DPRINTF(arg) if (_debug_on) printf arg
 
+
+#include "nst_wince.h"
+
+
 #ifdef XP_PC
 char *TEST_DIR = "prdir";
 char *SMALL_FILE_NAME = "prsmallf";
@@ -2197,8 +2201,7 @@ done:
  * Test Socket NSPR APIs
  */
 
-int
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
     /*
      * -d           debug mode

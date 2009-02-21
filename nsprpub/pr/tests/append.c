@@ -54,6 +54,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "nst_wince.h"
 
 PRIntn  debug = 0;
 PRIntn  verbose = 0;
@@ -62,7 +63,7 @@ const PRInt32 addedBytes = 1000;
 const PRInt32   buf = 1; /* constant written to fd, addedBytes times */
 PRInt32         inBuf;   /* read it back into here */
 
-PRIntn main(PRIntn argc, char *argv[])
+int main(int argc, char **argv)
 {
     PRStatus    rc;
     PRInt32     rv;

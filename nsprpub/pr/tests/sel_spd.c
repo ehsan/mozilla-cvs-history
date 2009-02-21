@@ -47,6 +47,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
+#include "nst_wince.h"
 
 #ifdef XP_MAC
 #include "prlog.h"

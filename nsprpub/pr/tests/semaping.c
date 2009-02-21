@@ -39,6 +39,7 @@
 #include "plgetopt.h"
 
 #include <stdio.h>
+#include "nst_wince.h"
 
 #define SHM_NAME "/tmp/counter"
 #define SEM_NAME1 "/tmp/foo.sem"

@@ -53,6 +53,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "nst_wince.h"
 
 #define NUM_ITERATIONS 10
 
@@ -106,7 +107,7 @@ static void PongThreadFunc(void *arg)
     }
 }
 
-int main()
+int main(int argc, char **argv)
 {
     PRStatus status;
     PRThread *pongThread;

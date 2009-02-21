@@ -50,6 +50,7 @@
  
 #include "nspr.h"
 #include "plgetopt.h"
+#include "nst_wince.h"
 
 typedef struct _DataRecord {
 	PRInt32	data;
@@ -83,7 +84,7 @@ static int _debug_on;
 PRFileDesc  *output;
 PRFileDesc  *errhandle;
 
-PRIntn main(PRIntn argc, char **argv)
+int main(int argc, char **argv)
 {
     PRInt32 rv, cnt, sum;
 	DataRecord	*Item;

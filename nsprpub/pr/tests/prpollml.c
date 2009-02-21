@@ -46,6 +46,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "nst_wince.h"
 
 #define POLL_DESC_COUNT 256  /* This should be greater than the
                               * STACK_POLL_DESC_COUNT macro in

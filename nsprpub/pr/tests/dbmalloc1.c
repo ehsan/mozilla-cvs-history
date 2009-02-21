@@ -60,6 +60,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "nspr.h"
+#include "nst_wince.h"
 
 PRIntn failed_already=0;
 PRIntn debug_mode;
@@ -117,12 +118,7 @@ r2
     }
 }
 
-int
-main
-(
-    int     argc,
-    char   *argv[]
-)
+int main(int argc, char **argv)
 {
 
  /* main test */

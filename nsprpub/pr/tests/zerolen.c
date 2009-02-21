@@ -55,8 +55,9 @@
 #ifndef XP_UNIX
 
 #include <stdio.h>
+#include "nst_wince.h"
 
-int main()
+int main(int argc, char **argv)
 {
     printf("PASS\n");
     return 0;

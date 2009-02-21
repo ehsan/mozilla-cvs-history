@@ -76,6 +76,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "nst_wince.h"
 
 /*
 ** Test harness infrastructure
@@ -204,7 +205,7 @@ static void ConnectThread( void *arg )
 } /* end ConnectThread() */
 
 
-PRIntn main(PRIntn argc, char *argv[])
+int main(int argc, char **argv)
 {
     PRThread *tJitter;
     PRThread *tAccept;

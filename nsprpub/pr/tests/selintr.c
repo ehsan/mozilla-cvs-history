@@ -58,11 +58,12 @@ int main()
 #else /* XP_UNIX */
 
 #include "nspr.h"
+#include "nst_wince.h"
 
 #include <sys/time.h>
 #include <stdio.h>
 
-int main()
+int main(int argc, char **argv)
 {
     struct timeval timeout;
     int rv;
