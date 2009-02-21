@@ -257,6 +257,8 @@ const int kEscapeKeyCode = 53;
 
   NSPoint clickLocation = [self convertPoint:[theEvent locationInWindow] fromView:nil];
   TabButtonView* activeTabButton = [self buttonAtPoint:clickLocation];
+  if (!activeTabButton)
+    return;
 
   // When a tab is dragged to the edge, the tab is not allowed to move off the bar, but the mouse
   // keeps moving. We want to prevent moving the tab again until the mouse gets back to the original
