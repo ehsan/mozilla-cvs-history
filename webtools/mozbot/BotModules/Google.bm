@@ -2,30 +2,35 @@
 # Google Module                #
 ################################
 
-# Author: Max Kanat-Alexander <mkanat@bugzilla.org>
-
-# Uses the Net::Google module to query Google for keywords.
-# Note that Net::Google requires SOAP::Lite.
+# Original Author: Max Kanat-Alexander <mkanat@bugzilla.org>
+# Author: Stephen Lau <steve@grommit.com>
+#
+# stevel's notes:
+# The original version of this module used Net::Google which used the Google
+# SOAP API.  I've updated it to use the REST::Google::Search module which
+# uses Google's AJAX API
+#
+# This API requires that you send a valid HTTP_REFERER, which you can set 
+# with the REFERER constant below:
 
 package BotModules::Google;
 use vars qw(@ISA);
 @ISA = qw(BotModules);
-use Net::Google;
+use REST::Google::Search;
 
 use constant SEPARATOR => ' -- ';
+use constant REFERER   => 'http://www.mozilla.org/projects/mozbot/';
 1;
 
 sub Help {
     my $self = shift;
     my ($event) = @_;
     return {
-        '' =>    q{Queries Google for specified search terms. Note that you}
-               . q{ have to specify your Google API Key (the 'googleApiKey'}
-               . q{ var) before using any commands. To get a Google API Key,}
-               . q{ see: http://www.google.com/apis/ and go to "Create an}
-               . q{ Account."},
+        '' =>    q{Queries Google for specified search terms. },
         'google' =>  q{Searches google for the specified terms.}
                    . q{Syntax: 'google <terms>'},
+		'fight' => q{Google fight two terms.}
+			     . q{Syntax: 'fight <term1> vs. <term2>'}
     };
 }
 
@@ -35,14 +40,9 @@ sub RegisterConfig {
     $self->SUPER::RegisterConfig(@_);
     $self->registerVariables(
       # [ name, save?, settable? ]
-      ['maxResults', 1, 1, 10],
+      ['maxResults', 1, 1, 8],
       ['maxInChannel', 1, 1, 1],
-      # XXX - Not yet implemented.
-      #['backoffTime', 1, 1, 120],
-      ['googleApiKey', 1, 1, ''],
       ['safeSearch', 1, 1, 1],
-      # Note that maxLineLength will not be respected if the URL
-      # alone is longer than maxLineLength.
       ['maxLineLength', 1, 1, 256]
     );
 }
@@ -59,7 +59,6 @@ sub Told {
 
         if (!@searchResults) {
             $self->say($event, "Nothing found.");
-            # XXX - We could use $google->spell here to make suggestions.
         } 
         # If we are in a channel, and not a /msg
         elsif ($event->{'channel'}) {
@@ -73,35 +72,69 @@ sub Told {
         foreach my $result (@searchResults) {
             $self->say($event, $event->{'from'} . ': ' . $result);
         }
-    } else {
+    } elsif ($message =~ /^(\s*fight\s+)(.+)\s+vs\.\s+(.+)\s*$/osi) {
+		my $term1 = $2;
+		my $term2 = $3;
+		my $results1 = $self->getNumResults($term1);
+		my $results2 = $self->getNumResults($term2);
+
+		if ($results1 > $results2) {
+			$self->say($event, "$term1 beats $term2, $results1 to $results2!");
+		} elsif ($results2 > $results1) {
+			$self->say($event, "$term2 beats $term1, $results2 to $results1!");
+		} else {
+			$self->say($event, "It's a dead tie at $results1 results!");
+		}
+	} else {
         return $self->SUPER::Told(@_);
     }
     return 0; # we've dealt with it, no need to do anything else.
 }
 
+sub getNumResults {
+    my $self = shift;
+    my ($terms) = @_;
+	
+	REST::Google::Search->http_referer(REFERER);
+	my $res = REST::Google::Search->new(
+		q => $terms,
+		rsz => "large",
+	);
 
+	if ($res->responseStatus != 200) {
+		return 0;
+	}
+
+	my $data = $res->responseData;
+	return $data->cursor->estimatedResultCount;
+}
 # Performs the actual Google search and returns the
 # result as an array of lines to say.
 sub doSearch {
     my $self = shift;
     my ($terms) = @_;
 
-    my $google = Net::Google->new(key => $self->{'googleApiKey'});
-    my $search = $google->search(safe => $self->{'safeSearch'},
-                                 filter => $self->{'safeSearch'},
-                                 max_results => $self->{'maxResults'});
-    $search->query($terms);
-    my $results = $search->results();
-
     my @searchLines = ();
+	REST::Google::Search->http_referer(REFERER);
+	my $res = REST::Google::Search->new(
+		q => $terms,
+		rsz => "large",
+	);
 
-    foreach my $result (@$results) {
-        my $title = $result->title();
+	if ($res->responseStatus != 200) {
+		return @searchLines;
+	}
+
+	my $data = $res->responseData;
+	my @results = $data->results;
+
+    foreach my $result (@results) {
+        my $title = $result->title;
         # The Google API puts <b></b> tags into the title if the search
         # terms appear in the title.
         $title =~ s|</?b>||g;
         $title = $self->unescapeXML($title);
-        my $url = $result->URL();
+        my $url = $result->url;
         my $line_size = (length($title) + length($result) + length(SEPARATOR));
         if ($line_size  > $self->{'maxLineLength'} ) {
             # The 3 is for the '...'
