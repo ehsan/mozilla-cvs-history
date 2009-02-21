@@ -24,9 +24,14 @@ tie(%{$seen->{'states'}}, 'AnyDBM_File', 'seen-states', O_RDWR|O_CREAT, 0666);
 sub Help {
     my $self = shift;
     my ($event) = @_;
-    return {
+    my %commands = {
         'seen' => 'Says how long it\'s been since the last time someone was seen. Syntax: seen victim',
     };
+    if ($self->isAdmin($event)) {
+        $commands{'mute'} = 'Stop responding to !seen <name> in a channel unless told directly. Syntax: mute seen in <channel>';
+        $commands{'unmute'} = 'Start responding to !seen <name> in a channel. Syntax: unmute seen in <channel>';
+    }
+    return \%commands;
 }
 
 # RegisterConfig - Called when initialised, should call registerVariables
@@ -37,6 +42,7 @@ sub RegisterConfig {
       # [ name, save?, settable? ]
         ['overrides', 1, 1, {'therapist' => 'Look, dude, I\'m feeling fine, mm\'k?'}], # canned responses
         ['maxLines', 1, 1, 5],
+        ['directOnlyChannels', 1, 1, []], #list of channels where we're only observing and not responding to !seen unless told.
     );
 }
 
@@ -50,8 +56,12 @@ sub Told {
         $seen->{'times'}->{lc $event->{'from'}} = $now;
         $seen->{'states'}->{lc $event->{'from'}} = "saying '$message' to me in $channel.";
     }
-
-    if ($message =~ /^\s*!?seen\s+(\S+?)[\s?.!]*$/osi) {
+    if ($self->isAdmin($event) and $message =~ /^\s*(un)?mute\s+seen\s+in\s+(\S+)\s*$/osi){
+        my $mute = !defined($1);
+        my $channel = lc $2;
+        $channel =~ s/^\#?/\#/;  # Add # character if needed.
+        $self->MuteOrUnmuteChannel($event, $mute, $channel);
+    }elsif ($message =~ /^\s*!?seen\s+(\S+?)[\s?.!]*$/osi) {
         $self->DoSeen($event, $1);
     } else {
         return $self->SUPER::Told(@_);
@@ -67,8 +77,7 @@ sub Heard {
         $seen->{'times'}->{lc $event->{'from'}} = $event->{'time'};
         $seen->{'states'}->{lc $event->{'from'}} = "saying '$message' in $channel.";
     }
-
-    if ($message =~ /^\s*!seen\s+(\S+)\s*$/osi) {
+    if (!(grep {$event->{'channel'} eq $_} @{$self->{'directOnlyChannels'}}) and $message =~ /^\s*!seen\s+(\S+)\s*$/osi) {
         $self->DoSeen($event, $1);
     } else {
         return $self->SUPER::Heard(@_);
@@ -244,7 +253,6 @@ sub DoSeen {
             if ($who =~ /^[aeiou]/o) {
               $n = 'n';
             }
-            
             if ($pattern == 1) {
               $self->say($event, "I've never seen anyone matching the pattern '$who', sorry.");
             } else {
@@ -257,4 +265,26 @@ sub DoSeen {
 sub Unload {
   untie(%{$seen->{'times'}});
   untie(%{$seen->{'states'}});
+}
+
+sub MuteOrUnmuteChannel {
+    my $self = shift;
+    my ($event, $mute, $channel) = @_;
+    if ($mute){
+        if (grep {$_ eq $channel} @{$self->{'directOnlyChannels'}}){
+            $self->say($event,"I'm already ignoring !seen <name> in $channel.");
+        } else{
+            push @{$self->{'directOnlyChannels'}}, $channel;
+            $self->say($event, "I won't respond to !seen <name> in $channel anymore unless told directly.");
+            $self->saveConfig();
+        }
+    } else {
+        if (grep {$_ eq $channel} @{$self->{'directOnlyChannels'}}){
+            @{$self->{'directOnlyChannels'}} = map {$_ ne $channel} @{$self->{'directOnlyChannels'}};
+            $self->say($event,"I'll start responding to !seen <name> in $channel now.");
+            $self->saveConfig();
+        } else{
+            $self->say($event, "I'm already responding to !seen <name> in $channel.");
+        }
+    }
 }
