@@ -1,4 +1,4 @@
-/pub/mozilla.org/seamonkey/nightly/latest-comm-central/seamonkey-2.0a3pre.en-US.linux-i686.tar.bz2
-/pub/mozilla.org/seamonkey/nightly/latest-comm-central/seamonkey-2.0a3pre.en-US.mac.dmg
-/pub/mozilla.org/seamonkey/nightly/latest-comm-central/seamonkey-2.0a3pre.en-US.win32.installer.exe
-/pub/mozilla.org/seamonkey/nightly/latest-comm-central/seamonkey-2.0a3pre.en-US.win32.zip
+/pub/mozilla.org/seamonkey/nightly/latest-comm-central/seamonkey-2.0b1pre.en-US.linux-i686.tar.bz2
+/pub/mozilla.org/seamonkey/nightly/latest-comm-central/seamonkey-2.0b1pre.en-US.mac.dmg
+/pub/mozilla.org/seamonkey/nightly/latest-comm-central/seamonkey-2.0b1pre.en-US.win32.installer.exe
+/pub/mozilla.org/seamonkey/nightly/latest-comm-central/seamonkey-2.0b1pre.en-US.win32.zip
