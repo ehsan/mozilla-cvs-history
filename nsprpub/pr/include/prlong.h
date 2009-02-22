@@ -83,7 +83,7 @@ NSPR_API(PRUint64) LL_MaxUint(void);
 #define LL_ZERO     0L
 #define LL_MAXUINT  18446744073709551615UL
 #define LL_INIT(hi, lo)  ((hi ## L << 32) + lo ## L)
-#elif (defined(WIN32) || defined(WIN16)) && !defined(__GNUC__)
+#elif defined(WIN32) && !defined(__GNUC__)
 #define LL_MAXINT   9223372036854775807i64
 #define LL_MININT   (-LL_MAXINT - 1i64)
 #define LL_ZERO     0i64

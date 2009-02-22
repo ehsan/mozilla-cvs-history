@@ -112,39 +112,6 @@
 #define PR_CALLBACK_DECL
 #define PR_STATIC_CALLBACK(__x) static __x
 
-#elif defined(WIN16)
-
-#define PR_CALLBACK_DECL        __cdecl
-
-#if defined(_WINDLL)
-#define PR_EXPORT(__type) extern __type _cdecl _export _loadds
-#define PR_IMPORT(__type) extern __type _cdecl _export _loadds
-#define PR_EXPORT_DATA(__type) extern __type _export
-#define PR_IMPORT_DATA(__type) extern __type _export
-
-#define PR_EXTERN(__type) extern __type _cdecl _export _loadds
-#define PR_IMPLEMENT(__type) __type _cdecl _export _loadds
-#define PR_EXTERN_DATA(__type) extern __type _export
-#define PR_IMPLEMENT_DATA(__type) __type _export
-
-#define PR_CALLBACK             __cdecl __loadds
-#define PR_STATIC_CALLBACK(__x) static __x PR_CALLBACK
-
-#else /* this must be .EXE */
-#define PR_EXPORT(__type) extern __type _cdecl _export
-#define PR_IMPORT(__type) extern __type _cdecl _export
-#define PR_EXPORT_DATA(__type) extern __type _export
-#define PR_IMPORT_DATA(__type) extern __type _export
-
-#define PR_EXTERN(__type) extern __type _cdecl _export
-#define PR_IMPLEMENT(__type) __type _cdecl _export
-#define PR_EXTERN_DATA(__type) extern __type _export
-#define PR_IMPLEMENT_DATA(__type) __type _export
-
-#define PR_CALLBACK             __cdecl __loadds
-#define PR_STATIC_CALLBACK(__x) __x PR_CALLBACK
-#endif /* _WINDLL */
-
 #elif defined(XP_MAC)
 
 #define PR_EXPORT(__type) extern __declspec(export) __type
@@ -390,9 +357,6 @@ typedef long PRInt32;
 #if PR_BYTES_PER_LONG == 8
 typedef long PRInt64;
 typedef unsigned long PRUint64;
-#elif defined(WIN16)
-typedef __int64 PRInt64;
-typedef unsigned __int64 PRUint64;
 #elif defined(WIN32) && !defined(__GNUC__)
 typedef __int64  PRInt64;
 typedef unsigned __int64 PRUint64;
