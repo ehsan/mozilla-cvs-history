@@ -239,7 +239,7 @@ sub show_graph {
   my $cmds = qq{
 				reset
                 $graph_size
-				set terminal png color
+				set terminal png
 				set output "$PNGFILE"
 				set title "$TBOX $TESTNAME"
 				set key graph 0.1,0.95 reverse spacing .75 width -18
