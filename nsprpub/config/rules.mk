@@ -109,7 +109,7 @@ ifdef LIBRARY_NAME
 ifeq (,$(filter-out WINNT WINCE OS2,$(OS_ARCH)))
 
 #
-# Win95, Win16, and OS/2 require library names conforming to the 8.3 rule.
+# Win95 and OS/2 require library names conforming to the 8.3 rule.
 # other platforms do not.
 #
 ifeq (,$(filter-out WIN95 WINCE OS2,$(OS_TARGET)))

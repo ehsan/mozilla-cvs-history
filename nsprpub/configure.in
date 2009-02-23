@@ -694,9 +694,6 @@ fi
 # at lesser performance (the Win95 target uses threads; the WinNT target
 # uses fibers).
 #
-# When OS_TARGET=WIN16 is specified, then a Windows 3.11 (16bit) target
-# is built. See: win16_3.11.mk for lots more about the Win16 target.
-#
 # If OS_TARGET is not specified, it defaults to $(OS_ARCH), i.e., no
 # cross-compilation.
 #
@@ -794,9 +791,6 @@ if test -z "$OS_TARGET"; then
 fi
 if test "$OS_TARGET" = "WIN95"; then
     OS_RELEASE="4.0"
-fi
-if test "$OS_TARGET" = "WIN16"; then
-    OS_RELEASE=
 fi
 OS_CONFIG="${OS_TARGET}${OS_RELEASE}"
 
@@ -1631,9 +1625,6 @@ tools are selected during the Xcode/Developer Tools installation.])
 	    ;;
     WIN95)
 	    MDCPUCFG_H=_win95.cfg
-	    ;;
-    WIN16)
-	    MDCPUCFG_H=_win16.cfg
 	    ;;
     *)
 	    AC_MSG_ERROR([Missing OS_TARGET for ${target}.  Use --enable-win32-target to set.])
