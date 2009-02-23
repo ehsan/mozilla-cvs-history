@@ -156,7 +156,7 @@ struct _imcb *IAC$GL_IMAGE_LIST = NULL;
  * On these platforms, symbols have a leading '_'.
  */
 #if defined(SUNOS4) || (defined(DARWIN) && defined(USE_MACH_DYLD)) \
-    || defined(NEXTSTEP) || defined(WIN16) || defined(XP_OS2) \
+    || defined(NEXTSTEP) || defined(XP_OS2) \
     || ((defined(OPENBSD) || defined(NETBSD)) && !defined(__ELF__))
 #define NEED_LEADING_UNDERSCORE
 #endif
@@ -314,39 +314,11 @@ void _PR_InitLinker(void)
     PR_ExitMonitor(pr_linker_lock);
 }
 
-#if defined(WIN16)
 /*
- * _PR_ShutdownLinker unloads all dlls loaded by the application via
- * calls to PR_LoadLibrary
- */
-void _PR_ShutdownLinker(void)
-{
-    PR_EnterMonitor(pr_linker_lock);
-
-    while (pr_loadmap) {
-    if (pr_loadmap->refCount > 1) {
-#ifdef DEBUG
-        fprintf(stderr, "# Forcing library to unload: %s (%d outstanding references)\n",
-            pr_loadmap->name, pr_loadmap->refCount);
-#endif
-        pr_loadmap->refCount = 1;
-    }
-    PR_UnloadLibrary(pr_loadmap);
-    }
-    
-    PR_ExitMonitor(pr_linker_lock);
-
-    PR_DestroyMonitor(pr_linker_lock);
-    pr_linker_lock = NULL;
-}
-#else
-/*
- * _PR_ShutdownLinker was originally only used on WIN16 (see above),
- * but I think it should also be used on other platforms.  However,
- * I disagree with the original implementation's unloading the dlls
- * for the application.  Any dlls that still remain on the pr_loadmap
- * list when NSPR shuts down are application programming errors.  The
- * only exception is pr_exe_loadmap, which was added to the list by
+ * _PR_ShutdownLinker does not unload the dlls loaded by the application
+ * via calls to PR_LoadLibrary.  Any dlls that still remain on the
+ * pr_loadmap list when NSPR shuts down are application programming errors.
+ * The only exception is pr_exe_loadmap, which was added to the list by
  * NSPR and hence should be cleaned up by NSPR.
  */
 void _PR_ShutdownLinker(void)
@@ -361,7 +333,6 @@ void _PR_ShutdownLinker(void)
         _pr_currentLibPath = NULL;
     }
 }
-#endif
 
 /******************************************************************************/
 
@@ -1213,9 +1184,9 @@ pr_FindSymbolInLib(PRLibrary *lm, const char *name)
 #endif
 #endif  /* XP_OS2 */
 
-#if defined(WIN32) || defined(WIN16)
+#ifdef WIN32
     f = GetProcAddress(lm->dlh, name);
-#endif  /* WIN32 || WIN16 */
+#endif  /* WIN32 */
 
 #if defined(XP_MACOSX) && defined(USE_MACH_DYLD)
 /* add this offset to skip the leading underscore in name */
