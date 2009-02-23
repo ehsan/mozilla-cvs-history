@@ -210,11 +210,13 @@ pref("gfx.use_text_smoothing_setting", true);
 // force <select>s to display as Aqua rather than honor author styles
 pref("camino.use_aqua_selects", true);
 
+// Phishing and malware protection are temporarily disabled until the UI is
+// in a more polished state; see bug 479076.
 // Prevent loading of suspected phishing sites
-pref("browser.safebrowsing.enabled", true);
+pref("browser.safebrowsing.enabled", false);
 
 // Prevent loading of suspected malware sites
-pref("browser.safebrowsing.malware.enabled", true);
+pref("browser.safebrowsing.malware.enabled", false);
 
 // The active safe browsing data provider
 pref("browser.safebrowsing.dataProvider", 0);
