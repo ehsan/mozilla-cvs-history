@@ -42,7 +42,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "nst_wince.h"
 
 #ifndef XP_BEOS
 

@@ -51,7 +51,6 @@
 #include <plerror.h>
 
 #include <stdlib.h>
-#include "nst_wince.h"
 
 #define DEFAULT_PORT 12273
 #define GET "GET / HTTP/1.0\n\n"

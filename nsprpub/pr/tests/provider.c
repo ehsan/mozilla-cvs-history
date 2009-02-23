@@ -81,7 +81,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "nst_wince.h"
 
 
 #if defined(XP_UNIX)

@@ -54,7 +54,6 @@
 #include "prio.h"
 #include "prerror.h"
 #include <stdio.h>
-#include "nst_wince.h"
 
 #ifdef XP_MAC
 #include "prlog.h"

@@ -48,7 +48,6 @@
 #include "prinrval.h"
 
 #include <stdio.h>
-#include "nst_wince.h"
 
 #ifdef XP_MAC
 extern void SetupMacPrintfLog(char *logFile);

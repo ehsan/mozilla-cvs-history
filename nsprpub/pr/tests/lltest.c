@@ -69,7 +69,6 @@
 
 #include "nspr.h"
 #include "plgetopt.h"
-#include "nst_wince.h"
 
 /* --- Local Definitions --- */
 #define ReportProgress(m) if (verboseMode) PR_fprintf(output, (m));

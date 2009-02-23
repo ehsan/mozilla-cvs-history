@@ -53,7 +53,6 @@
 #include "plgetopt.h"
 
 #include <string.h>
-#include "nst_wince.h"
 
 typedef struct Shared
 {

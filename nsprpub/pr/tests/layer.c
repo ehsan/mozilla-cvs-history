@@ -47,7 +47,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "nst_wince.h"
 
 /*
 ** Testing layering of I/O

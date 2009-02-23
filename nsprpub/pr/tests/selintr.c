@@ -58,7 +58,6 @@ int main()
 #else /* XP_UNIX */
 
 #include "nspr.h"
-#include "nst_wince.h"
 
 #include <sys/time.h>
 #include <stdio.h>

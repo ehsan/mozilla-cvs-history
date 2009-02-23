@@ -64,7 +64,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "nst_wince.h"
 
 static enum {
     thread_nspr, thread_pthread, thread_sproc, thread_win32

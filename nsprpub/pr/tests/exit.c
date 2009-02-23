@@ -45,7 +45,6 @@
 #include "plgetopt.h"
 
 #include <stdlib.h>
-#include "nst_wince.h"
 
 static PRInt32 dally = 0;
 static PRFileDesc *err = NULL;

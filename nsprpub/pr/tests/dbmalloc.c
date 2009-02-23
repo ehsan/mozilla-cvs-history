@@ -53,7 +53,6 @@
 #include <time.h>
 #include <string.h>
 #include "nspr.h"
-#include "nst_wince.h"
 
 void
 usage

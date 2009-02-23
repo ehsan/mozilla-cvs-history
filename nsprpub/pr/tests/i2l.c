@@ -44,7 +44,6 @@
 
 #include "plerror.h"
 #include "plgetopt.h"
-#include "nst_wince.h"
 
 typedef union Overlay_i
 {

@@ -45,7 +45,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "nst_wince.h"
 
 /* Byte sequence in network byte order */
 static unsigned char bytes_n[8] = { 1, 2, 3, 4, 5, 6, 7, 8 };

@@ -48,7 +48,6 @@
 
 #include "prinit.h"
 #include <stdio.h>
-#include "nst_wince.h"
 
 #if !defined(IRIX)
 

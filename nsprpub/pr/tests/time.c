@@ -59,7 +59,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
-#include "nst_wince.h"
 
 #define DEFAULT_COUNT 100000
 PRInt32 count;

@@ -56,8 +56,6 @@
 #include <errno.h>
 #endif /* XP_OS2 */
 
-#include "nst_wince.h"
-
 static int _debug_on = 0;
 
 #ifdef XP_MAC

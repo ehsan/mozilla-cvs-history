@@ -43,7 +43,6 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
-#include "nst_wince.h"
 
 #define TEST_FILE_NAME "bigfile3.txt"
 #ifdef WINCE

@@ -52,7 +52,6 @@
 #include <locale.h>
 #include "prprf.h"
 #include "prdtoa.h"
-#include "nst_wince.h"
 
 static int failed_already = 0;
 

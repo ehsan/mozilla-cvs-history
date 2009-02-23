@@ -49,7 +49,6 @@
 #include "prinit.h"
 #include "prinrval.h"
 #include "prthread.h"
-#include "nst_wince.h"
 
 static PRLock *ml = NULL;
 static PRIntervalTime base;

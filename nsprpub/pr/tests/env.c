@@ -46,7 +46,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "nst_wince.h"
 
 PRIntn  debug = 0;
 PRIntn  verbose = 0;

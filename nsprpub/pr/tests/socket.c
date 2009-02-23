@@ -84,10 +84,6 @@ extern void SetupMacPrintfLog(char *logFile);
 
 #define DPRINTF(arg) if (_debug_on) printf arg
 
-
-#include "nst_wince.h"
-
-
 #ifdef XP_PC
 char *TEST_DIR = "prdir";
 char *SMALL_FILE_NAME = "prsmallf";

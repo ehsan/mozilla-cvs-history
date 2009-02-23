@@ -63,8 +63,6 @@ int main()
 extern void SetupMacPrintfLog(char *logFile);
 #endif
 
-#include "nst_wince.h"
-
 PRMonitor *mon;
 PRInt32 count;
 PRInt32 alive;

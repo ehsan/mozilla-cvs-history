@@ -75,7 +75,6 @@
 #include <sys/types.h>
 #include <sys/timeb.h>  /* for _ftime */
 #endif
-#include "nst_wince.h"
 
 #define DEFAULT_LEAD_TIME_SECS 5
 #define DEFAULT_TOLERANCE_MSECS 500

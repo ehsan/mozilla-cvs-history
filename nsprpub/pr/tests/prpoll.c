@@ -62,8 +62,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "nst_wince.h"
-
 #ifdef WINCE
 
 int main(int argc, char **argv)

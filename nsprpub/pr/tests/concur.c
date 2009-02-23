@@ -57,7 +57,6 @@
 #endif
 
 #include <stdlib.h>
-#include "nst_wince.h"
 
 #define DEFAULT_RANGE 10
 #define DEFAULT_LOOPS 100

@@ -52,7 +52,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "nst_wince.h"
 
 static PRIntn PR_CALLBACK stdio(PRIntn argc, char **argv)
 {

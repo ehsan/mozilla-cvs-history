@@ -42,7 +42,6 @@
 
 #include "plerror.h"
 #include "plgetopt.h"
-#include "nst_wince.h"
 
 static PRFileDesc *err = NULL;
 

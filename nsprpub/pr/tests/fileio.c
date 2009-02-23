@@ -65,7 +65,6 @@
 #include "prlog.h"
 
 #include <stdio.h>
-#include "nst_wince.h"
 
 #ifdef XP_MAC
 #include "prsem.h"

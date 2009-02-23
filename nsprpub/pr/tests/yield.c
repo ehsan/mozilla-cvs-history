@@ -45,7 +45,6 @@
 #include "primpl.h"
 #include <os2.h>
 #endif
-#include "nst_wince.h"
 
 #define THREADS 10
 

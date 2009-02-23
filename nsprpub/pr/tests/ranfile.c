@@ -69,7 +69,6 @@
 
 #include <string.h>
 #include <stdio.h>
-#include "nst_wince.h"
 
 static PRIntn debug_mode = 0;
 static PRIntn failed_already=0;

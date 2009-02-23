@@ -68,8 +68,6 @@
 #include <process.h>
 #endif
 
-#include "nst_wince.h"
-
 static int _debug_on = 0;
 static char *program_name = NULL;
 static void serve_client_write(void *arg);

@@ -40,7 +40,6 @@
 #include "prtime.h"
 
 #include <stdio.h>
-#include "nst_wince.h"
 
 int main(int argc, char **argv)
 {

@@ -54,7 +54,6 @@
 #endif
 
 #include "plgetopt.h"
-#include "nst_wince.h"
 
 static PRUintn key[128];
 static PRIntn debug = 0;

@@ -60,7 +60,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "nst_wince.h"
 
 #if defined(_PR_DCETHREADS)
 

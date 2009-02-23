@@ -78,7 +78,6 @@
 #include <prtrace.h> 
 #include <prcountr.h> 
 #include <prolock.h> 
-#include "nst_wince.h"
 
 #define COUNT_LIMIT  (10 * ( 1024))
 

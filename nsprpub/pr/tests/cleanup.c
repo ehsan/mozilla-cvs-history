@@ -44,7 +44,6 @@
 #include "plgetopt.h"
 
 #include <stdlib.h>
-#include "nst_wince.h"
 
 static void PR_CALLBACK Thread(void *sleep)
 {

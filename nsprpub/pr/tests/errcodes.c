@@ -46,7 +46,6 @@
 #include "plgetopt.h"
 
 #include <stdio.h>
-#include "nst_wince.h"
 
 static int _debug_on = 0;
 

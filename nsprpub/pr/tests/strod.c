@@ -42,7 +42,6 @@
 #include "plgetopt.h"
 
 #include <stdlib.h>
-#include "nst_wince.h"
 
 static void Help(void)
 {

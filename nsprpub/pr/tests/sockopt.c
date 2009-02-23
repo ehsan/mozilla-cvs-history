@@ -47,8 +47,6 @@
 
 #include "plerror.h"
 
-#include "nst_wince.h"
-
 static PRFileDesc *err = NULL;
 static PRBool failed = PR_FALSE;
 

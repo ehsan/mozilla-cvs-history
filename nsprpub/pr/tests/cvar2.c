@@ -60,7 +60,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "nst_wince.h"
 
 int _debug_on = 0;
 #define DPRINTF(arg) if (_debug_on) printf arg

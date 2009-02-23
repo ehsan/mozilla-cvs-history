@@ -60,7 +60,6 @@
 #endif
 
 #include <stdlib.h>
-#include "nst_wince.h"
 
 #define INNER_LOOPS 100
 #define DEFAULT_LOOPS 100

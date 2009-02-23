@@ -46,7 +46,6 @@ before leaving the critical section in _PR_CondWait in hwmon.c).
 #include "prinit.h"
 #include "prmon.h"
 #include "prlog.h"
-#include "nst_wince.h"
 
 typedef struct Arg_s
 {

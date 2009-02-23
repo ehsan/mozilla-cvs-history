@@ -41,7 +41,6 @@
 #include "prsystem.h"
 
 #include "plerror.h"
-#include "nst_wince.h"
 
 static char *tag[] =
 {

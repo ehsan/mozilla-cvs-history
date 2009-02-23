@@ -36,7 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nspr.h"
-#include "nst_wince.h"
 
 #if defined(XP_UNIX) || defined(XP_OS2)
 

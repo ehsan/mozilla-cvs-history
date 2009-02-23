@@ -51,7 +51,6 @@
 #include <prerror.h>
 #include <prlog.h>
 #include "plgetopt.h"
-#include "nst_wince.h"
 
 #define DIRNAME "xxxBug80884/"
 #define FILENAME "file80883"

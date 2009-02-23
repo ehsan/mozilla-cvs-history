@@ -53,7 +53,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "nst_wince.h"
 
 static int _debug_on = 0;
 

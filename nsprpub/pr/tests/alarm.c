@@ -73,7 +73,6 @@
 #include "plgetopt.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include "nst_wince.h"
 
 #if defined(XP_UNIX)
 #include <sys/time.h>

@@ -50,7 +50,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "nst_wince.h"
 
 /*
  * This release (4.8) is backward compatible with the

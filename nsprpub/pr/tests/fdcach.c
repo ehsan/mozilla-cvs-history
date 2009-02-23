@@ -46,7 +46,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "nst_wince.h"
 
 /*
  * Define ORDER_PRESERVED if the implementation of PR_SetFDCacheSize

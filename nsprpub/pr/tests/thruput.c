@@ -54,13 +54,9 @@
 #include "prnetdb.h"
 #include "prprf.h"
 #include "prthread.h"
-
 #include "pprio.h"
-
 #include "plerror.h"
 #include "plgetopt.h"
-
-#include "nst_wince.h"
 
 #define ADDR_BUFFER 100
 #define PORT_NUMBER 51877

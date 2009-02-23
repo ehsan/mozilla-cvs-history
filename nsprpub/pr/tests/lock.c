@@ -82,7 +82,6 @@
 #include "plstr.h"
 
 #include <stdlib.h>
-#include "nst_wince.h"
 
 #if defined(XP_UNIX)
 #include <string.h>

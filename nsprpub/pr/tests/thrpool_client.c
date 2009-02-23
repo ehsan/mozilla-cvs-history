@@ -61,8 +61,6 @@
 #include <process.h>
 #endif
 
-#include "nst_wince.h"
-
 static int _debug_on = 0;
 static int server_port = -1;
 static char *program_name = NULL;

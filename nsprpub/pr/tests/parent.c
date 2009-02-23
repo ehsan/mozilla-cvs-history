@@ -45,7 +45,6 @@
 #include "prinit.h"
 #include "prproces.h"
 #include "prinrval.h"
-#include "nst_wince.h"
 
 typedef struct Child
 {

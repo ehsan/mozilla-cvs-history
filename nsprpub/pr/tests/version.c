@@ -42,7 +42,6 @@
 
 #include "plerror.h"
 #include "plgetopt.h"
-#include "nst_wince.h"
 
 PR_IMPORT(const PRVersionDescription *) libVersionPoint(void);
 

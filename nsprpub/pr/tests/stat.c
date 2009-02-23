@@ -47,7 +47,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "nst_wince.h"
 
 #ifdef XP_OS2
 #include <io.h>

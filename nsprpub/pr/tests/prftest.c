@@ -46,7 +46,6 @@
 #include "prprf.h"
 
 #include <string.h>
-#include "nst_wince.h"
 
 #define BUF_SIZE 128
 

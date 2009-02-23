@@ -51,7 +51,6 @@
 #include "prprf.h"
 #include "prnetdb.h"
 #include "prerror.h"
-#include "nst_wince.h"
 
 int main(int argc, char **argv)
 {

@@ -50,7 +50,6 @@
  
 #include "nspr.h"
 #include "plgetopt.h"
-#include "nst_wince.h"
 
 typedef struct _DataRecord {
 	PRInt32	data;

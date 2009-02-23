@@ -38,7 +38,6 @@
 #include "prio.h"
 #include "prprf.h"
 #include "pratom.h"
-#include "nst_wince.h"
 
 /*
  * TODO: create a macro to generate the six lines of code that are repeated

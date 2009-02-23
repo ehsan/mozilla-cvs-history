@@ -54,7 +54,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "nst_wince.h"
 
 #ifdef XP_MAC
 #include "prlog.h"

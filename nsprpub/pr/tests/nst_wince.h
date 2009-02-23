@@ -42,11 +42,10 @@
 
 /***********
  * NOTE: This file is loaded once in each test - and defines two
- * functions for each test's eventual executable: WinMain() and
+ * functions for each test's eventual executable: DllMain() and
  * nspr_test_runme() -- both exported functions.
  *
- * WinMain() is required to massage a main() entry-point EXE into
- * a WinMain() entry-point DLL.
+ * DLLs require a DllMain() entry-point.
  *
  * nspr_test_runme() is required so that the WinCE/WinMobile
  * controlling test program can run each DLL's tests in a standard way.

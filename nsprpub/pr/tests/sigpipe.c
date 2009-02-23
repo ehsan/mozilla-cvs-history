@@ -66,7 +66,6 @@ int main(void)
 #include <stdio.h>
 #include <unistd.h>
 #include <errno.h>
-#include "nst_wince.h"
 
 static void Test(void *arg)
 {

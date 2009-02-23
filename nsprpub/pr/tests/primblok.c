@@ -45,7 +45,6 @@
 #if !defined(WINNT)
 
 #include <stdio.h>
-#include "nst_wince.h"
 
 int main(int argc, char **argv)
 {
@@ -61,7 +60,6 @@ int main(int argc, char **argv)
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "nst_wince.h"
 
 #define TEST_FILE_NAME "primblok.dat"
 

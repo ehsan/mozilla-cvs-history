@@ -53,7 +53,6 @@
 #include "nspr.h"
 #include "plgetopt.h"
 #include "prrwlock.h"
-#include "nst_wince.h"
 
 static int _debug_on;
 static void rwtest(void *args);

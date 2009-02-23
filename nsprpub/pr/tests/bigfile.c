@@ -44,7 +44,6 @@
 
 #include "plerror.h"
 #include "plgetopt.h"
-#include "nst_wince.h"
 
 #define DEFAULT_COUNT 10
 #define DEFAULT_FILESIZE 1

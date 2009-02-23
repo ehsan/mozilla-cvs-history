@@ -48,7 +48,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "nst_wince.h"
 
 #define NUM_SERVER_THREADS 10
 

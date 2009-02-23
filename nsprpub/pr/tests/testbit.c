@@ -42,7 +42,6 @@
 */
 
 #include "nspr.h"
-#include "nst_wince.h"
 
 #define ErrorReport(x) { printf((x)); failed = 1; }
 

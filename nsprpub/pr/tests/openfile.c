@@ -46,7 +46,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "nst_wince.h"
 
 #define TEMPLATE_FILE_NAME "template.txt"
 

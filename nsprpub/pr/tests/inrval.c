@@ -72,7 +72,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "nst_wince.h"
 
 static PRIntn debug_mode;
 static PRFileDesc *output;
