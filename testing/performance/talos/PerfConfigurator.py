@@ -141,7 +141,7 @@ class PerfConfigurator:
                     newline += "test_name_extension: _nochrome\n"
                 if self.fast:
                     newline += '\n'
-                    newline += "test_name_estension: _fast\n"
+                    newline += "test_name_extension: _fast\n"
             if 'buildid:' in line:
                 newline = 'buildid: ' + buildidString
             if 'testbranch' in line:
