@@ -360,10 +360,10 @@ def results_from_graph(links, results_server):
     else:
       linkvalue = float(values[1])
       linkdetail = values[2]
-    if linkName in ('tp_pbytes', 'tp_%cpu', 'tp_pbytes_nochrome', 'tp_%cpu_nochrome'):
+    if linkName in ('tp_pbytes', 'tp_%cpu', 'tp_pbytes_nochrome', 'tp_%cpu_nochrome', 'tp_pbytes_fast', 'tp_%cpu_fast'):
       continue
     if linkvalue > -1:
-      if linkName in ('tp_memset', 'tp_rss', 'tp_memset_nochrome', 'tp_rss_nochrome'): #measured in bytes
+      if linkName in ('tp_memset', 'tp_rss', 'tp_memset_nochrome', 'tp_rss_nochrome', 'tp_memset_fast', 'tp_rss_fast'): #measured in bytes
         linkName += ": " + filesizeformat(linkvalue)
       else:
         linkName += ": " + str(linkvalue)
