@@ -37,7 +37,7 @@
 /*
  * secport.h - portability interfaces for security libraries
  *
- * $Id: secport.h,v 1.18 2009/02/12 17:17:48 alexei.volkov.bugs%sun.com Exp $
+ * $Id: secport.h,v 1.19 2009/02/27 00:15:03 nelson%bolyard.com Exp $
  */
 
 #ifndef _SECPORT_H_
@@ -74,10 +74,6 @@
 # ifndef XP_UNIX
 # define XP_UNIX
 # endif
-#endif
-
-#if defined(__WATCOMC__) || defined(__WATCOM_CPLUSPLUS__)
-#include "watcomfx.h"
 #endif
 
 #if defined(_WIN32_WCE)
