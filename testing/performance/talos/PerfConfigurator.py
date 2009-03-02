@@ -10,6 +10,7 @@ Modified by Rob Campbell on 2007-07-06 - added -d testDate option
 Modified by Ben Hearsum on 2007-08-22 - bugfixes, cleanup, support for multiple platforms. Only works on Talos2
 Modified by Alice Nodelman on 2008-04-30 - switch to using application.ini, handle different time stamp formats/options
 Modified by Alice Nodelman on 2008-07-10 - added options for test selection, graph server configuration, nochrome
+Modified by Benjamin Smedberg on 2009-02-27 - added option for symbols path
 """
 
 import sys
@@ -25,7 +26,7 @@ defaultTitle = "qm-pxp01"
 help_message = '''
 This is the buildbot performance runner's YAML configurator.bean
 
-USAGE: python PerfConfigurator.py --title title --executablePath path --configFilePath cpath --buildid id --branch branch --testDate date --resultsServer server --resultsLink link --activeTests testlist --oldresultsServer oldserver --oldresultsLink oldlink --branchName branchFullName --fast
+USAGE: python PerfConfigurator.py --title title --executablePath path --configFilePath cpath --buildid id --branch branch --testDate date --resultsServer server --resultsLink link --activeTests testlist --oldresultsServer oldserver --oldresultsLink oldlink --branchName branchFullName --fast --symbolsPath path
 
 example testlist: tp:tsspider:tdhtml:twinopen
 '''
@@ -67,6 +68,8 @@ class PerfConfigurator:
         print " - oldresultsServer = " + self.oldresultsServer
         print " - oldresultsLink = " + self.oldresultsLink
         print " - activeTests = " + self.activeTests
+        if self.symbolsPath:
+            print " - symbolsPath = " + self.symbolsPath
     
     def _getCurrentDateString(self):
         """collect a date string to be used in naming the created config file"""
@@ -142,6 +145,8 @@ class PerfConfigurator:
                 if self.fast:
                     newline += '\n'
                     newline += "test_name_extension: _fast\n"
+                if self.symbolsPath:
+                    newline += '\nsymbols_path: %s\n' % self.symbolsPath
             if 'buildid:' in line:
                 newline = 'buildid: ' + buildidString
             if 'testbranch' in line:
@@ -212,6 +217,8 @@ class PerfConfigurator:
             self.noChrome = kwargs['noChrome']
         if 'fast' in kwargs:
             self.fast = kwargs['fast']
+        if 'symbolsPath' in kwargs:
+            self.symbolsPath = kwargs['symbolsPath']
         self.currentDate = self._getCurrentDateString()
         if not self.buildid:
             self.buildid = self._getCurrentBuildId()
@@ -245,6 +252,7 @@ def main(argv=None):
     activeTests = ''
     noChrome = False
     fast = False
+    symbolsPath = None
     
     if argv is None:
         argv = sys.argv
@@ -252,7 +260,7 @@ def main(argv=None):
         try:
             opts, args = getopt.getopt(argv[1:], "hvue:c:t:b:o:i:d:s:l:a:n", 
                 ["help", "verbose", "useId", "executablePath=", "configFilePath=", "title=", 
-                "branch=", "output=", "id=", "testDate=", "resultsServer=", "resultsLink=", "activeTests=", "noChrome", "oldresultsServer=", "oldresultsLink=", "branchName=", "fast"])
+                "branch=", "output=", "id=", "testDate=", "resultsServer=", "resultsLink=", "activeTests=", "noChrome", "oldresultsServer=", "oldresultsLink=", "branchName=", "fast", "symbolsPath="])
         except getopt.error, msg:
             raise Usage(msg)
         
@@ -294,6 +302,8 @@ def main(argv=None):
                 noChrome = True
             if option in ("--fast"):
                 fast = True
+            if option in ("--symbolsPath",):
+                symbolsPath = value
         
     except Usage, err:
         print >> sys.stderr, sys.argv[0].split("/")[-1] + ": " + str(err.msg)
@@ -316,7 +326,8 @@ def main(argv=None):
                                     oldresultsLink=oldresultsLink,
                                     activeTests=activeTests,
                                     noChrome=noChrome,
-                                    fast=fast)
+                                    fast=fast,
+                                    symbolsPath=symbolsPath)
     try:
         configurator.writeConfigFile()
     except Configuration, err:
