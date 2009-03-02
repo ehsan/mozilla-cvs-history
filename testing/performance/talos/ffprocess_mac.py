@@ -92,6 +92,8 @@ def GetPidsByName(process_name):
     #overlook the mac crashreporter daemon
     if line.find("crashreporterd") >= 0:
       continue
+    if line.find('defunct') != -1:
+      continue
     if line.find(process_name) >= 0:
       # splits by whitespace, the first one should be the pid
       pid = int(line.split()[0])

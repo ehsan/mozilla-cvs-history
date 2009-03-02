@@ -86,6 +86,8 @@ def GetPidsByName(process_name):
   
   # find all matching processes and add them to the list
   for line in data.splitlines():
+    if line.find('defunct') != -1:
+      continue
     if line.find(process_name) >= 0:
       # splits by whitespace, the first one should be the pid
       pid = int(line.split()[0])
