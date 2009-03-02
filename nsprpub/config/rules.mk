@@ -318,6 +318,10 @@ ifeq ($(OS_TARGET), OS2)
 $(IMPORT_LIBRARY): $(MAPFILE)
 	rm -f $@
 	$(IMPLIB) $@ $(MAPFILE)
+else
+ifeq (,$(filter-out WIN95 WINCE,$(OS_TARGET)))
+$(IMPORT_LIBRARY): $(SHARED_LIBRARY)
+endif
 endif
 
 $(SHARED_LIBRARY): $(OBJS) $(RES) $(MAPFILE)
