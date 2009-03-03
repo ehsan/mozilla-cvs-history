@@ -271,6 +271,7 @@ def old_send_to_graph(results_server, results_link, title, date, browser_config,
     else:
       # each line of the string is of the format i;page_name;median;mean;min;max;time vals\n
       name = ''
+      res = res.replace('_fast', '')
       if ((res == 'tp') or (res == 'tp_js')):
           name = '_loadtime'
       for bd in browser_dump:

@@ -142,9 +142,6 @@ class PerfConfigurator:
                 if self.noChrome:
                     newline += '\n'
                     newline += "test_name_extension: _nochrome\n"
-                if self.fast:
-                    newline += '\n'
-                    newline += "test_name_extension: _fast\n"
                 if self.symbolsPath:
                     newline += '\nsymbols_path: %s\n' % self.symbolsPath
             if 'buildid:' in line:
@@ -170,6 +167,8 @@ class PerfConfigurator:
                         match = re.match(reTestMatch, line)
                         if match:
                             printMe = True
+                            if (test == 'tp') and self.fast: #only affects the tp test name
+                                newline = newline.replace('tp', 'tp_fast')
                 if self.noChrome: 
                     #if noChrome is True remove --tpchrome option 
                     newline = line.replace('-tpchrome ','')
