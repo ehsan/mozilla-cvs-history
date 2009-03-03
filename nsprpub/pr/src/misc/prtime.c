@@ -257,11 +257,7 @@ PR_ExplodeTime(
  *
  *------------------------------------------------------------------------
  */
-#if defined(HAVE_WATCOM_BUG_2)
-PRTime __pascal __export __loadds
-#else
 PR_IMPLEMENT(PRTime)
-#endif
 PR_ImplodeTime(const PRExplodedTime *exploded)
 {
     PRExplodedTime copy;
