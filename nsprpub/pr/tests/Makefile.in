@@ -527,6 +527,8 @@ endif # AIX_PRE_4_2
 
 
 ifeq ($(OS_ARCH),WINCE)
+$(OBJS): $(OBJDIR)/%.$(OBJ_SUFFIX): nst_wince.h
+
 # WinCE HAS to be different.  Turns out that the OS swallows crashes
 #   and returns a result code of zero -- an indication of success for
 #   the shell script.  AND, WinCE does not really have a good shell 
