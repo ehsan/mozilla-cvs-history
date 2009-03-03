@@ -4768,16 +4768,6 @@ interrupt:
                     newifp->frame.regs = NULL;
                     newifp->frame.spbase = NULL;
 
-                    /* Call the debugger hook if present. */
-                    hook = cx->debugHooks->callHook;
-                    if (hook) {
-                        newifp->hookData = hook(cx, &newifp->frame, JS_TRUE, 0,
-                                                cx->debugHooks->callHookData);
-                        LOAD_INTERRUPT_HANDLER(cx);
-                    } else {
-                        newifp->hookData = NULL;
-                    }
-
                     /* Scope with a call object parented by callee's parent. */
                     if (JSFUN_HEAVYWEIGHT_TEST(fun->flags) &&
                         !js_GetCallObject(cx, &newifp->frame, parent)) {
@@ -4799,6 +4789,16 @@ interrupt:
                     regs.pc = script->code;
                     newifp->frame.regs = &regs;
                     cx->fp = fp = &newifp->frame;
+
+                    /* Call the debugger hook if present. */
+                    hook = cx->debugHooks->callHook;
+                    if (hook) {
+                        newifp->hookData = hook(cx, &newifp->frame, JS_TRUE, 0,
+                                                cx->debugHooks->callHookData);
+                        LOAD_INTERRUPT_HANDLER(cx);
+                    } else {
+                        newifp->hookData = NULL;
+                    }
 
                     inlineCallCount++;
                     JS_RUNTIME_METER(rt, inlineCalls);
