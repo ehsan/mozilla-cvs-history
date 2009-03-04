@@ -50,6 +50,8 @@
 #include "nsICookieManager.h"
 #include "nsISimpleEnumerator.h"
 
+static NSString* const kCookieNullPlaceholderString = @"<null>";
+
 // Xcode 2.x's ld dead-strips this symbol.  Xcode 3.0's ld is fine.
 asm(".no_dead_strip .objc_class_name_CHCookieStorage");
 
@@ -66,16 +68,22 @@ asm(".no_dead_strip .objc_class_name_CHCookieStorage");
 
   nsCAutoString val;
   geckoCookie->GetHost(val);
-  [properties setObject:[NSString stringWithCString:val.get()] forKey:NSHTTPCookieDomain];
+  [properties setObject:[NSString stringWithUTF8String:val.get()] forKey:NSHTTPCookieDomain];
 
   geckoCookie->GetName(val);
-  [properties setObject:[NSString stringWithCString:val.get()] forKey:NSHTTPCookieName];
+  // NSHTTPCookie (and RFC 2109 and RFC 2965) requires that cookies have a name.
+  // Core doesn't and will happily set nameless cookies. Substitute a placeholder
+  // string for the missing name so NSHTTPCookie doesn't choke on it.
+  if (val.Length() == 0)
+    [properties setObject:kCookieNullPlaceholderString forKey:NSHTTPCookieName];
+  else
+    [properties setObject:[NSString stringWithUTF8String:val.get()] forKey:NSHTTPCookieName];
 
   geckoCookie->GetPath(val);
-  [properties setObject:[NSString stringWithCString:val.get()] forKey:NSHTTPCookiePath];
+  [properties setObject:[NSString stringWithUTF8String:val.get()] forKey:NSHTTPCookiePath];
 
   geckoCookie->GetValue(val);
-  [properties setObject:[NSString stringWithCString:val.get()] forKey:NSHTTPCookieValue];
+  [properties setObject:[NSString stringWithUTF8String:val.get()] forKey:NSHTTPCookieValue];
 
   PRBool secure = PR_FALSE;
   geckoCookie->GetIsSecure(&secure);
@@ -169,8 +177,13 @@ static CHCookieStorage* sCookieStorage = nil;
 {
   if (!mManager)
     return;
+  NSString* cookieName = [cookie name];
+  // Look for the placeholder string and replace it with an empty string.
+  if ([cookieName isEqualToString:kCookieNullPlaceholderString])
+    cookieName = @"";
+
   mManager->Remove(nsDependentCString([[cookie domain] UTF8String]),
-                   nsDependentCString([[cookie name] UTF8String]),
+                   nsDependentCString([cookieName UTF8String]),
                    nsDependentCString([[cookie path] UTF8String]),
                    PR_FALSE);  // don't block permanently
 }
