@@ -904,7 +904,7 @@ if test "${enable_symbian_target+set}" = set; then
   enableval="$enable_symbian_target"
   OS_TARGET=`echo $enableval | tr a-z A-Z`
 else
-  OS_TARGET=GCCE
+  OS_TARGET=
 fi
 
 
