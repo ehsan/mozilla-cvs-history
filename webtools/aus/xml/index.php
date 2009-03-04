@@ -53,6 +53,20 @@ require_once('./inc/init.php');
 // Instantiate XML object.
 $xml = new Xml();
 
+//Are we behind a proxy and given the IP via an alternate enviroment variable? If so, use it.
+if (!empty($_SERVER["HTTP_X_FORWARDED_FOR"])) {
+    list($ip) = explode(', ',$_SERVER["HTTP_X_FORWARDED_FOR"]);
+} else {
+    $ip = $_SERVER["REMOTE_ADDR"];
+}
+
+
+//We need to give the user a unique cookie and make it expire in 5 years.
+if (!array_key_exists('aus', $_COOKIE)) {
+    setcookie('aus', $ip . '.' . microtime(true), time() + 157784630, '/');
+}
+
+
 // Check to see if the user is explicitly requesting an update.  If they are,
 // skip throttling.  If they aren't, and throttling is enabled, randomly serve
 // updates based on the configured random seed.
@@ -64,12 +78,6 @@ if ( (empty($_GET['force']) || $_GET['force']!=1) &&
 
     if (defined('THROTTLE_LOGGING') && THROTTLE_LOGGING) {
 
-        //Are we behind a proxy and given the IP via an alternate enviroment variable? If so, use it.
-        if (!empty($_SERVER["HTTP_X_FORWARDED_FOR"])) {
-            $ip = $_SERVER["HTTP_X_FORWARDED_FOR"];
-        } else {
-            $ip = $_SERVER["REMOTE_ADDR"];
-        }
         error_log('AUS2 THROTTLE: '.$ip.' '.$_SERVER['REQUEST_URI']);
     }
 
