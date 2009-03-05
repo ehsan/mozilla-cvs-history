@@ -100,6 +100,21 @@ else
 endif
 endif
 
+# Need -fno-strict-aliasing because prdtoa.c violates strict aliasing rules
+# (bug 439144).
+#
+# The dtoa.c test program won't pass without -ffloat-store in optimized
+# builds, but I don't know why (may be related to bug 270502).
+ifeq ($(OS_TARGET),Linux)
+$(OBJDIR)/prdtoa.$(OBJ_SUFFIX): prdtoa.c
+	@$(MAKE_OBJDIR)
+ifdef NEED_ABSOLUTE_PATH
+	$(CC) -o $@ -c $(CFLAGS) -ffloat-store -fno-strict-aliasing $(call abspath,$<)
+else
+	$(CC) -o $@ -c $(CFLAGS) -ffloat-store -fno-strict-aliasing $<
+endif
+endif
+
 #
 # Generate prerr.h, prerr.c, and prerr.properties from prerr.et.
 #
