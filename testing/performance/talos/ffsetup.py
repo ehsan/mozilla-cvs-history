@@ -157,7 +157,7 @@ def InitializeNewProfile(browser_path, process, browser_wait, extra_args, profil
                                                               process,
                                                               browser_wait,
                                                               PROFILE_REGEX,
-                                                              30)
+                                                              60)
   if (not timed_out):
     print match
   else:
