@@ -57,6 +57,7 @@ import time
 import sys
 import subprocess
 import utils
+import glob
 from utils import talosError
 
 import ffprocess
@@ -130,6 +131,28 @@ def cleanupProfile(dir, browser_config):
     ffsetup.MakeDirectoryContentsWritable(dir)
     shutil.rmtree(dir)
 
+def checkForCrashes(browser_config, profile_dir):
+    if platform.system() in ('Windows', 'Microsoft'):
+        stackwalkpaths = ['win32', 'minidump_stackwalk.exe']
+    elif platform.system() == 'Linux':
+        stackwalkpaths = ['linux', 'minidump_stackwalk']
+    elif platform.system() == 'Darwin':
+        stackwalkpaths = ['osx', 'minidump_stackwalk']
+    else:
+        return
+    stackwalkbin = os.path.join(os.path.dirname(__file__), 'breakpad', *stackwalkpaths)
+
+    found = False
+    for dump in glob.glob(os.path.join(profile_dir, 'minidumps', '*.dmp')):
+        utils.noisy("Found crashdump: " + dump)
+        if browser_config['symbols_path']:
+            subprocess.call([stackwalkbin, dump, browser_config['symbols_path']])
+        os.remove(dump)
+        found = True
+
+    if found:
+        raise talosError("crash during run")
+
 def runTest(browser_config, test_config):
   """
   Runs an url based test on the browser as specified in the browser_config dictionary
@@ -146,7 +169,14 @@ def runTest(browser_config, test_config):
   all_browser_results = []
   all_counter_results = []
   utils.setEnvironmentVars(browser_config['env'])
+  utils.setEnvironmentVars({'MOZ_CRASHREPORTER_NO_REPORT': '1'})
 
+  if browser_config['symbols_path']:
+      utils.setEnvironmentVars({'MOZ_CRASHREPORTER': '1'})
+  else:
+      utils.setEnvironmentVars({'MOZ_CRASHREPORTER_DISABLE': '1'})
+
+  profile_dir = None
 
   try:
     if checkAllProcesses(browser_config):
@@ -261,6 +291,8 @@ def runTest(browser_config, test_config):
       if counters:
         cm.stopMonitor()
   
+      checkForCrashes(browser_config, profile_dir)
+
       utils.debug("Completed test with: " + browser_results)
   
       all_browser_results.append(browser_results)
@@ -277,6 +309,13 @@ def runTest(browser_config, test_config):
       if counters:
         cm.stopMonitor()
       cleanupProcesses(browser_config)
+
+      if profile_dir:
+          try:
+              checkForCrashes(browser_config, profile_dir)
+          except talosError:
+              pass
+
       if vars().has_key('temp_dir'):
         cleanupProfile(temp_dir, browser_config)
     except talosError, te:

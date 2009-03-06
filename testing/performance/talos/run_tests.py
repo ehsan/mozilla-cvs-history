@@ -458,6 +458,7 @@ def test_file(filename):
   browser_config = {'preferences'  : yaml_config['preferences'],
                     'extensions'   : yaml_config['extensions'],
                     'browser_path' : yaml_config['browser_path'],
+                    'symbols_path' : yaml_config.get('symbols_path', None),
                     'browser_wait' : yaml_config['browser_wait'],
                     'process'      : yaml_config['process'],
                     'extra_args'   : yaml_config['extra_args'],
