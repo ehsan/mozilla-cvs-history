@@ -367,6 +367,10 @@ static FlashblockWhitelistManager* sFlashblockWhitelistManager = nil;
   // Make sure we release core objects before XPCOM shuts down; by the time we
   // get to dealloc it may already be too late.
   NS_IF_RELEASE(mBlockedPopups);  // NULLs out the pointer
+
+  // Form fill hooks in to Gecko, so tear it down immediately as well.
+  [mFormFillController release];
+  mFormFillController = nil;
 }
 
 - (BOOL)isFlipped

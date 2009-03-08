@@ -152,6 +152,7 @@ NS_IMETHODIMP FormFillListener::HandleEvent(nsIDOMEvent* aEvent)
 
   [mResults release];
   [mKeychainSession release];
+  [mPopupWindow closePopup];
   [mPopupWindow release];
   NS_IF_RELEASE(mListener);
 
