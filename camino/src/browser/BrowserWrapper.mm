@@ -232,7 +232,7 @@ static FlashblockWhitelistManager* sFlashblockWhitelistManager = nil;
 - (void)setSiteIconImage:(NSImage*)inSiteIcon;
 - (void)setSiteIconURI:(NSString*)inSiteIconURI;
 
-- (void)updateSiteIconImage:(NSImage*)inSiteIcon withURI:(NSString *)inSiteIconURI loadError:(BOOL)inLoadError;
+- (void)updateSiteIconImage:(NSImage*)inSiteIcon withURI:(NSString *)inSiteIconURI status:(ERequestStatus)inRequestStatus;
 
 - (void)updateStatusString:(NSString*)statusString withPriority:(StatusPriority)priority;
 
@@ -740,7 +740,7 @@ static FlashblockWhitelistManager* sFlashblockWhitelistManager = nil;
   }
 }
 
-- (void)onLocationChange:(NSString*)urlSpec isNewPage:(BOOL)newPage requestSucceeded:(BOOL)requestOK
+- (void)onLocationChange:(NSString*)urlSpec isNewPage:(BOOL)newPage requestStatus:(ERequestStatus)requestStatus
 {
   if (newPage) {
     // Defer hiding of extra views until we've loaded the new page.
@@ -770,7 +770,7 @@ static FlashblockWhitelistManager* sFlashblockWhitelistManager = nil;
     [mDetectedSearchPlugins removeAllObjects];
 
     NSString* faviconURI = [SiteIconProvider defaultFaviconLocationStringFromURI:urlSpec];
-    if (requestOK && [faviconURI length] > 0) {
+    if (requestStatus == eRequestSucceeded && [faviconURI length] > 0) {
       SiteIconProvider* faviconProvider = [SiteIconProvider sharedFavoriteIconProvider];
 
       // if the favicon uri has changed, do the favicon load
@@ -784,7 +784,7 @@ static FlashblockWhitelistManager* sFlashblockWhitelistManager = nil;
           cachedImageURI = faviconURI;
 
         // immediately update the site icon (to the cached one, or the default)
-        [self updateSiteIconImage:cachedImage withURI:cachedImageURI loadError:NO];
+        [self updateSiteIconImage:cachedImage withURI:cachedImageURI status:eRequestSucceeded];
 
         if ([[PreferenceManager sharedInstance] getBooleanPref:kGeckoPrefEnableFavicons withSuccess:NULL]) {
           // note that this is the only time we hit the network for site icons.
@@ -804,7 +804,7 @@ static FlashblockWhitelistManager* sFlashblockWhitelistManager = nil;
       else
       	faviconURI = @"";
 
-      [self updateSiteIconImage:nil withURI:faviconURI loadError:!requestOK];
+      [self updateSiteIconImage:nil withURI:faviconURI status:requestStatus];
     }
   }
 
@@ -1319,15 +1319,17 @@ static FlashblockWhitelistManager* sFlashblockWhitelistManager = nil;
 }
 
 // A nil inSiteIcon image indicates that we should use the default icon
-- (void)updateSiteIconImage:(NSImage*)inSiteIcon withURI:(NSString *)inSiteIconURI loadError:(BOOL)inLoadError
+- (void)updateSiteIconImage:(NSImage*)inSiteIcon withURI:(NSString *)inSiteIconURI status:(ERequestStatus)inRequestStatus
 {
   BOOL     resetTabIcon     = NO;
   BOOL     tabIconDraggable = YES;
   NSImage* siteIcon         = inSiteIcon;
 
-  if (![mSiteIconURI isEqualToString:inSiteIconURI] || inLoadError) {
+  if (![mSiteIconURI isEqualToString:inSiteIconURI] || inRequestStatus != eRequestSucceeded) {
     if (!siteIcon) {
-      if (inLoadError)
+      if (inRequestStatus == eRequestBlocked)
+        siteIcon = [NSImage imageNamed:@"popup_blocked_icon"];
+      else if (inRequestStatus != eRequestSucceeded)
         siteIcon = [NSImage imageNamed:@"error_page_site_icon"];
       else
         siteIcon = [NSImage imageNamed:@"globe_ico"];
@@ -1385,7 +1387,7 @@ static FlashblockWhitelistManager* sFlashblockWhitelistManager = nil;
       siteIconURI = @"";	// go back to default image
 
     if ([pageURI isEqualToString:[self currentURI]]) // make sure it's for the current page
-      [self updateSiteIconImage:iconImage withURI:siteIconURI loadError:NO];
+      [self updateSiteIconImage:iconImage withURI:siteIconURI status:eRequestSucceeded];
   }
 }
 

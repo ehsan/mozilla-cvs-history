@@ -60,6 +60,17 @@ class nsISupports;
 class nsISecureBrowserUI;
 class nsIDOMNSEvent;
 
+// Page load outcomes: succeeded means the page loaded successfully,
+// failed means there was an error (e.g., 404), and blocked means
+// that the page was flagged as possible phishing/malware (in which
+// case the user is seeing our warning overlay, rather than the page).
+typedef enum
+{
+  eRequestSucceeded,
+  eRequestFailed,
+  eRequestBlocked
+} ERequestStatus;
+
 // Protocol implemented by anyone interested in progress
 // related to a BrowserView. A listener should explicitly
 // register itself with the view using the addListener
@@ -78,7 +89,7 @@ class nsIDOMNSEvent;
 - (void)onProgressChange:(long)currentBytes outOf:(long)maxBytes;
 - (void)onProgressChange64:(long long)currentBytes outOf:(long long)maxBytes;
 
-- (void)onLocationChange:(NSString*)urlSpec isNewPage:(BOOL)newPage requestSucceeded:(BOOL)requestOK;
+- (void)onLocationChange:(NSString*)urlSpec isNewPage:(BOOL)newPage requestStatus:(ERequestStatus)requestStatus;
 - (void)onStatusChange:(NSString*)aMessage;
 - (void)onSecurityStateChange:(unsigned long)newState;
 // Called when a context menu should be shown.

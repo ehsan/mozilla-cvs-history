@@ -262,7 +262,7 @@ extern NSString* const kBrowserInstanceClosedNotification;
 - (void)onResourceLoadingCompleted:(NSValue*)resourceIdentifier;
 - (void)onProgressChange64:(long long)currentBytes outOf:(long long)maxBytes;
 - (void)onProgressChange:(long)currentBytes outOf:(long)maxBytes;
-- (void)onLocationChange:(NSString*)urlSpec isNewPage:(BOOL)newPage requestSucceeded:(BOOL)requestOK;
+- (void)onLocationChange:(NSString*)urlSpec isNewPage:(BOOL)newPage requestStatus:(ERequestStatus)requestStatus;
 - (void)onStatusChange:(NSString*)aMessage;
 - (void)onSecurityStateChange:(unsigned long)newState;
 - (void)onShowTooltip:(NSPoint)where withText:(NSString*)text;

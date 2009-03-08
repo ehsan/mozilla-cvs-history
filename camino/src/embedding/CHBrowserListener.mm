@@ -69,6 +69,9 @@
 #include "nsNetError.h"
 #include "nsNetUtil.h"
 
+// Safe browsing constants
+#include "nsURILoader.h"
+
 #import "CHBrowserView.h"
 
 #import "CHBrowserListener.h"
@@ -729,12 +732,15 @@ CHBrowserListener::OnLocationChange(nsIWebProgress *aWebProgress, nsIRequest *aR
   if (windowForProgress != ourWindow)
     return NS_OK;
 
-  BOOL requestOK = YES;
+  ERequestStatus requestStatus = eRequestSucceeded;
   if (aRequest)  // aRequest can be null (e.g. for relative anchors)
   {
-    nsresult requestStatus = NS_OK;
-    aRequest->GetStatus(&requestStatus);
-    requestOK = NS_SUCCEEDED(requestStatus);
+    nsresult status = NS_OK;
+    aRequest->GetStatus(&status);
+    if (status == NS_ERROR_MALWARE_URI || status == NS_ERROR_PHISHING_URI)
+      requestStatus = eRequestBlocked;
+    else if (!NS_SUCCEEDED(status))
+      requestStatus = eRequestFailed;
   }
   
   nsCAutoString spec;
@@ -750,7 +756,7 @@ CHBrowserListener::OnLocationChange(nsIWebProgress *aWebProgress, nsIRequest *aR
   NSEnumerator* enumerator = [mListeners objectEnumerator];
   id<CHBrowserListener> obj;
   while ((obj = [enumerator nextObject]))
-    [obj onLocationChange:str isNewPage:(aRequest != nsnull) requestSucceeded:requestOK];
+    [obj onLocationChange:str isNewPage:(aRequest != nsnull) requestStatus:requestStatus];
 
   return NS_OK;
 }
