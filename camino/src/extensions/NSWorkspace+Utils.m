@@ -79,6 +79,10 @@
 - (NSURL*)defaultBrowserURL
 {
   NSString* defaultBundleId = [(NSString*)LSCopyDefaultHandlerForURLScheme(CFSTR("http")) autorelease];
+  // Sometimes LaunchServices likes to pretend there's no default browser.
+  // If that happens, we'll assume it's probably Safari.
+  if (!defaultBundleId)
+    defaultBundleId = @"com.apple.safari";
   return [self urlOfApplicationWithIdentifier:defaultBundleId];
 }
 
