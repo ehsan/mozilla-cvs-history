@@ -450,7 +450,7 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest,
   nsIDocument* doc = thisContent->GetOwnerDoc();
   if (!doc) {
     Fallback(PR_FALSE);
-    return NS_BINDING_ABORTED;    
+    return NS_BINDING_ABORTED;
   }
 
   PRInt16 shouldProcess = nsIContentPolicy::ACCEPT;
