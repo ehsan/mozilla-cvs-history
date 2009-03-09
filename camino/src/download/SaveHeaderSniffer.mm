@@ -280,9 +280,11 @@ nsHeaderSniffer::PerformSave(nsIURI* inOriginalURI)
     }
     
     // One last case to handle about:blank and other fruity untitled pages.
-    if (defaultFileName.IsEmpty())
-        defaultFileName = NS_LITERAL_STRING("untitled");		// XXX localize
-        
+    if (defaultFileName.IsEmpty()) {
+        NSString* localizedUntitledFilename = NSLocalizedString(@"UntitledPageTitle", nil);
+        CopyUTF8toUTF16([localizedUntitledFilename UTF8String], defaultFileName);
+    }
+
     // Validate the file name to ensure legality.
     for (PRUint32 i = 0; i < defaultFileName.Length(); i++)
         if (defaultFileName[i] == ':' || defaultFileName[i] == '/')
