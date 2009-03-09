@@ -256,6 +256,8 @@
 		3489ADCC0753B717005ADF6C /* ABAddressBook+Utils.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3489ADCA0753B717005ADF6C /* ABAddressBook+Utils.mm */; };
 		3489ADCE0753B717005ADF6C /* ABAddressBook+Utils.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3489ADCA0753B717005ADF6C /* ABAddressBook+Utils.mm */; };
 		34D112DE08E9B17400989FD5 /* dl_trash.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 34D112DD08E9B17400989FD5 /* dl_trash.tiff */; };
+		3D9419800F559B2F00227277 /* blockedSite.xhtml in Resources */ = {isa = PBXBuildFile; fileRef = 3D94197F0F559B2F00227277 /* blockedSite.xhtml */; };
+		3D9419810F559B2F00227277 /* blockedSite.xhtml in Resources */ = {isa = PBXBuildFile; fileRef = 3D94197F0F559B2F00227277 /* blockedSite.xhtml */; };
 		3F12FC57072E8ECB00995ED9 /* libxpcom_core.dylib in Copy Libraries */ = {isa = PBXBuildFile; fileRef = 3F12FC56072E8ECB00995ED9 /* libxpcom_core.dylib */; };
 		3F12FD3107312CCD00995ED9 /* libxpcom_core.dylib in Copy Libraries */ = {isa = PBXBuildFile; fileRef = 3F12FC56072E8ECB00995ED9 /* libxpcom_core.dylib */; };
 		3F27D94D05DB2600007B543D /* NSSplitView+Utils.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3F27D94B05DB2600007B543D /* NSSplitView+Utils.mm */; };
@@ -2599,6 +2601,7 @@
 		3489ADC90753B717005ADF6C /* ABAddressBook+Utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "ABAddressBook+Utils.h"; path = "src/extensions/ABAddressBook+Utils.h"; sourceTree = "<group>"; };
 		3489ADCA0753B717005ADF6C /* ABAddressBook+Utils.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "ABAddressBook+Utils.mm"; path = "src/extensions/ABAddressBook+Utils.mm"; sourceTree = "<group>"; };
 		34D112DD08E9B17400989FD5 /* dl_trash.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = dl_trash.tiff; path = resources/images/toolbar/dl_trash.tiff; sourceTree = SOURCE_ROOT; };
+		3D94197F0F559B2F00227277 /* blockedSite.xhtml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; name = blockedSite.xhtml; path = resources/application/blockedSite.xhtml; sourceTree = "<group>"; };
 		3F12FC56072E8ECB00995ED9 /* libxpcom_core.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libxpcom_core.dylib; path = ../dist/Embed/libxpcom_core.dylib; sourceTree = SOURCE_ROOT; };
 		3F22CC1303DF42A200026DCE /* Charset.dict */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = Charset.dict; path = resources/application/Charset.dict; sourceTree = "<group>"; };
 		3F27D94A05DB2600007B543D /* NSSplitView+Utils.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = "NSSplitView+Utils.h"; path = "src/extensions/NSSplitView+Utils.h"; sourceTree = "<group>"; };
@@ -3746,6 +3749,7 @@
 				33E1EA970D358DE200910BBD /* caminosearch.xpt */,
 				DE4044910ED0A96F00057E17 /* Gecko Strings */,
 				DEE8101D0EFB7D2E006ACC7D /* aquaSelect.css */,
+				3D94197F0F559B2F00227277 /* blockedSite.xhtml */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -5652,6 +5656,7 @@
 				DE40448F0ED09D1E00057E17 /* global_locale_languageNames_properties.strings in Resources */,
 				000D0A9C0ED9BD8100A6C2F0 /* tabOverview.tiff in Resources */,
 				DEE8101E0EFB7D2E006ACC7D /* aquaSelect.css in Resources */,
+				3D9419800F559B2F00227277 /* blockedSite.xhtml in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5882,6 +5887,7 @@
 				DE40446B0ED09D1E00057E17 /* global_locale_languageNames_properties.strings in Resources */,
 				000D0A9D0ED9BD8100A6C2F0 /* tabOverview.tiff in Resources */,
 				DEE8101F0EFB7D2E006ACC7D /* aquaSelect.css in Resources */,
+				3D9419810F559B2F00227277 /* blockedSite.xhtml in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

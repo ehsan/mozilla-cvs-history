@@ -518,3 +518,17 @@
 "GrowlDownloadFailed" = "Download Failed";
 "GrowlDownloadComplete" = "Download Complete";
 "GrowlShortDownloadComplete" = "Short Download Complete";
+
+/* Safe Browsing */
+"PhishingTitleText" = "Reported Web Forgery!";
+"MalwareTitleText" = "Reported Attack Site!";
+/* For the short descriptions, please do not translate the contents of the <span> tags. 
+   They will be replaced at runtime with a domain name. */
+"PhishingShortDescText" = "This web site at <span id='phishing_sitename'/> has been reported as a web forgery and has been blocked based on your security preferences.";
+"MalwareShortDescText" = "This web site at <span id='malware_sitename'/> has been reported as an attack site and has been blocked based on your security preferences.";
+/* To create paragraphs within the long description text, please wrap each paragraph in <p></p> tags */
+"PhishingLongDescText" = "<p>Web forgeries are designed to trick you into revealing personal or financial information by imitating sources you may trust.</p><p>Entering any information on this web page may result in identity theft or other fraud.</p>";
+"MalwareLongDescText" = "<p>Attack sites try to install programs that steal private information, use your computer to attack others, or damage your system.</p><p>Some attack sites intentionally distribute harmful software, but many are compromised without the knowledge or permission of their owners.</p>";
+"GetMeOutButtonLabel" = "Get me out of here!";
+"MoreInformationButtonLabel" = "Why was this site blocked?";
+"IgnoreWarningButtonLabel" = "Ignore this warning";

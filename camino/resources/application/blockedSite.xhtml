@@ -2,7 +2,6 @@
 
 <!DOCTYPE html [
   <!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
-  <!ENTITY % blockedSiteDTD SYSTEM "chrome://global/locale/safebrowsing/blockedSite-strings.dtd">
   %blockedSiteDTD;
 ]>
 
@@ -179,36 +178,36 @@
     
       <!-- Error Title -->
       <div id="errorTitle">
-        <h1 id="errorTitleText_phishing">&safeb.blocked.phishing.title;</h1>
-        <h1 id="errorTitleText_malware">&safeb.blocked.malware.title;</h1>
+        <h1 id="errorTitleText_phishing">PhishingTitleText</h1>
+        <h1 id="errorTitleText_malware">MalwareTitleText</h1>
       </div>
       
       <div id="errorLongContent">
       
         <!-- Short Description -->
         <div id="errorShortDesc">
-          <p id="errorShortDescText_phishing">&safeb.blocked.phishing.shortDesc;</p>
-          <p id="errorShortDescText_malware">&safeb.blocked.malware.shortDesc;</p>
+          <p id="errorShortDescText_phishing">PhishingShortDescText</p>
+          <p id="errorShortDescText_malware">MalwareShortDescText</p>
         </div>
 
         <!-- Long Description -->
         <div id="errorLongDesc">
-          <p id="errorLongDescText_phishing">&safeb.blocked.phishing.longDesc;</p>
-          <p id="errorLongDescText_malware">&safeb.blocked.malware.longDesc;</p>
+          <p id="errorLongDescText_phishing">PhishingLongDescText</p>
+          <p id="errorLongDescText_malware">MalwareLongDescText</p>
         </div>
         
         <!-- Action buttons -->
         <div id="buttons">
           <!-- Commands handled in browser.js -->
           <xul:button xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-                      id="getMeOutButton" label="&safeb.button.getMeOut.label;"/>
+                      id="getMeOutButton" label="GetMeOutButtonLabel"/>
           <xul:button xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-                      id="whyBlockedButton" label="&safeb.button.moreInformation.label;"/>
+                      id="whyBlockedButton" label="MoreInformationButtonLabel"/>
         </div>
       </div>
       <div id="ignoreWarning">
         <xul:button xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-                    id="ignoreWarningButton" label="&safeb.button.ignoreWarning.label;"/>
+                    id="ignoreWarningButton" label="IgnoreWarningButtonLabel"/>
       </div>
     </div>
     <!--

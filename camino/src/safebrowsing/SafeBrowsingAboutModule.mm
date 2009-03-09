@@ -36,18 +36,29 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import <Cocoa/Cocoa.h>
+#import "NSString+Gecko.h"
 #include "SafeBrowsingAboutModule.h"
 
 #include "nsCOMPtr.h"
 #include "nsIChannel.h"
-#include "nsIIOService.h"
 #include "nsIServiceManager.h"
 #include "nsNetCID.h"
 #include "nsString.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrincipal.h"
+#include "nsStringStream.h"
+#include "nsNetUtil.h"
 
-#define BLOCKED_PAGE_CHROME_URL "chrome://global/locale/safebrowsing/blockedSite.xhtml"
+// Placeholders in the blocked site HTML page to replace with localized strings.
+static NSString *const kPhishingTitleText = @"PhishingTitleText";
+static NSString *const kMalwareTitleText = @"MalwareTitleText";
+static NSString *const kPhishingShortDescText = @"PhishingShortDescText";
+static NSString *const kMalwareShortDescText = @"MalwareShortDescText";
+static NSString *const kPhishingLongDescText = @"PhishingLongDescText";
+static NSString *const kMalwareLongDescText = @"MalwareLongDescText";
+static NSString *const kMoreInformationButtonLabel = @"MoreInformationButtonLabel";
+static NSString *const kGetMeOutButtonLabel = @"GetMeOutButtonLabel";
+static NSString *const kIgnoreWarningButtonLabel = @"IgnoreWarningButtonLabel";
 
 NS_IMPL_ISUPPORTS1(CHSafeBrowsingAboutModule, nsIAboutModule)
 
@@ -59,35 +70,34 @@ CHSafeBrowsingAboutModule::NewChannel(nsIURI *aURI, nsIChannel **result)
 
   nsresult rv;
 
-  nsCOMPtr<nsIIOService> ioService = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
+  nsCAutoString pageSource;
+  rv = GetBlockedPageSource(pageSource);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString blockedSitePageURL;
-  blockedSitePageURL.AssignLiteral(BLOCKED_PAGE_CHROME_URL);
+  nsCOMPtr<nsIInputStream> inputStream;
+  rv = NS_NewCStringInputStream(getter_AddRefs(inputStream), pageSource);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIChannel> blockedSiteChannel;
-  rv = ioService->NewChannel(blockedSitePageURL, "UTF8", aURI, getter_AddRefs(blockedSiteChannel));
-  if (NS_FAILED(rv))
-    return rv;
+  nsIChannel* channel = NULL;
+  rv = NS_NewInputStreamChannel(&channel, aURI, inputStream,
+                                NS_LITERAL_CSTRING("application/xhtml+xml"),
+                                NS_LITERAL_CSTRING("UTF8"));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  blockedSiteChannel->SetOriginalURI(aURI);
+  channel->SetOriginalURI(aURI);
 
   nsCOMPtr<nsIScriptSecurityManager> securityManager = 
     do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIPrincipal> principal;
   rv = securityManager->GetCodebasePrincipal(aURI, getter_AddRefs(principal));
-  if (NS_FAILED(rv))
-    return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = blockedSiteChannel->SetOwner(principal);
-  if (NS_FAILED(rv))
-    return rv;
+  rv = channel->SetOwner(principal);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  *result = blockedSiteChannel;
+  *result = channel;
   NS_ADDREF(*result);
   return NS_OK;
 }
@@ -112,4 +122,42 @@ CHSafeBrowsingAboutModule::CreateSafeBrowsingAboutModule(nsISupports *aOuter, RE
   nsresult rv = aboutModule->QueryInterface(aIID, aResult);
   NS_RELEASE(aboutModule);
   return rv;
+}
+
+nsresult CHSafeBrowsingAboutModule::GetBlockedPageSource(nsACString &result) {
+
+  NSString *pathToBlockedSitePageSource = [[NSBundle mainBundle] pathForResource:@"blockedSite"
+                                                                          ofType:@"xhtml"];
+
+  NSMutableString *blockedSitePageSource = [NSMutableString stringWithContentsOfFile:pathToBlockedSitePageSource
+                                                                            encoding:NSUTF8StringEncoding
+                                                                               error:NULL];
+
+  if (![blockedSitePageSource length] > 0)
+    return NS_ERROR_FILE_NOT_FOUND;
+
+  // Localize the blocked page by swapping out placeholder strings.
+  NSArray *stringPlaceholdersInPage = [NSArray arrayWithObjects:kPhishingTitleText,
+                                                                kMalwareTitleText,
+                                                                kPhishingShortDescText,
+                                                                kMalwareShortDescText,
+                                                                kPhishingLongDescText,
+                                                                kMalwareLongDescText,
+                                                                kMoreInformationButtonLabel,
+                                                                kGetMeOutButtonLabel,
+                                                                kIgnoreWarningButtonLabel,
+                                                                nil];
+
+  NSEnumerator *placeholderEnum = [stringPlaceholdersInPage objectEnumerator];
+  NSString *currentPlaceholder = nil;
+  while ((currentPlaceholder = [placeholderEnum nextObject])) {
+    [blockedSitePageSource replaceOccurrencesOfString:currentPlaceholder
+                                           withString:NSLocalizedString(currentPlaceholder, nil)
+                                              options:NULL
+                                                range:NSMakeRange(0, [blockedSitePageSource length])];    
+  }
+
+  result.Assign([blockedSitePageSource UTF8String]);
+
+  return NS_OK;
 }

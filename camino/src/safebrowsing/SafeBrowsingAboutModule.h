@@ -54,7 +54,10 @@ class CHSafeBrowsingAboutModule : public nsIAboutModule
   CHSafeBrowsingAboutModule() {}
   virtual ~CHSafeBrowsingAboutModule() {}
 
-  static NS_METHOD CreateSafeBrowsingAboutModule(nsISupports *aOuter, REFNSIID aIID, void **aResult);    
+  static NS_METHOD CreateSafeBrowsingAboutModule(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+
+ private:
+  nsresult GetBlockedPageSource(nsACString &result);
 };
 
 /* EDF643A9-8B38-472C-92A0-B6 3B EF B3 07 69 */
