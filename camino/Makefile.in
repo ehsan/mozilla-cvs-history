@@ -48,6 +48,7 @@ DIRS = \
 	feedhandlers \
 	flashblock \
 	idl \
+	pinstripe \
 	striptease \
 	safebrowsing \
 	$(NULL)
