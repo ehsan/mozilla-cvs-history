@@ -25,7 +25,7 @@ do
     ;;
     n) 
       # ignore nightly & talos builders
-      NIGHTLY_REGEXP='(nightly|talos)'
+      NIGHTLY_REGEXP='(nightly|talos|shark)'
     ;;
   esac
 done
