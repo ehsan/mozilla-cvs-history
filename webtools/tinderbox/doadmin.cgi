@@ -170,21 +170,15 @@ sub create_tree {
 
 sub admin_builds {
     my ($i,%active_buildnames, %scrape_buildnames, %warning_buildnames);
-
-    # Read build.dat
-    open(BD, "<", "$::tree_dir/$tree/build.dat");
-    while(<BD>){
-        my ($endtime,$buildtime,$bname) = split( /\|/ );
-        $active_buildnames{$bname} = 0;
-        $scrape_buildnames{$bname} = 0;
-        $warning_buildnames{$bname} = 0;
-    }
-    close(BD);
+    my (%all_buildnames);
 
     for $i (keys %form) {
         if ($i =~ m/^active_/ ) {
             $i =~ s/^active_//;
             $active_buildnames{$i} = 1;
+        } elsif ($i =~ m/^all_/ ) {
+            $i =~ s/^all_//;
+            $all_buildnames{$i} = 1;
         } elsif ($i =~ m/^scrape_/ ) {
             $i =~ s/^scrape_//;
             $scrape_buildnames{$i} = 1;
@@ -196,8 +190,8 @@ sub admin_builds {
 
     open(IGNORE, ">", "$::tree_dir/$tree/ignorebuilds.pl");
     print IGNORE '$ignore_builds = {' . "\n";
-    for $i (sort keys %active_buildnames){
-        if ($active_buildnames{$i} == 0){
+    for $i (sort keys %all_buildnames){
+        if (!defined($active_buildnames{$i})) {
             print IGNORE "\t\t'$i' => 1,\n";
         }
     }
@@ -206,8 +200,8 @@ sub admin_builds {
 
     open(SCRAPE, ">", "$::tree_dir/$tree/scrapebuilds.pl");
     print SCRAPE '$scrape_builds = {' . "\n";
-    for $i (sort keys %scrape_buildnames){
-        if ($scrape_buildnames{$i} == 1){
+    for $i (sort keys %all_buildnames){
+        if (defined($scrape_buildnames{$i}) && $scrape_buildnames{$i} == 1){
             print SCRAPE "\t\t'$i' => 1,\n";
         }
     }
@@ -216,8 +210,8 @@ sub admin_builds {
 
     open(WARNING, ">", "$::tree_dir/$tree/warningbuilds.pl");
     print WARNING '$warning_builds = {' . "\n";
-    for $i (sort keys %warning_buildnames){
-        if ($warning_buildnames{$i} == 1){
+    for $i (sort keys %all_buildnames){
+        if (defined($warning_buildnames{$i}) && $warning_buildnames{$i} == 1){
             print WARNING "\t\t'$i' => 1,\n";
         }
     }

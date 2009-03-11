@@ -162,7 +162,8 @@ Tinderbox is configured to show up to $::global_treedata->{$tree}->{who_days} da
     print "<B><font size=+1>Individual tree administration</font></b><br>";
     print "
 <table border=1>
-<tr><td><b>Active</b></td><td>Only checked builds are shown. Add <b><tt>&noignore=1</tt></b> to the tinderbox URL to override.</td></tr>
+<tr><td><b>Current</b></td><td>Indicates which builds are currently active relative to the current time window.</td></tr>
+<tr><td><b>Active</b></td><td>Checked builds are shown on builds page. Add <b><tt>&amp;noignore=1</tt></b> to the tinderbox URL to override.</td></tr>
 <tr><td><b>Scrape</b></td><td>Checked builds will have the logs scanned for a token of the form <b>TinderboxPrint:aaa,bbb,ccc</b>.<br>These values will show up as-is in the showbuilds.cgi output.</td></tr>
 <tr><td><b>Warnings</b></td><td>Checked builds will have the logs scanned for compiler warning messages.</td></tr>
 </table>
@@ -174,22 +175,32 @@ Tinderbox is configured to show up to $::global_treedata->{$tree}->{who_days} da
 <INPUT TYPE=HIDDEN NAME=tree VALUE='$safe_tree'>
 <INPUT TYPE=HIDDEN NAME=command VALUE=admin_builds>
 <TABLE BORDER=1>
-<TR><TD><B>Build</B></TD><TD><B>Active</B></TD><TD><B>Scrape</B></TD><TD><B>Warnings</B></TD></TR>
+<TR><TH>Build</TH><TH>Current</TH><TH>Active</TH><TH>Scrape</TH><TH>Warnings</TH></TR>
 ";
+    
+    foreach my $aname (@{$treedata->{build_names}},
+                       keys %{$treedata->{ignore_builds}},
+                       keys %{$treedata->{scrape_builds}},
+                       keys %{$treedata->{warning_builds}},
+                       ) {
+        push @names, $aname if (!grep(/^$aname$/, @names));
+    }
 
-    @names = sort (@{$treedata->{build_names}}) ;
 
-    for $i (@names){
+    for $i (sort @names) {
         if ($i ne "") {
             my $buildname = &value_encode($i);
+            my $current_status = (grep(/^$i$/, @{$treedata->{build_names}}) ? "CHECKED" : "");
             my $active_check = ($treedata->{ignore_builds}->{$i} != 0 ? "": "CHECKED=1" );
             my $scrape_check = ($treedata->{scrape_builds}->{$i} != 0 ? "CHECKED=1" : "" );
             my $warning_check = ($treedata->{warning_builds}->{$i} != 0 ? "CHECKED=1": "" );
             print "<TR>\n";
             print "<TD>$buildname</TD>\n";
+            print "\t<TD><INPUT TYPE=checkbox NAME='current_$buildname' $current_status DISABLED></TD>\n";
             print "<TD><INPUT TYPE=checkbox NAME='active_$buildname' $active_check ></TD>\n";
             print "<TD><INPUT TYPE=checkbox NAME='scrape_$buildname' $scrape_check ></TD>\n";
             print "<TD><INPUT TYPE=checkbox NAME='warning_$buildname' $warning_check ></TD>\n";
+            print "\t<INPUT TYPE=HIDDEN NAME='all_$buildname' CHECKED>\n";
             print "</TR>\n";
         }
     }
