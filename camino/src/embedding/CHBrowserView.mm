@@ -1172,6 +1172,8 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   if ([mimeType hasPrefix:@"text/"] ||
       [mimeType hasSuffix:@"+xml"] ||
       [mimeType isEqualToString:@"application/x-javascript"] ||
+      [mimeType isEqualToString:@"application/javascript"] ||
+      [mimeType isEqualToString:@"application/ecmascript"] ||
       [mimeType isEqualToString:@"application/xml"])
   {
     return YES;
