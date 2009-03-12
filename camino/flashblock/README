@@ -7,4 +7,5 @@ the contents of flashblock.jar.
 
 Camino's bundled Flashblock extension is currently synchronized with
 Flashblock 1.5.8 from
-http://downloads.mozdev.org/flashblock/flashblock-1.5.8.xpi.
+http://downloads.mozdev.org/flashblock/flashblock-1.5.8.xpi
+plus fixes from Flashblock cvs for bug 482433 and mozdev bug 19372.
