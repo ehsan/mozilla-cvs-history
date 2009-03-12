@@ -151,7 +151,7 @@ def checkForCrashes(browser_config, profile_dir):
         found = True
 
     if found:
-        raise talosError("crash during run")
+        raise talosError("crash during run (stack found)")
 
 def runTest(browser_config, test_config):
   """
