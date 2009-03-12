@@ -34,6 +34,7 @@ sub Execute {
     my $hgToolsRepo = $config->Get(var => 'hgToolsRepo');
     my $tagDir = $config->Get(var => 'tagDir');
     my $geckoBranchTag = $config->Get(var => 'geckoBranchTag');
+    my $bumpMilestoneTxt = $config->Get(var => 'bumpMilestoneTxt');
 
     my $releaseTag = $productTag . '_RELEASE';
     my $buildTag = $productTag . '_BUILD' . $build;
@@ -59,8 +60,8 @@ sub Execute {
 
     my @bumpFiles = ('client.mk', $moduleVer, $versionTxt);
 
-    # milestone changes only occur with Firefox releases
-    if ($product eq 'firefox') {
+    # milestone changes based on configuration
+    if ($bumpMilestoneTxt) {
         @bumpFiles = (@bumpFiles, $milestoneTxt);
     }
 
