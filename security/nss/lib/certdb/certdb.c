@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *    Aaron Spangler <aaron@spangler.ods.org>
+ *    Kaspar Brand <mozbugzilla@velox.ch>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,7 +39,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.97 2009/03/12 07:21:36 nelson%bolyard.com Exp $
+ * $Id: certdb.c,v 1.98 2009/03/12 08:53:51 nelson%bolyard.com Exp $
  */
 
 #include "nssilock.h"
