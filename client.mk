@@ -383,7 +383,6 @@ MODULES_NS_camino :=                            \
 MODULES_camino :=                               \
   $(MODULES_core)                               \
   mozilla/camino                                \
-  mozilla/themes                                \
   $(NULL)
 
 BOOTSTRAP_camino :=                             \
