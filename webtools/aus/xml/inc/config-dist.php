@@ -86,14 +86,12 @@ $nightlyChannels = array(
 // @todo replace this with a better datasource that can be easily managed via a GUI.
 $productBranchVersions = array(
     'Firefox'     =>  array(
-        '1.5.0.*' =>  '1.5.0.x',
-        '1.6a1'   =>  'trunk',
-        '1.*'     =>  '1.5',
         '2.0*'    =>  '2.0',
         '3.0*'   =>  'trunk',
-        '4.0*'    => 'mozilla-central',
         '3.1*'    => 'mozilla-1.9.1',
-        '3.2*'    => 'mozilla-central'
+        '3.5*'    => 'mozilla-1.9.1',
+        '3.2*'    => 'mozilla-central',
+        '3.6*'    => 'mozilla-central',
     ),
     'Thunderbird' =>  array(
         '1.5.0.*' =>  '1.5.0.x',
