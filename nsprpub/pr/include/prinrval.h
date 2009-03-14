@@ -79,7 +79,7 @@ typedef PRUint32 PRIntervalTime;
 **  They are used to indicate that the process should wait no time (return
 **  immediately) or wait forever (never time out), respectively.
 **  Note: PR_INTERVAL_NO_TIMEOUT passed as input to PR_Connect is 
-**  interpreted as use the OS'es connect timeout time
+**  interpreted as use the OS's connect timeout.
 **  
 ***********************************************************************/
 #define PR_INTERVAL_NO_WAIT 0UL
