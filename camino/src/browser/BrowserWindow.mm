@@ -198,7 +198,7 @@ static const int kEscapeKeyCode = 53;
 // Use |hasUnifiedToolbarAppearance && isMainWindow| when necessary.
 - (BOOL)hasUnifiedToolbarAppearance
 {
-  return [self styleMask] & NSUnifiedTitleAndToolbarWindowMask;
+  return ([self styleMask] & NSUnifiedTitleAndToolbarWindowMask) ? YES : NO;
 }
 
 @end
