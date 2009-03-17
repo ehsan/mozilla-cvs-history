@@ -780,7 +780,7 @@ sub on_destroy {
 
 sub targetted {
     my ($data, $nick) = @_;
-    return $data =~ /^(\s*$nick(?:[\s,:;.!?]+|\s*:-\s*|\s*--+\s*|\s*-+>?\s+))(.+)$/is ?
+    return $data =~ /^(\s*$nick(?:[\s,:;!?]+|\s*:-\s*|\s*--+\s*|\s*-+>?\s+))(.+)$/is ?
       (defined $2 ? $2 : '') : undef;
 }
 

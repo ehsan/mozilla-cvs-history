@@ -156,9 +156,9 @@ sub DoFactoidCheck {
     my $shortMessage;
     if ($message =~ /^\s* (?:\w+[:.!\s]+\s+)?
                           (?:(?:well|and|or|yes|[uh]+m*|o+[oh]*[k]+(?:a+y+)?|still|well|so|a+h+|o+h+)[:,.!?\s]+|)*
-                          (?:(?:geez?|boy|du+des?|golly|gosh|wow|whee|wo+ho+)?[:,.!\s]+|)*
-                          (?:(?:heya?|hello|hi)(?:\s+there)?(?:\s+peoples?|\s+kids?|\s+folks?)?[:,!.?\s]+)*
-                          (?:(?:geez?|boy|du+des?|golly|gosh|wow|whee|wo+ho+)?[:,.!\s]+|)*
+                          (?:(?:geez?|boy|du+des?|golly|gosh|wow|whee|wo+ho+)[:,.!\s]+|)*
+                          (?:(?:heya?|hello|hi)(?:\s+there)?(?:\s+peoples?|\s+kids?|\s+folks?)[:,!.?\s]+)*
+                          (?:(?:geez?|boy|du+des?|golly|gosh|wow|whee|wo+ho+)[:,.!\s]+|)*
                           (?:tell\s+me[,\s]+)?
                           (?:(?:(?:stupid\s+)?q(?:uestion)?|basically)[:,.!\s]+)*
                           (?:tell\s+me[,\s]+)?
@@ -167,6 +167,8 @@ sub DoFactoidCheck {
                       \s*$/osix) {
         $shortMessage = $1;
     }
+    $self->debug("message: '$message'");
+    $self->debug("shortMessage: '$shortMessage'");
 
     if ($message =~ /^\s*tell\s+(\S+)\s+about\s+me(?:[,\s]+please)?[\s!?.]*$/osi) {
         $self->GiveFactoid($event,
