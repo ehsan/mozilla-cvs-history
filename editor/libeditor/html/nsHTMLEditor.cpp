@@ -3599,6 +3599,8 @@ nsHTMLEditor::AddOverrideStyleSheet(const nsAString& aURL)
   nsCOMPtr<nsICSSLoader> cssLoader;
   nsresult rv = GetCSSLoader(aURL, getter_AddRefs(cssLoader));
   NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsICSSLoader_1_9_0_BRANCH> cssLoaderBranch =
+    do_QueryInterface(cssLoader);
 
   nsCOMPtr<nsIURI> uaURI;
   rv = NS_NewURI(getter_AddRefs(uaURI), aURL);
@@ -3609,7 +3611,8 @@ nsHTMLEditor::AddOverrideStyleSheet(const nsAString& aURL)
   // synchronously, of course..
   nsCOMPtr<nsICSSStyleSheet> sheet;
   // Editor override style sheets may want to style Gecko anonymous boxes
-  rv = cssLoader->LoadSheetSync(uaURI, PR_TRUE, getter_AddRefs(sheet));
+  rv = cssLoaderBranch->LoadSheetSync(uaURI, PR_TRUE, PR_TRUE,
+                                      getter_AddRefs(sheet));
 
   // Synchronous loads should ALWAYS return completed
   if (!sheet)
