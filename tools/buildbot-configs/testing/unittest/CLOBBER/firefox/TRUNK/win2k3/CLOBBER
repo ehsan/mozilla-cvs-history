@@ -1,1 +1,3 @@
-.mozconfig contains errant PGO bits from PGO slave setup.
+Clobber for "program finished with exit code -1073741819" on crashtest,     
+which fx-win32-1.9-slave11 is doing but not fx-win32-1.9-slave10              
+
