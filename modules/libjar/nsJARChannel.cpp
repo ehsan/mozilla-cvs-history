@@ -250,18 +250,23 @@ nsJARChannel::~nsJARChannel()
     NS_RELEASE(handler); // NULL parameter
 }
 
-NS_IMPL_ISUPPORTS6(nsJARChannel,
-                   nsIRequest,
-                   nsIChannel,
-                   nsIStreamListener,
-                   nsIRequestObserver,
-                   nsIDownloadObserver,
-                   nsIJARChannel)
+NS_IMPL_ISUPPORTS_INHERITED6(nsJARChannel,
+                             nsHashPropertyBag,
+                             nsIRequest,
+                             nsIChannel,
+                             nsIStreamListener,
+                             nsIRequestObserver,
+                             nsIDownloadObserver,
+                             nsIJARChannel)
 
 nsresult 
 nsJARChannel::Init(nsIURI *uri)
 {
     nsresult rv;
+    rv = nsHashPropertyBag::Init();
+    if (NS_FAILED(rv))
+        return rv;
+
     mJarURI = do_QueryInterface(uri, &rv);
     if (NS_FAILED(rv))
         return rv;
