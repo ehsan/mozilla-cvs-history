@@ -162,7 +162,8 @@ nsSVGScriptElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
   }
 
   nsCOMPtr<nsINode> kungFuDeathGrip = it;
-  nsresult rv = CopyInnerTo(it);
+  nsresult rv = it->Init();
+  rv |= CopyInnerTo(it);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // The clone should be marked evaluated if we are.
