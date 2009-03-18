@@ -61,6 +61,9 @@ int main()
 
 #include <sys/time.h>
 #include <stdio.h>
+#ifdef SYMBIAN
+#include <sys/select.h>
+#endif
 
 int main(int argc, char **argv)
 {

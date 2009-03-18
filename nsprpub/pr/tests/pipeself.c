@@ -176,7 +176,7 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(SYMBIAN)
 	/*
 	 * Test PR_Available for pipes
 	 */

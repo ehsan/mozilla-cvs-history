@@ -85,6 +85,7 @@ PRFileDesc  *errhandle;
 
 int main(int argc, char **argv)
 {
+#if !(defined(SYMBIAN) && defined(__WINS__))
     PRInt32 rv, cnt, sum;
 	DataRecord	*Item;
 	PRStack		*list1, *list2;
@@ -234,6 +235,7 @@ int main(int argc, char **argv)
 								SUM_OF_NUMBERS(data_cnt * thread_cnt));
 		return 2;
 	}
+#endif
 }
 
 static void stackop(void *thread_arg)

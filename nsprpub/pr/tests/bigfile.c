@@ -183,8 +183,13 @@ int main(int argc, char **argv)
     if (0 == filesize) filesize = DEFAULT_FILESIZE;
     if (NULL == filename)
     {
+#ifdef SYMBIAN
+#define FILE_NAME "c:\\data\\bigfile.dat"
+#else
+#define FILE_NAME "bigfile.dat"
+#endif
         if (DEFAULT_FILESIZE != filesize) return Usage();
-        else filename = "bigfile.dat";
+        else filename = FILE_NAME;
     }
 
     if (PR_FAILURE == DeleteIfFound(filename)) return 1;

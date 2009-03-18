@@ -281,7 +281,12 @@ static void OneShot(void *arg)
             break;
             
         case 6:
-            dir = PR_OpenDir("/tmp/"); 
+#ifdef SYMBIAN
+#define TEMP_DIR "c:\\data\\"
+#else
+#define TEMP_DIR "/tmp/"
+#endif
+            dir = PR_OpenDir(TEMP_DIR);
 			DPRINTF((output,"Thread[0x%x] called PR_OpenDir\n",
 			PR_GetCurrentThread()));
             PR_CloseDir(dir);

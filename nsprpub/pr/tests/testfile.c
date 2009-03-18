@@ -48,6 +48,9 @@
 #if defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS)
 #include <pthread.h>
 #endif
+#ifdef SYMBIAN
+#include <getopt.h>
+#endif
 
 #if defined(XP_OS2)
 #define INCL_DOSFILEMGR
@@ -111,7 +114,11 @@ char *TEST_DIR = "C:\\temp\\prdir";
 char *FILE_NAME = "pr_testfile";
 char *HIDDEN_FILE_NAME = "hidden_pr_testfile";
 #else
+#ifdef SYMBIAN
+char *TEST_DIR = "c:\\data\\testfile_dir";
+#else
 char *TEST_DIR = "/tmp/testfile_dir";
+#endif
 char *FILE_NAME = "pr_testfile";
 char *HIDDEN_FILE_NAME = ".hidden_pr_testfile";
 #endif
