@@ -1568,13 +1568,8 @@ tools are selected during the Xcode/Developer Tools installation.])
         fi
 
         if test -n "$MOZ_OPTIMIZE"; then
-            if test -n "$MOZ_PROFILE"; then
-                _OPTIMIZE_FLAGS="$_OPTIMIZE_FLAGS -Z7"
-            fi
             if test -n "$MOZ_DEBUG_SYMBOLS"; then
                 _OPTIMIZE_FLAGS="$_OPTIMIZE_FLAGS -Zi"
-            fi
-            if test -n "$MOZ_PROFILE" -o -n "$MOZ_DEBUG_SYMBOLS"; then
                 DLLFLAGS="$DLLFLAGS -DEBUG -OPT:REF"
                 LDFLAGS="$LDFLAGS -DEBUG -OPT:REF"
             fi
