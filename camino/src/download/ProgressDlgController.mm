@@ -75,6 +75,8 @@ static NSString* const kProgressWindowFrameSaveName = @"ProgressWindow";
 -(BOOL)shouldRemoveDownloadsOnQuit;
 -(NSString*)downloadsPlistPath;
 -(void)setToolTipForToolbarItem:(NSToolbarItem*)theItem;
+-(void)saveProgressViewControllers;
+-(void)loadProgressViewControllers;
 
 @end
 
@@ -100,9 +102,11 @@ static id gSharedProgressController = nil;
 
 -(id)init
 {
-  if ((self = [super initWithWindowNibName:@"ProgressDialog"]))
-  {
+  if ((self = [super initWithWindowNibName:@"ProgressDialog"])) {
+    // Load the saved instances to mProgressViewControllers array.
     mProgressViewControllers = [[NSMutableArray alloc] init];
+    [self loadProgressViewControllers];
+
     mFileChangeWatcher = [[FileChangeWatcher alloc] init];
     mSelectionPivotIndex = -1;
   }
@@ -131,9 +135,6 @@ static id gSharedProgressController = nil;
   [toolbar setAutosavesConfiguration:YES];
   [[self window] setToolbar:toolbar];
 
-  // Load the saved instances to mProgressViewControllers array.
-  [self loadProgressViewControllers];
-  
   // Scroll to last selected download, or to the end if no downloads are selected.
   NSArray* currentlySelectedDownloads = [self selectedProgressViewControllers];
   if ([currentlySelectedDownloads count] > 0) {
@@ -143,6 +144,8 @@ static id gSharedProgressController = nil;
     [self scrollIntoView:[mProgressViewControllers lastObject]];
     [(ProgressViewController*)[mProgressViewControllers lastObject] setSelected:YES];
   }
+
+  [self rebuildViews];
 }
 
 -(void)dealloc
@@ -788,8 +791,7 @@ static id gSharedProgressController = nil;
   if (downloads) {
     NSEnumerator* downloadsEnum = [downloads objectEnumerator];
     NSDictionary* downloadsDictionary;
-    while((downloadsDictionary = [downloadsEnum nextObject]))
-    {
+    while((downloadsDictionary = [downloadsEnum nextObject])) {
       ProgressViewController* curController = [[ProgressViewController alloc] initWithDictionary:downloadsDictionary
                                                                              andWindowController:self];
       [mProgressViewControllers addObject:curController];
@@ -800,8 +802,6 @@ static id gSharedProgressController = nil;
     if ([selectedDownloads count] > 0) {
       mSelectionPivotIndex = [mProgressViewControllers indexOfObject:[selectedDownloads lastObject]];
     }
-
-    [self rebuildViews];
   }
 }
 

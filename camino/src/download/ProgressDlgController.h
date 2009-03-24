@@ -118,8 +118,6 @@
 -(void)removeDownload:(ProgressViewController*)progressDisplay suppressRedraw:(BOOL)suppressRedraw;
 -(NSApplicationTerminateReply)allowTerminate;
 -(void)applicationWillTerminate;
--(void)saveProgressViewControllers;
--(void)loadProgressViewControllers;
 
 -(void)addFileDelegateToWatchList:(id<WatchedFileDelegate>)aWatchedFileDelegate;
 -(void)removeFileDelegateFromWatchList:(id<WatchedFileDelegate>)aWatchedFileDelegate;
