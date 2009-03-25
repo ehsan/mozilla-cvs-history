@@ -349,15 +349,17 @@ static FlashblockWhitelistManager* sFlashblockWhitelistManager = nil;
   [mDetectedSearchPlugins release];
 
   // Make sure this is gone before |mBrowserView|, which it has a weak ref to.
-  [mFindBarView removeFromSuperviewWithoutNeedingDisplay];
   [mFindBarController release];
 
   [mBrowserView release];
   [mContentViewProviders release];
 
-  // |mBlockedPopupView| has a retain count of 1 when it comes out of the nib,
+  // |mBlockedPopupBar| has a retain count of 1 when it comes out of the nib,
   // we have to release it manually.
-  [mBlockedPopupView release];
+  [mBlockedPopupBar release];
+
+  [mTopTransientBar release];
+  [mBottomTransientBar release];
 
   [super dealloc];
 }
@@ -455,33 +457,32 @@ static FlashblockWhitelistManager* sFlashblockWhitelistManager = nil;
   // However, this requires us to do the resize on loadURI: below to make
   // sure that we maintain the scroll position in background tabs correctly.
   if ([self window] || inResizeBrowser) {
-    NSRect bounds = [self bounds];
-    NSRect browserFrame = bounds;
-    if (mBlockedPopupView) {
-      // First resize the width of blockedPopupView to match this view.
-      // The blockedPopupView will, during its setFrame method, wrap information
-      // text if necessary and adjust its own height to enclose that text.
-      // Then find out the actual (possibly adjusted) height of blockedPopupView
-      // and adjust the browser view frame accordingly.
-      // Recall that we're flipped, so the origin is the top left.
+    NSRect browserFrame = [self bounds];
+    // For the transient bars, first resize their width to match the content area.
+    // They will, when resized, adjust their own height if necessary to account for
+    // the given width.  Then find out their actual (possibly adjusted) height
+    // and adjust the browser frame accordingly.
+    // Recall that we're flipped, so the origin is the top left.    
+    if (mTopTransientBar) {      
+      NSRect topBarFrame = [mTopTransientBar frame];
+      topBarFrame.origin = NSZeroPoint;
+      topBarFrame.size.width = browserFrame.size.width;
+      [mTopTransientBar setFrame:topBarFrame];
 
-      NSRect popupBlockFrame = [mBlockedPopupView frame];
-      popupBlockFrame.origin = NSZeroPoint;
-      popupBlockFrame.size.width = bounds.size.width;
-      [mBlockedPopupView setFrame:popupBlockFrame];
-
-      NSRect blockedPopupViewFrameAfterResized = [mBlockedPopupView frame];
-      browserFrame.origin.y = blockedPopupViewFrameAfterResized.size.height;
-      browserFrame.size.height -= blockedPopupViewFrameAfterResized.size.height;
+      NSRect actualTopBarFrame = [mTopTransientBar frame];
+      browserFrame.origin.y = actualTopBarFrame.size.height;
+      browserFrame.size.height -= actualTopBarFrame.size.height;
     }
-    if (mFindBarView) {
-      NSRect findBarFrame;
-      NSRect remainderRect;
-      NSDivideRect(browserFrame, &findBarFrame, &remainderRect,
-                   [mFindBarView frame].size.height, NSMaxYEdge);
-      [mFindBarView setFrame:findBarFrame];
+    if (mBottomTransientBar) {
+      NSRect bottomBarFrame = [mBottomTransientBar frame];
+      bottomBarFrame.origin = NSZeroPoint;
+      bottomBarFrame.size.width = browserFrame.size.width;
+      [mBottomTransientBar setFrame:bottomBarFrame];
 
-      browserFrame = remainderRect;
+      NSRect actualBottomBarFrame = [mBottomTransientBar frame];
+      browserFrame.size.height -= actualBottomBarFrame.size.height;
+      actualBottomBarFrame.origin.y = browserFrame.origin.y + browserFrame.size.height;
+      [mBottomTransientBar setFrame:actualBottomBarFrame];
     }
     [mBrowserView setFrame:browserFrame];
   }
@@ -749,12 +750,12 @@ static FlashblockWhitelistManager* sFlashblockWhitelistManager = nil;
     // later (see bug 350752, and the XXXbryner comment in nsDocShell.cpp). To
     // work around that, re-set the frame once core is done meddling.
     BOOL needsFrameAdjustment = NO;
-    if (mBlockedPopupView) {
-      [self removeBlockedPopupViewAndDisplay];
+    if (mTopTransientBar) {
+      [self removeTransientBar:mTopTransientBar display:YES];
       needsFrameAdjustment = YES;
     }
-    if (mFindBarView) {
-      [self removeFindBarViewAndDisplay];
+    if (mBottomTransientBar) {
+      [self removeTransientBar:mBottomTransientBar display:YES];
       needsFrameAdjustment = YES;
     }
     if (needsFrameAdjustment)
@@ -1495,10 +1496,20 @@ static FlashblockWhitelistManager* sFlashblockWhitelistManager = nil;
 // which view should come after the browser content in the key view loop.
 - (void)setNextKeyViewFollowingBrowserContent:(NSView *)aNextKeyView
 {
-  if (mFindBarView)
-    [[mFindBarController lastKeyViewInFindBar] setNextKeyView:aNextKeyView];
+  if (mBottomTransientBar)
+    [[mBottomTransientBar lastKeySubview] setNextKeyView:aNextKeyView];
   else
     [mBrowserView setNextKeyView:aNextKeyView];
+}
+
+//
+// -showFindBar
+//
+// Shows the find bar at the bottom of the content area.
+//
+- (void)showFindBar
+{
+  [mFindBarController showFindBar];
 }
 
 #pragma mark -
@@ -1571,7 +1582,7 @@ static FlashblockWhitelistManager* sFlashblockWhitelistManager = nil;
 //
 - (void)addBlockedPopupViewAndDisplay
 {
-  if ([self popupsBlocked] && !mBlockedPopupView) {
+  if ([self popupsBlocked] && !mBlockedPopupBar) {
     [NSBundle loadNibNamed:@"PopupBlockView" owner:self];
 
     NSString* currentHost = [[NSURL URLWithString:[self currentURI]] host];
@@ -1581,13 +1592,10 @@ static FlashblockWhitelistManager* sFlashblockWhitelistManager = nil;
     [mBlockedPopupCloseButton setImage:[NSImage imageNamed:@"popup_close"]];
     [mBlockedPopupCloseButton setAlternateImage:[NSImage imageNamed:@"popup_close_pressed"]];
     [mBlockedPopupCloseButton setHoverImage:[NSImage imageNamed:@"popup_close_hover"]];
-    [self setNextKeyView:mBlockedPopupView];
-    [mBlockedPopupCloseButton setNextKeyView:mBrowserView];
-
-    [self addSubview:mBlockedPopupView];
-    [self setFrame:[self frame] resizingBrowserViewIfHidden:YES];
-    [self display];
+    [mBlockedPopupBar setLastKeySubview:mBlockedPopupCloseButton];
   }
+
+  [self showTransientBar:mBlockedPopupBar atPosition:eTransientBarPositionTop];
 }
 
 //
@@ -1598,13 +1606,10 @@ static FlashblockWhitelistManager* sFlashblockWhitelistManager = nil;
 //
 - (void)removeBlockedPopupViewAndDisplay
 {
-  if (mBlockedPopupView) {
-    [self setNextKeyView:mBrowserView];
-    [mBlockedPopupView removeFromSuperview];
-    [mBlockedPopupView release]; // retain count of 1 from nib
-    mBlockedPopupView = nil;
-    [self setFrame:[self frame] resizingBrowserViewIfHidden:YES];
-    [self display];
+  if (mBlockedPopupBar) {
+    [self removeTransientBar:mBlockedPopupBar display:YES];
+    [mBlockedPopupBar release]; // retain count of 1 from nib
+    mBlockedPopupBar = nil;
   }
 }
 
@@ -1614,69 +1619,88 @@ static FlashblockWhitelistManager* sFlashblockWhitelistManager = nil;
 }
 
 #pragma mark -
-#pragma mark Find Bar
 
-//
-// -showFindBar
-//
-// Shows the find bar at the bottom of the content area.
-//
-- (void)showFindBar
+- (BOOL)showTransientBar:(TransientBar*)aTransientBar atPosition:(ETransientBarPosition)aPosition
 {
-  [mFindBarController showFindBar];
+  if (!aTransientBar)
+    return NO;
+
+  BOOL barWasShown = NO;
+
+  switch (aPosition) {
+    case eTransientBarPositionTop:
+      if (!mTopTransientBar ||
+          (mTopTransientBar != aTransientBar && [mTopTransientBar isReplaceable]))
+      {
+        if (mTopTransientBar)
+          [self removeTransientBar:mTopTransientBar display:NO];
+
+        mTopTransientBar = [aTransientBar retain];
+        [self addSubview:mTopTransientBar];
+        [self setNextKeyView:mTopTransientBar];
+        [[mTopTransientBar lastKeySubview] setNextKeyView:mBrowserView];
+        barWasShown = YES;
+      }
+      break;
+    case eTransientBarPositionBottom:
+      if (!mBottomTransientBar ||
+          (mBottomTransientBar != aTransientBar && [mBottomTransientBar isReplaceable]))
+      {
+        if (mBottomTransientBar)
+          [self removeTransientBar:mBottomTransientBar display:NO];
+
+        mBottomTransientBar = [aTransientBar retain];
+        [self addSubview:mBottomTransientBar];
+        NSView* viewAfterBrowserView = [mBrowserView nextKeyView];
+        [mBrowserView setNextKeyView:mBottomTransientBar];
+        [[mBottomTransientBar lastKeySubview] setNextKeyView:viewAfterBrowserView];
+        barWasShown = YES;
+      }
+      break;
+    default:
+      break;
+  }
+
+  if (barWasShown) {
+    [self setFrame:[self frame] resizingBrowserViewIfHidden:YES];
+    [self display];
+  }
+  return barWasShown;
 }
 
-//
-// -showFindBarView:
-//
-// Meant for use by FindBarController; internally, use
-// add/removeFindBarViewAndDisplay.
-//
-- (void)showFindBarView:(NSView*)inBarView
+- (void)removeTransientBar:(TransientBar*)aTransientBar display:(BOOL)aShouldDisplay
 {
-  if (inBarView && (inBarView != mFindBarView)) {
-    [mFindBarView removeFromSuperviewWithoutNeedingDisplay];
-    mFindBarView = inBarView;
-    if (inBarView)
-      [self addFindBarViewAndDisplay];
-  }
-  else if (!inBarView && mFindBarView) {
-    // Pull focus back to the content area.
+  if (!aTransientBar)
+    return;
+
+  // If the first responder lies within the TransientBar we're removing,
+  // throw focus back out to the browser content.
+  NSResponder* firstResponder = [[self window] firstResponder];
+  if ([firstResponder isKindOfClass:[NSView class]] &&
+      [(NSView*)firstResponder isDescendantOf:aTransientBar])
+  {
     [[self window] makeFirstResponder:mBrowserView];
-    [self removeFindBarViewAndDisplay];
   }
-}
 
-//
-// -addFindBarViewAndDisplay
-//
-// Even if we're hidden, we ensure that the new view is in the view hierarchy
-// and it will be resized when the current tab is eventually displayed.
-//
-- (void)addFindBarViewAndDisplay
-{
-  [self addSubview:mFindBarView];
-  [self setFrame:[self frame] resizingBrowserViewIfHidden:YES];
-  [self display];
-  NSView* viewAfterBrowserView = [mBrowserView nextKeyView];
-  [mBrowserView setNextKeyView:mFindBarView];
-  [[mFindBarController lastKeyViewInFindBar] setNextKeyView:viewAfterBrowserView];
-}
+  BOOL barWasRemoved = NO;
 
-//
-// -removeFindBarViewAndDisplay
-//
-// If we're showing the find bar view, this removes it and resizes the
-// browser view to fill that space. Causes a full redraw of our view.
-//
-- (void)removeFindBarViewAndDisplay
-{
-  if (mFindBarView) {
-    NSView* viewAfterFindBar = [[mFindBarController lastKeyViewInFindBar] nextKeyView];
-    [mBrowserView setNextKeyView:viewAfterFindBar];
+  if (aTransientBar == mTopTransientBar) {
+    [self setNextKeyView:mBrowserView];
+    [mTopTransientBar removeFromSuperviewWithoutNeedingDisplay];
+    [mTopTransientBar release];
+    mTopTransientBar = nil;
+    barWasRemoved = YES;
+  }
+  else if (aTransientBar == mBottomTransientBar) {
+    NSView* viewAfterBottomBar = [[mBottomTransientBar lastKeySubview] nextKeyView];
+    [mBrowserView setNextKeyView:viewAfterBottomBar];
+    [mBottomTransientBar removeFromSuperviewWithoutNeedingDisplay];
+    [mBottomTransientBar release];
+    mBottomTransientBar = nil;
+    barWasRemoved = YES;
+  }
 
-    [mFindBarView removeFromSuperview];
-    mFindBarView = nil;
+  if (aShouldDisplay && barWasRemoved) {
     [self setFrame:[self frame] resizingBrowserViewIfHidden:YES];
     [self display];
   }
@@ -1689,7 +1713,7 @@ static FlashblockWhitelistManager* sFlashblockWhitelistManager = nil;
 // This value keeps the message text field from wrapping excessively.
 #define kMessageTextMinWidth 70
 
-@implementation InformationPanelView
+@implementation PopupBlockedBar
 
 - (void)awakeFromNib
 {

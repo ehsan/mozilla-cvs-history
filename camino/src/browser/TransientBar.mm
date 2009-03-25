@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,15 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Camino code.
  *
  * The Initial Developer of the Original Code is
- * Mike Pinkerton.
- * Portions created by the Initial Developer are Copyright (C) 2007
+ * Sean Murphy.
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Mike Pinkerton
+ *   Sean Murphy <murph@seanmurph.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,17 +35,41 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#import <Cocoa/Cocoa.h>
 #import "TransientBar.h"
 
-//
-// FindBarView
-//
-// Handles custom drawing for the find bar
-//
+@implementation TransientBar
 
-@interface FindBarView : TransientBar
+- (void)dealloc
 {
+  [self setLastKeySubview:nil];
+  [super dealloc];
+}
+
+#pragma mark -
+
+- (void)setFrame:(NSRect)aNewFrame
+{
+  // Subclasses can modify their height during this method, to accomodate
+  // the given width.
+  [super setFrame:aNewFrame];
+}
+
+- (NSView *)lastKeySubview
+{
+  return [[mLastKeySubview retain] autorelease]; 
+}
+
+- (void)setLastKeySubview:(NSView *)aLastKeySubview
+{
+  if (mLastKeySubview != aLastKeySubview) {
+    [mLastKeySubview release];
+    mLastKeySubview = [aLastKeySubview retain];
+  }
+}
+
+- (BOOL)isReplaceable
+{
+  return YES;
 }
 
 @end

@@ -57,9 +57,11 @@
 // The current search query is read from and written to the find pasteboard.
 //
 
+@class TransientBar;
+
 @interface FindBarController : NSObject
 {
-  IBOutlet NSView* mFindBar;
+  IBOutlet TransientBar* mFindBar;
   IBOutlet NSSearchField* mSearchField;
   IBOutlet NSButton* mMatchCase;
   IBOutlet NSTextField* mStatusText;
@@ -84,7 +86,5 @@
 - (IBAction)findPreviousNextClicked:(id)sender;
 // Currently unimplemented.
 - (IBAction)findAll:(id)sender;
-
-- (NSView*)lastKeyViewInFindBar;
 
 @end

@@ -258,6 +258,8 @@
 		34D112DE08E9B17400989FD5 /* dl_trash.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 34D112DD08E9B17400989FD5 /* dl_trash.tiff */; };
 		3D9419800F559B2F00227277 /* blockedSite.xhtml in Resources */ = {isa = PBXBuildFile; fileRef = 3D94197F0F559B2F00227277 /* blockedSite.xhtml */; };
 		3D9419810F559B2F00227277 /* blockedSite.xhtml in Resources */ = {isa = PBXBuildFile; fileRef = 3D94197F0F559B2F00227277 /* blockedSite.xhtml */; };
+		3DE5B63A0F6C11B300D2EF11 /* TransientBar.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3DE5B6390F6C11B300D2EF11 /* TransientBar.mm */; };
+		3DE5B63B0F6C11B400D2EF11 /* TransientBar.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3DE5B6390F6C11B300D2EF11 /* TransientBar.mm */; };
 		3F12FC57072E8ECB00995ED9 /* libxpcom_core.dylib in Copy Libraries */ = {isa = PBXBuildFile; fileRef = 3F12FC56072E8ECB00995ED9 /* libxpcom_core.dylib */; };
 		3F12FD3107312CCD00995ED9 /* libxpcom_core.dylib in Copy Libraries */ = {isa = PBXBuildFile; fileRef = 3F12FC56072E8ECB00995ED9 /* libxpcom_core.dylib */; };
 		3F27D94D05DB2600007B543D /* NSSplitView+Utils.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3F27D94B05DB2600007B543D /* NSSplitView+Utils.mm */; };
@@ -2602,6 +2604,8 @@
 		3489ADCA0753B717005ADF6C /* ABAddressBook+Utils.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "ABAddressBook+Utils.mm"; path = "src/extensions/ABAddressBook+Utils.mm"; sourceTree = "<group>"; };
 		34D112DD08E9B17400989FD5 /* dl_trash.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = dl_trash.tiff; path = resources/images/toolbar/dl_trash.tiff; sourceTree = SOURCE_ROOT; };
 		3D94197F0F559B2F00227277 /* blockedSite.xhtml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; name = blockedSite.xhtml; path = resources/application/blockedSite.xhtml; sourceTree = "<group>"; };
+		3DE5B6380F6C11B300D2EF11 /* TransientBar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TransientBar.h; path = src/browser/TransientBar.h; sourceTree = "<group>"; };
+		3DE5B6390F6C11B300D2EF11 /* TransientBar.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TransientBar.mm; path = src/browser/TransientBar.mm; sourceTree = "<group>"; };
 		3F12FC56072E8ECB00995ED9 /* libxpcom_core.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libxpcom_core.dylib; path = ../dist/Embed/libxpcom_core.dylib; sourceTree = SOURCE_ROOT; };
 		3F22CC1303DF42A200026DCE /* Charset.dict */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = Charset.dict; path = resources/application/Charset.dict; sourceTree = "<group>"; };
 		3F27D94A05DB2600007B543D /* NSSplitView+Utils.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = "NSSplitView+Utils.h"; path = "src/extensions/NSSplitView+Utils.h"; sourceTree = "<group>"; };
@@ -3824,6 +3828,8 @@
 				1F8407060C5705CC007B893D /* ThumbnailView.m */,
 				F549ACE70302DEF001026D5D /* ToolTip.h */,
 				F549ACDE0302DE6001026D5D /* ToolTip.mm */,
+				3DE5B6380F6C11B300D2EF11 /* TransientBar.h */,
+				3DE5B6390F6C11B300D2EF11 /* TransientBar.mm */,
 				3FF08F0806E7CF9C001C9B19 /* TruncatingTextAndImageCell.h */,
 				3FF08EFF06E7CF86001C9B19 /* TruncatingTextAndImageCell.mm */,
 				0FD75057093ABEBA00B6A3A4 /* TruncatingTextFieldCell.h */,
@@ -6135,6 +6141,7 @@
 				DE18FBFD0F2435F700325C11 /* GrowlController.mm in Sources */,
 				C7DE8DD70F30CFAC00CD3872 /* SafeBrowsingListManager.mm in Sources */,
 				C7DE8DD80F30CFAC00CD3872 /* SafeBrowsingAboutModule.mm in Sources */,
+				3DE5B63A0F6C11B300D2EF11 /* TransientBar.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6322,6 +6329,7 @@
 				DE18FBFC0F2435F700325C11 /* GrowlController.mm in Sources */,
 				C7DE8DD90F30CFAC00CD3872 /* SafeBrowsingListManager.mm in Sources */,
 				C7DE8DDA0F30CFAC00CD3872 /* SafeBrowsingAboutModule.mm in Sources */,
+				3DE5B63B0F6C11B400D2EF11 /* TransientBar.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

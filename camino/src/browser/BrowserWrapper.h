@@ -37,6 +37,7 @@
 
 #import <Cocoa/Cocoa.h>
 #import "CHBrowserView.h"
+#import "TransientBar.h"
 
 @class BrowserWindowController;
 @class ToolTip;
@@ -166,12 +167,11 @@ extern NSString* const kBrowserInstanceClosedNotification;
   NSMutableArray*           mStatusStrings;    // current status bar messages, STRONG
   NSMutableSet*             mLoadingResources; // page resources currently loading, STRONG
 
-  IBOutlet NSView*          mBlockedPopupView;   // loaded on demand, can be nil, STRONG
+  IBOutlet TransientBar*    mBlockedPopupBar;   // loaded on demand, can be nil, STRONG
   IBOutlet RolloverImageButton* mBlockedPopupCloseButton;
   IBOutlet NSTextField*     mBlockedPopupLabel;
 
   FindBarController*        mFindBarController;  // STRONG
-  NSView*                   mFindBarView;        // can be nil, WEAK (owned by the controller)
 
   double                    mProgress;
   
@@ -184,6 +184,9 @@ extern NSString* const kBrowserInstanceClosedNotification;
   BOOL mListenersAttached; // We hook up our click and context menu listeners lazily.
                            // If we never become the primary view, we don't bother creating the listeners.
   BOOL mActivateOnLoad;    // If set, activate the browser view when loading starts.
+
+  TransientBar*             mTopTransientBar;    // strong
+  TransientBar*             mBottomTransientBar; // strong
 }
 
 - (id)initWithTab:(NSTabViewItem*)aTab inWindow:(NSWindow*)window;
@@ -247,8 +250,9 @@ extern NSString* const kBrowserInstanceClosedNotification;
 
 - (void)setNextKeyViewFollowingBrowserContent:(NSView *)aNextKeyView;
 
-// FindBarController content view method
-- (void)showFindBarView:(NSView*)inBarView;
+// Returns NO if an existing bar in the same position did not allow replacement.
+- (BOOL)showTransientBar:(TransientBar*)aTransientBar atPosition:(ETransientBarPosition)aPosition;
+- (void)removeTransientBar:(TransientBar*)aTransientBar display:(BOOL)aShouldDisplay;
 
 // Custom view embedding
 - (void)registerContentViewProvider:(id<ContentViewProvider>)inProvider forURL:(NSString*)inURL;
@@ -282,13 +286,11 @@ extern NSString* const kBrowserInstanceClosedNotification;
 
 
 //
-// interface InformationPanelView
+// PopupBlockedBar
 //
-// A placard-style view for showing additional information to the user.
-// Drawn with a shaded background.
+// A TransientBar subclass displayed when pop-up windows are blocked.
 //
-
-@interface InformationPanelView : NSView
+@interface PopupBlockedBar : TransientBar
 {
   IBOutlet NSTextField *mPopupBlockedMessageTextField;
   float mVerticalPadding;

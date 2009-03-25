@@ -111,6 +111,8 @@
     buttonSize.height = [[mMatchCase cell] cellSize].height;
     [mMatchCase setFrameSize:buttonSize];
   }
+
+  [mFindBar setLastKeySubview:mMatchCase];
 }
 
 //
@@ -125,7 +127,8 @@
 
   [mStatusText setStringValue:@""];
   [mSearchField setStringValue:[self findPasteboardString]];
-  [mContentView showFindBarView:mFindBar];
+
+  [mContentView showTransientBar:mFindBar atPosition:eTransientBarPositionBottom];
   [[mFindBar window] makeFirstResponder:mSearchField];
 }
 
@@ -135,7 +138,7 @@
 // Makes the find bar go away.
 //
 - (IBAction)hideFindBar:(id)sender {
-  [mContentView showFindBarView:nil];
+  [mContentView removeTransientBar:mFindBar display:YES];
 }
 
 //
@@ -269,11 +272,6 @@
     searchText = [findPboard stringForType:NSStringPboardType];
 
   return searchText;
-}
-
-- (NSView*)lastKeyViewInFindBar
-{
-  return mMatchCase;
 }
 
 @end

@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,15 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Camino code.
  *
  * The Initial Developer of the Original Code is
- * Mike Pinkerton.
- * Portions created by the Initial Developer are Copyright (C) 2007
+ * Sean Murphy.
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Mike Pinkerton
+ *   Sean Murphy <murph@seanmurph.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,16 +36,36 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import <Cocoa/Cocoa.h>
-#import "TransientBar.h"
+
+// The position of the bar in relation to the browser content.
+typedef enum {
+  eTransientBarPositionTop,
+  eTransientBarPositionBottom
+} ETransientBarPosition;
 
 //
-// FindBarView
+// TransientBar
 //
-// Handles custom drawing for the find bar
+// An abstract class for creating an information bar which can be displayed around
+// browser content.
 //
-
-@interface FindBarView : TransientBar
-{
+@interface TransientBar : NSView {
+ @private
+  NSView *mLastKeySubview;
 }
+
+// Bars may adjust their height inside this method to accommodate the supplied width.
+// The new frame value will be re-fetched by the browser after the initial call, to
+// determine any changes in height.
+- (void)setFrame:(NSRect)aNewFrame;
+
+// The last view in the bar's internal key view loop.
+- (NSView *)lastKeySubview;
+- (void)setLastKeySubview:(NSView *)aLastKeySubview;
+
+// Indicates whether the bar could be replaced, by a subsequent call to insert 
+// another one in the same position. Subclasses can override this method to ensure
+// important bars (security, for instance) are not replaced by less urgent ones.
+- (BOOL)isReplaceable;
 
 @end
