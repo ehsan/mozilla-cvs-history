@@ -108,7 +108,10 @@
 /* About window */
 "AboutWindowTitleFormat" = "About %@";
 
-/* Download Progress Dialog */
+/* Save dialog */
+"HTMLCompleteFolderSuffixString" = "%@ Files";
+
+/* Downloads window buttons */
 "dlRemoveButtonLabel" = "Remove";
 "dlRevealButtonLabel" = "Show";
 "dlOpenButtonLabel" = "Open";
@@ -134,7 +137,7 @@
 "dlTrashButtonTooltipPlural" = "Move selected files to Trash";
 "dlCleanUpButtonTooltip" = "Remove all inactive items from the list";
 
-/* Download contextual menus */
+/* Downloads contextual menus */
 "dlRemoveCMLabel" = "Remove";
 "dlRevealCMLabel" = "Show in Finder";
 "dlOpenCMLabel" = "Open";
@@ -144,15 +147,7 @@
 "dlResumeCMLabel" = "Resume";
 "dlTrashCMLabel" = "Move to Trash";
 
-"UnderSec" = "Under %d seconds";
-"UnderMin" = "Under a minute";
-"AboutMin" = "About a minute";
-"AboutMins" = "About %d minutes";
-"AboutHour" = "Over an hour";
-"AboutHours" = "Over %d hours";
-"LabelString" = "%@ of %@ (at %@/sec)";
-
-/* New Download progress dialog */
+/* Downloads window status */
 "DownloadLabelString" = "Downloading “%@” to “%@”";
 "DownloadDoneLabelString" = "Downloaded “%@” to “%@”";
 "DownloadPausedStatusString" = "Paused at %@ of %@";
@@ -166,6 +161,19 @@
 "DownloadRemainingLabelDone" = "Time elapsed:";
 "DownloadingTooltipFormat" = "Downloading %@\n\t%@\n\t%@";
 "DownloadedTooltipFormat" = "Downloaded %@\n\t%@\n\t%@";
+"UnderSec" = "Under %d seconds";
+"UnderMin" = "Under a minute";
+"AboutMin" = "About a minute";
+"AboutMins" = "About %d minutes";
+"AboutHour" = "Over an hour";
+"AboutHours" = "Over %d hours";
+"LabelString" = "%@ of %@ (at %@/sec)";
+
+/* Downloading errors */
+"DownloadErrorMsgFmt" = "There was an error downloading the file “%@”";
+"DownloadErrorNoDiskSpaceOnVolumeFmt" = "The download failed because the volume “%@” has run out of disk space.";
+"DownloadErrorDestinationWriteProtectedFmt" = "The download failed because you do not have write permissions in the destination folder “%@”.";
+"DownloadErrorOther" = "The download failed. Check your network connectivity and the download folder, and try again.";
 
 /* Keychain items */
 "KeychainLabelFormat" = "%1$@ (%2$@)";
@@ -444,12 +452,6 @@
 /* used in default browser selection */
 "Application does not exist" = "Application does not exist";
 "BrowserDoesNotExistExplanation" = "The default browser you have chosen no longer exists. Please choose another browser.";
-
-/* Downloading errors */
-"DownloadErrorMsgFmt" = "There was an error downloading the file “%@”";
-"DownloadErrorNoDiskSpaceOnVolumeFmt" = "The download failed because the volume “%@” has run out of disk space.";
-"DownloadErrorDestinationWriteProtectedFmt" = "The download failed because you do not have write permissions in the destination folder “%@”.";
-"DownloadErrorOther" = "The download failed. Check your network connectivity and the download folder, and try again.";
 
 /* Spelling UI */
 "SpellingSubmenu" = "Spelling";
