@@ -36,7 +36,7 @@
 #define _PKCS11N_H_
 
 #ifdef DEBUG
-static const char CKT_CVS_ID[] = "@(#) $RCSfile: pkcs11n.h,v $ $Revision: 1.4 $ $Date: 2009/03/25 05:20:48 $ $Name:  $";
+static const char CKT_CVS_ID[] = "@(#) $RCSfile: pkcs11n.h,v $ $Revision: 1.5 $ $Date: 2009/03/25 05:20:49 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -165,6 +165,16 @@ static const char CKT_CVS_ID[] = "@(#) $RCSfile: pkcs11n.h,v $ $Revision: 1.4 $ 
 
 #define CKM_TLS_PRF_GENERAL                     0x80000373L
 
+/* These new SHAxxx mechanisms will be defined as vendor-defined until
+** they are given standard mechanism numbers.
+*/
+#define CKM_SHA256				0x80000401L
+#define CKM_SHA384				0x80000402L
+#define CKM_SHA512				0x80000403L
+
+#define CKM_SHA256_RSA_PKCS			0x80000411L
+#define CKM_SHA384_RSA_PKCS			0x80000412L
+#define CKM_SHA512_RSA_PKCS			0x80000413L
 
 /*
  * Netscape-defined return values
