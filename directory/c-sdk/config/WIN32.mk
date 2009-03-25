@@ -78,13 +78,6 @@ DEFINES = -UDEBUG -U_DEBUG -DNDEBUG
 DLLFLAGS = -OUT:"$@"
 OBJDIR_TAG = _OPT
 
-# Add symbolic information for use by a profiler
-ifdef MOZ_PROFILE
-OPTIMIZER += -Zi
-DLLFLAGS += -DEBUG
-LDFLAGS += -DEBUG
-endif
-
 else
 #
 # Define USE_DEBUG_RTL if you want to use the debug runtime library
