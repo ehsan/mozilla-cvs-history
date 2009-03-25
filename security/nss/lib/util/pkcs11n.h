@@ -36,7 +36,7 @@
 #define _PKCS11N_H_
 
 #ifdef DEBUG
-static const char CKT_CVS_ID[] = "@(#) $RCSfile: pkcs11n.h,v $ $Revision: 1.2 $ $Date: 2009/03/25 05:20:46 $ $Name:  $";
+static const char CKT_CVS_ID[] = "@(#) $RCSfile: pkcs11n.h,v $ $Revision: 1.3 $ $Date: 2009/03/25 05:20:47 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -97,7 +97,12 @@ static const char CKT_CVS_ID[] = "@(#) $RCSfile: pkcs11n.h,v $ $Revision: 1.2 $ 
 #define CKA_NETSCAPE_PKCS8_SALT         (CKA_NETSCAPE +  5)
 #define CKA_NETSCAPE_PASSWORD_CHECK     (CKA_NETSCAPE +  6)
 #define CKA_NETSCAPE_EXPIRES            (CKA_NETSCAPE +  7)
-#define CKA_NETSCAPE_KRL                (CKA_NETSCAPE +  7)
+#define CKA_NETSCAPE_KRL                (CKA_NETSCAPE +  8)
+
+#define CKA_NETSCAPE_PQG_COUNTER        (CKA_NETSCAPE +  20)
+#define CKA_NETSCAPE_PQG_SEED           (CKA_NETSCAPE +  21)
+#define CKA_NETSCAPE_PQG_H              (CKA_NETSCAPE +  22)
+#define CKA_NETSCAPE_PQG_SEED_BITS      (CKA_NETSCAPE +  23)
 
 /*
  * Trust attributes:
