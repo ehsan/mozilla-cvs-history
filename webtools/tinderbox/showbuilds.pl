@@ -136,7 +136,7 @@ sub do_json($) {
     $line =~ s/=>/:/g;
     $line =~ s/\$VAR1//g;
     $line =~ s/undef/'undef'/g;
-    $line =~ s/\n//g;
+    $line =~ s/\n/\\n/g;
     $line =~ s/\r//g;
     $line =~ s/: ,/: '',/g;
     print "$line\n";
