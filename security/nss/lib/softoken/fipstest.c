@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: fipstest.c,v 1.24 2009/02/12 22:48:53 rrelyea%redhat.com Exp $ */
+/* $Id: fipstest.c,v 1.25 2009/03/29 03:45:34 wtc%google.com Exp $ */
 
 #include "softoken.h"   /* Required for RC2-ECB, RC2-CBC, RC4, DES-ECB,  */
                         /*              DES-CBC, DES3-ECB, DES3-CBC, RSA */
@@ -1901,11 +1901,11 @@ sftk_fips_RNG_PowerUpSelfTest( void )
    PRUint8 result[sizeof(rng_known_result)];
    PRUint8 DSAX[FIPS_DSA_SUBPRIME_LENGTH];
 
-   /*******************************************************/
-   /* Generate random bytes  with a known seed.           */
-   /*******************************************/
+   /********************************************/
+   /* Generate random bytes with a known seed. */
+   /********************************************/
    rng_status = PRNGTEST_Instantiate(entropy, sizeof entropy, 
-							NULL, 0, NULL, 0);
+				     NULL, 0, NULL, 0);
    if (rng_status != SECSuccess) {
 	return ( CKR_DEVICE_ERROR );
    }

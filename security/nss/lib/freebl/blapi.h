@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: blapi.h,v 1.32 2009/03/04 21:56:44 nelson%bolyard.com Exp $ */
+/* $Id: blapi.h,v 1.33 2009/03/29 03:45:32 wtc%google.com Exp $ */
 
 #ifndef _BLAPI_H_
 #define _BLAPI_H_
@@ -1081,8 +1081,8 @@ extern void RNG_SystemInfoForRNG(void);
  */
 
 /*
- * FIPS186Change_GenerateX is now deprecated. It will return SEC_Failure with
- * the error set to SEC_ERROR_LIBRARY_FAILURE.
+ * FIPS186Change_GenerateX is now deprecated. It will return SECFailure with
+ * the error set to PR_NOT_IMPLEMENTED_ERROR.
  */
 extern SECStatus
 FIPS186Change_GenerateX(unsigned char *XKEY,
@@ -1112,11 +1112,11 @@ PRNGTEST_Instantiate(const PRUint8 *entropy, unsigned int entropy_len,
 		const PRUint8 *personal_string, unsigned int ps_len);
 
 extern SECStatus
-PRNGTEST_Reseed(PRUint8 *entropy, unsigned int entropy_len, 
+PRNGTEST_Reseed(const PRUint8 *entropy, unsigned int entropy_len, 
 		  const PRUint8 *additional, unsigned int additional_len);
 
 extern SECStatus
-PRNGTEST_Generate(PRUint8 *bytes, unsigned int byte_Len, 
+PRNGTEST_Generate(PRUint8 *bytes, unsigned int bytes_len, 
 		  const PRUint8 *additional, unsigned int additional_len);
 
 extern SECStatus
