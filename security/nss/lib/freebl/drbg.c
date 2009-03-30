@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: drbg.c,v 1.6 2009/03/30 19:21:08 wtc%google.com Exp $ */
+/* $Id: drbg.c,v 1.7 2009/03/30 19:31:04 wtc%google.com Exp $ */
 
 #ifdef FREEBL_NO_DEPEND
 #include "stubs.h"
@@ -409,7 +409,6 @@ static PRStatus rng_init(void)
 	} else {
 	    PZ_DestroyLock(globalrng->lock);
 	    globalrng->lock = NULL;
-	    globalrng->isValid = PR_FALSE;
 	    globalrng = NULL;
 	    return PR_FAILURE;
 	}
@@ -441,7 +440,7 @@ prng_freeRNGContext(RNGContext *rng)
     memcpy(rng->C, inputhash, sizeof rng->C); 
     memcpy(V(rng), &inputhash[sizeof rng->C], VSize(rng)); 
 
-    globalrng = NULL;
+    memset(inputhash, 0, sizeof inputhash);
 }
 
 /*
