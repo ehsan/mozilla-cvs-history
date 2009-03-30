@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: drbg.c,v 1.5 2009/03/29 16:51:58 wtc%google.com Exp $ */
+/* $Id: drbg.c,v 1.6 2009/03/30 19:21:08 wtc%google.com Exp $ */
 
 #ifdef FREEBL_NO_DEPEND
 #include "stubs.h"
@@ -157,7 +157,7 @@ static RNGContext theGlobalRng;
  * input_string_1 must be supplied.
  * if input_string_2 is not supplied, NULL should be passed for this parameter.
  */
-static void
+static SECStatus
 prng_Hash_df(PRUint8 *requested_bytes, unsigned int no_of_bytes_to_return, 
 	const PRUint8 *input_string_1, unsigned int input_string_1_len, 
 	const PRUint8 *input_string_2, unsigned int input_string_2_len)
@@ -182,6 +182,7 @@ prng_Hash_df(PRUint8 *requested_bytes, unsigned int no_of_bytes_to_return,
 	requested_bytes += hash_return_len;
 	no_of_bytes_to_return -= hash_return_len;
     }
+    return SECSuccess;
 }
 
 
