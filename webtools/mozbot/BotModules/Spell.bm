@@ -48,7 +48,7 @@ sub checkSpelling {
                   //isox) { # and remove everything up to here so we can do another check in a minute
         my $word = $1;
         # XXX escape $word
-        $self->getURI($event, "http://www.m-w.com/cgi-bin/dictionary?va=$word", 'word', $1); # XXX should be configurable!
+        $self->getURI($event, "http://www.merriam-webster.com/dictionary/$word", 'word', $1); # XXX should be configurable!
         return 1;
     }
     return 0;
@@ -73,12 +73,22 @@ sub GotURI {
                        (.*?)                         # our suggestions,
                        <\/PRE>                       # PRE tag
                        /osx
+                       
+                || $result =~ /                        # Match
+                       The\ word\ you've\ entered\   # literal string
+                       isn't\ in\ the\ dictionary\.  # (not very smart),
+                       .*?                           # anything (non-greedy),
+                       <ol.*?\">                         # OL tag,
+                       (.*?)                         # our suggestions,
+                       <\/ol>                       # OL tag
+                       /osx
                  # XXX this is hardcoded to m-w.com!
         ) {
             # Strip line numbering and anchor tags
             my $suggestions = $1;
             $suggestions =~ s/\s+[\d]+\.\s+//go;
             $suggestions =~ s/<a href.*?>(.*?)<\/a>/$1 /go;
+            $suggestions =~ s/<li>(.*?)<\/li>/$1 /go;
 
             # get them in list format
             my @suggestions = split(' ', $suggestions);
