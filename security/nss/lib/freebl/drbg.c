@@ -1,6 +1,4 @@
-/*
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -13,14 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
+ * The Original Code is the Network Security Services libraries.
  *
- * The Initial Developer this code is Red Hat, Inc.
+ * The Initial Developer of the Original Code is Red Hat, Inc.
  * Portions created by the Initial Developer are Copyright (C) 2009
- * 
- * Portions creaated by Netscape Communications Corporation.
- * are Copyright (C) 1994-2000 by Netscape Communications Corporation
- * All Rights Reserved.
+ * the Initial Developer. All Rights Reserved.
  *
+ * Portions created by Netscape Communications Corporation
+ * are Copyright (C) 1994-2000 Netscape Communications Corporation.
+ * All Rights Reserved.
  *
  * Contributor(s):
  *
@@ -37,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: drbg.c,v 1.7 2009/03/30 19:31:04 wtc%google.com Exp $ */
+/* $Id: drbg.c,v 1.8 2009/04/01 03:37:29 wtc%google.com Exp $ */
 
 #ifdef FREEBL_NO_DEPEND
 #include "stubs.h"
