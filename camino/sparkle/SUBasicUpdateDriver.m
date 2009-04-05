@@ -32,7 +32,7 @@
 	[appcast setDelegate:self];
 	NSString *userAgent = [NSString stringWithFormat: @"%@/%@ Sparkle/%@", [aHost name], [aHost displayVersion], ([SPARKLE_BUNDLE objectForInfoDictionaryKey:@"CFBundleVersion"] ?: nil)];
 	NSData * cleanedAgent = [userAgent dataUsingEncoding:NSASCIIStringEncoding allowLossyConversion:YES];
-	userAgent = [NSString stringWithCString:[cleanedAgent bytes] length:[cleanedAgent length]];
+	userAgent = [NSString stringWithCString:[cleanedAgent bytes] encoding:NSASCIIStringEncoding];
 	[appcast setUserAgentString:userAgent];
 	[appcast fetchAppcastFromURL:URL];
 }
@@ -142,7 +142,7 @@
 	NSString *prefix = [NSString stringWithFormat:@"%@ %@ Update", [host name], [host version]];
 	NSString *tempDir = [NSTemporaryDirectory() stringByAppendingPathComponent:prefix];
 	int cnt=1;
-	while ([[NSFileManager defaultManager] fileExistsAtPath:tempDir] && cnt <= 999999)
+	while ([[NSFileManager defaultManager] fileExistsAtPath:tempDir] && cnt <= 999)
 		tempDir = [NSTemporaryDirectory() stringByAppendingPathComponent:[NSString stringWithFormat:@"%@ %d", prefix, cnt++]];
 	BOOL success = [[NSFileManager defaultManager] createDirectoryAtPath:tempDir attributes:nil];
 	if (!success)
@@ -160,7 +160,7 @@
 {
 	// New in Sparkle 1.5: we're now checking signatures on all non-secure downloads, where "secure" is defined as both the appcast and the download being transmitted over SSL.
 	NSURL *downloadURL = [[d request] URL];
-	if (![[downloadURL scheme] isEqualToString:@"https"] || ![[appcastURL scheme] isEqualToString:@"https"] || [host publicDSAKey])
+	if (!([[downloadURL scheme] isEqualToString:@"https"] && [[appcastURL scheme] isEqualToString:@"https"]) || !([downloadURL isFileURL] && [appcastURL isFileURL]) || [host publicDSAKey])
 	{
 		if (![SUDSAVerifier validatePath:downloadPath withEncodedDSASignature:[updateItem DSASignature] withPublicDSAKey:[host publicDSAKey]])
 		{

@@ -61,11 +61,10 @@
 
 - (void)displayReleaseNotes
 {
-	// Set the default font, but avoid polluting the standard preferences.
-	WebPreferences *preferences = [NSKeyedUnarchiver unarchiveObjectWithData:[NSKeyedArchiver archivedDataWithRootObject:[WebPreferences standardPreferences]]];
-    [preferences setStandardFontFamily:[[NSFont systemFontOfSize:8] familyName]];
-	[preferences setDefaultFontSize:(int)[NSFont systemFontSizeForControlSize:NSSmallControlSize]];
-	[releaseNotesView setPreferences:preferences];
+	// Set the default font	
+	[releaseNotesView setPreferencesIdentifier:[SPARKLE_BUNDLE bundleIdentifier]];
+	[[releaseNotesView preferences] setStandardFontFamily:[[NSFont systemFontOfSize:8] familyName]];
+	[[releaseNotesView preferences] setDefaultFontSize:(int)[NSFont systemFontSizeForControlSize:NSSmallControlSize]];
 	[releaseNotesView setFrameLoadDelegate:self];
 	[releaseNotesView setPolicyDelegate:self];
 	
@@ -190,6 +189,38 @@
     else {
         [listener use];
     }
+}
+
+// Clean up the contextual menu.
+- (NSArray *)webView:(WebView *)sender contextMenuItemsForElement:(NSDictionary *)element defaultMenuItems:(NSArray *)defaultMenuItems
+{
+	NSMutableArray *webViewMenuItems = [[defaultMenuItems mutableCopy] autorelease];
+	
+	if (webViewMenuItems)
+	{
+		NSEnumerator *itemEnumerator = [defaultMenuItems objectEnumerator];
+		NSMenuItem *menuItem = nil;
+		while ((menuItem = [itemEnumerator nextObject]))
+		{
+			NSInteger tag = [menuItem tag];
+			
+			switch (tag)
+			{
+				case WebMenuItemTagOpenLinkInNewWindow:
+				case WebMenuItemTagDownloadLinkToDisk:
+				case WebMenuItemTagOpenImageInNewWindow:
+				case WebMenuItemTagDownloadImageToDisk:
+				case WebMenuItemTagOpenFrameInNewWindow:
+				case WebMenuItemTagGoBack:
+				case WebMenuItemTagGoForward:
+				case WebMenuItemTagStop:
+				case WebMenuItemTagReload:		
+					[webViewMenuItems removeObjectIdenticalTo: menuItem];
+			}
+		}
+	}
+	
+	return webViewMenuItems;
 }
 
 - (void)setDelegate:del

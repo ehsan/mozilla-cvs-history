@@ -3,7 +3,8 @@ functionality. See http://sparkle.andymatuschak.org/ for more information about
 Sparkle. The Sparkle framework is shipped inside Camino's bundle, and some glue
 code is included in Camino itself.
 
-This is a pull of revision 318 of the lp:sparkle branch from http://code.launchpad.net/sparkle
+This is a pull of revision 343 of the lp:sparkle branch from http://code.launchpad.net/sparkle
 with the following changes:
 - Commented out used of [arch=<foo>] notation in ConfigCommon.xcconfig to allow building with our toolchain
 - Commented out ARCHS in ConfigCommonRelease.xcconfig and replaced it with a version that doesn't include x86_64
+- Added a conditional definition of NSAppKitVersionNumber10_4 to SUPackageInstaller.m for 10.4 SDK build support (in the process of being upstreamed)
