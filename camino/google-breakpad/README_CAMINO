@@ -1,0 +1,7 @@
+Breakpad is an open-source library for crash reporting. See:
+  http://code.google.com/p/google-breakpad/
+for more information.
+
+This is a pull of r325 from the svn repository at:
+  http://google-breakpad.googlecode.com/svn/trunk/
+with the non-mac platform directories stripped out.
