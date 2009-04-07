@@ -210,6 +210,7 @@ GARBAGE_DIRS += \
 	growl/build \
 	sharedmenuscocoa/build \
 	sparkle/build \
+	google-breakpad/src/client/mac/build \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
@@ -228,7 +229,7 @@ ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
 	ln -fs $(srcdir)/config
 	ln -fs $(srcdir)/PreferencePanes
 	ln -fs $(srcdir)/Info-*.plist .
-	mkdir -p sharedmenuscocoa sparkle growl
+	mkdir -p sharedmenuscocoa sparkle growl google-breakpad/src/client/mac
 	bash -O extglob -c \
 	  "ln -fs $(ABS_topsrcdir)/camino/sharedmenuscocoa/!(CVS|*.xcodeproj|build) sharedmenuscocoa"
 	$(RSYNC_ALL) $(ABS_topsrcdir)/camino/sharedmenuscocoa/*.xcodeproj sharedmenuscocoa
@@ -238,6 +239,15 @@ ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
 	bash -O extglob -c \
 	  "ln -fs $(ABS_topsrcdir)/camino/growl/!(CVS|*.xcodeproj|build) growl"
 	$(RSYNC_ALL) $(ABS_topsrcdir)/camino/growl/*.xcodeproj growl
+	bash -O extglob -c \
+	  "ln -fs $(ABS_topsrcdir)/camino/google-breakpad/!(CVS|build|src) google-breakpad"
+	bash -O extglob -c \
+	  "ln -fs $(ABS_topsrcdir)/camino/google-breakpad/src/!(CVS|build|client) google-breakpad/src"
+	bash -O extglob -c \
+	  "ln -fs $(ABS_topsrcdir)/camino/google-breakpad/src/client/!(CVS|build|mac) google-breakpad/src/client"
+	bash -O extglob -c \
+	  "ln -fs $(ABS_topsrcdir)/camino/google-breakpad/src/client/mac/!(CVS|build|*.xcodeproj) google-breakpad/src/client/mac"
+	$(RSYNC_ALL) $(ABS_topsrcdir)/camino/google-breakpad/src/client/mac/*.xcodeproj google-breakpad/src/client/mac/
 endif
 
 # Generate files which need to pull version numbers or dates from other files
