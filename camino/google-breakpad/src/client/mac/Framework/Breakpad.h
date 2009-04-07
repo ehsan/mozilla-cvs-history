@@ -77,10 +77,9 @@ extern "C" {
 #define BREAKPAD_LOGFILES              "BreakpadLogFiles"
 #define BREAKPAD_LOGFILE_UPLOAD_SIZE   "BreakpadLogFileTailSize"
 #define BREAKPAD_LOGFILE_KEY_PREFIX    "BreakpadAppLogFile"
-#define BREAKPAD_REQUEST_COMMENTS      "BreakpadRequestComments"
-#define BREAKPAD_REQUEST_EMAIL         "BreakpadRequestEmail"
-#define BREAKPAD_COMMENTS              "BreakpadComments"
 #define BREAKPAD_EMAIL                 "BreakpadEmail"
+#define BREAKPAD_REQUEST_COMMENTS      "BreakpadRequestComments"
+#define BREAKPAD_COMMENTS              "BreakpadComments"
 
 // Optional user-defined function to dec to decide if we should handle
 // this crash or forward it along.
@@ -112,8 +111,8 @@ typedef bool (*BreakpadFilterCallback)(int exception_type,
 //                                as metadata for crash report
 //                                REQUIRED
 //
-// BREAKPAD_VENDOR                Vendor named, used in UI (e.g. the Xxxx
-//                                foo bar company product widget has crashed)
+// BREAKPAD_VENDOR                Vendor name, used in UI (e.g. "A report has
+//                                been created that you can send to <vendor>")
 //
 // BREAKPAD_URL                   URL destination for reporting
 //                                REQUIRED
@@ -150,10 +149,8 @@ typedef bool (*BreakpadFilterCallback)(int exception_type,
 //                                should be uploaded at crash time.
 //
 // BREAKPAD_REQUEST_COMMENTS      If true, the message dialog will have a
-//                                text box for the user to enter comments.
-// BREAKPAD_REQUEST_EMAIL         If true, and BREAKPAD_REQUEST_COMMENTS is
-//                                true, the message dialog will have a text box
-//                                for the user to enter their email address.
+//                                text box for the user to enter comments as
+//                                well as a name and email address.
 //                                Default: NO
 //
 // The BREAKPAD_PRODUCT, BREAKPAD_VERSION, and BREAKPAD_URL are
