@@ -211,6 +211,9 @@ GARBAGE_DIRS += \
 	sharedmenuscocoa/build \
 	sparkle/build \
 	google-breakpad/src/client/mac/build \
+	google-breakpad/src/tools/mac/dump_syms/build \
+	google-breakpad/src/tools/mac/crash_report/build \
+	google-breakpad/src/tools/mac/symupload/build \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
@@ -229,7 +232,11 @@ ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
 	ln -fs $(srcdir)/config
 	ln -fs $(srcdir)/PreferencePanes
 	ln -fs $(srcdir)/Info-*.plist .
-	mkdir -p sharedmenuscocoa sparkle growl google-breakpad/src/client/mac
+	mkdir -p sharedmenuscocoa sparkle growl \
+	  google-breakpad/src/client/mac \
+	  google-breakpad/src/tools/mac/dump_syms \
+	  google-breakpad/src/tools/mac/crash_report \
+	  google-breakpad/src/tools/mac/symupload
 	bash -O extglob -c \
 	  "ln -fs $(ABS_topsrcdir)/camino/sharedmenuscocoa/!(CVS|*.xcodeproj|build) sharedmenuscocoa"
 	$(RSYNC_ALL) $(ABS_topsrcdir)/camino/sharedmenuscocoa/*.xcodeproj sharedmenuscocoa
@@ -242,12 +249,21 @@ ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
 	bash -O extglob -c \
 	  "ln -fs $(ABS_topsrcdir)/camino/google-breakpad/!(CVS|build|src) google-breakpad"
 	bash -O extglob -c \
-	  "ln -fs $(ABS_topsrcdir)/camino/google-breakpad/src/!(CVS|build|client) google-breakpad/src"
+	  "ln -fs $(ABS_topsrcdir)/camino/google-breakpad/src/!(CVS|build|client|tools) google-breakpad/src"
 	bash -O extglob -c \
 	  "ln -fs $(ABS_topsrcdir)/camino/google-breakpad/src/client/!(CVS|build|mac) google-breakpad/src/client"
 	bash -O extglob -c \
 	  "ln -fs $(ABS_topsrcdir)/camino/google-breakpad/src/client/mac/!(CVS|build|*.xcodeproj) google-breakpad/src/client/mac"
-	$(RSYNC_ALL) $(ABS_topsrcdir)/camino/google-breakpad/src/client/mac/*.xcodeproj google-breakpad/src/client/mac/
+	bash -O extglob -c \
+	  "ln -fs $(ABS_topsrcdir)/camino/google-breakpad/src/tools/mac/dump_syms/!(CVS|build|*.xcodeproj) google-breakpad/src/tools/mac/dump_syms"
+	bash -O extglob -c \
+	  "ln -fs $(ABS_topsrcdir)/camino/google-breakpad/src/tools/mac/crash_report/!(CVS|build|*.xcodeproj) google-breakpad/src/tools/mac/crash_report"
+	bash -O extglob -c \
+	  "ln -fs $(ABS_topsrcdir)/camino/google-breakpad/src/tools/mac/symupload/!(CVS|build|*.xcodeproj) google-breakpad/src/tools/mac/symupload"
+	$(RSYNC_ALL) $(ABS_topsrcdir)/camino/google-breakpad/src/client/mac/*.xcodeproj google-breakpad/src/client/mac
+	$(RSYNC_ALL) $(ABS_topsrcdir)/camino/google-breakpad/src/tools/mac/dump_syms/*.xcodeproj google-breakpad/src/tools/mac/dump_syms
+	$(RSYNC_ALL) $(ABS_topsrcdir)/camino/google-breakpad/src/tools/mac/crash_report/*.xcodeproj google-breakpad/src/tools/mac/crash_report
+	$(RSYNC_ALL) $(ABS_topsrcdir)/camino/google-breakpad/src/tools/mac/symupload/*.xcodeproj google-breakpad/src/tools/mac/symupload
 endif
 
 # Generate files which need to pull version numbers or dates from other files
