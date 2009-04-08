@@ -256,11 +256,23 @@
 		</class>
 		<class name="tab" code="BTab" plural="tabs">
 			<cocoa class="BrowserWrapper"/>
-			<property name="title" code="pTtl" description="The tab&apos;s displayed title" type="text" access="r">
+			<property name="title" code="pTtl" description="The displayed title of the tab." type="text" access="r">
 				<cocoa key="title"/>
 			</property>
-			<property name="URL" code="pURL" description="The tab&apos;s current URL" type="text">
+			<property name="URL" code="pURL" description="The current URL of the tab." type="text">
 				<cocoa key="currentURI"/>
+			</property>
+			<property name="source" code="pSrc" description="The HTML source of the web page currently loaded in the tab." type="text" access="r">
+				<cocoa key="pageSource"/>
+			</property>
+			<property name="text" code="pTxt" description="The text of the web page currently loaded in the tab." type="text" access="r">
+				<cocoa key="pageText"/>
+			</property>
+			<property name="selected source" code="pSSr" description="The HTML source of the current selection in the tab." type="text" access="r">
+				<cocoa key="selectionSource"/>
+			</property>
+			<property name="selected text" code="pSTx" description="The currently selected text in the tab." type="text" access="r">
+				<cocoa key="selectionText"/>
 			</property>
 			<responds-to name="close">
 				<cocoa method="close:"/>

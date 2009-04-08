@@ -142,6 +142,9 @@
 const char kPersistContractID[] = "@mozilla.org/embedding/browser/nsWebBrowserPersist;1";
 const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 
+const char* const kPlainTextMIMEType = "text/plain";
+const char* const kHTMLMIMEType = "text/html";
+
 #define DEFAULT_TEXT_ZOOM 1.0f
 #define MIN_TEXT_ZOOM 0.01f
 #define MAX_TEXT_ZOOM 20.0f
@@ -1705,27 +1708,40 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 //
 // -selectedText
 //
-// Returns the currently selected text as a NSString. 
+// Returns the currently selected text as an NSString. 
 //
 - (NSString*)selectedText
 {
+  return [self pageTextForSelection:YES inFormat:kPlainTextMIMEType];
+}
+
+//
+// - pageTextForSelection: inFormat:
+//
+// Returns the text of the current selection (if selection is YES), or the
+// whole page (if selection is NO). Choose "text/plain" as the format to get
+// the text as it appears in the browser, without any formatting attributes, 
+// or "text/html" to get the source code.
+//
+- (NSString*)pageTextForSelection:(BOOL)selection inFormat:(const char*)format
+{
   nsCOMPtr<nsICommandManager> cmdManager = do_GetInterface(_webBrowser);
   if (!cmdManager) return NO;
-  
+
   nsCOMPtr<nsICommandParams> params = do_CreateInstance(NS_COMMAND_PARAMS_CONTRACTID);
   if (!params) return NO;
-  
-  params->SetCStringValue("format", "text/plain");
-  params->SetBooleanValue("selection_only", PR_TRUE);
-  
+
+  params->SetCStringValue("format", format);
+  params->SetBooleanValue("selection_only", (selection ? PR_TRUE : PR_FALSE));
+
   nsresult rv = cmdManager->DoCommand("cmd_getContents", params, nsnull);
   if (NS_FAILED(rv))
     return NO;
- 
-  nsAutoString selectedText;
-  params->GetStringValue("result", selectedText);
 
-  return [NSString stringWith_nsAString:selectedText];
+  nsAutoString requestedText;
+  params->GetStringValue("result", requestedText);
+
+  return [NSString stringWith_nsAString:requestedText];
 }
 
 - (BOOL)writeSelectionToPasteboard:(NSPasteboard *)pboard types:(NSArray *)types

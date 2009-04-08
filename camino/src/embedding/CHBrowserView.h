@@ -190,6 +190,9 @@ typedef enum {
   CHSecurityHigh          = 3
 } CHSecurityStrength;
 
+extern const char* const kPlainTextMIMEType;
+extern const char* const kHTMLMIMEType;
+
 @interface CHBrowserView : NSView 
 {
   nsIWebBrowser*        _webBrowser;
@@ -323,6 +326,9 @@ typedef enum {
 // charset
 - (IBAction)reloadWithNewCharset:(NSString*)charset;
 - (NSString*)currentCharset;
+
+// access to page text as a given MIME type
+- (NSString*)pageTextForSelection:(BOOL)selection inFormat:(const char*)format;
 
 // security
 - (BOOL)hasSSLStatus;   // if NO, then the following methods all return empty values.

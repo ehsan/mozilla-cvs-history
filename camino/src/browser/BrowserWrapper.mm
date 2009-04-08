@@ -508,6 +508,26 @@ static FlashblockWhitelistManager* sFlashblockWhitelistManager = nil;
   return mDisplayTitle;
 }
 
+- (NSString*)pageSource
+{
+  return [mBrowserView pageTextForSelection:NO inFormat:kHTMLMIMEType];
+}
+
+- (NSString*)pageText
+{
+  return [mBrowserView pageTextForSelection:NO inFormat:kPlainTextMIMEType];
+}
+
+- (NSString*)selectionSource
+{
+  return [mBrowserView pageTextForSelection:YES inFormat:kHTMLMIMEType];
+}
+
+- (NSString*)selectionText
+{
+  return [mBrowserView pageTextForSelection:YES inFormat:kPlainTextMIMEType];
+}
+
 - (NSImage*)siteIcon
 {
   return mSiteIconImage;
