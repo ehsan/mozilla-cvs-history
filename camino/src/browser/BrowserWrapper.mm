@@ -606,9 +606,11 @@ static FlashblockWhitelistManager* sFlashblockWhitelistManager = nil;
 
     nsCOMPtr<nsIDOMWindow> contentWindow = [[self browserView] contentWindow];
     nsCOMPtr<nsPIDOMWindow> piWindow(do_QueryInterface(contentWindow));
-    nsPIDOMEventTarget *chromeHandler = piWindow->GetChromeEventHandler();
-    if (chromeHandler)
-      chromeHandler->AddEventListenerByIID(clickListener, NS_GET_IID(nsIDOMMouseListener));
+    if (piWindow) {
+      nsPIDOMEventTarget *chromeHandler = piWindow->GetChromeEventHandler();
+      if (chromeHandler)
+        chromeHandler->AddEventListenerByIID(clickListener, NS_GET_IID(nsIDOMMouseListener));
+    }
   }
 }
 

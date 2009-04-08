@@ -241,12 +241,13 @@ CHBrowserListener::ProvideWindow(nsIDOMWindow *inParent, PRUint32 inChromeFlags,
   if (prefersTabs) {
     CHBrowserView* newContainer = [mContainer reuseExistingBrowserWindow:inChromeFlags];
     nsCOMPtr<nsIDOMWindow> contentWindow = [newContainer contentWindow];
-    
-    // make sure gecko knows whether we're creating a new browser window (new tabs don't count)
-    nsCOMPtr<nsIDOMWindow> currentWindow = [mView contentWindow];
-    *outWindowIsNew = (contentWindow != currentWindow);
-    
-    NS_IF_ADDREF(*outDOMWindow = contentWindow.get());
+    if (contentWindow) {
+      // make sure gecko knows whether we're creating a new browser window (new tabs don't count)
+      nsCOMPtr<nsIDOMWindow> currentWindow = [mView contentWindow];
+      *outWindowIsNew = (contentWindow != currentWindow);
+
+      NS_IF_ADDREF(*outDOMWindow = contentWindow.get());
+    }
   }
 
   return NS_OK;

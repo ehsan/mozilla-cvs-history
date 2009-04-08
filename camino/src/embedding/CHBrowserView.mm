@@ -266,39 +266,39 @@ const char* const kHTMLMIMEType = "text/html";
 
     nsCOMPtr<nsIDOMWindow> contentWindow = [self contentWindow];
     nsCOMPtr<nsPIDOMWindow> piWindow(do_QueryInterface(contentWindow));
-    nsPIDOMEventTarget *chromeHandler = piWindow->GetChromeEventHandler();
-    if (chromeHandler) {
-      chromeHandler->AddEventListenerByIID((nsIDOMMouseListener*)selectHandler, NS_GET_IID(nsIDOMMouseListener));
-      chromeHandler->AddEventListenerByIID((nsIDOMKeyListener*)selectHandler, NS_GET_IID(nsIDOMKeyListener));
-    }
-
-    // register the CHBrowserListener as an event listener for popup-blocking events,
-    // link-added events, and error page (XUL content activated) command events.
-    nsCOMPtr<nsIDOMEventTarget> eventTarget = do_QueryInterface(chromeHandler);
-    if (eventTarget)
-    {
-      rv = eventTarget->AddEventListener(NS_LITERAL_STRING("DOMPopupBlocked"),
-                                         static_cast<nsIDOMEventListener*>(_listener), PR_FALSE);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "AddEventListener failed");
-
-      rv = eventTarget->AddEventListener(NS_LITERAL_STRING("DOMLinkAdded"),
-                                         static_cast<nsIDOMEventListener*>(_listener), PR_FALSE);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "AddEventListener failed");
-
-      // Register the CHBrowserListener to listen for flashblock whitelist checks.
-      // Need to use an nsIDOMNSEventTarget since flashblockCheckLoad is untrusted
-      nsCOMPtr<nsIDOMNSEventTarget> nsEventTarget = do_QueryInterface(eventTarget);
-      if (nsEventTarget)
-      {
-        rv = nsEventTarget->AddEventListener(NS_LITERAL_STRING("flashblockCheckLoad"),
-                                             static_cast<nsIDOMEventListener*>(_listener),
-                                             PR_TRUE, PR_TRUE);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "AddEventListener failed: flashblockCheckLoad");
+    if (piWindow) {
+      nsPIDOMEventTarget *chromeHandler = piWindow->GetChromeEventHandler();
+      if (chromeHandler) {
+        chromeHandler->AddEventListenerByIID((nsIDOMMouseListener*)selectHandler, NS_GET_IID(nsIDOMMouseListener));
+        chromeHandler->AddEventListenerByIID((nsIDOMKeyListener*)selectHandler, NS_GET_IID(nsIDOMKeyListener));
       }
 
-      rv = eventTarget->AddEventListener(NS_LITERAL_STRING("command"),
-                                         static_cast<nsIDOMEventListener*>(_listener), PR_FALSE);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "AddEventListener failed");
+      // register the CHBrowserListener as an event listener for popup-blocking events,
+      // link-added events, and error page (XUL content activated) command events.
+      nsCOMPtr<nsIDOMEventTarget> eventTarget = do_QueryInterface(chromeHandler);
+      if (eventTarget) {
+        rv = eventTarget->AddEventListener(NS_LITERAL_STRING("DOMPopupBlocked"),
+                                           static_cast<nsIDOMEventListener*>(_listener), PR_FALSE);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "AddEventListener failed");
+
+        rv = eventTarget->AddEventListener(NS_LITERAL_STRING("DOMLinkAdded"),
+                                           static_cast<nsIDOMEventListener*>(_listener), PR_FALSE);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "AddEventListener failed");
+
+        // Register the CHBrowserListener to listen for flashblock whitelist checks.
+        // Need to use an nsIDOMNSEventTarget since flashblockCheckLoad is untrusted
+        nsCOMPtr<nsIDOMNSEventTarget> nsEventTarget = do_QueryInterface(eventTarget);
+        if (nsEventTarget) {
+          rv = nsEventTarget->AddEventListener(NS_LITERAL_STRING("flashblockCheckLoad"),
+                                               static_cast<nsIDOMEventListener*>(_listener),
+                                               PR_TRUE, PR_TRUE);
+          NS_ASSERTION(NS_SUCCEEDED(rv), "AddEventListener failed: flashblockCheckLoad");
+        }
+
+        rv = eventTarget->AddEventListener(NS_LITERAL_STRING("command"),
+                                           static_cast<nsIDOMEventListener*>(_listener), PR_FALSE);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "AddEventListener failed");
+      }
     }
   }
   return self;
@@ -628,6 +628,8 @@ const char* const kHTMLMIMEType = "text/html";
 - (NSDate*)pageLastModifiedDate
 {
   nsCOMPtr<nsIDOMWindow> domWindow = [self contentWindow];
+  if (!domWindow)
+    return nil;
 
   nsCOMPtr<nsIDOMDocument> domDocument;
   domWindow->GetDocument(getter_AddRefs(domDocument));
@@ -1158,7 +1160,9 @@ const char* const kHTMLMIMEType = "text/html";
 - (BOOL)isTextBasedContent
 {
   nsCOMPtr<nsIDOMWindow> domWindow = [self contentWindow];
-  
+  if (!domWindow)
+    return NO;
+
   nsCOMPtr<nsIDOMDocument> domDocument;
   domWindow->GetDocument(getter_AddRefs(domDocument));
   if (!domDocument)
@@ -1188,7 +1192,9 @@ const char* const kHTMLMIMEType = "text/html";
 - (BOOL)isImageBasedContent
 {
   nsCOMPtr<nsIDOMWindow> domWindow = [self contentWindow];
-  
+  if (!domWindow)
+    return NO;
+
   nsCOMPtr<nsIDOMDocument> domDocument;
   domWindow->GetDocument(getter_AddRefs(domDocument));
   if (!domDocument)
