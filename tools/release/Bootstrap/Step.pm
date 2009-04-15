@@ -64,6 +64,14 @@ sub Shell {
         $runShellCommandArgs{'dir'} = $dir;
     }
 
+    if ($args{'prependToPath'}) {
+        $runShellCommandArgs{'prependToPath'} = $args{'prependToPath'};
+    }
+    
+    if ($args{'appendToPath'}) {
+        $runShellCommandArgs{'appendToPath'} = $args{'appendToPath'};
+    }
+
     $this->Log(msg => 'Running shell command' .
      (defined($dir) ? " in $dir" : '') . ':');
     $this->Log(msg => '  arg0: ' . $cmd); 
@@ -186,6 +194,12 @@ sub SendAnnouncement {
     my @ccList = $config->Exists(var => 'cc') ? split(/[,\s]+/, 
      $config->Get(var => 'cc')) : ();
     my $hostname = $config->SystemInfo(var => 'hostname');
+
+    # This allows for per-step CC, since some consumers only care about
+    # certain steps, e.g. partner repacks
+    if ($args{'cc'}) {
+        push @ccList, split(/[,\s]+/,$args{'cc'});
+    }
 
     my $subject = $hostname . ' - ' . $args{'subject'};
     my $message = $hostname . ' - ' . $args{'message'};

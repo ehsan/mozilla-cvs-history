@@ -111,6 +111,11 @@ sub RunShellCommand {
     my $prevStdoutBufferingSetting = 0;
     local *LOGFILE;
 
+    my $original_path = $ENV{'PATH'};
+    if  ($args{'prependToPath'} or $args{'appendToPath'}) {
+        $ENV{'PATH'} = AugmentPath(%args);
+    }
+                    
     if ($printOutputImmediately) {
         # We Only end up doing this if it's requested that we're going to print
         # output immediately. Additionally, we can't call autoflush() on STDOUT
@@ -265,6 +270,11 @@ sub RunShellCommand {
         }
     }
 
+    # Restore path (if necessary)
+    if ($ENV{'PATH'} ne $original_path) {
+        $ENV{'PATH'} = $original_path;
+    }
+
     # Restore external state
     chdir($cwd) if (defined($changeToDir));
     if ($printOutputImmediately) {
@@ -281,6 +291,37 @@ sub RunShellCommand {
              output => $output,
              dumpedCore => $dumpedCore
            };
+}
+
+## Allows the path to be (temporarily) augmented on either end. It's expected
+## that the caller will keep track of the original path if it needs to be
+## reverted.
+##
+## NOTE: we don't actually set the path here, just return the augmented path
+## string for use by the caller.
+
+sub AugmentPath {
+    my %args = @_;
+
+    my $prependToPath = $args{'prependToPath'};
+    my $appendToPath  = $args{'appendToPath'};
+    
+    my $current_path = $ENV{'PATH'};
+    if ($prependToPath and $prependToPath ne '') {
+        if ($current_path and $current_path ne '') {
+            $current_path = $prependToPath . ":" . $current_path;
+        } else {
+            $current_path = $prependToPath;
+        }
+    }
+    if ($appendToPath and $appendToPath ne '') {
+        if ($current_path and $current_path ne '') {
+            $current_path .= ":" . $appendToPath;
+        } else {
+            $current_path = $appendToPath;
+        }
+    }
+    return $current_path;
 }
 
 ## This is a wrapper function to get easy true/false return values from a

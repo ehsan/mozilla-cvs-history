@@ -14,6 +14,7 @@ use Bootstrap::Step::PatcherConfig;
 use Bootstrap::Step::Updates;
 use Bootstrap::Step::Stage;
 use Bootstrap::Step::Sign;
+use Bootstrap::Step::PartnerRepack;
 
 my @allSteps = (
     'Tag',
@@ -25,6 +26,7 @@ my @allSteps = (
     'PatcherConfig',
     'Updates',
     'Stage',
+    'PartnerRepack'
 );
 
 my %config;
