@@ -1,5 +1,6 @@
 /* Localized versions of Info.plist keys */
 
+BreakpadVendor = "the Camino developers";
 CFBundleName = "Camino";
 CFBundleShortVersionString = "%CM_APP_VERSION%";
 CFBundleGetInfoString = "Camino %CM_APP_VERSION%, © 1998-%CM_COPYRIGHT_YEAR% Contributors";

@@ -37,9 +37,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import <Cocoa/Cocoa.h>
+#import <Breakpad/Breakpad.h>
 
 #include <sys/resource.h>
 #include <sys/types.h>
+#include <time.h>
+
 
 static void SetupRuntimeOptions(int argc, const char *argv[])
 {
@@ -65,6 +68,18 @@ static void SetMaxFileDescriptors(unsigned int target)
 
 int main(int argc, const char *argv[])
 {
+  NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
+  NSDictionary* info = [[NSBundle mainBundle] infoDictionary];
+  BreakpadRef breakpad = BreakpadCreate(info);
+  // Add fields for Socorro
+  BreakpadSetKeyValue(breakpad, @"BuildID", [info valueForKey:@"MozillaBuildID"]);
+  BreakpadSetKeyValue(breakpad, @"ProductName", [info valueForKey:@"CFBundleName"]);
+  BreakpadSetKeyValue(breakpad, @"Version", [info valueForKey:@"CFBundleShortVersionString"]);
+  BreakpadSetKeyValue(breakpad, @"StartupTime", [NSString stringWithFormat:@"%ld", time(NULL)]);
+  // XXX lie for now, to get things working.
+  BreakpadSetKeyValue(breakpad, @"CrashTime", [NSString stringWithFormat:@"%ld", (time(NULL)+1)]);
+  [pool release];
+
   SetupRuntimeOptions(argc, argv);
 
   // Because of a nasty file descriptor leak when viewing Flash
@@ -73,4 +88,6 @@ int main(int argc, const char *argv[])
   SetMaxFileDescriptors(1024);
 
   return NSApplicationMain(argc, argv);
+
+  BreakpadRelease(breakpad);
 }
