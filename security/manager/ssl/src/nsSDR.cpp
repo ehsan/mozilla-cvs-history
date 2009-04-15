@@ -235,7 +235,7 @@ EncryptString(const char *text, char **_retval)
     rv = encode(encrypted, eLen, _retval);
 
 loser:
-    if (encrypted) PORT_Free(encrypted);
+    if (encrypted) nsMemory::Free(encrypted);
 
     return rv;
 }
@@ -274,8 +274,8 @@ DecryptString(const char *crypt, char **_retval)
     r = 0;
 
 loser:
-    if (decrypted) PORT_Free(decrypted);
-    if (decoded) PR_DELETE(decoded);
+    if (decrypted) nsMemory::Free(decrypted);
+    if (decoded) nsMemory::Free(decoded);
  
     return rv;
 }
@@ -373,11 +373,7 @@ encode(const unsigned char *data, PRInt32 dataLen, char **_retval)
 {
     nsresult rv = NS_OK;
 
-    char *result = PL_Base64Encode((const char *)data, dataLen, NULL);
-    if (!result) { rv = NS_ERROR_OUT_OF_MEMORY; goto loser; }
-
-    *_retval = NS_strdup(result);
-    PR_DELETE(result);
+    *_retval = PL_Base64Encode((const char *)data, dataLen, NULL);
     if (!*_retval) { rv = NS_ERROR_OUT_OF_MEMORY; goto loser; }
 
 loser:
