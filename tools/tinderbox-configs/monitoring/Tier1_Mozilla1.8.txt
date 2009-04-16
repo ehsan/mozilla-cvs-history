@@ -1,4 +1,3 @@
-production-prometheus-vm02|Depend
-bm-xserve05|Fx-Nightly
+crazyhorse|Tb-Nightly
 bm-xserve02|Tb-Nightly
-production-pacifica-vm02|Depend
+patrocles|Tb-Nightly
