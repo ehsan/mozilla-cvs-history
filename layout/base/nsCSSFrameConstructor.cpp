@@ -8608,6 +8608,12 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
       PRUint32 containerCount = aContainer->GetChildCount();
       for (PRUint32 i = aNewIndexInContainer; i < containerCount; i++) {
         nsIContent *child = aContainer->GetChildAt(i);
+        if (mPresShell->GetPrimaryFrameFor(child)) {
+          // Already have a frame for this content; a previous ContentInserted
+          // in this loop must have reconstructed its insertion parent.  Skip
+          // it.
+          continue;
+        }
         if (multiple) {
           // Filters are in effect, so the insertion point needs to be refetched for
           // each child.
