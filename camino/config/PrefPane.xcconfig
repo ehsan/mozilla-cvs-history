@@ -12,7 +12,12 @@ GCC_TREAT_WARNINGS_AS_ERRORS = YES
 GCC_WARN_SIGN_COMPARE = YES
 WARNING_CFLAGS = -Wall
 
+// Build the pref panes diretly into the app bundle, since bundling them in
+// a build step is tricky due to our dual targets.
 CONFIGURATION_BUILD_DIR = $(BUILD_DIR)/$(CONFIGURATION)/Camino.app/Contents/PreferencePanes
+// ... but we don't want dSYM files to go there.
+DWARF_DSYM_FOLDER_PATH = $(BUILD_DIR)/$(CONFIGURATION)
+
 BUNDLE_LOADER = $(BUILD_DIR)/$(CONFIGURATION)/Camino.app/Contents/MacOS/Camino
 OTHER_LDFLAGS = -Wl,-executable_path,$(BUILD_DIR)/$(CONFIGURATION)/Camino.app/Contents/MacOS
 
