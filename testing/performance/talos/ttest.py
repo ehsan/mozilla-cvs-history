@@ -267,10 +267,11 @@ def runTest(browser_config, test_config):
 
       time.sleep(browser_config['browser_wait']) 
       #clean up the process
-      timer = 0
-      while ((process.poll() is None) and timer < browser_config['browser_wait']):
-        time.sleep(1)
-        timer+=1
+      if process.returncode is not None:
+        timer = 0
+        while ((process.poll() is None) and timer < browser_config['browser_wait']):
+          time.sleep(1)
+          timer+=1
  
       if test_config['shutdown']:
           shutdown.append(endTime - startTime)
