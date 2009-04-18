@@ -196,8 +196,6 @@ function reportResults() {
     }
     avgOpenTime = Math.round(avgOpenTime / (MAX_INDEX - 1));
     dump("__start_report" + openingTimes.join('|') + "__end_report");
-    var now = (new Date()).getTime();
-    dump("__startTimestamp" + now + "__endTimestamp\n");
     dump("openingTimes="+openingTimes.slice(1)+"\n");
     dump("avgOpenTime:" + avgOpenTime + "\n" );
     dump("minOpenTime:" + minOpenTime + "\n" );

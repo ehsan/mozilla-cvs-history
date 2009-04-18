@@ -45,7 +45,6 @@ __author__ = 'annie.sullivan@gmail.com (Annie Sullivan)'
 
 import platform
 import os
-import os.path
 import re
 import shutil
 import tempfile
@@ -53,8 +52,6 @@ import time
 import glob
 
 import utils
-from utils import talosError
-import subprocess
 import ffprocess
 
 if platform.system() == "Linux":
@@ -143,7 +140,7 @@ def InstallInBrowser(browser_path, dir_path):
       else:
           utils.debug("WARNING: file already installed (" + fromfile + ")")
 
-def InitializeNewProfile(browser_path, process, browser_wait, extra_args, profile_dir, init_url, log):
+def InitializeNewProfile(browser_path, process, browser_wait, extra_args, profile_dir, init_url):
   """Runs browser with the new profile directory, to negate any performance
      hit that could occur as a result of starting up with a new profile.  
      Also kills the "extra" browser that gets spawned the first time browser
@@ -154,23 +151,15 @@ def InitializeNewProfile(browser_path, process, browser_wait, extra_args, profil
     profile_dir: The full path to the profile directory to load
   """
   PROFILE_REGEX = re.compile('__metrics(.*)__metrics', re.DOTALL|re.MULTILINE)
-  command_line = ffprocess.GenerateBrowserCommandLine(browser_path, extra_args, profile_dir, init_url)
-  process = subprocess.Popen('python bcontroller.py --command "%s" --name %s --timeout %d --log %s' % (command_line, process, browser_wait, log), universal_newlines=True, shell=True, bufsize=0, env=os.environ)
-  res = 0
-  total_time = 0
-  while total_time < 600: #10 minutes
-    time.sleep(1)
-    if process.poll() != None: #browser_controller completed, file now full
-      if not os.path.isfile(log):
-        raise talosError("no output from browser")
-      results_file = open(log, "r")
-      results_raw = results_file.read()
-      results_file.close()
-      match = PROFILE_REGEX.search(results_raw)
-      if match:
-        res = 1
-        print match.group(1)
-        break
-    total_time += 1
-
+  res = 1
+  cmd = ffprocess.GenerateBrowserCommandLine(browser_path, extra_args, profile_dir, init_url)
+  (match, timed_out) = ffprocess.RunProcessAndWaitForOutput(cmd,
+                                                              process,
+                                                              browser_wait,
+                                                              PROFILE_REGEX,
+                                                              30)
+  if (not timed_out):
+    print match
+  else:
+    res = 0
   return res

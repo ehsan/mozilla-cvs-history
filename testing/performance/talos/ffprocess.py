@@ -46,7 +46,6 @@ import os
 import re
 import time
 import subprocess
-from utils import talosError
 
 if platform.system() == "Linux":
     from ffprocess_linux import *
@@ -94,10 +93,6 @@ def RunProcessAndWaitForOutput(command, process_name, browser_wait, output_regex
     if result:
       try:
         return_val = result.group(1)
-        timer=0
-        while ((process.poll() is None) and timer < browser_wait):
-          time.sleep(1)
-          timer+=1
         TerminateAllProcesses(browser_wait, process_name)
         return (return_val, False)
       except IndexError:
@@ -107,23 +102,3 @@ def RunProcessAndWaitForOutput(command, process_name, browser_wait, output_regex
   # Timed out.
   TerminateAllProcesses(browser_wait, process_name)
   return (None, True)
-
-def checkBrowserAlive(process_name):
-  #is the browser actually up?
-  return (ProcessesWithNameExist(process_name) and not ProcessesWithNameExist("crashreporter", "talkback", "dwwin"))
-
-def checkAllProcesses(process_name):
-  #is anything browser related active?
-  return ProcessesWithNameExist(process_name, "crashreporter", "talkback", "dwwin")
-
-def cleanupProcesses(process_name, browser_wait):
-  #kill any remaining browser processes
-  TerminateAllProcesses(browser_wait, process_name, "crashreporter", "dwwin", "talkback")
-  #check if anything is left behind
-  if checkAllProcesses(process_name):
-    #this is for windows machines.  when attempting to send kill messages to win processes the OS
-    # always gives the process a chance to close cleanly before terminating it, this takes longer
-    # and we need to give it a little extra time to complete
-    time.sleep(browser_wait)
-    if checkAllProcesses(process_name):
-      raise talosError("failed to cleanup")

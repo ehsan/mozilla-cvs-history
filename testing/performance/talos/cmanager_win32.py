@@ -63,9 +63,9 @@ class CounterManager:
     return keys(self.registeredCounters)
 
   def getCounterValue(self, counter):
+    hq = self.registeredCounters[counter][0]
+    hc = self.registeredCounters[counter][1]
     try:
-      hq = self.registeredCounters[counter][0]
-      hc = self.registeredCounters[counter][1]
       win32pdh.CollectQueryData(hq)
       type, val = win32pdh.GetFormattedCounterValue(hc, win32pdh.PDH_FMT_LONG)
       return val
