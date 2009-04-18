@@ -1400,13 +1400,6 @@
 			remoteGlobalIDString = 8DD76F960486AA7600D96B5E;
 			remoteInfo = dump_syms;
 		};
-		33758E740F965AE200CD1D69 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 33758E610F96555F00CD1D69 /* crash_report.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 8DD76F960486AA7600D96B5E;
-			remoteInfo = crash_report;
-		};
 		33758E780F965B4700CD1D69 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 33758E050F96551D00CD1D69 /* dump_syms.xcodeproj */;
@@ -1418,49 +1411,49 @@
 			isa = PBXContainerItemProxy;
 			containerPortal = 33758E050F96551D00CD1D69 /* dump_syms.xcodeproj */;
 			proxyType = 1;
-			remoteGlobalIDString = 8DD76F960486AA7600D96B5E /* dump_syms */;
+			remoteGlobalIDString = 8DD76F960486AA7600D96B5E;
 			remoteInfo = dump_syms;
 		};
 		33758F5B0F96EB6200CD1D69 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 33758E050F96551D00CD1D69 /* dump_syms.xcodeproj */;
 			proxyType = 1;
-			remoteGlobalIDString = 8DD76F960486AA7600D96B5E /* dump_syms */;
+			remoteGlobalIDString = 8DD76F960486AA7600D96B5E;
 			remoteInfo = dump_syms;
 		};
 		33758F5D0F96EB7000CD1D69 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 33758E050F96551D00CD1D69 /* dump_syms.xcodeproj */;
 			proxyType = 1;
-			remoteGlobalIDString = 8DD76F960486AA7600D96B5E /* dump_syms */;
+			remoteGlobalIDString = 8DD76F960486AA7600D96B5E;
 			remoteInfo = dump_syms;
 		};
 		33758F5F0F96EB7800CD1D69 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 33758E050F96551D00CD1D69 /* dump_syms.xcodeproj */;
 			proxyType = 1;
-			remoteGlobalIDString = 8DD76F960486AA7600D96B5E /* dump_syms */;
+			remoteGlobalIDString = 8DD76F960486AA7600D96B5E;
 			remoteInfo = dump_syms;
 		};
 		33758F610F96EB8700CD1D69 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 33758E050F96551D00CD1D69 /* dump_syms.xcodeproj */;
 			proxyType = 1;
-			remoteGlobalIDString = 8DD76F960486AA7600D96B5E /* dump_syms */;
+			remoteGlobalIDString = 8DD76F960486AA7600D96B5E;
 			remoteInfo = dump_syms;
 		};
 		33758F630F96EB9100CD1D69 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 33758E050F96551D00CD1D69 /* dump_syms.xcodeproj */;
 			proxyType = 1;
-			remoteGlobalIDString = 8DD76F960486AA7600D96B5E /* dump_syms */;
+			remoteGlobalIDString = 8DD76F960486AA7600D96B5E;
 			remoteInfo = dump_syms;
 		};
 		33758F650F96EB9A00CD1D69 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 33758E050F96551D00CD1D69 /* dump_syms.xcodeproj */;
 			proxyType = 1;
-			remoteGlobalIDString = 8DD76F960486AA7600D96B5E /* dump_syms */;
+			remoteGlobalIDString = 8DD76F960486AA7600D96B5E;
 			remoteInfo = dump_syms;
 		};
 		33820DA50F8AA24500D2164A /* PBXContainerItemProxy */ = {
@@ -1539,6 +1532,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 8DC2EF4F0486A6940098B216;
 			remoteInfo = Breakpad;
+		};
+		33B04C110F9A8A3B00E71846 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 33758E050F96551D00CD1D69 /* dump_syms.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 8DD76F960486AA7600D96B5E /* dump_syms */;
+			remoteInfo = dump_syms;
 		};
 		7B0B576C0D4A4EE0003BC853 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -5473,7 +5473,7 @@
 				7B0B578F0D4A50A0003BC853 /* PBXTargetDependency */,
 				7B64B7D60CCFDA210098406C /* PBXTargetDependency */,
 				33820DBE0F8AA27400D2164A /* PBXTargetDependency */,
-				33758E750F965AE200CD1D69 /* PBXTargetDependency */,
+				33B04C120F9A8A3B00E71846 /* PBXTargetDependency */,
 			);
 			name = CaminoStaticApp;
 			productInstallPath = "$(HOME)/Applications";
@@ -6838,11 +6838,6 @@
 			name = dump_syms;
 			targetProxy = 33758E720F965AD500CD1D69 /* PBXContainerItemProxy */;
 		};
-		33758E750F965AE200CD1D69 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = crash_report;
-			targetProxy = 33758E740F965AE200CD1D69 /* PBXContainerItemProxy */;
-		};
 		33758E790F965B4700CD1D69 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = dump_syms;
@@ -6892,6 +6887,11 @@
 			isa = PBXTargetDependency;
 			name = Breakpad;
 			targetProxy = 33820DBD0F8AA27400D2164A /* PBXContainerItemProxy */;
+		};
+		33B04C120F9A8A3B00E71846 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = dump_syms;
+			targetProxy = 33B04C110F9A8A3B00E71846 /* PBXContainerItemProxy */;
 		};
 		7B0B578D0D4A5098003BC853 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
