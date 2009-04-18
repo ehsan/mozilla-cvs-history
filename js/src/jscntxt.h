@@ -134,8 +134,11 @@ struct JSThread {
 extern void JS_DLL_CALLBACK
 js_ThreadDestructorCB(void *ptr);
 
+extern JSBool
+js_SetContextThread(JSContext *cx);
+
 extern void
-js_InitContextThread(JSContext *cx, JSThread *thread);
+js_ClearContextThread(JSContext *cx);
 
 extern JSThread *
 js_GetCurrentThread(JSRuntime *rt);

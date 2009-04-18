@@ -1454,9 +1454,22 @@ js_AddRootRT(JSRuntime *rt, void *rp, const char *name)
      * properly with a racing GC, without calling JS_AddRoot from a request.
      * We have to preserve API compatibility here, now that we avoid holding
      * rt->gcLock across the mark phase (including the root hashtable mark).
+     *
+     * If the GC is running and we're called on another thread, wait for this
+     * GC activation to finish.  We can safely wait here (in the case where we
+     * are called within a request on another thread's context) without fear
+     * of deadlock because the GC doesn't set rt->gcRunning until after it has
+     * waited for all active requests to end.
      */
     JS_LOCK_GC(rt);
-    js_WaitForGC(rt);
+#ifdef JS_THREADSAFE
+    JS_ASSERT(!rt->gcRunning || rt->gcLevel > 0);
+    if (rt->gcRunning && rt->gcThread->id != js_CurrentThreadId()) {
+        do {
+            JS_AWAIT_GC_DONE(rt);
+        } while (rt->gcLevel > 0);
+    }
+#endif
     rhe = (JSGCRootHashEntry *)
           JS_DHashTableOperate(&rt->gcRootsHash, rp, JS_DHASH_ADD);
     if (rhe) {
@@ -1478,7 +1491,14 @@ js_RemoveRoot(JSRuntime *rt, void *rp)
      * Same synchronization drill as above in js_AddRoot.
      */
     JS_LOCK_GC(rt);
-    js_WaitForGC(rt);
+#ifdef JS_THREADSAFE
+    JS_ASSERT(!rt->gcRunning || rt->gcLevel > 0);
+    if (rt->gcRunning && rt->gcThread->id != js_CurrentThreadId()) {
+        do {
+            JS_AWAIT_GC_DONE(rt);
+        } while (rt->gcLevel > 0);
+    }
+#endif
     (void) JS_DHashTableOperate(&rt->gcRootsHash, rp, JS_DHASH_REMOVE);
     rt->gcPoke = JS_TRUE;
     JS_UNLOCK_GC(rt);
@@ -3528,31 +3548,6 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
         }
     }
 }
-
-#ifdef JS_THREADSAFE
-
-/*
- * If the GC is running and we're called on another thread, wait for this GC
- * activation to finish. We can safely wait here without fear of deadlock (in
- * the case where we are called within a request on another thread's context)
- * because the GC doesn't set rt->gcRunning until after it has waited for all
- * active requests to end.
- *
- * We call here js_CurrentThreadId() after checking for rt->gcRunning to avoid
- * expensive calls when the GC is not running.
- */
-void
-js_WaitForGC(JSRuntime *rt)
-{
-    JS_ASSERT_IF(rt->gcRunning, rt->gcLevel > 0);
-    if (rt->gcRunning && rt->gcThread->id != js_CurrentThreadId()) {
-        do {
-            JS_AWAIT_GC_DONE(rt);
-        } while (rt->gcRunning);
-    }
-}
-
-#endif
 
 void
 js_UpdateMallocCounter(JSContext *cx, size_t nbytes)
