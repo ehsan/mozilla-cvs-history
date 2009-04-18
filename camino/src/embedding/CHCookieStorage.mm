@@ -166,8 +166,14 @@ static CHCookieStorage* sCookieStorage = nil;
   while (hasMoreElements) {
     nsCOMPtr<nsICookie2> cookie;
     cookieEnumerator->GetNext(getter_AddRefs(cookie));
-    if (cookie)
-      [cookies addObject:[NSHTTPCookie cookieFromGeckoCookie:cookie.get()]];
+    if (cookie) {
+      NSHTTPCookie* theCookie = [NSHTTPCookie cookieFromGeckoCookie:cookie.get()];
+      // For some reason we don't understand, the above can sometimes fail.
+      // XXX if we ever discover a good failure testcase in the future, we should fix
+      // cookieFromGeckoCookie: to deal with it.
+      if (theCookie)
+        [cookies addObject:theCookie];
+    }
     cookieEnumerator->HasMoreElements(&hasMoreElements);
   }
   return cookies;
