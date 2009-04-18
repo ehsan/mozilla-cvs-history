@@ -38,6 +38,7 @@
 
 import os
 import time
+import sys
 DEBUG = 0
 NOISY = 0
 START_TIME = 0
@@ -65,6 +66,7 @@ def noisy(message):
   """
   if NOISY == 1:
     print "NOISE: " + message.strip().replace('\r', '').replace('\n', '\nNOISE: ')
+    sys.stdout.flush()
 
 def debug(message):
   """Prints a debug message to the console if the DEBUG switch is turned on 
@@ -74,6 +76,7 @@ def debug(message):
   """
   if DEBUG == 1:
     print "DEBUG: " + message.strip().replace('\r', '').replace('\n', '\nDEBUG: ')
+    sys.stdout.flush()
 
 def stamped_msg(msg_title, msg_action):
   """Prints a message to the console with a time stamp
@@ -81,6 +84,7 @@ def stamped_msg(msg_title, msg_action):
   time_format = "%a, %d %b %Y %H:%M:%S"
   msg_format = "%s: \n\t\t%s %s"
   print msg_format % (msg_title, msg_action, time.strftime(time_format, time.localtime()))
+  sys.stdout.flush()
 
 def setEnvironmentVars(newVars): 
    """Sets environment variables as specified by env, an array of variables 

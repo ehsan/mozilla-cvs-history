@@ -46,8 +46,9 @@
     var begin = document.location.search.split('=')[1]; // ?begin=nnnnn
     var startupTime = now - begin;
 	document.write('\n\nStartup time = ' + startupTime + ' ms<br>');
+    now = (new Date()).getTime();
     if (window.dump) {
-      dump('__start_report' + startupTime + '__end_report\n\n');
+      dump('__start_report' + startupTime + '__end_report\n\n' + '__startTimestamp' + now + '__endTimestamp\n');
     }
     goQuitApplication();
     window.close();

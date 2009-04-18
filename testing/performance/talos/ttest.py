@@ -51,6 +51,7 @@ __author__ = 'annie.sullivan@gmail.com (Annie Sullivan)'
 
 import platform
 import os
+import os.path
 import re
 import shutil
 import time
@@ -63,6 +64,7 @@ from utils import talosError
 import ffprocess
 import ffsetup
 
+
 if platform.system() == "Linux":
     from cmanager_linux import *
     platform_type = 'unix_'
@@ -74,34 +76,13 @@ elif platform.system() == "Darwin":
     platform_type = 'unix_'
 
 
-# Regula expression for getting results from most tests
-RESULTS_REGEX = re.compile('__start_report(.*)__end_report',
+# Regular expression for getting results from most tests
+RESULTS_REGEX = re.compile('.*__start_report(.*)__end_report.*__startTimestamp(.*)__endTimestamp.*__startSecondTimestamp(.*)__endSecondTimestamp.*',
                       re.DOTALL | re.MULTILINE)
 # Regular expression to get stats for page load test (Tp) - should go away once data passing is standardized
-RESULTS_TP_REGEX = re.compile('__start_tp_report(.*)__end_tp_report',
+RESULTS_TP_REGEX = re.compile('.*__start_tp_report(.*)__end_tp_report.*__startTimestamp(.*)__endTimestamp.*__startSecondTimestamp(.*)__endSecondTimestamp.*',
                       re.DOTALL | re.MULTILINE)
-RESULTS_GENERIC = re.compile('(.*)', re.DOTALL | re.MULTILINE)
-RESULTS_REGEX_FAIL = re.compile('__FAIL(.*)__FAIL', re.DOTALL|re.MULTILINE)
-
-def checkBrowserAlive(browser_config):
-  #is the browser actually up?
-  return (ffprocess.ProcessesWithNameExist(browser_config['process']) and not ffprocess.ProcessesWithNameExist("crashreporter", "talkback", "dwwin"))
-
-def checkAllProcesses(browser_config):
-  #is anything browser related active?
-  return ffprocess.ProcessesWithNameExist(browser_config['process'], "crashreporter", "talkback", "dwwin")
-
-def cleanupProcesses(browser_config):
-  #kill any remaining browser processes
-  ffprocess.TerminateAllProcesses(browser_config['browser_wait'], browser_config['process'], "crashreporter", "dwwin", "talkback")
-  #check if anything is left behind
-  if checkAllProcesses(browser_config): 
-    #this is for windows machines.  when attempting to send kill messages to win processes the OS
-    # always gives the process a chance to close cleanly before terminating it, this takes longer
-    # and we need to give it a little extra time to complete
-    time.sleep(browser_config['browser_wait'])
-    if checkAllProcesses(browser_config):
-      raise talosError("failed to cleanup")
+RESULTS_REGEX_FAIL = re.compile('.*__FAIL(.*)__FAIL.*', re.DOTALL|re.MULTILINE)
 
 def createProfile(browser_config):
   if browser_config["profile_path"] != {}:
@@ -117,10 +98,10 @@ def createProfile(browser_config):
 
 def initializeProfile(profile_dir, browser_config):
   if browser_config["profile_path"] != {}:
-      if not (ffsetup.InitializeNewProfile(browser_config['browser_path'], browser_config['process'], browser_config['browser_wait'], browser_config['extra_args'], profile_dir, browser_config['init_url'])):
+      if not (ffsetup.InitializeNewProfile(browser_config['browser_path'], browser_config['process'], browser_config['browser_wait'], browser_config['extra_args'], profile_dir, browser_config['init_url'], browser_config['browser_log'])):
          raise talosError("failed to initialize browser")
       time.sleep(browser_config['browser_wait'])
-      if checkAllProcesses(browser_config):
+      if ffprocess.checkAllProcesses(browser_config['process']):
          raise talosError("browser failed to close after being initialized") 
 
 def cleanupProfile(dir, browser_config):
@@ -176,10 +157,12 @@ def runTest(browser_config, test_config):
   else:
       utils.setEnvironmentVars({'MOZ_CRASHREPORTER_DISABLE': '1'})
 
+  utils.setEnvironmentVars({"LD_LIBRARY_PATH" : os.path.dirname(browser_config['browser_path'])})
+
   profile_dir = None
 
   try:
-    if checkAllProcesses(browser_config):
+    if ffprocess.checkAllProcesses(browser_config['process']):
       utils.debug(browser_config['process'] + " already running before testing started (unclean system)")
       raise talosError("system not clean")
   
@@ -188,25 +171,29 @@ def runTest(browser_config, test_config):
       ffsetup.InstallInBrowser(browser_config['browser_path'], browser_config['dirs'][dir])
    
     profile_dir, temp_dir = createProfile(browser_config)
+    if os.path.isfile(browser_config['browser_log']):
+      os.chmod(browser_config['browser_log'], 0777)
+      os.remove(browser_config['browser_log'])
     initializeProfile(profile_dir, browser_config)
     
     utils.debug("initialized " + browser_config['process'])
+    if test_config['shutdown']:
+      shutdown = []
   
     for i in range(test_config['cycles']):
+      if os.path.isfile(browser_config['browser_log']):
+        os.chmod(browser_config['browser_log'], 0777)
+        os.remove(browser_config['browser_log'])
       time.sleep(browser_config['browser_wait']) #wait out the browser closing
       # check to see if the previous cycle is still hanging around 
-      if (i > 0) and checkAllProcesses(browser_config):
+      if (i > 0) and ffprocess.checkAllProcesses(browser_config['process']):
         raise talosError("previous cycle still running")
       # Run the test 
       browser_results = ""
       if 'timeout' in test_config:
         timeout = test_config['timeout']
       else:
-        timeout = 28800 # 8 hours
-      if 'pagetimeout' in test_config:
-         pagetimeout = test_config['pagetimeout']
-      else:
-         pagetimeout = 28800 # 8 hours
+        timeout = 7200 # 2 hours
       total_time = 0
       output = ''
       url = test_config['url']
@@ -216,8 +203,7 @@ def runTest(browser_config, test_config):
   
       utils.debug("command line: " + command_line)
   
-      process = subprocess.Popen(command_line, stdout=subprocess.PIPE, universal_newlines=True, shell=True, bufsize=0, env=os.environ)
-      handle = process.stdout
+      process = subprocess.Popen('python bcontroller.py --command "%s" --name %s --timeout %d --log %s' % (command_line, browser_config['process'], browser_config['browser_wait'], browser_config['browser_log']), universal_newlines=True, shell=True, bufsize=0, env=os.environ)
   
       #give browser a chance to open
       # this could mean that we are losing the first couple of data points as the tests starts, but if we don't provide
@@ -231,58 +217,46 @@ def runTest(browser_config, test_config):
       for counter in counters:
         counter_results[counter] = []
      
-      busted = False 
-      lastNoise = 0
-      while total_time < timeout:
+      startTime = -1
+      while total_time < timeout: #the main test loop, monitors counters and checks for browser ouptut
         # Sleep for [resolution] seconds
         time.sleep(resolution)
         total_time += resolution
-        lastNoise += resolution
         
         # Get the output from all the possible counters
         for count_type in counters:
           val = cm.getCounterValue(count_type)
-  
           if (val):
             counter_results[count_type].append(val)
+        if process.poll() != None: #browser_controller completed, file now full
+          if not os.path.isfile(browser_config['browser_log']):
+            raise talosError("no output from browser")
+          results_file = open(browser_config['browser_log'], "r")
+          results_raw = results_file.read()
+          results_file.close()
+          utils.noisy(results_raw)
   
-        # Check to see if page load times were outputted
-        (bytes, current_output) = ffprocess.NonBlockingReadProcessOutput(handle)
-        output += current_output
-        match = RESULTS_GENERIC.search(current_output)
-        if match:
-          if match.group(1):
-            utils.noisy(match.group(1))
-            lastNoise = 0
-        match = RESULTS_REGEX.search(output)
-        if match:
-          browser_results += match.group(1)
-          utils.debug("Matched basic results: " + browser_results)
-          break
-        #TODO: this a stop gap until all of the tests start outputting the same format
-        match = RESULTS_TP_REGEX.search(output)
-        if match:
-          browser_results += match.group(1)
-          utils.debug("Matched tp results: " + browser_results)
-          break
-        match = RESULTS_REGEX_FAIL.search(output)
-        if match:
-          browser_results += match.group(1)
-          utils.debug("Matched fail results: " + browser_results)
-          raise talosError(match.group(1))
-  
-        #ensure that the browser is still running
-        #check at intervals of 60 - this is just to cut down on load 
-        #use the busted check to ensure that we aren't catching a bad time slice where the browser has
-        # completed the test and closed but we haven't picked up the result yet
-        if busted:
-          raise talosError("browser crash")
-        if (total_time % 60 == 0): 
-          if not checkBrowserAlive(browser_config):
-            busted = True
-        
-        if lastNoise > pagetimeout:
-          raise talosError("browser frozen")
+          match = RESULTS_REGEX.search(results_raw)
+          if match:
+            browser_results += match.group(1)
+            startTime = int(match.group(2))
+            endTime = int(match.group(3))
+            utils.debug("Matched basic results: " + browser_results)
+            break
+          #TODO: this a stop gap until all of the tests start outputting the same format
+          match = RESULTS_TP_REGEX.search(results_raw)
+          if match:
+            browser_results += match.group(1)
+            startTime = int(match.group(2))
+            endTime = int(match.group(3))
+            utils.debug("Matched tp results: " + browser_results)
+            break
+          match = RESULTS_REGEX_FAIL.search(results_raw)
+          if match:
+            browser_results += match.group(1)
+            utils.debug("Matched fail results: " + browser_results)
+            raise talosError(match.group(1))
+          raise talosError("unrecognized output format")
   
       if total_time >= timeout:
         raise talosError("timeout exceeded")
@@ -290,7 +264,17 @@ def runTest(browser_config, test_config):
       #stop the counter manager since this test is complete
       if counters:
         cm.stopMonitor()
-  
+
+      time.sleep(browser_config['browser_wait']) 
+      #clean up the process
+      timer = 0
+      while ((process.poll() is None) and timer < browser_config['browser_wait']):
+        time.sleep(1)
+        timer+=1
+ 
+      if test_config['shutdown']:
+          shutdown.append(endTime - startTime)
+
       checkForCrashes(browser_config, profile_dir)
 
       utils.debug("Completed test with: " + browser_results)
@@ -298,17 +282,25 @@ def runTest(browser_config, test_config):
       all_browser_results.append(browser_results)
       all_counter_results.append(counter_results)
      
-    cleanupProcesses(browser_config) 
+    ffprocess.cleanupProcesses(browser_config['process'], browser_config['browser_wait']) 
     cleanupProfile(temp_dir, browser_config)
 
     utils.restoreEnvironmentVars()
-      
+    if test_config['shutdown']:
+      all_counter_results.append({'shutdown' : shutdown})      
     return (all_browser_results, all_counter_results)
   except:
     try:
-      if counters:
+      if 'cm' in vars():
         cm.stopMonitor()
-      cleanupProcesses(browser_config)
+
+      if os.path.isfile(browser_config['browser_log']):
+        results_file = open(browser_config['browser_log'], "r")
+        results_raw = results_file.read()
+        results_file.close()
+        utils.noisy(results_raw)
+
+      ffprocess.cleanupProcesses(browser_config['process'], browser_config['browser_wait'])
 
       if profile_dir:
           try:

@@ -64,6 +64,8 @@ def shortName(name):
     return "pbytes"
   elif name == "RSS":
     return "rss"
+  else: 
+    return name
 
 def process_tpformat(line):
   # each line of the string is of the format i;page_name;median;mean;min;max;time vals\n
@@ -458,6 +460,7 @@ def test_file(filename):
   browser_config = {'preferences'  : yaml_config['preferences'],
                     'extensions'   : yaml_config['extensions'],
                     'browser_path' : yaml_config['browser_path'],
+                    'browser_log'  : yaml_config['browser_log'],
                     'symbols_path' : yaml_config.get('symbols_path', None),
                     'browser_wait' : yaml_config['browser_wait'],
                     'process'      : yaml_config['process'],
@@ -498,16 +501,15 @@ def test_file(filename):
     utils.stamped_msg("Running test " + testname, "Started")
     try:
       browser_dump, counter_dump = ttest.runTest(browser_config, test)
+      utils.debug("Received test results: " + " ".join(browser_dump))
+      results[testname] = [browser_dump, counter_dump]
+      # If we're doing CSV, write this test immediately (bug 419367)
+      if csv_dir != '':
+        send_to_csv(csv_dir, {testname : results[testname]})
     except talosError, e:
       utils.stamped_msg("Failed " + testname, "Stopped")
       print 'FAIL: Busted: ' + testname
       print 'FAIL: ' + e.msg
-      sys.exit(0)
-    utils.debug("Received test results: " + " ".join(browser_dump))
-    results[testname] = [browser_dump, counter_dump]
-    # If we're doing CSV, write this test immediately (bug 419367)
-    if csv_dir != '':
-      send_to_csv(csv_dir, {testname : results[testname]})
     utils.stamped_msg("Completed test " + testname, "Stopped")
   elapsed = utils.stopTimer()
   print "RETURN: cycle time: " + elapsed + "<br>"
