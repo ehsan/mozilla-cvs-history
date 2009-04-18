@@ -277,10 +277,7 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
     JS_INIT_ARENA_POOL(&cx->tempPool, "temp", 1024, sizeof(jsdouble),
                        &cx->scriptStackQuota);
 
-    if (!js_InitRegExpStatics(cx, &cx->regExpStatics)) {
-        js_DestroyContext(cx, JSDCM_NEW_FAILED);
-        return NULL;
-    }
+    js_InitRegExpStatics(cx);
 
     /*
      * If cx is the first context on this runtime, initialize well-known atoms,
@@ -393,13 +390,8 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
         JS_ClearAllWatchPoints(cx);
     }
 
-    /*
-     * Remove more GC roots in regExpStatics, then collect garbage.
-     * XXX anti-modularity alert: we rely on the call to js_RemoveRoot within
-     * XXX this function call to wait for any racing GC to complete, in the
-     * XXX case where JS_DestroyContext is called outside of a request on cx
-     */
-    js_FreeRegExpStatics(cx, &cx->regExpStatics);
+    /* Remove more GC roots in regExpStatics, then collect garbage. */
+    JS_ClearRegExpRoots(cx);
 
 #ifdef JS_THREADSAFE
     /*
@@ -440,6 +432,7 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
     }
 
     /* Free the stuff hanging off of cx. */
+    js_FreeRegExpStatics(cx);
     JS_FinishArenaPool(&cx->stackPool);
     JS_FinishArenaPool(&cx->tempPool);
 
