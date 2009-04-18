@@ -228,35 +228,35 @@ def runTest(browser_config, test_config):
           val = cm.getCounterValue(count_type)
           if (val):
             counter_results[count_type].append(val)
-        if process.poll() != None: #browser_controller completed, file now full
-          if not os.path.isfile(browser_config['browser_log']):
-            raise talosError("no output from browser")
-          results_file = open(browser_config['browser_log'], "r")
-          results_raw = results_file.read()
-          results_file.close()
-          utils.noisy(results_raw)
+        if not os.path.isfile(browser_config['browser_log']):
+          raise talosError("no output from browser")
+        results_file = open(browser_config['browser_log'], "r")
+        results_raw = results_file.read()
+        results_file.close()
   
-          match = RESULTS_REGEX.search(results_raw)
-          if match:
-            browser_results += match.group(1)
-            startTime = int(match.group(2))
-            endTime = int(match.group(3))
-            utils.debug("Matched basic results: " + browser_results)
-            break
-          #TODO: this a stop gap until all of the tests start outputting the same format
-          match = RESULTS_TP_REGEX.search(results_raw)
-          if match:
-            browser_results += match.group(1)
-            startTime = int(match.group(2))
-            endTime = int(match.group(3))
-            utils.debug("Matched tp results: " + browser_results)
-            break
-          match = RESULTS_REGEX_FAIL.search(results_raw)
-          if match:
-            browser_results += match.group(1)
-            utils.debug("Matched fail results: " + browser_results)
-            raise talosError(match.group(1))
-          raise talosError("unrecognized output format")
+        match = RESULTS_REGEX.search(results_raw)
+        if match:
+          utils.noisy(results_raw)
+          browser_results += match.group(1)
+          startTime = int(match.group(2))
+          endTime = int(match.group(3))
+          utils.debug("Matched basic results: " + browser_results)
+          break
+        #TODO: this a stop gap until all of the tests start outputting the same format
+        match = RESULTS_TP_REGEX.search(results_raw)
+        if match:
+          utils.noisy(results_raw)
+          browser_results += match.group(1)
+          startTime = int(match.group(2))
+          endTime = int(match.group(3))
+          utils.debug("Matched tp results: " + browser_results)
+          break
+        match = RESULTS_REGEX_FAIL.search(results_raw)
+        if match:
+          utils.noisy(results_raw)
+          browser_results += match.group(1)
+          utils.debug("Matched fail results: " + browser_results)
+          raise talosError(match.group(1))
   
       if total_time >= timeout:
         raise talosError("timeout exceeded")

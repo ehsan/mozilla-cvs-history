@@ -123,6 +123,7 @@ class BrowserController:
       return
     results_file.write("__startSecondTimestamp%d__endSecondTimestamp\n" % self.bwaiter.getTime())
     results_file.close()
+    return
 
 
 def main(argv=None):
