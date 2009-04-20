@@ -458,7 +458,7 @@ class MozillaUnixReftest(MozillaReftest):
                "reftest.list"]
 
 class MozillaOSXReftest(MozillaReftest):
-    command = ["../../objdir/dist/Minefield.app/Contents/MacOS/firefox",
+    command = ["../../objdir/dist/GranParadiso.app/Contents/MacOS/firefox",
                "-console",
                "-P",
                "default",
@@ -482,7 +482,7 @@ class MozillaUnixCrashtest(MozillaCrashtest):
                "crashtests.list"]
 
 class MozillaOSXCrashtest(MozillaCrashtest):
-    command = ["../../objdir/dist/Minefield.app/Contents/MacOS/firefox",
+    command = ["../../objdir/dist/GranParadiso.app/Contents/MacOS/firefox",
                "-console",
                "-P",
                "default",
@@ -542,7 +542,7 @@ class MozillaWin32Mochitest(MozillaMochitest):
 class MozillaOSXMochitest(MozillaMochitest):
     command = ["python",
                "runtests.py",
-               "--appname=../../../dist/Minefield.app/Contents/MacOS/firefox",
+               "--appname=../../../dist/GranParadiso.app/Contents/MacOS/firefox",
                "--autorun",
                "--console-level=INFO",
                "--close-when-done"]
@@ -597,7 +597,7 @@ class MozillaWin32Mochichrome(MozillaMochichrome):
 class MozillaOSXMochichrome(MozillaMochichrome):
    command = ["python",
               "runtests.py",
-              "--appname=../../../dist/Minefield.app/Contents/MacOS/firefox",
+              "--appname=../../../dist/GranParadiso.app/Contents/MacOS/firefox",
               "--chrome",
               "--autorun",
               "--console-level=INFO",
@@ -649,7 +649,7 @@ class MozillaWin32BrowserChromeTest(MozillaBrowserChromeTest):
 class MozillaOSXBrowserChromeTest(MozillaBrowserChromeTest):
     command = ["python",
                "runtests.py",
-               "--appname=../../../dist/Minefield.app/Contents/MacOS/firefox",
+               "--appname=../../../dist/GranParadiso.app/Contents/MacOS/firefox",
                "--autorun",
                "--browser-chrome",
                "--close-when-done"]
@@ -692,7 +692,7 @@ class MozillaWin32A11YTest(MozillaA11YTest):
 class MozillaOSXA11YTest(MozillaA11YTest):
    command = ["python",
               "runtests.py",
-              "--appname=../../../dist/Minefield.app/Contents/MacOS/firefox",
+              "--appname=../../../dist/GranParadiso.app/Contents/MacOS/firefox",
               "--a11y",
               "--autorun",
               "--console-level=INFO",
