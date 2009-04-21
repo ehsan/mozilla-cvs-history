@@ -7,7 +7,7 @@
 	<key>BreakpadRequestComments</key>
 	<string>YES</string>
 	<key>BreakpadSendAndExit</key>
-	<string>YES</string>
+	<string>NO</string>
 	<key>BreakpadURL</key>
 	<string>https://crash-reports.mozilla.com/submit</string>
 	<key>BreakpadVendor</key>
