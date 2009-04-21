@@ -209,32 +209,41 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
         return NULL;
 #endif
 
-    cx = (JSContext *) malloc(sizeof *cx);
+    /*
+     * We need to initialize the new context fully before adding it to the
+     * runtime list. After that it can be accessed from another thread via
+     * js_ContextIterator.
+     */
+    cx = (JSContext *) calloc(1, sizeof *cx);
     if (!cx)
         return NULL;
-    memset(cx, 0, sizeof *cx);
 
     cx->runtime = rt;
     JS_ClearOperationCallback(cx);
     cx->debugHooks = &rt->globalDebugHooks;
 #if JS_STACK_GROWTH_DIRECTION > 0
-    cx->stackLimit = (jsuword)-1;
+    cx->stackLimit = (jsuword) -1;
 #endif
     cx->scriptStackQuota = JS_DEFAULT_SCRIPT_STACK_QUOTA;
 #ifdef JS_THREADSAFE
-
-    /*
-     * At this point cx is not on rt->contextList. Thus we do not need to
-     * prevent a race against the GC when adding cx to JSThread.contextList.
-     */
     js_InitContextThread(cx, thread);
 #endif
+    JS_ASSERT(cx->version == JSVERSION_DEFAULT);
+    JS_INIT_ARENA_POOL(&cx->stackPool, "stack", stackChunkSize, sizeof(jsval),
+                       &cx->scriptStackQuota);
+    JS_INIT_ARENA_POOL(&cx->tempPool, "temp", 1024, sizeof(jsdouble),
+                       &cx->scriptStackQuota);
+
+    js_InitRegExpStatics(cx);
 
     JS_LOCK_GC(rt);
     for (;;) {
         first = (rt->contextList.next == &rt->contextList);
         if (rt->state == JSRTS_UP) {
             JS_ASSERT(!first);
+
+            /* Ensure that it is safe to update rt->contextList below. */
+            js_WaitForGC(rt);
             break;
         }
         if (rt->state == JSRTS_DOWN) {
@@ -246,21 +255,6 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
     }
     JS_APPEND_LINK(&cx->links, &rt->contextList);
     JS_UNLOCK_GC(rt);
-
-    /*
-     * First we do the infallible, every-time per-context initializations.
-     * Should a later, fallible initialization (js_InitRegExpStatics, e.g.,
-     * or the stuff under 'if (first)' below) fail, at least the version
-     * and arena-pools will be valid and safe to use (say, from the last GC
-     * done by js_DestroyContext).
-     */
-    cx->version = JSVERSION_DEFAULT;
-    JS_INIT_ARENA_POOL(&cx->stackPool, "stack", stackChunkSize, sizeof(jsval),
-                       &cx->scriptStackQuota);
-    JS_INIT_ARENA_POOL(&cx->tempPool, "temp", 1024, sizeof(jsdouble),
-                       &cx->scriptStackQuota);
-
-    js_InitRegExpStatics(cx);
 
     /*
      * If cx is the first context on this runtime, initialize well-known atoms,
@@ -339,9 +333,16 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
         }
     }
 
-    /* Remove cx from context list first. */
     JS_LOCK_GC(rt);
     JS_ASSERT(rt->state == JSRTS_UP || rt->state == JSRTS_LAUNCHING);
+#ifdef JS_THREADSAFE
+    /*
+     * Typically we are called outside a request, so ensure that the GC is not
+     * running before removing the context from rt->contextList, see bug 477021.
+     */
+    if (cx->requestDepth == 0)
+        js_WaitForGC(rt);
+#endif
     JS_REMOVE_LINK(&cx->links);
     last = (rt->contextList.next == &rt->contextList);
     if (last)
