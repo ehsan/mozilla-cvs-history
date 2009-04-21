@@ -1,5 +1,9 @@
 /* Localized versions of Info.plist keys */
 
+/* The BreakpadVendor string appears in the Crash Reporter.  It is an indirect 
+   object in a sentence informing users that a crash report has been generated
+   that users can send "to the Camino developers" to help us figure out the
+   crash. */
 BreakpadVendor = "the Camino developers";
 CFBundleName = "Camino";
 CFBundleShortVersionString = "%CM_APP_VERSION%";
