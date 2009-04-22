@@ -76,6 +76,7 @@ _BROWSER_FILES = harness.js \
                  browser_chrome.js \
                  browser_cancel.js \
                  browser_navigateaway.js \
+                 browser_navigateaway2.js \
                  unsigned.xpi \
                  empty.xpi \
                  corrupt.xpi \
