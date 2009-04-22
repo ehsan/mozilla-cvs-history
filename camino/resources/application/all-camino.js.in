@@ -250,3 +250,6 @@ pref("urlclassifier.gethashtables", "goog-phish-shavar,goog-malware-shavar");
 // a gethash request will be forced to check that the result is still in
 // the database.
 pref("urlclassifier.confirm-age", 2700);
+
+// Base URL for crash report links in about:crashes
+pref("breakpad.reportURL", "http://crash-stats.mozilla.com/report/index/");

@@ -152,6 +152,7 @@ GECKO_STRINGS_FILES = \
 	resources/localized/English.lproj/global_locale_charsetTitles_properties.strings \
 	resources/localized/English.lproj/global_locale_commonDialogs_properties.strings \
 	resources/localized/English.lproj/global_locale_config_properties.strings \
+	resources/localized/English.lproj/global_locale_crashes_properties.strings \
 	resources/localized/English.lproj/global_locale_css_properties.strings \
 	resources/localized/English.lproj/global_locale_dialog_properties.strings \
 	resources/localized/English.lproj/global_locale_dom_dom_properties.strings \

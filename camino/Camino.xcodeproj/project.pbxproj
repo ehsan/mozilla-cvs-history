@@ -1170,6 +1170,12 @@
 		DEBC80110A14E4F6006AECD3 /* tab_close_hover.tiff in Resources */ = {isa = PBXBuildFile; fileRef = DEBC800F0A14E4F6006AECD3 /* tab_close_hover.tiff */; };
 		DEBC801B0A14E5F5006AECD3 /* RolloverImageButton.m in Sources */ = {isa = PBXBuildFile; fileRef = DEBC801A0A14E5F5006AECD3 /* RolloverImageButton.m */; };
 		DEBC801C0A14E5F5006AECD3 /* RolloverImageButton.m in Sources */ = {isa = PBXBuildFile; fileRef = DEBC801A0A14E5F5006AECD3 /* RolloverImageButton.m */; };
+		DEC17FE20F9E81D2001E43F1 /* xpcom_system.xpt in Copy Component XPTs */ = {isa = PBXBuildFile; fileRef = DEC17FE10F9E7F0C001E43F1 /* xpcom_system.xpt */; };
+		DEC17FE30F9E81FD001E43F1 /* locale.xpt in Copy Component XPTs */ = {isa = PBXBuildFile; fileRef = DEC17FE00F9E7EEF001E43F1 /* locale.xpt */; };
+		DEC17FE60F9E8269001E43F1 /* locale.xpt in Copy Component XPTs */ = {isa = PBXBuildFile; fileRef = DEC17FE00F9E7EEF001E43F1 /* locale.xpt */; };
+		DEC17FE70F9E8269001E43F1 /* xpcom_system.xpt in Copy Component XPTs */ = {isa = PBXBuildFile; fileRef = DEC17FE10F9E7F0C001E43F1 /* xpcom_system.xpt */; };
+		DEC180780F9EA96A001E43F1 /* global_locale_crashes_properties.strings in Resources */ = {isa = PBXBuildFile; fileRef = DEC180760F9EA96A001E43F1 /* global_locale_crashes_properties.strings */; };
+		DEC180790F9EA96A001E43F1 /* global_locale_crashes_properties.strings in Resources */ = {isa = PBXBuildFile; fileRef = DEC180760F9EA96A001E43F1 /* global_locale_crashes_properties.strings */; };
 		DEC87B100C2882DC002EB106 /* libstoragecomps.dylib in Copy Component Libraries */ = {isa = PBXBuildFile; fileRef = DEC87B0F0C2882DC002EB106 /* libstoragecomps.dylib */; };
 		DEC87B120C288337002EB106 /* storage.xpt in Copy Component XPTs */ = {isa = PBXBuildFile; fileRef = DEC87B110C288337002EB106 /* storage.xpt */; };
 		DEC87B130C288337002EB106 /* storage.xpt in Copy Component XPTs */ = {isa = PBXBuildFile; fileRef = DEC87B110C288337002EB106 /* storage.xpt */; };
@@ -1852,6 +1858,7 @@
 				3F44ACF705BDFB9F00CB4B08 /* layout_base.xpt in Copy Component XPTs */,
 				3F44ACF805BDFB9F00CB4B08 /* layout_xul.xpt in Copy Component XPTs */,
 				0FCD859008C4D4B900A1923B /* layout_xul_tree.xpt in Copy Component XPTs */,
+				DEC17FE60F9E8269001E43F1 /* locale.xpt in Copy Component XPTs */,
 				3F44ACF905BDFB9F00CB4B08 /* widget.xpt in Copy Component XPTs */,
 				3F44ACFF05BDFB9F00CB4B08 /* necko_about.xpt in Copy Component XPTs */,
 				3F44AD0005BDFB9F00CB4B08 /* necko_cache.xpt in Copy Component XPTs */,
@@ -1876,6 +1883,7 @@
 				3F44AD1B05BDFB9F00CB4B08 /* xpcom_components.xpt in Copy Component XPTs */,
 				3F44AD1C05BDFB9F00CB4B08 /* xpcom_ds.xpt in Copy Component XPTs */,
 				3F44AD1D05BDFB9F00CB4B08 /* xpcom_io.xpt in Copy Component XPTs */,
+				DEC17FE70F9E8269001E43F1 /* xpcom_system.xpt in Copy Component XPTs */,
 				3F44AD1E05BDFB9F00CB4B08 /* xpcom_threads.xpt in Copy Component XPTs */,
 				3F44AD1F05BDFB9F00CB4B08 /* xpcom_xpti.xpt in Copy Component XPTs */,
 				3F44AD2005BDFB9F00CB4B08 /* xpconnect.xpt in Copy Component XPTs */,
@@ -2138,6 +2146,7 @@
 				3F44AF2405BDFBA000CB4B08 /* layout_base.xpt in Copy Component XPTs */,
 				3F44AF2505BDFBA000CB4B08 /* layout_xul.xpt in Copy Component XPTs */,
 				0FCD859108C4D4DA00A1923B /* layout_xul_tree.xpt in Copy Component XPTs */,
+				DEC17FE30F9E81FD001E43F1 /* locale.xpt in Copy Component XPTs */,
 				3F44AF2605BDFBA000CB4B08 /* necko_about.xpt in Copy Component XPTs */,
 				3F44AF2705BDFBA000CB4B08 /* necko_cache.xpt in Copy Component XPTs */,
 				3F44AF2905BDFBA000CB4B08 /* necko_dns.xpt in Copy Component XPTs */,
@@ -2162,6 +2171,7 @@
 				3F44AF3B05BDFBA000CB4B08 /* xpcom_components.xpt in Copy Component XPTs */,
 				3F44AF3C05BDFBA000CB4B08 /* xpcom_ds.xpt in Copy Component XPTs */,
 				3F44AF3D05BDFBA000CB4B08 /* xpcom_io.xpt in Copy Component XPTs */,
+				DEC17FE20F9E81D2001E43F1 /* xpcom_system.xpt in Copy Component XPTs */,
 				3F44AF3E05BDFBA000CB4B08 /* xpcom_threads.xpt in Copy Component XPTs */,
 				3F44AF3F05BDFBA000CB4B08 /* xpcom_xpti.xpt in Copy Component XPTs */,
 				3F44AF4005BDFBA000CB4B08 /* xpconnect.xpt in Copy Component XPTs */,
@@ -2970,6 +2980,9 @@
 		DEBC800F0A14E4F6006AECD3 /* tab_close_hover.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = tab_close_hover.tiff; path = chrome/tab_close_hover.tiff; sourceTree = "<group>"; };
 		DEBC80140A14E547006AECD3 /* RolloverImageButton.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = RolloverImageButton.h; path = src/extensions/RolloverImageButton.h; sourceTree = "<group>"; };
 		DEBC801A0A14E5F5006AECD3 /* RolloverImageButton.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; name = RolloverImageButton.m; path = src/extensions/RolloverImageButton.m; sourceTree = "<group>"; };
+		DEC17FE00F9E7EEF001E43F1 /* locale.xpt */ = {isa = PBXFileReference; lastKnownFileType = file; name = locale.xpt; path = ../dist/bin/components/locale.xpt; sourceTree = SOURCE_ROOT; };
+		DEC17FE10F9E7F0C001E43F1 /* xpcom_system.xpt */ = {isa = PBXFileReference; lastKnownFileType = file; name = xpcom_system.xpt; path = ../dist/bin/components/xpcom_system.xpt; sourceTree = SOURCE_ROOT; };
+		DEC180770F9EA96A001E43F1 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = generated/resources/localized/English.lproj/global_locale_crashes_properties.strings; sourceTree = "<group>"; };
 		DEC87B0F0C2882DC002EB106 /* libstoragecomps.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.bundle"; name = libstoragecomps.dylib; path = ../dist/bin/components/libstoragecomps.dylib; sourceTree = SOURCE_ROOT; };
 		DEC87B110C288337002EB106 /* storage.xpt */ = {isa = PBXFileReference; lastKnownFileType = file; name = storage.xpt; path = ../dist/bin/components/storage.xpt; sourceTree = SOURCE_ROOT; };
 		DEC87B140C288403002EB106 /* libstoragecomps.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libstoragecomps.a; path = ../staticlib/components/libstoragecomps.a; sourceTree = SOURCE_ROOT; };
@@ -3681,6 +3694,7 @@
 				F6BD63F201B313EE01A962F7 /* layout_printing.xpt */,
 				F6BD63DD01B313EE01A962F7 /* layout_xul.xpt */,
 				0FCD858708C4D45400A1923B /* layout_xul_tree.xpt */,
+				DEC17FE00F9E7EEF001E43F1 /* locale.xpt */,
 				F6BD63B201B3131201A962F7 /* mimetype.xpt */,
 				F6BD63F101B313EE01A962F7 /* necko.xpt */,
 				F6BD63E601B313EE01A962F7 /* necko_about.xpt */,
@@ -3712,6 +3726,7 @@
 				F6BD642601B3156701A962F7 /* xpcom_components.xpt */,
 				F6BD642701B3156701A962F7 /* xpcom_ds.xpt */,
 				F6BD642801B3156701A962F7 /* xpcom_io.xpt */,
+				DEC17FE10F9E7F0C001E43F1 /* xpcom_system.xpt */,
 				F6BD642901B3156701A962F7 /* xpcom_threads.xpt */,
 				F6BD642A01B3156701A962F7 /* xpcom_xpti.xpt */,
 				F6BD642B01B3156701A962F7 /* xpconnect.xpt */,
@@ -4306,6 +4321,7 @@
 				DE40440A0ED09D1E00057E17 /* global_locale_plugins_properties.strings */,
 				DE40440C0ED09D1E00057E17 /* communicator_locale_typeaheadfind_properties.strings */,
 				DE40440E0ED09D1E00057E17 /* global_locale_css_properties.strings */,
+				DEC180760F9EA96A001E43F1 /* global_locale_crashes_properties.strings */,
 				DE4044100ED09D1E00057E17 /* global_locale_nsProgressDialog_properties.strings */,
 				DE4044120ED09D1E00057E17 /* global_locale_layout_xmlparser_properties.strings */,
 				DE4044140ED09D1E00057E17 /* global_locale_global-strres_properties.strings */,
@@ -5836,6 +5852,7 @@
 				DE40448D0ED09D1E00057E17 /* global_locale_xslt_xslt_properties.strings in Resources */,
 				DE40448E0ED09D1E00057E17 /* global_locale_nsTreeSorting_properties.strings in Resources */,
 				DE40448F0ED09D1E00057E17 /* global_locale_languageNames_properties.strings in Resources */,
+				DEC180780F9EA96A001E43F1 /* global_locale_crashes_properties.strings in Resources */,
 				000D0A9C0ED9BD8100A6C2F0 /* tabOverview.tiff in Resources */,
 				DEE8101E0EFB7D2E006ACC7D /* aquaSelect.css in Resources */,
 				3D9419800F559B2F00227277 /* blockedSite.xhtml in Resources */,
@@ -6067,6 +6084,7 @@
 				DE4044690ED09D1E00057E17 /* global_locale_xslt_xslt_properties.strings in Resources */,
 				DE40446A0ED09D1E00057E17 /* global_locale_nsTreeSorting_properties.strings in Resources */,
 				DE40446B0ED09D1E00057E17 /* global_locale_languageNames_properties.strings in Resources */,
+				DEC180790F9EA96A001E43F1 /* global_locale_crashes_properties.strings in Resources */,
 				000D0A9D0ED9BD8100A6C2F0 /* tabOverview.tiff in Resources */,
 				DEE8101F0EFB7D2E006ACC7D /* aquaSelect.css in Resources */,
 				3D9419810F559B2F00227277 /* blockedSite.xhtml in Resources */,
@@ -7220,6 +7238,14 @@
 			);
 			name = OpenFeed.nib;
 			sourceTree = SOURCE_ROOT;
+		};
+		DEC180760F9EA96A001E43F1 /* global_locale_crashes_properties.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				DEC180770F9EA96A001E43F1 /* English */,
+			);
+			name = global_locale_crashes_properties.strings;
+			sourceTree = "<group>";
 		};
 		E43EFBAD0D143F0D00DACA10 /* FindBar.nib */ = {
 			isa = PBXVariantGroup;
