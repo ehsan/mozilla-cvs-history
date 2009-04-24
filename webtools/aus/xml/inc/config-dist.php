@@ -62,8 +62,8 @@ define('UPDATE_EXTENSION_VERSION','1.0+');
 define('COOKIE_NAME', 'aus2');
 define('COOKIE_DOMAIN', 'aus2.mozilla.org');
 
-// Turns throttling on and off.
-define('THROTTLE',false);
+// Turns global throttling on and off.
+define('THROTTLE_GLOBAL',false);
 
 // Define the throttle -- think gas pedal.  This determines how much the AUS application will
 // stagger updates.  Pedal to the floor means we're serving all updates.  Examples:
@@ -74,6 +74,20 @@ define('THROTTLE_LEVEL',100);
 
 // Turns logging throttled hits on and off.
 define('THROTTLE_LOGGING',false);
+
+// This defines explicit throttling levels.  If global throttling is on, these
+// override global levels.  If it is off, this still works.  For example, this
+// is 10% throttling (only 10% of the time updates are offered):
+//
+// $productThrottling = array(
+//     'Firefox' => array(
+//         '3.0' => array(
+//             'release' => 10 
+//         )
+//     )
+// );
+$productThrottling = array(
+);
 
 // These are channels that have access to nightly updates.
 // All other channels only have access to the OVERRIDE_DIR for update info.

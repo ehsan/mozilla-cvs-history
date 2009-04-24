@@ -66,27 +66,55 @@ if (!array_key_exists('aus', $_COOKIE)) {
     setcookie(COOKIE_NAME, $ip . '.' . microtime(true), time() + 157784630, '/', COOKIE_DOMAIN);
 }
 
-
-// Check to see if the user is explicitly requesting an update.  If they are,
-// skip throttling.  If they aren't, and throttling is enabled, randomly serve
-// updates based on the configured random seed.
-if ( (empty($_GET['force']) || $_GET['force']!=1) &&
-     defined('THROTTLE') && 
-     THROTTLE && 
-     defined('THROTTLE_LEVEL') &&
-     mt_rand(0,100) > THROTTLE_LEVEL ) {
-
-    if (defined('THROTTLE_LOGGING') && THROTTLE_LOGGING) {
-
-        error_log('AUS2 THROTTLE: '.$ip.' '.$_SERVER['REQUEST_URI']);
-    }
-
-    $xml->printXml();
-    exit;
-}
-
 // Find everything between our CWD and 255 in QUERY_STRING.
 $rawPath = substr(urldecode($_SERVER['QUERY_STRING']),5,255);
+
+// Munge he resulting string and store it in $path.
+$path = explode('/',$rawPath);
+
+// Determine incoming request and clean inputs.
+$clean = Array();
+$clean['updateVersion'] = isset($path[0]) ? intval($path[0]) : null;
+$clean['product'] = isset($path[1]) ? trim($path[1]) : null;
+$clean['version'] = isset($path[2]) ? urlencode($path[2]) : null;
+$clean['build'] = isset($path[3]) ? trim($path[3]) : null;
+$clean['platform'] = isset($path[4]) ? trim($path[4]) : null;
+$clean['locale'] = isset($path[5]) ? trim($path[5]) : null;
+$clean['channel'] = isset($path[6]) ? trim($path[6]) : null;
+$clean['platformVersion'] = isset($path[7]) ? trim($path[7]) : null;
+$clean['dist'] = isset($path[8]) ? trim($path[8]) : null;
+$clean['distVersion'] = isset($path[9]) ? trim($path[9]) : null;
+ 
+// Check to see if the user is explicitly requesting an update.  If they are,
+// skip throttling.  If they aren't, and throttling is enabled, first check
+// explicit throttling.  If no specific rules exist, fallback to global rules.
+// In either case, updates will be served based on the configured random seed.
+if ( (empty($_GET['force']) || $_GET['force']!=1) ) {
+
+    // Default to false.  If conditions are met, flip it.
+    $throttleMe = false;
+
+    // Check explicit throttling.
+    if ( isset($productThrottling[$clean['product']][$clean['version']][$clean['channel']]) 
+         && mt_rand(0,100) > $productThrottling[$clean['product']][$clean['version']][$clean['channel']]) {
+        $throttleMe = true;
+
+    // Check global throttling.
+    } elseif ( defined('THROTTLE_GLOBAL') && THROTTLE_GLOBAL && 
+      defined('THROTTLE_LEVEL') &&
+      mt_rand(0,100) > THROTTLE_LEVEL ) {
+        $throttleMe = true;
+    }
+
+    if ($throttleMe) {
+        if (defined('THROTTLE_LOGGING') && THROTTLE_LOGGING) {
+            error_log('AUS2 THROTTLE: '.$ip.' '.$_SERVER['REQUEST_URI']);
+        }
+
+        $xml->printXml();
+        exit;
+    }
+}
 
 // Connect to memcache and try to pull output.
 $memcache = new Memcaching();
@@ -95,20 +123,6 @@ $_cached_xml = $memcache->get($rawPath);
 if ($_cached_xml) {
     $xml = $_cached_xml;
 } else {
-    // Munge he resulting string and store it in $path.
-    $path = explode('/',$rawPath);
-
-    // Determine incoming request and clean inputs.
-    // These are common URI elements, agreed upon in revision 0.
-    // For successive versions, the path of least resistence is to append and not reorder.
-    $clean = Array();
-    $clean['updateVersion'] = isset($path[0]) ? intval($path[0]) : null;
-    $clean['product'] = isset($path[1]) ? trim($path[1]) : null;
-    $clean['version'] = isset($path[2]) ? urlencode($path[2]) : null;
-    $clean['build'] = isset($path[3]) ? trim($path[3]) : null;
-    $clean['platform'] = isset($path[4]) ? trim($path[4]) : null;
-    $clean['locale'] = isset($path[5]) ? trim($path[5]) : null;
-
     /**
      * For each updateVersion, we will run separate code when it differs.
      * Our case statements below are ordered by date added, desc (recent ones first).
@@ -124,19 +138,14 @@ if ($_cached_xml) {
          * /update/3/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml
          */
         case 3:
-            // Parse out dist information.  For now, though, we aren't doing
-            // anything with it.
-            $clean['dist'] = isset($path[8]) ? trim($path[8]) : null;
-            $clean['distVersion'] = isset($path[9]) ? trim($path[9]) : null;
-        
+
+            // Nothing special.
+       
         /*
          * This is for the third revision of the URI schema, with %OS_VERSION%.
          * /update2/2/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/update.xml
          */
         case 2:
-
-            // Parse out the %OS_VERSION% if it exists.
-            $clean['platformVersion'] = isset($path[7]) ? trim($path[7]) : null;
 
             // Check for OS_VERSION values and scrub the URI to make sure we aren't getting a malformed request
             // from a client suffering from bug 360127.
@@ -156,7 +165,6 @@ if ($_cached_xml) {
             }
 
             // Check for a set channel.
-            $clean['channel'] = isset($path[6]) ? trim($path[6]) : null;
 
             // Instantiate Update object and set updateVersion.
             $update = new Update();
