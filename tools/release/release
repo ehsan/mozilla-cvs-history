@@ -10,6 +10,7 @@ use Bootstrap::Step::TinderConfig;
 use Bootstrap::Step::Build;
 use Bootstrap::Step::Source;
 use Bootstrap::Step::Repack;
+use Bootstrap::Step::PartnerRepack;
 use Bootstrap::Step::PatcherConfig;
 use Bootstrap::Step::Updates;
 use Bootstrap::Step::Stage;
@@ -23,6 +24,7 @@ my @allSteps = (
     'Source',
     'Repack',
     'Sign',
+    'PartnerRepack',
     'PatcherConfig',
     'Updates',
     'Stage',
