@@ -357,8 +357,6 @@ typedef enum  {
 - (IBAction)copyImage:(id)sender;
 - (IBAction)copyImageLocation:(id)sender;
 
-- (IBAction)unblockFlashFromCurrentDomain:(id)sender;
-
 - (BookmarkToolbar*) bookmarkToolbar;
 
 - (BOOL)windowClosesQuietly;
