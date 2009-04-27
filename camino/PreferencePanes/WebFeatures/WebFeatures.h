@@ -68,7 +68,8 @@
   IBOutlet ExtendedTableView*   mFlashblockWhitelistTable;
   IBOutlet NSTextField*         mAddFlashblockField;
   IBOutlet NSButton*            mAddFlashblockButton;
-  NSArray*                      mFlashblockSites;        // STRONG
+  NSMutableArray*               mFlashblockSites;        // STRONG
+  NSCharacterSet*               mFlashblockSiteCharSet;  // STRONG
 
   NSMutableArray* mCachedPermissions;		// cached list for speed, STRONG
 }
@@ -98,7 +99,6 @@
 -(IBAction) editFlashblockWhitelistDone:(id)aSender;
 -(IBAction) removeFlashblockWhitelistSite:(id)aSender;
 -(IBAction) addFlashblockWhitelistSite:(id)Sender;
--(void) updateFlashblockWhitelist;
 
 // data source informal protocol (NSTableDataSource)
 - (int)numberOfRowsInTableView:(NSTableView *)aTableView;
