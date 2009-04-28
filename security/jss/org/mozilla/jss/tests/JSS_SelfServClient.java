@@ -675,7 +675,12 @@ public class JSS_SelfServClient implements ConstantsBase, Constants {
                     System.out.println("Time taken: " +
                             (System.currentTimeMillis() - start) +
                             " Millieseconds");
-                    System.exit(1);
+                    /* while all the threads have not completed cleanup. */
+                    /* the functional test of each configured cihpersuite */
+                    /* successfully established a connection. */
+                    /* Let remaining threads die when this application */
+                    /* ends execution */
+                    return;
                 }
                 i++;
             }
