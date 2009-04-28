@@ -1127,8 +1127,6 @@
 		DE57A0010D43FB790057C437 /* BloglinesFeedHandler.app in Copy Feed Handlers */ = {isa = PBXBuildFile; fileRef = DE579FFB0D43FB790057C437 /* BloglinesFeedHandler.app */; };
 		DE57A0020D43FB790057C437 /* GoogleFeedHandler.app in Copy Feed Handlers */ = {isa = PBXBuildFile; fileRef = DE579FFC0D43FB790057C437 /* GoogleFeedHandler.app */; };
 		DE57A0030D43FB790057C437 /* MyYahooFeedHandler.app in Copy Feed Handlers */ = {isa = PBXBuildFile; fileRef = DE579FFD0D43FB790057C437 /* MyYahooFeedHandler.app */; };
-		DE59E2F60FA54EE0001F240C /* InfoPlist.strings in Copy Crash Reporter InfoPlist.strings Override */ = {isa = PBXBuildFile; fileRef = DE59E2F50FA54EC8001F240C /* InfoPlist.strings */; };
-		DE59E2F90FA54F5D001F240C /* InfoPlist.strings in Copy Crash Reporter InfoPlist.strings Override */ = {isa = PBXBuildFile; fileRef = DE59E2F50FA54EC8001F240C /* InfoPlist.strings */; };
 		DE62E4300B72B3D200142851 /* libauth.dylib in Copy Component Libraries */ = {isa = PBXBuildFile; fileRef = DE62E42F0B72B3D200142851 /* libauth.dylib */; };
 		DE62E4320B72B50C00142851 /* libauth.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DE62E4310B72B50C00142851 /* libauth.a */; };
 		DE6D27E70C1A014D00292043 /* CHPermissionManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = DE6D27E60C1A014D00292043 /* CHPermissionManager.mm */; };
@@ -2456,28 +2454,6 @@
 				DE1EBDC20D066F5100BE9ECC /* mathfontUnicode.properties in Copy Gecko Fonts */,
 			);
 			name = "Copy Gecko Fonts";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		DE59E2F30FA54E03001F240C /* Copy Crash Reporter InfoPlist.strings Override */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/Breakpad.framework/Versions/A/Resources/crash_report_sender.app/Contents/Resources/English.lproj/";
-			dstSubfolderSpec = 0;
-			files = (
-				DE59E2F60FA54EE0001F240C /* InfoPlist.strings in Copy Crash Reporter InfoPlist.strings Override */,
-			);
-			name = "Copy Crash Reporter InfoPlist.strings Override";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		DE59E2F80FA54F40001F240C /* Copy Crash Reporter InfoPlist.strings Override */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/Breakpad.framework/Versions/A/Resources/crash_report_sender.app/Contents/Resources/English.lproj/";
-			dstSubfolderSpec = 0;
-			files = (
-				DE59E2F90FA54F5D001F240C /* InfoPlist.strings in Copy Crash Reporter InfoPlist.strings Override */,
-			);
-			name = "Copy Crash Reporter InfoPlist.strings Override";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		DEF798F40BC703A40015970A /* Copy Gecko Cursors */ = {
@@ -5256,7 +5232,7 @@
 				3F44AD6F05BDFB9F00CB4B08 /* Copy Security Chrome */,
 				33819D740D98189700CA9F52 /* Copy Feed Handlers */,
 				3F44AD7705BDFB9F00CB4B08 /* Copy Frameworks */,
-				DE59E2F30FA54E03001F240C /* Copy Crash Reporter InfoPlist.strings Override */,
+				DE578A7A0FA69EAF0032CFD2 /* Copy Crash Reporter InfoPlists.strings Override */,
 				0080C7DE0E2E4CD9006AFD32 /* Change Sparkle Load ID */,
 				3365CA1F0D073ECA00ACBF18 /* Scrub Sparkle Languages */,
 				3F44AD7A05BDFB9F00CB4B08 /* Copy Plugins */,
@@ -5395,7 +5371,7 @@
 				3F44AF8605BDFBA000CB4B08 /* Copy Libraries */,
 				33819D750D98189700CA9F52 /* Copy Feed Handlers */,
 				3F44AF9005BDFBA000CB4B08 /* Copy Frameworks */,
-				DE59E2F80FA54F40001F240C /* Copy Crash Reporter InfoPlist.strings Override */,
+				DE578A7C0FA69FCB0032CFD2 /* Copy Crash Reporter InfoPlist.strings Override */,
 				0080C7F10E2E4D7A006AFD32 /* Change Sparkle Load ID */,
 				3365CA0F0D07197E00ACBF18 /* Scrub Sparkle Languages */,
 				3F44AF9205BDFBA000CB4B08 /* Copy Plugins */,
@@ -6232,6 +6208,36 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "# This script does nothing; it is here only to force Xcode (via the input and output files)\n# into understanding that library and framework copy phases must take place before linking.\n# This is necessary to be able to set an @executable_path that works for both libthebes.dylib\n# and Breakpad.framework. (It's really only necessary for the non-static build, since we\n# don't have to worry about libthebes in a static build, but this minimizes divergence\n# between the two builds.)";
+		};
+		DE578A7A0FA69EAF0032CFD2 /* Copy Crash Reporter InfoPlists.strings Override */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/Breakpad.framework/Versions/A/Resources/crash_report_sender.app/Contents/Resources/English.lproj/InfoPlist.strings",
+			);
+			name = "Copy Crash Reporter InfoPlists.strings Override";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "cp $SRCROOT/resources/google-breakpad/InfoPlist.strings $BUILT_PRODUCTS_DIR/$FRAMEWORKS_FOLDER_PATH/Breakpad.framework/Versions/A/Resources/crash_report_sender.app/Contents/Resources/English.lproj/";
+		};
+		DE578A7C0FA69FCB0032CFD2 /* Copy Crash Reporter InfoPlist.strings Override */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/Breakpad.framework/Versions/A/Resources/crash_report_sender.app/Contents/Resources/English.lproj/InfoPlist.strings",
+			);
+			name = "Copy Crash Reporter InfoPlist.strings Override";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "cp $SRCROOT/resources/google-breakpad/InfoPlist.strings $BUILT_PRODUCTS_DIR/$FRAMEWORKS_FOLDER_PATH/Breakpad.framework/Versions/A/Resources/crash_report_sender.app/Contents/Resources/English.lproj/";
 		};
 /* End PBXShellScriptBuildPhase section */
 
