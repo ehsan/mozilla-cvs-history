@@ -80,7 +80,7 @@ def GetPidsByName(process_name):
 
   matchingPids = []
   
-  command = ['ps -Ac']
+  command = ['ps -Acj']
   handle = subprocess.Popen(command, stdout=subprocess.PIPE, universal_newlines=True, shell=True)
   
   # wait for the process to terminate
@@ -94,9 +94,12 @@ def GetPidsByName(process_name):
       continue
     if line.find('defunct') != -1:
       continue
+    #overlook zombie processes
+    if line.find("Z+") >= 0:
+      continue
     if line.find(process_name) >= 0:
       # splits by whitespace, the first one should be the pid
-      pid = int(line.split()[0])
+      pid = int(line.split()[1])
       matchingPids.append(pid)
 
   return matchingPids

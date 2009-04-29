@@ -38,6 +38,7 @@
 
 import os
 import time
+import sys
 DEBUG = 0
 NOISY = 0
 START_TIME = 0
@@ -64,7 +65,15 @@ def noisy(message):
      these are ignored.  Controlled through command line switch (-n or --noisy)
   """
   if NOISY == 1:
-    print "NOISE: " + message.strip().replace('\r', '').replace('\n', '\nNOISE: ')
+    lines = message.splitlines()
+    counter = 1
+    for line in lines:
+      print "NOISE: " + line
+      #really silly throttling
+      if counter % 100 == 0:
+        time.sleep(1) #twisted.spread.banana.BananaError: string is too long to send (803255)
+      sys.stdout.flush()
+      counter += 1
 
 def debug(message):
   """Prints a debug message to the console if the DEBUG switch is turned on 
@@ -73,7 +82,15 @@ def debug(message):
        message: string containing a debugging statement
   """
   if DEBUG == 1:
-    print "DEBUG: " + message.strip().replace('\r', '').replace('\n', '\nDEBUG: ')
+    lines = message.splitlines()
+    counter = 1
+    for line in lines:
+      print "DEBUG: " + line
+      #really silly throttling
+      if counter % 100 == 0:
+        time.sleep(1) #twisted.spread.banana.BananaError: string is too long to send (803255)
+      sys.stdout.flush()
+      counter += 1
 
 def stamped_msg(msg_title, msg_action):
   """Prints a message to the console with a time stamp
@@ -81,6 +98,7 @@ def stamped_msg(msg_title, msg_action):
   time_format = "%a, %d %b %Y %H:%M:%S"
   msg_format = "%s: \n\t\t%s %s"
   print msg_format % (msg_title, msg_action, time.strftime(time_format, time.localtime()))
+  sys.stdout.flush()
 
 def setEnvironmentVars(newVars): 
    """Sets environment variables as specified by env, an array of variables 
