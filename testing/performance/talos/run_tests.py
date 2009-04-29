@@ -233,7 +233,9 @@ def send_to_graph(results_server, results_link, machine, date, browser_config, r
     for cd in counter_dump:
       for count_type in cd:
         vals = [[x, 'NULL'] for x in cd[count_type]]
-        counterName = testname + '_' + shortName(count_type) + browser_config['test_name_extension']
+        counterName = testname + '_' + shortName(count_type)
+        if testname not in ('ts', 'twinopen'):
+          counterName += browser_config['test_name_extension']
         utils.stamped_msg("Generating results file: " + counterName, "Started")
         files.append(construct_file(machine, counterName, browser_config['branch_name'], browser_config['sourcestamp'], browser_config['buildid'], date, vals))
         utils.stamped_msg("Generating results file: " + counterName, "Stopped")
