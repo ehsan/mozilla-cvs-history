@@ -64,15 +64,19 @@ elif platform.system() == "Darwin":
 
 class BrowserWaiter(threading.Thread):
 
-  def __init__(self, command):
+  def __init__(self, command, log, mod):
      self.command = command
+     self.log = log
+     self.mod = mod
      self.endTime = -1
      self.returncode = -1
      threading.Thread.__init__(self)
      self.start()
 
   def run(self):
-    self.returncode = os.system(self.command) #blocking call to system
+    if self.mod:
+      self.command = self.command + eval(self.mod)
+    self.returncode = os.system(self.command + " > " + self.log) #blocking call to system
     self.endTime = int(time.time()*1000)
 
   def hasTime(self):
@@ -86,15 +90,16 @@ class BrowserWaiter(threading.Thread):
 
 class BrowserController:
 
-  def __init__(self, command, name, timeout, log):
+  def __init__(self, command, mod, name, timeout, log):
     self.command = command
+    self.mod = mod
     self.process_name = name
     self.browser_wait = timeout
     self.log = log
     self.timeout = 600 #no output from the browser in 10 minutes = failure
 
   def run(self):
-    self.bwaiter = BrowserWaiter(self.command + " > " + self.log)
+    self.bwaiter = BrowserWaiter(self.command, self.log, self.mod) 
     noise = 0
     prev_size = 0
     while not self.bwaiter.hasTime():
@@ -132,10 +137,11 @@ def main(argv=None):
    name = "firefox" #default
    timeout = ""
    log = ""
+   mod = ""
 
    if argv is None:
         argv = sys.argv
-   opts, args = getopt.getopt(argv[1:], "c:t:n:l:", ["command=", "timeout=", "name=", "log="]) 
+   opts, args = getopt.getopt(argv[1:], "c:t:n:l:m:", ["command=", "timeout=", "name=", "log=", "mod="]) 
         
    # option processing
    for option, value in opts:
@@ -147,9 +153,11 @@ def main(argv=None):
        name = value 
      if option in ("-l", "--log"):
        log = value 
+     if option in ("-m", "--mod"):
+       mod = value
 
    if command and timeout and log:
-     bcontroller = BrowserController(command, name, timeout, log)
+     bcontroller = BrowserController(command, mod, name, timeout, log)
      bcontroller.run()
    else:
      print "\nFAIL: no command\n"

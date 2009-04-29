@@ -197,13 +197,14 @@ def runTest(browser_config, test_config):
       total_time = 0
       output = ''
       url = test_config['url']
-      if 'url_mod' in test_config:
-        url += eval(test_config['url_mod']) 
       command_line = ffprocess.GenerateBrowserCommandLine(browser_config['browser_path'], browser_config['extra_args'], profile_dir, url)
   
       utils.debug("command line: " + command_line)
-  
-      process = subprocess.Popen('python bcontroller.py --command "%s" --name %s --timeout %d --log %s' % (command_line, browser_config['process'], browser_config['browser_wait'], browser_config['browser_log']), universal_newlines=True, shell=True, bufsize=0, env=os.environ)
+ 
+      if 'url_mod' in test_config:
+        process = subprocess.Popen('python bcontroller.py --command "%s" --mod "%s" --name %s --timeout %d --log %s' % (command_line, test_config['url_mod'], browser_config['process'], browser_config['browser_wait'], browser_config['browser_log']), universal_newlines=True, shell=True, bufsize=0, env=os.environ)
+      else:
+        process = subprocess.Popen('python bcontroller.py --command "%s" --name %s --timeout %d --log %s' % (command_line, browser_config['process'], browser_config['browser_wait'], browser_config['browser_log']), universal_newlines=True, shell=True, bufsize=0, env=os.environ)
   
       #give browser a chance to open
       # this could mean that we are losing the first couple of data points as the tests starts, but if we don't provide
