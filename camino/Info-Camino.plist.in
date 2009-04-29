@@ -2,12 +2,18 @@
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>BreakpadBuildID</key>
+	<string>%PLATFORM_BUILD_ID%</string>
+	<key>BreakpadConfirmTimeout</key>
+	<string>0</string>
 	<key>BreakpadReportInterval</key>
 	<string>0</string>
 	<key>BreakpadRequestComments</key>
 	<string>YES</string>
 	<key>BreakpadSendAndExit</key>
 	<string>NO</string>
+	<key>BreakpadServerType</key>
+	<string>socorro</string>
 	<key>BreakpadURL</key>
 	<string>https://crash-reports.mozilla.com/submit</string>
 	<key>BreakpadVendor</key>

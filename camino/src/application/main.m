@@ -71,13 +71,9 @@ int main(int argc, const char *argv[])
   NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
   NSDictionary* info = [[NSBundle mainBundle] infoDictionary];
   BreakpadRef breakpad = BreakpadCreate(info);
-  // Add fields for Socorro
-  BreakpadSetKeyValue(breakpad, @"BuildID", [info valueForKey:@"MozillaBuildID"]);
-  BreakpadSetKeyValue(breakpad, @"ProductName", [info valueForKey:@"CFBundleName"]);
-  BreakpadSetKeyValue(breakpad, @"Version", [info valueForKey:@"CFBundleShortVersionString"]);
-  BreakpadSetKeyValue(breakpad, @"StartupTime", [NSString stringWithFormat:@"%ld", time(NULL)]);
-  // XXX lie for now, to get things working.
-  BreakpadSetKeyValue(breakpad, @"CrashTime", [NSString stringWithFormat:@"%ld", (time(NULL)+1)]);
+  // Breakpad uses CFBundleVersion, but we want our short version instead.
+  BreakpadSetKeyValue(breakpad, @BREAKPAD_VERSION,
+                      [info valueForKey:@"CFBundleShortVersionString"]);
   [pool release];
 
   SetupRuntimeOptions(argc, argv);
