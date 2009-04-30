@@ -962,31 +962,26 @@ static id gSharedProgressController = nil;
   return YES;
 }
 
-
+// Sets the icon, label, and action for the pause/resume toolbar button.
+// Since this is also the method that gets called when the customize dialog is run,
+// by default we set the value of the icon and label to pause.
+// We only enable the button if the download manager is the key window and either
+// the pause or resume action applies to the currently selected downloads.
 - (BOOL)setPauseResumeToolbarItem:(NSToolbarItem*)theItem
 {
-  // since this is also the method that gets called when the customize dialog is run
-  // set the default value of the label, tooltip, icon, and pallete label to pause
-  // only set the action of the selector to pause if we validate properly
-  [theItem setLabel:NSLocalizedString(@"dlPauseButtonLabel", nil)];
-  [theItem setPaletteLabel:NSLocalizedString(@"dlPauseButtonLabel", nil)];
-  [theItem setImage:[NSImage imageNamed:@"dl_pause"]];
-
-  if ([self shouldAllowPauseAction]) {
-    [theItem setAction:@selector(pause:)];
-
-    return [[self window] isKeyWindow]; // if not key window, dont enable
-  }
-  else if ([self shouldAllowResumeAction]) {
-    [theItem setLabel:NSLocalizedString(@"dlResumeButtonLabel", nil)];
-    [theItem setPaletteLabel:NSLocalizedString(@"dlResumeButtonLabel", nil)];
-    [theItem setAction:@selector(resume:)];
+  if ([self shouldAllowResumeAction]) {
     [theItem setImage:[NSImage imageNamed:@"dl_resume"]];
-
-    return [[self window] isKeyWindow]; // if not key window, dont enable
+    [theItem setLabel:NSLocalizedString(@"dlResumeButtonLabel", nil)];
+    [theItem setAction:@selector(resume:)];
+    
+    return [[self window] isKeyWindow];
   }
   else {
-    return NO;
+    [theItem setImage:[NSImage imageNamed:@"dl_pause"]];    
+    [theItem setLabel:NSLocalizedString(@"dlPauseButtonLabel", nil)];
+    [theItem setAction:@selector(pause:)];
+
+    return [self shouldAllowPauseAction] && [[self window] isKeyWindow];
   }
 }
 
@@ -1083,6 +1078,7 @@ static id gSharedProgressController = nil;
     [theItem setImage:[NSImage imageNamed:@"dl_trash"]];
   }
   else if ([itemIdentifier isEqualToString:@"pauseresumebutton"]) {
+    [theItem setPaletteLabel:NSLocalizedString(@"dlPauseButtonLabel", nil)];
     [self setPauseResumeToolbarItem:theItem];
   }
   else {
