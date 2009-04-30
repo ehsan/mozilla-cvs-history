@@ -5239,6 +5239,7 @@
 				4D5881750864B276001305B3 /* Copy Gecko Plugins */,
 				33820EA50F8AB1F400D2164A /* Force Copy Before Link */,
 				3F44AD7C05BDFB9F00CB4B08 /* Frameworks */,
+				334D108B0FAA4D7600545AFE /* Strip Framework Headers */,
 			);
 			buildRules = (
 			);
@@ -5378,6 +5379,7 @@
 				4D5881790864B297001305B3 /* Copy Gecko Plugins */,
 				33A72CD40F8ADDE4003D3D78 /* Force Copy Before Link */,
 				3F44AF9405BDFBA000CB4B08 /* Frameworks */,
+				00118D860FA3C75D00EADCBC /* Strip Framework Headers */,
 			);
 			buildRules = (
 			);
@@ -6106,6 +6108,21 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		00118D860FA3C75D00EADCBC /* Strip Framework Headers */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)",
+			);
+			name = "Strip Framework Headers";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/scripts/strip-headers.sh\"";
+		};
 		0080C7DE0E2E4CD9006AFD32 /* Change Sparkle Load ID */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -6147,6 +6164,21 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "/usr/bin/install_name_tool -change @loader_path/../Frameworks/Sparkle.framework/Versions/A/Sparkle @executable_path/../Frameworks/Sparkle.framework/Versions/A/Sparkle \"$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.$WRAPPER_EXTENSION/Contents/MacOS/$PRODUCT_NAME\"\n";
+		};
+		334D108B0FAA4D7600545AFE /* Strip Framework Headers */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)",
+			);
+			name = "Strip Framework Headers";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/scripts/strip-headers.sh\"";
 		};
 		3365CA0F0D07197E00ACBF18 /* Scrub Sparkle Languages */ = {
 			isa = PBXShellScriptBuildPhase;
