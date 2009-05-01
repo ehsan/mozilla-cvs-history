@@ -996,6 +996,7 @@ case "$target" in
     AC_DEFINE(DARWIN)
     AC_DEFINE(HAVE_BSD_FLOCK)
     AC_DEFINE(HAVE_SOCKLEN_T)
+    AS='$(CC) -x assembler-with-cpp'
     CFLAGS="$CFLAGS -Wall -fno-common"
     case "${target_cpu}" in
         i*86*)
