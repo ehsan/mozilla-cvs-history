@@ -270,13 +270,13 @@ $archive       = 1;
 #$update_pushinfo = 0;
 #$update_aus_host = 'aus2-staging.mozilla.org';
 
-#$crashreporter_buildsymbols = 0;
-#$crashreporter_pushsymbols = 0;
-#$ENV{SYMBOL_SERVER_HOST} = '';
-#$ENV{SYMBOL_SERVER_USER}   = '';
-#$ENV{SYMBOL_SERVER_PATH}   = '';
+$crashreporter_buildsymbols = 1;
+$crashreporter_pushsymbols = 1;
+$ENV{SYMBOL_SERVER_HOST} = 'dm-symbolpush01.mozilla.org';
+$ENV{SYMBOL_SERVER_USER}   = 'caminobld';
+$ENV{SYMBOL_SERVER_PATH}   = '/mnt/netapp/breakpad/symbols_camino/';
 # this is optional, it's a full path to a ssh private key
-#$ENV{SYMBOL_SERVER_SSH_KEY} = '';
+$ENV{SYMBOL_SERVER_SSH_KEY}   = "$ENV{HOME}/.ssh/id_dsa";
 
 # Reboot the OS at the end of build-and-test cycle. This is primarily
 # intended for Win9x, which can't last more than a few cycles before
