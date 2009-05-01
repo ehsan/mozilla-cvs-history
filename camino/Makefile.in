@@ -419,4 +419,4 @@ uploadcaminosymbols:
 	@echo Uploading symbols
 	cd $(SYMBOL_OUTPUT_DIR) && \
 	  zip -r9D ../crashreporter-symbols-$(SYMBOL_ARCHIVE_BASENAME).zip .
-	$(topsrcdir)/toolkit/crashreporter/tools/upload_symbols.sh ../crashreporter-symbols-$(SYMBOL_ARCHIVE_BASENAME).zip
+	$(topsrcdir)/toolkit/crashreporter/tools/upload_symbols.sh $(SYMBOL_OUTPUT_DIR)/../crashreporter-symbols-$(SYMBOL_ARCHIVE_BASENAME).zip
