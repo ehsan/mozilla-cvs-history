@@ -1347,7 +1347,7 @@ static void suspend_signal_handler(PRIntn sig)
 	while (me->suspend & PT_THREAD_SUSPENDED)
 	{
 #if !defined(FREEBSD) && !defined(NETBSD) && !defined(OPENBSD) \
-    && !defined(BSDI) && !defined(VMS) && !defined(UNIXWARE) \
+    && !defined(BSDI) && !defined(UNIXWARE) \
     && !defined(DARWIN) && !defined(RISCOS) \
     && !defined(SYMBIAN) /*XXX*/
         PRIntn rv;
@@ -1393,9 +1393,7 @@ static void pt_SuspendSet(PRThread *thred)
     PR_LOG(_pr_gc_lm, PR_LOG_ALWAYS, 
 	   ("doing pthread_kill in pt_SuspendSet thred %p tid = %X\n",
 	   thred, thred->id));
-#if defined(VMS)
-    rv = thread_suspend(thred);
-#elif defined(SYMBIAN)
+#if defined(SYMBIAN)
     /* All signal group functions are not implemented in Symbian OS */
     rv = 0;
 #else
@@ -1452,9 +1450,7 @@ static void pt_ResumeSet(PRThread *thred)
     thred->suspend &= ~PT_THREAD_SUSPENDED;
 
 #if defined(PT_NO_SIGTIMEDWAIT)
-#if defined(VMS)
-	thread_resume(thred);
-#elif defined(SYMBIAN) 
+#if defined(SYMBIAN) 
 	/* All signal group functions are not implemented in Symbian OS */
 #else
 	pthread_kill(thred->id, SIGUSR1);

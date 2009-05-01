@@ -1012,10 +1012,6 @@ if test -z "$CC"; then
         CC=cc
     ;;
 
-    *-openvms*)
-        CC=cc
-    ;;
-
     *-osf*)
         CC=cc
     ;;
@@ -1054,10 +1050,6 @@ if test -z "$CXX"; then
 
     *-irix*)
         CXX=CC
-    ;;
-
-    *-openvms*)
-        CXX=cxx
     ;;
 
     *-osf*)
@@ -2820,10 +2812,6 @@ if test "$OS_ARCH" = "Linux"; then
     OS_RELEASE=`echo $OS_RELEASE | awk -F\. '{ print $1 "." $2 }'`
 fi
 
-if test "$OS_ARCH" = "OpenVMS"; then
-    OS_RELEASE=`uname -v`
-fi
-
 #######################################################################
 # Master "Core Components" macros for getting the OS target           #
 #######################################################################
@@ -4480,31 +4468,6 @@ EOF
     fi
     DSO_LDOPTS='-shared -fPIC'
     MKSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
-    ;;
-
-*-openvms*)
-    cat >> confdefs.h <<\EOF
-#define XP_UNIX 1
-EOF
-
-    cat >> confdefs.h <<\EOF
-#define VMS 1
-EOF
-
-    cat >> confdefs.h <<\EOF
-#define PR_GETIPNODE_NOT_THREADSAFE 1
-EOF
-
-    RESOLVE_LINK_SYMBOLS=1
-    AR_FLAGS='c $@'
-    MDCPUCFG_H=_openvms.cfg
-    PR_MD_CSRCS=openvms.c
-    DSO_LDOPTS='-shared -auto_symvec'
-    if test -n "$MOZ_DEBUG"; then
-      DSO_LDOPTS="$DSO_LDOPTS $_DEBUG_FLAGS"
-    else
-      DSO_LDOPTS="$DSO_LDOPTS $_OPTIMIZE_FLAGS"
-    fi
     ;;
 
 *-osf*)

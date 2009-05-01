@@ -65,9 +65,7 @@
  * The name of a file that is guaranteed to exist
  * on every machine of a particular OS.
  */
-#ifdef VMS
-#define EXISTING_FILENAME "SYS$LOGIN:LOGIN.COM"
-#elif defined(SYMBIAN)
+#if defined(SYMBIAN)
 #define EXISTING_FILENAME "z:\\system\\install\\Series60v3.0.sis"
 #elif defined (XP_UNIX)
 #define EXISTING_FILENAME "/bin/sh"
