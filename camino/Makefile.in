@@ -186,6 +186,8 @@ GECKO_STRINGS_FILES = \
 	$(NULL)
 GENERATED_GECKO_STRINGS_FILES = $(patsubst %,generated/%,$(GECKO_STRINGS_FILES))
 
+# We split this into two groups because symbols for things we build have source files based on
+# the objdir, and we have to do some tweaking to get the cvs paths to work out right.
 CAMINO_SYMBOL_SOURCE_FILES = \
 	$(XCODE_PRODUCT_DIR)/*.dSYM/Contents/Resources/DWARF/* \
 	$(XCODE_PRODUCT_DIR)/Camino.app/Contents/Frameworks/Growl.framework/Growl \
@@ -393,27 +395,28 @@ libs:: \
 	$(RM) $(DIST)/$(APP_NAME).app/Contents/MacOS/components/*.xpt
 	mv $(DIST)/$(APP_NAME).app/Contents/MacOS/camino.xpt \
 	  $(DIST)/$(APP_NAME).app/Contents/MacOS/components/camino.xpt
-ifndef MOZ_DEBUG
+
+buildcaminosymbols:
 	$(PBBUILD) -project google-breakpad/src/tools/mac/dump_syms/dump_syms.xcodeproj \
 	  -configuration Release
 	@echo Generating symbols
 	mkdir -p $(SYMBOL_OUTPUT_DIR)
 	$(PYTHON) $(topsrcdir)/toolkit/crashreporter/tools/symbolstore.py \
-	  -a $(OS_TEST) -s $(shell pwd)/$(DEPTH) \
+	  -a $(OS_TEST) -s $(shell pwd) --vcs-info \
 	  google-breakpad/src/tools/mac/dump_syms/build/Release/dump_syms \
 	  $(SYMBOL_OUTPUT_DIR) \
 	  $(CAMINO_SYMBOL_SOURCE_FILES) > \
 	  $(SYMBOL_OUTPUT_DIR)/$(SYMBOL_ARCHIVE_BASENAME)-symbols.txt
+	find $(SYMBOL_OUTPUT_DIR) -name '*.sym' -exec sed -e 's/cvsroot:camino/cvsroot:mozilla\/camino/' -i -- "{}" \;
 	$(PYTHON) $(topsrcdir)/toolkit/crashreporter/tools/symbolstore.py \
-	  -a $(OS_TEST) -s $(topsrcdir) \
+	  -a $(OS_TEST) -s $(topsrcdir) --vcs-info \
 	  google-breakpad/src/tools/mac/dump_syms/build/Release/dump_syms \
 	  $(SYMBOL_OUTPUT_DIR) \
 	  $(CORE_SYMBOL_SOURCE_FILES) >> \
 	  $(SYMBOL_OUTPUT_DIR)/$(SYMBOL_ARCHIVE_BASENAME)-symbols.txt
-ifdef SYMBOL_SERVER_HOST
+
+uploadcaminosymbols:
 	@echo Uploading symbols
 	cd $(SYMBOL_OUTPUT_DIR) && \
 	  zip -r9D ../crashreporter-symbols-$(SYMBOL_ARCHIVE_BASENAME).zip .
 	$(topsrcdir)/toolkit/crashreporter/tools/upload_symbols.sh ../crashreporter-symbols-$(SYMBOL_ARCHIVE_BASENAME).zip
-endif
-endif
