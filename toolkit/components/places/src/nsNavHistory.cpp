@@ -642,6 +642,11 @@ nsNavHistory::InitDB(PRInt16 *aMadeChanges)
   NS_ENSURE_SUCCESS(rv, rv);
 #endif
 
+  // Set pragma synchronous to FULL to ensure maximum data integrity.
+  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "PRAGMA synchronous = FULL"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
   // Initialize the other places services' database tables. We do this before
