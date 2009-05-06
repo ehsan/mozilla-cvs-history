@@ -55,12 +55,6 @@
 #include "prerror.h"
 #include <stdio.h>
 
-#ifdef XP_MAC
-#include "prlog.h"
-#define printf PR_LogPrint
-#else
-#endif
-
 /*
  * The name of a file that is guaranteed to exist
  * on every machine of a particular OS.
@@ -83,11 +77,6 @@ static PRFileDesc *t1;
 
 int main(int argc, char **argv)
 {
-
-#ifdef XP_MAC
-	SetupMacPrintfLog("pr_open_re.log");
-#endif
-	
     PR_STDIO_INIT();
 
 	t1 = PR_Open(EXISTING_FILENAME, PR_RDONLY, 0666);

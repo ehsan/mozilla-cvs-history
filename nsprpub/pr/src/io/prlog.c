@@ -128,8 +128,6 @@ static void OutputDebugStringA(const char* msg) {
 #define _PUT_LOG(fd, buf, nb) {fwrite(buf, 1, nb, fd); fflush(fd);}
 #elif defined(_PR_PTHREADS)
 #define _PUT_LOG(fd, buf, nb) PR_Write(fd, buf, nb)
-#elif defined(XP_MAC)
-#define _PUT_LOG(fd, buf, nb) _PR_MD_WRITE_SYNC(fd, buf, nb)
 #else
 #define _PUT_LOG(fd, buf, nb) _PR_MD_WRITE(fd, buf, nb)
 #endif
@@ -419,9 +417,6 @@ PR_IMPLEMENT(PRBool) PR_SetLogFile(const char *file)
             PR_Close(logFile);
         }
         logFile = newLogFile;
-#if defined(XP_MAC)
-        SetLogFileTypeCreator(file);
-#endif
     }
     return (PRBool) (newLogFile != 0);
 #endif /* _PR_USE_STDIO_FOR_LOGGING */
@@ -549,23 +544,11 @@ PR_IMPLEMENT(void) PR_Assert(const char *s, const char *file, PRIntn ln)
 #if defined(XP_UNIX) || defined(XP_OS2) || defined(XP_BEOS)
     fprintf(stderr, "Assertion failure: %s, at %s:%d\n", s, file, ln);
 #endif
-#ifdef XP_MAC
-    dprintf("Assertion failure: %s, at %s:%d\n", s, file, ln);
-#endif
 #ifdef WIN32
     DebugBreak();
 #endif
 #ifdef XP_OS2
     asm("int $3");
 #endif
-#ifndef XP_MAC
     abort();
-#endif
 }
-
-#ifdef XP_MAC
-PR_IMPLEMENT(void) PR_Init_Log(void)
-{
-	_PR_InitLog();
-}
-#endif

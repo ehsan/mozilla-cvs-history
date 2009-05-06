@@ -529,10 +529,6 @@ PR_NormalizeTime(PRExplodedTime *time, PRTimeParamFn params)
 
 #else
 
-#if defined(XP_MAC)
-extern struct tm *Maclocaltime(const time_t * t);
-#endif
-
 #define HAVE_LOCALTIME_MONITOR 1  /* We use 'monitor' to serialize our calls
                                    * to localtime(). */
 static PRLock *monitor = NULL;
@@ -562,11 +558,7 @@ static struct tm *MT_safe_localtime(const time_t *clock, struct tm *result)
      * structs returned for timezones west of Greenwich when clock == 0.
      */
     
-#if defined(XP_MAC)
-    tmPtr = Maclocaltime(clock);
-#else
     tmPtr = localtime(clock);
-#endif
 
 #if defined(WIN16) || defined(XP_OS2)
     if ( (PRInt32) *clock < 0 ||
@@ -908,10 +900,6 @@ PR_USPacificTimeParameters(const PRExplodedTime *gmt)
 PR_IMPLEMENT(PRTimeParameters)
 PR_GMTParameters(const PRExplodedTime *gmt)
 {
-#if defined(XP_MAC)
-#pragma unused (gmt)
-#endif
-
     PRTimeParameters retVal = { 0, 0 };
     return retVal;
 }

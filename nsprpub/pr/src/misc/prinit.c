@@ -295,20 +295,12 @@ PR_IMPLEMENT(void) PR_UnblockClockInterrupts(void)
 PR_IMPLEMENT(void) PR_Init(
     PRThreadType type, PRThreadPriority priority, PRUintn maxPTDs)
 {
-#if defined(XP_MAC)
-#pragma unused (type, priority, maxPTDs)
-#endif
-
     _PR_ImplicitInitialization();
 }
 
 PR_IMPLEMENT(PRIntn) PR_Initialize(
     PRPrimordialFn prmain, PRIntn argc, char **argv, PRUintn maxPTDs)
 {
-#if defined(XP_MAC)
-#pragma unused (maxPTDs)
-#endif
-
     PRIntn rv;
     _PR_ImplicitInitialization();
     rv = prmain(argc, argv);
@@ -857,13 +849,9 @@ PR_IMPLEMENT(PRStatus) PR_CallOnceWithArg(
 PRBool _PR_Obsolete(const char *obsolete, const char *preferred)
 {
 #if defined(DEBUG)
-#ifndef XP_MAC
     PR_fprintf(
         PR_STDERR, "'%s' is obsolete. Use '%s' instead.\n",
         obsolete, (NULL == preferred) ? "something else" : preferred);
-#else
-#pragma unused (obsolete, preferred)
-#endif
 #endif
     return PR_FALSE;
 }  /* _PR_Obsolete */
