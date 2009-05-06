@@ -500,8 +500,8 @@ PR_NormalizeTime(PRExplodedTime *time, PRTimeParamFn params)
  *     returns the time parameters for the local time zone
  *
  *     The following uses localtime() from the standard C library.
- *     (time.h)  This is our fallback implementation.  Unix and PC
- *     use this version.  Mac has its own machine-dependent
+ *     (time.h)  This is our fallback implementation.  Unix, PC, and BeOS
+ *     use this version.  A platform may have its own machine-dependent
  *     implementation of this function.
  *
  *-------------------------------------------------------------------------
@@ -746,7 +746,7 @@ PR_LocalTimeParameters(const PRExplodedTime *gmt)
     return retVal;
 }
 
-#endif    /* defined(XP_UNIX) !! defined(XP_PC) */
+#endif    /* defined(XP_UNIX) || defined(XP_PC) || defined(XP_BEOS) */
 
 /*
  *------------------------------------------------------------------------
