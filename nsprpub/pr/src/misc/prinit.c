@@ -233,11 +233,11 @@ static void _PR_InitStuff(void)
     _PR_InitCMon();
     _PR_InitIO();
     _PR_InitNet();
+    _PR_InitTime();
     _PR_InitLog();
     _PR_InitLinker();
     _PR_InitCallOnce();
     _PR_InitDtoa();
-    _PR_InitTime();
     _PR_InitMW();
     _PR_InitRWLocks();
 
