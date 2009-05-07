@@ -1427,10 +1427,26 @@ sub main {
   }
 
   if ($cachebuild && $Settings::crashreporter_buildsymbols) {
-    TinderUtils::run_shell_command("$Settings::Make -C $objdir buildsymbols");
+    if ($Settings::BinaryName ne 'Camino') {
+      TinderUtils::run_shell_command("$Settings::Make -C $objdir buildsymbols");
+    } else {
+      TinderUtils::run_shell_command("$Settings::Make -C $objdir/camino buildcaminosymbols");
+      if ($Settings::MacUniversalBinary) {
+        my $i386objdir = $objdir . '/../i386';
+        TinderUtils::run_shell_command("$Settings::Make -C $i386objdir/camino buildcaminosymbols");
+      }
+    }
   }
   if ($cachebuild && $Settings::crashreporter_pushsymbols) {
-    TinderUtils::run_shell_command("$Settings::Make -C $objdir uploadsymbols");
+    if ($Settings::BinaryName ne 'Camino') {
+      TinderUtils::run_shell_command("$Settings::Make -C $objdir uploadsymbols");
+    } else {
+      TinderUtils::run_shell_command("$Settings::Make -C $objdir/camino uploadcaminosymbols");
+      if ($Settings::MacUniversalBinary) {
+        my $i386objdir = $objdir . '/../i386';
+        TinderUtils::run_shell_command("$Settings::Make -C $i386objdir/camino uploadcaminosymbols");
+      }
+    }
   }
 
   $local_build_dir = $package_location . "/" . $package_dir;
