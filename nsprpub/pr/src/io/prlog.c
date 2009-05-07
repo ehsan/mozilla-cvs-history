@@ -297,14 +297,13 @@ void _PR_LogCleanup(void)
 #endif
         ) {
         fclose(logFile);
-        logFile = NULL;
     }
 #else
     if (logFile && logFile != _pr_stdout && logFile != _pr_stderr) {
         PR_Close(logFile);
-        logFile = NULL;
     }
 #endif
+    logFile = NULL;
 
     if (logBuf)
         PR_DELETE(logBuf);
