@@ -444,20 +444,9 @@ LINK_EXE	= $(CC_FOR_LINK) -o $@ $(LDFLAGS) $(LCFLAGS) $(DEPLIBS) \
 LINK_LIB	= $(AR) cr $@ $(OBJS)
 LINK_DLL	= $(CC_FOR_LINK) -shared -Wl,--export-all-symbols -Wl,--out-implib -Wl,$(@:.$(DLL_SUFFIX)=.$(LIB_SUFFIX)) $(LLFLAGS) $(DLL_LDFLAGS) -o $@ $(OBJS) $(EXTRA_LIBS) $(EXTRA_DLL_LIBS)
 else
-DEBUG_LINK_OPT=-DEBUG
-ifeq ($(BUILD_OPT), 1)
-  ifndef MOZ_DEBUG_SYMBOLS
-    DEBUG_LINK_OPT=
-  endif
-  DEBUG_LINK_OPT += -OPT:REF
-endif
-
 SUBSYSTEM=CONSOLE
-ifndef MOZ_DEBUG_SYMBOLS
-DEBUG_FLAGS=-PDB:NONE
-endif
 
-LINK_EXE        = $(CYGWIN_WRAPPER) link $(DEBUG_LINK_OPT) -OUT:"$@" -MAP $(ALDFLAGS) $(LDFLAGS) $(ML_DEBUG) \
+LINK_EXE        = $(CYGWIN_WRAPPER) link $(DLLFLAGS) -OUT:"$@" -MAP $(ALDFLAGS) $(LDFLAGS) $(ML_DEBUG) \
     $(LCFLAGS) -NOLOGO $(DEBUG_FLAGS) -INCREMENTAL:NO \
     -NODEFAULTLIB:MSVCRTD -SUBSYSTEM:$(SUBSYSTEM) $(DEPLIBS) \
     $(filter %.$(OBJ_SUFFIX),$^) $(OBJS) $(EXTRA_LIBS) $(PLATFORMLIBS) msvcrt.lib
@@ -479,7 +468,7 @@ ifndef LD
 LD=link
 endif
 
-LINK_DLL        = $(CYGWIN_WRAPPER) $(LD) $(DEBUG_LINK_OPT) -nologo -MAP -DLL $(DEBUG_FLAGS) \
+LINK_DLL        = $(CYGWIN_WRAPPER) $(LD) $(DLLFLAGS) -MAP $(OS_DLLFLAGS) \
         $(ML_DEBUG) -SUBSYSTEM:$(SUBSYSTEM) $(LLFLAGS) $(DLL_LDFLAGS) \
         $(EXTRA_LIBS) -out:"$@" $(OBJS)
 endif # NS_USE_GCC

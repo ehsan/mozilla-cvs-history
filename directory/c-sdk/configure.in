@@ -82,6 +82,7 @@ dnl ========================================================
 CFLAGS="${CFLAGS=}"
 CXXFLAGS="${CXXFLAGS=}"
 LDFLAGS="${LDFLAGS=}"
+DLLFLAGS="${DLLFLAGS=}"
 HOST_CFLAGS="${HOST_CFLAGS=}"
 HOST_LDFLAGS="${HOST_LDFLAGS=}"
 
@@ -1581,7 +1582,7 @@ tools are selected during the Xcode/Developer Tools installation.])
         _MSC_VER=${_CC_MAJOR_VERSION}${_CC_MINOR_VERSION}
 
         CFLAGS="$CFLAGS -W3 -nologo -GF -Gy"
-        DLLFLAGS='-OUT:"$@"'
+        DLLFLAGS="$DLLFLAGS -OUT:'$@'"
         _DEBUG_FLAGS=-Z7
         _OPTIMIZE_FLAGS=-O2
         if test -z "$MOZ_OPTIMIZE"; then
