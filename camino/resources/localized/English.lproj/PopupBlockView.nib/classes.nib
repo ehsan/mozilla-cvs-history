@@ -1,33 +1,47 @@
 {
-    IBClasses = (
-        {
-            ACTIONS = {
-                blacklistPopups = id; 
-                hideBlockedPopupView = id; 
-                reloadWithNewCharset = id; 
-                showPopups = id; 
-                unblockPopups = id; 
-            }; 
-            CLASS = BrowserWrapper; 
-            LANGUAGE = ObjC; 
-            OUTLETS = {
-                mBlockedPopupBar = TransientBar; 
-                mBlockedPopupCloseButton = RolloverImageButton; 
-                mBlockedPopupLabel = NSTextField; 
-                mCreateDelegate = id; 
-                mDelegate = id; 
-            }; 
-            SUPERCLASS = NSView; 
-        }, 
-        {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
-        {
-            CLASS = PopupBlockedBar; 
-            LANGUAGE = ObjC; 
-            OUTLETS = {mPopupBlockedMessageTextField = NSTextField; }; 
-            SUPERCLASS = TransientBar; 
-        }, 
-        {CLASS = RolloverImageButton; LANGUAGE = ObjC; SUPERCLASS = NSButton; }, 
-        {CLASS = TransientBar; LANGUAGE = ObjC; SUPERCLASS = NSView; }
-    ); 
-    IBVersion = 1; 
+    IBClasses =     (
+                {
+            ACTIONS =             {
+                blacklistPopups = id;
+                hideBlockedPopupView = id;
+                reloadWithNewCharset = id;
+                showPopups = id;
+                unblockPopups = id;
+            };
+            CLASS = BrowserWrapper;
+            LANGUAGE = ObjC;
+            OUTLETS =             {
+                mBlockedPopupBar = TransientBar;
+                mBlockedPopupCloseButton = RolloverImageButton;
+                mBlockedPopupLabel = NSTextField;
+                mCreateDelegate = id;
+                mDelegate = id;
+            };
+            SUPERCLASS = NSView;
+        },
+                {
+            CLASS = FirstResponder;
+            LANGUAGE = ObjC;
+            SUPERCLASS = NSObject;
+        },
+                {
+            CLASS = PopupBlockedBar;
+            LANGUAGE = ObjC;
+            OUTLETS =             {
+                mPopupBlockedMessageTextField = NSTextField;
+            };
+            SUPERCLASS = TransientBar;
+        },
+                {
+            CLASS = RolloverImageButton;
+            LANGUAGE = ObjC;
+            SUPERCLASS = NSButton;
+        },
+                {
+            CLASS = TransientBar;
+            LANGUAGE = ObjC;
+            SUPERCLASS = NSView;
+        }
+    );
+    IBVersion = 1;
 }

@@ -1610,6 +1610,7 @@ static FlashblockWhitelistManager* sFlashblockWhitelistManager = nil;
     NSString* currentHost = [[NSURL URLWithString:[self currentURI]] host];
     if (!currentHost)
       currentHost = NSLocalizedString(@"GenericHostString", nil);
+    [mBlockedPopupLabel setTextColor:[NSColor colorWithDeviceWhite:0.9 alpha:1.0]];
     [mBlockedPopupLabel setStringValue:[NSString stringWithFormat:NSLocalizedString(@"PopupDisplayRequest", nil), currentHost]];
     [mBlockedPopupCloseButton setImage:[NSImage imageNamed:@"popup_close"]];
     [mBlockedPopupCloseButton setAlternateImage:[NSImage imageNamed:@"popup_close_pressed"]];
