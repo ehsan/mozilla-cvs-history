@@ -394,6 +394,11 @@ PR_IMPLEMENT(PRStatus) PR_Cleanup()
         while (_pr_userActive > _pr_primordialExitCount) {
             PR_WaitCondVar(_pr_primordialExitCVar, PR_INTERVAL_NO_TIMEOUT);
         }
+        if (me->flags & _PR_SYSTEM) {
+            _pr_systemActive--;
+        } else {
+            _pr_userActive--;
+        }
         PR_Unlock(_pr_activeLock);
 
 #ifdef IRIX

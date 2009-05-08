@@ -1040,6 +1040,10 @@ PR_IMPLEMENT(PRStatus) PR_Cleanup(void)
         PR_Lock(pt_book.ml);
         while (pt_book.user > pt_book.this_many)
             PR_WaitCondVar(pt_book.cv, PR_INTERVAL_NO_TIMEOUT);
+        if (me->state & PT_THREAD_SYSTEM)
+            pt_book.system -= 1;
+        else
+            pt_book.user -= 1;
         PR_Unlock(pt_book.ml);
 
         _PR_CleanupMW();
