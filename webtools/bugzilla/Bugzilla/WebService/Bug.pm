@@ -201,8 +201,7 @@ sub get_history {
 
         foreach my $changeset (@$activity) {
             my %bug_history;
-            $bug_history{when} = $self->type('dateTime',
-                $self->datetime_format($changeset->{when}));
+            $bug_history{when} = $self->type('dateTime', $changeset->{when});
             $bug_history{who}  = $self->type('string', $changeset->{who});
             $bug_history{changes} = [];
             foreach my $change (@{ $changeset->{changes} }) {
