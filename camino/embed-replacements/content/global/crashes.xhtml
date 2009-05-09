@@ -3,9 +3,7 @@
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"
 [
   <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
-  <!ENTITY % crashesDTD SYSTEM "chrome://global/locale/crashes.dtd">
   %globalDTD;
-  %crashesDTD;
 ]>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -74,6 +72,18 @@ function findInsertionPoint(reports, date) {
   if (reports[min].date <= date)
     return min;
   return min+1;
+}
+
+function insertLocalizedStrings() {
+  var bundles = Cc["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService);
+  var bundle = bundles.createBundle("chrome://global/locale/crashes.properties");
+  document.title = bundle.GetStringFromName("crashes.title");
+  document.getElementById("crashesTitle").innerHTML = bundle.GetStringFromName("crashes.title");
+  document.getElementById("clearReports").innerHTML = bundle.GetStringFromName("clearReports.label");
+  document.getElementById("idHeading").innerHTML = bundle.GetStringFromName("id.heading");
+  document.getElementById("dateHeading").innerHTML = bundle.GetStringFromName("date.heading");
+  document.getElementById("noReports").innerHTML = bundle.GetStringFromName("noReports.label");
+  document.getElementById("noConfig").innerHTML = bundle.GetStringFromName("noConfig.label");
 }
 
 function populateReportList() {
@@ -185,24 +195,24 @@ function clearReports() {
 }
 ]]>
 </script>
-<title>&crashes.title;</title>
-</head><body onload="populateReportList()" dir="&locale.dir;">
+<title></title>
+</head><body onload="insertLocalizedStrings();populateReportList()" dir="&locale.dir;">
 <button chromedir="&locale.dir;" class="clear-reports"
-        onclick="clearReports()">&clearReports.label;</button>
-<h1>&crashes.title;</h1>
+        onclick="clearReports()" id="clearReports"></button>
+<h1 id="crashesTitle"></h1>
 <div id="reportList">
   <table>
     <thead>
       <tr>
-        <th chromedir="&locale.dir;">&id.heading;</th>
-        <th chromedir="&locale.dir;" colspan="2">&date.heading;</th>
+        <th chromedir="&locale.dir;" id="idHeading"></th>
+        <th chromedir="&locale.dir;" colspan="2" id="dateHeading"></th>
       </tr>
     </thead>
     <tbody id="tbody">
     </tbody>
   </table>
 </div>
-<p id="noReports" style="display: none">&noReports.label;</p>
-<p id="noConfig" style="display: none">&noConfig.label;</p>
+<p id="noReports" style="display: none"></p>
+<p id="noConfig" style="display: none"></p>
 </body>
 </html>
