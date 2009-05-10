@@ -14,15 +14,15 @@
 		<string>60 401 126 68 0 0 1440 878 </string>
 	</dict>
 	<key>IBFramework Version</key>
-	<string>446.1</string>
+	<string>489.0</string>
 	<key>IBOldestOS</key>
 	<integer>3</integer>
 	<key>IBOpenObjects</key>
 	<array>
-		<integer>287</integer>
 		<integer>401</integer>
+		<integer>287</integer>
 	</array>
 	<key>IBSystem Version</key>
-	<string>8S2167</string>
+	<string>8S165</string>
 </dict>
 </plist>
