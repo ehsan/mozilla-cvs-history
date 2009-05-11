@@ -995,8 +995,6 @@
 		B3128A120E5D14C8009F0595 /* pageBigger.tiff in Resources */ = {isa = PBXBuildFile; fileRef = B3757F860E5D0FE70006EDF1 /* pageBigger.tiff */; };
 		B3128A130E5D14CD009F0595 /* pageSmaller.tiff in Resources */ = {isa = PBXBuildFile; fileRef = B3757F870E5D0FE70006EDF1 /* pageSmaller.tiff */; };
 		B3128A140E5D14CE009F0595 /* pageSmaller.tiff in Resources */ = {isa = PBXBuildFile; fileRef = B3757F870E5D0FE70006EDF1 /* pageSmaller.tiff */; };
-		B3886D880F79D53700D8E015 /* FlashblockWhitelistManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = B3886D870F79D53700D8E015 /* FlashblockWhitelistManager.mm */; };
-		B3886D890F79D53700D8E015 /* FlashblockWhitelistManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = B3886D870F79D53700D8E015 /* FlashblockWhitelistManager.mm */; };
 		C713F0900E9AF7DB002313B3 /* CHSlidingViewAnimation.m in Sources */ = {isa = PBXBuildFile; fileRef = C713F08E0E9AF7DB002313B3 /* CHSlidingViewAnimation.m */; };
 		C713F0910E9AF7DB002313B3 /* CHSlidingViewAnimation.m in Sources */ = {isa = PBXBuildFile; fileRef = C713F08E0E9AF7DB002313B3 /* CHSlidingViewAnimation.m */; };
 		C79573880D35314D0028A773 /* XMLSearchPluginParser.mm in Sources */ = {isa = PBXBuildFile; fileRef = C79573840D35314D0028A773 /* XMLSearchPluginParser.mm */; };
@@ -2873,8 +2871,6 @@
 		A7FD31C90466004E00A80196 /* libsuitetypeaheadfind.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsuitetypeaheadfind.a; path = ../extensions/typeaheadfind/src/libsuitetypeaheadfind.a; sourceTree = SOURCE_ROOT; };
 		B3757F860E5D0FE70006EDF1 /* pageBigger.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = pageBigger.tiff; path = resources/images/toolbar/pageBigger.tiff; sourceTree = "<group>"; };
 		B3757F870E5D0FE70006EDF1 /* pageSmaller.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = pageSmaller.tiff; path = resources/images/toolbar/pageSmaller.tiff; sourceTree = "<group>"; };
-		B3886D840F79D52700D8E015 /* FlashblockWhitelistManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FlashblockWhitelistManager.h; path = src/browser/FlashblockWhitelistManager.h; sourceTree = "<group>"; };
-		B3886D870F79D53700D8E015 /* FlashblockWhitelistManager.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = FlashblockWhitelistManager.mm; path = src/browser/FlashblockWhitelistManager.mm; sourceTree = "<group>"; };
 		C713F08E0E9AF7DB002313B3 /* CHSlidingViewAnimation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CHSlidingViewAnimation.m; path = src/extensions/CHSlidingViewAnimation.m; sourceTree = "<group>"; };
 		C713F08F0E9AF7DB002313B3 /* CHSlidingViewAnimation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CHSlidingViewAnimation.h; path = src/extensions/CHSlidingViewAnimation.h; sourceTree = "<group>"; };
 		C79573840D35314D0028A773 /* XMLSearchPluginParser.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = XMLSearchPluginParser.mm; path = src/websearch/XMLSearchPluginParser.mm; sourceTree = "<group>"; };
@@ -4031,8 +4027,6 @@
 				F6BA6D4E01B2F8A601A962F7 /* BrowserWrapper.mm */,
 				F59E9F3D0237E28401A967DF /* ContentClickListener.h */,
 				F59E9F3F0237E43401A967DF /* ContentClickListener.mm */,
-				B3886D870F79D53700D8E015 /* FlashblockWhitelistManager.mm */,
-				B3886D840F79D52700D8E015 /* FlashblockWhitelistManager.h */,
 			);
 			name = Content;
 			sourceTree = "<group>";
@@ -6449,7 +6443,6 @@
 				C7DE8DD70F30CFAC00CD3872 /* SafeBrowsingListManager.mm in Sources */,
 				C7DE8DD80F30CFAC00CD3872 /* SafeBrowsingAboutModule.mm in Sources */,
 				3DE5B63A0F6C11B300D2EF11 /* TransientBar.mm in Sources */,
-				B3886D880F79D53700D8E015 /* FlashblockWhitelistManager.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6638,7 +6631,6 @@
 				C7DE8DD90F30CFAC00CD3872 /* SafeBrowsingListManager.mm in Sources */,
 				C7DE8DDA0F30CFAC00CD3872 /* SafeBrowsingAboutModule.mm in Sources */,
 				3DE5B63B0F6C11B400D2EF11 /* TransientBar.mm in Sources */,
-				B3886D890F79D53700D8E015 /* FlashblockWhitelistManager.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
