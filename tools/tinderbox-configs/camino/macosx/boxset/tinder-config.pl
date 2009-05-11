@@ -29,7 +29,8 @@ $ENV{'CVS_RSH'} = 'ssh';
 #- PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
 #$BuildAdministrator = "$ENV{USER}\@$ENV{HOST}";
 #$BuildAdministrator = ($ENV{USER} || "cltbld") . "\@" . ($ENV{HOST} || "dhcp");
-$BuildAdministrator = "mento, the fresh MAKEr";
+$BuildAdministrator = "alqahira@ardisson.org";
+$FailedBuildAdministrator = "alqahira@ardisson.org";
 
 #- You'll need to change these to suit your machine's needs
 #$DisplayServer = ':0.0';
@@ -39,6 +40,7 @@ $BuildAdministrator = "mento, the fresh MAKEr";
 #$BuildDepend       = 1;      # Depend or Clobber
 #$BuildDebug        = 0;      # Debug or Opt (Darwin)
 #$ReportStatus      = 1;      # Send results to server, or not
+$ReportFailedStatus = 1;      # Send email report of initial build failure
 #$ReportFinalStatus = 1;      # Finer control over $ReportStatus.
 #$UseTimeStamp      = 1;      # Use the CVS 'pull-by-timestamp' option, or not
 #$BuildOnce         = 0;      # Build once, don't send results to server
