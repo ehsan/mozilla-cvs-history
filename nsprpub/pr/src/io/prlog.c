@@ -230,7 +230,7 @@ void _PR_InitLog(void)
                 if (level >= LINE_BUF_SIZE) {
                     bufSize = level;
                 }
-            } else if (strcasecmp(module, "__timestamp") == 0) {
+            } else if (strcasecmp(module, "timestamp") == 0) {
                 outputTimeStamp = PR_TRUE;
             } else {
                 PRLogModuleInfo *lm = logModules;
