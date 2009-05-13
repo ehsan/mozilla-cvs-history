@@ -202,6 +202,7 @@ CORE_SYMBOL_SOURCE_FILES = \
 	$(XCODE_PRODUCT_DIR)/Camino.app/Contents/MacOS/plugins/JavaEmbeddingPlugin.bundle/Contents/MacOS/JavaEmbeddingPlugin \
 	$(XCODE_PRODUCT_DIR)/Camino.app/Contents/MacOS/plugins/MRJPlugin.plugin/Contents/MacOS/MRJPlugin \
 	$(XCODE_PRODUCT_DIR)/Camino.app/Contents/PlugIns/PrintPDE.plugin/Contents/MacOS/PrintPDE \
+	"$(XCODE_PRODUCT_DIR)/Camino.app/Contents/MacOS/plugins/Default Plugin.plugin/Contents/MacOS/Default Plugin" \
 	$(NULL)
 
 ifdef MOZ_DEBUG
@@ -401,14 +402,14 @@ buildcaminosymbols:
 	  -configuration Release
 	@echo Generating symbols
 	mkdir -p $(SYMBOL_OUTPUT_DIR)
-	$(PYTHON) $(topsrcdir)/toolkit/crashreporter/tools/symbolstore.py \
+	$(PYTHON) $(srcdir)/scripts/symbolstore.py \
 	  -a $(OS_TEST) -s $(shell pwd) --vcs-info \
 	  google-breakpad/src/tools/mac/dump_syms/build/Release/dump_syms \
 	  $(SYMBOL_OUTPUT_DIR) \
 	  $(CAMINO_SYMBOL_SOURCE_FILES) > \
 	  $(SYMBOL_OUTPUT_DIR)/$(SYMBOL_ARCHIVE_BASENAME)-symbols.txt
 	find $(SYMBOL_OUTPUT_DIR) -name '*.sym' -exec sed -e 's/cvsroot:camino/cvsroot:mozilla\/camino/' -i -- "{}" \;
-	$(PYTHON) $(topsrcdir)/toolkit/crashreporter/tools/symbolstore.py \
+	$(PYTHON) $(srcdir)/scripts/symbolstore.py \
 	  -a $(OS_TEST) -s $(topsrcdir) --vcs-info \
 	  google-breakpad/src/tools/mac/dump_syms/build/Release/dump_syms \
 	  $(SYMBOL_OUTPUT_DIR) \
