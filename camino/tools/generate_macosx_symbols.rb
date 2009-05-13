@@ -41,7 +41,7 @@ require 'fileutils'
 require 'open3'
 
 if ARGV.length != 3
-  puts "Usage: $0 <symbolstore.py path> <dump_syms path> <output directory>"
+  puts "Usage: #{$0} <symbolstore.py path> <dump_syms path> <output directory>"
   exit 1
 end
 (symbolstore_py_path, dump_syms_path, output_dir) = ARGV
