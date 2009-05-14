@@ -963,8 +963,6 @@ static id gSharedProgressController = nil;
 }
 
 // Sets the icon, label, and action for the pause/resume toolbar button.
-// Since this is also the method that gets called when the customize dialog is run,
-// by default we set the value of the icon and label to pause.
 // We only enable the button if the download manager is the key window and either
 // the pause or resume action applies to the currently selected downloads.
 - (BOOL)setPauseResumeToolbarItem:(NSToolbarItem*)theItem
@@ -1078,8 +1076,18 @@ static id gSharedProgressController = nil;
     [theItem setImage:[NSImage imageNamed:@"dl_trash"]];
   }
   else if ([itemIdentifier isEqualToString:@"pauseresumebutton"]) {
-    [theItem setPaletteLabel:NSLocalizedString(@"dlPauseButtonLabel", nil)];
-    [self setPauseResumeToolbarItem:theItem];
+    // If the button is being requested for the toolbar, choose the pause or
+    // resume version as usual, depending on the state of the selected downloads.
+    // Otherwise (if it is being requested for the toolbar customization sheet),
+    // always display the pause version.
+    if (flag) {
+      [self setPauseResumeToolbarItem:theItem];
+    }
+    else {
+      [theItem setLabel:NSLocalizedString(@"dlPauseButtonLabel", nil)];
+      [theItem setPaletteLabel:NSLocalizedString(@"dlPauseButtonLabel", nil)];
+      [theItem setImage:[NSImage imageNamed:@"dl_pause"]];
+    }
   }
   else {
     return nil;
