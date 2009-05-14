@@ -3,9 +3,14 @@
 ## uname: Darwin cb-xserve01.mozilla.com 8.9.1 Darwin Kernel Version 8.9.1: Thu Feb 22 20:55:00 PST 2007; root:xnu-792.18.15~1/RELEASE_I386 i386 i386
 #
 
+# symbols for breakpad
+export CFLAGS="-g -gfull"
+export CXXFLAGS="-g -gfull"
+
 . $topsrcdir/camino/config/mozconfig
 . $topsrcdir/build/macosx/universal/mozconfig
-ac_add_options --enable-optimize="-gfull -O2"
+# Don't add explicit optimize flags here, set them in configure.in, see bug 407794.
+ac_add_options --enable-optimize
 ac_add_options --enable-static
 mk_add_options MOZ_MAKE_FLAGS=-j4
 mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/../build

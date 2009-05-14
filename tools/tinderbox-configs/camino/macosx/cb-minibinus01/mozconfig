@@ -3,9 +3,14 @@
 ## uname: Darwin cb-minibinus01 8.11.0 Darwin Kernel Version 8.11.0: Wed Oct 10 18:26:00 PDT 2007; root:xnu-792.24.17~1/RELEASE_PPC Power Macintosh powerpc
 #
 
+# symbols for breakpad
+export CFLAGS="-g -gfull"
+export CXXFLAGS="-g -gfull"
+
 . $topsrcdir/camino/config/mozconfig
 . $topsrcdir/build/macosx/universal/mozconfig
-ac_add_options --enable-optimize="-gfull -O2"
+# Don't add explicit optimize flags here, set them in configure.in, see bug 407794.
+ac_add_options --enable-optimize
 ac_add_options --enable-static
 mk_add_options MOZ_MAKE_FLAGS=-j2
 mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/../build
