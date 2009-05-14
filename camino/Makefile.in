@@ -408,7 +408,7 @@ buildcaminosymbols:
 	  $(SYMBOL_OUTPUT_DIR) \
 	  $(CAMINO_SYMBOL_SOURCE_FILES) > \
 	  $(SYMBOL_OUTPUT_DIR)/$(SYMBOL_ARCHIVE_BASENAME)-symbols.txt
-	find $(SYMBOL_OUTPUT_DIR) -name '*.sym' -exec sed -e 's/cvsroot:camino/cvsroot:mozilla\/camino/' -i -- "{}" \;
+	find $(SYMBOL_OUTPUT_DIR) -name '*.sym' -exec sed -e 's/cvsroot:camino/cvsroot:mozilla\/camino/' -i '' "{}" \;
 	$(PYTHON) $(srcdir)/scripts/symbolstore.py \
 	  -a $(OS_TEST) -s $(topsrcdir) --vcs-info \
 	  google-breakpad/src/tools/mac/dump_syms/build/Release/dump_syms \
