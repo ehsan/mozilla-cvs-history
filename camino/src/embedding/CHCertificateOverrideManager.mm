@@ -47,6 +47,9 @@
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 
+// Xcode 2.x's ld dead-strips this symbol.  Xcode 3.0's ld is fine.
+asm(".no_dead_strip .objc_class_name_CHCertificateOverrideManager");
+
 const int CHCertificateOverrideFlagUntrusted =
   nsICertOverrideService::ERROR_UNTRUSTED;
 const int CHCertificateOverrideFlagDomainMismatch =
