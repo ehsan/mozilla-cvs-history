@@ -37,6 +37,8 @@
 
 #import "SecurityPane.h"
 
+#import "CHCertificateOverrideManager.h"
+#import "ExtendedTableView.h"
 #import "GeckoPrefConstants.h"
 
 // prefs for showing security dialogs
@@ -46,10 +48,21 @@
 const unsigned int kSelectAutomaticallyMatrixRowValue = 0;
 const unsigned int kAskEveryTimeMatrixRowValue        = 1;
 
+static NSString* const kOverrideHostKey = @"host";
+static NSString* const kOverridePortKey = @"port";
+
+
+@interface OrgMozillaCaminoPreferenceSecurity(Private)
+// Loads the list of stored certificate overrides into mOverrides.
+- (void)loadOverrides;
+@end
+
 @implementation OrgMozillaCaminoPreferenceSecurity
 
 - (void)dealloc
 {
+  [mOverrides release];
+
   [super dealloc];
 }
 
@@ -118,6 +131,99 @@ const unsigned int kAskEveryTimeMatrixRowValue        = 1;
   [[NSNotificationCenter defaultCenter] postNotificationName:@"ShowCertificatesNotification"
                                                       object:nil
                                                     userInfo:userInfoDict];
+}
+
+#pragma mark -
+#pragma mark Certificate Overrides Sheet
+
+- (IBAction)editOverrides:(id)aSender
+{
+  [self loadOverrides];
+
+  [mOverridesTable setDeleteAction:@selector(removeOverrides:)];
+  [mOverridesTable setTarget:self];
+
+  // bring up sheet
+  [NSApp beginSheet:mOverridePanel
+     modalForWindow:[aSender window]
+      modalDelegate:self
+     didEndSelector:NULL
+        contextInfo:NULL];
+}
+
+- (IBAction)editOverridesDone:(id)aSender
+{
+  [mOverridePanel orderOut:self];
+  [NSApp endSheet:mOverridePanel];
+
+  [mOverrides release];
+  mOverrides = nil;
+}
+
+- (void)loadOverrides
+{
+  CHCertificateOverrideManager* overrideManager =
+    [CHCertificateOverrideManager certificateOverrideManager];
+  NSArray* hostPortOverrides = [overrideManager overrideHosts];
+
+  NSMutableArray* overrides =
+    [NSMutableArray arrayWithCapacity:[hostPortOverrides count]];
+  NSEnumerator* hostPortEnumerator = [hostPortOverrides objectEnumerator];
+  NSString* hostPort;
+  while ((hostPort = [hostPortEnumerator nextObject])) {
+    // Entries should be "host:port"; split them apart and sanity check.
+    NSArray* components = [hostPort componentsSeparatedByString:@":"];
+    if ([components count] != 2)
+      continue;
+    [overrides addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+                           [components objectAtIndex:0], kOverrideHostKey,
+                           [components objectAtIndex:1], kOverridePortKey,
+                           nil]];
+  }
+
+  NSSortDescriptor* initialSort =
+    [[[NSSortDescriptor alloc] initWithKey:@"host"
+                                 ascending:YES] autorelease];
+  [self willChangeValueForKey:@"mOverrides"];
+  [mOverrides autorelease];
+  mOverrides = [overrides retain];
+  [mOverrides sortUsingDescriptors:[NSArray arrayWithObject:initialSort]];
+  [self didChangeValueForKey:@"mOverrides"];
+}
+
+- (IBAction)removeOverrides:(id)aSender
+{
+  CHCertificateOverrideManager* overrideManager =
+    [CHCertificateOverrideManager certificateOverrideManager];
+
+  // Walk the selected rows, removing overrides.
+  NSArray* selectedOverrides = [mOverridesController selectedObjects];
+  NSEnumerator* overrideEnumerator = [selectedOverrides objectEnumerator];
+  NSDictionary* override;
+  while ((override = [overrideEnumerator nextObject])) {
+    [overrideManager removeOverrideForHost:[override objectForKey:kOverrideHostKey]
+                                      port:[[override objectForKey:kOverridePortKey] intValue]];
+  }
+  [mOverridesController removeObjects:selectedOverrides];
+}
+
+- (IBAction)removeAllOverrides:(id)aSender
+{
+  NSAlert* removeAllAlert = [[[NSAlert alloc] init] autorelease];
+  [removeAllAlert setMessageText:[self localizedStringForKey:@"RemoveAllSecurityExceptionsWarningTitle"]];
+  [removeAllAlert setInformativeText:[self localizedStringForKey:@"RemoveAllSecurityExceptionsWarning"]];
+  [removeAllAlert addButtonWithTitle:[self localizedStringForKey:@"RemoveAllExceptionsButtonText"]];
+  NSButton* dontRemoveButton = [removeAllAlert addButtonWithTitle:[self localizedStringForKey:@"DontRemoveButtonText"]];
+  [dontRemoveButton setKeyEquivalent:@"\e"]; // escape
+  
+  [removeAllAlert setAlertStyle:NSCriticalAlertStyle];
+  
+  if ([removeAllAlert runModal] == NSAlertFirstButtonReturn) {
+    NSRange fullRange = NSMakeRange(0, [mOverrides count]);
+    NSIndexSet* allIndexes = [NSIndexSet indexSetWithIndexesInRange:fullRange];
+    [mOverridesController setSelectionIndexes:allIndexes];
+    [self removeOverrides:aSender];
+  }
 }
 
 @end

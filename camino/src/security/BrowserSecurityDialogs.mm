@@ -40,13 +40,14 @@
 #import "NSString+Utils.h"
 #import "NSString+Gecko.h"
 
+#import "CHCertificateOverrideManager.h"
+
 #import "nsCOMPtr.h"
 #import "nsString.h"
 
 #import "nsIX509Cert.h"
 #import "nsIRecentBadCertsService.h"
 #import "nsISSLStatus.h"
-#import "nsICertOverrideService.h"
 #import "nsServiceManagerUtils.h"
 
 #import "AutoSizingTextField.h"
@@ -259,21 +260,18 @@ static int kInvalidCertCancelOverride = 0;
       certStatus->GetIsNotValidAtThisTime(&isInvalidTime);
       certStatus->GetIsUntrusted(&isUntrusted);
       if (isUntrusted)
-        mCertFailureFlags |= nsICertOverrideService::ERROR_UNTRUSTED;
+        mCertFailureFlags |= CHCertificateOverrideFlagUntrusted;
       if (isDomainMismatch)
-        mCertFailureFlags |= nsICertOverrideService::ERROR_MISMATCH;
+        mCertFailureFlags |= CHCertificateOverrideFlagDomainMismatch;
       if (isInvalidTime)
-        mCertFailureFlags |= nsICertOverrideService::ERROR_TIME;
+        mCertFailureFlags |= CHCertificateOverrideFlagInvalidTime;
 
-      nsCOMPtr<nsICertOverrideService> certOverrideService = do_GetService(NS_CERTOVERRIDE_CONTRACTID);
-      if (certOverrideService) {
-        nsCOMPtr<nsIX509Cert> cert;
-        certStatus->GetServerCert(getter_AddRefs(cert));
-        if (cert) {
-          CertificateItem* certItem = [CertificateItem certificateItemWithCert:cert];
-          [self setCertificateItem:certItem];
-          return certItem;
-        }
+      nsCOMPtr<nsIX509Cert> cert;
+      certStatus->GetServerCert(getter_AddRefs(cert));
+      if (cert) {
+        CertificateItem* certItem = [CertificateItem certificateItemWithCert:cert];
+        [self setCertificateItem:certItem];
+        return certItem;
       }
     }
   }
@@ -318,11 +316,11 @@ static int kInvalidCertCancelOverride = 0;
   // Rather than overwhelm the user with information, just pick the most
   // important problem to tell them about.
   NSString* problemDescription = nil;
-  if (mCertFailureFlags & nsICertOverrideService::ERROR_UNTRUSTED) {
+  if (mCertFailureFlags & CHCertificateOverrideFlagUntrusted) {
     NSString* messageFormat = NSLocalizedStringFromTable(@"InvalidCertMessageFormat", @"CertificateDialogs", nil);
     problemDescription = [NSString stringWithFormat:messageFormat, mSourceHost];
   }
-  else if (mCertFailureFlags & nsICertOverrideService::ERROR_MISMATCH) {
+  else if (mCertFailureFlags & CHCertificateOverrideFlagDomainMismatch) {
     NSString* messageFormat = NSLocalizedStringFromTable(@"MismatchedCertMessageFormat", @"CertificateDialogs", nil);
     problemDescription = [NSString stringWithFormat:messageFormat, [certItem commonName], mSourceHost];
   } else {
@@ -363,14 +361,14 @@ static int kInvalidCertCancelOverride = 0;
   [[self window] orderOut:self];
   BOOL addedOverride = NO;
   if (returnCode == kInvalidCertAddOverride) {
-    nsCOMPtr<nsICertOverrideService> certOverrideService = do_GetService(NS_CERTOVERRIDE_CONTRACTID);
-    if (certOverrideService) {
-      nsCOMPtr<nsIX509Cert> cert = [[mCertificateView certificateItem] cert];
-      if (cert) {
-        certOverrideService->RememberValidityOverride(nsDependentCString([mSourceHost UTF8String]),
-                                                      mSourcePort, cert, mCertFailureFlags, PR_FALSE);
-        addedOverride = YES;
-      }
+    nsCOMPtr<nsIX509Cert> cert = [[mCertificateView certificateItem] cert];
+    if (cert) {
+      CHCertificateOverrideManager* overrideManager =
+        [CHCertificateOverrideManager certificateOverrideManager];
+      addedOverride = [overrideManager addOverrideForHost:mSourceHost
+                                                     port:mSourcePort
+                                                 withCert:cert
+                                          validationFlags:mCertFailureFlags];
     }
   }
 

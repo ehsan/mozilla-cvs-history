@@ -77,6 +77,9 @@
 		0098B20E0CAEC6D900DA0F2F /* mimeTypes.rdf in Copy Profile Defaults */ = {isa = PBXBuildFile; fileRef = 0098B20C0CAEC6C600DA0F2F /* mimeTypes.rdf */; };
 		0098B2990CAECEC000DA0F2F /* necko_file.xpt in Copy Component XPTs */ = {isa = PBXBuildFile; fileRef = 0098B2980CAECEBA00DA0F2F /* necko_file.xpt */; };
 		0098B29A0CAECEF500DA0F2F /* necko_file.xpt in Copy Component XPTs */ = {isa = PBXBuildFile; fileRef = 0098B2980CAECEBA00DA0F2F /* necko_file.xpt */; };
+		009A854C0F892F1D00C9892B /* CHCertificateOverrideManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = 009A854B0F892F1200C9892B /* CHCertificateOverrideManager.mm */; };
+		009A854D0F892F1D00C9892B /* CHCertificateOverrideManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = 009A854B0F892F1200C9892B /* CHCertificateOverrideManager.mm */; };
+		009A861E0F89527B00C9892B /* action_button.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 0FA9712F092AF9A0005C1CA6 /* action_button.tiff */; };
 		00A29E870BC9AA5B00BF313F /* tab_menu_button.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 00A29E860BC9AA5B00BF313F /* tab_menu_button.tiff */; };
 		00A29E880BC9AA5B00BF313F /* tab_menu_button.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 00A29E860BC9AA5B00BF313F /* tab_menu_button.tiff */; };
 		00BBBC850D66C13400C2D916 /* CHGradient.m in Sources */ = {isa = PBXBuildFile; fileRef = 00BBBC840D66C13400C2D916 /* CHGradient.m */; };
@@ -2539,6 +2542,8 @@
 		0098B19E0CAEAAE800DA0F2F /* exthandler.xpt */ = {isa = PBXFileReference; lastKnownFileType = file; name = exthandler.xpt; path = ../dist/bin/components/exthandler.xpt; sourceTree = SOURCE_ROOT; };
 		0098B20C0CAEC6C600DA0F2F /* mimeTypes.rdf */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xml; name = mimeTypes.rdf; path = resources/application/mimeTypes.rdf; sourceTree = "<group>"; };
 		0098B2980CAECEBA00DA0F2F /* necko_file.xpt */ = {isa = PBXFileReference; lastKnownFileType = file; name = necko_file.xpt; path = ../dist/bin/components/necko_file.xpt; sourceTree = SOURCE_ROOT; };
+		009A854A0F892F1200C9892B /* CHCertificateOverrideManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CHCertificateOverrideManager.h; path = src/embedding/CHCertificateOverrideManager.h; sourceTree = "<group>"; };
+		009A854B0F892F1200C9892B /* CHCertificateOverrideManager.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CHCertificateOverrideManager.mm; path = src/embedding/CHCertificateOverrideManager.mm; sourceTree = "<group>"; };
 		00A29E860BC9AA5B00BF313F /* tab_menu_button.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = tab_menu_button.tiff; path = resources/images/chrome/tab_menu_button.tiff; sourceTree = SOURCE_ROOT; };
 		00BBBC830D66C13400C2D916 /* CHGradient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CHGradient.h; path = src/extensions/CHGradient.h; sourceTree = "<group>"; };
 		00BBBC840D66C13400C2D916 /* CHGradient.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CHGradient.m; path = src/extensions/CHGradient.m; sourceTree = "<group>"; };
@@ -4815,6 +4820,8 @@
 				335639BC0C84E85600DC4D06 /* Browser View */,
 				6021CDD70C84FDC4000E7754 /* CHStringBundleOverride.h */,
 				6021CDD80C84FDC4000E7754 /* CHStringBundleOverride.mm */,
+				009A854A0F892F1200C9892B /* CHCertificateOverrideManager.h */,
+				009A854B0F892F1200C9892B /* CHCertificateOverrideManager.mm */,
 				33E95A750D31B6FA0054C01D /* CHCookieStorage.h */,
 				33E95A760D31B6FA0054C01D /* CHCookieStorage.mm */,
 				F50D9DED02EE0AB101BB4219 /* CHDownloadProgressDisplay.h */,
@@ -5913,6 +5920,7 @@
 				3F44ADDF05BDFBA000CB4B08 /* Security.tiff in Resources */,
 				3F44ADE005BDFBA000CB4B08 /* Security.nib in Resources */,
 				3F8C005106800D8D00658CBC /* Localizable.strings in Resources */,
+				009A861E0F89527B00C9892B /* action_button.tiff in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6443,6 +6451,7 @@
 				C7DE8DD70F30CFAC00CD3872 /* SafeBrowsingListManager.mm in Sources */,
 				C7DE8DD80F30CFAC00CD3872 /* SafeBrowsingAboutModule.mm in Sources */,
 				3DE5B63A0F6C11B300D2EF11 /* TransientBar.mm in Sources */,
+				009A854D0F892F1D00C9892B /* CHCertificateOverrideManager.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6631,6 +6640,7 @@
 				C7DE8DD90F30CFAC00CD3872 /* SafeBrowsingListManager.mm in Sources */,
 				C7DE8DDA0F30CFAC00CD3872 /* SafeBrowsingAboutModule.mm in Sources */,
 				3DE5B63B0F6C11B400D2EF11 /* TransientBar.mm in Sources */,
+				009A854C0F892F1D00C9892B /* CHCertificateOverrideManager.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

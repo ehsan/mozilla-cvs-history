@@ -40,12 +40,19 @@
 
 #import "PreferencePaneBase.h"
 
+@class ExtendedTableView;
+
 @interface OrgMozillaCaminoPreferenceSecurity : PreferencePaneBase
 {
   IBOutlet NSButton* mLeaveEncrypted;
-  IBOutlet NSButton* mViewMixed;  
-
+  IBOutlet NSButton* mViewMixed;
   IBOutlet NSMatrix* mCertificateBehavior;
+
+  // Certificate override sheet.
+  IBOutlet id                 mOverridePanel;
+  IBOutlet NSArrayController* mOverridesController;
+  IBOutlet ExtendedTableView* mOverridesTable;
+  NSMutableArray*             mOverrides;      // strong
 }
 
 - (IBAction)clickEnableLeaveEncrypted:(id)sender;
@@ -53,5 +60,17 @@
 
 - (IBAction)clickCertificateSelectionBehavior:(id)sender;
 - (IBAction)showCertificates:(id)sender;
+
+// Brings up the sheet for removing certificate overrides.
+- (IBAction)editOverrides:(id)aSender;
+
+// Dismisses the sheet for removing certificate overrides.
+- (IBAction)editOverridesDone:(id)aSender;
+
+// Removes the currently selected certificate overrides.
+- (IBAction)removeOverrides:(id)aSender;
+
+// Removes all of the certificate overrides, after prompting for confirmation.
+- (IBAction)removeAllOverrides:(id)aSender;
 
 @end

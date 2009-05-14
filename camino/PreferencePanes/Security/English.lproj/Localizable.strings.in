@@ -1,1 +1,7 @@
 "PreferencePanelLabel" = "Security";
+
+/* Security exception removal warning  */
+"RemoveAllSecurityExceptionsWarningTitle" = "Are you sure you want to remove all security exceptions?";
+"RemoveAllSecurityExceptionsWarning" = "This will clear the list of sites whose invalid or untrusted certificates you have chosen to trust. If you visit these sites again, and their certificates are still invalid or untrusted, you will not be able to enter without adding a new exception. You cannot undo this action.";
+"RemoveAllExceptionsButtonText" = "Remove All Exceptions";
+"DontRemoveButtonText"  = "Don’t Remove";
