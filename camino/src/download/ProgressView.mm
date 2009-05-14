@@ -176,13 +176,20 @@
 
 -(BOOL)performKeyEquivalent:(NSEvent*)theEvent
 {
-  // Catch a command-period key down event and send the cancel request
   if (([theEvent type] == NSKeyDown && 
-      ([theEvent modifierFlags] & NSCommandKeyMask) != 0) && 
-      [[theEvent characters] isEqualToString:@"."]) 
+      ([theEvent modifierFlags] & NSCommandKeyMask) != 0)) 
   {
-    [mProgressController cancelSelectedDownloads];
-    return YES;
+    // Catch a command-period key down event and send the cancel request.
+    if ([[theEvent characters] isEqualToString:@"."]) {
+      [mProgressController cancelSelectedDownloads];
+      return YES;
+    }
+    
+    // Catch a command-down-arrow key down event and send the open request.
+    if ([[theEvent characters] characterAtIndex:0] == NSDownArrowFunctionKey) {
+      [mProgressController openSelectedDownloads];
+      return YES;
+    }
   }
   
   return [super performKeyEquivalent:theEvent];
