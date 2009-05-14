@@ -245,8 +245,10 @@ ABS_topsrcdir := $(shell cd $(topsrcdir); pwd)
 
 SYMBOL_ARCHIVE_BASENAME = \
 	$(APP_NAME)-$(CM_APP_VERSION)-$(PLATFORM_BUILD_ID)-$(OS_TEST)
-
 SYMBOL_OUTPUT_DIR = crashreporter-symbols/$(PLATFORM_BUILD_ID)
+SYMBOL_ZIP_FILENAME = crashreporter-symbols-$(SYMBOL_ARCHIVE_BASENAME).zip
+SYMBOL_STORE_HOME_DIR = $(topsrcdir)/../$(PLATFORM_BUILD_ID)/symbols
+SYMBOL_REUPLOAD_SCRIPT_FILE = $(SYMBOL_STORE_HOME_DIR)/../upload-symbols-$(OS_TEST).sh
 
 export::
 	mkdir -p wallet/tables
@@ -417,7 +419,24 @@ buildcaminosymbols:
 	  $(SYMBOL_OUTPUT_DIR)/$(SYMBOL_ARCHIVE_BASENAME)-symbols.txt
 
 uploadcaminosymbols:
-	@echo Uploading symbols
+	@echo Zipping symbols
 	cd $(SYMBOL_OUTPUT_DIR) && \
-	  zip -r9D ../crashreporter-symbols-$(SYMBOL_ARCHIVE_BASENAME).zip .
-	$(topsrcdir)/toolkit/crashreporter/tools/upload_symbols.sh $(SYMBOL_OUTPUT_DIR)/../crashreporter-symbols-$(SYMBOL_ARCHIVE_BASENAME).zip
+	  zip -r9D ../$(SYMBOL_ZIP_FILENAME) .
+	@echo Storing symbols
+	mkdir -p $(SYMBOL_STORE_HOME_DIR)
+	cp -r -p -v \
+	  $(SYMBOL_OUTPUT_DIR)/../$(SYMBOL_ZIP_FILENAME) \
+	  $(SYMBOL_STORE_HOME_DIR)/$(SYMBOL_ZIP_FILENAME)
+	@echo Creating re-upload script
+	echo '#!/bin/sh\n\n \
+	  SYMBOL_SERVER_HOST=$(SYMBOL_SERVER_HOST) \
+	  SYMBOL_SERVER_USER=$(SYMBOL_SERVER_USER) \
+	  SYMBOL_SERVER_PATH=$(SYMBOL_SERVER_PATH) \
+	  SYMBOL_SERVER_SSH_KEY=$(SYMBOL_SERVER_SSH_KEY) \
+	  $(topsrcdir)/toolkit/crashreporter/tools/upload_symbols.sh \
+	  $(SYMBOL_STORE_HOME_DIR)/$(SYMBOL_ZIP_FILENAME)' | \
+	  sed -e 's/  //g' -e 's/^ //g' > \
+	  $(SYMBOL_REUPLOAD_SCRIPT_FILE)
+	chmod 755 $(SYMBOL_REUPLOAD_SCRIPT_FILE) 
+	@echo Uploading symbols
+	$(topsrcdir)/toolkit/crashreporter/tools/upload_symbols.sh $(SYMBOL_OUTPUT_DIR)/../$(SYMBOL_ZIP_FILENAME)
