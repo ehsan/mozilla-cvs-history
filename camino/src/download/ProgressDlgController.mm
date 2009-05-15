@@ -142,7 +142,6 @@ static id gSharedProgressController = nil;
   }
   else {
     [self scrollIntoView:[mProgressViewControllers lastObject]];
-    [(ProgressViewController*)[mProgressViewControllers lastObject] setSelected:YES];
   }
 
   [self rebuildViews];
