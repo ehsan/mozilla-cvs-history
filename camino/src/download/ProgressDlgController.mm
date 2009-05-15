@@ -140,7 +140,7 @@ static id gSharedProgressController = nil;
   if ([currentlySelectedDownloads count] > 0) {
     [self scrollIntoView:[currentlySelectedDownloads lastObject]];
   }
-  else {
+  else if ([mProgressViewControllers count] > 0) {
     [self scrollIntoView:[mProgressViewControllers lastObject]];
   }
 
