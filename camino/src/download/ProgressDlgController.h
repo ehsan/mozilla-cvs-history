@@ -105,6 +105,7 @@
 -(IBAction)open:(id)sender;
 -(IBAction)pause:(id)sender;
 -(IBAction)resume:(id)sender;
+-(IBAction)selectAll:(id)sender;
 
 -(ProgressViewController*)downloadWithIdentifier:(unsigned int)identifier;
 

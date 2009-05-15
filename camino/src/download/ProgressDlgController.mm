@@ -465,6 +465,15 @@ static id gSharedProgressController = nil;
   }
 }
 
+// Selects all of the downlaods in the window.
+-(IBAction)selectAll:(id)sender
+{
+  unsigned int count = [mProgressViewControllers count];
+  for (unsigned int i = 0; i < count; i++) {
+    [(ProgressViewController*)[mProgressViewControllers objectAtIndex:i] setSelected:YES];
+  }
+}
+
 -(void)deselectDownloads:(NSArray*)downloads
 {
   unsigned count = [downloads count];
