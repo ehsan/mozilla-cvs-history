@@ -1103,9 +1103,12 @@ static FlashblockWhitelistManager* sFlashblockWhitelistManager = nil;
         allowPopups:NO];
     }
     else if ([elementIdentifier isEqualToString:@"whyBlockedButton"]) {
-      // Note: pageURI can be examined for e=phishingBlocked or e=malwareBlocked
-      // to customize the blocking info location for each case...
-      [mDelegate showSafeBrowsingInformation];
+      // Examine pageURI for e=phishingBlocked or e=malwareBlocked
+      // to customize the blocking info location for each case.
+      if ([pageURI rangeOfString:@"e=malwareBlocked"].location != NSNotFound)
+        [mDelegate showMalwareDiagnosticInformation];
+      else // e=phishingBlocked
+        [mDelegate showSafeBrowsingInformation];
     }
   }
 }

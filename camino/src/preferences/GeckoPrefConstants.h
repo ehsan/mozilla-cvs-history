@@ -322,6 +322,7 @@ extern NSString* const kGeckoPrefSafeBrowsingDataProviderReportURL;     // strin
 extern NSString* const kGeckoPrefSafeBrowsingDataProviderGetHashURL;    // string
 
 extern const char* const kGeckoPrefSafeBrowsingInformationURL;          // string
+extern const char* const kGeckoPrefSafeBrowsingMalwareDiagnosticURL;    // string
 extern const char* const kGeckoPrefSafeBrowsingPhishingCheckingEnabled; // bool
 extern const char* const kGeckoPrefSafeBrowsingMalwareCheckingEnabled;  // bool
 extern const char* const kGeckoPrefSafeBrowsingDataProvider;            // int

@@ -84,6 +84,7 @@
 #import "ToolbarScriptItem.h"
 #import "SearchEngineManager.h"
 #import "SearchEngineEditor.h"
+#import "CmXULAppInfo.h"
 // For search plugin description keys:
 #import "XMLSearchPluginParser.h"
 
@@ -5164,6 +5165,30 @@ public:
     [[PreferenceManager sharedInstance] getStringPref:kGeckoPrefSafeBrowsingInformationURL 
                                           withSuccess:NULL];
   [self loadURL:blockingInformationURL referrer:nil focusContent:YES allowPopups:NO];  
+}
+
+- (void)showMalwareDiagnosticInformation
+{
+  NSString *malwareDiagnosticURL =
+    [[PreferenceManager sharedInstance] getStringPref:kGeckoPrefSafeBrowsingMalwareDiagnosticURL
+                                          withSuccess:NULL];
+  NSString *locale =
+    [[PreferenceManager sharedInstance] getStringPref:kGeckoPrefUserAgentLocale
+                                        withSuccess:NULL];
+
+  // Fill in certain URL parameter tokens with values.
+  NSMutableString *filledURL = [[malwareDiagnosticURL mutableCopy] autorelease];
+  [filledURL replaceOccurrencesOfString:@"{moz:client}"
+                             withString:[XULAppInfo name]
+                                options:NULL
+                                  range:NSMakeRange(0, [filledURL length])];
+  [filledURL replaceOccurrencesOfString:@"{moz:locale}"
+                             withString:locale
+                                options:NULL
+                                  range:NSMakeRange(0, [filledURL length])];
+  [filledURL appendString:[mBrowserView currentURI]];
+
+  [self loadURL:filledURL referrer:nil focusContent:YES allowPopups:NO];
 }
 
 @end

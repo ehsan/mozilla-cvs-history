@@ -236,6 +236,9 @@ pref("browser.safebrowsing.provider.0.reportPhishURL", "http://{moz:locale}.phis
 // Location to more information about the safe browsing feature
 pref("browser.safebrowsing.warning.infoURL", "http://en-us.www.mozilla.com/en-US/firefox/phishing-protection/");
 
+// URL for checking the reason for a malware warning.
+pref("browser.safebrowsing.malware.reportURL", "http://safebrowsing.clients.google.com/safebrowsing/diagnostic?client={moz:client}&hl={moz:locale}&site=");
+
 // Name of the about: page contributed by safebrowsing to handle display of error
 // pages on phishing/malware hits.
 pref("urlclassifier.alternate_error_page", "safebrowsingblocked");

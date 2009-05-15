@@ -86,6 +86,7 @@ extern NSString* const kBrowserInstanceClosedNotification;
 // Called when the user clicks buttons on the about:safebrowsingblocked error page.
 - (void)runAwayFromSafeBrowsingBlockedSite;
 - (void)showSafeBrowsingInformation;
+- (void)showMalwareDiagnosticInformation;
 
 @end
 
