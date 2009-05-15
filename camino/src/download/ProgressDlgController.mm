@@ -105,10 +105,11 @@ static id gSharedProgressController = nil;
   if ((self = [super initWithWindowNibName:@"ProgressDialog"])) {
     // Load the saved instances to mProgressViewControllers array.
     mProgressViewControllers = [[NSMutableArray alloc] init];
+
+    mSelectionPivotIndex = -1;
     [self loadProgressViewControllers];
 
     mFileChangeWatcher = [[FileChangeWatcher alloc] init];
-    mSelectionPivotIndex = -1;
   }
   return self;
 }
