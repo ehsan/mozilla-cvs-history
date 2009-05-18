@@ -4,8 +4,8 @@
 #
 
 # symbols for breakpad
-export CFLAGS="-g -gfull"
-export CXXFLAGS="-g -gfull"
+export CFLAGS="-gdwarf-2"
+export CXXFLAGS="-gdwarf-2"
 
 . $topsrcdir/camino/config/mozconfig
 . $topsrcdir/build/macosx/universal/mozconfig
