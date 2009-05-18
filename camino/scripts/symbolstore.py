@@ -37,6 +37,14 @@
 #
 # ***** END LICENSE BLOCK *****
 #
+# This version was forked from the mozilla-central version in 
+# /toolkit/crashreporter/tools/ and changed to meet Camino's needs:
+# - Fixes (hacks around) issues with file names/paths containing spaces.
+# - Allows the contents of a dSYM bundle to be used directly if passed in
+#   as one of the command-line arguments. (Note that it must be the symbol
+#   file itself, not the containing .dSYM folder, or it will be skipped.)
+# - Adds fall-back to non-DWARF symbols (see bug 493392).
+#
 # Usage: symbolstore.py <params> <dump_syms path> <symbol store path>
 #                                <debug info files or dirs>
 #   Runs dump_syms on each debug info file specified on the command line,
