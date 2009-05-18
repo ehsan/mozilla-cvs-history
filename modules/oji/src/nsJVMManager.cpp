@@ -407,6 +407,13 @@ nsJVMManager::nsJVMManager(nsISupports* outer)
 
 nsJVMManager::~nsJVMManager()
 {
+    nsCOMPtr<nsIObserverService>
+        obsService(do_GetService("@mozilla.org/observer-service;1"));
+    if (obsService) {
+        obsService->RemoveObserver(this, NS_XPCOM_CATEGORY_ENTRY_ADDED_OBSERVER_ID);
+        obsService->RemoveObserver(this, NS_XPCOM_CATEGORY_ENTRY_REMOVED_OBSERVER_ID);
+    }
+
     int count = fClassPathAdditions->Count();
     for (int i = 0; i < count; i++) {
         PR_Free((*fClassPathAdditions)[i]);
