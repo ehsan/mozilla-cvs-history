@@ -44,6 +44,8 @@
 #   as one of the command-line arguments. (Note that it must be the symbol
 #   file itself, not the containing .dSYM folder, or it will be skipped.)
 # - Adds fall-back to non-DWARF symbols (see bug 493392).
+# - Commented out the 'subprocess' import, since that module isn't available
+#   on Tiger. This will make --copy_debug fatal, but we don't currently use it.
 #
 # Usage: symbolstore.py <params> <dump_syms path> <symbol store path>
 #                                <debug info files or dirs>
@@ -66,7 +68,7 @@ import sys
 import os
 import re
 import shutil
-from subprocess import call, STDOUT
+#from subprocess import call, STDOUT
 from optparse import OptionParser
 
 # Utility classes
