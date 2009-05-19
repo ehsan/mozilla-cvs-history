@@ -86,7 +86,7 @@ typedef PRIntn intn;
  * uint
  */
 
-#if !defined(XP_BEOS) && !defined(XP_UNIX) && !defined(XP_OS2) || defined(NTO)
+#if !defined(XP_BEOS) && !defined(XP_OS2) && !defined(XP_UNIX) || defined(NTO)
 typedef PRUintn uint;
 #endif
 
