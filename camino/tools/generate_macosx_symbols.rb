@@ -174,27 +174,22 @@ puts "Preparing symbol storage directory"
 FileUtils.mkdir_p symbol_output_dir
 
 puts "\nGenerating OS symbols"
-Open3.popen3("python", symbolstore_py_path, "-a", "ppc i386", dump_syms_path, symbol_output_dir, *symbol_files) do |stdin, stdout, stderr| 
+Open3.popen3("python", symbolstore_py_path, "-a", "ppc i386", "--no-dsym", dump_syms_path, symbol_output_dir, *symbol_files) do |stdin, stdout, stderr| 
   symbol_list_buffer = ""
   while ready_sources = IO.select([stdout, stderr], nil, nil, 10)
-    done = false
+    still_reading = false
     for source in ready_sources[0]
       output = source.read(128)
-      if output.nil?
-        done = true
-        break
-      end
+      continue if output.nil?
+      still_reading = true
       if source == stdout 
         symbol_list_buffer += output
       else
         print output
       end
     end
-    break if done
+    break if not still_reading
   end
-  # Grab anything that's left in either buffer.
-  print stderr.read
-  symbol_list_buffer += stdout.read
   File.open(symbol_list_file, "w") { |file| file.write(symbol_list_buffer) }
 end
 

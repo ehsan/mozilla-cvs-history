@@ -46,6 +46,9 @@
 # - Adds fall-back to non-DWARF symbols (see bug 493392).
 # - Commented out the 'subprocess' import, since that module isn't available
 #   on Tiger. This will make --copy_debug fatal, but we don't currently use it.
+# - Added a --no_dsym option that causes all symbols to be generated directly
+#   from the binary (intended for use in generating OS symbols, where
+#   trying to make a dSYM will fail due to permissions).
 #
 # Usage: symbolstore.py <params> <dump_syms path> <symbol store path>
 #                                <debug info files or dirs>
@@ -422,7 +425,7 @@ class Dumper:
     ProcessDir.  Instead, call GetPlatformSpecificDumper to
     get an instance of a subclass."""
     def __init__(self, dump_syms, symbol_path,
-                 archs=None, srcdirs=None, copy_debug=False, vcsinfo=False, srcsrv=False):
+                 archs=None, srcdirs=None, copy_debug=False, vcsinfo=False, srcsrv=False, no_dsym=False):
         # popen likes absolute paths, at least on windows
         self.dump_syms = os.path.abspath(dump_syms)
         self.symbol_path = symbol_path
@@ -438,6 +441,7 @@ class Dumper:
         self.copy_debug = copy_debug
         self.vcsinfo = vcsinfo
         self.srcsrv = srcsrv
+        self.no_dsym = no_dsym
 
     # subclasses override this
     def ShouldProcess(self, file):
@@ -719,7 +723,8 @@ class Dumper_Mac(Dumper):
         # If there's a dSYM in the path then we must have been given an
         # existing dSYM file as an argument (since ShouldSkipDir would have
         # skipped it), so we should use it directly.
-        if file.find('.dSYM/') != -1:
+        # If no_dsym is set, then everything bypasses the dSYM generation.
+        if self.no_dsym or file.find('.dSYM/') != -1:
             res = Dumper.ProcessFile(self, file)
         else:
             dsymbundle = file + ".dSYM"
@@ -773,6 +778,9 @@ def main():
     parser.add_option("-i", "--source-index",
                       action="store_true", dest="srcsrv", default=False,
                       help="Add source index information to debug files, making them suitable for use in a source server.")
+    parser.add_option("--no-dsym",
+                      action="store_true", dest="no_dsym", default=False,
+                      help="Runs dumpsyms directly on the binary, rather than attempting to generate a dSYM bundle.")
     (options, args) = parser.parse_args()
     
     #check to see if the pdbstr.exe exists
@@ -792,7 +800,8 @@ def main():
                                        archs=options.archs,
                                        srcdirs=options.srcdir,
                                        vcsinfo=options.vcsinfo,
-                                       srcsrv=options.srcsrv)
+                                       srcsrv=options.srcsrv,
+                                       no_dsym=options.no_dsym)
     for arg in args[2:]:
         dumper.Process(arg)
 
