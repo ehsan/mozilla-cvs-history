@@ -72,8 +72,10 @@ typedef PRIntn intn;
  *
  * On AIX 4.3, sys/inttypes.h (which is included by sys/types.h)
  * defines the types int8, int16, int32, and int64.
+ *
+ * On OS/2, sys/types.h defines uint.
  */
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_OS2)
 #include <sys/types.h>
 #endif
 
