@@ -175,8 +175,27 @@ FileUtils.mkdir_p symbol_output_dir
 
 puts "\nGenerating OS symbols"
 Open3.popen3("python", symbolstore_py_path, "-a", "ppc i386", dump_syms_path, symbol_output_dir, *symbol_files) do |stdin, stdout, stderr| 
-  File.open(symbol_list_file, "w") { |file| file.write(stdout.read) }
-  puts stderr.read
+  symbol_list_buffer = ""
+  while ready_sources = IO.select([stdout, stderr], nil, nil, 10)
+    done = false
+    for source in ready_sources[0]
+      output = source.read(128)
+      if output.nil?
+        done = true
+        break
+      end
+      if source == stdout 
+        symbol_list_buffer += output
+      else
+        print output
+      end
+    end
+    break if done
+  end
+  # Grab anything that's left in either buffer.
+  print stderr.read
+  symbol_list_buffer += stdout.read
+  File.open(symbol_list_file, "w") { |file| file.write(symbol_list_buffer) }
 end
 
 puts "\nZipping symbols"
