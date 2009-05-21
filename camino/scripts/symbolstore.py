@@ -44,6 +44,8 @@
 #   as one of the command-line arguments. (Note that it must be the symbol
 #   file itself, not the containing .dSYM folder, or it will be skipped.)
 # - Adds fall-back to non-DWARF symbols (see bug 493392).
+# - When no actual symbols are generated for a binary, the useless file is
+#   removed and its path is not echoed to stdout.
 # - Commented out the 'subprocess' import, since that module isn't available
 #   on Tiger. This will make --copy_debug fatal, but we don't currently use it.
 # - Added a --no_dsym option that causes all symbols to be generated directly
@@ -559,6 +561,18 @@ class Dumper:
                             f.write(line)
                     f.close()
                     cmd.close()
+                    # If the symbol file was empty, throw it away and don't report it.
+                    if processedLines == 0:
+                        os.remove(full_path)
+                        # If the two enclosing directories that we (potentially) made above
+                        # are empty, remove them too. If they aren't empty, fail silently.
+                        parent_dir = os.path.dirname(full_path)
+                        try:
+                            os.rmdir(parent_dir)
+                            os.rmdir(os.path.dirname(parent_dir))
+                        except:
+                            pass
+                        continue
                     # we output relative paths so callers can get a list of what
                     # was generated
                     print rel_path
