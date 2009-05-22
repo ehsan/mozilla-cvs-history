@@ -10,7 +10,7 @@
 # SOAP API.  I've updated it to use the REST::Google::Search module which
 # uses Google's AJAX API
 #
-# This API requires that you send a valid HTTP_REFERER, which you can set 
+# This API requires that you send a valid HTTP_REFERER, which you can set
 # with the REFERER constant below:
 
 package BotModules::Google;
@@ -43,7 +43,8 @@ sub RegisterConfig {
       ['maxResults', 1, 1, 8],
       ['maxInChannel', 1, 1, 1],
       ['safeSearch', 1, 1, 1],
-      ['maxLineLength', 1, 1, 256]
+      ['maxLineLength', 1, 1, 256],
+      ['searchSites', 1, 1, {}]
     );
 }
 
@@ -52,26 +53,29 @@ sub Told {
     my ($event, $message) = @_;
     # We take anything that occurs at the end of the line,
     # because Google will ignore punctuation anyway.
-    if ($message =~ /^(\s*google\s+)(.+)$/osi) {
+    if ($message =~ /^\s*(\w+)\s+(.+)$/osi) {
+        my $site = $1;
         my $terms = $2;
+        if ($site =~ /^google$/ios or grep {/^$site$/is} keys (%{$self->{'searchSites'}})){
+            $terms .= ' site:'.$self->{'searchSites'}{$site} unless $site =~ /^google$/ios;
+            my @searchResults = $self->doSearch($terms);
+            if (!@searchResults) {
+                $self->say($event, "Nothing found.");
+            }
+            # If we are in a channel, and not a /msg
+            elsif ($event->{'channel'}) {
+                splice(@searchResults, $self->{'maxInChannel'});
+            }
+            # We're in a /msg
+            else {
+                unshift(@searchResults, scalar(@searchResults) . " results found: ");
+            }
 
-        my @searchResults = $self->doSearch($terms);
-
-        if (!@searchResults) {
-            $self->say($event, "Nothing found.");
-        } 
-        # If we are in a channel, and not a /msg
-        elsif ($event->{'channel'}) {
-            splice(@searchResults, $self->{'maxInChannel'});
-        }
-        # We're in a /msg
-        else {
-            unshift(@searchResults, scalar(@searchResults) . " results found: ");
+            foreach my $result (@searchResults) {
+                $self->say($event, $event->{'from'} . ': ' . $result);
+            }
         }
 
-        foreach my $result (@searchResults) {
-            $self->say($event, $event->{'from'} . ': ' . $result);
-        }
     } elsif ($message =~ /^(\s*fight\s+)(.+)\s+vs\.\s+(.+)\s*$/osi) {
 		my $term1 = $2;
 		my $term2 = $3;
@@ -94,7 +98,7 @@ sub Told {
 sub getNumResults {
     my $self = shift;
     my ($terms) = @_;
-	
+
 	REST::Google::Search->http_referer(REFERER);
 	my $res = REST::Google::Search->new(
 		q => $terms,
