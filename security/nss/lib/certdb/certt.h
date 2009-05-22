@@ -36,7 +36,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: certt.h,v 1.50 2009/04/24 19:18:32 nelson%bolyard.com Exp $
+ * $Id: certt.h,v 1.51 2009/05/22 04:29:55 wtc%google.com Exp $
  */
 #ifndef _CERTT_H_
 #define _CERTT_H_
@@ -944,8 +944,8 @@ typedef enum {
 				 * default trusted roots are used.
 				 * Specified in value.pointer.chain */
    cert_pi_useAIACertFetch = 12, /* Enables cert fetching using AIA extension.
-				 * Default is off.
-                                     * Value is in value.scalar.b */
+				 * In NSS 3.12.1 or later. Default is off.
+				 * Value is in value.scalar.b */
    cert_pi_max                  /* SPECIAL: signifies maximum allowed value,
 				 *  can increase in future releases */
 } CERTValParamInType;
