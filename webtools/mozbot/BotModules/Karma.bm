@@ -18,6 +18,7 @@ sub RegisterConfig {
       ['privateScores', 1, 1, {}], # nick => nick karma nick karma...
       ['secondsDelayRequired', 1, 1, 20],
       ['_lastspoken', 0, 0, {}], # nick => nick => time
+      ['ranklimit', 1, 1, 10], # ranklimit is changeable if anyone want it smaller or higher
     );
 }
 
@@ -160,7 +161,7 @@ sub ReportKarmaRanks {
             my $score = $self->{'scores'}->{$top};
             $self->say($event, "The person with the most karma is $top with $score points.");
         }
-        $self->directSay($event, "Global rankings:");
+        $self->directSay($event, "Global rankings (Top $self->{'ranklimit'}):");
         $self->ReportKarmaRanksList($event, \@order, $self->{'scores'});
     }
     if ($event->{'channel'} eq '') {
@@ -191,6 +192,9 @@ sub ReportKarmaRanksList {
     foreach my $entry (@$order) {
         my $score = $scores->{$entry};
         $self->directSay($event, "$rank. $entry ($score)");
+        if($rank >= $self->{'ranklimit'}) {
+            return 1;
+        }
         $rank++;
     }
 }
