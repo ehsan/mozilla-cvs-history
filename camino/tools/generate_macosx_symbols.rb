@@ -176,11 +176,17 @@ FileUtils.mkdir_p symbol_output_dir
 puts "\nGenerating OS symbols"
 Open3.popen3("python", symbolstore_py_path, "-a", "ppc i386", "--no-dsym", dump_syms_path, symbol_output_dir, *symbol_files) do |stdin, stdout, stderr| 
   symbol_list_buffer = ""
-  while ready_sources = IO.select([stdout, stderr], nil, nil, 10)
+  # Use a very long timeout, since symbolstore.py buffers output.
+  while ready_sources = IO.select([stdout, stderr], nil, nil, 300)
     still_reading = false
     for source in ready_sources[0]
-      output = source.read(128)
-      continue if output.nil?
+      output = ""
+      begin
+        output = source.readpartial(4096)
+      rescue EOFError
+        next
+      end
+      next if output.nil?
       still_reading = true
       if source == stdout 
         symbol_list_buffer += output
