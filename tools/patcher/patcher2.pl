@@ -81,7 +81,7 @@ use vars qw($PID_FILE
             $ST_SIZE );
 
 $PID_FILE = 'patcher2.pid';
-$DEFAULT_HASH_TYPE = 'SHA1';
+$DEFAULT_HASH_TYPE = 'SHA512';
 $DEFAULT_CVSROOT = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
 $DEFAULT_HGROOT  = 'http://hg.mozilla.org/mozilla-central';
 

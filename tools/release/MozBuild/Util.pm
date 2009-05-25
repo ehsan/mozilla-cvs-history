@@ -359,13 +359,12 @@ sub HashFile {
    die "ASSERT: HashFile(): null file\n" if (not defined($args{'file'}));
 
    my $fileToHash = $args{'file'};
-   my $hashFunction = lc($args{'type'}) || 'md5';
+   my $hashFunction = lc($args{'type'}) || 'sha512';
    my $dumpOutput = $args{'output'} || 0;
    my $ignoreErrors = $args{'ignoreErrors'} || 0;
 
-   die 'ASSERT: HashFile(): invalid hashFunction; use md5/sha1: ' .
-    "$hashFunction\n" if 
-    ($hashFunction ne 'md5' && $hashFunction ne 'sha1');
+   die 'ASSERT: HashFile(): invalid hashFunction; use md5/sha1/sha256/sha384/sha512: ' .
+    "$hashFunction\n" if ($hashFunction !~ '^(md5|sha1|sha256|sha384|sha512)$');
 
    if (not(-f $fileToHash) || not(-r $fileToHash)) {
       if ($ignoreErrors) {
