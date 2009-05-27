@@ -9,7 +9,7 @@ if [[ "${BUILT_PRODUCTS_DIR}" == "" || "${FRAMEWORKS_FOLDER_PATH}" == "" ]]; the
 fi
 
 echo Stripping framework headers
-find "${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}" -name *.h -exec rm {} \;
+find "${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}" -name '*.h' -exec rm {} \;
 find "${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}" -name Headers -type l -exec rm {} \;
 find "${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}" -name Headers -type d -exec rmdir {} \; -prune
 find "${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}" -name PrivateHeaders -type l -exec rm {} \;
