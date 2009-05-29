@@ -78,6 +78,7 @@
   int               mDraggingTabOriginalIndex;
   BOOL              mIsReorganizingTabViewItems;
   NSMutableArray*   mCurrentlySlidingTabs;  // strong
+  NSMutableArray*   mCachedTabViewItems;    // strong; Used to reorder tab items locally during a drag session.
 }
 
 // Should be called when the number, order, or visible range of tabs is changed.
