@@ -113,6 +113,9 @@ extern const char* const kGeckoPrefBlockAds;                           // bool
 // Controls whether Flashblock is enabled
 extern const char* const kGeckoPrefBlockFlash;                         // bool
 
+// The whitelist of allowed Flash sites
+extern const char* const kGeckoPrefFlashblockWhitelist;                // string
+
 // Controls how animated images are allowed to animate
 extern const char* const kGeckoPrefImageAnimationBehavior;             // string
 // Possible values:

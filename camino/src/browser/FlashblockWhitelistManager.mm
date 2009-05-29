@@ -16,7 +16,7 @@
  *
  * The Initial Developer of the Original Code is
  * Bryan Atwood
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):

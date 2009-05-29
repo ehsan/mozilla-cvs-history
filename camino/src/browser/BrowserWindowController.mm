@@ -85,6 +85,7 @@
 #import "SearchEngineManager.h"
 #import "SearchEngineEditor.h"
 #import "CmXULAppInfo.h"
+#import "FlashblockWhitelistManager.h"
 // For search plugin description keys:
 #import "XMLSearchPluginParser.h"
 
@@ -114,6 +115,12 @@
 #include "nsIWebBrowserChrome.h"
 #include "nsNetUtil.h"
 #include "nsIPref.h"
+
+#include "nsIDOMViewCSS.h"
+#include "nsIDOMDocumentView.h"
+#include "nsIDOMCSSStyleDeclaration.h"
+#include "nsIDOMCSSValue.h"
+#include "nsIDOMCSSPrimitiveValue.h"
 
 #include "nsICommandManager.h"
 #include "nsICommandParams.h"
@@ -192,6 +199,7 @@ const int kSpellingRelatedItemsTag = 103;
 const int kItemsNeedingOpenBehaviorAlternatesTag = 104;
 const int kItemsNeedingForceAlternateTag = 105;
 const int kLinkOpeningItemsTag = 106;
+const int kFlashblockTag = 107;
 
 // Cached toolbar defaults read in from a plist. If null, we'll use
 // hardcoded defaults.
@@ -613,6 +621,7 @@ public:
 - (void)populateEnginesIntoSearchField:(WebSearchField*)searchField;
 - (NSString*)lastKnownPreferredSearchEngine;
 - (void)setLastKnownPreferredSearchEngine:(NSString*)inPreferredEngine;
+- (BOOL)isFlashblockElement:(nsIDOMNode*)aNode;
 
 @end
 
@@ -4146,6 +4155,7 @@ public:
 
   BOOL hasSelection = [[mBrowserView browserView] canCopy];
   BOOL isMidas = NO;
+  BOOL isFlashblock = NO;
 
   if (mDataOwner->mContextMenuNode) {
     nsCOMPtr<nsIDOMDocument> ownerDoc;
@@ -4253,11 +4263,23 @@ public:
     [mBackItem    setEnabled: [[mBrowserView browserView] canGoBack]];
     [mForwardItem setEnabled: [[mBrowserView browserView] canGoForward]];
     [mCopyItem    setEnabled:hasSelection];
+
+    if ([[PreferenceManager sharedInstance] getBooleanPref:kGeckoPrefBlockFlash withSuccess:NULL]
+        && [self isFlashblockElement:(mDataOwner->mContextMenuNode)]) {
+      isFlashblock = YES;
+    }
   }
 
   // we have to clone the menu and return that, so that we don't change
   // our only copy of the menu
   NSMenu* result = [[menuPrototype copy] autorelease];
+
+  if (!isFlashblock) {
+    NSMenuItem* flashblockItem;
+    // this removes the separator above the item as well
+    while ((flashblockItem = [result itemWithTag:kFlashblockTag]) != nil)
+      [result removeItem:flashblockItem];
+  }
 
   if (isUnsafeLink) {
     NSMenuItem* frameItem;
@@ -4713,6 +4735,67 @@ public:
     else
       [self loadURL:urlStr referrer:referrer focusContent:YES allowPopups:NO];
   }  
+}
+
+//
+// -isFlashblockElement:
+//
+// Returns YES if the element is a Flashblock placeholder. This is achieved by
+// looking for chrome://flashblock/content/* as the element's background image.
+//
+- (BOOL)isFlashblockElement:(nsIDOMNode*)aNode
+{
+  nsCOMPtr<nsIDOMElement> flashElement(do_QueryInterface(aNode));
+  if(!flashElement) {
+    return NO;
+  }
+
+  nsCOMPtr<nsIDOMDocument> document;
+  flashElement->GetOwnerDocument(getter_AddRefs(document));
+  nsCOMPtr<nsIDOMDocumentView> docView(do_QueryInterface(document));
+  if (!docView) {
+    return NO;
+  }
+
+  nsCOMPtr<nsIDOMAbstractView> defaultView;
+  docView->GetDefaultView(getter_AddRefs(defaultView));
+  nsCOMPtr<nsIDOMViewCSS> defaultCSSView(do_QueryInterface(defaultView));
+  if (!defaultCSSView) {
+    return NO;
+  }
+
+  nsCOMPtr<nsIDOMCSSStyleDeclaration> computedStyle;
+  defaultCSSView->GetComputedStyle(flashElement, EmptyString(),
+                                   getter_AddRefs(computedStyle));
+  if (!computedStyle) {
+    return NO;
+  }
+
+  nsCOMPtr<nsIDOMCSSValue> cssValue;
+  computedStyle->GetPropertyCSSValue(NS_LITERAL_STRING("background-image"),
+                                     getter_AddRefs(cssValue));
+  nsCOMPtr<nsIDOMCSSPrimitiveValue> primitiveValue;
+  primitiveValue = do_QueryInterface(cssValue);
+  if (!primitiveValue) {
+    return NO;
+  }
+
+  nsAutoString bgStringValue;
+  primitiveValue->GetStringValue(bgStringValue);
+  return [[NSString stringWith_nsAString:bgStringValue]
+          hasPrefix:@"chrome://flashblock/content/"];
+}
+
+//
+// -unblockFlashFromCurrentDomain:
+//
+// Context menu action for adding the current domain to the Flashblock whitelist.
+//
+- (IBAction)unblockFlashFromCurrentDomain:(id)sender
+{
+  NSString *currentDomain = [[[self browserWrapper] browserView] pageLocationHost];
+  [[FlashblockWhitelistManager sharedInstance] addFlashblockWhitelistSite:currentDomain];
+  [self reload:nil];
 }
 
 - (IBAction)showPageInfo:(id)sender
