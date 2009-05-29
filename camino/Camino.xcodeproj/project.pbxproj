@@ -265,6 +265,8 @@
 		34D112DE08E9B17400989FD5 /* dl_trash.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 34D112DD08E9B17400989FD5 /* dl_trash.tiff */; };
 		3D9419800F559B2F00227277 /* blockedSite.xhtml in Resources */ = {isa = PBXBuildFile; fileRef = 3D94197F0F559B2F00227277 /* blockedSite.xhtml */; };
 		3D9419810F559B2F00227277 /* blockedSite.xhtml in Resources */ = {isa = PBXBuildFile; fileRef = 3D94197F0F559B2F00227277 /* blockedSite.xhtml */; };
+		3DACDAAA0FBF1D1600709AC3 /* SafeBrowsingTestDataUpdater.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3DACDAA90FBF1D1600709AC3 /* SafeBrowsingTestDataUpdater.mm */; };
+		3DACDAAB0FBF1D1600709AC3 /* SafeBrowsingTestDataUpdater.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3DACDAA90FBF1D1600709AC3 /* SafeBrowsingTestDataUpdater.mm */; };
 		3DE5B63A0F6C11B300D2EF11 /* TransientBar.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3DE5B6390F6C11B300D2EF11 /* TransientBar.mm */; };
 		3DE5B63B0F6C11B400D2EF11 /* TransientBar.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3DE5B6390F6C11B300D2EF11 /* TransientBar.mm */; };
 		3F12FC57072E8ECB00995ED9 /* libxpcom_core.dylib in Copy Libraries */ = {isa = PBXBuildFile; fileRef = 3F12FC56072E8ECB00995ED9 /* libxpcom_core.dylib */; };
@@ -2706,6 +2708,8 @@
 		3489ADCA0753B717005ADF6C /* ABAddressBook+Utils.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "ABAddressBook+Utils.mm"; path = "src/extensions/ABAddressBook+Utils.mm"; sourceTree = "<group>"; };
 		34D112DD08E9B17400989FD5 /* dl_trash.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = dl_trash.tiff; path = resources/images/toolbar/dl_trash.tiff; sourceTree = SOURCE_ROOT; };
 		3D94197F0F559B2F00227277 /* blockedSite.xhtml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; name = blockedSite.xhtml; path = resources/application/blockedSite.xhtml; sourceTree = "<group>"; };
+		3DACDAA80FBF1D1600709AC3 /* SafeBrowsingTestDataUpdater.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SafeBrowsingTestDataUpdater.h; path = src/safebrowsing/SafeBrowsingTestDataUpdater.h; sourceTree = "<group>"; };
+		3DACDAA90FBF1D1600709AC3 /* SafeBrowsingTestDataUpdater.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SafeBrowsingTestDataUpdater.mm; path = src/safebrowsing/SafeBrowsingTestDataUpdater.mm; sourceTree = "<group>"; };
 		3DE5B6380F6C11B300D2EF11 /* TransientBar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TransientBar.h; path = src/browser/TransientBar.h; sourceTree = "<group>"; };
 		3DE5B6390F6C11B300D2EF11 /* TransientBar.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TransientBar.mm; path = src/browser/TransientBar.mm; sourceTree = "<group>"; };
 		3F12FC56072E8ECB00995ED9 /* libxpcom_core.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libxpcom_core.dylib; path = ../dist/Embed/libxpcom_core.dylib; sourceTree = SOURCE_ROOT; };
@@ -4309,6 +4313,8 @@
 				C7DE8DD30F30CFAC00CD3872 /* SafeBrowsingListManager.mm */,
 				C7DE8DD60F30CFAC00CD3872 /* SafeBrowsingAboutModule.h */,
 				C7DE8DD50F30CFAC00CD3872 /* SafeBrowsingAboutModule.mm */,
+				3DACDAA80FBF1D1600709AC3 /* SafeBrowsingTestDataUpdater.h */,
+				3DACDAA90FBF1D1600709AC3 /* SafeBrowsingTestDataUpdater.mm */,
 			);
 			name = "Safe Browsing";
 			sourceTree = "<group>";
@@ -6459,6 +6465,7 @@
 				3DE5B63A0F6C11B300D2EF11 /* TransientBar.mm in Sources */,
 				009A854D0F892F1D00C9892B /* CHCertificateOverrideManager.mm in Sources */,
 				B3886D880F79D53700D8E015 /* FlashblockWhitelistManager.mm in Sources */,
+				3DACDAAA0FBF1D1600709AC3 /* SafeBrowsingTestDataUpdater.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6649,6 +6656,7 @@
 				3DE5B63B0F6C11B400D2EF11 /* TransientBar.mm in Sources */,
 				009A854C0F892F1D00C9892B /* CHCertificateOverrideManager.mm in Sources */,
 				B3886D890F79D53700D8E015 /* FlashblockWhitelistManager.mm in Sources */,
+				3DACDAAB0FBF1D1600709AC3 /* SafeBrowsingTestDataUpdater.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

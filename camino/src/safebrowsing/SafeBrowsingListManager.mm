@@ -48,6 +48,7 @@
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsString.h"
+#include "SafeBrowsingTestDataUpdater.h"
 
 @implementation SafeBrowsingList
 
@@ -107,6 +108,7 @@
 - (void)reRegisterAllLists;
 - (void)setUpdatesAreEnabled:(BOOL)aShouldEnableUpdates forListTypes:(SafeBrowsingListTypesMask)aListTypesToChange;
 - (int)preferredDataProviderIdentifier;
+- (void)insertTestURLsIntoDatabase;
 
 @end
 
@@ -147,6 +149,7 @@
 
     [self registerObservationOfSafeBrowsingPreferences];
     [self setInitialDataProviderValuesFromPreferences];
+    [self insertTestURLsIntoDatabase];
   }
   return self;
 }
@@ -206,6 +209,17 @@
                         forKey:kGeckoPrefSafeBrowsingDataProviderGetHashURL 
                usingProviderID:providerID];
   mListManager->SetGethashUrl(getHashURL);
+}
+
+// Manually insert our own test URLs into the safe browsing database. This provides
+// a way for users to verify that the feature is enabled and working and also
+// to experience what the UI looks like when visiting a dangerous site.
+- (void)insertTestURLsIntoDatabase
+{
+  // Create a CHSafeBrowsingTestDataUpdater instance to simulate the update stream.
+  // The object will be freed automatically by XPCOM's memory management.
+  CHSafeBrowsingTestDataUpdater *testDataController = new CHSafeBrowsingTestDataUpdater();
+  testDataController->InsertTestURLsIntoSafeBrowsingDb();
 }
 
 // Initializes a secure MAC with the data provider, which is used to decrypt list data. 
