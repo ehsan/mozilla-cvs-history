@@ -6033,7 +6033,14 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
     if (!win->IsChromeWindow()) {
       rv = sXPConnect->GetXOWForObject(cx, scope, JSVAL_TO_OBJECT(v), &v);
-      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (NS_FAILED(rv)) {
+        NS_WARNING("Failed to get XOW for window object!");
+
+        sDoSecurityCheckInAddProperty = doSecurityCheckInAddProperty;
+
+        return rv;
+      }
     }
 
     JSAutoRequest ar(cx);
@@ -6142,8 +6149,15 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
         rv = sXPConnect->GetXOWForObject(cx, scope, JSVAL_TO_OBJECT(winVal),
                                          &winVal);
-        NS_ENSURE_SUCCESS(rv, rv);
+        if (NS_FAILED(rv)) {
+          NS_WARNING("Failed to get XOW for window object!");
+
+          sDoSecurityCheckInAddProperty = doSecurityCheckInAddProperty;
+
+          return rv;
+        }
       }
+
       PRBool ok =
         ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
                               ::JS_GetStringLength(str),
