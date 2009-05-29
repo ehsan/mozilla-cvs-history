@@ -5,4 +5,8 @@ COPY_PHASE_STRIP = NO
 
 GCC_DYNAMIC_NO_PIC = NO
 
-GCC_ENABLE_FIX_AND_CONTINUE = YES
+GCC_ENABLE_FIX_AND_CONTINUE = NO
+
+// Setting this here will also cause preference panes to inherit hidden
+// visibility during the debug build without requiring target-level changes.
+GCC_SYMBOLS_PRIVATE_EXTERN = YES
