@@ -244,6 +244,7 @@ static id gSharedProgressController = nil;
 {
   [[self selectedProgressViewControllers] makeObjectsPerformSelector:@selector(resume:) withObject:sender];
   [self rebuildViews];  // because we swap in a different progress view
+  [self setupDownloadTimer];
 }
 
 // Remove all inactive instances.
@@ -694,10 +695,26 @@ static id gSharedProgressController = nil;
   }
 }
 
-// Called by our timer to refresh all the download stats
+// Called by our timer to refresh all the download stats.
+// Kills the download timer if no active downloads remain.
 - (void)setDownloadProgress:(NSTimer *)aTimer
 {
-  [mProgressViewControllers makeObjectsPerformSelector:@selector(refreshDownloadInfo)];
+  bool activeDownloadExists = NO;
+  
+  // For efficiency, only refresh info for active downloads.
+  NSEnumerator* downloadsEnum = [mProgressViewControllers objectEnumerator];
+  ProgressViewController* curController;
+  while ((curController = [downloadsEnum nextObject])) {
+    if ([curController isActive] && ![curController isPaused]) {
+      activeDownloadExists = YES;
+      [curController performSelector:@selector(refreshDownloadInfo)];
+    }
+  }
+
+  // Kill the download timer if no active downloads remain.
+  if (!activeDownloadExists) {
+    [self killDownloadTimer];
+  }
 }
 
 - (void)setupDownloadTimer
