@@ -571,8 +571,9 @@ static id gSharedProgressController = nil;
 
 -(void)maybeCloseWindow
 {
-  // only check if there are zero downloads running
-  if ([self numDownloadsInProgress] == 0)
+  // Only check if there are zero downloads running and there is no sheet
+  // (e.g. toolbar customization sheet) attached.
+  if ([self numDownloadsInProgress] == 0 && ![[self window] attachedSheet])
   {
     BOOL gotPref;
     BOOL keepDownloadsOpen = [[PreferenceManager sharedInstance] getBooleanPref:kGeckoPrefLeaveDownloadManagerOpen
