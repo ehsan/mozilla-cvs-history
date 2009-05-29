@@ -6149,7 +6149,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "/usr/bin/install_name_tool -id @executable_path/../Frameworks/Sparkle.framework/Versions/A/Sparkle \"$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.$WRAPPER_EXTENSION/Contents/Frameworks/Sparkle.framework/Sparkle\"\n";
+			shellScript = "echo \"Change Sparkle Load ID\"\n/usr/bin/install_name_tool -id @executable_path/../Frameworks/Sparkle.framework/Versions/A/Sparkle \"$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.$WRAPPER_EXTENSION/Contents/Frameworks/Sparkle.framework/Sparkle\"\n";
 		};
 		0080C7F10E2E4D7A006AFD32 /* Change Sparkle Load ID */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -6163,7 +6163,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "/usr/bin/install_name_tool -id @executable_path/../Frameworks/Sparkle.framework/Versions/A/Sparkle \"$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.$WRAPPER_EXTENSION/Contents/Frameworks/Sparkle.framework/Sparkle\"\n";
+			shellScript = "echo \"Change Sparkle Load ID\"\n/usr/bin/install_name_tool -id @executable_path/../Frameworks/Sparkle.framework/Versions/A/Sparkle \"$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.$WRAPPER_EXTENSION/Contents/Frameworks/Sparkle.framework/Sparkle\"\n";
 		};
 		0080C7F50E2E4DDF006AFD32 /* Change Sparkle Load Path */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -6177,7 +6177,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "/usr/bin/install_name_tool -change @loader_path/../Frameworks/Sparkle.framework/Versions/A/Sparkle @executable_path/../Frameworks/Sparkle.framework/Versions/A/Sparkle \"$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.$WRAPPER_EXTENSION/Contents/MacOS/$PRODUCT_NAME\"\n";
+			shellScript = "echo \"Change Sparkle Load Path\"\n/usr/bin/install_name_tool -change @loader_path/../Frameworks/Sparkle.framework/Versions/A/Sparkle @executable_path/../Frameworks/Sparkle.framework/Versions/A/Sparkle \"$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.$WRAPPER_EXTENSION/Contents/MacOS/$PRODUCT_NAME\"\n";
 		};
 		334D108B0FAA4D7600545AFE /* Strip Framework Headers */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -6229,7 +6229,7 @@
 			);
 			inputPaths = (
 				"$(BUILT_PRODUCTS_DIR)/$(WRAPPER_NAME)/Contents/MacOS/libmozlcms.dylib",
-				"$(BUILT_PRODUCTS_DIR)/$(WRAPPRE_NAME)/Contents/Frameworks/Breakpad.framework",
+				"$(BUILT_PRODUCTS_DIR)/$(WRAPPER_NAME)/Contents/Frameworks/Breakpad.framework",
 			);
 			name = "Force Copy Before Link";
 			outputPaths = (
@@ -6237,7 +6237,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# This script does nothing; it is here only to force Xcode (via the input and output files)\n# into understanding that library and framework copy phases must take place before linking.\n# This is necessary to be able to set an @executable_path that works for both libthebes.dylib\n# and Breakpad.framework.";
+			shellScript = "# This script does nothing; it is here only to force Xcode (via the input and output files)\n# into understanding that library and framework copy phases must take place before linking.\n# This is necessary to be able to set an @executable_path that works for both libthebes.dylib\n# and Breakpad.framework.\necho \"Forcing library and framework copy phase to happen before linking.\"";
 		};
 		33A72CD40F8ADDE4003D3D78 /* Force Copy Before Link */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -6245,7 +6245,7 @@
 			files = (
 			);
 			inputPaths = (
-				"$(BUILT_PRODUCTS_DIR)/$(WRAPPRE_NAME)/Contents/Frameworks/Breakpad.framework",
+				"$(BUILT_PRODUCTS_DIR)/$(WRAPPER_NAME)/Contents/Frameworks/Breakpad.framework",
 			);
 			name = "Force Copy Before Link";
 			outputPaths = (
@@ -6253,7 +6253,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# This script does nothing; it is here only to force Xcode (via the input and output files)\n# into understanding that library and framework copy phases must take place before linking.\n# This is necessary to be able to set an @executable_path that works for both libthebes.dylib\n# and Breakpad.framework. (It's really only necessary for the non-static build, since we\n# don't have to worry about libthebes in a static build, but this minimizes divergence\n# between the two builds.)";
+			shellScript = "# This script does nothing; it is here only to force Xcode (via the input and output files)\n# into understanding that library and framework copy phases must take place before linking.\n# This is necessary to be able to set an @executable_path that works for both libthebes.dylib\n# and Breakpad.framework. (It's really only necessary for the non-static build, since we\n# don't have to worry about libthebes in a static build, but this minimizes divergence\n# between the two builds.)\necho \"Forcing library and framework copy phase to happen before linking.\"";
 		};
 		DE578A7A0FA69EAF0032CFD2 /* Copy Crash Reporter InfoPlists.strings Override */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -6268,7 +6268,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cp $SRCROOT/resources/google-breakpad/InfoPlist.strings $BUILT_PRODUCTS_DIR/$FRAMEWORKS_FOLDER_PATH/Breakpad.framework/Versions/A/Resources/crash_report_sender.app/Contents/Resources/English.lproj/";
+			shellScript = "echo \"Copy Crash Reporter InfoPlists.strings Override\"\ncp $SRCROOT/resources/google-breakpad/InfoPlist.strings $BUILT_PRODUCTS_DIR/$FRAMEWORKS_FOLDER_PATH/Breakpad.framework/Versions/A/Resources/crash_report_sender.app/Contents/Resources/English.lproj/";
 		};
 		DE578A7C0FA69FCB0032CFD2 /* Copy Crash Reporter InfoPlist.strings Override */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -6283,7 +6283,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cp $SRCROOT/resources/google-breakpad/InfoPlist.strings $BUILT_PRODUCTS_DIR/$FRAMEWORKS_FOLDER_PATH/Breakpad.framework/Versions/A/Resources/crash_report_sender.app/Contents/Resources/English.lproj/";
+			shellScript = "echo \"Copy Crash Reporter InfoPlists.strings Override\"\ncp $SRCROOT/resources/google-breakpad/InfoPlist.strings $BUILT_PRODUCTS_DIR/$FRAMEWORKS_FOLDER_PATH/Breakpad.framework/Versions/A/Resources/crash_report_sender.app/Contents/Resources/English.lproj/";
 		};
 /* End PBXShellScriptBuildPhase section */
 
