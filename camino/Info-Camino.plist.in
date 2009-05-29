@@ -10,8 +10,6 @@
 	<string>0</string>
 	<key>BreakpadRequestComments</key>
 	<string>YES</string>
-	<key>BreakpadSendAndExit</key>
-	<string>NO</string>
 	<key>BreakpadServerType</key>
 	<string>socorro</string>
 	<key>BreakpadURL</key>
