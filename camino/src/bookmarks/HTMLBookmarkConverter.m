@@ -85,9 +85,15 @@
 - (BookmarkItem*)bookmarksFromFile:(NSString*)filePath
 {
   NSError* error = nil;
-  NSXMLDocument* bookmarkDoc = [[NSXMLDocument alloc] initWithData:[NSData dataWithContentsOfFile:filePath]
-                                                           options:NSXMLDocumentTidyHTML
-                                                             error:&error];
+  NSXMLDocument* bookmarkDoc = nil;
+  // NSXMLDocument will sometimes throw an exception
+  @try {
+    bookmarkDoc = [[[NSXMLDocument alloc] initWithData:[NSData dataWithContentsOfFile:filePath]
+                                              options:NSXMLDocumentTidyHTML
+                                                error:&error] autorelease];
+  }
+  @catch (id exception) {
+  }
   if (!bookmarkDoc) {
     NSLog(@"Unable to read bookmark file '%@' for import", filePath);
     return nil;
