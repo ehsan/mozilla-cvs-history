@@ -624,6 +624,20 @@ msvcr80.dll
 mozcrt19.dll
 #endif
 xpicleanup.exe
+#Remove new files added in Firefox 3.5 in case of downgrade
+update.locale
+uninstall/shortcuts_log.ini
+modules/WindowDraggingUtils.jsm
+modules/SpatialNavigation.js
+modules/PlacesDBUtils.jsm
+modules/DownloadLastDir.jsm
+components/storage-mozStorage.js
+components/nsPrivateBrowsingService.js
+components/nsPlacesDBFlush.js
+components/NetworkGeolocationProvider.js
+components/aboutSessionRestore.js
+components/aboutPrivateBrowsing.js
+components/aboutCertError.js
 #else
 xpicleanup
 #endif
