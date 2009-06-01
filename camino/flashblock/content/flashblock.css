@@ -76,7 +76,7 @@ embed[source*=".xaml"]
  * Don't bind to objects with an explicit type=""
  * e.g. type="application/x-sibelius-score".
 */
-object[type]:not([type="application/x-shockwave-flash"]):not([type="application/x-director"]):not([type="application/x-authorware-map"])
+object[type]:not([type="application/x-shockwave-flash"]):not([type="application/x-director"]):not([type="application/x-authorware-map"]):not([data*=".swf"]):not([src*=".swf"])
 { -moz-binding: none !important; }
 
 /*

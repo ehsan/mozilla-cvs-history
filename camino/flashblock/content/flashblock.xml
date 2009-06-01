@@ -158,7 +158,9 @@ function flashblockStylePlaceholder(flash, placeholder, isStandalone) {
 	placeholder.style.border = "1px solid #dfdfdf";
 	placeholder.style.cursor = "pointer";
 	placeholder.style.overflow = "hidden";
-	placeholder.style.display = "inline-block";
+	var disp = flash.style.display == "block" ? "block" : "inline-block";
+	placeholder.style.display = disp;
+	placeholder.style.setProperty("visibility", "visible", "important");
 
 	// The size of the placeholder should include borders too,
 	// otherwise scrollbars appear for blocked standalone objects
@@ -435,7 +437,9 @@ function flashblockStylePlaceholder(flash, placeholder, isStandalone) {
 	placeholder.style.border = "1px solid #dfdfdf";
 	placeholder.style.cursor = "pointer";
 	placeholder.style.overflow = "hidden";
-	placeholder.style.display = "inline-block";
+	var disp = flash.style.display == "block" ? "block" : "inline-block";
+	placeholder.style.display = disp;
+	placeholder.style.setProperty("visibility", "visible", "important");
 
 	// The size of the placeholder should include borders too,
 	// otherwise scrollbars appear for blocked standalone objects
