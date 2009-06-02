@@ -44,6 +44,17 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/rules.mk
 
+# The next three lines, along with corresponding entries in jar.mn, are a hack
+# to keep generation of a Camino-specific license.html out of the main Camino 
+# Makefile.  The generated license.html file overwrites the existing 
+# content/global/license.html file.
+
+CHROME_DEPS += $(topsrcdir)/camino/config/app-license.html
+
+DEFINES += -DAPP_LICENSE_BLOCK=$(CM_APP_LICENSE_FILE)
+
+CM_APP_LICENSE_FILE = $(topsrcdir)/camino/config/app-license.html
+
 # The presence of jar.mn causes $(SOURCE_CHROME_DIR)/$(JAR_FILE).jar to be
 # built and $(SOURCE_CHROME_DIR)/installed-chrome.txt to be updated.  Camino
 # uses $(TARGET_CHROME_DIR)/installed-chrome.txt instead, though, so copy

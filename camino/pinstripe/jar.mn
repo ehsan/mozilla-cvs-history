@@ -1,4 +1,7 @@
 embed.jar:
+# Replace the generic Toolkit license with one appropriate for Camino
+*  content/global/license.html                                        (/toolkit/content/license.html)
+# Use up-to-date skin files from pinstripe instead of outdated ones from xpfe
    skin/classic/global/contents.rdf                                   (global/contents.rdf)
 +  skin/classic/global/10pct_transparent_grey.png                     (/toolkit/themes/pinstripe/global/10pct_transparent_grey.png)
 +  skin/classic/global/10pct_transparent_pixel.png                    (/toolkit/themes/pinstripe/global/10pct_transparent_pixel.png)
