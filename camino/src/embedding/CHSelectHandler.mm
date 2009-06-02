@@ -225,12 +225,11 @@
       option->GetText(itemLabel);
 
     NSString* title = [[NSString stringWith_nsAString:itemLabel] stringByTruncatingTo:75 at:kTruncateAtMiddle];
-
+    NSMenuItem* menuItem = [[[NSMenuItem alloc] initWithTitle:title action:NULL keyEquivalent:@""] autorelease];
     // indent items in optgroup
     if (parentOptGroup)
-      title = [@"  " stringByAppendingString:title];
+      [menuItem setIndentationLevel:1];
 
-    NSMenuItem* menuItem = [[[NSMenuItem alloc] initWithTitle:title action:NULL keyEquivalent:@""] autorelease];
     [menu addItem:menuItem];
     option_pool->AppendElement(option);  // refcount the option.
     [menuItem setRepresentedObject:[NSValue valueWithPointer:option.get()]];
