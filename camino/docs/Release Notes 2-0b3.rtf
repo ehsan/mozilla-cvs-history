@@ -1,0 +1,303 @@
+{\rtf1\ansi\ansicpg1252\cocoartf949\cocoasubrtf460
+\readonlydoc1{\fonttbl\f0\fnil\fcharset0 TrebuchetMS;\f1\fnil\fcharset0 LucidaGrande;\f2\fnil\fcharset0 Monaco;
+}
+{\colortbl;\red255\green255\blue255;\red51\green51\blue51;}
+\margl1440\margr1440\vieww12000\viewh15840\viewkind0
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl320\sa60\ql\qnatural
+
+\f0\b\fs30 \cf2 About Camino
+\fs24 \super \'ae
+\fs30 \nosupersub  2.0 Beta 3\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural
+
+\f1\b0\fs20 \cf2 Camino 2.0 Beta 3 is the third preview release of a significant upgrade to the popular Mac OS X browser using Mozilla.org\'92s Gecko HTML rendering engine. Notable improvements include enhanced AppleScript capabilities, a new crash reporting system that works on all Macs, Growl notifications for completed downloads, rearranging tabs by drag and drop, the ability to disable \'93Block Flash animations\'94 on a per-site basis, tab overview, full content zoom, better support for Full Keyboard Access in the browser window, and a \'93Recently Closed Pages\'94 menu.\
+\
+Note that Camino 2.0 Beta 3 is in the \'93beta\'94 stage, which means that it is close to its final shipping state. We feel that it is usable on a day-to-day basis and a large improvement over Camino 1.6, but you may still experience issues and some functionality may not work entirely as intended. The goal of this early release is to demonstrate the team\'92s progress and to allow users to report problems before the final release.\
+\
+Camino 2.0 Beta 3 shares the same code base as Firefox 3.0, both being based on version 1.9.0 of Gecko, and thus shares many of the security fixes and Gecko improvements that are in that version of Firefox.\
+\
+Camino 2.0 Beta 3 is available for Mac OS X 10.4 and later.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural
+
+\f0\b\fs30 \cf2 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl320\sa60\ql\qnatural
+\cf2 Features in Camino 2.0 Beta 3\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural
+
+\f1\b0\fs20 \cf2 The following changes and improvements have been made since the Camino 2.0 Beta 2 release.
+\f0\b\fs30 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sb200\sa200\ql\qnatural
+
+\f1\fs20 \cf2 General\
+\pard\tx360\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li720\fi-720\ql\qnatural
+
+\b0 \cf2 	\'95	Added support for retrieving the text or source of the current page or current selection via AppleScript.\
+	\'95	Camino includes a new crash reporting system based on {\field{\*\fldinst{HYPERLINK "http://code.google.com/p/google-breakpad/"}}{\fldrslt Google Breakpad}} which works on both PowerPC and Intel Macintoshes.\
+	\'95	Minimized Camino windows now interact better with Spaces on Mac OS X 10.5.\
+	\'95	Quitting Camino with the pop-up blocker visible should no longer cause a crash.\
+	\'95	Selecting an item from a context menu after its window has closed will no longer cause a crash.\
+	\'95	Find will now work properly when viewing JavaScript files which use the new JavaScript MIME type definitions.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sb200\sa200\ql\qnatural
+
+\b \cf2 Bookmarks & History\
+\pard\tx360\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li720\fi-720\ql\qnatural
+
+\b0 \cf2 	\'95	The Bookmark Bar once again has the correct background appearance on Mac OS X 10.4.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sb200\sa200\ql\qnatural
+
+\b \cf2 Downloading\
+\pard\tx360\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li720\fi-720\ql\qnatural
+
+\b0 \cf2 	\'95	When the Downloads window is opened for the first time after launch, Camino now scrolls to the last selected download in the list, or to the end of the list if there is no selection.\
+	\'95	Added Command-Down Arrow as a keyboard shortcut for opening selected files in the Downloads window.\
+	\'95	Command-A will now select all downloads in the Downloads window.\
+	\'95	Camino no longer refreshes download information on inactive downloads.\
+	\'95	The Downloads window will no longer close when the Customize Toolbar sheet is visible.\
+	\'95	It is now possible to suppress display of the Downloads window with a hidden preference (this may be useful for {\field{\*\fldinst{HYPERLINK "http://www.growl.info/"}}{\fldrslt Growl}} users).\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sb200\sa200\ql\qnatural
+
+\b \cf2 Localization\
+\pard\tx360\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li720\fi-720\ql\qnatural
+
+\b0 \cf2 	\'95	The \'93Files\'94 portion of the HTML Complete folder name is now localizable.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sb200\sa200\ql\qnatural
+
+\b \cf2 Preferences\
+\pard\tx360\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li720\fi-720\ql\qnatural
+
+\b0 \cf2 	\'95	The presence of invalid cookies no longer prevents display of the list of stored cookies.\
+	\'95	The default browser pop-up menu will no longer show a blank default browser on clean Mac OS X 10.5 installations.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sb200\sa200\ql\qnatural
+
+\b \cf2 Privacy & Security\
+\pard\tx360\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li720\fi-720\ql\qnatural
+
+\b0 \cf2 	\'95	It is now possible to see and remove exceptions that have been added to allow access to secure web pages whose certificates are invalid or untrusted.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sb200\sa200\ql\qnatural
+
+\b \cf2 Tabs\
+\pard\tx360\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li720\fi-720\ql\qnatural
+
+\b0 \cf2 	\'95	Improved the performance of tab dragging.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sb200\sa200\ql\qnatural
+
+\b \cf2 Web Page Interaction\
+\pard\tx360\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li720\fi-720\ql\qnatural
+
+\b0 \cf2 	\'95	Web pages will no longer steal keyboard shortcuts from menu commands.\
+	\'95	Typing to choose an item now works properly in 
+\f2 <select>
+\f1  controls with 
+\f2 <optgroup>
+\f1  elements.\
+	\'95	Added \'93Allow Flash From This Site\'94 to the context menu for blocked Flash animations.\
+	\'95	Upgraded the \'93Block flash animations\'94 code to use Flashblock 1.5.10.\
+	\'95	Improved ad-blocking.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sb200\sa200\ql\qnatural
+
+\f0\b\fs30 \cf2 Features in Camino 2.0 Beta 2\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural
+
+\f1\b0\fs20 \cf2 The following changes and improvements have been made since the Camino 2.0 Beta 1 release.
+\f0\b\fs30 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sb200\sa200\ql\qnatural
+
+\f1\fs20 \cf2 Bookmarks & History\
+\pard\tx360\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li720\fi-720\ql\qnatural
+
+\b0 \cf2 	\'95	Bookmark folders expanded during bookmark dragging now auto-collapse after dropping the bookmark.\
+	\'95	It is once again possible to move bookmarks that were imported from HTML-based bookmark files.\
+	\'95	Site icons in the bookmarks and history menus now display properly even when modifier keys are pressed.\
+	\'95	When the Top Ten List collection is used as the Dock menu, \'93Use as Dock menu\'94 will be checked in the context menu.\
+	\'95	Added support for importing bookmarks from SeaMonkey 2.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sb200\sa200\ql\qnatural
+
+\b \cf2 Downloading\
+\pard\tx360\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li720\fi-720\ql\qnatural
+
+\b0 \cf2 	\'95	If {\field{\*\fldinst{HYPERLINK "http://www.growl.info/"}}{\fldrslt Growl}} is installed, Camino will generate notifications when downloads begin and finish.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sb200\sa200\ql\qnatural
+
+\b \cf2 Tabs\
+\pard\tx360\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li720\fi-720\ql\qnatural
+
+\b0 \cf2 	\'95	On Mac OS X 10.4, background tabs will now draw properly while dragging.\
+	\'95	Attempting to drag the empty space in the tab bar will no longer drag the current tab.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sb200\sa200\ql\qnatural
+
+\b \cf2 User Interface\
+\pard\tx360\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li720\fi-720\ql\qnatural
+
+\b0 \cf2 	\'95	Non-ASCII characters in URLs are now displayed in a readable format in tooltips.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sb200\sa200\ql\qnatural
+
+\b \cf2 Web Page Interaction\
+\pard\tx360\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li720\fi-720\ql\qnatural
+
+\b0 \cf2 	\'95	Pop-up menu 
+\f2 <select>
+\f1  controls will always display using the Aqua appearance.\
+	\'95	Flash animations will no longer continue running once the page containing them has been closed.\
+	\'95	Upgraded the \'93Block flash animations\'94 code to use Flashblock 1.5.8.\
+	\'95	Improved ad-blocking.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sb200\sa200\ql\qnatural
+
+\f0\b\fs30 \cf2 Features in Camino 2.0 Beta 1\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural
+
+\f1\b0\fs20 \cf2 The following changes and improvements have been made since the Camino 2.0 Alpha 1 release.
+\f0\b\fs30 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sb200\sa200\ql\qnatural
+
+\f1\fs20 \cf2 Bookmarks & History\
+\pard\tx360\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li720\fi-720\ql\qnatural
+
+\b0 \cf2 	\'95	Middle-clicking a bookmark on the Bookmark Bar now opens the bookmark in a new window or tab.\
+	\'95	It is now possible to drag a bookmark in the search results.\
+	\'95	Cancelling a search in Bookmarks or History now restores the open folder state.\
+	\'95	When an Address Book card has the \'93Company\'94 option selected, Camino now displays the company name as the bookmark title.\
+	\'95	Escape now cancels an edit in the Bookmarks Manager.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sb200\sa200\ql\qnatural
+
+\b \cf2 Downloading\
+\pard\tx360\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li720\fi-720\ql\qnatural
+
+\b0 \cf2 	\'95	On Mac OS X 10.5, Camino will bounce the downloads folder in the Dock when a download finishes.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sb200\sa200\ql\qnatural
+
+\b \cf2 Preferences\
+\pard\tx360\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li720\fi-720\ql\qnatural
+
+\b0 \cf2 	\'95	Added an exceptions list to allow disabling \'93Block Flash animations\'94 on a per-site basis.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sb200\sa200\ql\qnatural
+
+\b \cf2 Privacy & Security\
+\pard\tx360\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li720\fi-720\ql\qnatural
+
+\b0 \cf2 	\'95	Camino now supports importing PKCS#12 certificates with the 
+\f2 .pkcs12
+\f1  extension.\
+	\'95	The \'93Import\'94 command in the Certificates window now supports importing Certificate Authorities, website certificates, and personal certificates.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sb200\sa200\ql\qnatural
+
+\b \cf2 Tabs\
+\pard\tx360\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li720\fi-720\ql\qnatural
+
+\b0 \cf2 	\'95	Tabs can be rearranged by dragging and dropping.\
+	\'95	Added an optional toolbar button for Tab Overview.\
+	\'95	Command-dragging a bookmark folder to a tab will now open the bookmarks in new tabs instead of replacing the current tabs.\
+	\'95	Site icons in tabs are now the same size as site icons in the location bar.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sb200\sa200\ql\qnatural
+
+\b \cf2 User Interface\
+\pard\tx360\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li720\fi-720\ql\qnatural
+
+\b0 \cf2 	\'95	Non-ASCII characters in URLs are now displayed in a readable format in the location bar and the autocomplete window.\
+	\'95	The down arrow will now display menus in search fields if the cursor is already at the end of the field.\
+	\'95	Command-D will now trigger the Bookmark sheet even when Caps Lock is on.\
+	\'95	When closing the Preferences window with Escape, Camino will no longer commit unsaved changes to text fields.\
+	\'95	Camino will now choose the most appropriately-sized icon when a web page\'92s site icon contains icons of multiple sizes.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sb200\sa200\ql\qnatural
+
+\b \cf2 Web Page Interaction\
+\pard\tx360\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li720\fi-720\ql\qnatural
+
+\b0 \cf2 	\'95	QuickTime movies and other plug-in content will now hide properly when switching tabs.\
+	\'95	Web pages now respect the Mac OS X preference for disabling text smoothing below a certain font size.\
+	\'95	Camino no longer detects certain non-feed URLs as feeds.\
+	\'95	Upgraded the \'93Block flash animations\'94 code to use Flashblock 1.5.7.\
+	\'95	Improved ad-blocking.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sb200\sa200\ql\qnatural
+
+\f0\b\fs30 \cf2 Features in Camino 2.0 Alpha 1\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural
+
+\f1\b0\fs20 \cf2 The following changes and improvements have been made since the Camino 1.6 release.
+\f0\b\fs30 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sb200\sa200\ql\qnatural
+
+\f1\fs20 \cf2 General\
+\pard\tx360\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li720\fi-720\ql\qnatural
+
+\b0 \cf2 	\'95	Camino 2.0 Alpha 1 requires Mac OS X 10.4 or higher.\
+	\'95	Uses version 1.9 of the Mozilla Gecko rendering engine.\
+\pard\tx1080\tx1440\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li1440\fi-720\ql\qnatural
+\cf2 	\'95	Includes a new graphics architecture based on Quartz.\
+	\'95	Better compatibility with popular plug-ins.\
+	\'95	Significant improvements in Flash performance.\
+	\'95	Enhanced support for web standards.\
+	\'95	Supports JavaScript 1.8.\
+	\'95	Scroll bars in hidden portions of web pages no longer display.\
+	\'95	Better handling of pages with large tables.\
+	\'95	Web page form controls now respect author styling in more cases.\
+	\'95	Improved support for fonts and languages.\
+\pard\tx360\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li720\fi-720\ql\qnatural
+\cf2 	\'95	Upgraded to version 1.5b6 of the Sparkle software update framework.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sb200\sa200\ql\qnatural
+
+\b \cf2 Bookmarks & History\
+\pard\tx360\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li720\fi-720\ql\qnatural
+
+\b0 \cf2 	\'95	The History menu now contains a sub-menu listing the last 20 closed web pages.\
+	\'95	The importer for HTML bookmark files is now more stable and includes better support for bookmark attributes and for exported Firefox 3 bookmarks.\
+	\'95	Dropping a bookmark on a collection no longer switches the active collection.\
+	\'95	It is now possible to drag plain-text 
+\f2 javascript:
+\f1  URLs, such as bookmarklets, to the Bookmark Bar.\
+	\'95	Added a page translation bookmarklet to default bookmarks.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sb200\sa200\ql\qnatural
+
+\b \cf2 Preferences\
+\pard\tx360\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li720\fi-720\ql\qnatural
+
+\b0 \cf2 	\'95	Changes to the font preferences now apply automatically.\
+	\'95	Changes to the \'93Home Page\'94 field in the General preference pane now apply without switching panes or closing the Preferences window.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sb200\sa200\ql\qnatural
+
+\b \cf2 Privacy & Security\
+\pard\tx360\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li720\fi-720\ql\qnatural
+
+\b0 \cf2 	\'95	Camino now displays error pages for secure web pages using invalid or untrusted certificates.\
+	\'95	Camino now supports adding exceptions to allow access to secure web pages whose certificates are invalid or untrusted.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sb200\sa200\ql\qnatural
+
+\b \cf2 Tabs\
+\pard\tx360\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li720\fi-720\ql\qnatural
+
+\b0 \cf2 	\'95	The Tab Overview feature displays a grid of thumbnails of the tabs in the current window.\
+	\'95	The Command-T keyboard shortcut is now always enabled and will create a new tab in the frontmost browser window.\
+	\'95	The tab bar is now keyboard accessible.\
+	\'95	VoiceOver can now speak tab titles.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sb200\sa200\ql\qnatural
+
+\b \cf2 User Interface\
+\pard\tx360\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li720\fi-720\ql\qnatural
+
+\b0 \cf2 	\'95	When Full Keyboard Access is enabled, tabbing now moves correctly through the entire browser window.\
+	\'95	The notification bar for blocked pop-ups is now keyboard accessible.\
+	\'95	Directory listings on local disks and FTP sites have a more pleasing appearance.\
+	\'95	The location bar autocomplete list now displays the site icon for each web page.\
+	\'95	Site icons and URLs in the location bar are updated correctly in more cases.\
+	\'95	Camino now better handles invalid characters in the location bar, the search field, and in bookmarks.\
+	\'95	The \'93Last Visited\'94 column in History and items in autocomplete lists no longer become editable on Mac OS X 10.5.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sb200\sa200\ql\qnatural
+
+\b \cf2 Web Page Interaction\
+\pard\tx360\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li720\fi-720\ql\qnatural
+
+\b0 \cf2 	\'95	Camino now has support for making the entire content of a web page bigger or smaller.\
+	\'95	Improved ad-blocking.\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\ql\qnatural
+
+\f0\b\fs30 \cf2 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\sl320\sa60\ql\qnatural
+\cf2 Known Issues\
+\pard\tx360\tx720\tx1440\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li720\fi-720\sa200\ql\qnatural
+
+\f1\b0\fs20 \cf2 	\'95	Delete no longer functions as a keyboard shortcut for Back.\
+	\'95	Scroll bars appear active at all times.\
+	\'95	If \'93Ask me before accepting each cookie\'94 is checked, Camino will display a cookie dialog for each cookie request from a web page.\
+	\'95	Camino no longer supports Shockwave Player 10 and older; to display Shockwave content, install Shockwave Player 11 or newer.\
+	\'95	Version 2.2 of the Flip4Mac (F4M) plug-in for displaying Windows Media content causes major rendering issues in Camino. The Flip4Mac team has fixed this problem in version 2.2.1.11 of the plug-in.\
+	\'95	After visiting enough pages with Flash content while browsing, Camino may stop functioning correctly. Quitting and re-launching Camino will resolve the problem. This behavior is caused by a bug in the Flash plug-in and is fixed in version 10.0 of the plug-in.\
+	\'95	Some versions of the third-party add-on 1Password are not compatible with Camino. These versions can cause Camino to crash on launch, hang when importing bookmarks, and hang when pasting into the location bar. Make sure that you are running the latest version of 1Password, and if you continue to experience issues, disable 1Password\'92s integration with Camino and contact 1Password support.}
