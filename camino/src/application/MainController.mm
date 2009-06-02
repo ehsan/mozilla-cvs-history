@@ -994,8 +994,18 @@ NSString* const kPreviousSessionTerminatedNormallyKey = @"PreviousSessionTermina
   NSWindow* frontBrowser = [self frontmostBrowserWindow];
   if (!frontBrowser)
     [self newWindow:self];
-  else if ([frontBrowser isMiniaturized])
+  else if ([frontBrowser isMiniaturized]) {
+    // If the only unminimized windows are in other spaces, Spaces will
+    // sometimes tell us that the minimized window is frontmost, so make sure
+    // we aren't in that case (since unminimizing is the wrong behavior).
+    NSEnumerator* windowEnumerator = [[self browserWindows] objectEnumerator];
+    NSWindow* window;
+    while ((window = [windowEnumerator nextObject])) {
+      if (![window isMiniaturized])
+        return NO;
+    }
     [frontBrowser deminiaturize:self];
+  }
 
   return NO;
 }
