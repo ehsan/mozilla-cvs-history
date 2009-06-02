@@ -288,9 +288,6 @@
 "Accept Once" = "Accept Once";
 "Security Warning" = "Security Warning";
 "Post To Insecure" = "The information you have entered will be sent over an unencrypted connection and could easily be read by a third party.\n\nAre you sure you want to continue sending this information?";
-"Security Mismatch" = "There is a problem with this site’s security certificate. It may be invalid, expired, or not registered with a trusted authority.\n\nAre you sure you want to connect to this site?";
-"Expired Certification" = "This site is using an expired certificate.\n\nAre you sure you want to connect to this site?";
-"Unknown Certification" = "This site has an identity that cannot be verified.";
 
 /* cookie dialog */
 "CookieText" = "%s wants to set a cookie. Do you want to allow it?";

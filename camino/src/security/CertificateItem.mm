@@ -435,7 +435,8 @@ NSString* const CertificateChangedNotificationName = @"CertificateChangedNotific
 
 - (BOOL)isValid
 {
-  return ([self generalValidity] == nsIX509Cert::VERIFIED_OK);
+  return ([self generalValidity] == nsIX509Cert::VERIFIED_OK) &&
+         !mDomainIsMismatched;
 }
 
 - (NSString*)validity
@@ -449,7 +450,7 @@ NSString* const CertificateChangedNotificationName = @"CertificateChangedNotific
   if ([self isUntrustedRootCACert])
     return [NSColor orangeColor];
 
-  if (![self isValid])
+  if (![self isValid] || mDomainIsMismatched)
     return [NSColor redColor];
 
   return [NSColor blackColor];
@@ -550,33 +551,8 @@ NSString* const CertificateChangedNotificationName = @"CertificateChangedNotific
 
 - (NSString*)shortValidityKeyForVerifyState:(PRUint32)inVerifyState
 {
-  NSString* stateKey = @"";
-  switch (inVerifyState)
-  {
-    case nsIX509Cert::VERIFIED_OK:          stateKey = @"ShortValidStateOK";                   break;
-    default:
-    case nsIX509Cert::USAGE_NOT_ALLOWED:
-    case nsIX509Cert::NOT_VERIFIED_UNKNOWN: stateKey = @"ShortInvalidStateVerifyFailed";       break;
-    case nsIX509Cert::CERT_REVOKED:         stateKey = @"ShortInvalidStateRevoked";            break;
-    case nsIX509Cert::CERT_NOT_TRUSTED:     stateKey = @"ShortInvalidStateCertNotTrusted";     break;
-    case nsIX509Cert::ISSUER_NOT_TRUSTED:
-      // if the issuer is us
-      if ([self isRootCACert])
-        stateKey = @"ShortInvalidStateIsUntrustedRootCert";
-      else
-        stateKey = @"ShortInvalidStateIssuerNotTrusted";
-      break;
-
-    case nsIX509Cert::ISSUER_UNKNOWN:       stateKey = @"ShortInvalidStateIssuerNotKnown";     break;
-    case nsIX509Cert::INVALID_CA:           stateKey = @"ShortInvalidStateInvalidIssuerCert";  break;
-    case nsIX509Cert::CERT_EXPIRED:
-      if ([self isNotYetValid])
-        stateKey = @"ShortInvalidStateNotYetValid";
-      else
-        stateKey = @"ShortInvalidStateExpired";
-      break;
-  }
-  return stateKey;
+  NSString* longStateKey = [self longValidityKeyForVerifyState:inVerifyState];
+  return [NSString stringWithFormat:@"Short%@", longStateKey];
 }
 
 - (NSString*)longValidityKeyForVerifyState:(PRUint32)inVerifyState
@@ -584,7 +560,12 @@ NSString* const CertificateChangedNotificationName = @"CertificateChangedNotific
   NSString* stateKey = @"";
   switch (inVerifyState)
   {
-    case nsIX509Cert::VERIFIED_OK:          stateKey = @"ValidStateOK";                   break;
+    case nsIX509Cert::VERIFIED_OK:
+      if (mDomainIsMismatched)
+        stateKey = @"InvalidStateMismatchedDomain";
+      else
+        stateKey = @"ValidStateOK";
+      break;
     default:
     case nsIX509Cert::USAGE_NOT_ALLOWED:
     case nsIX509Cert::NOT_VERIFIED_UNKNOWN: stateKey = @"InvalidStateVerifyFailed";       break;
@@ -697,6 +678,11 @@ NSString* const CertificateChangedNotificationName = @"CertificateChangedNotific
     usageMask |= nsIX509CertDB::TRUSTED_OBJSIGN;
 
   [self setTrustedFor:usageMask asType:inType];
+}
+
+- (void)setDomainIsMismatched:(BOOL)isMismatched
+{
+  mDomainIsMismatched = isMismatched;
 }
 
 

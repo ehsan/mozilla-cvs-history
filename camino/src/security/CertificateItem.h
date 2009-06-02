@@ -64,6 +64,7 @@ extern NSString* const CertificateChangedNotificationName;
   
   unsigned long   mVerification;    // we cache this because it's slow to obtain
   BOOL            mGotVerification;
+  BOOL            mDomainIsMismatched;
 }
 
 + (CertificateItem*)certificateItemWithCert:(nsIX509Cert*)inCert;
@@ -138,6 +139,10 @@ extern NSString* const CertificateChangedNotificationName;
 // inUsageMask is flags in nsIX509CertDB
 - (void)setTrustedFor:(unsigned int)inUsageMask asType:(unsigned int)inType;
 - (void)setTrustedForSSL:(BOOL)inTrustSSL forEmail:(BOOL)inForEmail forObjSigning:(BOOL)inForObjSigning asType:(unsigned int)inType;
+
+// Indicates that we are using this certificate in the context of a domain it
+// isn't valid for, so it should not be considered valid.
+- (void)setDomainIsMismatched:(BOOL)isMismatched;
 
 @end
 

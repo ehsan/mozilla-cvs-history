@@ -61,7 +61,11 @@
 "InvalidStateIssuerNotKnown" = "The certificate’s issuer is not known";
 "InvalidStateInvalidIssuerCert" = "The issuer’s certificate has expired";
 "InvalidStateInvalidUsage" = "The certificate is not valid for this usage";
+"InvalidStateMismatchedDomain" = "The certificate is not valid for this domain";
 
+/* Note: the "Short" keys are generated programatically from the keys for the
+longer versions, so they are used even though they won't show up if you search
+the code for the whole key. */
 "ShortValidStateOK" = "Valid";
 "ShortInvalidStateVerifyFailed" = "Unable to verify";
 "ShortInvalidStateRevoked" = "Revoked"; /* explain revoked? */
@@ -73,6 +77,7 @@
 "ShortInvalidStateIssuerNotKnown" = "Issuer unknown";
 "ShortInvalidStateInvalidIssuerCert" = "Issuer’s certificate expired";
 "ShortInvalidStateInvalidUsage" = "Not valid for usage";
+"ShortInvalidStateMismatchedDomain" = "Not valid for domain";
 
 "VerifySSLClient" = "SSL Client Certificate";
 "VerifySSLServer" = "SSL Server Certificate";

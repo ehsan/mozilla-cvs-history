@@ -270,6 +270,7 @@ static int kInvalidCertCancelOverride = 0;
       certStatus->GetServerCert(getter_AddRefs(cert));
       if (cert) {
         CertificateItem* certItem = [CertificateItem certificateItemWithCert:cert];
+        [certItem setDomainIsMismatched:isDomainMismatch];
         [self setCertificateItem:certItem];
         return certItem;
       }
