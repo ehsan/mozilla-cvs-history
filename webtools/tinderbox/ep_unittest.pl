@@ -28,7 +28,7 @@ BEGIN {
   sub has_error {
     local $_ = $_[0];
 
-    /fatal error/ # . . . . . . . . . . . . . . . . . . Link
+    (/fatal error/  # . . . . . . . . . . . . . . . . . Link
       or /^g?make(?:\[\d\d?\])?: \*\*\*/ #. . . . . . . gmake
       or /^C /  # . . . . . . . . . . . . . . . . . . . cvs merge conflict
       or /\WError: /i # . . . . . . . . . . . . . . . . C
@@ -41,7 +41,7 @@ BEGIN {
       or /: FAIL$/  # . . . . . . . . . . . . . . . . . xpcshell unit test
       or /TEST-UNEXPECTED-(?:PASS|FAIL) / # . . . . . . new unified error output
       or /buildbot\.slave\.commands\.TimeoutError:/ # . buildbot error
-      ;
+      ) and !/TEST-INFO /;  # . . . . . . . . . . . . . information line
   }
 }
 
