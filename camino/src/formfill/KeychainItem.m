@@ -238,8 +238,8 @@ static NSString* sPasswordsNotSavedMarkerAccount = nil;
   attrInfo.format = NULL;
 
   SecKeychainAttributeList *attrList;
-  OSStatus result = SecKeychainItemCopyAttributesAndData(mKeychainItemRef, &attrInfo, NULL,
-                                                         &attrList, NULL, NULL);
+  mLastError = SecKeychainItemCopyAttributesAndData(mKeychainItemRef, &attrInfo,
+                                                    NULL, &attrList, NULL, NULL);
 
   [mUsername autorelease];
   mUsername = nil;
@@ -252,8 +252,8 @@ static NSString* sPasswordsNotSavedMarkerAccount = nil;
   [mLabel autorelease];
   mLabel = nil;
 
-  if (result != noErr) {
-    NSLog(@"Couldn't load keychain data (error %d)", result);
+  if (mLastError != noErr) {
+    NSLog(@"Couldn't load keychain data (error %d)", mLastError);
     mUsername = [[NSString alloc] init];
     mHost = [[NSString alloc] init];
     mComment = [[NSString alloc] init];
@@ -313,13 +313,13 @@ static NSString* sPasswordsNotSavedMarkerAccount = nil;
     return;
   UInt32 passwordLength;
   char* passwordData;
-  OSStatus result = SecKeychainItemCopyAttributesAndData(mKeychainItemRef, NULL, NULL, NULL,
-                                                         &passwordLength, (void**)(&passwordData));
+  mLastError = SecKeychainItemCopyAttributesAndData(mKeychainItemRef, NULL, NULL, NULL,
+                                                    &passwordLength, (void**)(&passwordData));
   
   [mPassword autorelease];
   mPassword = nil;
   
-  if (result == noErr) {
+  if (mLastError == noErr) {
     mPassword = [[NSString alloc] initWithBytes:passwordData
                                          length:passwordLength
                                        encoding:NSUTF8StringEncoding];
@@ -327,8 +327,8 @@ static NSString* sPasswordsNotSavedMarkerAccount = nil;
   }
   else {
     // Being denied access isn't a failure case, so don't log it.
-    if (result != errSecAuthFailed)
-      NSLog(@"Couldn't load keychain data (error %d)", result);
+    if (mLastError != errSecAuthFailed)
+      NSLog(@"Couldn't load keychain data (error %d)", mLastError);
   }
   // Mark it as loaded either way, so that we can return nil password as an
   // indicator that the item is inaccessible.
@@ -362,13 +362,13 @@ static NSString* sPasswordsNotSavedMarkerAccount = nil;
   attrList.attr = &user;
   const char* passwordData = [password UTF8String];
   UInt32 passwordLength = passwordData ? strlen(passwordData) : 0;
-  OSStatus result = SecKeychainItemModifyAttributesAndData(mKeychainItemRef,
-                                                           &attrList,
-                                                           passwordLength,
-                                                           passwordData);
-  if (result != noErr) {
+  mLastError = SecKeychainItemModifyAttributesAndData(mKeychainItemRef,
+                                                      &attrList,
+                                                      passwordLength,
+                                                      passwordData);
+  if (mLastError != noErr) {
     NSLog(@"Couldn't update keychain item user and password for %@ (error %d)",
-          username, result);
+          username, mLastError);
     return;
   }
   [mUsername autorelease];
@@ -559,8 +559,9 @@ static NSString* sPasswordsNotSavedMarkerAccount = nil;
   SecKeychainAttributeList attrList;
   attrList.count = 1;
   attrList.attr = &attr;
-  return SecKeychainItemModifyAttributesAndData(mKeychainItemRef, &attrList,
-                                                0, NULL);
+  mLastError = SecKeychainItemModifyAttributesAndData(mKeychainItemRef,
+                                                      &attrList, 0, NULL);
+  return mLastError;
 }
 
 - (BOOL)isNonEntry
@@ -583,6 +584,10 @@ static NSString* sPasswordsNotSavedMarkerAccount = nil;
   // KeychainLabelFormat takes host, username (e.g., "%1$@ (%2$@)")
   return [NSString stringWithFormat:NSLocalizedString(@"KeychainLabelFormat", nil),
                                     host, username];
+}
+
+- (OSStatus)lastError {
+  return mLastError;
 }
 
 @end

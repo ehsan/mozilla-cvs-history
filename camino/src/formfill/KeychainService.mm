@@ -695,6 +695,10 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
     KeychainItem* keychainItem = [loginInfo objectForKey:kLoginKeychainEntry];
     [keychainItem setUsername:[loginInfo objectForKey:kLoginUsernameKey]
                      password:[loginInfo objectForKey:kLoginPasswordKey]];
+    // If the account is already in the keychain, nuke our incorrect copy so
+    // that the user will get the existing (hopefully correct) item next time.
+    if ([keychainItem lastError] == errKCDuplicateItem)
+      [keychainItem removeFromKeychain];
   }
   [loginInfo release]; // balance the retain in the alert creation
 }
@@ -944,6 +948,11 @@ KeychainPrompt::ProcessPrompt(const PRUnichar* realmBlob, bool checked, PRUnicha
         keychainEntry = [keychain updateAuthKeychainEntry:keychainEntry
                                              withUsername:username
                                                  password:password];
+        // If we collide then the user is trying to switch Camino to an account
+        // already stored by another browser; the way to let them get to it
+        // is to delete our entry, since we can't make a duplicate.
+        if ([keychainEntry lastError] == errKCDuplicateItem)
+          [keychainEntry removeFromKeychain];
       }
     }
   }
@@ -1158,14 +1167,19 @@ KeychainFormSubmitObserver::Notify(nsIDOMHTMLFormElement* formNode, nsIDOMWindow
       if ([keychainEntry authenticationType] == kSecAuthenticationTypeHTTPDigest)
         [keychain upgradeLegacyKeychainEntry:keychainEntry withScheme:scheme isForm:YES];
 
+      [keychain setDefaultWebFormKeychainEntry:keychainEntry];
+
+      // If the user tries to update the password and it's a duplicate entry,
+      // it will be deleted, so keychainEntry shouldn't be used after this
+      // point. (We could detect the duplicate during the upgrade process above,
+      // but if the user doesn't change the password it's right, and since the
+      // entry it collides with may be wrong we err on the side of caution.)
       if (![[keychainEntry password] isEqualToString:password]) {
         [keychain promptToUpdateKeychainItem:keychainEntry
                                 withUsername:username
                                     password:password
                                     inWindow:GetNSWindow(window)];
       }
-
-      [keychain setDefaultWebFormKeychainEntry:keychainEntry];
 
       if ([[keychain allowedActionHostsForHost:host] count] == 0)
         [keychain setAllowedActionHosts:[NSArray arrayWithObject:actionHost] forHost:host];

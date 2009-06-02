@@ -55,6 +55,8 @@
   SecProtocolType mProtocol;
   SecAuthenticationType mAuthenticationType;
   OSType mCreator;
+
+  OSStatus mLastError;
 }
 
 // Returns the first keychain item matching the given criteria.
@@ -106,5 +108,9 @@
 - (BOOL)isNonEntry;
 
 - (void)removeFromKeychain;
+
+// Returns the error code for the last action performed on this instance.
+// This will not report errors from class methods.
+- (OSStatus)lastError;
 
 @end
