@@ -72,6 +72,7 @@ PLATFORM_INI_FILE = ../toolkit/xre/platform.ini
 ifdef MOZILLA_OFFICIAL
 APP_UPDATE_URL = https://caminobrowser.org/update-check
 APP_UPDATES_ENABLED = true
+BREAKPAD_UPLOAD_URL = https://crash-reports.mozilla.com/submit
 else
 APP_UPDATES_ENABLED = false
 endif
@@ -321,6 +322,7 @@ generated/Info-Camino.plist: \
 	    -e "s/%PLATFORM_BUILD_ID%/$(PLATFORM_BUILD_ID)/" \
 	    -e "s/%PLATFORM_VERSION%/$(PLATFORM_VERSION)/" \
 	    -e "s/%APP_UPDATES_ENABLED%/$(APP_UPDATES_ENABLED)/" \
+	    -e "s@%BREAKPAD_UPLOAD_URL%@$(BREAKPAD_UPLOAD_URL)@" \
 	    $(SED_ARGS) $< | \
 	grep -v "$(GREP_V_PATTERN)" > $@
 

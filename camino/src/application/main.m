@@ -68,12 +68,15 @@ static void SetMaxFileDescriptors(unsigned int target)
 
 int main(int argc, const char *argv[])
 {
+  BreakpadRef breakpad = NULL;
   NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
   NSDictionary* info = [[NSBundle mainBundle] infoDictionary];
-  BreakpadRef breakpad = BreakpadCreate(info);
-  // Breakpad uses CFBundleVersion, but we want our short version instead.
-  BreakpadSetKeyValue(breakpad, @BREAKPAD_VERSION,
-                      [info valueForKey:@"CFBundleShortVersionString"]);
+  if ([[info valueForKey:@"BreakpadURL"] length] > 0) {
+    breakpad = BreakpadCreate(info);
+    // Breakpad uses CFBundleVersion, but we want our short version instead.
+    BreakpadSetKeyValue(breakpad, @BREAKPAD_VERSION,
+                        [info valueForKey:@"CFBundleShortVersionString"]);
+  }
   [pool release];
 
   SetupRuntimeOptions(argc, argv);
@@ -83,7 +86,10 @@ int main(int argc, const char *argv[])
   // the world to end.
   SetMaxFileDescriptors(1024);
 
-  return NSApplicationMain(argc, argv);
+  int rv = NSApplicationMain(argc, argv);
 
-  BreakpadRelease(breakpad);
+  if (breakpad)
+    BreakpadRelease(breakpad);
+
+  return rv;
 }
