@@ -64,17 +64,13 @@ static NSString* const kProgressWindowFrameSaveName = @"ProgressWindow";
 -(void)scrollIntoView:(ProgressViewController*)controller;
 -(void)killDownloadTimer;
 -(void)setupDownloadTimer;
--(BOOL)shouldAllowCancelAction;
--(BOOL)shouldAllowRemoveAction;
--(BOOL)shouldAllowPauseAction;
--(BOOL)shouldAllowResumeAction;
--(BOOL)shouldAllowOpenAction;
--(BOOL)fileExistsForSelectedItems;
 -(void)maybeCloseWindow;
 -(void)removeSuccessfulDownloads;
 -(BOOL)shouldRemoveDownloadsOnQuit;
 -(NSString*)downloadsPlistPath;
 -(void)setToolTipForToolbarItem:(NSToolbarItem*)theItem;
+-(BOOL)isDestructiveAction:(SEL)action;
+-(BOOL)shouldAllowAction:(SEL)action;
 -(void)saveProgressViewControllers;
 -(void)loadProgressViewControllers;
 
@@ -174,7 +170,7 @@ static id gSharedProgressController = nil;
 // open all selected instances
 -(IBAction)open:(id)sender
 {
-  if ([self shouldAllowOpenAction])
+  if ([self shouldAllowAction:@selector(open:)])
     [[self selectedProgressViewControllers] makeObjectsPerformSelector:@selector(open:) withObject:sender];
   else
     NSBeep();
@@ -440,7 +436,7 @@ static id gSharedProgressController = nil;
     case NSDeleteFunctionKey:
     case NSDeleteCharacter:
       { // delete or fwd-delete key - remove all selected items unless an active one is selected
-        if ([self shouldAllowRemoveAction])
+        if ([self shouldAllowAction:@selector(remove:)])
           [self remove:self];
         else
           NSBeep();
@@ -871,91 +867,33 @@ static id gSharedProgressController = nil;
   return [[[PreferenceManager sharedInstance] profilePath] stringByAppendingPathComponent:@"downloads.plist"];
 }
 
--(BOOL)shouldAllowCancelAction
+-(BOOL)isDestructiveAction:(SEL)action
 {
-  // if no selections are inactive or canceled then allow cancel
-  NSEnumerator* progViewEnum = [[self selectedProgressViewControllers] objectEnumerator];
-  ProgressViewController* curController;
-  while ((curController = [progViewEnum nextObject]))
-  {
-    if ((![curController isActive]) || [curController isCanceled])
-      return NO;
-  }
-  return YES;
+  return
+    (action == @selector(remove:) ||
+     action == @selector(cancel:) ||
+     action == @selector(deleteDownloads:) ||
+     action == @selector(pause:));
 }
 
--(BOOL)shouldAllowRemoveAction
+// Returns YES if the action makes sense given the state of the selected downloads.
+-(BOOL)shouldAllowAction:(SEL)action
 {
-  // if no selections are active then allow remove
-  NSEnumerator* progViewEnum = [[self selectedProgressViewControllers] objectEnumerator];
+  // Don't allow click-through for actions with potential dataloss.
+  if ([self isDestructiveAction:action] && ![[self window] isKeyWindow])
+    return NO;
+
+  // Actions act on selected downloads, so if no downloads are selected, disallow the action.
+  NSArray *selectedDownloads = [self selectedProgressViewControllers];
+  if ([selectedDownloads count] == 0)
+    return NO;
+
+  // Return YES only if every selected download supports the action.
+  NSEnumerator* progViewEnum = [selectedDownloads objectEnumerator];
   ProgressViewController* curController;
   while ((curController = [progViewEnum nextObject]))
   {
-    if ([curController isActive])
-      return NO;
-  }
-  return YES;
-}
-
--(BOOL)shouldAllowMoveToTrashAction
-{
-  NSEnumerator* progViewEnum = [[self selectedProgressViewControllers] objectEnumerator];
-  ProgressViewController* curController;
-  while ((curController = [progViewEnum nextObject]))
-  {
-    if ([curController isActive] || ![curController fileExists]) {
-      return NO;
-    }
-  }
-  return YES;
-}
-
--(BOOL)fileExistsForSelectedItems
-{
-  NSEnumerator* progViewEnum = [[self selectedProgressViewControllers] objectEnumerator];
-  ProgressViewController* curController;
-  while ((curController = [progViewEnum nextObject]))
-  {
-    if ([curController isCanceled] || ![curController fileExists])
-      return NO;
-  }
-
-  return YES;
-}
-
--(BOOL)shouldAllowOpenAction
-{
-  NSEnumerator* progViewEnum = [[self selectedProgressViewControllers] objectEnumerator];
-  ProgressViewController* curController;
-  while ((curController = [progViewEnum nextObject]))
-  {
-    if ([curController isActive] || [curController isCanceled] || ![curController fileExists])
-      return NO;
-  }
-
-  return YES;
-}
-
-- (BOOL)shouldAllowPauseAction
-{
-  NSEnumerator* progViewEnum = [[self selectedProgressViewControllers] objectEnumerator];
-  ProgressViewController* curController;
-  while ((curController = [progViewEnum nextObject]))
-  {
-    if ([curController isPaused] || ![curController isActive])
-      return NO;
-  }
-
-  return YES;
-}
-
--(BOOL)shouldAllowResumeAction
-{
-  NSEnumerator* progViewEnum = [[self selectedProgressViewControllers] objectEnumerator];
-  ProgressViewController* curController;
-  while ((curController = [progViewEnum nextObject]))
-  {
-    if (![curController isPaused] || ![curController isActive])
+    if (![curController shouldAllowAction:action])
       return NO;
   }
 
@@ -964,29 +902,7 @@ static id gSharedProgressController = nil;
 
 -(BOOL)validateMenuItem:(NSMenuItem*)menuItem
 {
-  SEL action = [menuItem action];
-  if (action == @selector(cancel:)) {
-    return [self shouldAllowCancelAction];
-  }
-  else if (action == @selector(remove:)) {
-    return [self shouldAllowRemoveAction];
-  }
-  else if (action == @selector(open:)) {
-    return [self shouldAllowOpenAction];
-  }
-  else if (action == @selector(reveal:)) {
-    return [self fileExistsForSelectedItems];
-  }
-  else if (action == @selector(pause:)) {
-    return [self shouldAllowPauseAction];
-  }
-  else if (action == @selector(resume:)) {
-    return [self shouldAllowResumeAction];
-  }
-  else if (action == @selector(deleteDownloads:)) {
-    return [self shouldAllowMoveToTrashAction];
-  }
-  return YES;
+  return [self shouldAllowAction:[menuItem action]];
 }
 
 // Sets the icon, label, and action for the pause/resume toolbar button.
@@ -994,7 +910,7 @@ static id gSharedProgressController = nil;
 // the pause or resume action applies to the currently selected downloads.
 - (BOOL)setPauseResumeToolbarItem:(NSToolbarItem*)theItem
 {
-  if ([self shouldAllowResumeAction]) {
+  if ([self shouldAllowAction:@selector(resume:)]) {
     [theItem setImage:[NSImage imageNamed:@"dl_resume"]];
     [theItem setLabel:NSLocalizedString(@"dlResumeButtonLabel", nil)];
     [theItem setAction:@selector(resume:)];
@@ -1006,7 +922,7 @@ static id gSharedProgressController = nil;
     [theItem setLabel:NSLocalizedString(@"dlPauseButtonLabel", nil)];
     [theItem setAction:@selector(pause:)];
 
-    return [self shouldAllowPauseAction] && [[self window] isKeyWindow];
+    return [self shouldAllowAction:@selector(pause:)];
   }
 }
 
@@ -1032,31 +948,14 @@ static id gSharedProgressController = nil;
   }
 
   // validate items that depend on current selection
-  if ([[self selectedProgressViewControllers] count] == 0)
-    return NO;
-
   [self setToolTipForToolbarItem:theItem];
 
-  if (action == @selector(remove:)) {
-    return [self shouldAllowRemoveAction] && [[self window] isKeyWindow];
-  }
-  else if (action == @selector(open:)) {
-    return [self shouldAllowOpenAction];
-  }
-  else if (action == @selector(reveal:)) {
-    return [self fileExistsForSelectedItems];
-  }
-  else if (action == @selector(cancel:)) {
-    return [self shouldAllowCancelAction] && [[self window] isKeyWindow];
-  }
-  else if (action == @selector(pause:) || action == @selector(resume:)) {
+  if (action == @selector(pause:) || action == @selector(resume:)) {
     return [self setPauseResumeToolbarItem:theItem];
   }
-  else if (action == @selector(deleteDownloads:)) {
-    return [self shouldAllowMoveToTrashAction] && [[self window] isKeyWindow];
+  else {
+    return [self shouldAllowAction:action];
   }
-
-  return YES;
 }
 
 -(NSToolbarItem *)toolbar:(NSToolbar *)toolbar itemForItemIdentifier:(NSString *)itemIdentifier willBeInsertedIntoToolbar:(BOOL)flag
@@ -1169,7 +1068,7 @@ static id gSharedProgressController = nil;
   else if ([itemIdentifier isEqualToString:@"movetotrashbutton"])
     toolTip = NSLocalizedString((plural ? @"dlTrashButtonTooltipPlural" : @"dlTrashButtonTooltip"), nil);
   else if ([itemIdentifier isEqualToString:@"pauseresumebutton"]) {
-    if ([self shouldAllowResumeAction])
+    if ([self shouldAllowAction:@selector(resume:)])
       toolTip = NSLocalizedString((plural ? @"dlResumeButtonTooltipPlural" : @"dlResumeButtonTooltip"), nil);
     else
       toolTip = NSLocalizedString((plural ? @"dlPauseButtonTooltipPlural" : @"dlPauseButtonTooltip"), nil);

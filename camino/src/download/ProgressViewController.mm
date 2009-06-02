@@ -735,15 +735,38 @@ enum {
   return [menu autorelease];    
 }
 
+// Returns YES if the action makes sense given the state of the download.
+- (BOOL)shouldAllowAction:(SEL)action
+{
+  if (action == @selector(remove:)) {
+    return ![self isActive];
+  }
+  else if (action == @selector(open:)) {
+    return ![self isActive] && ![self isCanceled] && [self fileExists];
+  }
+  else if (action == @selector(reveal:)) {
+    return ![self isCanceled] && [self fileExists];
+  }
+  else if (action == @selector(cancel:)) {
+    return [self isActive] && ![self isCanceled];
+  }
+  else if (action == @selector(pause:)) {
+    return [self isActive] && ![self isPaused];
+  }
+  else if (action == @selector(resume:)) {
+    return [self isActive] && [self isPaused];
+  }
+  else if (action == @selector(deleteDownloads:)) {
+    return ![self isActive] && [self fileExists];
+  }
+
+  return YES;
+}
+
 - (BOOL)validateMenuItem:(NSMenuItem*)menuItem
 {
-  SEL action = [menuItem action];
-  if (action == @selector(cancel:)) {
-    return ((!mUserCancelled) && (!mDownloadDone));
-  }
-  if (action == @selector(remove:) || action == @selector(deleteDownloads:)) {
-    return (mUserCancelled || mDownloadDone);
-  }
+  // Currently, this method is responsible only for the "Copy Source URL" function;
+  // all others are handled by |ProgressDlgController|.
   return YES;
 }
 

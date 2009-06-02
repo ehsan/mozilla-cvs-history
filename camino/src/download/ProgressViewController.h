@@ -146,6 +146,7 @@ extern NSString* const kDownloadNotificationTimeElapsedKey;
 -(unsigned int)uniqueIdentifier;
 
 -(NSMenu*)contextualMenu;
+-(BOOL)shouldAllowAction:(SEL)action;
 
 // Handlers for actions that are triggered by user action on a view but aren't
 // specific to the view.
