@@ -94,8 +94,9 @@ private:
 
 - (void)willSelect
 {
-  [mAutoCloseDLManager setState:![self getBooleanPref:kGeckoPrefLeaveDownloadManagerOpen withSuccess:NULL]];
-  [mEnableHelperApps setState:[self getBooleanPref:kGeckoPrefAutoOpenDownloads withSuccess:NULL]];
+  // Our behaviour here should match what the browser does when the prefs don't exist.
+  [mAutoCloseDLManager setState:([self getBooleanPref:kGeckoPrefCloseDownloadManagerWhenDone withSuccess:NULL]) ? NSOnState : NSOffState];
+  [mEnableHelperApps setState:([self getBooleanPref:kGeckoPrefAutoOpenDownloads withSuccess:NULL]) ? NSOnState : NSOffState];
   [mDownloadRemovalPolicy selectItem:[[mDownloadRemovalPolicy menu] itemWithTag:[self getIntPref:kGeckoPrefDownloadCleanupPolicy
                                                                                      withSuccess:NULL]]];
 
@@ -108,12 +109,11 @@ private:
 
 - (IBAction)checkboxClicked:(id)sender
 {
-  if (sender == mAutoCloseDLManager) {
-    [self setPref:kGeckoPrefLeaveDownloadManagerOpen toBoolean:![sender state]];
-  }
-  if (sender == mEnableHelperApps) {
+  if (sender == mAutoCloseDLManager)
+    [self setPref:kGeckoPrefCloseDownloadManagerWhenDone toBoolean:[sender state]];
+
+  if (sender == mEnableHelperApps)
     [self setPref:kGeckoPrefAutoOpenDownloads toBoolean:[sender state]];
-  }
 }
 
 // Sets the IC download pref to the given path. We write to Internet Config

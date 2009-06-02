@@ -77,16 +77,19 @@ pref("browser.urlbar.autocomplete.enabled", true);
 // Don't do inline autocomplete in the location bar
 pref("browser.urlbar.autoFill", false);
 
-// Default to auto download enabled but auto helper dispatch disabled
-pref("browser.download.autoDownload", true);
-pref("browser.download.autoDispatch", false);
-pref("browser.download.progressDnldDialog.keepAlive", true);
+// Download to the default location but don't process files after downloading.
+pref("browser.download.useDownloadDir", true);
+pref("browser.download.manager.openDownloadedFiles", false);
+pref("browser.download.manager.closeWhenDone", false);
 
 // Download removing policy
-pref("browser.download.downloadRemoveAction", 0);
+pref("browser.download.manager.retention", 2);
 
 // bring download window to the front when each download starts
-pref("browser.download.progressDnldDialog.bringToFront", true);
+pref("browser.download.manager.focusWhenStarting", true);
+
+// open download window when each download starts
+pref("browser.download.manager.showWhenStarting", true);
 
 // set typeahead find to search all text by default, but not invoke
 // unless you type '/'

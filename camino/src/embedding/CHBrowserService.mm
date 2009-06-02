@@ -60,6 +60,7 @@
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "GeckoUtils.h"
+#include "GeckoPrefConstants.h"
 
 NSString* const InitEmbeddingNotificationName = @"InitEmebedding";    // this is actually broadcast from MainController
 NSString* const TermEmbeddingNotificationName = @"TermEmbedding";
@@ -276,15 +277,15 @@ CHBrowserService::CreateChromeWindow(nsIWebBrowserChrome *parent,
 NS_IMETHODIMP
 CHBrowserService::Show(nsIHelperAppLauncher* inLauncher, nsISupports* inContext, PRUint32 aReason)
 {
-  PRBool autoDownload = PR_FALSE;
-  
-  // See if pref enabled to allow automatic download
+  PRBool downloadWithoutDialog = PR_FALSE;
+
+  // Check for pref to download to defined downloads directory
   nsCOMPtr<nsIPref> prefService (do_GetService(NS_PREF_CONTRACTID));
   if (prefService)
-    prefService->GetBoolPref("browser.download.autoDownload", &autoDownload);
-  
+    prefService->GetBoolPref(kGeckoPrefDownloadToDefaultLocation, &downloadWithoutDialog);
+
   nsCOMPtr<nsIFile> downloadFile;
-  if (autoDownload)
+  if (downloadWithoutDialog)
   {
     NS_GetSpecialDirectory(NS_MAC_DEFAULT_DOWNLOAD_DIR, getter_AddRefs(downloadFile));
     

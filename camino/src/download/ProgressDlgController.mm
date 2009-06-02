@@ -39,6 +39,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "BrowserWindowController.h"
+
 #include "nsNetError.h"
 
 #import "NSString+Utils.h"
@@ -521,18 +523,54 @@ static id gSharedProgressController = nil;
 
 -(void)didStartDownload:(ProgressViewController*)progressDisplay
 {
-  if (![[self window] isVisible]) {
-    [self showWindow:nil]; // make sure the window is visible
-  }
+  BOOL gotPref;
+  NSWindow* downloadManagerWindow = [self window];
+  BOOL shouldOpenManager = [[PreferenceManager sharedInstance] getBooleanPref:kGeckoPrefOpenDownloadManagerOnDownload
+                                                                  withSuccess:&gotPref];
+  if (shouldOpenManager || !gotPref) {
+    // A common cause of user confusion is the window being visible but behind other
+    // windows. They have no idea the download was successful, and click the link
+    // two or three times before looking around to see what happened.
+    // This ensures the download manager is open and visible, and has the side effect of
+    // making it key and front (i.e., focusing it).
+    // Some people don't want the manager to be stealing focus on every download,
+    // so we support a (hidden) pref to allow the manager not to be focused each time.
+    BOOL bringToFront = [[PreferenceManager sharedInstance] getBooleanPref:kGeckoPrefFocusDownloadManagerOnDownload
+                                                               withSuccess:&gotPref];
+    if (bringToFront || !gotPref) {
+      [self showWindow:nil];
+    }
+    else if (![downloadManagerWindow isVisible]) {
+      // If the hidden pref is set to false and the manager isn't already open,
+      // open it and send it to the back of all browser windows. This is sort of
+      // arbitrary, but it beats |orderBack| (which includes visible windows
+      // from other apps and can thus look weird).
+      // NB: We include popups and view-source windows in this definition of
+      // "browser window", though we generally don't elsewhere.
 
-  // a common cause of user confusion is the window being visible but behind other windows. They
-  // have no idea the download was successful, and click the link two or three times before
-  // looking around to see what happened. We always want the download window to come to the
-  // front on a new download (unless they set a user_pref);
-  BOOL gotPref = NO;
-  BOOL bringToFront = [[PreferenceManager sharedInstance] getBooleanPref:kGeckoPrefFocusDownloadManagerOnDownload withSuccess:&gotPref];
-  if (gotPref && bringToFront)
-    [[self window] makeKeyAndOrderFront:self];
+      // Store the current key window before we stomp it.
+      NSWindow* storedKeyWindow = [NSApp keyWindow];
+
+      [self showWindow:nil];
+
+      NSEnumerator* windowEnum = [[NSApp orderedWindows] reverseObjectEnumerator];
+      NSWindow* rearmostBrowserWindow = nil;
+
+      NSWindow* curWindow;
+      while ((curWindow = [windowEnum nextObject])) {
+        if ([[curWindow windowController] isMemberOfClass:[BrowserWindowController class]]) {
+          rearmostBrowserWindow = curWindow;
+          break;
+        }
+      }
+
+      if (rearmostBrowserWindow) {
+        [downloadManagerWindow orderWindow:NSWindowBelow relativeTo:[rearmostBrowserWindow windowNumber]];
+        // Restore the stored key/main window.
+        [storedKeyWindow makeKeyAndOrderFront:self];
+      }
+    }
+  }
 
   [self rebuildViews];
   [self setupDownloadTimer];
@@ -540,7 +578,7 @@ static id gSharedProgressController = nil;
   // Downloads should be individually selected when initiated.
   [self updateSelectionOfDownload:progressDisplay withBehavior:DownloadSelectExclusively];
 
-  // make sure new download is visible
+  // Make sure the new download is visible.
   [self scrollIntoView:progressDisplay];
 }
 
@@ -569,13 +607,11 @@ static id gSharedProgressController = nil;
 {
   // Only check if there are zero downloads running and there is no sheet
   // (e.g. toolbar customization sheet) attached.
-  if ([self numDownloadsInProgress] == 0 && ![[self window] attachedSheet])
-  {
+  if ([self numDownloadsInProgress] == 0 && ![[self window] attachedSheet]) {
     BOOL gotPref;
-    BOOL keepDownloadsOpen = [[PreferenceManager sharedInstance] getBooleanPref:kGeckoPrefLeaveDownloadManagerOpen
-                                                                    withSuccess:&gotPref];
-    if (gotPref && !keepDownloadsOpen)
-    {
+    BOOL closeDownloadManager = [[PreferenceManager sharedInstance] getBooleanPref:kGeckoPrefCloseDownloadManagerWhenDone
+                                                                       withSuccess:&gotPref];
+    if (gotPref && closeDownloadManager) {
       // don't call -performClose: on the window, because we don't want Cocoa to look
       // for the option key and try to close all windows
       [self close];

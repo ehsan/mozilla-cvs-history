@@ -178,10 +178,12 @@ const char* const kGeckoPrefProxyBypassList = "network.proxy.no_proxies_on";
 
 #pragma mark Downloads
 
-const char* const kGeckoPrefAutoOpenDownloads = "browser.download.autoDispatch";
-const char* const kGeckoPrefDownloadCleanupPolicy = "browser.download.downloadRemoveAction";
-const char* const kGeckoPrefFocusDownloadManagerOnDownload = "browser.download.progressDnldDialog.bringToFront";
-const char* const kGeckoPrefLeaveDownloadManagerOpen = "browser.download.progressDnldDialog.keepAlive";
+const char* const kGeckoPrefAutoOpenDownloads = "browser.download.manager.openDownloadedFiles";
+const char* const kGeckoPrefDownloadCleanupPolicy = "browser.download.manager.retention";
+const char* const kGeckoPrefFocusDownloadManagerOnDownload = "browser.download.manager.focusWhenStarting";
+const char* const kGeckoPrefOpenDownloadManagerOnDownload = "browser.download.manager.showWhenStarting";
+const char* const kGeckoPrefCloseDownloadManagerWhenDone = "browser.download.manager.closeWhenDone";
+const char* const kGeckoPrefDownloadToDefaultLocation = "browser.download.useDownloadDir";
 
 #pragma mark Page Appearance
 
@@ -214,6 +216,14 @@ const char* const kGeckoPrefSafeBrowsingMalwareDiagnosticURL = "browser.safebrow
 const char* const kGeckoPrefSafeBrowsingPhishingCheckingEnabled = "browser.safebrowsing.enabled";
 const char* const kGeckoPrefSafeBrowsingMalwareCheckingEnabled = "browser.safebrowsing.malware.enabled";
 const char* const kGeckoPrefSafeBrowsingDataProvider = "browser.safebrowsing.dataProvider";
+
+#pragma mark Obsolete Downloads Prefs
+
+const char* const kOldGeckoPrefAutoOpenDownloads = "browser.download.autoDispatch";
+const char* const kOldGeckoPrefDownloadToDefaultLocation = "browser.download.autoDownload";
+const char* const kOldGeckoPrefDownloadCleanupPolicy = "browser.download.downloadRemoveAction";
+const char* const kOldGeckoPrefFocusDownloadManagerOnDownload = "browser.download.progressDnldDialog.bringToFront";
+const char* const kOldGeckoPrefLeaveDownloadManagerOpen = "browser.download.progressDnldDialog.keepAlive";
 
 #pragma mark -
 #pragma mark Values
@@ -271,6 +281,13 @@ const int kCookieLifetimeAsk = 1;
 const int kCookieLifetimeSession = 2;
 
 // kGeckoPrefDownloadCleanupPolicy values
-const int kRemoveDownloadsManually = 0;
+// NB: these are the opposite of what they used to be!
+const int kRemoveDownloadsOnSuccess = 0;
 const int kRemoveDownloadsOnQuit = 1;
-const int kRemoveDownloadsOnSuccess = 2;
+const int kRemoveDownloadsManually = 2;
+
+// kOldGeckoPrefDownloadCleanupPolicy values
+// NB: these are the opposite of the new ones!
+const int kOldRemoveDownloadsManually = 0;
+const int kOldRemoveDownloadsOnQuit = 1;
+const int kOldRemoveDownloadsOnSuccess = 2;

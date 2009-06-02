@@ -85,7 +85,7 @@ static NSString* const kFlashBlockChangedNotificationName = @"FlashBlockChanged"
 // This is an arbitrary version stamp that gets written to the prefs file.
 // It can be used to detect when a new version of Camino is run that needs
 // some prefs to be upgraded.
-static const PRInt32 kCurrentPrefsVersion = 1;
+static const PRInt32 kCurrentPrefsVersion = 2;
 
 // CheckCompatibility and WriteVersion are based on the versions in
 // toolkit/xre/nsAppRunner.cpp.  This is done to provide forward
@@ -195,6 +195,7 @@ WriteVersion(nsIFile* aProfileDir, const nsACString& aVersion,
 - (void)registerNotificationListener;
 - (void)initUpdatePrefs;
 - (void)cleanUpObsoletePrefs;
+- (void)migrateOldDownloadPrefs;
 
 - (void)termEmbedding:(NSNotification*)aNotification;
 - (void)xpcomTerminate:(NSNotification*)aNotification;
@@ -780,6 +781,11 @@ static BOOL gMadePrefManager;
   // turned it off since it didn't work well enough.
   if (mLastRunPrefsVersion < 1)
     mPrefs->SetCharPref("intl.charset.detector", "");
+
+  // Starting with pref version 2, we migrated to the toolkit versions of
+  // all our download manager preferences.
+  if (mLastRunPrefsVersion < 2)
+    [self migrateOldDownloadPrefs];
 
   mPrefs->SetIntPref("camino.prefs_version", kCurrentPrefsVersion);
 
@@ -1450,6 +1456,46 @@ typedef enum EProxyConfig {
   BOOL pluginsEnabled = [self getBooleanPref:kGeckoPrefEnablePlugins withSuccess:&gotPref] || !gotPref;
 
   return jsEnabled && pluginsEnabled;
+}
+
+//
+// migrateOldDownloadPrefs
+//
+// Migrates from our old Gecko download preferences, which were a mish-mash of all sorts
+// of different things, to the standard toolkit prefs (where they exist).
+//
+-(void)migrateOldDownloadPrefs
+{
+  BOOL gotPref;
+
+  unsigned int oldCleanupPolicy = [self getIntPref:kOldGeckoPrefDownloadCleanupPolicy withSuccess:&gotPref];
+  // The new policy values (0 = on success; 1 = on quit; 2 = manually) are reversed from the old
+  // (manually/on quit/on success), so subtract from 2 to translate.
+  [self setPref:kGeckoPrefDownloadCleanupPolicy toInt:(gotPref ? (2 - oldCleanupPolicy) : kRemoveDownloadsManually)];
+
+  BOOL oldFocusPref = [self getBooleanPref:kOldGeckoPrefFocusDownloadManagerOnDownload withSuccess:&gotPref];
+  // If we failed to get a pref, default to focus-on-download.
+  [self setPref:kGeckoPrefFocusDownloadManagerOnDownload toBoolean:(gotPref ? oldFocusPref : YES)];
+
+  BOOL oldStayOpenPref = [self getBooleanPref:kOldGeckoPrefLeaveDownloadManagerOpen withSuccess:&gotPref];
+  // The new pref is "close when done" rather than "stay open", so true is now false.
+  // If we failed to get a pref, default to keeping the manager open.
+  [self setPref:kGeckoPrefCloseDownloadManagerWhenDone toBoolean:(gotPref ? !oldStayOpenPref : NO)];
+
+  BOOL oldDownloadDirectoryPref = [self getBooleanPref:kOldGeckoPrefDownloadToDefaultLocation withSuccess:&gotPref];
+  // If we somehow failed to get a pref here, default to dialogless downloads.
+  [self setPref:kGeckoPrefDownloadToDefaultLocation toBoolean:(gotPref ? oldDownloadDirectoryPref : YES)];
+
+  BOOL oldProcessDownloadsPref = [self getBooleanPref:kOldGeckoPrefAutoOpenDownloads withSuccess:&gotPref];
+  // If we somehow failed to get a pref, default to no processing.
+  [self setPref:kGeckoPrefAutoOpenDownloads toBoolean:(gotPref ? oldProcessDownloadsPref : NO)];
+
+  // Now remove all the old prefs so we don't leave cruft in the profile.
+  [self clearPref:kOldGeckoPrefDownloadCleanupPolicy];
+  [self clearPref:kOldGeckoPrefFocusDownloadManagerOnDownload];
+  [self clearPref:kOldGeckoPrefLeaveDownloadManagerOpen];
+  [self clearPref:kOldGeckoPrefDownloadToDefaultLocation];
+  [self clearPref:kOldGeckoPrefAutoOpenDownloads];
 }
 
 @end

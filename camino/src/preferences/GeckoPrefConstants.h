@@ -264,17 +264,25 @@ extern const char* const kGeckoPrefProxyBypassList;                    // string
 // Controls whether downloads should be auto-launched
 extern const char* const kGeckoPrefAutoOpenDownloads;                  // bool
 
+// Controls when downloads are removed from the manager
 extern const char* const kGeckoPrefDownloadCleanupPolicy;              // int
 // Possible values:
-extern const int kRemoveDownloadsManually;
-extern const int kRemoveDownloadsOnQuit;
 extern const int kRemoveDownloadsOnSuccess;
+extern const int kRemoveDownloadsOnQuit;
+extern const int kRemoveDownloadsManually;
 
 // Controls whether the download manager is focused when a download is started
 extern const char* const kGeckoPrefFocusDownloadManagerOnDownload;     // bool
 
+// Controls whether the download manager opens when a download is started
+extern const char* const kGeckoPrefOpenDownloadManagerOnDownload;      // bool
+
 // Controls whether the download manager stays open after downloads complete
-extern const char* const kGeckoPrefLeaveDownloadManagerOpen;           // bool
+extern const char* const kGeckoPrefCloseDownloadManagerWhenDone;       // bool
+
+// Controls whether downloads are saved to the Downloads directory
+// or prompted for a save location every time
+extern const char* const kGeckoPrefDownloadToDefaultLocation;          // bool
 
 #pragma mark Page Appearance
 
@@ -329,5 +337,27 @@ extern const char* const kGeckoPrefSafeBrowsingMalwareDiagnosticURL;    // strin
 extern const char* const kGeckoPrefSafeBrowsingPhishingCheckingEnabled; // bool
 extern const char* const kGeckoPrefSafeBrowsingMalwareCheckingEnabled;  // bool
 extern const char* const kGeckoPrefSafeBrowsingDataProvider;            // int
+
+#pragma mark Obsolete Downloads Prefs
+// These prefs are all obsolete as of Camino 2.0.
+
+// Formerly controlled when downloads were removed from the manager
+extern const char* const kOldGeckoPrefDownloadCleanupPolicy;           // int
+// Possible values:
+extern const int kOldRemoveDownloadsManually;
+extern const int kOldRemoveDownloadsOnQuit;
+extern const int kOldRemoveDownloadsOnSuccess;
+
+// Formerly controlled whether the manager would open on download (iff closed)
+extern const char* const kOldGeckoPrefFocusDownloadManagerOnDownload;  // bool
+
+// Formerly controlled whether manager stayed open after downloads completed
+extern const char* const kOldGeckoPrefLeaveDownloadManagerOpen;        // bool
+
+// Formerly controlled whether to use default downloads directory
+extern const char* const kOldGeckoPrefDownloadToDefaultLocation;       // bool
+
+// Formerly controlled whether to process downloads with helper apps
+extern const char* const kOldGeckoPrefAutoOpenDownloads;               // bool
 
 #pragma GCC visibility pop
