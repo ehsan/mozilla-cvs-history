@@ -13,7 +13,7 @@
 	<key>BreakpadServerType</key>
 	<string>socorro</string>
 	<key>BreakpadURL</key>
-	<string>https://crash-reports.mozilla.com/submit</string>
+	<string>%BREAKPAD_UPLOAD_URL%</string>
 	<key>BreakpadVendor</key>
 	<string>the Camino developers</string>
 	<key>CFBundleDevelopmentRegion</key>
