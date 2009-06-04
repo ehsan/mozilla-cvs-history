@@ -1,0 +1,16 @@
+2009-06-04  John Dennis  <jdennis@redhat.com> 0.3
+
+  * import to Mozilla CVS, tweak directory layout
+
+2009-05-21  John Dennis  <jdennis@redhat.com> 0.2
+
+  * apply patch from bug #472805, (Miloslav Trmač)
+    Don't allow closing a socket twice, that causes crashes.
+    New function nss.io.Socket.new_socket_pair()
+    New function nss.io.Socket.poll()
+    New function nss.io.Socket.import_tcp_socket()
+    New method nss.nss.Certificate.get_subject_common_name()
+    New function nss.nss.generate_random()
+    Fix return value creation in SSLSocket.get_security_status
+    New function nss.ssl.SSLSocket.import_tcp_socket()  
+    Convert licensing to MPL tri-license

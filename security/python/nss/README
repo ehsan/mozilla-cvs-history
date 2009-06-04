@@ -1,0 +1,5 @@
+Python bindings for Network Security Services (NSS) and Netscape
+Portable Runtime (NSPR).
+
+Please see the nss package documentation for more information.
+

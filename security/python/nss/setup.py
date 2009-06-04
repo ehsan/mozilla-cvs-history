@@ -144,15 +144,9 @@ class InstallDoc(Command):
 
 
         dst_root = change_root(self.root, self.docdir)
-        self.copy_transformed_tree(
-            [
-                [['include README',
-                  'recursive-include doc LICENSE *.py *.txt',],
-                 [('^doc/', '')], None],
-                [['recursive-include build/doc/html *'],
-                 [('^build/doc/', 'api/')], None],
-            ],
-            dst_root=dst_root, substitutions={'docdir' : self.docdir})
+        self.copy_transformed_tree(doc_manifest,
+                                   dst_root=dst_root,
+                                   substitutions={'docdir' : self.docdir})
 
     def copy_transformed_tree(self, install_specs, dst_root=None, src_root=None, substitutions={}):
         """
@@ -255,13 +249,13 @@ Python bindings for Network Security Services (NSS) and Netscape Portable Runtim
 '''
 
 debug_compile_args = ['-O0', '-g']
-
 # force debug build until package matures
-extra_compile_args = debug_compile_args
+# extra_compile_args = debug_compile_args
+extra_compile_args = []
 
 nss_error_extension = \
     Extension('nss.error',
-              sources            = ['src/nss/py_nspr_error.c'],
+              sources            = ['src/py_nspr_error.c'],
               include_dirs       = ['/usr/include/nss3', '/usr/include/nspr4'],
               libraries          = ['nspr4'],
               extra_compile_args = extra_compile_args,
@@ -269,7 +263,7 @@ nss_error_extension = \
 
 nss_io_extension = \
     Extension('nss.io',
-              sources            = ['src/nss/py_nspr_io.c'],
+              sources            = ['src/py_nspr_io.c'],
               include_dirs       = ['/usr/include/nss3', '/usr/include/nspr4'],
               libraries          = ['nspr4'],
               extra_compile_args = extra_compile_args,
@@ -277,22 +271,30 @@ nss_io_extension = \
 
 nss_nss_extension = \
     Extension('nss.nss',
-              sources            = ['src/nss/py_nss.c'],
-              include_dirs       = ['src/nss', '/usr/include/nss3', '/usr/include/nspr4'],
+              sources            = ['src/py_nss.c'],
+              include_dirs       = ['src', '/usr/include/nss3', '/usr/include/nspr4'],
               libraries          = ['nspr4', 'ssl3'],
               extra_compile_args = extra_compile_args,
               )
 
 nss_ssl_extension = \
     Extension('nss.ssl',
-              sources            = ['src/nss/py_ssl.c'],
-              include_dirs       = ['src/nss', '/usr/include/nss3', '/usr/include/nspr4'],
+              sources            = ['src/py_ssl.c'],
+              include_dirs       = ['src', '/usr/include/nss3', '/usr/include/nspr4'],
               libraries          = ['nspr4', 'ssl3'],
               extra_compile_args = extra_compile_args,
               )
 
+doc_manifest = [
+    [['include README LICENSE*',
+      'recursive-include doc *.py *.txt',],
+     [('^doc/', '')], None],
+    [['recursive-include build/doc/html *'],
+     [('^build/doc/', 'api/')], None],
+]
+
 setup(name             = 'python-nss',
-      version          = '0.2',
+      version          = '0.3',
       description      = 'Python bindings for Network Security Services (NSS) and Netscape Portable Runtime (NSPR)',
       long_description = long_description,
       author           = 'John Dennis',
@@ -301,14 +303,14 @@ setup(name             = 'python-nss',
       maintainer_email = 'jdennis@redhat.com',
       license          = 'MPLv1.1 or GPLv2+ or LGPLv2+',
       platforms        = 'posix',
-      url              = '',
+      url              = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot mozilla/security/python/nss',
       download_url     = '',
       ext_modules      = [nss_error_extension,
                           nss_io_extension,
                           nss_nss_extension,
                           nss_ssl_extension,
                          ],
-      package_dir      = {'nss':'src/nss', 'nss.nss':'src/nss/nss'},
+      package_dir      = {'nss':'src'},
       packages         = ['nss'],
       cmdclass         = {'build_doc'     : BuildDoc,
                           'build_api_doc' : BuildApiDoc,
