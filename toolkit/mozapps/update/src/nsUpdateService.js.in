@@ -800,9 +800,9 @@ UpdatePatch.prototype = {
    * See nsIUpdateService.idl
    */
   get state() {
-    if (!this.statusFileExists)
-      return STATE_NONE;
-    return this._properties.state;
+    if (this._properties.state)
+      return this._properties.state;
+    return STATE_NONE;
   },
   set state(val) {
     this._properties.state = val;
@@ -1218,7 +1218,8 @@ UpdateService.prototype = {
 #endif
 
     if (status == STATE_DOWNLOADING) {
-      LOG("UpdateService", "_postUpdateProcessing: Downloading patch, resuming...");
+      LOG("UpdateService", "_postUpdateProcessing: patch found in " +
+          "downloading state");
     }
     else if (status != null) {
       // null status means the update.status file is not present, because either:
@@ -1246,16 +1247,8 @@ UpdateService.prototype = {
       if (status == STATE_SUCCEEDED) {
         update.statusText = bundle.GetStringFromName("installSuccess");
 
-        // Dig through the update history to find the patch that was just
-        // installed and update its metadata.
-        for (var i = 0; i < um.updateCount; ++i) {
-          var umUpdate = um.getUpdateAt(i);
-          if (umUpdate && umUpdate.version == update.version &&
-                          umUpdate.buildID == update.buildID) {
-            umUpdate.statusText = update.statusText;
-            break;
-          }
-        }
+        // Update the patch's metadata.
+        um.activeUpdate = update;
 
         LOG("UpdateService", "_postUpdateProcessing: Install Succeeded, Showing UI");
         prompter.showUpdateInstalled(update);
@@ -1613,8 +1606,8 @@ UpdateService.prototype = {
           // When the installation directory is not under Program Files,
           // fall through to checking if write access to the 
           // installation directory is available.
-          LOG("UpdateService", 
-              "canUpdate?  on Vista, appDir is not under the Program Files");
+          LOG("UpdateService", "canUpdate: on Vista, appDir is not under " +
+              "Program Files");
         }
       }
 
@@ -1710,6 +1703,20 @@ UpdateService.prototype = {
   downloadUpdate: function(update, background) {
     if (!update)
       throw Components.results.NS_ERROR_NULL_POINTER;
+
+    var ai = Components.classes["@mozilla.org/xre/app-info;1"].
+             getService(Components.interfaces.nsIXULAppInfo);
+    var vc = Components.classes["@mozilla.org/xpcom/version-comparator;1"].
+             getService(Components.interfaces.nsIVersionComparator);
+    // Don't download the update if the update's version is less than the
+    // current application's version.
+    if (update.version && vc.compare(update.version, ai.version) < 0) {
+      LOG("UpdateService", "downloadUpdate: removing update for previous " +
+          "application version " + update.version);
+      cleanupActiveUpdate();
+      return STATE_NONE;
+    }
+
     if (this.isDownloading) {
       if (update.isCompleteUpdate == this._downloader.isCompleteUpdate &&
           background == this._downloader.background) {
@@ -1807,7 +1814,7 @@ UpdateManager.prototype = {
           LOG("UpdateManager", "_loadXMLFileIntoArray: invalid update");
           continue;
         }
-        result.push(new Update(updateElement));
+        result.push(update);
       }
     }
     catch (e) {
@@ -1826,10 +1833,10 @@ UpdateManager.prototype = {
       this._updates = this._loadXMLFileIntoArray(getUpdateFile(
                         [FILE_UPDATES_DB]));
 
-      // Make sure that any active update is part of our updates list
-      var active = this.activeUpdate;
-      if (active)
-        this._addUpdate(active);
+      var activeUpdates = this._loadXMLFileIntoArray(getUpdateFile(
+                            [FILE_UPDATE_ACTIVE]));
+      if (activeUpdates.length > 0)
+        this._activeUpdate = activeUpdates[0];
     }
   },
 
@@ -1901,8 +1908,7 @@ UpdateManager.prototype = {
       }
     }
     // Otherwise add it to the front of the list.
-    if (update)
-      this._updates = [update].concat(this._updates);
+    this._updates.unshift(update);
   },
 
   /**
@@ -1947,8 +1953,21 @@ UpdateManager.prototype = {
   saveUpdates: function() {
     this._writeUpdatesToXMLFile([this._activeUpdate],
                                 getUpdateFile([FILE_UPDATE_ACTIVE]));
+    if (this._activeUpdate)
+      this._addUpdate(this._activeUpdate);
+
+    // Don't write updates that have a temporary state to the updates.xml file.
     if (this._updates) {
-      this._writeUpdatesToXMLFile(this._updates.slice(0, 10),
+      var updates = this._updates.slice();
+      for (var i = updates.length - 1; i >= 0; --i) {
+        var state = updates[i].state;
+        if (state == STATE_NONE || state == STATE_DOWNLOADING ||
+            state == STATE_PENDING) {
+          updates.splice(i, 1);
+        }
+      }
+
+      this._writeUpdatesToXMLFile(updates.slice(0, 10),
                                   getUpdateFile([FILE_UPDATES_DB]));
     }
   },
@@ -2639,6 +2658,9 @@ Downloader.prototype = {
     if (deleteActiveUpdate) {
       this._update.installDate = (new Date()).getTime();
       um.activeUpdate = null;
+    }
+    else {
+      um.activeUpdate.state = state;
     }
     um.saveUpdates();
 
