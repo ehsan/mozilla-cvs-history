@@ -1321,7 +1321,7 @@ NSString* const kPreviousSessionTerminatedNormallyKey = @"PreviousSessionTermina
     // We need different warnings depending on whether there's only a single window with multiple tabs,
     // or multiple windows open
     if ([openBrowserWins count] == 1) {
-      BrowserWindowController* bwc = [self mainWindowBrowserController];
+      BrowserWindowController* bwc = [[openBrowserWins firstObject] windowController];
       unsigned int numTabs = [[bwc tabBrowser] numberOfTabViewItems];
       if (numTabs > 1) { // only show the warning if there are multiple tabs
         closeAlertMsg  = NSLocalizedString(@"CloseWindowWithMultipleTabsMsg", @"");
