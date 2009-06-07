@@ -1,0 +1,93 @@
+# This list of files is generated based on mxr results for "-framework" in 
+# mozilla/, frameworks Camino links against, common hits in Camino breakpad
+# reports, as well as a few cherry-picked forward-looking files (CoreText).
+# AE and LaunchServices switched frameworks in Mac OS X 10.5, and 
+# FindByContent and WebServicesCore have no binary on 10.5.
+/Library/Internet Plug-Ins/Flash Player.plugin/Contents/MacOS/Flash Player
+/Library/Internet Plug-Ins/JavaPluginCocoa.bundle/Contents/MacOS/JavaPluginCocoa
+/Library/Internet Plug-Ins/QuickTime Plugin.plugin/Contents/MacOS/QuickTime Plugin
+/Library/Internet Plug-Ins/RealPlayer Plugin.plugin/Contents/MacOS/RealPlayer Plugin
+/System/Library/Frameworks/AGL.framework/AGL
+/System/Library/Frameworks/AddressBook.framework/AddressBook
+/System/Library/Frameworks/AppKit.framework/AppKit
+/System/Library/Frameworks/AppKit.framework/Resources/BridgeSupport/AppKit.dylib
+/System/Library/Frameworks/ApplicationServices.framework/ApplicationServices
+/System/Library/Frameworks/ApplicationServices.framework/Frameworks/ATS.framework/ATS
+/System/Library/Frameworks/ApplicationServices.framework/Frameworks/ATS.framework/Resources/*.dylib
+/System/Library/Frameworks/ApplicationServices.framework/Frameworks/ColorSync.framework/ColorSync
+/System/Library/Frameworks/ApplicationServices.framework/Frameworks/CoreGraphics.framework/CoreGraphics
+/System/Library/Frameworks/ApplicationServices.framework/Frameworks/CoreGraphics.framework/Resources/*.dylib
+/System/Library/Frameworks/ApplicationServices.framework/Frameworks/CoreGraphics.framework/Resources/BridgeSupport/CoreGraphics.dylib
+/System/Library/Frameworks/ApplicationServices.framework/Frameworks/CoreText.framework/CoreText
+/System/Library/Frameworks/ApplicationServices.framework/Frameworks/HIServices.framework/HIServices
+/System/Library/Frameworks/ApplicationServices.framework/Frameworks/ImageIO.framework/ImageIO
+/System/Library/Frameworks/ApplicationServices.framework/Frameworks/ImageIO.framework/Resources/*.dylib
+/System/Library/Frameworks/ApplicationServices.framework/Frameworks/LangAnalysis.framework/LangAnalysis
+/System/Library/Frameworks/ApplicationServices.framework/Frameworks/PrintCore.framework/PrintCore
+/System/Library/Frameworks/ApplicationServices.framework/Frameworks/QD.framework/QD
+/System/Library/Frameworks/ApplicationServices.framework/Frameworks/SpeechSynthesis.framework/SpeechSynthesis
+/System/Library/Frameworks/Carbon.framework/Carbon
+/System/Library/Frameworks/Carbon.framework/Frameworks/CarbonSound.framework/CarbonSound
+/System/Library/Frameworks/Carbon.framework/Frameworks/CommonPanels.framework/CommonPanels
+/System/Library/Frameworks/Carbon.framework/Frameworks/HIToolbox.framework/HIToolbox
+/System/Library/Frameworks/Carbon.framework/Frameworks/HTMLRendering.framework/HTMLRendering
+/System/Library/Frameworks/Carbon.framework/Frameworks/Help.framework/Help
+/System/Library/Frameworks/Carbon.framework/Frameworks/ImageCapture.framework/ImageCapture
+/System/Library/Frameworks/Carbon.framework/Frameworks/Ink.framework/Ink
+/System/Library/Frameworks/Carbon.framework/Frameworks/NavigationServices.framework/NavigationServices
+/System/Library/Frameworks/Carbon.framework/Frameworks/OpenScripting.framework/OpenScripting
+/System/Library/Frameworks/Carbon.framework/Frameworks/OpenScripting.framework/Resources/*.dylib
+/System/Library/Frameworks/Carbon.framework/Frameworks/Print.framework/Print
+/System/Library/Frameworks/Carbon.framework/Frameworks/SecurityHI.framework/SecurityHI
+/System/Library/Frameworks/Carbon.framework/Frameworks/SpeechRecognition.framework/SpeechRecognition
+/System/Library/Frameworks/Cocoa.framework/Cocoa
+/System/Library/Frameworks/CoreAudio.framework/CoreAudio
+/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation
+/System/Library/Frameworks/CoreFoundation.framework/Resources/BridgeSupport/CoreFoundation.dylib
+/System/Library/Frameworks/CoreServices.framework/CoreServices
+/System/Library/Frameworks/CoreServices.framework/Frameworks/AE.framework/AE
+/System/Library/Frameworks/CoreServices.framework/Frameworks/CFNetwork.framework/CFNetwork
+/System/Library/Frameworks/CoreServices.framework/Frameworks/CarbonCore.framework/CarbonCore
+/System/Library/Frameworks/CoreServices.framework/Frameworks/DictionaryServices.framework/DictionaryServices
+/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/LaunchServices
+/System/Library/Frameworks/CoreServices.framework/Frameworks/Metadata.framework/Metadata
+/System/Library/Frameworks/CoreServices.framework/Frameworks/OSServices.framework/OSServices
+/System/Library/Frameworks/CoreServices.framework/Frameworks/SearchKit.framework/SearchKit
+/System/Library/Frameworks/ExceptionHandling.framework/ExceptionHandling
+/System/Library/Frameworks/Foundation.framework/Foundation
+/System/Library/Frameworks/Foundation.framework/Resources/BridgeSupport/Foundation.dylib
+/System/Library/Frameworks/IOKit.framework/IOKit
+/System/Library/Frameworks/JavaEmbedding.framework/JavaEmbedding
+/System/Library/Frameworks/JavaVM.framework/Frameworks/JavaNativeFoundation.framework/JavaNativeFoundation
+/System/Library/Frameworks/JavaVM.framework/JavaVM
+/System/Library/Frameworks/JavaVM.framework/Versions/1.4.2/Libraries/*.dylib
+/System/Library/Frameworks/JavaVM.framework/Versions/1.4.2/Resources/JavaPluginCocoa.bundle/Contents/MacOS/JavaPluginCocoa
+/System/Library/Frameworks/JavaVM.framework/Versions/1.5.0/Libraries/*.dylib
+/System/Library/Frameworks/JavaVM.framework/Versions/1.5.0/Resources/JavaPluginCocoa.bundle/Contents/MacOS/JavaPluginCocoa
+/System/Library/Frameworks/OpenGL.framework/Libraries/*.dylib
+/System/Library/Frameworks/OpenGL.framework/OpenGL
+/System/Library/Frameworks/PreferencePanes.framework/PreferencePanes
+/System/Library/Frameworks/Python.framework/Python
+/System/Library/Frameworks/Quartz.framework/Quartz
+/System/Library/Frameworks/QuartzCore.framework/QuartzCore
+/System/Library/Frameworks/QuickTime.framework/QuickTime
+/System/Library/Frameworks/Security.framework/PlugIns/csparser.bundle/Contents/MacOS/csparser
+/System/Library/Frameworks/Security.framework/Security
+/System/Library/Frameworks/System.framework/System
+/System/Library/Frameworks/SystemConfiguration.framework/SystemConfiguration
+/System/Library/Input Methods/KoreanIM.app/Contents/HanjaTool.app/Contents/MacOS/HanjaTool
+/System/Library/Input Methods/KoreanIM.app/Contents/MacOS/KoreanIM
+/System/Library/Input Methods/Kotoeri.app/Contents/MacOS/Kotoeri
+/System/Library/Input Methods/SCIM.app/Contents/ITABCEngine.framework/ITABCEngine
+/System/Library/Input Methods/SCIM.app/Contents/MacOS/SCIM
+/System/Library/Input Methods/SCIM.app/Contents/SCIMTool.app/Contents/MacOS/SCIMTool
+/System/Library/Input Methods/TCIM.app/Contents/MacOS/TCIM
+/System/Library/Input Methods/TCIM.app/Contents/TCIMTool.app/Contents/MacOS/TCIMTool
+/System/Library/Input Methods/TamilIM.app/Contents/MacOS/TamilIM
+/System/Library/Input Methods/VietnameseIM.app/Contents/MacOS/VietnameseIM
+/System/Library/PrivateFrameworks/DesktopServicesPriv.framework/DesktopServicesPriv
+/System/Library/QuickTime/QuickTimeComponents.component/Contents/MacOS/QuickTimeComponents
+/usr/lib/libSystem.B.dylib
+/usr/lib/libgcc_s.1.dylib
+/usr/lib/libobjc.A.dylib
+/usr/lib/libstdc++.6.dylib
