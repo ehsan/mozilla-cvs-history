@@ -1,0 +1,195 @@
+#!/usr/bin/ruby
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is dependency_list_generator.rb.
+#
+# The Initial Developer of the Original Code is
+# Stuart Morgan <stuart.morgan@alumni.case.edu>
+# Portions created by the Initial Developer are Copyright (C) 2009
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Stuart Morgan <stuart.morgan@alumni.case.edu>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+require 'open3'
+
+def main()
+  if ARGV.length < 1
+    print_usage()
+    exit(1)
+  end
+
+  seed_apps = ARGV
+  seed_sets = seed_apps.collect { |app_path|
+    expanded_seed_paths(seed_set_for_app(app_path))
+  }
+
+  extra_seed_set = expanded_seed_paths(parse_extra_seed_set())
+  # Prepend a nil, so that we catch anything that has an @executable_path
+  # rather than substituting a random value.
+  extra_seed_set.unshift(nil)
+  seed_sets.push(extra_seed_set)
+
+  full_dependency_list = []
+  seed_sets.each do |seed_set|
+    full_dependency_list += all_dependencies(*seed_set)
+  end
+  full_dependency_list.uniq!
+  seed_apps.each do |app|
+    full_dependency_list.reject! { |path| path.match("^#{app}") }
+  end
+  puts full_dependency_list.sort.join("\n")
+end
+
+def print_usage()
+  puts <<EOF
+Usage: #{$0} <path to application> [<path to other application> ...]
+
+Generates the complete (recursive) list of OS libraries and frameworks linked
+by all the listed applications, plus an extra list of loadable modules listed
+on stdin.
+
+Sample usage:
+#{$0} /Applications/Camino.app /Applications/Firefox.app /Applications/Thunderbird.app < extra_seed_files.txt
+EOF
+end
+
+# Parses stdin to get the list of extra files we want to use as seeds.
+def parse_extra_seed_set()
+  extra_seed_set = $stdin.readlines.reject {|line| line.match("^#") }
+  # This won't be going through a shell, so take care of globbing ourselves.
+  extra_seed_set.collect! { |path| Dir.glob(path.chomp) }.flatten!
+  return extra_seed_set
+end
+
+# Returns the binary path for the given app bundle path, using standard naming
+# conventions for Mozilla apps.
+def binary_for_app(app_path)
+  binary_dir = File.join(app_path, "Contents", "MacOS")
+  binary_path = Dir.glob(File.join(binary_dir, "*-bin")).first
+  if binary_path.nil?
+    standard_path = File.join(binary_dir, File.basename(app_path, ".app"))
+    if File.exists?(standard_path)
+      binary_path = standard_path
+    end
+  end
+  return binary_path
+end
+
+# Returns all the binaries in/under the given directory.
+def binaries_in_directory(directory)
+  executables = `find "#{directory.chomp('/')}" -perm +100 -type f`.split("\n")
+  # Weed out any files that aren't really binaries.
+  executables.select{ |binary| `file "#{binary}"`.match('binary') }
+end
+
+# Given a list of paths, expands any that are directories to all of the binaries
+# they contain, and returns that expanded list as a flat array.
+def expanded_seed_paths(seed_paths)
+  seed_paths.collect { |path|
+    if FileTest.directory?(path)
+      binaries_in_directory(path)
+    else
+      path
+    end
+  }.flatten
+end
+
+# Returns the set of binaries/directories to use as a starting point for
+# generating dependencies for the given application, with the main binary as
+# the first entry. Assumes standard Mozilla app bundle layout.
+def seed_set_for_app(app_path)
+  binary_path = binary_for_app(app_path)
+  if binary_path.nil?
+    $stderr.puts "Unable to find binary for #{app_path}"
+    return []
+  end
+  standard_plugin_path = File.join(app_path, "Contents", "Plug-Ins")
+  core_plugin_path = File.join(app_path, "Contents", "MacOS", "plugins")
+  prefpane_path = File.join(app_path, "Contents", "PreferencePanes")
+  return [binary_path, standard_plugin_path, core_plugin_path, prefpane_path]
+end
+
+# Returns |path| with any instances of @executable_path or @loader_path
+# resolved. If |executable_path| is nil and @executable_path is present, returns
+# nil.
+def expanded_load_path(path, executable_path, loader_path)
+  expanded_path = path
+  if expanded_path.match('@executable_path')
+    if executable_path.nil?
+      $stderr.puts "@executable_path encountered in #{path}, but no path was set:\n"
+      puts library_path
+      return nil
+    end
+    expanded_path.sub!('@executable_path', executable_path)
+  end
+  expanded_path.sub!('@loader_path', loader_path)
+  return expanded_path
+end
+
+# Generates the transitive closure of OS libraries and frameworks linked by
+# the main binary and any extra binaries (e.g., plugins) given. Because some
+# libraries may use @executable_path, only one primary binary should be given
+# in any one call (e.g., to generate all the symbols used by both Camino and
+# Firefox, it should be called once for each application, and the lists merged).
+def all_dependencies(main_binary, *loadables)
+  paths_to_check = loadables
+  executable_path = nil
+  if main_binary
+    # Store the main binary directory, if one was given, for resolving
+    # @executabe_path.
+    executable_path = File.dirname(main_binary)
+    paths_to_check.unshift(main_binary)
+  end
+
+  load_regex = Regexp.new('\s+(.*\S)\s+\(.*\)$')
+
+  paths_seen = {}
+  while not paths_to_check.empty?
+    path = paths_to_check.shift
+    if not paths_seen[path] and File.exists?(path)
+      paths_seen[path] = true;
+      loader_path = File.dirname(path)
+      Open3.popen3("otool", "-L", path) do |stdin, stdout, stderr|
+        stdout.each do |line|
+          if match = load_regex.match(line)
+            library_path = expanded_load_path(match[1], executable_path, loader_path)
+            next unless library_path and File.exists?(library_path)
+            # Note that we deliberately do *not* resolve symlinks; we need the
+            # symbols to be generated using the same name they are linked with.
+            paths_to_check.push(library_path)
+          end
+        end
+      end
+    end
+  end
+
+  return paths_seen.keys
+end
+
+main()

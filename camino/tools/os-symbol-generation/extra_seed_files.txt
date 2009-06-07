@@ -1,0 +1,25 @@
+# Files (or directories of files) that can end up loaded but that we don't link
+# to, suitable for input to dependency_list_generator.
+# This list is based on both common sense and things that we've seen show up on
+# the crash server.
+/Library/Internet Plug-Ins/JavaPluginCocoa.bundle/
+/Library/Internet Plug-Ins/QuickTime Plugin.plugin/
+/Library/Internet Plug-Ins/Flash Player.plugin/
+/Library/Internet Plug-Ins/RealPlayer Plugin.plugin/Contents/MacOS/RealPlayer Plugin
+/System/Library/Frameworks/ApplicationServices.framework/Frameworks/ATS.framework/Resources/*.dylib
+/System/Library/Frameworks/ApplicationServices.framework/Frameworks/ImageIO.framework/Resources/*.dylib
+/System/Library/Frameworks/ApplicationServices.framework/Frameworks/CoreGraphics.framework/Resources/*.dylib
+/System/Library/Frameworks/Carbon.framework/Frameworks/OpenScripting.framework/Resources/*.dylib
+/System/Library/Frameworks/JavaEmbedding.framework/JavaEmbedding
+/System/Library/Frameworks/JavaVM.framework/Frameworks/JavaNativeFoundation.framework/JavaNativeFoundation
+/System/Library/Frameworks/JavaVM.framework/JavaVM
+/System/Library/Frameworks/JavaVM.framework/Versions/1.4.2/Libraries/*.dylib
+/System/Library/Frameworks/JavaVM.framework/Versions/1.4.2/Resources/JavaPluginCocoa.bundle/Contents/MacOS/JavaPluginCocoa
+/System/Library/Frameworks/JavaVM.framework/Versions/1.5.0/Libraries/*.dylib
+/System/Library/Frameworks/JavaVM.framework/Versions/1.5.0/Resources/JavaPluginCocoa.bundle/Contents/MacOS/JavaPluginCocoa
+/System/Library/Frameworks/OpenGL.framework/Libraries/*.dylib
+/System/Library/Frameworks/Python.framework/Python
+/System/Library/Frameworks/Security.framework/PlugIns/
+/System/Library/Frameworks/System.framework/System
+/System/Library/Input Methods/
+/System/Library/QuickTime/QuickTimeComponents.component/Contents/MacOS/QuickTimeComponents
