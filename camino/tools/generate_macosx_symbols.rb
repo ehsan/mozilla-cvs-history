@@ -47,8 +47,9 @@ end
 (symbolstore_py_path, dump_syms_path, output_dir) = ARGV
 
 os_version = `sw_vers -productVersion`.chomp.gsub('.', '_')
-symbol_output_dir = File.join(output_dir, "macosx-#{os_version}-symbols")
-symbol_archive_basename = "Mac_OS_X-#{os_version}"
+os_build = `sw_vers -buildVersion`.chomp
+symbol_output_dir = File.join(output_dir, "macosx-#{os_version}-#{os_build}-symbols")
+symbol_archive_basename = "Mac_OS_X-#{os_version}-#{os_build}"
 symbol_list_file = File.join(symbol_output_dir, "#{symbol_archive_basename}-symbols.txt")
 zip_archive_file = "crashreporter-symbols-#{symbol_archive_basename}.zip"
 
