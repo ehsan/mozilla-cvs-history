@@ -94,7 +94,8 @@ gfxAtsuiFont::gfxAtsuiFont(MacOSFontEntry *aFontEntry,
                            const gfxFontStyle *fontStyle, PRBool aNeedsBold)
     : gfxFont(aFontEntry->Name(), fontStyle),
       mFontStyle(fontStyle), mATSUStyle(nsnull), mFontEntry(aFontEntry),
-      mValid(PR_TRUE), mHasMirroring(PR_FALSE), mHasMirroringLookedUp(PR_FALSE), mAdjustedSize(0.0f)
+      mValid(PR_TRUE), mHasMirroring(PR_FALSE), mHasMirroringLookedUp(PR_FALSE), 
+      mFontFace(nsnull), mScaledFont(nsnull), mAdjustedSize(0.0f)
 {
     ATSUFontID fontID = mFontEntry->GetFontID();
     ATSFontRef fontRef = FMGetATSFontRefFromFont(fontID);
@@ -115,6 +116,9 @@ gfxAtsuiFont::gfxAtsuiFont(MacOSFontEntry *aFontEntry,
     }
 
     InitMetrics(fontID, fontRef);
+    if (!mValid) {
+        return;
+    }
 
     mFontFace = cairo_quartz_font_face_create_for_atsu_font_id(fontID);
 
@@ -217,8 +221,21 @@ gfxAtsuiFont::InitMetrics(ATSUFontID aFontID, ATSFontRef aFontRef)
     /* Now pull out the metrics */
 
     ATSFontMetrics atsMetrics;
-    ATSFontGetHorizontalMetrics(aFontRef, kATSOptionFlagsDefault,
+    OSStatus err;
+    
+    err = ATSFontGetHorizontalMetrics(aFontRef, kATSOptionFlagsDefault,
                                 &atsMetrics);
+    
+    if (err != noErr) {
+        mValid = PR_FALSE;
+        
+#ifdef DEBUG        
+        char warnBuf[1024];
+        sprintf(warnBuf, "Bad font metrics for: %s err: %8.8x", NS_ConvertUTF16toUTF8(GetName()).get(), PRUint32(err));
+        NS_WARNING(warnBuf);
+#endif
+        return;
+    }
 
     if (atsMetrics.xHeight)
         mMetrics.xHeight = atsMetrics.xHeight * size;
@@ -366,10 +383,13 @@ gfxAtsuiFont::GetCharHeight(PRUnichar c)
 
 gfxAtsuiFont::~gfxAtsuiFont()
 {
-    cairo_scaled_font_destroy(mScaledFont);
-    cairo_font_face_destroy(mFontFace);
+    if (mScaledFont)
+        cairo_scaled_font_destroy(mScaledFont);
+    if (mFontFace)
+        cairo_font_face_destroy(mFontFace);
 
-    ATSUDisposeStyle(mATSUStyle);
+    if (mATSUStyle)
+        ATSUDisposeStyle(mATSUStyle);
 }
 
 const gfxFont::Metrics&
