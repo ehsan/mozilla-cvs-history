@@ -74,6 +74,8 @@ sub Told {
             foreach my $result (@searchResults) {
                 $self->say($event, $event->{'from'} . ': ' . $result);
             }
+        } else {
+            return $self->SUPER::Told(@_);
         }
 
     } elsif ($message =~ /^(\s*fight\s+)(.+)\s+vs\.\s+(.+)\s*$/osi) {
