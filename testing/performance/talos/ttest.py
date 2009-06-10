@@ -127,7 +127,9 @@ def checkForCrashes(browser_config, profile_dir):
     for dump in glob.glob(os.path.join(profile_dir, 'minidumps', '*.dmp')):
         utils.noisy("Found crashdump: " + dump)
         if browser_config['symbols_path']:
-            subprocess.call([stackwalkbin, dump, browser_config['symbols_path']])
+            nullfd = open(os.devnull, 'w')
+            subprocess.call([stackwalkbin, dump, browser_config['symbols_path']], stderr=nullfd)
+            nullfd.close()
         os.remove(dump)
         found = True
 
