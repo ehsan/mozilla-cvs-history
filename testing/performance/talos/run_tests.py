@@ -493,6 +493,7 @@ def test_file(filename):
     date = int(time.time()) #TODO get this into own file
   utils.debug("using testdate: %d" % date)
   utils.debug("actual date: %d" % int(time.time()))
+  print 'RETURN:s: %s' % browser_config['title']
   #pull buildid & sourcestamp from browser
   browser_config = browserInfo(browser_config)
 
