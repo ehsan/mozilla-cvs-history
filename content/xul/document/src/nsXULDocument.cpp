@@ -684,13 +684,6 @@ nsXULDocument::SynchronizeBroadcastListener(nsIDOMElement   *aBroadcaster,
                                             nsIDOMElement   *aListener,
                                             const nsAString &aAttr)
 {
-    if (!nsContentUtils::IsSafeToRunScript()) {
-        nsDelayedBroadcastUpdate delayedUpdate(aBroadcaster, aListener,
-                                               aAttr);
-        mDelayedBroadcasters.AppendElement(delayedUpdate);
-        MaybeBroadcast();
-        return;
-    }
     nsCOMPtr<nsIContent> broadcaster = do_QueryInterface(aBroadcaster);
     nsCOMPtr<nsIContent> listener = do_QueryInterface(aListener);
 
@@ -837,8 +830,6 @@ nsXULDocument::AddBroadcastListenerFor(nsIDOMElement* aBroadcaster,
     if (! bl)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    nsCOMPtr<nsINode> listener = do_QueryInterface(aListener);
-    listener->SetFlags(NODE_MAY_BE_LISTENER);
     bl->mListener  = do_GetWeakReference(aListener);
     bl->mAttribute = attr;
 
@@ -1730,21 +1721,6 @@ nsXULDocument::AddSubtreeToDocument(nsIContent* aElement)
     return AddElementToDocumentPost(aElement);
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
-RemoveListener(PLDHashTable* aTable, PLDHashEntryHdr* aHdr, PRUint32 aNumber,
-               void* aArg)
-{
-  BroadcasterMapEntry* entry = static_cast<BroadcasterMapEntry*>(aHdr);
-  for (PRInt32 i = entry->mListeners.Count() - 1; i >= 0; --i) {
-    BroadcastListener* bl = static_cast<BroadcastListener*>(entry->mListeners[i]);
-    nsCOMPtr<nsIDOMElement> listener = do_QueryReferent(bl->mListener);
-    if (listener == static_cast<nsIDOMElement*>(aArg)) {
-      entry->mListeners.RemoveElementAt(i);
-    }
-  }
-  return PL_DHASH_NEXT;
-}
-
 NS_IMETHODIMP
 nsXULDocument::RemoveSubtreeFromDocument(nsIContent* aElement)
 {
@@ -1785,9 +1761,12 @@ nsXULDocument::RemoveSubtreeFromDocument(nsIContent* aElement)
 
     // 4. Remove the element from our broadcaster map, since it is no longer
     // in the document.
-    if (mBroadcasterMap && aElement->HasFlag(NODE_MAY_BE_LISTENER)) {
-      nsCOMPtr<nsIDOMElement> listener = do_QueryInterface(aElement);
-      PL_DHashTableEnumerate(mBroadcasterMap, RemoveListener, listener);
+    nsCOMPtr<nsIDOMElement> broadcaster, listener;
+    nsAutoString attribute, broadcasterID;
+    rv = FindBroadcaster(aElement, getter_AddRefs(listener),
+                         broadcasterID, attribute, getter_AddRefs(broadcaster));
+    if (rv == NS_FINDBROADCASTER_FOUND) {
+        RemoveBroadcastListenerFor(broadcaster, listener, attribute);
     }
 
     return NS_OK;
@@ -3256,36 +3235,6 @@ nsXULDocument::StyleSheetLoaded(nsICSSStyleSheet* aSheet,
     }
 
     return NS_OK;
-}
-
-void
-nsXULDocument::MaybeBroadcast()
-{
-    // Only broadcast when not in an update and when safe to run scripts.
-    if (mUpdateNestLevel == 0 && mDelayedBroadcasters.Length()) {
-        if (!nsContentUtils::IsSafeToRunScript()) {
-            if (!mInDestructor) {
-                nsContentUtils::AddScriptRunner(
-                  NS_NEW_RUNNABLE_METHOD(nsXULDocument, this, MaybeBroadcast));
-            }
-            return;
-        }
-        PRUint32 length = mDelayedBroadcasters.Length();
-        nsTArray<nsDelayedBroadcastUpdate> delayedBroadcasters;
-        mDelayedBroadcasters.SwapElements(delayedBroadcasters);
-        for (PRUint32 i = 0; i < length; ++i) {
-            SynchronizeBroadcastListener(delayedBroadcasters[i].mBroadcaster,
-                                         delayedBroadcasters[i].mListener,
-                                         delayedBroadcasters[i].mAttr);
-        }
-    }
-}
-
-void
-nsXULDocument::EndUpdate(nsUpdateType aUpdateType)
-{
-    nsXMLDocument::EndUpdate(aUpdateType);
-    MaybeBroadcast();
 }
 
 void

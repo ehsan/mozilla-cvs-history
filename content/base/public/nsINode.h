@@ -129,9 +129,7 @@ enum {
 
   // Remaining bits are node type specific.
   NODE_TYPE_SPECIFIC_BITS_OFFSET =
-    NODE_SCRIPT_TYPE_OFFSET + NODE_SCRIPT_TYPE_SIZE,
-
-  NODE_MAY_BE_LISTENER =         0x80000000U
+    NODE_SCRIPT_TYPE_OFFSET + NODE_SCRIPT_TYPE_SIZE
 };
 
 // Useful inline function for getting a node given an nsIContent and an
