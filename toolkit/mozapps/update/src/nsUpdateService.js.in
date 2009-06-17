@@ -1710,9 +1710,10 @@ UpdateService.prototype = {
              getService(Components.interfaces.nsIVersionComparator);
     // Don't download the update if the update's version is less than the
     // current application's version.
-    if (update.version && vc.compare(update.version, ai.version) < 0) {
+    if (update.extensionVersion &&
+        vc.compare(update.extensionVersion, ai.version) < 0) {
       LOG("UpdateService", "downloadUpdate: removing update for previous " +
-          "application version " + update.version);
+          "application version " + update.extensionVersion);
       cleanupActiveUpdate();
       return STATE_NONE;
     }
