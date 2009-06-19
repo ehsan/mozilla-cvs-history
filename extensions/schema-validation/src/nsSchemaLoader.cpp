@@ -1087,7 +1087,8 @@ ParseQualifiedName(nsIDOMElement* aContext,
 
   if (pos < end) {
     aPrefix.Assign(Substring(begin, pos-begin));
-    aLocalName.Assign(Substring(++pos, end-pos));
+    ++pos;
+    aLocalName.Assign(Substring(pos, end-pos));
   }
   else {
     aLocalName.Assign(aQualifiedName);
