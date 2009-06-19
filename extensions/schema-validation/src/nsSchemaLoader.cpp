@@ -2631,6 +2631,9 @@ nsSchemaLoader::ProcessSimpleTypeUnion(nsISVSchemaErrorHandler* aErrorHandler,
       if (tokenEnd < end) {
         typeStr.Assign(Substring(begin, tokenEnd-begin));
         ++tokenEnd;
+        while (tokenEnd < end && *tokenEnd == PRUnichar(' ')) {
+          ++tokenEnd;
+        }
       }
       else {
         typeStr.Assign(Substring(begin, end-begin));
