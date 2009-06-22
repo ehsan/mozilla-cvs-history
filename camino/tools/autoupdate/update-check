@@ -132,9 +132,9 @@ sub latest_supported_update {
         array_contains($update->{Arch}, $client_info->{arch}) &&
         ($include_betas || ($update->{VersionString} !~ /[a-z]/))) 
     {
-			# Load the description in the approriate language
-			$update->{Description} = localized_description($update->{VersionString},
-																										 $client_info->{lang});
+      # Load the description in the approriate language
+      $update->{Description} = localized_description($update->{VersionString},
+                                                     $client_info->{lang});
       return $update;
     }
   }
@@ -191,26 +191,26 @@ sub array_contains {
 # not available but a non-locale specific version is that will be used;
 # if no matching language is available, it will use English.
 sub localized_description {
-	my ($version, $language) = @_;
-	  $version =~ s/\s*Int.*$//;
-   my $description_file = "$update_desc_dir/$version-$language";
-	# If we don't have a match, try a non-locale match
-	if (!-e $description_file) {
-		$language =~ s/[-_]\w+$//;
-  	$description_file = "$update_desc_dir/$version-$language";
-	}
-	# Fall back to English if we don't have anything close
-	if (!-e $description_file) {
-  	$description_file = "$update_desc_dir/$version-en";
-	}
-	# If we really have nothing, then we're out of luck
-	return "" unless -e $description_file;
+  my ($version, $language) = @_;
+  $version =~ s/\s*Int.*$//;
+  my $description_file = "$update_desc_dir/$version-$language";
+  # If we don't have a match, try a non-locale match
+  if (!-e $description_file) {
+    $language =~ s/[-_]\w+$//;
+    $description_file = "$update_desc_dir/$version-$language";
+  }
+  # Fall back to English if we don't have anything close
+  if (!-e $description_file) {
+    $description_file = "$update_desc_dir/$version-en";
+  }
+  # If we really have nothing, then we're out of luck
+  return "" unless -e $description_file;
 
-	local $/;
+  local $/;
   open INFILE, '<', $description_file or return "";
-	my $description = <INFILE>;
-	close INFILE;
-	return $description;
+  my $description = <INFILE>;
+  close INFILE;
+  return $description;
 }
 
 main();
