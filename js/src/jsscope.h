@@ -350,7 +350,8 @@ struct JSScopeProperty {
                            OBJECT_TO_JSVAL((sprop)->setter), JSACC_WRITE,     \
                            1, vp, vp)                                         \
      : ((sprop)->attrs & JSPROP_GETTER)                                       \
-     ? (js_ReportGetterOnlyAssignment(cx), JS_FALSE)                          \
+     ? (JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,                    \
+                             JSMSG_GETTER_ONLY, NULL), JS_FALSE)              \
      : (sprop)->setter(cx, OBJ_THIS_OBJECT(cx,obj), SPROP_USERID(sprop), vp))
 
 /* Macro for common expression to test for shared permanent attributes. */
