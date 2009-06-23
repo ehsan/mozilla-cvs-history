@@ -5199,6 +5199,20 @@ js_GetWrappedObject(JSContext *cx, JSObject *obj)
     return obj;
 }
 
+void
+js_ReportGetterOnlyAssignment(JSContext *cx)
+{
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                         JSMSG_GETTER_ONLY, NULL);
+}
+
+JS_FRIEND_API(JSBool)
+js_GetterOnlyPropertyStub(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+    js_ReportGetterOnlyAssignment(cx);
+    return JS_FALSE;
+}
+
 #ifdef DEBUG
 
 /* Routines to print out values during debugging. */
