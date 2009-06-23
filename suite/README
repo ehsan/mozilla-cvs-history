@@ -3,6 +3,9 @@ mozilla/suite
 
 This module contains files for the SeaMonkey suite.
 
+Active development has switched from CVS to Mercurial, see
+https://developer.mozilla.org/en/Comm-central_source_code_(Mercurial)
+
 Documentation about the directory structure within this module can be found at
 http://wiki.mozilla.org/SeaMonkey:Suite_Directory_Layout
 
