@@ -470,21 +470,26 @@ DefinePropertyIfFound(XPCCallContext& ccx,
     NS_ASSERTION(member->IsAttribute(), "way broken!");
 
     propFlags |= JSPROP_GETTER | JSPROP_SHARED;
+    JSObject* funobj = JSVAL_TO_OBJECT(funval);
+    JSPropertyOp getter = (JSPropertyOp) funobj;
+    JSPropertyOp setter;
     if(member->IsWritableAttribute())
     {
         propFlags |= JSPROP_SETTER;
         propFlags &= ~JSPROP_READONLY;
+        setter = getter;
+    }
+    else
+    {
+        setter = js_GetterOnlyPropertyStub;
     }
 
     AutoResolveName arn(ccx, idval);
     if(resolved)
         *resolved = JS_TRUE;
 
-    JSObject* funobj = JSVAL_TO_OBJECT(funval);
     return JS_ValueToId(ccx, idval, &id) &&
-           OBJ_DEFINE_PROPERTY(ccx, obj, id, JSVAL_VOID,
-                               (JSPropertyOp) funobj,
-                               (JSPropertyOp) funobj,
+           OBJ_DEFINE_PROPERTY(ccx, obj, id, JSVAL_VOID, getter, setter,
                                propFlags, nsnull);
 }
 
