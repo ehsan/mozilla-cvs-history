@@ -331,6 +331,16 @@ struct JSScopeProperty {
 #define SPROP_HAS_STUB_SETTER(sprop)    (!(sprop)->setter)
 
 /*
+ * JSObjectOps is private, so we know there are only two implementations
+ * of the thisObject hook: with objects and XPConnect wrapped native
+ * objects.  XPConnect objects don't expect the hook to be called here,
+ * but with objects do.
+ */
+#define UNWRAP_WITH(cx,obj)                                                   \
+    ((OBJ_GET_CLASS(cx,obj) == &js_WithClass)                                 \
+     ? OBJ_THIS_OBJECT(cx,obj) : (obj))
+
+/*
  * NB: SPROP_GET must not be called if SPROP_HAS_STUB_GETTER(sprop).
  */
 #define SPROP_GET(cx,sprop,obj,obj2,vp)                                       \
@@ -338,7 +348,7 @@ struct JSScopeProperty {
      ? js_InternalGetOrSet(cx, obj, (sprop)->id,                              \
                            OBJECT_TO_JSVAL((sprop)->getter), JSACC_READ,      \
                            0, 0, vp)                                          \
-     : (sprop)->getter(cx, OBJ_THIS_OBJECT(cx,obj), SPROP_USERID(sprop), vp))
+     : (sprop)->getter(cx, UNWRAP_WITH(cx,obj), SPROP_USERID(sprop), vp))
 
 /*
  * NB: SPROP_SET must not be called if (SPROP_HAS_STUB_SETTER(sprop) &&
@@ -351,7 +361,7 @@ struct JSScopeProperty {
                            1, vp, vp)                                         \
      : ((sprop)->attrs & JSPROP_GETTER)                                       \
      ? (js_ReportGetterOnlyAssignment(cx), JS_FALSE)                          \
-     : (sprop)->setter(cx, OBJ_THIS_OBJECT(cx,obj), SPROP_USERID(sprop), vp))
+     : (sprop)->setter(cx, UNWRAP_WITH(cx,obj), SPROP_USERID(sprop), vp))
 
 /* Macro for common expression to test for shared permanent attributes. */
 #define SPROP_IS_SHARED_PERMANENT(sprop)                                      \
