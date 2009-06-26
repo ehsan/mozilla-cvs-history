@@ -62,7 +62,7 @@ if (!empty($_SERVER["HTTP_X_FORWARDED_FOR"])) {
 
 
 //We need to give the user a unique cookie and make it expire in 5 years.
-if (!array_key_exists('aus', $_COOKIE)) {
+if (!array_key_exists(COOKIE_NAME, $_COOKIE)) {
     setcookie(COOKIE_NAME, $ip . '.' . microtime(true), time() + 157784630, '/', COOKIE_DOMAIN);
 }
 
