@@ -87,6 +87,14 @@ define('THROTTLE_LOGGING',false);
 //     )
 // );
 $productThrottling = array(
+     'Firefox' => array(
+         '3.0.11' => array(
+             'release' => 0,
+             'beta' => 0,
+             'releasetest' => 0,
+             'betatest' => 0,
+         )
+     )
 );
 
 // These are channels that have access to nightly updates.
