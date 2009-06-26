@@ -122,10 +122,13 @@ def TerminateProcess(pid, timeout):
   """
   try:
     if ProcessesWithNameExist(str(pid)):
-      os.kill(pid, signal.SIGTERM)
+      os.kill(pid, signal.SIGSEGV)
       time.sleep(timeout)
       if ProcessesWithNameExist(str(pid)):
-        os.kill(pid, signal.SIGKILL)
+        os.kill(pid, signal.SIGTERM)
+        time.sleep(timeout)
+        if ProcessesWithNameExist(str(pid)):
+          os.kill(pid, signal.SIGKILL)
   except OSError, (errno, strerror):
     print 'WARNING: failed os.kill: %s : %s' % (errno, strerror)
 
