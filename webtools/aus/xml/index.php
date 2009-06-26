@@ -95,8 +95,8 @@ if ( (empty($_GET['force']) || $_GET['force']!=1) ) {
     $throttleMe = false;
 
     // Check explicit throttling.
-    if ( isset($productThrottling[$clean['product']][$clean['version']][$clean['channel']]) 
-         && mt_rand(0,100) > $productThrottling[$clean['product']][$clean['version']][$clean['channel']]) {
+    if ( isset($productThrottling[$clean['product']][$clean['version']]) 
+         && mt_rand(0,100) > $productThrottling[$clean['product']][$clean['version']]) {
         $throttleMe = true;
 
     // Check global throttling.
