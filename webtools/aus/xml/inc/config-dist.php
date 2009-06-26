@@ -92,7 +92,7 @@ $productThrottling = array(
              'release' => 0,
              'beta' => 0,
              'releasetest' => 0,
-             'betatest' => 0,
+             'betatest' => 0
          )
      )
 );
