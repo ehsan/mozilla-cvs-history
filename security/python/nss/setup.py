@@ -294,7 +294,7 @@ doc_manifest = [
 ]
 
 setup(name             = 'python-nss',
-      version          = '0.3',
+      version          = '0.4',
       description      = 'Python bindings for Network Security Services (NSS) and Netscape Portable Runtime (NSPR)',
       long_description = long_description,
       author           = 'John Dennis',

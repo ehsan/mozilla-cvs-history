@@ -4679,11 +4679,86 @@ nss_indented_format(PyObject *self, PyObject *args, PyObject *kwds)
         return NULL;
 }
 
+/* ============================== Module Methods ============================= */
 
+PyDoc_STRVAR(NSS_init_doc,
+"nss_init(cert_dir)\n\
+\n\
+:Parameters:\n\
+    cert_dir : string\n\
+        Pathname of the directory where the certificate, key, and\n\
+        security module databases reside.\n\
+\n\
+Sets up configuration files and performs other tasks required to run\n\
+Network Security Services.\n\
+");
+
+static PyObject *
+NSS_init(PyObject *self, PyObject *args)
+{
+    char *cert_dir;
+
+    if (!PyArg_ParseTuple(args, "s:nss_init", &cert_dir)) {
+        return NULL;
+    }
+
+    if (NSS_Init(cert_dir) != SECSuccess) {
+        return set_nspr_error(NULL);
+    }
+    Py_RETURN_NONE;
+}
+
+PyDoc_STRVAR(NSS_init_nodb_doc,
+"nss_init_nodb()\n\
+\n\
+Performs tasks required to run Network Security Services without setting up\n\
+configuration files. Important: This NSS function is not intended for use with\n\
+SSL, which requires that the certificate and key database files be opened.\n\
+\n\
+nss_init_nodb opens only the temporary database and the internal PKCS #112\n\
+module. Unlike nss_init, nss_init_nodb allows applications that do not have\n\
+access to storage for databases to run raw crypto, hashing, and certificate\n\
+functions. nss_init_nodb is not idempotent, so call it only once. The policy\n\
+flags for all cipher suites are turned off by default, disallowing all cipher\n\
+suites. Therefore, an application cannot use NSS to perform any cryptographic\n\
+operations until after it enables appropriate cipher suites by calling one of\n\
+the SSL Export Policy Functions.\n\
+");
+
+static PyObject *
+NSS_init_nodb(PyObject *self, PyObject *args)
+{
+    if (NSS_NoDB_Init(NULL) != SECSuccess) {
+        return set_nspr_error(NULL);
+    }
+    Py_RETURN_NONE;
+}
+
+PyDoc_STRVAR(NSS_shutdown_doc,
+"nss_shutdown()\n\
+\n\
+Closes the key and certificate databases that were opened by nss_init().\n\
+\n\
+Note that if any reference to an NSS object is leaked (for example, if an SSL\n\
+client application doesn't call clear_session_cache() first) then nss_shutdown fails\n\
+with the error code SEC_ERROR_BUSY.\n\
+");
+
+static PyObject *
+NSS_shutdown(PyObject *self, PyObject *args)
+{
+    if (NSS_Shutdown() != SECSuccess) {
+        return set_nspr_error(NULL);
+    }
+    Py_RETURN_NONE;
+}
 
 /* List of functions exported by this module. */
 static PyMethodDef
 module_methods[] = {
+    {"nss_init",                (PyCFunction)NSS_init,           METH_VARARGS,               NSS_init_doc},
+    {"nss_init_nodb",           (PyCFunction)NSS_init_nodb,      METH_NOARGS,                NSS_init_nodb_doc},
+    {"nss_shutdown",            (PyCFunction)NSS_shutdown,       METH_NOARGS,                NSS_shutdown_doc},
     {"set_password_callback",   PK11_set_password_callback,      METH_VARARGS,               PK11_set_password_callback_doc},
     {"find_cert_from_nickname", PK11_find_cert_from_nickname,    METH_VARARGS,               PK11_find_cert_from_nickname_doc},
     {"find_key_by_any_cert",    PK11_find_key_by_any_cert,       METH_VARARGS,               PK11_find_key_by_any_cert_doc},

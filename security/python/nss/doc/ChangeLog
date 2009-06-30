@@ -1,3 +1,7 @@
+2009-06-30  John Dennis  <jdennis@redhat.com> 0.4
+  * add binding for NSS_NoDB_Init(), bug #509002
+    move nss_init and nss_shutdown from ssl module to nss module
+	
 2009-06-04  John Dennis  <jdennis@redhat.com> 0.3
 
   * import to Mozilla CVS, tweak directory layout
