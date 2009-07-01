@@ -38,12 +38,65 @@
 import sys
 import os
 import re
+import subprocess
+import re
 
 from distutils.core import setup, Extension, Command
 from distutils.spawn import find_executable, spawn
 from distutils import log
 from distutils.filelist import FileList
 from distutils.util import subst_vars, change_root
+from distutils.command.build_py import build_py as _build_py
+from distutils.command.sdist import sdist as _sdist
+
+version = "0.5"
+
+def update_version():
+    """If the version string in __init__.py doesn't match the current
+    version then edit the file replacing the version string
+    with the current version."""
+
+    version_file = 'src/__init__.py'
+    tmp_file = 'src/__init__.tmp'
+    version_re = re.compile("^\s*__version__\s*=\s*['\"]([^'\"]*)['\"]")
+    need_to_update = False
+    version_found = False
+    f = open(tmp_file, "w")
+    for line in open(version_file):
+        match = version_re.search(line)
+        if match:
+            version_found = True
+            file_version = match.group(1)
+            if file_version != version:
+                need_to_update = True
+                f.write("__version__ = '%s'\n" % version)
+        else:
+            f.write(line)
+    if not version_found:
+        need_to_update = True
+        f.write("__version__ = '%s'\n" % version)
+
+    if need_to_update:
+        print "Updating version in \"%s\" to \"%s\"" % (version_file, version)
+        os.rename(tmp_file, version_file)
+    else:
+        os.unlink(tmp_file)
+
+class BuildPy(_build_py):
+    """Specialized Python source builder."""
+
+    def run(self):
+        update_version()
+        _build_py.run(self)
+    
+
+class SDist(_sdist):
+    """Specialized Python source builder."""
+
+    def run(self):
+        update_version()
+        _sdist.run(self)
+    
 
 class BuildDoc(Command):
     description = 'generate documentation'
@@ -294,7 +347,7 @@ doc_manifest = [
 ]
 
 setup(name             = 'python-nss',
-      version          = '0.4',
+      version          = version,
       description      = 'Python bindings for Network Security Services (NSS) and Netscape Portable Runtime (NSPR)',
       long_description = long_description,
       author           = 'John Dennis',
@@ -315,6 +368,8 @@ setup(name             = 'python-nss',
       cmdclass         = {'build_doc'     : BuildDoc,
                           'build_api_doc' : BuildApiDoc,
                           'install_doc'   : InstallDoc,
+                          'build_py'      : BuildPy,
+                          'sdist'         : SDist,
                          },
 
 )

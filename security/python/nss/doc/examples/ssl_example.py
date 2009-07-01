@@ -338,7 +338,7 @@ if not (client or server):
     sys.exit(1)
 
 # Perform basic configuration and setup
-ssl.nssinit(certdir)
+nss.nss_init(certdir)
 ssl.set_domestic_policy()
 nss.set_password_callback(password_callback)
 

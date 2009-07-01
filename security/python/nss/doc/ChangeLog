@@ -1,3 +1,7 @@
+2009-07-01  John Dennis  <jdennis@redhat.com> 0.5
+  * restore ssl.nss_init and ssl.nss_shutdown but make them deprecated
+    add __version__ string to nss module
+	
 2009-06-30  John Dennis  <jdennis@redhat.com> 0.4
   * add binding for NSS_NoDB_Init(), bug #509002
     move nss_init and nss_shutdown from ssl module to nss module

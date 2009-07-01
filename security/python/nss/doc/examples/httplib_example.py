@@ -117,7 +117,7 @@ if url_components.scheme == 'https':
 
 
 if use_ssl:
-    ssl.nssinit(certdir)
+    nss.nss_init(certdir)
     ssl.set_domestic_policy()
     nss.set_password_callback(password_callback)
     h = httplib.HTTPS()

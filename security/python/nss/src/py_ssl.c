@@ -1791,6 +1791,60 @@ PyTypeObject SSLSocketType = {
 /* ============================== Module Methods ============================= */
 
 
+PyDoc_STRVAR(NSS_init_doc,
+"nss_init(cert_dir)\n\
+WARNING: nss_init() has been moved to the nss module, use nss.nss_init() instead of ssl.nss_init()\n\
+\n\
+:Parameters:\n\
+    cert_dir : string\n\
+        Pathname of the directory where the certificate, key, and\n\
+        security module databases reside.\n\
+\n\
+Sets up configuration files and performs other tasks required to run\n\
+Network Security Services.\n\
+");
+
+static PyObject *
+NSS_init(PyObject *self, PyObject *args)
+{
+    char *cert_dir;
+
+    if (PyErr_Warn(PyExc_DeprecationWarning, "nss_init() has been moved to the nss module, use nss.nss_init() instead of ssl.nss_init()") < 0)
+        return NULL;
+
+    if (!PyArg_ParseTuple(args, "s:nss_init", &cert_dir)) {
+        return NULL;
+    }
+
+    if (NSS_Init(cert_dir) != SECSuccess) {
+        return set_nspr_error(NULL);
+    }
+    Py_RETURN_NONE;
+}
+
+PyDoc_STRVAR(NSS_shutdown_doc,
+"nss_shutdown()\n\
+WARNING: nss_shutdown() has been moved to the nss module, use nss.nss_shutdown() instead of ssl.nss_shutdown()\n\
+\n\
+Closes the key and certificate databases that were opened by nss_init().\n\
+\n\
+Note that if any reference to an NSS object is leaked (for example, if an SSL\n\
+client application doesn't call clear_session_cache() first) then nss_shutdown fails\n\
+with the error code SEC_ERROR_BUSY.\n\
+");
+
+static PyObject *
+NSS_shutdown(PyObject *self, PyObject *args)
+{
+    if (PyErr_Warn(PyExc_DeprecationWarning, "nss_shutdown() has been moved to the nss module, use nss.nss_shutdown() instead of ssl.nss_shutdown()") < 0)
+        return NULL;
+
+    if (NSS_Shutdown() != SECSuccess) {
+        return set_nspr_error(NULL);
+    }
+    Py_RETURN_NONE;
+}
+
 PyDoc_STRVAR(SSL_set_ssl_default_option_doc,
 "set_ssl_default_option(option, value)\n\
 \n\
@@ -2110,6 +2164,8 @@ NSS_set_france_policy(PyObject *self, PyObject *args)
 
 /* List of functions exported by this module. */
 static PyMethodDef module_methods[] = {
+{"nss_init",                       (PyCFunction)NSS_init,                           METH_VARARGS,               NSS_init_doc},
+{"nss_shutdown",                   (PyCFunction)NSS_shutdown,                       METH_NOARGS,                NSS_shutdown_doc},
 {"set_ssl_default_option",         (PyCFunction)SSL_set_ssl_default_option,         METH_VARARGS,               SSL_set_ssl_default_option_doc},
 {"get_ssl_default_option",         (PyCFunction)SSL_get_ssl_default_option,         METH_VARARGS,               SSL_get_ssl_default_option_doc},
 {"set_default_cipher_pref",        (PyCFunction)SSL_set_default_cipher_pref,        METH_VARARGS,               SSL_set_default_cipher_pref_doc},

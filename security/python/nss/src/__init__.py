@@ -296,3 +296,4 @@ FAQ
 To be added
 
 """
+__version__ = '0.5'
