@@ -134,6 +134,7 @@ endif  # MOZ_CO_DATE
 STRINGS_FILES = \
 	resources/localized/English.lproj/CertificateDialogs.strings \
 	resources/localized/English.lproj/Localizable.strings \
+	resources/localized/English.lproj/ServicesMenu.strings \
 	PreferencePanes/Appearance/English.lproj/Localizable.strings \
 	PreferencePanes/Appearance/English.lproj/RegionNames.strings \
 	PreferencePanes/Downloads/English.lproj/Localizable.strings \

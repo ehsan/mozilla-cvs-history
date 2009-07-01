@@ -1056,6 +1056,8 @@
 		DE1EBDC40D066F5100BE9ECC /* mathfontSTIXNonUnicode.properties in Copy Gecko Fonts */ = {isa = PBXBuildFile; fileRef = DE1EBDBC0D066F5100BE9ECC /* mathfontSTIXNonUnicode.properties */; };
 		DE1EBDC50D066F5100BE9ECC /* mathfontStandardSymbolsL.properties in Copy Gecko Fonts */ = {isa = PBXBuildFile; fileRef = DE1EBDBD0D066F5100BE9ECC /* mathfontStandardSymbolsL.properties */; };
 		DE2AC7180F33EBAB009C0A42 /* libcaminosafebrowsing.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DE2AC6EC0F33EB8F009C0A42 /* libcaminosafebrowsing.a */; };
+		DE4025950FF4345D00568817 /* ServicesMenu.strings in Resources */ = {isa = PBXBuildFile; fileRef = DE4025930FF4345D00568817 /* ServicesMenu.strings */; };
+		DE4025960FF4345D00568817 /* ServicesMenu.strings in Resources */ = {isa = PBXBuildFile; fileRef = DE4025930FF4345D00568817 /* ServicesMenu.strings */; };
 		DE4044480ED09D1E00057E17 /* global_locale_printPageSetup_properties.strings in Resources */ = {isa = PBXBuildFile; fileRef = DE4044000ED09D1E00057E17 /* global_locale_printPageSetup_properties.strings */; };
 		DE4044490ED09D1E00057E17 /* global_locale_nsWebBrowserPersist_properties.strings in Resources */ = {isa = PBXBuildFile; fileRef = DE4044020ED09D1E00057E17 /* global_locale_nsWebBrowserPersist_properties.strings */; };
 		DE40444A0ED09D1E00057E17 /* global_locale_xul_properties.strings in Resources */ = {isa = PBXBuildFile; fileRef = DE4044040ED09D1E00057E17 /* global_locale_xul_properties.strings */; };
@@ -2921,6 +2923,8 @@
 		DE1EBDBC0D066F5100BE9ECC /* mathfontSTIXNonUnicode.properties */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; name = mathfontSTIXNonUnicode.properties; path = ../dist/bin/res/fonts/mathfontSTIXNonUnicode.properties; sourceTree = SOURCE_ROOT; };
 		DE1EBDBD0D066F5100BE9ECC /* mathfontStandardSymbolsL.properties */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; name = mathfontStandardSymbolsL.properties; path = ../dist/bin/res/fonts/mathfontStandardSymbolsL.properties; sourceTree = SOURCE_ROOT; };
 		DE2AC6EC0F33EB8F009C0A42 /* libcaminosafebrowsing.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcaminosafebrowsing.a; path = ../staticlib/components/libcaminosafebrowsing.a; sourceTree = SOURCE_ROOT; };
+		DE4025940FF4345D00568817 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = generated/resources/localized/English.lproj/ServicesMenu.strings; sourceTree = "<group>"; };
+		DE4025DE0FF435A200568817 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = English; path = resources/localized/English.lproj/ServicesMenu.strings.in; sourceTree = "<group>"; };
 		DE4044010ED09D1E00057E17 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = generated/resources/localized/English.lproj/global_locale_printPageSetup_properties.strings; sourceTree = "<group>"; };
 		DE4044030ED09D1E00057E17 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = generated/resources/localized/English.lproj/global_locale_nsWebBrowserPersist_properties.strings; sourceTree = "<group>"; };
 		DE4044050ED09D1E00057E17 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = generated/resources/localized/English.lproj/global_locale_xul_properties.strings; sourceTree = "<group>"; };
@@ -3862,6 +3866,8 @@
 				F52CE65C02BFA8B701026D5D /* Localizable.strings */,
 				0017874D0E6B3C7500583A98 /* CertificateDialogs.strings.in */,
 				0FCD85D008C4D6EE00A1923B /* CertificateDialogs.strings */,
+				DE4025DD0FF435A200568817 /* ServicesMenu.strings.in */,
+				DE4025930FF4345D00568817 /* ServicesMenu.strings */,
 				F5F190BB02D1F81A01026D5D /* ToolbarDefaults.plist */,
 				F5F190BE02D217C201026D5D /* WebsiteDefaults.strings */,
 				3F22CC1303DF42A200026DCE /* Charset.dict */,
@@ -5889,6 +5895,7 @@
 				000D0A9C0ED9BD8100A6C2F0 /* tabOverview.tiff in Resources */,
 				DEE8101E0EFB7D2E006ACC7D /* aquaSelect.css in Resources */,
 				3D9419800F559B2F00227277 /* blockedSite.xhtml in Resources */,
+				DE4025950FF4345D00568817 /* ServicesMenu.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6122,6 +6129,7 @@
 				000D0A9D0ED9BD8100A6C2F0 /* tabOverview.tiff in Resources */,
 				DEE8101F0EFB7D2E006ACC7D /* aquaSelect.css in Resources */,
 				3D9419810F559B2F00227277 /* blockedSite.xhtml in Resources */,
+				DE4025960FF4345D00568817 /* ServicesMenu.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -7042,6 +7050,22 @@
 			);
 			name = WebSearchEngines.plist;
 			sourceTree = "<group>";
+		};
+		DE4025930FF4345D00568817 /* ServicesMenu.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				DE4025940FF4345D00568817 /* English */,
+			);
+			name = ServicesMenu.strings;
+			sourceTree = "<group>";
+		};
+		DE4025DD0FF435A200568817 /* ServicesMenu.strings.in */ = {
+			isa = PBXVariantGroup;
+			children = (
+				DE4025DE0FF435A200568817 /* English */,
+			);
+			name = ServicesMenu.strings.in;
+			sourceTree = SOURCE_ROOT;
 		};
 		DE4044000ED09D1E00057E17 /* global_locale_printPageSetup_properties.strings */ = {
 			isa = PBXVariantGroup;
