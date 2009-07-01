@@ -49,7 +49,7 @@
 
 // need to match the strings in PreferenceManager.mm
 static NSString* const AdBlockingChangedNotificationName = @"AdBlockingChanged";
-static NSString* const kFlashBlockChangedNotificationName = @"FlashBlockChanged";
+static NSString* const kFlashblockChangedNotificationName = @"FlashblockChanged";
 static NSString* const kFlashblockWhitelistChangedNotificationName = @"FlashblockWhitelistChanged";
 
 // for annoyance blocker prefs
@@ -62,8 +62,8 @@ const int kAnnoyancePrefSome = 3;
 - (int)annoyingWindowPrefs;
 - (int)popupIndexForCurrentTabFocusPref;
 - (int)preventAnimationCheckboxState;
-- (BOOL)isFlashBlockAllowed;
-- (void)updateFlashBlock;
+- (BOOL)isFlashblockAllowed;
+- (void)updateFlashblock;
 - (void)populatePermissionCache;
 
 @end
@@ -121,14 +121,14 @@ const int kAnnoyancePrefSome = 3;
   BOOL enableAdBlock = [self getBooleanPref:kGeckoPrefBlockAds withSuccess:&gotPref];
   [mEnableAdBlocking setState:enableAdBlock];
 
-  // Only allow FlashBlock if dependencies are set correctly
-  BOOL flashBlockAllowed = [self isFlashBlockAllowed];
-  [mEnableFlashBlock setEnabled:flashBlockAllowed];
+  // Only allow Flashblock if dependencies are set correctly
+  BOOL flashblockAllowed = [self isFlashblockAllowed];
+  [mEnableFlashblock setEnabled:flashblockAllowed];
  
-  if (flashBlockAllowed) {
-    BOOL enableFlashBlock = [self getBooleanPref:kGeckoPrefBlockFlash withSuccess:NULL];
-    [mEnableFlashBlock setState:(enableFlashBlock ? NSOnState : NSOffState)];
-    [mEditFlashblockWhitelist setEnabled:enableFlashBlock];
+  if (flashblockAllowed) {
+    BOOL enableFlashblock = [self getBooleanPref:kGeckoPrefBlockFlash withSuccess:NULL];
+    [mEnableFlashblock setState:(enableFlashblock ? NSOnState : NSOffState)];
+    [mEditFlashblockWhitelist setEnabled:enableFlashblock];
   }
   else {
     [mEditFlashblockWhitelist setEnabled:NO];
@@ -147,8 +147,8 @@ const int kAnnoyancePrefSome = 3;
 {
   [self setPref:kGeckoPrefEnableJavascript toBoolean:([sender state] == NSOnState)];
 
-  // FlashBlock depends on Javascript so make sure to update the FlashBlock settings
-  [self updateFlashBlock];
+  // Flashblock depends on JavaScript, so make sure to update the Flashblock settings.
+  [self updateFlashblock];
 }
 
 //
@@ -198,15 +198,16 @@ const int kAnnoyancePrefSome = 3;
 }
 
 //
-// clickEnableFlashBlock:
+// clickEnableFlashblock:
 //
-// Enable and disable FlashBlock.  When enabled, an icon is displayed and the 
-// Flash animation plays when the user clicks it.  When disabled, Flash plays automatically
+// Enable and disable Flashblock.  When enabled, an icon is displayed and the 
+// Flash animation plays when the user clicks it.  When disabled, Flash plays 
+// automatically.
 //
--(IBAction) clickEnableFlashBlock:(id)sender
+-(IBAction) clickEnableFlashblock:(id)sender
 {
   [self setPref:kGeckoPrefBlockFlash toBoolean:([sender state] == NSOnState)];
-  [[NSNotificationCenter defaultCenter] postNotificationName:kFlashBlockChangedNotificationName object:nil];
+  [[NSNotificationCenter defaultCenter] postNotificationName:kFlashblockChangedNotificationName object:nil];
   [mEditFlashblockWhitelist setEnabled:[sender state]];
 }
 
@@ -528,14 +529,14 @@ const int kAnnoyancePrefSome = 3;
 }
 
 //
-// isFlashBlockAllowed
+// isFlashblockAllowed
 //
-// Checks whether FlashBlock can be enabled
-// FlashBlock only allowed if javascript and plug-ins enabled
-// NOTE: This code is duplicated in PreferenceManager.mm since the FlashBlock checkbox
-// settings are done by WebFeatures and stylesheet loading is done by PreferenceManager
+// Checks whether Flashblock can be enabled.
+// Flashblock is only allowed if javascript and plug-ins enabled.
+// NOTE: This code is duplicated in PreferenceManager.mm since the Flashblock checkbox
+// settings are done by WebFeatures and stylesheet loading is done by PreferenceManager.
 //
--(BOOL) isFlashBlockAllowed
+-(BOOL) isFlashblockAllowed
 {
   BOOL gotPref = NO;
   BOOL jsEnabled = [self getBooleanPref:kGeckoPrefEnableJavascript withSuccess:&gotPref] && gotPref;
@@ -545,26 +546,26 @@ const int kAnnoyancePrefSome = 3;
 }
 
 //
-// updateFlashBlock
+// updateFlashblock
 //
-// Update the state of the FlashBlock checkbox
+// Update the state of the Flashblock checkbox
 //
--(void) updateFlashBlock
+-(void) updateFlashblock
 {
-  BOOL allowed = [self isFlashBlockAllowed];
-  [mEnableFlashBlock setEnabled:allowed];
+  BOOL allowed = [self isFlashblockAllowed];
+  [mEnableFlashblock setEnabled:allowed];
 
-  // FlashBlock state can only change if it's already enabled 
-  // since changing dependencies won't have affect on disabled FlashBlock
+  // Flashblock state can only change if it's already enabled, 
+  // since changing dependencies won't have any effect on disabled Flashblock.
   if (![self getBooleanPref:kGeckoPrefBlockFlash withSuccess:NULL])
     return;
 
-  // FlashBlock preference is enabled.  Checkbox is on if FlashBlock also allowed
-  [mEnableFlashBlock setState:(allowed ? NSOnState : NSOffState)];
+  // Flashblock preference is enabled.  Checkbox is on if Flashblock is also allowed.
+  [mEnableFlashblock setState:(allowed ? NSOnState : NSOffState)];
   [mEditFlashblockWhitelist setEnabled:allowed];
  
   // Always send a notification, dependency verification is done by receiver.
-  [[NSNotificationCenter defaultCenter] postNotificationName:kFlashBlockChangedNotificationName object:nil];
+  [[NSNotificationCenter defaultCenter] postNotificationName:kFlashblockChangedNotificationName object:nil];
 }
 
 @end

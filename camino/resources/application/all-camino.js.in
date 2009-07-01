@@ -194,7 +194,7 @@ pref("camino.remember_window_state", false);
 // enable bonjour
 pref("camino.disable_bonjour", false);
 
-// ad-blocking and flashblock are off by default
+// ad-blocking and Flashblock are off by default
 pref("camino.enable_ad_blocking", false);
 pref("camino.enable_flashblock", false);
 

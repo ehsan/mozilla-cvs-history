@@ -80,7 +80,7 @@ NSString* const kPrefChangedPrefNameUserInfoKey = @"pref_name";
 
 
 static NSString* const AdBlockingChangedNotificationName = @"AdBlockingChanged";
-static NSString* const kFlashBlockChangedNotificationName = @"FlashBlockChanged";
+static NSString* const kFlashblockChangedNotificationName = @"FlashblockChanged";
 
 // This is an arbitrary version stamp that gets written to the prefs file.
 // It can be used to detect when a new version of Camino is run that needs
@@ -216,10 +216,10 @@ WriteVersion(nsIFile* aProfileDir, const nsACString& aVersion,
 - (void)readSystemProxySettings;
 
 - (void)refreshAdBlockingStyleSheet:(BOOL)inLoad;
-- (void)refreshFlashBlockStyleSheet:(BOOL)inLoad;
+- (void)refreshFlashblockStyleSheet:(BOOL)inLoad;
 - (void)refreshAquaSelectStyleSheet:(BOOL)inLoad;
 - (void)refreshStyleSheet:(nsIURI *)cssFileURI load:(BOOL)inLoad;
-- (BOOL)isFlashBlockAllowed;
+- (BOOL)isFlashblockAllowed;
 
 - (NSString*)pathForSpecialDirectory:(const char*)specialDirectory;
 
@@ -444,8 +444,8 @@ static BOOL gMadePrefManager;
                                              object:nil];
 
   [[NSNotificationCenter defaultCenter] addObserver:self
-                                           selector:@selector(flashBlockPrefChanged:)
-                                               name:kFlashBlockChangedNotificationName
+                                           selector:@selector(flashblockPrefChanged:)
+                                               name:kFlashblockChangedNotificationName
                                              object:nil];
 }
 
@@ -808,10 +808,10 @@ static BOOL gMadePrefManager;
   if ([self getBooleanPref:kGeckoPrefBlockAds withSuccess:NULL])
     [self refreshAdBlockingStyleSheet:YES];
 
-  // Load flashblock if enabled, and test dependencies to avoid conflicts.
-  BOOL flashBlockAllowed = [self isFlashBlockAllowed];
-  if (flashBlockAllowed && [self getBooleanPref:kGeckoPrefBlockFlash withSuccess:NULL])
-    [self refreshFlashBlockStyleSheet:YES];
+  // Load Flashblock if enabled, and test dependencies to avoid conflicts.
+  BOOL flashblockAllowed = [self isFlashblockAllowed];
+  if (flashblockAllowed && [self getBooleanPref:kGeckoPrefBlockFlash withSuccess:NULL])
+    [self refreshFlashblockStyleSheet:YES];
 
   // Load the stylesheet to force Aqua <select>s.
   if ([self getBooleanPref:kGeckoPrefForceAquaSelects withSuccess:NULL])
@@ -1114,12 +1114,12 @@ typedef enum EProxyConfig {
   [self refreshAdBlockingStyleSheet:adBlockingEnabled];
 }
 
-- (void)flashBlockPrefChanged:(NSNotification*)inNotification
+- (void)flashblockPrefChanged:(NSNotification*)inNotification
 {
-  BOOL allowed = [self isFlashBlockAllowed];
+  BOOL allowed = [self isFlashblockAllowed];
 
-  BOOL flashBlockEnabled = allowed && [self getBooleanPref:kGeckoPrefBlockFlash withSuccess:NULL];
-  [self refreshFlashBlockStyleSheet:flashBlockEnabled];
+  BOOL flashblockEnabled = allowed && [self getBooleanPref:kGeckoPrefBlockFlash withSuccess:NULL];
+  [self refreshFlashblockStyleSheet:flashblockEnabled];
 }
 
 - (void)aquaSelectPrefChanged:(NSNotification*)inNotification
@@ -1155,7 +1155,7 @@ typedef enum EProxyConfig {
 
 // This will reload the Flashblock sheet if it's already registered, or unload it if the
 // param is NO.
-- (void)refreshFlashBlockStyleSheet:(BOOL)inLoad
+- (void)refreshFlashblockStyleSheet:(BOOL)inLoad
 {
   // the URI of the Flashblock sheet in the chrome path
   nsCOMPtr<nsIURI> cssFileURI;
@@ -1442,14 +1442,14 @@ typedef enum EProxyConfig {
 }
 
 //
-// isFlashBlockAllowed
+// isFlashblockAllowed
 //
-// Checks whether FlashBlock can be enabled.
-// FlashBlock only allowed if JavaScript and plug-ins are both enabled.
-// NOTE: This code is duplicated in WebFeatures.mm since the FlashBlock checkbox
+// Checks whether Flashblock can be enabled.
+// Flashblock is only allowed if JavaScript and plug-ins are both enabled.
+// NOTE: This code is duplicated in WebFeatures.mm since the Flashblock checkbox
 // settings are done by WebFeatures and stylesheet loading is done by PreferenceManager.
 //
-- (BOOL)isFlashBlockAllowed
+- (BOOL)isFlashblockAllowed
 {
   BOOL gotPref = NO;
   BOOL jsEnabled = [self getBooleanPref:kGeckoPrefEnableJavascript withSuccess:&gotPref] && gotPref;

@@ -285,7 +285,7 @@ const char* const kHTMLMIMEType = "text/html";
                                            static_cast<nsIDOMEventListener*>(_listener), PR_FALSE);
         NS_ASSERTION(NS_SUCCEEDED(rv), "AddEventListener failed");
 
-        // Register the CHBrowserListener to listen for flashblock whitelist checks.
+        // Register the CHBrowserListener to listen for Flashblock whitelist checks.
         // Need to use an nsIDOMNSEventTarget since flashblockCheckLoad is untrusted
         nsCOMPtr<nsIDOMNSEventTarget> nsEventTarget = do_QueryInterface(eventTarget);
         if (nsEventTarget) {

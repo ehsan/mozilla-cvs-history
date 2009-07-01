@@ -99,7 +99,7 @@ typedef enum
 - (void)onHideTooltip;
 // Called when a popup is blocked
 - (void)onPopupBlocked:(nsIDOMPopupBlockedEvent*)data;
-// Called when flashblock whitelist is checked
+// Called when Flashblock whitelist is checked
 - (void)onFlashblockCheck:(nsIDOMEvent*)inEvent;
 // Called when a "shortcut icon" link element is noticed
 - (void)onFoundShortcutIcon:(NSString*)inIconURI;

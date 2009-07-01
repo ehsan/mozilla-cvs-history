@@ -54,7 +54,7 @@
   IBOutlet NSButton*      mPreventAnimation;
   IBOutlet NSButton*      mEditWhitelist;
   IBOutlet NSButton*      mEditFlashblockWhitelist;
-  IBOutlet NSButton*      mEnableFlashBlock;
+  IBOutlet NSButton*      mEnableFlashblock;
   IBOutlet NSButton*      mEnableAnnoyanceBlocker;
   IBOutlet NSPopUpButton* mTabBehaviorPopup;
 
@@ -81,7 +81,7 @@
 -(IBAction) clickPreventAnimation:(id)sender;
 -(IBAction) editWhitelist:(id)sender;
 -(IBAction) editFlashblockWhitelist:(id)sender;
--(IBAction) clickEnableFlashBlock:(id)sender;
+-(IBAction) clickEnableFlashblock:(id)sender;
 
 -(IBAction) clickEnableAnnoyanceBlocker:(id)sender;
 -(void) setAnnoyingWindowPrefsTo:(BOOL)inValue;
