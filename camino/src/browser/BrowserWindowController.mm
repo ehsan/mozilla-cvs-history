@@ -739,7 +739,7 @@ public:
   mMoveReentrant = NO;
 }
 
-// Undocumented method for handling multi-touch swipe events in 10.5.
+// Undocumented method for handling multi-touch swipe and pinch events in 10.5.
 // The worst that's likely to happen is that this would just stop being
 // called if the gesture system changes in a future version.
 - (void)swipeWithEvent:(NSEvent*)event
@@ -754,6 +754,43 @@ public:
     [[mBrowserView browserView] pageUp];
   else if ([event deltaY] < -0.5)
     [[mBrowserView browserView] pageDown];
+}
+
+- (void)magnifyWithEvent:(NSEvent*)event
+{
+  // The deltaZ difference necessary to trigger a zoom action. Derived from
+  // experimentation to find a value that feels reasonable.
+  static const float kZoomStepValue = 150;
+
+  // Find the (absolute) thresholds on either side of the current zoom factor,
+  // then convert those to actual numbers to trigger a zoom in or out.
+  // This logic deliberately makes the range around the starting zoom value for
+  // the gesture twice as large as the other ranges (i.e., the notches are at
+  // ..., -3*step, -2*step, -step, step, 2*step, 3*step, ... but not at 0)
+  // so that it's easier to get back to your starting point than it is to
+  // overshoot.
+  float nextStep = (abs(mCurrentZoomStepDelta) + 1) * kZoomStepValue;
+  float backStep = abs(mCurrentZoomStepDelta) * kZoomStepValue;
+  float zoomInThreshold = (mCurrentZoomStepDelta >= 0) ? nextStep : -backStep;
+  float zoomOutThreshold = (mCurrentZoomStepDelta <= 0) ? -nextStep : backStep;
+
+  mTotalMagnifyGestureAmount += [event deltaZ];
+  if (mTotalMagnifyGestureAmount > zoomInThreshold &&
+      [self canMakePageBigger]) {
+    [self makePageBigger:nil];
+    ++mCurrentZoomStepDelta;
+  }
+  else if (mTotalMagnifyGestureAmount < zoomOutThreshold &&
+           [self canMakePageSmaller]) {
+    [self makePageSmaller:nil];
+    --mCurrentZoomStepDelta;
+  }
+}
+
+- (void)beginGestureWithEvent:(NSEvent*)event
+{
+  mTotalMagnifyGestureAmount = 0;
+  mCurrentZoomStepDelta = 0;
 }
 
 -(void)autosaveWindowFrame

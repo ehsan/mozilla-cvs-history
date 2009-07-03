@@ -183,6 +183,10 @@ typedef enum  {
   NSTextView *mURLFieldEditor;
 
   NSString *mLastKnownPreferredSearchEngine;
+
+  // Pinch gesture handling.
+  float mTotalMagnifyGestureAmount;  // Total delta-z for the current pinch.
+  int mCurrentZoomStepDelta;  // Zoom steps taken during the current pinch.
 }
 
 - (BrowserTabView*)tabBrowser;
