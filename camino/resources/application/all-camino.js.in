@@ -229,18 +229,18 @@ pref("browser.safebrowsing.provider.0.name", "Google");
 pref("browser.safebrowsing.provider.0.updateURL", "http://safebrowsing.clients.google.com/safebrowsing/downloads?client={moz:client}&appver={moz:version}&pver=2.2");
 pref("browser.safebrowsing.provider.0.gethashURL", "http://safebrowsing.clients.google.com/safebrowsing/gethash?client={moz:client}&appver={moz:version}&pver=2.2");
 pref("browser.safebrowsing.provider.0.keyURL", "https://sb-ssl.google.com/safebrowsing/newkey?client={moz:client}&appver={moz:version}&pver=2.2");
-pref("browser.safebrowsing.provider.0.reportURL", "http://safebrowsing.clients.google.com/safebrowsing/report?");
 
-// Safe browsing report pages
-pref("browser.safebrowsing.provider.0.reportGenericURL", "http://{moz:locale}.phish-generic.mozilla.com/?hl={moz:locale}");
-pref("browser.safebrowsing.provider.0.reportErrorURL", "http://{moz:locale}.phish-error.mozilla.com/?hl={moz:locale}");
-pref("browser.safebrowsing.provider.0.reportPhishURL", "http://{moz:locale}.phish-report.mozilla.com/?hl={moz:locale}");
+// Data provider error reporting URLs
+pref("browser.safebrowsing.provider.0.reportPhishingURL", "http://www.google.com/safebrowsing/report_phish/?tpl=generic&continue=%CONTINUE_TO_URL%&url=%REPORTED_URL%&hl=%LANGUAGE%");
+pref("browser.safebrowsing.provider.0.reportPhishingErrorURL", "http://www.google.com/safebrowsing/report_error/?tpl=generic&continue=%CONTINUE_TO_URL%&url=%REPORTED_URL%&hl=%LANGUAGE%");
+pref("browser.safebrowsing.provider.0.reportMalwareURL", "http://www.google.com/safebrowsing/report_badware/?tpl=generic&continue=%CONTINUE_TO_URL%&url=%REPORTED_URL%&hl=%LANGUAGE%");
+pref("browser.safebrowsing.provider.0.reportMalwareErrorURL", "http://google.com/safebrowsing/diagnostic?tpl={moz:client}&site=%REPORTED_URL%&hl=%LANGUAGE%");
+
+// URL the user is forwarded to after submitting an error report
+pref("browser.safebrowsing.sendToURLAfterReporting", "http://caminobrowser.org/security/report-submitted.php");
 
 // Location to more information about the safe browsing feature
 pref("browser.safebrowsing.warning.infoURL", "http://en-us.www.mozilla.com/en-US/firefox/phishing-protection/");
-
-// URL for checking the reason for a malware warning.
-pref("browser.safebrowsing.malware.reportURL", "http://safebrowsing.clients.google.com/safebrowsing/diagnostic?client={moz:client}&hl={moz:locale}&site=");
 
 // Name of the about: page contributed by safebrowsing to handle display of error
 // pages on phishing/malware hits.

@@ -56,6 +56,7 @@
 #import "CHGradient.h"
 #import "NSString+Gecko.h"
 #import "NSString+Utils.h"
+#import "SafeBrowsingBar.h"
 
 #include "CHBrowserService.h"
 #include "ContentClickListener.h"
@@ -96,6 +97,11 @@ enum StatusPriority {
 
 NSString* const kBrowserInstanceClosedNotification = @"BrowserInstanceClosed";
 
+static NSString* const kBlockedSiteInformationBlockedDateKey = @"BlockedDate";
+static NSString* const kBlockedSiteInformationBlockedReasonKey = @"BlockedReason";
+
+static const NSTimeInterval kTimeIntervalToConsiderSiteBlockingStatusValid = 900.0;
+
 @interface BrowserWrapper(Private)
 
 - (void)ensureContentClickListeners;
@@ -131,6 +137,10 @@ NSString* const kBrowserInstanceClosedNotification = @"BrowserInstanceClosed";
 - (void)performCommandForXULElementWithID:(NSString*)elementIdentifier onPage:(NSString*)pageURI;
 
 - (void)xpcomTerminate:(NSNotification*)aNotification;
+
+- (void)showSafeBrowsingBar;
+- (ESafeBrowsingBlockedReason)reasonForBlockingURL:(NSString*)aURL;
+- (BOOL)hasPreviouslyBlockedURLInRecentTimeframe:(NSString*)aURL;
 
 @end
 
@@ -195,6 +205,7 @@ NSString* const kBrowserInstanceClosedNotification = @"BrowserInstanceClosed";
     mLoadingResources = [[NSMutableSet alloc] init];
 
     mDetectedSearchPlugins = [[NSMutableArray alloc] initWithCapacity:1];
+    mBlockedSitesAndInfo = [[NSMutableDictionary alloc] init];
 
     [self registerNotificationListeners];
   }
@@ -230,12 +241,15 @@ NSString* const kBrowserInstanceClosedNotification = @"BrowserInstanceClosed";
   [mBrowserView release];
   [mContentViewProviders release];
 
-  // |mBlockedPopupBar| has a retain count of 1 when it comes out of the nib,
-  // we have to release it manually.
+  // These objects have a retain count of 1 when loaded from nibs,
+  // so we have to release them manually.
   [mBlockedPopupBar release];
+  [mSafeBrowsingBar release];
 
   [mTopTransientBar release];
   [mBottomTransientBar release];
+
+  [mBlockedSitesAndInfo release];
 
   [super dealloc];
 }
@@ -648,7 +662,18 @@ NSString* const kBrowserInstanceClosedNotification = @"BrowserInstanceClosed";
     // later (see bug 350752, and the XXXbryner comment in nsDocShell.cpp). To
     // work around that, re-set the frame once core is done meddling.
     BOOL needsFrameAdjustment = NO;
-    if (mTopTransientBar) {
+
+    BOOL blockedErrorOverlayIsDisplayed = (requestStatus == eRequestBlocked);
+
+    // If this site has been previously blocked and an error overlay is not being shown,
+    // the user has chosen to ignore the warning and proceed to the blocked site.
+    // In this situation, we display a safe browsing transient bar.
+    BOOL shouldDisplaySafeBrowsingBar = ([self hasPreviouslyBlockedURLInRecentTimeframe:urlSpec] &&
+                                         !blockedErrorOverlayIsDisplayed);
+    if (shouldDisplaySafeBrowsingBar)
+      [self showSafeBrowsingBar];
+
+    if (mTopTransientBar && !shouldDisplaySafeBrowsingBar) {
       [self removeTransientBar:mTopTransientBar display:YES];
       needsFrameAdjustment = YES;
     }
@@ -958,6 +983,20 @@ NSString* const kBrowserInstanceClosedNotification = @"BrowserInstanceClosed";
   NSString* documentURI = [NSString stringWith_nsAString:docURISpec];
 
   [self performCommandForXULElementWithID:elementID onPage:documentURI];
+}
+
+- (void)onSafeBrowsingBlockedURI:(NSString*)aBlockedURI
+                          reason:(ESafeBrowsingBlockedReason)aBlockedReason
+{
+  // We keep track of blocked sites for cases when the user ignores the main error
+  // overlay and proceeds to the site. After ignoring a blocked error for a page 
+  // we will always present a bar on it, especially when it was loaded unblocked
+  // from session history.
+  NSDictionary *blockedSiteInformation = 
+    [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithInt:aBlockedReason], kBlockedSiteInformationBlockedReasonKey,
+                                               [NSDate date], kBlockedSiteInformationBlockedDateKey,
+                                               nil];
+  [mBlockedSitesAndInfo setObject:blockedSiteInformation forKey:aBlockedURI];
 }
 
 // The pageURI is supplied because it might differ from -[self currentURI], particularly
@@ -1606,6 +1645,78 @@ NSString* const kBrowserInstanceClosedNotification = @"BrowserInstanceClosed";
     [self setFrame:[self frame] resizingBrowserViewIfHidden:YES];
     [self display];
   }
+}
+
+#pragma mark -
+
+// If |aURL| has been previously blocked by safe browsing upon visiting, returns
+// the reason it was blocked (e.g. malware or phishing).  If |aURL| hasn't
+// been visited and blocked, returns eSafeBrowsingNotBlocked.
+- (ESafeBrowsingBlockedReason)reasonForBlockingURL:(NSString*)aURL
+{
+  NSDictionary* blockedSiteInfo = [mBlockedSitesAndInfo objectForKey:aURL];
+  if (!blockedSiteInfo)
+    return eSafeBrowsingNotBlocked;
+
+  NSNumber* blockedReasonNumber = [blockedSiteInfo objectForKey:kBlockedSiteInformationBlockedReasonKey];
+  return static_cast<ESafeBrowsingBlockedReason>([blockedReasonNumber intValue]);
+}
+
+// Returns YES if |aURL| was visited and blocked by safe browsing recently. 
+// (We stop remembering previously blocked sites after a certain amount
+// of time in case any were mistakingly blocked. The safe browsing database will
+// always offer current checking, this method is merely to check if the site was
+// blocked on a previous visit).
+- (BOOL)hasPreviouslyBlockedURLInRecentTimeframe:(NSString*)aURL
+{
+  NSDictionary* blockedSiteInfo = [mBlockedSitesAndInfo objectForKey:aURL];
+  if (!blockedSiteInfo)
+    return NO;
+
+  NSDate* dateSiteWasBlocked = [blockedSiteInfo objectForKey:kBlockedSiteInformationBlockedDateKey];
+  NSTimeInterval blockedTimeSinceNow = -[dateSiteWasBlocked timeIntervalSinceNow];
+  if (blockedTimeSinceNow <= kTimeIntervalToConsiderSiteBlockingStatusValid) {
+    return YES;
+  }
+  else {
+    // Also remove the URL from our local cache since it was not blocked recently enough
+    [mBlockedSitesAndInfo removeObjectForKey:aURL];
+    return NO;
+  }
+}
+
+- (void)showSafeBrowsingBar
+{
+  if (!mSafeBrowsingBar)
+    [NSBundle loadNibNamed:@"SafeBrowsingBar" owner:self];
+
+  ESafeBrowsingBlockedReason blockedReason = [self reasonForBlockingURL:[self currentURI]];
+
+  if (blockedReason == eSafeBrowsingBlockedAsPhishing)
+    [mSafeBrowsingBarLabel setStringValue:NSLocalizedString(@"PhishingTitleText", nil)];
+  else
+    [mSafeBrowsingBarLabel setStringValue:NSLocalizedString(@"MalwareTitleText", nil)];
+
+  [self showTransientBar:mSafeBrowsingBar atPosition:eTransientBarPositionTop];
+}
+
+- (IBAction)closeSafeBrowsingBar:(id)sender
+{
+  [self removeTransientBar:mSafeBrowsingBar display:YES];
+}
+
+// IBAction from the safe browsing bar, sent from the "Report Incorrect Site" button.
+- (IBAction)reportIncorrectlyBlockedSite:(id)sender
+{
+  NSString* blockedURL = [self currentURI];
+  ESafeBrowsingBlockedReason blockedReason = [self reasonForBlockingURL:blockedURL];
+  [mDelegate reportIncorrectlyBlockedSite:blockedURL reason:blockedReason];
+}
+
+// IBAction from the safe browsing bar, sent from the "Get me out of here" button.
+- (IBAction)runAwayFromBlockedSite:(id)sender
+{
+  [mDelegate runAwayFromSafeBrowsingBlockedSite];
 }
 
 @end

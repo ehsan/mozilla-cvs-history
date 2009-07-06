@@ -329,14 +329,19 @@ extern const char* const kGeckoPrefUserAgentMultiLangAddition;         // string
 extern NSString* const kGeckoPrefSafeBrowsingDataProviderName;          // string
 extern NSString* const kGeckoPrefSafeBrowsingDataProviderUpdateURL;     // string
 extern NSString* const kGeckoPrefSafeBrowsingDataProviderKeyURL;        // string
-extern NSString* const kGeckoPrefSafeBrowsingDataProviderReportURL;     // string
 extern NSString* const kGeckoPrefSafeBrowsingDataProviderGetHashURL;    // string
 
+extern NSString* const kGeckoPrefSafeBrowsingDataProviderReportPhishingURL;      // string
+extern NSString* const kGeckoPrefSafeBrowsingDataProviderReportPhishingErrorURL; // string
+extern NSString* const kGeckoPrefSafeBrowsingDataProviderReportMalwareURL;       // string
+extern NSString* const kGeckoPrefSafeBrowsingDataProviderReportMalwareErrorURL;  // string
+
 extern const char* const kGeckoPrefSafeBrowsingInformationURL;          // string
-extern const char* const kGeckoPrefSafeBrowsingMalwareDiagnosticURL;    // string
 extern const char* const kGeckoPrefSafeBrowsingPhishingCheckingEnabled; // bool
 extern const char* const kGeckoPrefSafeBrowsingMalwareCheckingEnabled;  // bool
 extern const char* const kGeckoPrefSafeBrowsingDataProvider;            // int
+
+extern const char* const kGeckoPrefSafeBrowsingSendToURLAfterReporting; // string
 
 #pragma mark Obsolete Downloads Prefs
 // These prefs are all obsolete as of Camino 2.0.

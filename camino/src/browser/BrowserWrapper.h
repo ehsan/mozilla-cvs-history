@@ -45,6 +45,7 @@
 @class AutoCompleteTextField;
 @class RolloverImageButton;
 @class FindBarController;
+@class SafeBrowsingBar;
 
 class nsIMutableArray;
 class nsIArray;
@@ -87,6 +88,7 @@ extern NSString* const kBrowserInstanceClosedNotification;
 - (void)runAwayFromSafeBrowsingBlockedSite;
 - (void)showSafeBrowsingInformation;
 - (void)showMalwareDiagnosticInformation;
+- (void)reportIncorrectlyBlockedSite:(NSString*)aBlockedURL reason:(ESafeBrowsingBlockedReason)aBlockedReason;
 
 @end
 
@@ -188,6 +190,10 @@ extern NSString* const kBrowserInstanceClosedNotification;
 
   TransientBar*             mTopTransientBar;    // strong
   TransientBar*             mBottomTransientBar; // strong
+
+  IBOutlet SafeBrowsingBar* mSafeBrowsingBar; // loaded on demand, can be nil, strong
+  IBOutlet NSTextField*     mSafeBrowsingBarLabel;
+  NSMutableDictionary*      mBlockedSitesAndInfo; // strong
 }
 
 - (id)initWithTab:(NSTabViewItem*)aTab inWindow:(NSWindow*)window;
@@ -254,6 +260,11 @@ extern NSString* const kBrowserInstanceClosedNotification;
 - (void)showFindBar;
 
 - (void)setNextKeyViewFollowingBrowserContent:(NSView *)aNextKeyView;
+
+// Actions from the safe browsing bar:
+- (IBAction)closeSafeBrowsingBar:(id)sender;
+- (IBAction)reportIncorrectlyBlockedSite:(id)sender;
+- (IBAction)runAwayFromBlockedSite:(id)sender;
 
 // Returns NO if an existing bar in the same position did not allow replacement.
 - (BOOL)showTransientBar:(TransientBar*)aTransientBar atPosition:(ETransientBarPosition)aPosition;

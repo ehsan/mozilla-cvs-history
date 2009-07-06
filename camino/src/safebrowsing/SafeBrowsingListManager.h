@@ -116,4 +116,9 @@ typedef int SafeBrowsingListTypesMask;
 // check to take place immediately.
 - (void)checkForUpdates;
 
+// Obtains a URL to report list information to the data provider, filling in all URL
+// parameters. |prefKeyTemplate| is a Gecko pref key for the type of reporting URL.
+- (NSString *)listReportingURLForPrefKey:(NSString *)prefKeyTemplate
+                             urlToReport:(NSString *)urlToReport;
+
 @end

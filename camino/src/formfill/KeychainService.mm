@@ -1465,6 +1465,10 @@ KeychainFormSubmitObserver::Notify(nsIDOMHTMLFormElement* formNode, nsIDOMWindow
 {
 }
 
+- (void)onSafeBrowsingBlockedURI:(NSString*)aBlockedURI reason:(ESafeBrowsingBlockedReason)aBlockedReason
+{
+}
+
 @end
 
 //

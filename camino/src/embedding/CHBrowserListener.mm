@@ -733,17 +733,6 @@ CHBrowserListener::OnLocationChange(nsIWebProgress *aWebProgress, nsIRequest *aR
   if (windowForProgress != ourWindow)
     return NS_OK;
 
-  ERequestStatus requestStatus = eRequestSucceeded;
-  if (aRequest)  // aRequest can be null (e.g. for relative anchors)
-  {
-    nsresult status = NS_OK;
-    aRequest->GetStatus(&status);
-    if (status == NS_ERROR_MALWARE_URI || status == NS_ERROR_PHISHING_URI)
-      requestStatus = eRequestBlocked;
-    else if (!NS_SUCCEEDED(status))
-      requestStatus = eRequestFailed;
-  }
-  
   nsCAutoString spec;
   nsCOMPtr<nsIURI> exposableLocation;
   nsCOMPtr<nsIURIFixup> fixup(do_GetService("@mozilla.org/docshell/urifixup;1"));
@@ -752,12 +741,29 @@ CHBrowserListener::OnLocationChange(nsIWebProgress *aWebProgress, nsIRequest *aR
   else
     aLocation->GetSpec(spec);
 
-  NSString* str = [NSString stringWithUTF8String:spec.get()];
+  NSString* location = [NSString stringWithUTF8String:spec.get()];
+
+  ERequestStatus requestStatus = eRequestSucceeded;
+  if (aRequest) { // aRequest can be null (e.g. for relative anchors)
+    nsresult status = NS_OK;
+    aRequest->GetStatus(&status);
+    if (status == NS_ERROR_MALWARE_URI) {
+      [mContainer onSafeBrowsingBlockedURI:location reason:eSafeBrowsingBlockedAsMalware];
+      requestStatus = eRequestBlocked;
+    }
+    else if (status == NS_ERROR_PHISHING_URI) {
+      [mContainer onSafeBrowsingBlockedURI:location reason:eSafeBrowsingBlockedAsPhishing];
+      requestStatus = eRequestBlocked;
+    }
+    else if (!NS_SUCCEEDED(status)) {
+      requestStatus = eRequestFailed;
+    }
+  }
 
   NSEnumerator* enumerator = [mListeners objectEnumerator];
   id<CHBrowserListener> obj;
   while ((obj = [enumerator nextObject]))
-    [obj onLocationChange:str isNewPage:(aRequest != nsnull) requestStatus:requestStatus];
+    [obj onLocationChange:location isNewPage:(aRequest != nsnull) requestStatus:requestStatus];
 
   return NS_OK;
 }

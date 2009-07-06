@@ -50,6 +50,12 @@
 #include "nsString.h"
 #include "SafeBrowsingTestDataUpdater.h"
 
+static NSString *const kSendToURLAfterReportingPlaceholder = @"%CONTINUE_TO_URL%";
+static NSString *const kReportedURLPlaceholder = @"%REPORTED_URL%";
+static NSString *const kLanguageCodePlaceholder = @"%LANGUAGE%";
+static NSString *const kBrowserNamePlaceholder = @"{moz:client}";
+static NSString *const kBrowserVersionPlaceholder = @"{moz:version}";
+
 @implementation SafeBrowsingList
 
 + (id)listWithName:(NSString *)aName type:(ESafeBrowsingListType)aType
@@ -246,12 +252,12 @@
                                                                     withSuccess:NULL];
   // Fill in certain URL parameter tokens with values.
   NSMutableString *urlPref = [[urlPrefTemplate mutableCopy] autorelease];
-  [urlPref replaceOccurrencesOfString:@"{moz:client}" 
+  [urlPref replaceOccurrencesOfString:kBrowserNamePlaceholder 
                            withString:[XULAppInfo name]
                               options:NULL
                                 range:NSMakeRange(0, [urlPref length])];
 
-  [urlPref replaceOccurrencesOfString:@"{moz:version}"
+  [urlPref replaceOccurrencesOfString:kBrowserVersionPlaceholder
                            withString:[XULAppInfo version] 
                               options:NULL 
                                 range:NSMakeRange(0, [urlPref length])];
@@ -447,6 +453,60 @@ static const int kStringComparisonEqual = 0;
     [self reRegisterAllLists];
     [self enableUpdateCheckingAccordingToPrefs];
   }
+}
+
+- (NSString *)listReportingURLForPrefKey:(NSString *)prefKeyTemplate
+                             urlToReport:(NSString *)urlToReport
+{
+  BOOL prefFetchSuccess = NO;
+  PreferenceManager *prefManager = [PreferenceManager sharedInstance];
+
+  // |prefKeyTemplate| contains a token for the current data provider, filling in
+  // the provider to get an actual pref key.
+  NSString *reportURLPrefKey = [NSString stringWithFormat:prefKeyTemplate,
+                                                          [self preferredDataProviderIdentifier]];
+  NSString *reportURLPrefValue = [prefManager getStringPref:[reportURLPrefKey UTF8String]
+                                                withSuccess:&prefFetchSuccess];
+  if (!prefFetchSuccess)
+    return nil;
+
+  // Fill in certain URL parameter tokens with values:
+
+  NSMutableString *reportURL = [[reportURLPrefValue mutableCopy] autorelease];
+
+  NSString *sendToURLAfterReport = 
+    [prefManager getStringPref:kGeckoPrefSafeBrowsingSendToURLAfterReporting
+                   withSuccess:&prefFetchSuccess];
+  if (!prefFetchSuccess)
+    return nil;
+
+  [reportURL replaceOccurrencesOfString:kSendToURLAfterReportingPlaceholder
+                             withString:sendToURLAfterReport
+                                options:NULL
+                                  range:NSMakeRange(0, [reportURL length])];
+
+  [reportURL replaceOccurrencesOfString:kReportedURLPlaceholder
+                             withString:urlToReport
+                                options:NULL
+                                  range:NSMakeRange(0, [reportURL length])];
+
+  NSString *currentLanguageCode =
+    [[PreferenceManager sharedInstance] getStringPref:kGeckoPrefUserAgentLocale
+                                          withSuccess:&prefFetchSuccess];
+  if (!prefFetchSuccess)
+    currentLanguageCode = @"en";
+
+  [reportURL replaceOccurrencesOfString:kLanguageCodePlaceholder
+                             withString:currentLanguageCode
+                                options:NULL
+                                  range:NSMakeRange(0, [reportURL length])];
+
+  [reportURL replaceOccurrencesOfString:kBrowserNamePlaceholder
+                             withString:[XULAppInfo name]
+                                options:NULL
+                                  range:NSMakeRange(0, [reportURL length])];
+  
+  return reportURL;
 }
 
 @end

@@ -71,6 +71,12 @@ typedef enum
   eRequestBlocked
 } ERequestStatus;
 
+typedef enum {
+  eSafeBrowsingNotBlocked = 0,
+  eSafeBrowsingBlockedAsPhishing,
+  eSafeBrowsingBlockedAsMalware
+} ESafeBrowsingBlockedReason;
+
 // Protocol implemented by anyone interested in progress
 // related to a BrowserView. A listener should explicitly
 // register itself with the view using the addListener
@@ -110,6 +116,8 @@ typedef enum
 // Called when an XUL element was activated (e.g. clicked) in the content area, 
 // typically on an about: page.
 - (void)onXULCommand:(nsIDOMNSEvent*)aDOMEvent;
+- (void)onSafeBrowsingBlockedURI:(NSString*)aBlockedURI
+                          reason:(ESafeBrowsingBlockedReason)aBlockedReason;
 
 @end
 

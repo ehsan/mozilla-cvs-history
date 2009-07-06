@@ -265,6 +265,10 @@
 		34D112DE08E9B17400989FD5 /* dl_trash.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 34D112DD08E9B17400989FD5 /* dl_trash.tiff */; };
 		3D9419800F559B2F00227277 /* blockedSite.xhtml in Resources */ = {isa = PBXBuildFile; fileRef = 3D94197F0F559B2F00227277 /* blockedSite.xhtml */; };
 		3D9419810F559B2F00227277 /* blockedSite.xhtml in Resources */ = {isa = PBXBuildFile; fileRef = 3D94197F0F559B2F00227277 /* blockedSite.xhtml */; };
+		3D9A2AE310019F6E00CC9154 /* SafeBrowsingBar.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3D9A2AE110019F6E00CC9154 /* SafeBrowsingBar.mm */; };
+		3D9A2AE410019F6E00CC9154 /* SafeBrowsingBar.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3D9A2AE110019F6E00CC9154 /* SafeBrowsingBar.mm */; };
+		3D9A2B091001A45700CC9154 /* SafeBrowsingBar.nib in Resources */ = {isa = PBXBuildFile; fileRef = 3D9A2B071001A45700CC9154 /* SafeBrowsingBar.nib */; };
+		3D9A2B0A1001A45700CC9154 /* SafeBrowsingBar.nib in Resources */ = {isa = PBXBuildFile; fileRef = 3D9A2B071001A45700CC9154 /* SafeBrowsingBar.nib */; };
 		3DACDAAA0FBF1D1600709AC3 /* SafeBrowsingTestDataUpdater.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3DACDAA90FBF1D1600709AC3 /* SafeBrowsingTestDataUpdater.mm */; };
 		3DACDAAB0FBF1D1600709AC3 /* SafeBrowsingTestDataUpdater.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3DACDAA90FBF1D1600709AC3 /* SafeBrowsingTestDataUpdater.mm */; };
 		3DE5B63A0F6C11B300D2EF11 /* TransientBar.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3DE5B6390F6C11B300D2EF11 /* TransientBar.mm */; };
@@ -2710,6 +2714,9 @@
 		3489ADCA0753B717005ADF6C /* ABAddressBook+Utils.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "ABAddressBook+Utils.mm"; path = "src/extensions/ABAddressBook+Utils.mm"; sourceTree = "<group>"; };
 		34D112DD08E9B17400989FD5 /* dl_trash.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = dl_trash.tiff; path = resources/images/toolbar/dl_trash.tiff; sourceTree = SOURCE_ROOT; };
 		3D94197F0F559B2F00227277 /* blockedSite.xhtml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; name = blockedSite.xhtml; path = resources/application/blockedSite.xhtml; sourceTree = "<group>"; };
+		3D9A2AE110019F6E00CC9154 /* SafeBrowsingBar.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SafeBrowsingBar.mm; path = src/safebrowsing/SafeBrowsingBar.mm; sourceTree = "<group>"; };
+		3D9A2AE210019F6E00CC9154 /* SafeBrowsingBar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SafeBrowsingBar.h; path = src/safebrowsing/SafeBrowsingBar.h; sourceTree = "<group>"; };
+		3D9A2B081001A45700CC9154 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = resources/localized/English.lproj/SafeBrowsingBar.nib; sourceTree = "<group>"; };
 		3DACDAA80FBF1D1600709AC3 /* SafeBrowsingTestDataUpdater.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SafeBrowsingTestDataUpdater.h; path = src/safebrowsing/SafeBrowsingTestDataUpdater.h; sourceTree = "<group>"; };
 		3DACDAA90FBF1D1600709AC3 /* SafeBrowsingTestDataUpdater.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = SafeBrowsingTestDataUpdater.mm; path = src/safebrowsing/SafeBrowsingTestDataUpdater.mm; sourceTree = "<group>"; };
 		3DE5B6380F6C11B300D2EF11 /* TransientBar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TransientBar.h; path = src/browser/TransientBar.h; sourceTree = "<group>"; };
@@ -4321,6 +4328,8 @@
 				C7DE8DD50F30CFAC00CD3872 /* SafeBrowsingAboutModule.mm */,
 				3DACDAA80FBF1D1600709AC3 /* SafeBrowsingTestDataUpdater.h */,
 				3DACDAA90FBF1D1600709AC3 /* SafeBrowsingTestDataUpdater.mm */,
+				3D9A2AE210019F6E00CC9154 /* SafeBrowsingBar.h */,
+				3D9A2AE110019F6E00CC9154 /* SafeBrowsingBar.mm */,
 			);
 			name = "Safe Browsing";
 			sourceTree = "<group>";
@@ -4988,6 +4997,7 @@
 				E43EFBAD0D143F0D00DACA10 /* FindBar.nib */,
 				00BBBF1C0D6A149800C2D916 /* FindBarTextured.nib */,
 				C7FF53700D35285400194776 /* SearchEngineEditor.nib */,
+				3D9A2B071001A45700CC9154 /* SafeBrowsingBar.nib */,
 			);
 			name = Nibs;
 			sourceTree = "<group>";
@@ -5896,6 +5906,7 @@
 				DEE8101E0EFB7D2E006ACC7D /* aquaSelect.css in Resources */,
 				3D9419800F559B2F00227277 /* blockedSite.xhtml in Resources */,
 				DE4025950FF4345D00568817 /* ServicesMenu.strings in Resources */,
+				3D9A2B091001A45700CC9154 /* SafeBrowsingBar.nib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6130,6 +6141,7 @@
 				DEE8101F0EFB7D2E006ACC7D /* aquaSelect.css in Resources */,
 				3D9419810F559B2F00227277 /* blockedSite.xhtml in Resources */,
 				DE4025960FF4345D00568817 /* ServicesMenu.strings in Resources */,
+				3D9A2B0A1001A45700CC9154 /* SafeBrowsingBar.nib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6474,6 +6486,7 @@
 				009A854D0F892F1D00C9892B /* CHCertificateOverrideManager.mm in Sources */,
 				B3886D880F79D53700D8E015 /* FlashblockWhitelistManager.mm in Sources */,
 				3DACDAAA0FBF1D1600709AC3 /* SafeBrowsingTestDataUpdater.mm in Sources */,
+				3D9A2AE310019F6E00CC9154 /* SafeBrowsingBar.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6665,6 +6678,7 @@
 				009A854C0F892F1D00C9892B /* CHCertificateOverrideManager.mm in Sources */,
 				B3886D890F79D53700D8E015 /* FlashblockWhitelistManager.mm in Sources */,
 				3DACDAAB0FBF1D1600709AC3 /* SafeBrowsingTestDataUpdater.mm in Sources */,
+				3D9A2AE410019F6E00CC9154 /* SafeBrowsingBar.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6984,6 +6998,14 @@
 			);
 			name = DownloadCACertDialog.nib;
 			sourceTree = SOURCE_ROOT;
+		};
+		3D9A2B071001A45700CC9154 /* SafeBrowsingBar.nib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				3D9A2B081001A45700CC9154 /* English */,
+			);
+			name = SafeBrowsingBar.nib;
+			sourceTree = "<group>";
 		};
 		3F8C004F06800D8D00658CBC /* Localizable.strings */ = {
 			isa = PBXVariantGroup;

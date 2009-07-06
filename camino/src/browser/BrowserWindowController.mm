@@ -88,6 +88,7 @@
 #import "FlashblockWhitelistManager.h"
 // For search plugin description keys:
 #import "XMLSearchPluginParser.h"
+#import "SafeBrowsingListManager.h"
 
 #import "CHPermissionManager.h"
 #import "CHBrowserService.h"
@@ -5285,26 +5286,25 @@ public:
 
 - (void)showMalwareDiagnosticInformation
 {
-  NSString *malwareDiagnosticURL =
-    [[PreferenceManager sharedInstance] getStringPref:kGeckoPrefSafeBrowsingMalwareDiagnosticURL
-                                          withSuccess:NULL];
-  NSString *locale =
-    [[PreferenceManager sharedInstance] getStringPref:kGeckoPrefUserAgentLocale
-                                        withSuccess:NULL];
+  // The malware report URL is also a diagnostic page, explaining why the site is blocked...
+  [self reportIncorrectlyBlockedSite:[mBrowserView currentURI] reason:eSafeBrowsingBlockedAsMalware];
+}
 
-  // Fill in certain URL parameter tokens with values.
-  NSMutableString *filledURL = [[malwareDiagnosticURL mutableCopy] autorelease];
-  [filledURL replaceOccurrencesOfString:@"{moz:client}"
-                             withString:[XULAppInfo name]
-                                options:NULL
-                                  range:NSMakeRange(0, [filledURL length])];
-  [filledURL replaceOccurrencesOfString:@"{moz:locale}"
-                             withString:locale
-                                options:NULL
-                                  range:NSMakeRange(0, [filledURL length])];
-  [filledURL appendString:[mBrowserView currentURI]];
+- (void)reportIncorrectlyBlockedSite:(NSString*)aBlockedURL reason:(ESafeBrowsingBlockedReason)aBlockedReason
+{
+  NSString* prefToFetch = nil;
+  if (aBlockedReason == eSafeBrowsingBlockedAsMalware)
+    prefToFetch = kGeckoPrefSafeBrowsingDataProviderReportMalwareErrorURL;
+  else
+    prefToFetch = kGeckoPrefSafeBrowsingDataProviderReportPhishingErrorURL;
 
-  [self loadURL:filledURL referrer:nil focusContent:YES allowPopups:NO];
+  SafeBrowsingListManager* listManager = [SafeBrowsingListManager sharedInstance];
+  NSString* reportURL = [listManager listReportingURLForPrefKey:prefToFetch
+                                                    urlToReport:aBlockedURL];
+  if (reportURL)
+    [self loadURL:reportURL referrer:nil focusContent:YES allowPopups:NO];
+  else
+    NSLog(@"Unable to find an error reporting URL for the current safe browsing data provider");
 }
 
 @end
