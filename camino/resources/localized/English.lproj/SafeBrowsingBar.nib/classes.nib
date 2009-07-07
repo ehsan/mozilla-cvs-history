@@ -6,11 +6,82 @@
 	<array>
 		<dict>
 			<key>CLASS</key>
+			<string>NSString</string>
+			<key>LANGUAGE</key>
+			<string>ObjC</string>
+			<key>SUPERCLASS</key>
+			<string>NSObject</string>
+		</dict>
+		<dict>
+			<key>CLASS</key>
+			<string>NSMenu</string>
+			<key>LANGUAGE</key>
+			<string>ObjC</string>
+			<key>SUPERCLASS</key>
+			<string>NSObject</string>
+		</dict>
+		<dict>
+			<key>CLASS</key>
+			<string>RolloverImageButton</string>
+			<key>LANGUAGE</key>
+			<string>ObjC</string>
+			<key>SUPERCLASS</key>
+			<string>NSButton</string>
+		</dict>
+		<dict>
+			<key>CLASS</key>
+			<string>NSObject</string>
+			<key>LANGUAGE</key>
+			<string>ObjC</string>
+		</dict>
+		<dict>
+			<key>CLASS</key>
+			<string>TransientBar</string>
+			<key>LANGUAGE</key>
+			<string>ObjC</string>
+			<key>SUPERCLASS</key>
+			<string>NSView</string>
+		</dict>
+		<dict>
+			<key>ACTIONS</key>
+			<dict>
+				<key>blacklistPopups</key>
+				<string>id</string>
+				<key>closeSafeBrowsingBar</key>
+				<string>id</string>
+				<key>hideBlockedPopupView</key>
+				<string>id</string>
+				<key>reloadWithNewCharset</key>
+				<string>NSString</string>
+				<key>reportIncorrectlyBlockedSite</key>
+				<string>id</string>
+				<key>runAwayFromBlockedSite</key>
+				<string>id</string>
+				<key>showPopups</key>
+				<string>id</string>
+				<key>unblockPopups</key>
+				<string>id</string>
+			</dict>
+			<key>CLASS</key>
 			<string>BrowserWrapper</string>
 			<key>LANGUAGE</key>
 			<string>ObjC</string>
 			<key>OUTLETS</key>
 			<dict>
+				<key>mBlockedPopupBar</key>
+				<string>TransientBar</string>
+				<key>mBlockedPopupCloseButton</key>
+				<string>RolloverImageButton</string>
+				<key>mBlockedPopupLabel</key>
+				<string>NSTextField</string>
+				<key>mCreateDelegate</key>
+				<string>id</string>
+				<key>mDelegate</key>
+				<string>id</string>
+				<key>mSafeBrowsingBar</key>
+				<string>SafeBrowsingBar</string>
+				<key>mSafeBrowsingBarLabel</key>
+				<string>NSTextField</string>
 				<key>mSafeBrowsingBlockedBar</key>
 				<string>SafeBrowsingBlockedBar</string>
 			</dict>
@@ -42,28 +113,6 @@
 		</dict>
 		<dict>
 			<key>CLASS</key>
-			<string>NSMenu</string>
-			<key>LANGUAGE</key>
-			<string>ObjC</string>
-			<key>SUPERCLASS</key>
-			<string>NSObject</string>
-		</dict>
-		<dict>
-			<key>CLASS</key>
-			<string>RolloverImageButton</string>
-			<key>LANGUAGE</key>
-			<string>ObjC</string>
-			<key>SUPERCLASS</key>
-			<string>NSButton</string>
-		</dict>
-		<dict>
-			<key>CLASS</key>
-			<string>NSObject</string>
-			<key>LANGUAGE</key>
-			<string>ObjC</string>
-		</dict>
-		<dict>
-			<key>CLASS</key>
 			<string>SafeBrowsingBlockedBar</string>
 			<key>LANGUAGE</key>
 			<string>ObjC</string>
@@ -74,14 +123,6 @@
 			</dict>
 			<key>SUPERCLASS</key>
 			<string>TransientBar</string>
-		</dict>
-		<dict>
-			<key>CLASS</key>
-			<string>TransientBar</string>
-			<key>LANGUAGE</key>
-			<string>ObjC</string>
-			<key>SUPERCLASS</key>
-			<string>NSView</string>
 		</dict>
 	</array>
 	<key>IBVersion</key>

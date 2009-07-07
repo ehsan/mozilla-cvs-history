@@ -50,6 +50,8 @@
   // The warning label's text color is set to black in the nib so it's visible
   // when editing. Revert it to the actual white color we display it in on the bar.
   [mWarningLabelTextField setTextColor:[NSColor whiteColor]];
+
+  [self setLastKeySubview:mCloseButton];
 }
 
 - (void)drawRect:(NSRect)rect
