@@ -1,3 +1,7 @@
+2009-07-08  John Dennis  <jdennis@redhat.com> 0.6
+  * fix bug #510343 client_auth_data_callback seg faults if False
+    is returned from callback
+
 2009-07-01  John Dennis  <jdennis@redhat.com> 0.5
   * restore ssl.nss_init and ssl.nss_shutdown but make them deprecated
     add __version__ string to nss module

@@ -621,12 +621,27 @@ get_client_auth_data(void *arg, PRFileDesc *fd, CERTDistNames *caNames, CERTCert
         goto fail;
     }
     
+    if (PyBool_Check(return_args)) {
+        if (return_args == Py_False) {
+            goto fail;          // callback returned failure, boolean == false
+        } else {
+            goto bad_return;    // unexpected return value, boolean == true
+        }
+    }
+
+    if (!PyTuple_Check(return_args)) {
+        goto bad_return;        // unexpected return value, wasn't boolean or tuple
+    }
+
     return_argc = PyTuple_Size(return_args);
+
+    if (return_argc > 2) {
+        goto bad_return;
+    }
 
     py_cert = PyTuple_GetItem(return_args, 0);
     if (py_cert == Py_None) {
-        // callback returned failure
-        goto fail;
+        goto fail;              // callback returned failure, tuple = (None ...)
     }
 
     if (!PyCertificate_Check(py_cert)) {
@@ -643,8 +658,7 @@ get_client_auth_data(void *arg, PRFileDesc *fd, CERTDistNames *caNames, CERTCert
 
     py_priv_key = PyTuple_GetItem(return_args, 1);
     if (py_priv_key == Py_None) {
-        // callback returned failure
-        goto fail;
+        goto fail;              // callback returned failure, tuple = (cert, None ...)
     }
 
     if (!PyPrivateKey_Check(py_priv_key)) {
@@ -665,6 +679,10 @@ get_client_auth_data(void *arg, PRFileDesc *fd, CERTDistNames *caNames, CERTCert
     *pRetCert = ((Certificate *)py_cert)->cert;
     *pRetKey = ((PrivateKey *)py_priv_key)->private_key;
     return SECSuccess;
+
+ bad_return:
+    PySys_WriteStderr("SSLSocket.client_auth_data_callback: unexpected return value, must be False or the tuple (None) or the tuple (cert, priv_key)\n");
+    PyErr_Print();
 
  fail:
     Py_XDECREF(args);
@@ -1791,6 +1809,43 @@ PyTypeObject SSLSocketType = {
 /* ============================== Module Methods ============================= */
 
 
+/*
+ * WARNING: nssinit(), nss_init(), nss_shutdown() were deprecated in June 2009, 
+ * they should be removed after a suitible grace period. Each of these will
+ * emit a deprecation warning upon use.
+ */
+
+PyDoc_STRVAR(NSSinit_doc,
+"nssinit(cert_dir)\n\
+WARNING: nssinit() has been moved to the nss module, use nss.nss_init() instead of ssl.nssinit()\n\
+\n\
+:Parameters:\n\
+    cert_dir : string\n\
+        Pathname of the directory where the certificate, key, and\n\
+        security module databases reside.\n\
+\n\
+Sets up configuration files and performs other tasks required to run\n\
+Network Security Services.\n\
+");
+
+static PyObject *
+NSSinit(PyObject *self, PyObject *args)
+{
+    char *cert_dir;
+
+    if (PyErr_Warn(PyExc_DeprecationWarning, "nssinit() has been moved to the nss module, use nss.nss_init() instead of ssl.nssinit()") < 0)
+        return NULL;
+
+    if (!PyArg_ParseTuple(args, "s:nssinit", &cert_dir)) {
+        return NULL;
+    }
+
+    if (NSS_Init(cert_dir) != SECSuccess) {
+        return set_nspr_error(NULL);
+    }
+    Py_RETURN_NONE;
+}
+
 PyDoc_STRVAR(NSS_init_doc,
 "nss_init(cert_dir)\n\
 WARNING: nss_init() has been moved to the nss module, use nss.nss_init() instead of ssl.nss_init()\n\
@@ -2164,6 +2219,7 @@ NSS_set_france_policy(PyObject *self, PyObject *args)
 
 /* List of functions exported by this module. */
 static PyMethodDef module_methods[] = {
+{"nssinit",                        (PyCFunction)NSSinit,                            METH_VARARGS,               NSSinit_doc},
 {"nss_init",                       (PyCFunction)NSS_init,                           METH_VARARGS,               NSS_init_doc},
 {"nss_shutdown",                   (PyCFunction)NSS_shutdown,                       METH_NOARGS,                NSS_shutdown_doc},
 {"set_ssl_default_option",         (PyCFunction)SSL_set_ssl_default_option,         METH_VARARGS,               SSL_set_ssl_default_option_doc},

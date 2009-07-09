@@ -49,7 +49,7 @@ from distutils.util import subst_vars, change_root
 from distutils.command.build_py import build_py as _build_py
 from distutils.command.sdist import sdist as _sdist
 
-version = "0.5"
+version = "0.6"
 
 def update_version():
     """If the version string in __init__.py doesn't match the current
