@@ -112,7 +112,7 @@ sub ProcessCommandLineArgs
     Getopt::Long::Configure('bundling_override', 'ignore_case_always', 
      'pass_through');
     Getopt::Long::GetOptions(\%args,
-     'help|h|?', 'man', 'version', 'app=s', 'config=s', 'verbose',
+     'help|h|?', 'man', 'version', 'app=s', 'brand=s', 'config=s', 'verbose',
      'dry-run', 'tools-dir=s', 'download-dir=s', 'deliverable-dir=s',
      'tools-revision=s', 'partial-patchlist-file=s', @RUN_MODES)
      or return 0;
@@ -121,6 +121,7 @@ sub ProcessCommandLineArgs
      $DEFAULT_CONFIG_FILE;
 
     $this->{'mApp'} = defined($args{'app'}) ? $args{'app'} : $DEFAULT_APP;
+    $this->{'mBrand'} = defined($args{'brand'}) ? $args{'brand'} : ucfirst($this->{'mApp'});
 
     $this->{'mVerbose'} = defined($args{'verbose'}) ? $args{'verbose'} : 0;
     
@@ -768,7 +769,7 @@ sub GetDeliverableDir
 sub GetApp
 {
     my $this = shift;
-    return ucfirst($this->{'mApp'});
+    return $this->{'mBrand'};
 }
 
 sub GetDownloadDir
