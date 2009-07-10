@@ -2034,9 +2034,8 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
   if (repositionViews)
     ::PlaceFrameView(this);
 
-  // We can skip trying to pull up the next line if our height is constrained
-  // (so we can report being incomplete) and there is no next in flow or we
-  // were told not to or we know it will be futile, i.e.,
+  // We can skip trying to pull up the next line if there is no next
+  // in flow or we were told not to or we know it will be futile, i.e.,
   // -- the next in flow is not changing
   // -- and we cannot have added more space for its first line to be
   // pulled up into,
@@ -2045,10 +2044,8 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
   // didn't change)
   // -- my chain of next-in-flows either has no first line, or its first
   // line isn't dirty.
-  PRBool heightConstrained =
-    aState.mReflowState.availableHeight != NS_UNCONSTRAINEDSIZE;
-  PRBool skipPull = willReflowAgain && heightConstrained;
-  if (!skipPull && heightConstrained && aState.mNextInFlow &&
+  PRBool skipPull = willReflowAgain;
+  if (aState.mNextInFlow &&
       (aState.mReflowState.mFlags.mNextInFlowUntouched &&
        !lastLineMovedUp && 
        !(GetStateBits() & NS_FRAME_IS_DIRTY) &&
@@ -2067,17 +2064,13 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       // (First, see if there is such a line, and second, see if it's clean)
       if (!bifLineIter.Next() ||                
           !bifLineIter.GetLine()->IsDirty()) {
+        if (IS_TRUE_OVERFLOW_CONTAINER(aState.mNextInFlow))
+          NS_FRAME_SET_OVERFLOW_INCOMPLETE(aState.mReflowStatus);
+        else
+          NS_FRAME_SET_INCOMPLETE(aState.mReflowStatus);
         skipPull=PR_TRUE;
       }
     }
-  }
-
-  if (skipPull && aState.mNextInFlow) {
-    NS_ASSERTION(heightConstrained, "Height should be constrained here\n");
-    if (IS_TRUE_OVERFLOW_CONTAINER(aState.mNextInFlow))
-      NS_FRAME_SET_OVERFLOW_INCOMPLETE(aState.mReflowStatus);
-    else
-      NS_FRAME_SET_INCOMPLETE(aState.mReflowStatus);
   }
   
   if (!skipPull && aState.mNextInFlow) {
