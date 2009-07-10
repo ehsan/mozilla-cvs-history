@@ -922,6 +922,18 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
     return NS_OK;
   }
 
+  // Handle paginated overflow (see nsContainerFrame.h)
+  // Note: We use a temporary reflow status, which we'll merge into the state's
+  // reflow status down below.
+  nsRect overflowContainerBounds;
+  nsReflowStatus ocStatus = NS_FRAME_COMPLETE;
+  if (GetPrevInFlow()) {
+    ReflowOverflowContainerChildren(aPresContext, aReflowState,
+                                    overflowContainerBounds, 0,
+                                    ocStatus);
+  }
+
+
   PRBool marginRoot = BlockIsMarginRoot(this);
   nsBlockReflowState state(aReflowState, aPresContext, this, aMetrics,
                            marginRoot, marginRoot, needSpaceManager);
@@ -956,13 +968,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   NS_ASSERTION(NS_SUCCEEDED(rv), "reflow dirty lines failed");
   if (NS_FAILED(rv)) return rv;
 
-  // Handle paginated overflow (see nsContainerFrame.h)
-  nsRect overflowContainerBounds;
-  if (GetPrevInFlow()) {
-    ReflowOverflowContainerChildren(aPresContext, aReflowState,
-                                    overflowContainerBounds, 0,
-                                    state.mReflowStatus);
-  }
+  NS_MergeReflowStatusInto(&state.mReflowStatus, ocStatus);
 
   // If the block is complete, put continuted floats in the closest ancestor 
   // block that uses the same space manager and leave the block complete; this 
