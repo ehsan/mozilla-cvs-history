@@ -64,5 +64,40 @@ class AUS_Object {
             return false;
         }
     }
+
+    /**
+     * Determine whether or not a given channel is an exception for throttling.
+     * Requires throttleExceptions array in config which is declared as a global because it's faster.
+     *
+     * @param string $version
+     * @param string $channel
+     * @return boolean
+     */
+    function isThrottleException($version, $channel) {
+
+        // I hate PHP and how I use it.
+        global $throttleExceptions;
+
+        // If the exception array is not defined or just empty, return false.
+        if (empty($throttleExceptions[$version])) {
+            return false;
+        }
+
+        // Check the passed channel against our patterns to see if it's an exception.
+        foreach ($throttleExceptions[$version] as $channelPattern) {
+
+            // No need to create a regular expression if there's no wildcard
+            if (strpos($channelPattern, '*') === false && $channelPattern == $channel) {
+                return true;
+            }
+
+            // If we get here, check the pattern against the channel string and return true if there's a match.
+            if (preg_match('/^'. str_replace('\\*', '.*', preg_quote($channelPattern, '/')) .'$/', $channel)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
 ?>

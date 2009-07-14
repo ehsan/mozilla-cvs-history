@@ -92,6 +92,26 @@ $productThrottling = array(
      )
 );
 
+// List of exceptions for throttling.
+//
+// $throttleExceptions = array(
+//    '3.0.11' => array(
+//       'betatest',
+//       'releasetest',
+//       'beta'
+//    )
+// );
+//
+// In this example, 3.0.11 with channel names that match these channels will not
+// be throttled unless there is a global throttle enabled.
+$throttleExceptions = array(
+    '3.0.11' => array(
+        'betatest',
+        'releasetest',
+        'beta'
+    )
+);
+
 // These are channels that have access to nightly updates.
 // All other channels only have access to the OVERRIDE_DIR for update info.
 $nightlyChannels = array(
