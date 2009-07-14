@@ -116,7 +116,7 @@ sub latest_supported_update {
   # We'll only offer alpha/beta versions to users who already have
   # some kind of non-release build (which will have an a, b, and/or pre).
   # Someday we probably want to use a track-based system, but we don't yet.
-  my $include_betas = ($client_info->{version} =~ /[a-z]/);
+  my $include_betas = !version_is_release($client_info->{version});
   # Sort the updates from newest to oldest
   my @sorted_updates = sort { compare_versions($b->{Version}, $a->{Version}) } @$updates;
   # Then return the first one that meets the requirements
@@ -130,7 +130,7 @@ sub latest_supported_update {
     if (compare_versions($client_info->{os}, $update->{MinOSVersion}) >= 0 &&
         array_contains($update->{Intl}, $client_info->{intl}) &&
         array_contains($update->{Arch}, $client_info->{arch}) &&
-        ($include_betas || ($update->{VersionString} !~ /[a-z]/))) 
+        ($include_betas || version_is_release($update->{VersionString})))
     {
       # Load the description in the approriate language
       $update->{Description} = localized_description($update->{VersionString},
@@ -139,6 +139,16 @@ sub latest_supported_update {
     }
   }
   return;
+}
+
+# Returns true if the given version is a release version (i.e., not an alpha,
+# beta, or nightly).
+sub version_is_release {
+  my ($version) = @_;
+  # The localized build marker is Int, but check for Intl as well just in
+  # case someone gets mixed up (since we use Intl in our update descriptions).
+  $version =~ s/\s*intl?$//i;
+  return $version !~ /(?:(?:a|b)\d*|pre)$/;
 }
 
 # Performs a <=> style comparison on two OS or Camino versions
