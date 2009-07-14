@@ -186,7 +186,7 @@ $ObjDir = '../build';
 #$SubObjDir = '';
 
 # Extra build name, if needed.
-$BuildNameExtra = 'CmTrunk';
+$BuildNameExtra = 'Cm2.1-M1.9';
 
 # User comment, eg. ip address for dhcp builds.
 # ex: $UserComment = "ip = 208.12.36.108";
@@ -251,7 +251,7 @@ $ftp_path      = "/home/ftp/pub/camino/nightly/experimental";
 $url_path      = "http://ftp.mozilla.org/pub/mozilla.org/camino/nightly/experimental";
 $tbox_ftp_path = '/home/ftp/pub/camino/tinderbox-builds';
 $tbox_url_path = 'http://ftp.mozilla.org/pub/mozilla.org/camino/tinderbox-builds';
-$milestone     = "trunk";
+$milestone     = "2.1-M1.9";
 #$notify_list   = 'build-announce@mozilla.org';
 #$stub_installer = 1;
 #$sea_installer = 1;

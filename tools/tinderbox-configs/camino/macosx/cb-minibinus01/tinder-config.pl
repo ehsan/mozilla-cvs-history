@@ -160,7 +160,7 @@ $moz_cvsroot = ':ext:caminobld@cvs.mozilla.org:/cvsroot';
 $ObjDir = '../build';
 
 # Extra build name, if needed.
-$BuildNameExtra = 'Cm2-M1.9';
+$BuildNameExtra = 'Cm2.1-M1.9';
 
 # User comment, eg. ip address for dhcp builds.
 # ex: $UserComment = "ip = 208.12.36.108";
@@ -201,7 +201,7 @@ $BinaryName = 'Camino';
 # If set to a filepath, tinderbox will use the file contents (presumed to be a bz2
 # archive of a compatible Talkback extension) rather than compiling Talkback
 # from source. 
-$UsePrebuiltTalkback = "/builds/tinderbox/Cm2-M1.9/talkback-camino-trunk-mac.tar.bz2";
+# $UsePrebuiltTalkback = "/builds/tinderbox/Cm2-M1.9/talkback-camino-trunk-mac.tar.bz2";
 
 # Release build options
 #$ReleaseBuild  = 1;
@@ -224,7 +224,7 @@ $ftp_path      = "/home/ftp/pub/camino/nightly";
 $url_path      = "http://ftp.mozilla.org/pub/mozilla.org/camino/nightly";
 $tbox_ftp_path = '/home/ftp/pub/camino/tinderbox-builds';
 $tbox_url_path = "http://ftp.mozilla.org/pub/mozilla.org/camino/tinderbox-builds";
-$milestone     = "2.0-M1.9";
+$milestone     = "2.1-M1.9";
 #$notify_list   = "build-announce\@mozilla.org";
 #$stub_installer = 1;
 #$sea_installer = 1;
