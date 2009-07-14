@@ -227,7 +227,7 @@ public class SignedData implements ASN1Value {
      */
 
     /**
-     * Create a SignedData ASN1 object. Both certificates and crls
+     * Create a SignedData ASN1 object. Both certificates and CRLs
      * are optional. If you pass in a null for either value, that
      * parameter will not get written in the sequence.
      *
@@ -259,7 +259,7 @@ public class SignedData implements ASN1Value {
      *      omitted.
      * @param crls A SET of ASN1Values, which should encode to the ASN1 type
      *      <i>CertificateRevocationList</i>. This implementation does
-     *      not interpret crls. If this parameter is <code>null</code>,
+     *      not interpret CRLs. If this parameter is <code>null</code>,
      *      the <code>crls</code> field will be omitted.
      * @param signerInfos <i>SignerInfo</i> structures containing signatures
      *      of the content.  Additional signerInfos can be added with

@@ -44,7 +44,7 @@ import org.mozilla.jss.util.*;
  *
  * @see org.mozilla.jss.util.Debug
  * @see org.mozilla.jss.util.AssertionException
- * @version $Revision: 1.5 $ $Date: 2004/04/25 15:02:29 $
+ * @version $Revision: 1.6 $ $Date: 2009/07/14 22:31:16 $
  */
 public class Assert {
     /**
@@ -94,7 +94,7 @@ public class Assert {
     }
 
     /**
-     * Throw an AssertionException because functionlity is not yet implemented.
+     * Throw an AssertionException because functionality is not yet implemented.
      *
      * @param msg A message describing what is not implemented.
      */

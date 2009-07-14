@@ -449,7 +449,7 @@ public class SSLSocket extends java.net.Socket {
                 return;
             }
             /*
-             * If a read or write is occuring, abort the I/O.  Any
+             * If a read or write is occurring, abort the I/O.  Any
              * further attempts to read/write will fail since isClosed
              * is true
              */

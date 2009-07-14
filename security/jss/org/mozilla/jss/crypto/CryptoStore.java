@@ -82,7 +82,7 @@ public interface CryptoStore {
      *
      * @param key A PrivateKey to be permanently deleted.  It must reside
      *      on this token.
-     * @exception NoSuchItemOnTokenException If the given privae key does 
+     * @exception NoSuchItemOnTokenException If the given private key does 
      *      not reside on this token.
      * @exception TokenException If an error occurs on the token while
      *      deleting the key.

@@ -131,7 +131,7 @@ public class KeyPairGenerator {
      * @param strength The strength of the keys that will be generated.
      *      Usually this is the length of the key in bits.
      * @param random <b>This parameter is ignored.</b> NSS does not accept
-     *      an exterrnal source of random numbers.
+     *      an external source of random numbers.
      */
 	public void initialize(int strength, SecureRandom random) {
 		engine.initialize(strength, random);

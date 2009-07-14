@@ -281,7 +281,7 @@ public class SSLClientAuth implements Runnable {
 
             /* if FIPS is enabled, configure only FIPS ciphersuites */
             if (cm.FIPSEnabled()) {
-                System.out.println("The NSS database is confirued in FIPS" +
+                System.out.println("The NSS database is configured in FIPS" +
                         "mode.");
                 System.out.println("Enable ony FIPS ciphersuites.");
                 int ciphers[] =

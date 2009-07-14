@@ -37,7 +37,7 @@ package org.mozilla.jss.crypto;
 
 /**
  * The org.mozilla.jss.provider package comes before CryptoManager in
- * the depency list, so this class is used to allow them to access
+ * the dependency list, so this class is used to allow them to access
  * CryptoManager sneakily.  When CryptoManager initializes, it registers
  * itself as a token supplier with <code>setTokenSupplier</code>.  Then
  * the providers call <code>getTokenSupplier</code> when they need to use

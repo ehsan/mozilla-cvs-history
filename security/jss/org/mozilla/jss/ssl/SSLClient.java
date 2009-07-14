@@ -147,7 +147,7 @@ public class SSLClient
 	  results.println(htmlHeader);
 	results.println("SSL Client Tester");
 	results.println(
-			"$Id: SSLClient.java,v 1.7 2004/04/25 15:02:28 gerv%gerv.net Exp $ " + 
+			"$Id: SSLClient.java,v 1.8 2009/07/14 22:31:14 glen.beasley%sun.com Exp $ " + 
 			versionStr );
 	
 	SSLSocket s;
@@ -213,7 +213,7 @@ public class SSLClient
 	//s.setClientCertNickname("JavaSSLTestClientCert");
 	
 	
-        // Setup a hanshake callback. This listener will get invoked
+        // Setup a handshake callback. This listener will get invoked
         // When the SSL handshake is completed on this socket.
 	
 	listener = new ClientHandshakeCB(this);

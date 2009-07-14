@@ -177,7 +177,7 @@ sub build {
         open(MYOUTFILE, ">>MANIFEST.MF"); #open for write, append
     }
 
-    #*** Print freeform text, semicol required ***
+    #*** Print freeform text, semicolon required ***
 print MYOUTFILE <<"MyLabel";
 Manifest-Version: 1.0
     

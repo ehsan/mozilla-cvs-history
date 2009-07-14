@@ -42,7 +42,7 @@ LIBRARY jss4	;-
 ;+#  line on which it occurs.
 ;+#   3. Lines containing ";+" will have ";+" removed on SUN and LINUX.
 ;+#      On AIX, lines containing ";+" will be removed.  
-;+#   4. For all unix platforms, the string ";;" will thave the ";;" removed.
+;+#   4. For all unix platforms, the string ";;" will have the ";;" removed.
 ;+#   5. For all unix platforms, after the above processing has taken place,
 ;+#    all characters after the first ";" on the line will be removed.  
 ;+#    And for AIX, the first ";" will also be removed.

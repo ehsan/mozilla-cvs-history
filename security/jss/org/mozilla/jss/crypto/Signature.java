@@ -188,7 +188,7 @@ public class Signature {
 	 * @param off The beginning offset of the bytes to be signed/verified.
 	 * @param len The number of bytes to be signed/verified.
 	 * @exception SignatureException If an error occurs in the
-	 * 		signature/verifcation.
+	 * 		signature/verification.
  	 * @exception TokenException If an error occurs on the token.
 	 */
 	public void update(byte[] data, int off, int len)

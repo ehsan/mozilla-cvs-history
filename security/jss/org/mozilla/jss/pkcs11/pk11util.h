@@ -470,7 +470,7 @@ JSS_PK11_getCipherContext(JNIEnv *env, jobject proxy, PK11Context **pContext);
  * Wraps a PK11Context in a CipherContextProxy.
  *
  * context
- *      address of a poitner to a PK11Context, which must not be NULL.
+ *      address of a pointer to a PK11Context, which must not be NULL.
  *      It will be eaten by the wrapper and set to NULL, even if the
  *      function returns NULL.
  *
@@ -516,7 +516,7 @@ JSS_PK11_getNewSession(PK11SlotInfo *slot, PRBool *owner);
  *      The slot on which this session lives.
  *
  * session
- *      The sessin to close.
+ *      The session to close.
  *
  * owner
  *      As returned by JSS_PK11_GetNewSession. PR_TRUE if the session was

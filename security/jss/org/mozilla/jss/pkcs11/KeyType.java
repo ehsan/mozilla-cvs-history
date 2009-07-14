@@ -235,7 +235,7 @@ public final class KeyType {
                             EncryptionAlgorithm.AES_256_ECB,
                             EncryptionAlgorithm.AES_256_CBC,
                             /* AES CBC PAD is the same as AES_256_CBC_PAD */
-                            /* shouldn't break backward compatiblity 313798*/        
+                            /* shouldn't break backward compatibility 313798*/        
                             //EncryptionAlgorithm.AES_CBC_PAD, 
                             EncryptionAlgorithm.AES_128_CBC_PAD,
                             EncryptionAlgorithm.AES_192_CBC_PAD,

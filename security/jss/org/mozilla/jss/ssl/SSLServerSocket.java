@@ -173,7 +173,7 @@ public class SSLServerSocket extends java.net.ServerSocket {
      * @return java.net.Socket Local socket for client communication
      *
      * @throws IOException  If an input or output exception occurred
-     * @throws SocketTimeoutException  If the socket timesout trying to connect
+     * @throws SocketTimeoutException  If the socket times out trying to connect
      * @throws InterruptedIOException  If an input or output is interrupted
      * @throws SSLSocketException  JSS subclass of java.net.SocketException
      */

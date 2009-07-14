@@ -401,7 +401,7 @@ public class JCAKeyWrap {
             }
         } else if (!keysEqual(keyA, keyB)) {
             throw new Exception("unwrapped key " +
-                    "does not match orginal");
+                    "does not match original");
         }
 
         //As an extra test encrypt with keyA using ProviderA
@@ -474,7 +474,7 @@ public class JCAKeyWrap {
                     ((SecretKeyFacade) symKey).key.getStrength() +
                     " with " + wrapperKey.getAlgorithm() + " " +
                     ((SecretKeyFacade) wrapperKey).key.getStrength() +
-                    " symetric key. ");
+                    " symmetric key. ");
 
             // wrap key
             Cipher cipher = Cipher.getInstance(wrapperAlg, providerA);

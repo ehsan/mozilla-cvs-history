@@ -56,7 +56,7 @@ public interface Constants {
         }
        
         /*
-         * returns the string represantation of the ciphersuite OR 
+         * returns the string representation of the ciphersuite OR 
          * returns null if the ciphersuite is not found
          */
         public static final String cipherToString(int aCipher ) {

@@ -124,7 +124,7 @@ public final class PK11MessageDigest extends JSSMessageDigest {
     public void reset() throws DigestException {
         if( ! (alg instanceof HMACAlgorithm) ) {
             // This is a regular digest, so we have enough information
-            // to inialize the context
+            // to initialize the context
             this.digestProxy = initDigest(alg);
         } else if( hmacKey != null ) {
             // This is an HMAC digest, and we have a key

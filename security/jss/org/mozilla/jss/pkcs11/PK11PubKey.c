@@ -432,7 +432,7 @@ Java_org_mozilla_jss_pkcs11_PK11ECPublicKey_getCurveByteArray
  *
  * Returns the public value (W) of this EC Public Key.  
  * The format is a 1 byte to indicate compression followed by points
- * Wx and Wy unsigned and connatonatted.
+ * Wx and Wy unsigned and concatenated.
  *
  */
 JNIEXPORT jbyteArray JNICALL

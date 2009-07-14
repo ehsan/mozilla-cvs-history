@@ -199,7 +199,7 @@ public class HMACTest {
                         hmacTest.doHMAC(JSS_HMAC_Algs[i], sk, clearText);
                     }
                 } else {
-                    // compare MOZ_PROVIDER_NAME implemenation with all 
+                    // compare MOZ_PROVIDER_NAME implementation with all 
                     // providers that also support the given algorithm
                     if (!hmacTest.compareHMAC(
                             JSS_HMAC_Algs[i], sk, clearText)) {

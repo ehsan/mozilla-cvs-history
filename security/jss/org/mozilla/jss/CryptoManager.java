@@ -56,7 +56,7 @@ import org.mozilla.jss.provider.java.security.JSSMessageDigestSpi;
  * Initialization is done with static methods, and must be done before
  * an instance can be created.  All other operations are done with instance
  * methods.
- * @version $Revision: 1.53 $ $Date: 2009/03/27 21:34:49 $
+ * @version $Revision: 1.54 $ $Date: 2009/07/14 22:30:56 $
  */
 public final class CryptoManager implements TokenSupplier
 {
@@ -895,9 +895,9 @@ public final class CryptoManager implements TokenSupplier
      *
      * @param values The options with which to initialize CryptoManager.
      * @exception org.mozilla.jss.util.KeyDatabaseException Unable to open
-     *  the key database, or it was currupted.
+     *  the key database, or it was corrupted.
      * @exception org.mozilla.jss.util.CertDatabaseException Unable
-     *  to open the certificate database, or it was currupted.
+     *  to open the certificate database, or it was corrupted.
      **/
     public static synchronized void initialize( InitializationValues values )
         throws

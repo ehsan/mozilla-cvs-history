@@ -275,7 +275,7 @@ public class JSSE_SSLClient {
             
             String javaVendor      = System.getProperty("java.vendor");
             if (Constants.debug_level > 3)
-                System.out.println("DBEUG: JSSE_SSLClient.java java.vendor=" +
+                System.out.println("DEBUG: JSSE_SSLClient.java java.vendor=" +
                         javaVendor);
             
             // Initialize the system
@@ -320,7 +320,7 @@ public class JSSE_SSLClient {
             }
             kmf.init(ks, passphrase);
             
-            // trust manager that trusts all cetificates
+            // trust manager that trusts all certificates
             TrustManager[] trustAllCerts = new TrustManager[]{
                 new X509TrustManager() {
                     public boolean checkClientTrusted(

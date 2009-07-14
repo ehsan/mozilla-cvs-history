@@ -50,7 +50,7 @@ typedef struct tuple_str tuple_str;
 
 static const tuple_str errStrings[] = {
 
-/* keep this list in asceding order of error numbers */
+/* keep this list in ascending order of error numbers */
 #include "SSLerrs.h"
 #include "SECerrs.h"
 #include "NSPRerrs.h"

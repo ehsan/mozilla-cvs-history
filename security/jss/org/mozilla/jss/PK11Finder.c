@@ -785,7 +785,7 @@ static int find_leaf_cert(
         cur_link = leaf_link;
     }
     if (found == -1) {
-        /* the certificate chain is problemtic! */
+        /* the certificate chain is problematic! */
         status = 0;
         goto finish;
     }

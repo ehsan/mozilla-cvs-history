@@ -77,7 +77,7 @@ Java_org_mozilla_jss_pkcs11_PK11Store_putKeysInVector
 
     /*
      * Most, if not all, tokens have to be logged in before they allow
-     * access to their private keys, so try to login here.  If we're already
+     * access to their private keys, so try to log in here.  If we're already
      * logged in, this is a no-op.
      * If the login fails, go ahead and try to get the keys anyway, in case
      * this is an exceptionally promiscuous token.

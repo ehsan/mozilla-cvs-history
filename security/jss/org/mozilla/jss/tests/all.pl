@@ -398,7 +398,7 @@ sub run_ssl_test {
         return;
     }
     sleep 5;                                    
-    print "\nSSL Server is envoked using port $serverPort \n" ;
+    print "\nSSL Server is invoked using port $serverPort \n" ;
     print "$clientCommand \n";
     $result = system("$clientCommand");
     $result >>=8;
@@ -450,7 +450,7 @@ if( ! -d $testdir ) {
         ("$testdir/cert8.db", "$testdir/key3.db", "$testdir/secmod.db", "$testdir/rsa.pfx");
     (grep{ -f } @dbfiles)  and die "There is already an old database in $testdir";
     my $result = system("cp $nss_lib_dir/*nssckbi* $testdir"); $result >>= 8;
-    $result and die "Failed to copy builtins library";
+    $result and die "Failed to copy built-ins library";
 }
 
 print "creating pkcs11config file\n";

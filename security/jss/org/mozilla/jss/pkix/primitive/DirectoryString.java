@@ -174,7 +174,7 @@ public class DirectoryString implements ASN1Value {
         }
 
         /**
-         * @param implicitTag <b>This paramter is ignored</b>, because
+         * @param implicitTag <b>This parameter is ignored</b>, because
          *      DirectoryStrings (being CHOICEs) cannot have implicit tags.
          */
         public ASN1Value decode(Tag implicitTag, InputStream istream)

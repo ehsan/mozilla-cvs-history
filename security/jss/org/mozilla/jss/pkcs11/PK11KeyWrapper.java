@@ -443,7 +443,7 @@ final class PK11KeyWrapper implements KeyWrapper {
     extractPublicValue(PublicKey publicKey, PrivateKey.Type type)
         throws InvalidKeyException
     {
-        /* this code should call a generic function wich returns the
+        /* this code should call a generic function which returns the
          * proper public value. */
         if( publicKey == null ) {
             throw new InvalidKeyException("publicKey is null");

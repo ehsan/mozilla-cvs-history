@@ -93,7 +93,7 @@ public class ListCerts {
                     }
                 }
                 System.out.println("Convert to JDK cert");
-                //Convert to JDK certicate
+                //Convert to JDK certificate
                 CertificateFactory cf = CertificateFactory.getInstance("X.509");
                 ByteArrayInputStream bais = new ByteArrayInputStream(
                     certs[i].getEncoded());

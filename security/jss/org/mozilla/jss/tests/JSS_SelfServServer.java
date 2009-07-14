@@ -176,7 +176,7 @@ public class JSS_SelfServServer  {
             /* Disable SSL2 and SSL3 ciphers */
             SSLSocket.enableSSL2Default(false);
             SSLSocket.enableSSL3Default(false);
-            //Enable ony FIPS ciphersuites.
+            //Enable only FIPS ciphersuites.
             int ciphers[] =
                 org.mozilla.jss.ssl.SSLSocket.getImplementedCipherSuites();
             for (int i = 0; i < ciphers.length;  ++i) {
@@ -190,7 +190,7 @@ public class JSS_SelfServServer  {
                 }
             }
         } else {
-            /* turn on all implemented ciphersuites the server ceriticate
+            /* turn on all implemented ciphersuites the server certificate
             * will determine if the ciphersuites can be used.
             */
             int ciphers[] =

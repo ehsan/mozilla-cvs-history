@@ -375,7 +375,7 @@ public class JCASymKeyGen {
             int rLen = cipher.update(ciphertext, 0, cLen, recovered, 0);
             rLen += cipher.doFinal(recovered, rLen);
 
-            //ensure the recovered bytes equals the orginal plaintext
+            //ensure the recovered bytes equals the original plaintext
             boolean isEqual = true;
             for (int i = 0; i < plaintext.length; i++) {
                 if (i<plaintext.length) {
@@ -420,7 +420,7 @@ public class JCASymKeyGen {
         String certDbLoc             = ".";
         String passwdFile            = null;
         // Mozilla supported symmetric key ciphers and algorithms
-        // Note JCE supports algorthm/ECB/PKCS5Padding and JSS does
+        // Note JCE supports algorithm/ECB/PKCS5Padding and JSS does
         // not support algorithms in ECB mode with PKCS5Padding
         String [][] symKeyTable = {
             {"DES",  "DES/ECB/NoPadding", "DES/CBC/PKCS5Padding",
@@ -492,7 +492,7 @@ public class JCASymKeyGen {
                     System.out.println("unable to generate key: " +
                             symKeyTable[i][0] + " " + e.getMessage());
                 }
-                //test the cihper algorithms for this keyType
+                //test the cipher algorithms for this keyType
                 for (int a = 1 ;  a < symKeyTable[i].length; a++){
                     //encrypt/decrypt with Mozilla Provider
  

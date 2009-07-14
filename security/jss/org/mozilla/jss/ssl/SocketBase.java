@@ -193,7 +193,7 @@ class SocketBase {
 
     /** 
      * Sets the SSL option setting mode value use for options
-     * that have more values than just enable/diasable.
+     * that have more values than just enable/disable.
      */
     native void setSSLOptionMode(int option, int option2)
         throws SocketException; 

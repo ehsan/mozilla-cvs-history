@@ -90,7 +90,7 @@ public class CertificationRequest implements ASN1Value {
      * @param info A CertificationRequestInfo (TBSCertificationRequest), 
      *      which specifies
      *      the actual information of the CertificationRequest.
-     * @param privKey The private key with which to sign the certificat.
+     * @param privKey The private key with which to sign the certificate.
      * @param signingAlg The algorithm to use to sign the CertificationRequest.
      *      It must match the algorithm specified in the CertificationRequestInfo.
      * @exception IOException If an error occurred while encoding the

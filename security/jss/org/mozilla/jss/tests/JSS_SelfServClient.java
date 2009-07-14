@@ -228,7 +228,7 @@ public class JSS_SelfServClient implements ConstantsBase, Constants {
                 System.out.print(ciphersuite);
             }
             if (server.equalsIgnoreCase("JSS")) {
-                //For JSS SSLServer don'te test
+                //For JSS SSLServer don't test
                 
                 if ((ciphersuite.indexOf("_DHE_") != -1) ||
                         (ciphersuite.indexOf("SSL2") != -1) ||
@@ -674,7 +674,7 @@ public class JSS_SelfServClient implements ConstantsBase, Constants {
                             "threads to die. Exiting the program");
                     System.out.println("Time taken: " +
                             (System.currentTimeMillis() - start) +
-                            " Millieseconds");
+                            " Milliseconds");
                     /* while all the threads have not completed cleanup. */
                     /* the functional test of each configured cihpersuite */
                     /* successfully established a connection. */
@@ -874,7 +874,7 @@ public class JSS_SelfServClient implements ConstantsBase, Constants {
     }
     
     /**
-     * SSL Handshake Listeren implementation.
+     * SSL Handshake Listener implementation.
      */
     public class HandshakeListener
             implements SSLHandshakeCompletedListener {

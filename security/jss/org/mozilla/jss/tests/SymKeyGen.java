@@ -106,7 +106,7 @@ public class SymKeyGen {
         try {
             //this is debug code you don't initialize 
             //PBE algs with key Strength doing this should throw 
-            //InvaldAlgortithmParameterException
+            //InvalidAlgorithmParameterException
             kg.initialize(keyStrength);
             throw new Exception("ERROR: Initializing PBE key with strength "+
                 keyStrength + " succeeded");

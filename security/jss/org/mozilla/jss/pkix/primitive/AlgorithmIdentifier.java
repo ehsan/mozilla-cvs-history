@@ -83,7 +83,7 @@ public class AlgorithmIdentifier implements ASN1Value {
 
     /**
      * If this instance was constructed, returns the
-     * parameter passed in to the constructer.  If this instance was
+     * parameter passed in to the constructor.  If this instance was
      * decoded from a template, returns an ANY that was read from the
      * BER stream. In either case, it will return null if no parameters
      * were supplied.

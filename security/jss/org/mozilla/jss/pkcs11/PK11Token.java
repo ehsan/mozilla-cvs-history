@@ -48,7 +48,7 @@ import java.security.InvalidParameterException;
  * CryptoManager class.
  *
  * @author nicolson
- * @version $Revision: 1.11 $ $Date: 2007/11/10 00:37:57 $ 
+ * @version $Revision: 1.12 $ $Date: 2009/07/14 22:31:02 $ 
  * @see org.mozilla.jss.CryptoManager
  */
 public final class PK11Token implements CryptoToken {
@@ -581,7 +581,7 @@ public final class PK11Token implements CryptoToken {
 }
 
 /**
- * This class just hardwires the type to be TOKEN so we don't have to mess
+ * This class just hard-wires the type to be TOKEN so we don't have to mess
  * with Java constants in native code.
  */
 class TokenCallbackInfo extends PasswordCallbackInfo {

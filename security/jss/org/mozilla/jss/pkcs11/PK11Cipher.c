@@ -296,7 +296,7 @@ JSS_PK11_getCipherContext(JNIEnv *env, jobject proxy, PK11Context **pContext)
  * Wraps a PK11Context in a CipherContextProxy.
  *
  * context
- *      address of a poitner to a PK11Context, which must not be NULL.
+ *      address of a pointer to a PK11Context, which must not be NULL.
  *      It will be eaten by the wrapper and set to NULL, even if the
  *      function returns NULL.
  *

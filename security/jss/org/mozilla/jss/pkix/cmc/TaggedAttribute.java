@@ -110,7 +110,7 @@ public class TaggedAttribute implements ASN1Value {
 
     /**
      * If this AVA was constructed, returns the SET of ASN1Values passed to the
-     * constructor.  If this Atrribute was decoded with an Attribute.Template,
+     * constructor.  If this Attribute was decoded with an Attribute.Template,
      * returns a SET of ANYs.
      */
     public SET getValues() {

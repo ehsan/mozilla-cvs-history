@@ -89,7 +89,7 @@ public class Certificate implements ASN1Value
      * Creates and signs an X.509 Certificate.
      * @param info A CertificateInfo (TBSCertificate), which specifies
      *      the actual information of the certificate.
-     * @param privKey The private key with which to sign the certificat.
+     * @param privKey The private key with which to sign the certificate.
      * @param signingAlg The algorithm to use to sign the certificate.
      *      It must match the algorithm specified in the CertificateInfo.
      * @exception IOException If an error occurred while encoding the

@@ -165,7 +165,7 @@ public class JSS_FileUploadClient {
     }
     
     /**
-     * Set EOF for closinng server socket
+     * Set EOF for closing server socket
      * @param null for closing server socket
      */
     public void setEOF(String fEof) {
@@ -295,7 +295,7 @@ public class JSS_FileUploadClient {
     }
     
     /**
-     * SSL Handshake Listeren implementation.
+     * SSL Handshake Listener implementation.
      */
     public class HandshakeListener
             implements SSLHandshakeCompletedListener {

@@ -51,7 +51,7 @@ public class DigestTest {
     static final String MOZ_PROVIDER_NAME = "Mozilla-JSS";
 
     /**
-     * List all the Digest Algorithms that JSS implenents.
+     * List all the Digest Algorithms that JSS implements.
      */
     static final String JSS_Digest_Algs[] = { "MD2", "MD5", "SHA-1",
                                             "SHA-256", "SHA-384","SHA-512"};
@@ -149,7 +149,7 @@ public class DigestTest {
             System.out.println("The Java version is: " + javaVersion);
 
             for (int i = 0; i < JSS_Digest_Algs.length; i++) {
-                // compare Mozilla-JSS implemenation with all providers
+                // compare Mozilla-JSS implementation with all providers
                 // that also support the given algorithm
                 if (messageDigestCompare(JSS_Digest_Algs[i], toBeDigested) 
                     == false) {

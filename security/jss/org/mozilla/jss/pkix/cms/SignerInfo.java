@@ -451,7 +451,7 @@ public class SignerInfo implements ASN1Value {
             Assert._assert(
 						  signerIdentifier.getType().equals(SignerIdentifier.SUBJECT_KEY_IDENTIFIER) );
 
-			// xxxxx Do we have method to get key using keyIdentifier
+			// XXX Do we have method to get key using keyIdentifier
 		}
     }
     

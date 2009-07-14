@@ -46,7 +46,7 @@ import org.mozilla.jss.util.Assert;
  * <p>This class has two main purposes:
  * generating PQG parameters and verifying PQG parameters.  To generate
  * PQG parameters, call one of the static <code>generate</code> methods.
- * They will return a new set of PQG paramters.  To verify existing PQG
+ * They will return a new set of PQG parameters.  To verify existing PQG
  * parameters, create a new <code>PQGParams</code> object with the
  * constructor and call <code>paramsAreValid</code> on the object.
  *

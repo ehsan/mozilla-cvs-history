@@ -338,7 +338,7 @@ Java_org_mozilla_jss_crypto_PQGParams_paramsAreValidNative
 
     PR_ASSERT(env!=NULL && this!=NULL);
 
-    /* clear the secitems so we can free them indiscriminately later */
+    /* clear the SECItems so we can free them indiscriminately later */
     ZERO_SECITEM(P);
     ZERO_SECITEM(Q);
     ZERO_SECITEM(G);
