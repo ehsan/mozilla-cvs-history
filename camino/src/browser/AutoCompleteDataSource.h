@@ -39,26 +39,46 @@
 
 #import <AppKit/AppKit.h>
 
-class nsIAutoCompleteResults;
 
+@class HistoryItem;
+
+//
+// This class is in charge of retrieving/sorting the history and bookmark results
+// for the location bar autocomplete, and is also the datasource for the table view
+// in the autocomplete popup window. All of the work is performed on the main thread
+// using a chunked asynchronous method, which should allow everything to run smoothly 
+// even with large number of bookmark/history items.
+//
 @interface AutoCompleteDataSource : NSObject
 {
-  NSImage*      mGenericSiteIcon;     // owned
-  NSImage*      mGenericFileIcon;     // owned
-  NSString*     mErrorMessage;  // owned
+  id                      mDelegate;
 
-  nsIAutoCompleteResults* mResults;   // owned
+  NSRange                 mChunkRange;
+  NSPredicate*            mRegexTest;                   // owned
+
+  NSMutableArray*         mBookmarkData;                // owned
+  NSMutableArray*         mHistoryData;                 // owned
+  NSMutableArray*         mBookmarkResultsInProgress;   // owned
+  NSMutableArray*         mHistoryResultsInProgress;    // owned
+  NSMutableArray*         mResults;                     // owned
+
+  NSImage*                mGenericSiteIcon;             // owned
+  NSImage*                mGenericFileIcon;             // owned
 }
 
-- (id) init;
+// Pulls bookmarks and history items and puts them into mBookmarkData and mHistoryData.
+- (void)loadSearchableData;
 
-- (int) rowCount;
-- (id) resultForRow:(int)aRow columnIdentifier:(NSString *)aColumnIdentifier;
+// Starts the search for matching bookmarks/history items using the string passed
+// from AutoCompleteTextField. This is an asynchronous method--when the search is
+// complete, searchResultsAvailable will be called on the delegate.
+- (void)performSearchWithString:(NSString *)searchString delegate:(id)delegate;
 
-- (void) setErrorMessage: (NSString*) error;
-- (NSString*) errorMessage;
+// Returns the number of rows matching the search string, including headers.
+- (int)rowCount;
 
-- (void) setResults: (nsIAutoCompleteResults*) results;
-- (nsIAutoCompleteResults*) results;
+// Datasource methods.
+- (int)numberOfRowsInTableView:(NSTableView*)aTableView;
+- (id)resultForRow:(int)aRow columnIdentifier:(NSString *)aColumnIdentifier;
 
 @end

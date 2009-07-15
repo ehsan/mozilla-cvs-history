@@ -63,7 +63,13 @@
   [copy setIcon:mSiteIcon];
   [copy setTitle:mSiteTitle];
   [copy setUrl:mSiteURL];
+  [copy setIsHeader:mIsHeader];
   return copy;
+}
+
+- (BOOL)isEqual:(id)anObject
+{
+  return [[anObject url] isEqualToString:mSiteURL];
 }
 
 - (void)setIcon:(NSImage *)anImage
@@ -97,6 +103,16 @@
 - (NSString *)title
 {
   return mSiteTitle;
+}
+
+- (void)setIsHeader:(BOOL)aBOOL
+{
+  mIsHeader = aBOOL;
+}
+
+- (BOOL)isHeader
+{
+  return mIsHeader;
 }
 
 @end

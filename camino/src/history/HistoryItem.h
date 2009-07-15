@@ -60,6 +60,7 @@ class nsIHistoryItem;
 - (NSString*)url;
 - (NSDate*)firstVisit;
 - (NSDate*)lastVisit;
+- (NSNumber*)visitCount;
 - (NSString*)hostname;
 - (NSString*)identifier;
 
@@ -78,6 +79,7 @@ class nsIHistoryItem;
 - (NSComparisonResult)compareTitle:(HistoryItem *)aItem sortDescending:(NSNumber*)inDescending;
 - (NSComparisonResult)compareFirstVisitDate:(HistoryItem *)aItem sortDescending:(NSNumber*)inDescending;
 - (NSComparisonResult)compareLastVisitDate:(HistoryItem *)aItem sortDescending:(NSNumber*)inDescending;
+- (NSComparisonResult)compareVisitCount:(HistoryItem *)aItem sortDescending:(NSNumber*)inDescending;
 - (NSComparisonResult)compareHostname:(HistoryItem *)aItem sortDescending:(NSNumber*)inDescending;
 
 @end
@@ -134,6 +136,7 @@ class nsIHistoryItem;
   NSString*         mHostname;
   NSDate*           mFirstVisitDate;
   NSDate*           mLastVisitDate;
+  NSNumber*         mVisitCount;
   
   NSImage*          mSiteIcon;
   BOOL              mAttemptedIconLoad;

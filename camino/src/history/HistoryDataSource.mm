@@ -960,6 +960,9 @@ NS_IMPL_ISUPPORTS1(nsHistoryObserver, nsIHistoryObserver);
   if ([mSortColumn isEqualToString:@"last_visit"])
     return @selector(compareLastVisitDate:sortDescending:);
 
+  if ([mSortColumn isEqualToString:@"visit_count"])
+    return @selector(compareVisitCount:sortDescending:);
+
   if ([mSortColumn isEqualToString:@"hostname"])
     return @selector(compareHostname:sortDescending:);
 

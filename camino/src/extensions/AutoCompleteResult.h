@@ -47,6 +47,7 @@
   NSImage*           mSiteIcon;
   NSMutableString*   mSiteURL;
   NSMutableString*   mSiteTitle;
+  BOOL               mIsHeader;
 }
 
 - (void)setIcon:(NSImage *)anImage;
@@ -55,5 +56,7 @@
 - (NSString *)url;
 - (void)setTitle:(NSString *)aString;
 - (NSString *)title;
+- (void)setIsHeader:(BOOL)aBOOL;
+- (BOOL)isHeader;
 
 @end

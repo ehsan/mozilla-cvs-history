@@ -66,10 +66,6 @@ extern NSString* const kWillShowFeedMenu;
   AutoCompleteDataSource*   mDataSource;
   NSString*                 mSearchString;
   NSTimer*                  mOpenTimer;
-
-  nsIAutoCompleteSession*   mSession;   // owned
-  nsIAutoCompleteResults*   mResults;   // owned
-  nsIAutoCompleteListener*  mListener;  // owned
   
   // used to remember if backspace was pressed in complete: so we can check this in controlTextDidChange
   BOOL mBackspaced;
@@ -80,9 +76,7 @@ extern NSString* const kWillShowFeedMenu;
   BOOL mCompleteWhileTyping;
 }
 
-// get/set the autcomplete session
-- (void) setSession:(NSString *)aSession;
-- (NSString *) session;
+- (void)searchResultsAvailable;
 
 - (PageProxyIcon*)pageProxyIcon;
 - (void)setPageProxyIcon:(NSImage *)aImage;

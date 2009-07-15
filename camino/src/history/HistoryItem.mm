@@ -114,6 +114,11 @@ enum
   return nil;
 }
 
+- (NSNumber*)visitCount
+{
+  return nil;
+}
+
 - (NSString*)hostname
 {
   return @"";
@@ -177,6 +182,11 @@ enum
   return NSOrderedSame;
 }
 
+- (NSComparisonResult)compareVisitCount:(HistoryItem *)aItem sortDescending:(NSNumber*)inDescending
+{
+  return NSOrderedSame;
+}
+
 - (NSComparisonResult)compareHostname:(HistoryItem *)aItem sortDescending:(NSNumber*)inDescending
 {
   return NSOrderedSame;
@@ -234,6 +244,11 @@ enum
 }
 
 - (NSDate*)lastVisit
+{
+  return nil;
+}
+
+- (NSNumber*)visitCount
 {
   return nil;
 }
@@ -482,7 +497,7 @@ enum
     nsCString url;
     if (NS_SUCCEEDED(inItem->GetURL(url)))
       mURL = [[NSString alloc] initWith_nsACString:url];
-    
+
     nsString title;
     if (NS_SUCCEEDED(inItem->GetTitle(title)))
       mTitle = [[NSString alloc] initWith_nsAString:title];
@@ -493,7 +508,7 @@ enum
 
     if ([mHostname length] == 0 && [mURL hasPrefix:@"file://"])
       mHostname = [[NSString alloc] initWithString:@"local_file"];
-    
+
     PRTime firstVisit;
     if (NS_SUCCEEDED(inItem->GetFirstVisitDate(&firstVisit)))
       mFirstVisitDate = [[NSDate dateWithPRTime:firstVisit] retain];
@@ -501,6 +516,10 @@ enum
     PRTime lastVisit;
     if (NS_SUCCEEDED(inItem->GetLastVisitDate(&lastVisit)))
       mLastVisitDate = [[NSDate dateWithPRTime:lastVisit] retain];
+
+    PRInt32 visitCount;
+    if (NS_SUCCEEDED(inItem->GetVisitCount(&visitCount)))
+      mVisitCount = [[NSNumber numberWithInt:visitCount] retain];
   }
   return self;
 }
@@ -545,6 +564,7 @@ enum
   [mHostname release];
   [mFirstVisitDate release];
   [mLastVisitDate release];
+  [mVisitCount release];
   [mSiteIcon release];
 
   [super dealloc];
@@ -568,6 +588,11 @@ enum
 - (NSDate*)lastVisit
 {
   return mLastVisitDate;
+}
+
+- (NSNumber*)visitCount
+{
+  return mVisitCount;
 }
 
 - (NSString*)hostname
@@ -672,6 +697,18 @@ enum
     result = NSOrderedDescending;
   else
     result = [mLastVisitDate compare:[aItem lastVisit]];
+
+  return [inDescending boolValue] ? (NSComparisonResult)(-1 * (int)result) : result;
+}
+
+- (NSComparisonResult)compareVisitCount:(HistoryItem *)aItem sortDescending:(NSNumber*)inDescending
+{
+  NSComparisonResult result;
+  // sort categories before sites
+  if ([aItem isKindOfClass:[HistoryCategoryItem class]])
+    result = NSOrderedDescending;
+  else
+    result = [mVisitCount compare:[aItem visitCount]];
 
   return [inDescending boolValue] ? (NSComparisonResult)(-1 * (int)result) : result;
 }

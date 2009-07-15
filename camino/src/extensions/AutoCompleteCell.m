@@ -49,6 +49,9 @@ static NSSize kIconSize = {16, 16};
 // Creates and returns a dictionary of attributes for the url string.
 - (NSMutableDictionary *)urlAttributes;
 
+// Creates and returns a dictionary of attributes for the url string.
+- (NSDictionary *)headerAttributes;
+
 // Divides a rectangle into appropriate-sized rectangles for the site
 // favicon, title string, and url string.
 - (void)createImageRect:(NSRect *)imageRect titleRect:(NSRect *)titleTextRect urlRect:(NSRect *)urlTextRect fromRect:(NSRect)cellFrame;
@@ -79,6 +82,14 @@ static NSSize kIconSize = {16, 16};
           [NSColor grayColor], NSForegroundColorAttributeName,
           [NSFont systemFontOfSize:11.0], NSFontAttributeName,
           paragraphStyle, NSParagraphStyleAttributeName,
+          nil];
+}
+
+- (NSDictionary *)headerAttributes
+{
+  return [NSDictionary dictionaryWithObjectsAndKeys:
+          [NSColor grayColor], NSForegroundColorAttributeName,
+          [NSFont systemFontOfSize:12.0], NSFontAttributeName,
           nil];
 }
 
@@ -133,26 +144,38 @@ static NSSize kIconSize = {16, 16};
 
   // Start drawing.
   [controlView lockFocus];
-  if ([self isHighlighted]) {
-    // We're highlighted, so draw selection gradient.
-    [self drawHighlightInRect:cellFrame];
-    // Set highlighted text colors.
-    [titleAttributes setValue:[NSColor whiteColor] forKey:NSForegroundColorAttributeName];
-    [urlAttributes setValue:[NSColor whiteColor] forKey:NSForegroundColorAttributeName];
-  }
-  NSRect imageRect;
-  NSRect titleTextRect;
-  NSRect urlTextRect;
-  [self createImageRect:&imageRect titleRect:&titleTextRect urlRect:&urlTextRect fromRect:cellFrame];
-  // Move the origin of the smaller-size url text so it aligns with the title text.
-  urlTextRect.origin.y += titleTextHeight - urlTextHeight;
+  if ([[self objectValue] isHeader]) {
+    // Draw a header row.
+    const int kHorizontalPadding = 10;
+    const int kTextVerticalPadding = (NSHeight(cellFrame) - titleTextHeight) * 0.5;
+    [title drawInRect:NSMakeRect(cellFrame.origin.x + kHorizontalPadding, 
+                                 cellFrame.origin.y + kTextVerticalPadding,
+                                 cellFrame.size.width - kHorizontalPadding * 2,
+                                 titleTextHeight)
+       withAttributes:[self headerAttributes]];
+  } else {
+    if ([self isHighlighted]) {
+      // We're highlighted, so draw selection gradient.
+      [self drawHighlightInRect:cellFrame];
+      // Set highlighted text colors.
+      [titleAttributes setValue:[NSColor whiteColor] forKey:NSForegroundColorAttributeName];
+      [urlAttributes setValue:[NSColor whiteColor] forKey:NSForegroundColorAttributeName];
+    }
+    NSRect imageRect;
+    NSRect titleTextRect;
+    NSRect urlTextRect;
+    [self createImageRect:&imageRect titleRect:&titleTextRect urlRect:&urlTextRect fromRect:cellFrame];
+    // Move the origin of the smaller-size url text so it aligns with the title text.
+    urlTextRect.origin.y += titleTextHeight - urlTextHeight;
 
-  // Draw the columns.
-  [siteIcon setFlipped:YES];
-  [siteIcon drawInRect:imageRect fromRect:NSMakeRect(0, 0, kIconSize.width, kIconSize.height) operation:NSCompositeSourceOver fraction:1.0];
-  [siteIcon setFlipped:NO];
-  [title drawInRect:titleTextRect withAttributes:titleAttributes];
-  [url drawInRect:urlTextRect withAttributes:urlAttributes];
+    // Draw the columns.
+    [siteIcon setFlipped:YES];
+    [siteIcon drawInRect:imageRect fromRect:NSMakeRect(0, 0, kIconSize.width, kIconSize.height) operation:NSCompositeSourceOver fraction:1.0];
+    // The icon needs to be flipped back so it displays properly in other places where it's used.
+    [siteIcon setFlipped:NO];
+    [title drawInRect:titleTextRect withAttributes:titleAttributes];
+    [url drawInRect:urlTextRect withAttributes:urlAttributes];
+  }
   [controlView unlockFocus];
 }
 
