@@ -47,6 +47,7 @@
 #import "BrowserWindowController.h"
 #import "BrowserTabViewItem.h"
 #import "NSString+Utils.h"
+#import "MAAttachedWindow.h"
 
 
 // This file adds scripting support to various classes.
@@ -166,7 +167,7 @@
     // the second set of windows is, but they certainly shouldn't be included.
     // Note: there is no -[NSWindow uniqueID] method; the uniqueID key is only
     // availible via KVC.
-    if (![curWindow isKindOfClass:[AutoCompleteWindow class]] &&
+    if (![curWindow isKindOfClass:[MAAttachedWindow class]] &&
         [[curWindow valueForKey:@"uniqueID"] intValue] != -1) {
           [windowArray addObject:curWindow];
     }

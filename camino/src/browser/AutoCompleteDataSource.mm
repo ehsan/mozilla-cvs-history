@@ -42,6 +42,7 @@
 
 #import <AppKit/AppKit.h>
 #import "AutoCompleteDataSource.h"
+#import "AutoCompleteResult.h"
 #import "SiteIconProvider.h"
 
 #include "nsString.h"
@@ -114,40 +115,41 @@
 
 - (id) resultForRow:(int)aRow columnIdentifier:(NSString *)aColumnIdentifier
 {
-  id result = [aColumnIdentifier isEqualToString:@"icon"] ? (id)mGenericSiteIcon : (id)@"";
-  
+  AutoCompleteResult *info = [[[AutoCompleteResult alloc] init] autorelease];
+  [info setIcon:mGenericSiteIcon];
+
   if (!mResults)
-    return result;
+    return info;
 
   nsCOMPtr<nsISupportsArray> items;
   mResults->GetItems(getter_AddRefs(items));
   
   nsCOMPtr<nsISupports> itemSupports = dont_AddRef(items->ElementAt(aRow));
   nsCOMPtr<nsIHistoryItem> item = do_QueryInterface(itemSupports);
+  
   if (!item)
-    return result;
+    return info;
 
-  else if ([aColumnIdentifier isEqualToString:@"col1"]) {
-    nsCAutoString value;
-    item->GetURL(value);
-    result = [[NSString stringWith_nsACString:value] unescapedURI];
-  } else if ([aColumnIdentifier isEqualToString:@"col2"]) {
-    nsAutoString titleStr;
-    item->GetTitle(titleStr);
-    result = [NSString stringWith_nsAString:titleStr];
-  } else if ([aColumnIdentifier isEqualToString:@"icon"]) {
-    nsCAutoString url;
-    item->GetURL(url);
-    NSString* urlString = [NSString stringWith_nsACString:url];
-    NSImage* cachedFavicon = [[SiteIconProvider sharedFavoriteIconProvider] favoriteIconForPage:urlString];
-    if (cachedFavicon) {
-      result = cachedFavicon;
-    } else if ([urlString hasPrefix:@"file://"]) {
-      result = mGenericFileIcon;
-    }
+  // Set URL.
+  nsCAutoString value;
+  item->GetURL(value);
+  NSString* urlString = [[NSString stringWith_nsACString:value] unescapedURI];
+  [info setUrl:urlString];
+
+  // Set title.
+  nsAutoString titleStr;
+  item->GetTitle(titleStr);
+  [info setTitle:[NSString stringWith_nsAString:titleStr]];
+
+  // Set icon.
+  NSImage* cachedFavicon = [[SiteIconProvider sharedFavoriteIconProvider] favoriteIconForPage:urlString];
+  if (cachedFavicon) {
+    [info setIcon:cachedFavicon];
+  } else if ([urlString hasPrefix:@"file://"]) {
+    [info setIcon:mGenericFileIcon];
   }
 
-  return result;
+  return info;
 }
 
 -(int) numberOfRowsInTableView:(NSTableView*)aTableView

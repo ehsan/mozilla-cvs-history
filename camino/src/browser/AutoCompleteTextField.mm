@@ -43,6 +43,9 @@
 #import "NSString+Gecko.h"
 #import "NSTextView+Utils.h"
 
+#import "MAAttachedWindow.h"
+#import "AutoCompleteCell.h"
+#import "AutoCompleteResult.h"
 #import "AutoCompleteTextField.h"
 #import "AutoCompleteDataSource.h"
 #import "BrowserWindowController.h"
@@ -175,7 +178,7 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
     theRect.size.width -= kSecureIconRightOffset;
   if ([self isFeedIconDisplayed])
     theRect.size.width -= kFeedIconRightOffest;
-    
+
   return [super drawingRectForBounds:theRect];
 }
 
@@ -344,10 +347,6 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 
 - (void) awakeFromNib
 {
-  NSTableColumn *column;
-  NSScrollView *scrollView;
-  NSCell *dataCell;
-  
   mListener = (nsIAutoCompleteListener *)new AutoCompleteListener(self);
   NS_IF_ADDREF(mListener);
 
@@ -356,17 +355,11 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 
   // XXX the owner of the textfield should set this
   [self setSession:@"history"];
-  
-  // construct and configure the popup window
-  mPopupWin = [[AutoCompleteWindow alloc] initWithContentRect:NSMakeRect(0,0,0,0)
-                      styleMask:NSBorderlessWindowMask backing:NSBackingStoreBuffered defer:NO];
-  [mPopupWin setReleasedWhenClosed:NO];
-  [mPopupWin setHasShadow:YES];
-  [mPopupWin setAlphaValue:0.9];
 
   // construct and configure the view
-  mTableView = [[[NSTableView alloc] initWithFrame:NSMakeRect(0,0,0,0)] autorelease];
-  [mTableView setIntercellSpacing:NSMakeSize(1, 2)];
+  mTableView = [[[NSTableView alloc] initWithFrame:NSZeroRect] autorelease];
+  [mTableView setIntercellSpacing:NSMakeSize(0, 2)];
+  [mTableView setDelegate:self];
   [mTableView setTarget:self];
   [mTableView setAction:@selector(onRowClicked:)];
   
@@ -378,13 +371,6 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
     [self addSubview:mProxyIcon];
     [mProxyIcon release];
     [mProxyIcon setFrameOrigin: NSMakePoint(3, 3)];
-    // Create the icon column
-    column = [[[NSTableColumn alloc] initWithIdentifier:@"icon"] autorelease];
-    [column setWidth:[mProxyIcon frame].origin.x + [mProxyIcon frame].size.width];
-    dataCell = [[[NSImageCell alloc] initImageCell:nil] autorelease];
-    [column setDataCell:dataCell];
-    [column setEditable:NO];
-    [mTableView addTableColumn: column];
   }
   
   // cache the bg color for secure pages. create a secure icon view which we'll display at the far right
@@ -407,29 +393,41 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   
   [self setAutoresizesSubviews:YES];
 
-  // create the text columns
-  column = [[[NSTableColumn alloc] initWithIdentifier:@"col1"] autorelease];
+  // create the main column
+  NSTableColumn *column = [[[NSTableColumn alloc] initWithIdentifier:@"main"] autorelease];
   [column setEditable:NO];
-  [mTableView addTableColumn: column];
-  column = [[[NSTableColumn alloc] initWithIdentifier:@"col2"] autorelease];
-  [[column dataCell] setTextColor:[NSColor darkGrayColor]];
-  [column setEditable:NO];
-  [mTableView addTableColumn: column];
+  [column setDataCell:[[[AutoCompleteCell alloc] init] autorelease]];
+  [mTableView addTableColumn:column];
 
   // hide the table header
   [mTableView setHeaderView:nil];
   
   // construct the scroll view that contains the table view
-  scrollView = [[[NSScrollView alloc] initWithFrame:NSMakeRect(0,0,0,0)] autorelease];
-  [scrollView setHasVerticalScroller:YES];
-  [[scrollView verticalScroller] setControlSize:NSSmallControlSize];
+  NSScrollView *scrollView = [[[NSScrollView alloc] initWithFrame:NSZeroRect] autorelease];
+  [scrollView setHasVerticalScroller:NO];
   [scrollView setDocumentView: mTableView];
+
+  // Construct and configure the popup window. It is necessary to give the view some
+  // initial dimension because of the way that MAAttachedWindow constructs itself.
+  NSView* tableViewContainerView = [[[NSView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100)] autorelease];
+  [tableViewContainerView addSubview:scrollView];
+  const float kPopupWindowOffsetFromLocationField = 8.0;
+  mPopupWin = [[MAAttachedWindow alloc] initWithView:tableViewContainerView
+                                     attachedToPoint:NSZeroPoint
+                                            inWindow:[self window]
+                                              onSide:MAPositionBottom
+                                          atDistance:kPopupWindowOffsetFromLocationField];
+  [mPopupWin setReleasedWhenClosed:NO];
+  [mPopupWin setBorderColor:[NSColor darkGrayColor]];
+  [mPopupWin setBackgroundColor:[NSColor whiteColor]];
+  [mPopupWin setViewMargin:1.0];
+  [mPopupWin setBorderWidth:0.0];
+  [mPopupWin setCornerRadius:5.0];
+  [mPopupWin setHasArrow:NO];
 
   // construct the datasource
   mDataSource = [[AutoCompleteDataSource alloc] init];
   [mTableView setDataSource: mDataSource];
-
-  [mPopupWin setContentView:scrollView];
 
   [[NSNotificationCenter defaultCenter] addObserver:self
                                            selector:@selector(onResize:)
@@ -570,7 +568,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 
 // searching ////////////////////////////
 
-- (void) startSearch:(NSString*)aString complete:(BOOL)aComplete
+- (void)startSearch:(NSString*)aString complete:(BOOL)aComplete
 {
   if (mSearchString)
     [mSearchString release];
@@ -681,26 +679,25 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   // to show the popup)
   if (![self isOpen] && !forceResize)
     return;
-
-  // get the origin of the location bar in coordinates of the root view
-  NSRect locationFrame = [self bounds];
-  NSPoint locationOrigin = locationFrame.origin;
-  locationOrigin.y += NSHeight(locationFrame);    // we want bottom left
-  locationOrigin = [self convertPoint:locationOrigin toView:nil];
-
-  // get the height of the table view
-  NSRect winFrame = [[self window] frame];
-  int tableHeight = (int)([mTableView rowHeight] + [mTableView intercellSpacing].height) * [self visibleRows];
-
-  // make the columns split the width of the popup
-  [[mTableView tableColumnWithIdentifier:@"col1"] setWidth:(locationFrame.size.width / 2.0f)];
   
-  // position the popup anchored to bottom/left of location bar
-  NSRect popupFrame = NSMakeRect(winFrame.origin.x + locationOrigin.x + kFrameMargin,
-                                 ((winFrame.origin.y + locationOrigin.y) - tableHeight) - kFrameMargin,
-                                 locationFrame.size.width - (2 * kFrameMargin),
-                                 tableHeight);
-  [mPopupWin setFrame:popupFrame display:NO];
+  // Convert coordinates.
+  NSRect locationFrame = [self bounds];
+  locationFrame.origin = [self convertPoint:locationFrame.origin toView:nil];
+  locationFrame.origin = [[self window] convertBaseToScreen:locationFrame.origin];
+  
+  // Resize views.
+  const float kHorizontalPadding = 5.0;
+  int tableHeight = (int)([mTableView rowHeight] + [mTableView intercellSpacing].height) * [self visibleRows];
+  NSRect scrollViewFrame = NSZeroRect;
+  scrollViewFrame.size.height = tableHeight;
+  scrollViewFrame.size.width = locationFrame.size.width - (2 * kFrameMargin);
+  scrollViewFrame.origin.y = kHorizontalPadding;
+  NSRect containerViewFrame = scrollViewFrame;
+  containerViewFrame.size.height += kHorizontalPadding * 2.0;
+  [[[mTableView enclosingScrollView] superview] setFrame:containerViewFrame];
+  [[mTableView enclosingScrollView] setFrame:scrollViewFrame];
+  [mPopupWin setPoint:NSMakePoint(NSMidX(locationFrame), locationFrame.origin.y) side:MAPositionBottom];
+  
 }
 
 - (void) closePopup
@@ -823,7 +820,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
     // user to see what they have typed and what change the autocomplete
     // makes while allowing them to continue typing w/out having to
     // reset the insertion point. 
-    NSString *result = [mDataSource resultForRow:aRow columnIdentifier:@"col1"];
+    NSString *result = [(AutoCompleteResult *)[mDataSource resultForRow:aRow columnIdentifier:@"main"] url];
     
     // figure out where to start the match, depending on whether the user typed the protocol part
     int protocolLength = 0;
@@ -847,7 +844,8 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 - (void) enterResult:(int)aRow
 {
   if (aRow >= 0 && [mDataSource rowCount] > 0) {
-    [self setStringUndoably:[mDataSource resultForRow:[mTableView selectedRow] columnIdentifier:@"col1"] fromLocation:0];
+    [self setStringUndoably:[(AutoCompleteResult *)[mDataSource resultForRow:[mTableView selectedRow] columnIdentifier:@"main"] url]
+               fromLocation:0];
     [self closePopup];
   } else if (mOpenTimer) {
     // if there was a search timer going when we hit enter, cancel it
@@ -1050,7 +1048,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
     // no special case, just increment current row
     row += aRows;
   }
-    
+
   [self selectRowAt:row];
 }
 
@@ -1162,7 +1160,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   NSTextView* fieldEditor = [[aNote userInfo] objectForKey:@"NSFieldEditor"];
   [[fieldEditor undoManager] removeAllActionsWithTarget:fieldEditor];
 }
-  
+
 - (BOOL)control:(NSControl *)control textView:(NSTextView *)textView doCommandBySelector:(SEL)command
 {
   if (command == @selector(insertNewline:)) {

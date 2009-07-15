@@ -44,6 +44,7 @@ class nsIAutoCompleteSession;
 class nsIAutoCompleteResults;
 class nsIAutoCompleteListener;
 
+@class MAAttachedWindow;
 @class AutoCompleteDataSource;
 @class ClickMenuImageView;
 @class PageProxyIcon;
@@ -55,7 +56,7 @@ extern NSString* const kWillShowFeedMenu;
   IBOutlet PageProxyIcon*   mProxyIcon;
   IBOutlet NSMenu*          mLockIconContextMenu;
   
-  NSWindow*                 mPopupWin;
+  MAAttachedWindow*         mPopupWin;
   NSTableView*              mTableView;
   
   ClickMenuImageView*       mLock;                  // STRONG, lock that shows when a page is secure, hidden otherwise
