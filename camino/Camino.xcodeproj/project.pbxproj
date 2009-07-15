@@ -3378,12 +3378,12 @@
 		F6BD64FC01B3184301A962F7 /* all.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = all.js; path = ../dist/Embed/greprefs/all.js; sourceTree = SOURCE_ROOT; };
 		F6BD650001B3184301A962F7 /* embed.jar */ = {isa = PBXFileReference; lastKnownFileType = archive.jar; name = embed.jar; path = ../dist/Embed/chrome/embed.jar; sourceTree = SOURCE_ROOT; };
 		F6BD650001B3184301A96307 /* flashblock.jar */ = {isa = PBXFileReference; lastKnownFileType = archive.jar; name = flashblock.jar; path = ../dist/Embed/chrome/flashblock.jar; sourceTree = SOURCE_ROOT; };
-		F72434200FE6DA90008B783E /* AutoCompleteCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AutoCompleteCell.m; path = ../../mozilla/camino/src/extensions/AutoCompleteCell.m; sourceTree = SOURCE_ROOT; };
-		F72434210FE6DA90008B783E /* AutoCompleteResult.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AutoCompleteResult.h; path = ../../mozilla/camino/src/extensions/AutoCompleteResult.h; sourceTree = SOURCE_ROOT; };
-		F72434220FE6DA90008B783E /* AutoCompleteResult.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AutoCompleteResult.m; path = ../../mozilla/camino/src/extensions/AutoCompleteResult.m; sourceTree = SOURCE_ROOT; };
-		F72434230FE6DA90008B783E /* AutoCompleteCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AutoCompleteCell.h; path = ../../mozilla/camino/src/extensions/AutoCompleteCell.h; sourceTree = SOURCE_ROOT; };
-		F72434280FE6DAAA008B783E /* MAAttachedWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MAAttachedWindow.h; path = ../../mozilla/camino/src/extensions/MAAttachedWindow.h; sourceTree = SOURCE_ROOT; };
-		F72434290FE6DAAA008B783E /* MAAttachedWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MAAttachedWindow.m; path = ../../mozilla/camino/src/extensions/MAAttachedWindow.m; sourceTree = SOURCE_ROOT; };
+		F72434200FE6DA90008B783E /* AutoCompleteCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AutoCompleteCell.m; path = src/extensions/AutoCompleteCell.m; sourceTree = SOURCE_ROOT; };
+		F72434210FE6DA90008B783E /* AutoCompleteResult.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AutoCompleteResult.h; path = src/extensions/AutoCompleteResult.h; sourceTree = SOURCE_ROOT; };
+		F72434220FE6DA90008B783E /* AutoCompleteResult.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AutoCompleteResult.m; path = src/extensions/AutoCompleteResult.m; sourceTree = SOURCE_ROOT; };
+		F72434230FE6DA90008B783E /* AutoCompleteCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AutoCompleteCell.h; path = src/extensions/AutoCompleteCell.h; sourceTree = SOURCE_ROOT; };
+		F72434280FE6DAAA008B783E /* MAAttachedWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MAAttachedWindow.h; path = src/extensions/MAAttachedWindow.h; sourceTree = SOURCE_ROOT; };
+		F72434290FE6DAAA008B783E /* MAAttachedWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MAAttachedWindow.m; path = src/extensions/MAAttachedWindow.m; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
