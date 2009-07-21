@@ -81,16 +81,13 @@ define('THROTTLE_LOGGING',false);
 //
 // $productThrottling = array(
 //     'Firefox' => array(
-//         '3.0' => array(
-//             'release' => 10 
-//         )
+//         '3.0' => 10,
+//         '3.1' => 10
 //     )
 // );
 $productThrottling = array(
      'Firefox' => array(
-         '3.0.11' => 0
-     ),
-     'Firefox' => array(
+         '3.0.11' => 0,
          '3.0.12' => 0
      )
 );
