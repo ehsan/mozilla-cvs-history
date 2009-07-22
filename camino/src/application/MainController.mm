@@ -38,7 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import <Carbon/Carbon.h>
-#import <SharedMenusCocoa/SharedMenusObj.h>
 
 #import "MainController.h"
 
@@ -157,8 +156,6 @@ NSString* const kPreviousSessionTerminatedNormallyKey = @"PreviousSessionTermina
     mMenuBookmarks = nil;
 
     [NSApp setServicesProvider:self];
-    // Initialize shared menu support
-    mSharedMenusObj = [[SharedMenusObj alloc] init];
 
     // Initialize growl support
     mGrowlController = [[GrowlController alloc] init];
@@ -169,9 +166,6 @@ NSString* const kPreviousSessionTerminatedNormallyKey = @"PreviousSessionTermina
 - (void)dealloc
 {
   [mCharsets release];
-
-  // Terminate shared menus
-  [mSharedMenusObj release];
 
   [mGrowlController release];
 

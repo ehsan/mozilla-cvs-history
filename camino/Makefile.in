@@ -195,7 +195,6 @@ CAMINO_SYMBOL_SOURCE_FILES = \
 	google-breakpad/src/client/mac/build/Release/Breakpad.framework.dSYM/Contents/Resources/DWARF/Breakpad \
 	google-breakpad/src/client/mac/build/Release/breakpadUtilities.dylib.dSYM/Contents/Resources/DWARF/breakpadUtilities.dylib \
 	growl/build/Deployment/Growl.framework.dSYM/Contents/Resources/DWARF/Growl \
-	sharedmenuscocoa/build/Deployment/SharedMenusCocoa.framework.dSYM/Contents/Resources/DWARF/SharedMenusCocoa \
 	sparkle/build/Release/Sparkle.framework.dSYM/Contents/Resources/DWARF/Sparkle \
 	$(NULL)
 
@@ -231,7 +230,6 @@ GARBAGE_DIRS += \
 	embed-replacements.tmp \
 	generated \
 	growl/build \
-	sharedmenuscocoa/build \
 	sparkle/build \
 	google-breakpad/src/client/mac/build \
 	google-breakpad/src/tools/mac/dump_syms/build \
@@ -263,14 +261,11 @@ ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
 	ln -fs $(srcdir)/scripts
 	ln -fs $(srcdir)/PreferencePanes
 	ln -fs $(srcdir)/Info-*.plist .
-	mkdir -p sharedmenuscocoa sparkle growl \
+	mkdir -p sparkle growl \
 	  google-breakpad/src/client/mac \
 	  google-breakpad/src/tools/mac/dump_syms \
 	  google-breakpad/src/tools/mac/crash_report \
 	  google-breakpad/src/tools/mac/symupload
-	bash -O extglob -c \
-	  "ln -fs $(ABS_topsrcdir)/camino/sharedmenuscocoa/!(CVS|*.xcodeproj|build) sharedmenuscocoa"
-	$(RSYNC_ALL) $(ABS_topsrcdir)/camino/sharedmenuscocoa/*.xcodeproj sharedmenuscocoa
 	bash -O extglob -c \
 	  "ln -fs $(ABS_topsrcdir)/camino/sparkle/!(CVS|*.xcodeproj|build) sparkle"
 	$(RSYNC_ALL) $(ABS_topsrcdir)/camino/sparkle/*.xcodeproj sparkle
