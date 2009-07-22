@@ -31,4 +31,4 @@ image is included here, except:
       has been deleted, as the default is suitable.
     + INFOPLIST_FILE has been set properly.
     + PREBINDING has been turned off, as it is no longer desirable.
-    + DEBUG_INFORMATION_FORMAT has been set to dwarf-with-dsym for Deployment.
+    + DEBUG_INFORMATION_FORMAT has been set to dwarf-with-dsym for Deployment (and GCC_ENABLE_SYMBOL_SEPARATION set to NO).
