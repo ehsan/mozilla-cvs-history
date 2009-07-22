@@ -192,11 +192,11 @@ GENERATED_GECKO_STRINGS_FILES = $(patsubst %,generated/%,$(GECKO_STRINGS_FILES))
 # the objdir, and we have to do some tweaking to get the cvs paths to work out right.
 CAMINO_SYMBOL_SOURCE_FILES = \
 	$(XCODE_PRODUCT_DIR)/*.dSYM/Contents/Resources/DWARF/* \
-	$(XCODE_PRODUCT_DIR)/Camino.app/Contents/Frameworks/Growl.framework/Growl \
-	$(XCODE_PRODUCT_DIR)/Camino.app/Contents/Frameworks/SharedMenusCocoa.framework/SharedMenusCocoa \
-	$(XCODE_PRODUCT_DIR)/Camino.app/Contents/Frameworks/Sparkle.framework/Sparkle \
 	google-breakpad/src/client/mac/build/Release/Breakpad.framework.dSYM/Contents/Resources/DWARF/Breakpad \
 	google-breakpad/src/client/mac/build/Release/breakpadUtilities.dylib.dSYM/Contents/Resources/DWARF/breakpadUtilities.dylib \
+	growl/build/Deployment/Growl.framework.dSYM/Contents/Resources/DWARF/Growl \
+	sharedmenuscocoa/build/Deployment/SharedMenusCocoa.framework.dSYM/Contents/Resources/DWARF/SharedMenusCocoa \
+	sparkle/build/Release/Sparkle.framework.dSYM/Contents/Resources/DWARF/Sparkle \
 	$(NULL)
 
 CORE_SYMBOL_SOURCE_FILES = \

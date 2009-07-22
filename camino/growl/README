@@ -7,3 +7,4 @@ This is Growl 1.1.4 (4886) from http://www.growl.info/files/source/Growl-1.1.4-s
 with the following changes:
 - Only the source files needed to build the "Growl.framework" target have been included.
 - Commented out the SDK declarations in Growl.xcodeproj to support mozconfig-based configurations.
+- Debug symbol format for Deployment was changed to DWARF+dSYM for better breakpad symbol generation.
