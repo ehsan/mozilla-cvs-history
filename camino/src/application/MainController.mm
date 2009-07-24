@@ -1806,10 +1806,10 @@ NSString* const kPreviousSessionTerminatedNormallyKey = @"PreviousSessionTermina
       return YES;
   }
 
-  // disable non-BWC items that aren't relevant if there's no main browser window open
-  // or the bookmark/history manager is open
+  // disable non-BWC items that aren't relevant to the current state of the
+  // browser
   if (action == @selector(savePage:))
-    return (browserController && ![browserController bookmarkManagerIsVisible]);
+    return (browserController && [browserController validateActionBySelector:action]);
 
   // BrowserWindowController decides about actions that are just sent on to
   // the front window's BrowserWindowController. This works because the selectors

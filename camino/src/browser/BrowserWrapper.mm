@@ -331,6 +331,25 @@ static const NSTimeInterval kTimeIntervalToConsiderSiteBlockingStatusValid = 900
   return [mBrowserView currentURI];
 }
 
+- (NSString*)documentURI
+{
+  nsCOMPtr<nsIDOMWindow> domWindow = [mBrowserView contentWindow];
+  if (!domWindow)
+    return NO;
+  nsCOMPtr<nsIDOMDocument> domDocument;
+  domWindow->GetDocument(getter_AddRefs(domDocument));
+  if (!domDocument)
+    return NO;
+  nsCOMPtr<nsIDOM3Document> doc = do_QueryInterface(domDocument);
+  if (!doc)
+    return NO;
+  nsAutoString docURISpec;
+  nsresult rv = doc->GetDocumentURI(docURISpec);
+  if (NS_FAILED(rv))
+    return NO;
+  return [NSString stringWith_nsAString:docURISpec];
+}
+
 - (void)setFrame:(NSRect)frameRect
 {
   [self setFrame:frameRect resizingBrowserViewIfHidden:NO];
@@ -969,18 +988,7 @@ static const NSTimeInterval kTimeIntervalToConsiderSiteBlockingStatusValid = 900
 
   // Get the URI of the page actually containing the XUL element, which will differ
   // from -[self currentURI] if the command was send from an error overlay, for instance.
-  nsCOMPtr<nsIDOMDocument> domDocument;
-  rv = domElementSendingEvent->GetOwnerDocument(getter_AddRefs(domDocument));
-  if (NS_FAILED(rv))
-    return;
-  nsCOMPtr<nsIDOM3Document> doc = do_QueryInterface(domDocument, &rv);
-  if (NS_FAILED(rv))
-    return;
-  nsAutoString docURISpec;
-  rv = doc->GetDocumentURI(docURISpec);
-  if (NS_FAILED(rv))
-    return;
-  NSString* documentURI = [NSString stringWith_nsAString:docURISpec];
+  NSString* documentURI = [self documentURI];
 
   [self performCommandForXULElementWithID:elementID onPage:documentURI];
 }
@@ -1349,6 +1357,17 @@ static const NSTimeInterval kTimeIntervalToConsiderSiteBlockingStatusValid = 900
   return ([currentURI hasPrefix:@"about:"] || [currentURI hasPrefix:@"view-source:"]);
 }
 
+- (BOOL)isBlockedErrorOverlayShowing
+{
+  NSString* currentTitle = [self title];
+  // Quick heuristic before double-checking by inspecting the DOM.
+  if ([currentTitle isEqualToString:NSLocalizedString(@"PhishingTitleText", nil)] ||
+      [currentTitle isEqualToString:NSLocalizedString(@"MalwareTitleText", nil)]) {
+    return [[self documentURI] hasPrefix:@"about:safebrowsingblocked"];
+  }
+  return NO;
+}
+
 //
 // -isBookmarkable
 //
@@ -1356,7 +1375,7 @@ static const NSTimeInterval kTimeIntervalToConsiderSiteBlockingStatusValid = 900
 //
 - (BOOL)isBookmarkable
 {
-  if ([self isEmpty])
+  if ([self isEmpty] || [self isBlockedErrorOverlayShowing])
     return NO;
 
   // Check for any potential security implications as determined by nsIScriptSecurityManager's

@@ -1925,18 +1925,19 @@ public:
             [[[self browserWrapper] browserView] isTextBasedContent]);
   }
   if (action == @selector(sendURL:))
-    return ![[self browserWrapper] isInternalURI];
+    return (![[self browserWrapper] isInternalURI] && ![[self browserWrapper] isBlockedErrorOverlayShowing]);
   if (action == @selector(viewSource:) ||
       action == @selector(viewPageSource:) ||
       action == @selector(fillForm:))
   {
     BrowserWrapper* browser = [self browserWrapper];
-    return (![browser isInternalURI] && [[browser browserView] isTextBasedContent]);
+    return (![browser isInternalURI] && [[browser browserView] isTextBasedContent] && ![browser isBlockedErrorOverlayShowing]);
   }
   if (action == @selector(printDocument:) ||
-      action == @selector(pageSetup:))
+      action == @selector(pageSetup:) ||
+      action == @selector(savePage:))
   {
-    return ![self bookmarkManagerIsVisible];
+    return (![self bookmarkManagerIsVisible] && ![[self browserWrapper] isBlockedErrorOverlayShowing]);
   }
 
   return YES;
@@ -4321,9 +4322,14 @@ public:
       [result removeItem:frameItem];
   }
 
+  // validate Save Page/Frame As
+  if (![self validateActionBySelector:@selector(savePage:)]) {
+    [[result itemWithTarget:self andAction:@selector(savePageAs:)] setEnabled:NO];
+    [[result itemWithTarget:self andAction:@selector(saveFrameAs:)] setEnabled:NO];
+  }
+
   // validate View Page/Frame Source
-  BrowserWrapper* browser = [self browserWrapper];
-  if ([browser isInternalURI] || ![[browser browserView] isTextBasedContent]) {
+  if (![self validateActionBySelector:@selector(viewSource:)]) {
     [[result itemWithTarget:self andAction:@selector(viewPageSource:)] setEnabled:NO];
     [[result itemWithTarget:self andAction:@selector(viewSource:)] setEnabled:NO];
   }

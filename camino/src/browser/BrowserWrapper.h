@@ -218,11 +218,13 @@ extern NSString* const kBrowserInstanceClosedNotification;
 - (BOOL)isBusy;
 - (BOOL)isEmpty;                      // is about:blank loaded?
 - (BOOL)isInternalURI;
+- (BOOL)isBlockedErrorOverlayShowing; // is about:safebrowsingblocked loaded?
 - (BOOL)isBookmarkable;
 - (BOOL)canReload;
 
 - (NSString*)pendingURI;
 - (NSString*)currentURI;
+- (NSString*)documentURI;
 - (NSString*)pageTitle;
 - (NSString*)pageSource;
 - (NSString*)pageText;
