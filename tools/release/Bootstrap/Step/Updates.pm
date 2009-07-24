@@ -130,33 +130,12 @@ sub Verify {
 
     my $config = new Bootstrap::Config();
     my $logDir = $config->Get(sysvar => 'logDir');
-    my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
     my $hgToolsRepo = $config->Get(var => 'hgToolsRepo');
-    my $hgSshKey = $config->Get(sysvar => 'hgSshKey');
     my $verifyDir = $config->Get(var => 'verifyDir');
     my $osname = $config->SystemInfo(var => 'osname');
     my $product = $config->Get(var => 'product');
-    my $appName = $config->Get(var => 'appName');
-    my $oldVersion = $config->GetOldVersion(longName => 0);
-    my $oldAppVersion = $config->GetOldAppVersion();
-    my $oldLongVersion = $config->GetOldVersion(longName => 1);
     my $version = $config->GetVersion(longName => 0);
-    my $appVersion = $config->GetAppVersion();
-    my $longVersion = $config->GetVersion(longName => 1);
-    my $build = $config->Get(var => 'build');
-    my $oldBuild = $config->Get(var => 'oldBuild');
-    my $ausServerUrl = $config->Get(var => 'ausServerUrl');
-    my $stagingServer = $config->Get(var => 'stagingServer');
     my $verifyConfig = $config->Get(sysvar => 'verifyConfig');
-    my $linuxExtension = $config->GetLinuxExtension();
-
-    my $oldCandidatesDir = CvsCatfile('pub', 'mozilla.org', $product, 'nightly',
-                                     $oldVersion . '-candidates',
-                                     'build' . $oldBuild . '/');
-
-    my $oldTagVersion = $oldVersion;
-    $oldTagVersion =~ s/\./_/g;
-    my $oldBranchTag = uc($product).'_'.$oldTagVersion.'_RELEASE';
 
     # Create verification area.
     my $verifyDirVersion = catfile($verifyDir, $product . '-' . $version);
@@ -167,56 +146,7 @@ sub Verify {
       repo => $hgToolsRepo,
       workDir => $verifyDirVersion
     );
-    $this->CvsCo(
-      cvsroot => $mozillaCvsroot,
-      modules => [CvsCatfile('mozilla', $appName, 'locales',
-                             'shipped-locales')],
-      tag => $oldBranchTag,
-      workDir => $verifyDirVersion,
-      checkoutDir => 'locales'
-    );
-    my $shippedLocales = catfile($verifyDirVersion, 'locales',
-                                 'shipped-locales');
-    my @args = (catfile($verifyDirVersion, 'tools', 'release',
-                        'update-verify-bump.pl'),
-            '-o', $osname,
-            '-p', $product,
-            '--old-version=' . $oldVersion,
-            '--old-app-version=' . $oldAppVersion,
-            '--old-long-version=' . $oldLongVersion,
-            '-v', $version,
-            '--app-version=' . $appVersion,
-            '--long-version=' . $longVersion,
-            '-n', $build,
-            '-a', $ausServerUrl,
-            '-s', $stagingServer,
-            '-c', catfile($verifyDirVersion, 'tools', 'release', 'updates',
-                          $verifyConfig),
-            '-d', $oldCandidatesDir,
-            '-e', $linuxExtension,
-            '-l', $shippedLocales
-    );
 
-    $this->Shell(
-      cmd => 'perl',
-      cmdArgs => \@args
-    );
-    $this->Shell(
-      cmd => 'hg',
-      cmdArgs => ['commit', '-m',
-                  '"Automated configuration bump, release for '
-                  . $product  . ' ' . $version . "build$build" . '"'],
-      logFile => catfile($logDir, 'update_verify-checkin.log'),
-      dir => catfile($verifyDirVersion, 'tools')
-    );
-    $this->HgPush(
-      repo => $hgToolsRepo,
-      workDir => catfile($verifyDirVersion, 'tools')
-    );
-
-    # Customize updates.cfg to contain the channels you are interested in 
-    # testing.
-    
     my $verifyLog = catfile($logDir, 'updates_verify.log');
     $this->Shell(
       cmd => './verify.sh', 
