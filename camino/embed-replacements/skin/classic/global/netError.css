@@ -126,6 +126,7 @@ body[dir="rtl"] #brand {
 #securityOverrideContent {
   background-color: #ffdd7f; /* pale orange */
   padding: 1.3em 1.5em;
+  border: 1px solid transparent; /* bug 505946 */
   -moz-border-radius: 15px;
   -moz-margin-end: 3em;
 }
