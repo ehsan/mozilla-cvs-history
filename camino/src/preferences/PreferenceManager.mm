@@ -71,6 +71,7 @@
 #include "nsILocalFileMac.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsINIParser.h"
+#include "nsIFontEnumerator.h"
 
 #define CUSTOM_PROFILE_DIR  "CAMINO_PROFILE_DIR"
 
@@ -1496,6 +1497,28 @@ typedef enum EProxyConfig {
   [self clearPref:kOldGeckoPrefLeaveDownloadManagerOpen];
   [self clearPref:kOldGeckoPrefDownloadToDefaultLocation];
   [self clearPref:kOldGeckoPrefAutoOpenDownloads];
+}
+
+- (NSString*)fontNameForGeckoFontName:(NSString*)geckoFontName
+{
+  nsresult rv;
+  nsCOMPtr<nsIFontEnumerator> fontEnum = do_GetService("@mozilla.org/gfx/fontenumerator;1", &rv);
+  if (NS_FAILED(rv))
+    return nil;
+
+  PRUnichar* geckoName = [geckoFontName createNewUnicodeBuffer];
+  PRUnichar* standardNameBuffer = NULL;
+  rv = fontEnum->GetStandardFamilyName(geckoName, &standardNameBuffer);
+  if (geckoName)
+    nsCRT::free(geckoName);
+  if (NS_FAILED(rv))
+    return nil;
+
+  NSString* standardName = [NSString stringWithPRUnichars:standardNameBuffer];
+  if (standardNameBuffer)
+    nsCRT::free(standardNameBuffer);
+
+  return standardName;
 }
 
 @end

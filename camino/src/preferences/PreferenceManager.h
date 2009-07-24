@@ -97,4 +97,10 @@ extern NSString* const kPrefChangedPrefNameUserInfoKey;   // NSString
 - (void)removeObserver:(id)inObject;    // remove from all prefs that it observes
 - (void)removeObserver:(id)inObject forPref:(const char*)inPrefName;
 
+// Returns a Cocoa font name translated from a Gecko font family name (used in 
+// preferences). There's occasionally a mismatch when using Gecko family names
+// in Cocoa to create an NSFont (usually caused by localization differences).
+// Returns nil if no font name matches |geckoName|.
+- (NSString*)fontNameForGeckoFontName:(NSString*)geckoName;
+
 @end

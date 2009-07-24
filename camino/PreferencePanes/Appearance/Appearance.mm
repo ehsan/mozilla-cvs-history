@@ -411,11 +411,13 @@
   NSString* fontName = [fontTypeDict objectForKey:@"fontfamily"];
   NSString* fontPrefName = [NSString stringWithFormat:@"font.name.%@.%@", fontType, regionCode];
 
-  if (fontName)
+  if (fontName) {
     [self setPref:[fontPrefName UTF8String] toString:fontName];
-  else
+  }
+  else {
     // If the preferences were reset to defaults, this key could be gone.
     [self clearPref:[fontPrefName UTF8String]];
+  }
 }
 
 - (void)saveFontSizePrefsForRegion:(NSDictionary*)regionDict
@@ -499,40 +501,46 @@
   {
     // clear any missing flag
     [fontTypeDict removeObjectForKey:@"missing"];
-    
-    [fontTypeDict setObject:[font familyName] forKey:@"fontfamily"];
+
+    NSString* fontNameToSave = [font familyName];
+
+    // XXX Special-case Osaka-Mono as part of bug 391076.
+    // When using Osaka as a monospace font, we must use its exact font name (Osaka-Mono),
+    // since the family name (just Osaka) will be incorrect in this case.
+    if ([fontType isEqualToString:@"monospace"] && [[font fontName] isEqualToString:@"Osaka"])
+      fontNameToSave = @"Osaka-Mono";
+
+    [fontTypeDict setObject:fontNameToSave forKey:@"fontfamily"];
     [fontSizeDict setObject:[NSNumber numberWithInt:(int)[font pointSize]] forKey:[self fontSizeType:fontType]];
   }
 }
- 
+
+// Returns nil if the font could not be found.
 - (NSFont*)fontOfType:(NSString*)fontType fromDict:(NSDictionary*)regionDict
 {
   NSDictionary* fontTypeDict = [regionDict objectForKey:fontType];
   NSDictionary* fontSizeDict = [regionDict objectForKey:@"fontsize"];
 
-  NSString* fontName = [fontTypeDict objectForKey:@"fontfamily"];
+  NSString* fontFamilyFromPrefs = [fontTypeDict objectForKey:@"fontfamily"];
   int fontSize = [[fontSizeDict objectForKey:[self fontSizeType:fontType]] intValue];
-  
-  NSFont* returnFont = nil;
-  
-  if (fontName && fontSize > 0) {
-    // We can't use [NSFont fontWithName] here, because we only store font
-    // family names in the prefs file. So use the font manager instead of
-    // returnFont = [NSFont fontWithName:fontName size:fontSize];
-    returnFont = [[NSFontManager sharedFontManager] fontWithFamily:fontName traits:0 weight:5 size:fontSize];
-  }
-  else if (fontName) {
-    // no size
-    returnFont = [[NSFontManager sharedFontManager] fontWithFamily:fontName traits:0 weight:5 size:16.0];
-  }
-  
-  // If we still have no font, get defaults.
-  if (fontName == nil && returnFont == nil)
-    returnFont = ([fontType isEqualToString:@"monospace"]) ?
-              [NSFont userFixedPitchFontOfSize:14.0] :
-              [NSFont userFontOfSize:16.0];
 
-  // We return nil if the font was not found!
+  NSFont* returnFont = nil;
+
+  if (fontFamilyFromPrefs) {
+    returnFont = [NSFont fontWithName:[self fontNameForGeckoFontName:fontFamilyFromPrefs] size:fontSize];
+    if (!returnFont)
+      returnFont = [[NSFontManager sharedFontManager] fontWithFamily:fontFamilyFromPrefs traits:0 weight:5 size:fontSize];
+    // Some fonts are not specified as a family name in prefs, but a single face
+    // (e.g. Osaka-Mono). If we still could not create a font, try to use the pref
+    // value as a face name instead of family name.
+    if (!returnFont)
+      returnFont = [NSFont fontWithName:fontFamilyFromPrefs size:fontSize];
+  }
+  else {
+    returnFont = ([fontType isEqualToString:@"monospace"]) ? [NSFont userFixedPitchFontOfSize:14.0]
+                                                           : [NSFont userFontOfSize:16.0];
+  }
+
   return returnFont;
 }
 
@@ -557,13 +565,13 @@
 // enforce that assumption.
 - (void)setFontSampleOfType:(NSString*)fontType withFont:(NSFont*)font andDict:(NSDictionary*)regionDict
 {
-  // Font may be nil here, in which case the font is missing, and we construct
-  // a string to display from the dict.
   NSMutableDictionary* fontTypeDict = [regionDict objectForKey:fontType];
 
   NSTextField* sampleCell = [self fontSampleForType:fontType];
   NSString* displayString = nil;
-  
+
+  // Font may be nil here, in which case the font is missing, and we construct
+  // a string to display from the dict.
   if (font == nil) {
     if (regionDict) {
       NSDictionary* fontSizeDict = [regionDict objectForKey:@"fontsize"];
@@ -584,16 +592,25 @@
     }
   }
   else {
-    displayString = [NSString stringWithFormat:@"%@, %dpx", [font familyName], (int)[font pointSize]];
-    
+    // The fact that font != nil merely indicates that the font specified in prefs 
+    // is not missing on the system.  There could actually be no font pref set for
+    // this region and type, in which case |font| is only a default value.
+    // Check if there is an actual value set in prefs.
+    BOOL fontIsSpecifiedInPrefs = ([fontTypeDict objectForKey:@"fontfamily"] != nil);
+
+    if (fontIsSpecifiedInPrefs) {
+      NSString* localizedFamilyName = [[NSFontManager sharedFontManager] localizedNameForFamily:[font familyName] face:nil];
+      displayString = [NSString stringWithFormat:@"%@, %dpx", localizedFamilyName, (int)[font pointSize]];
+    }
+    else {
+      displayString = [self localizedStringForKey:@"NoFontSelected"];
+    }
+
     // Make sure we don't have a "missing" entry.
     [fontTypeDict removeObjectForKey:@"missing"];
   }
-  
-  // Set the font of the sample to a font that is not bold, italic etc.
-  NSFont* baseFont = [[NSFontManager sharedFontManager] fontWithFamily:[font familyName] traits:0 weight:5 /* normal weight */ size:[font pointSize]];
-  
-  [sampleCell setFont:baseFont];
+
+  [sampleCell setFont:font];
   [sampleCell setStringValue:displayString];
 }
 
@@ -607,8 +624,12 @@
 
   // Save the font in the dictionaries...
   [self saveFont:sampleFont toDict:regionDict forType:fontType];
-  // ...and update the sample.
-  [self setFontSampleOfType:fontType withFont:sampleFont andDict:regionDict];
+
+  // Update the font sample.
+  // Even though we know the new font we actually re-fetch it, as some fonts are
+  // actually modified when saving, to account for Gecko/Cocoa naming conflicts.
+  NSFont* fontAsSaved = [self fontOfType:fontType fromDict:regionDict];
+  [self setFontSampleOfType:fontType withFont:fontAsSaved andDict:regionDict];
 }
 
 - (NSTextField*)fontSampleForType:(NSString*)fontType

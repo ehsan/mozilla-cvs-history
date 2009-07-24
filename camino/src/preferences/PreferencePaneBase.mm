@@ -120,6 +120,11 @@
   return NSLocalizedStringFromTableInBundle(key, nil, [NSBundle bundleForClass:[self class]], @"");
 }
 
+- (NSString*)fontNameForGeckoFontName:(NSString*)geckoName
+{
+  return [[PreferenceManager sharedInstance] fontNameForGeckoFontName:geckoName];
+}
+
 @end
 
 // Compatibility wrappers for third-party pref panes that use methods that we

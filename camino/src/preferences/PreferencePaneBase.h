@@ -69,4 +69,7 @@
 
 - (NSString*)localizedStringForKey:(NSString*)key;
 
+// See PreferenceManager.h for documentation about this method.
+- (NSString*)fontNameForGeckoFontName:(NSString*)geckoName;
+
 @end
