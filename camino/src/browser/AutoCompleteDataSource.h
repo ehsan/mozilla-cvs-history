@@ -54,7 +54,8 @@
   id                      mDelegate;
 
   NSRange                 mChunkRange;
-  NSPredicate*            mRegexTest;                   // owned
+  NSPredicate*            mURLRegexTest;                // owned
+  NSPredicate*            mTitleRegexTest;              // owned
 
   NSMutableArray*         mBookmarkData;                // owned
   NSMutableArray*         mHistoryData;                 // owned

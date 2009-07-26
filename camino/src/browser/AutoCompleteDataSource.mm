@@ -112,7 +112,8 @@ const unsigned int kNumberOfItemsPerChunk = 100;
   [mBookmarkResultsInProgress release];
   [mHistoryResultsInProgress release];
   [mResults release];
-  [mRegexTest release];
+  [mURLRegexTest release];
+  [mTitleRegexTest release];
   [mGenericSiteIcon release];
   [mGenericFileIcon release];
   [super dealloc];
@@ -122,8 +123,10 @@ const unsigned int kNumberOfItemsPerChunk = 100;
 {
   [mBookmarkResultsInProgress removeAllObjects];
   [mHistoryResultsInProgress removeAllObjects];
-  [mRegexTest release];
-  mRegexTest = nil;
+  [mURLRegexTest release];
+  mURLRegexTest = nil;
+  [mTitleRegexTest release];
+  mTitleRegexTest = nil;
   mChunkRange = NSMakeRange(0, kNumberOfItemsPerChunk);
 }
 
@@ -158,14 +161,23 @@ const unsigned int kNumberOfItemsPerChunk = 100;
   [self resetSearch];
   [NSObject cancelPreviousPerformRequestsWithTarget:self];
 
-  // Construct the regular expression. NSPredicate will only evaluate to true if the
-  // entire string matches--thus the leading and trailing ".*".
+  // Construct the regular expression for url matching. NSPredicate will
+  // only evaluate to true if the entire string matches--thus the leading
+  // and trails stars. Matching works as follows:
+  // 1. If the user has not typed '://', match any protocol followed by
+  //    '://' followed by an optional 'www.' followed by the search string.
+  // 2. If the user has typed '://', then match the entire search string.
   NSString *regex;
   if ([searchString rangeOfString:@"://"].location == NSNotFound)
     regex = [NSString stringWithFormat:@".*://(www\\.)?%@.*", searchString];
   else
     regex = [NSString stringWithFormat:@".*%@.*", searchString];
-  mRegexTest = [[NSPredicate predicateWithFormat:@"SELF MATCHES[cd] %@", regex] retain];
+  mURLRegexTest = [[NSPredicate predicateWithFormat:@"SELF MATCHES[cd] %@", regex] retain];
+
+  // Construct the regular expression for title matching. The title will
+  // only match if the search string appears at the beginning of a word.
+  regex = [NSString stringWithFormat:@".*\\b%@.*", searchString];
+  mTitleRegexTest = [[NSPredicate predicateWithFormat:@"SELF MATCHES[cd] %@", regex] retain];
 
   [self performSelector:@selector(processNextSearchChunk) withObject:nil afterDelay:0.0];
 }
@@ -204,7 +216,7 @@ const unsigned int kNumberOfItemsPerChunk = 100;
 
 - (BOOL)searchStringMatchesItem:(id)item
 {
-  return [mRegexTest evaluateWithObject:[item url]];
+  return [mURLRegexTest evaluateWithObject:[item url]] || [mTitleRegexTest evaluateWithObject:[item title]];
 }
 
 - (AutoCompleteResult *)autoCompleteResultForItem:(id)item
