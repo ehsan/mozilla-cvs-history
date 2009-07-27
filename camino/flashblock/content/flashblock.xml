@@ -126,40 +126,38 @@ function flashblockStylePlaceholder(flash, placeholder, isStandalone) {
 	if (fClass)
 		placeholder.setAttribute("class", fClass);
 
-	if(flash.width.match("%$")) {
-		placeholder.style.width = current.width;
-	} else {
-		var width = parseInt(flash.width || flash.style.width);
-		if (width) {
-			if (width >= 32) {
-				placeholder.style.width = width + "px";
-			}
-			else {
-			placeholder.style.width = "32px";
-			}
-		}
-	}
+	var fStyle = window.getComputedStyle(flash, "");
 
-	if(flash.height.match("%$")) {
-		placeholder.style.height = flash.height;
-	} else {
-		var height = parseInt(flash.height || flash.style.height);
-		if (height) {
-			if (height >= 32) {
-				placeholder.style.height = height + "px";
-			}
-			else {
-				placeholder.style.height = "32px";
-			}
-		}
-	}
+	var fWidth = fStyle.getPropertyValue("width");
+	var width = parseInt(flash.width || flash.style.width);
+	if (fWidth && parseInt(fWidth) > 32)
+		width = fWidth;
+	else if(flash.width.match("%$"))
+		width = flash.width;
+	else if (width)
+			width = Math.max(width,32) + "px";
+	else
+		width = "32px"
+	placeholder.style.width = width;
+
+	var fHeight = fStyle.getPropertyValue("height");
+	var height = parseInt(flash.height || flash.style.height);
+	if (fHeight && parseInt(fHeight) > 32)
+		height = fHeight;
+	else if(flash.height.match("%$"))
+		height = flash.height;
+	else if (height)
+		height = Math.max(height,32) + "px";
+	else 
+		height = "32px"
+	placeholder.style.height = height;
 
 	// Add styling rules to placeholder div.
 	placeholder.style.border = "1px solid #dfdfdf";
 	placeholder.style.cursor = "pointer";
 	placeholder.style.overflow = "hidden";
-	var disp = flash.style.display == "block" ? "block" : "inline-block";
-	placeholder.style.display = disp;
+	var disp = fStyle.getPropertyValue("display");
+	placeholder.style.display = disp == "block" ? "block" : "inline-block";
 	placeholder.style.setProperty("visibility", "visible", "important");
 
 	// The size of the placeholder should include borders too,
@@ -405,40 +403,38 @@ function flashblockStylePlaceholder(flash, placeholder, isStandalone) {
 	if (fClass)
 		placeholder.setAttribute("class", fClass);
 
-	if(flash.width.match("%$")) {
-		placeholder.style.width = current.width;
-	} else {
-		var width = parseInt(flash.width || flash.style.width);
-		if (width) {
-			if (width >= 32) {
-				placeholder.style.width = width + "px";
-			}
-			else {
-			placeholder.style.width = "32px";
-			}
-		}
-	}
+	var fStyle = window.getComputedStyle(flash, "");
 
-	if(flash.height.match("%$")) {
-		placeholder.style.height = flash.height;
-	} else {
-		var height = parseInt(flash.height || flash.style.height);
-		if (height) {
-			if (height >= 32) {
-				placeholder.style.height = height + "px";
-			}
-			else {
-				placeholder.style.height = "32px";
-			}
-		}
-	}
+	var fWidth = fStyle.getPropertyValue("width");
+	var width = parseInt(flash.width || flash.style.width);
+	if (fWidth && parseInt(fWidth) > 32)
+		width = fWidth;
+	else if(flash.width.match("%$"))
+		width = flash.width;
+	else if (width)
+			width = Math.max(width,32) + "px";
+	else
+		width = "32px"
+	placeholder.style.width = width;
+
+	var fHeight = fStyle.getPropertyValue("height");
+	var height = parseInt(flash.height || flash.style.height);
+	if (fHeight && parseInt(fHeight) > 32)
+		height = fHeight;
+	else if(flash.height.match("%$"))
+		height = flash.height;
+	else if (height)
+		height = Math.max(height,32) + "px";
+	else 
+		height = "32px"
+	placeholder.style.height = height;
 
 	// Add styling rules to placeholder div.
 	placeholder.style.border = "1px solid #dfdfdf";
 	placeholder.style.cursor = "pointer";
 	placeholder.style.overflow = "hidden";
-	var disp = flash.style.display == "block" ? "block" : "inline-block";
-	placeholder.style.display = disp;
+	var disp = fStyle.getPropertyValue("display");
+	placeholder.style.display = disp == "block" ? "block" : "inline-block";
 	placeholder.style.setProperty("visibility", "visible", "important");
 
 	// The size of the placeholder should include borders too,
