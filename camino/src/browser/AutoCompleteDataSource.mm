@@ -224,6 +224,10 @@ const unsigned int kNumberOfItemsPerChunk = 100;
   AutoCompleteResult *info = [[[AutoCompleteResult alloc] init] autorelease];
   [info setTitle:[item title]];
   [info setUrl:[item url]];
+  if ([[info title] isEqualToString:@""]) {
+    NSString *host = [[NSURL URLWithString:[info url]] host];
+    [info setTitle:(host ? host : [info url])];
+  }
   NSImage* cachedFavicon = [[SiteIconProvider sharedFavoriteIconProvider] favoriteIconForPage:[info url]];
   if (cachedFavicon)
     [info setIcon:cachedFavicon];
