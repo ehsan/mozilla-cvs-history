@@ -56,7 +56,7 @@ ul {
   -moz-border-radius: 15px;
   padding: 3em;
   -moz-padding-start: 60px;
-  background: url("chrome://global/skin/icons/warning.png") 1em 1.6em no-repeat -moz-Field;
+  background: url("chrome://global/skin/icons/warning.png") 1.1em 1.6em no-repeat -moz-Field;
 }
 
 /* #errorPageContainer.certerror {
@@ -155,7 +155,6 @@ body[dir="rtl"] #brand {
 
 :root.blacklist #errorPageContainer {
   background-image: url("chrome://global/skin/icons/blacklist.png");
-  background-position: 1.1em 1.6em;
   background-color: #763033;
 }
 
