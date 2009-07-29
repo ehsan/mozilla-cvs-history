@@ -227,6 +227,7 @@ embed[type="application/x-shockwave-flash"][src*="adtechus.com"],
 embed[type="application/x-shockwave-flash"][src*="fmpub.net"],
 embed[type="application/x-shockwave-flash"][src*="splastk.com"],
 embed[type="application/x-shockwave-flash"][src*="ads.prisa.com"],
+embed[type="application/x-shockwave-flash"][src*="media.contextweb.com"],
 
 img[src*="googlesyndication.com"],
 img[src*=".doubleclick.net"],
@@ -318,12 +319,14 @@ img[src*="/ads2.msn.com"],
 img[src*=".adsdk.com"],
 img[src*=".adbureau.net"],
 img[src*=".adshuffle.com"],
+img[src*="media.adfrontiers.com"],
 
 iframe[src*="/ad."],
 iframe[src*="/ads."],
 iframe[src*="/ad/"],
 iframe[src*="/ads/"],
 iframe[src*="/ads2/"],
+iframe[src*="/AdServer/"],
 iframe[src*="/jsads/"],
 iframe[src*="/ad_data/"],
 iframe[src*="?banner"],
@@ -425,6 +428,7 @@ iframe[src*=".netavenir."],
 iframe[src*="bwp.versiontracker.com"],
 iframe[src*="bwp.macfixit.com"],
 iframe[src*="bwp.cnet.com"],
+iframe[src*="bwp.news.com"],
 iframe[src*=".mercuras.com"],
 iframe[src*="api.gestionpub.com"],
 iframe[src*=".comclick.com"],
@@ -446,6 +450,7 @@ iframe[src*="web.adblade.com"],
 iframe[src*=".adfusion.com"],
 iframe[src*=".adshuffle.com"],
 iframe[name$="skybannerframe"],
+iframe[src*=".quantserve.com"],
 
 table#overtureLinksWrapper,
 table.adbritetable,
@@ -483,6 +488,7 @@ div[id$="_ads"],
 div[id*="ad_google"],
 div.top_ad_image,
 div[class*="_ad_"],
+div[class^="ad_"],
 div[id*="swf_728x90"],
 div[id*="swf_171x600"],
 div[id*="swf_banner"],
@@ -553,12 +559,14 @@ div[id="apopBg_dju"],
 div[id*="advst_special"],
 div[class="box"][id="dropin"],
 div[class*="textAds"],
+div[class~="textAd"],
 div[id^="bbccom_"],
 div[id^="advert_"],
 div[id="spColumnAd"],
 div[class^="adBlock"],
 div[class^="AdBorder"],
 div[class~="adcolumn"],
+div[class="adbottom"],
 div[class$="_ad"],
 div[class*="publicite"],
 div[id*="blogbang"],
@@ -579,6 +587,7 @@ div[class^="adSpot"],
 div[class="relatedAds"],
 div[class^="adGoogle"],
 div[id^="p360_ad"],
+div[id^="p360-autotag"],
 div[class^="p360_"],
 div[id="adjacency"],
 div[id="adbar"],
@@ -595,7 +604,10 @@ div[id*="story-sponsoredlinks"],
 div[class="blk_advert"],
 div[class$="bottomAd"],
 div[id="upperad"],
-div[id="web_kelkoo"]
+div[id="web_kelkoo"],
+div[id^="right_ad_"],
+div[class$="WerberahmenOben"],
+div[class$="anzeige"]
 
 { display: none ! important }
 
@@ -646,4 +658,12 @@ embed[type="application/x-shockwave-flash"][src*="adserver"] {display: inline !i
 
 @-moz-document domain(priceminister.com) {
 a:link[href^="javascript"][href*="advert"] img {display: inline !important }
+}
+
+@-moz-document domain(mlb.com) {
+div[id="tw_secnav_mc_ad"] {display: block !important }
+}
+
+@-moz-document domain(news.cnet.com) {
+div[id="ads_backsplashSkin"] { display: block !important }
 }
