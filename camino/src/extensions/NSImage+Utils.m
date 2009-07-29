@@ -35,8 +35,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#import "NSImage+Utils.h"
 #import <Cocoa/Cocoa.h>
+
+#import "NSImage+Utils.h"
+
+#import "NSWorkspace+Utils.h"
 
 @implementation NSImage (CaminoImageUtils)
 
@@ -106,6 +109,22 @@
 
   [dragImage unlockFocus];
   return dragImage;
+}
+
++ (NSImage*)osFolderIcon
+{
+  static NSImage* sFolderImage = nil;
+  if (!sFolderImage) {
+    if ([NSWorkspace isLeopardOrHigher]) {
+      NSString* fileType = NSFileTypeForHFSTypeCode(kGenericFolderIcon);
+      sFolderImage = [[[NSWorkspace sharedWorkspace] iconForFileType:fileType] retain];
+      [sFolderImage setSize:NSMakeSize(16, 16)];
+    }
+    else {
+      sFolderImage = [[NSImage imageNamed:@"folder"] retain];
+    }
+  }
+  return sFolderImage;
 }
 
 @end

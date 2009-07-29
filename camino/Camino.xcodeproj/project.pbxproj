@@ -58,6 +58,8 @@
 		001FFD9A0C795D5400D9C2C8 /* designmode.css in Copy Gecko Resources */ = {isa = PBXBuildFile; fileRef = 001FFD940C795D3300D9C2C8 /* designmode.css */; };
 		00335B8E0C655ABC00A607F2 /* WebSearchField.mm in Sources */ = {isa = PBXBuildFile; fileRef = 00335B8C0C655ABC00A607F2 /* WebSearchField.mm */; };
 		00335B900C655ABC00A607F2 /* WebSearchField.mm in Sources */ = {isa = PBXBuildFile; fileRef = 00335B8C0C655ABC00A607F2 /* WebSearchField.mm */; };
+		00450523100A8E140096B649 /* bookmark_group_badge.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 00450522100A8E140096B649 /* bookmark_group_badge.tiff */; };
+		00450524100A8E140096B649 /* bookmark_group_badge.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 00450522100A8E140096B649 /* bookmark_group_badge.tiff */; };
 		005F387E0E50852D00D8E7A6 /* InvalidCertOverrideDialog.nib in Resources */ = {isa = PBXBuildFile; fileRef = 005F387C0E50852D00D8E7A6 /* InvalidCertOverrideDialog.nib */; };
 		005F387F0E50852D00D8E7A6 /* InvalidCertOverrideDialog.nib in Resources */ = {isa = PBXBuildFile; fileRef = 005F387C0E50852D00D8E7A6 /* InvalidCertOverrideDialog.nib */; };
 		0081150B0B180DDE001CB3F0 /* libthebes.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0081150A0B180DDE001CB3F0 /* libthebes.a */; };
@@ -2519,6 +2521,7 @@
 		001FFD940C795D3300D9C2C8 /* designmode.css */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; name = designmode.css; path = ../dist/Embed/res/designmode.css; sourceTree = SOURCE_ROOT; };
 		00335B8B0C655ABC00A607F2 /* WebSearchField.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = WebSearchField.h; path = src/browser/WebSearchField.h; sourceTree = "<group>"; };
 		00335B8C0C655ABC00A607F2 /* WebSearchField.mm */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.objcpp; name = WebSearchField.mm; path = src/browser/WebSearchField.mm; sourceTree = "<group>"; };
+		00450522100A8E140096B649 /* bookmark_group_badge.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = bookmark_group_badge.tiff; path = resources/images/chrome/bookmark_group_badge.tiff; sourceTree = "<group>"; };
 		005F387D0E50852D00D8E7A6 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = resources/localized/English.lproj/InvalidCertOverrideDialog.nib; sourceTree = "<group>"; };
 		0081150A0B180DDE001CB3F0 /* libthebes.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libthebes.a; path = ../staticlib/libthebes.a; sourceTree = SOURCE_ROOT; };
 		0081150C0B180DFA001CB3F0 /* libgkgfxthebes.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgkgfxthebes.a; path = ../gfx/src/thebes/libgkgfxthebes.a; sourceTree = SOURCE_ROOT; };
@@ -4843,6 +4846,7 @@
 		F564872E023B954E010001CA /* Sidebar */ = {
 			isa = PBXGroup;
 			children = (
+				00450522100A8E140096B649 /* bookmark_group_badge.tiff */,
 				3F42E91A05EAD4580045A30C /* bm_folder.tiff */,
 				F564872F023B957F010001CA /* history_icon.tiff */,
 				F5568A900217CA82010001CA /* folder.tiff */,
@@ -5871,6 +5875,7 @@
 				3D9419800F559B2F00227277 /* blockedSite.xhtml in Resources */,
 				DE4025950FF4345D00568817 /* ServicesMenu.strings in Resources */,
 				3D9A2B091001A45700CC9154 /* SafeBrowsingBar.nib in Resources */,
+				00450523100A8E140096B649 /* bookmark_group_badge.tiff in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6106,6 +6111,7 @@
 				3D9419810F559B2F00227277 /* blockedSite.xhtml in Resources */,
 				DE4025960FF4345D00568817 /* ServicesMenu.strings in Resources */,
 				3D9A2B0A1001A45700CC9154 /* SafeBrowsingBar.nib in Resources */,
+				00450524100A8E140096B649 /* bookmark_group_badge.tiff in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

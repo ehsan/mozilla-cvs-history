@@ -49,4 +49,8 @@
 // |aIcon| and |aTitle| must both be non-nil.
 + (NSImage*)dragImageWithIcon:(NSImage*)aIcon title:(NSString*)aTitle;
 
+// Returns the standard OS folder icon; unfortunately there's no convenient
+// name constant for it.
++ (NSImage*)osFolderIcon;
+
 @end

@@ -39,6 +39,8 @@
 
 #import "NSString+Utils.h"
 #import "NSArray+Utils.h"
+#import "NSImage+Utils.h"
+#import "NSWorkspace+Utils.h"
 
 #import "BookmarkManager.h"
 #import "BookmarkFolder.h"
@@ -122,6 +124,9 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
 
 // used for undo
 - (void)arrangeChildrenWithOrder:(NSArray*)inChildArray;
+
+// Returns the icon to be used for bookmark group items.
+- (NSImage*)bookmarkGroupIcon;
 
 @end
 
@@ -287,9 +292,38 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
 - (NSImage *)icon
 {
   if (!mIcon)
-    mIcon = [[NSImage imageNamed:@"folder"] retain];
+    mIcon = [[NSImage osFolderIcon] retain];
 
   return mIcon;
+}
+
+- (NSImage*)bookmarkGroupIcon
+{
+  static NSImage* sBookmarkGroupIcon = nil;
+  if (!sBookmarkGroupIcon) {
+    if ([NSWorkspace isLeopardOrHigher]) {
+      NSImage* folderIcon = [NSImage osFolderIcon];
+      NSImage* badgeImage = [NSImage imageNamed:@"bookmark_group_badge"];
+      sBookmarkGroupIcon = [[NSImage alloc] initWithSize:[folderIcon size]];
+      [sBookmarkGroupIcon lockFocus];
+      [folderIcon drawAtPoint:NSZeroPoint
+                     fromRect:NSZeroRect
+                    operation:NSCompositeCopy
+                     fraction:1.0];
+      // Magic values determined empirically to make the badge line up with the
+      // folder icon; may need adjustment if the OS folder icon changes.
+      NSPoint badgeOffset = NSMakePoint(6, 3);
+      [badgeImage drawAtPoint:badgeOffset
+                     fromRect:NSZeroRect
+                    operation:NSCompositeSourceOver
+                     fraction:1.0];
+      [sBookmarkGroupIcon unlockFocus];
+    }
+    else {
+      sBookmarkGroupIcon = [[NSImage imageNamed:@"groupbookmark"] retain];
+    }
+  }
+  return sBookmarkGroupIcon;
 }
 
 //
@@ -396,9 +430,9 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
   if ((oldFlag & kBookmarkFolderGroup) != (aFlag & kBookmarkFolderGroup)) {
     // only change the group/folder icon if we're changing that flag
     if ((aFlag & kBookmarkFolderGroup) != 0)
-      [self setIcon:[NSImage imageNamed:@"groupbookmark"]];
+      [self setIcon:[self bookmarkGroupIcon]];
     else
-      [self setIcon:[NSImage imageNamed:@"folder"]];
+      [self setIcon:[NSImage osFolderIcon]];
   }
   if ((aFlag & kBookmarkDockMenuFolder) != 0) {
     // if we're the dock menu folder, tell the previous dock folder that

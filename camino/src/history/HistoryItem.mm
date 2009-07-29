@@ -39,6 +39,7 @@
 #import "NSString+Utils.h"
 #import "NSString+Gecko.h"
 #import "NSDate+Utils.h"
+#import "NSImage+Utils.h"
 
 #import "HistoryItem.h"
 #import "HistoryDataSource.h"
@@ -260,7 +261,7 @@ enum
 
 - (NSImage*)icon
 {
-  return [NSImage imageNamed:@"folder"];
+  return [NSImage osFolderIcon];
 }
 
 - (NSMutableArray*)children

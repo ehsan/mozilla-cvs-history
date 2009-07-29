@@ -40,6 +40,7 @@
 
 #import "HistoryMenu.h"
 
+#import "NSImage+Utils.h"
 #import "NSString+Utils.h"
 #import "NSMenu+Utils.h"
 
@@ -560,7 +561,7 @@ static const unsigned int kMaxTitleLength = 50;
     NSMenuItem* recentlyClosedItem = [self addItemWithTitle:NSLocalizedString(@"RecentlyClosed", nil)
                                                      action:nil
                                               keyEquivalent:@""];
-    [recentlyClosedItem setImage:[NSImage imageNamed:@"folder"]];
+    [recentlyClosedItem setImage:[NSImage osFolderIcon]];
     [self setSubmenu:mRecentlyClosedMenu forItem:recentlyClosedItem];
     [self addItem:[NSMenuItem separatorItem]];
   }
