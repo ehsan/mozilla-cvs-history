@@ -331,6 +331,16 @@ ldapssl_connect(const char *hostlist, int defport, int timeout,
     }
 
     /*
+     * If using client auth., arrange to use a separate SSL session cache
+     * for each distinct local client certificate nickname.
+     */
+    if ( sseip->lssei_client_auth && 
+         sseip->lssei_certnickname && sseip->lssei_certnickname[0] &&
+	 SSL_SetSockPeerID( sslfd, sseip->lssei_certnickname) != SECSuccess ) {
+	goto close_socket_and_exit_with_error;
+    }
+
+    /*
      * Let the standard NSPR to LDAP layer know about the new socket and
      * our own socket-specific data.
      */
@@ -572,9 +582,9 @@ ldaptls_complete(LDAP *ld)
     }
     
     if ( SSL_OptionSet( sslfd, SSL_SECURITY, secure ) != SECSuccess ||
-		 SSL_OptionSet( sslfd, SSL_ENABLE_TLS, secure ) != SECSuccess ||
-		 SSL_OptionSet( sslfd, SSL_HANDSHAKE_AS_CLIENT, secure ) != SECSuccess ||
-		 ( secure && SSL_ResetHandshake( sslfd, PR_FALSE ) != SECSuccess ) ) {
+	 SSL_OptionSet( sslfd, SSL_ENABLE_TLS, secure ) != SECSuccess ||
+	 SSL_OptionSet( sslfd, SSL_HANDSHAKE_AS_CLIENT, secure ) != SECSuccess ||
+	 ( secure && SSL_ResetHandshake( sslfd, PR_FALSE ) != SECSuccess ) ) {
 	rc = LDAP_LOCAL_ERROR;
 	goto close_socket_and_exit_with_error;
     }
@@ -587,7 +597,7 @@ ldaptls_complete(LDAP *ld)
 	rc = LDAP_LOCAL_ERROR;
 	goto close_socket_and_exit_with_error;
     }
-	ldap_memfree(hostlist);
+    ldap_memfree(hostlist);
     hostlist = NULL;
 
     /*
@@ -599,7 +609,17 @@ ldaptls_complete(LDAP *ld)
 	rc = LDAP_LOCAL_ERROR;
 	goto close_socket_and_exit_with_error;
     }
-    
+
+    /*
+     * If using client auth., arrange to use a separate SSL session cache
+     * for each distinct local client certificate nickname.
+     */
+    if ( sseip->lssei_client_auth && 
+         sseip->lssei_certnickname && sseip->lssei_certnickname[0] &&
+	 SSL_SetSockPeerID( sslfd, sseip->lssei_certnickname) != SECSuccess ) {
+	rc = LDAP_LOCAL_ERROR;
+	goto close_socket_and_exit_with_error;
+    }
 
     /*
      * Let the standard NSPR to LDAP layer know about the new socket and
@@ -1435,6 +1455,16 @@ ldapssl_import_fd ( LDAP *ld, int secure )
     if ( set_ssl_options( sslfd, sseip->lssei_ssl_option_value,
 						  sseip->lssei_ssl_option_isset ) < 0 ) {
 		goto reset_socket_and_exit_with_error;
+    }
+
+    /*
+     * If using client auth., arrange to use a separate SSL session cache
+     * for each distinct local client certificate nickname.
+     */
+    if ( sseip->lssei_client_auth && 
+         sseip->lssei_certnickname && sseip->lssei_certnickname[0] &&
+	 SSL_SetSockPeerID( sslfd, sseip->lssei_certnickname) != SECSuccess ) {
+	goto reset_socket_and_exit_with_error;
     }
 
     /*
