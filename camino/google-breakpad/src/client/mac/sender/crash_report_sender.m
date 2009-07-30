@@ -42,8 +42,11 @@
 
 #define kLastSubmission @"LastSubmission"
 const int kMinidumpFileLengthLimit = 800000;
+const int kUserCommentsMaxLength = 1500;
+const int kEmailMaxLength = 64;
 
-#define kApplePrefsSyncExcludeAllKey @"com.apple.PreferenceSync.ExcludeAllSyncKeys"
+#define kApplePrefsSyncExcludeAllKey \
+  @"com.apple.PreferenceSync.ExcludeAllSyncKeys"
 
 NSString *const kGoogleServerType = @"google";
 NSString *const kSocorroServerType = @"socorro";
@@ -115,7 +118,7 @@ NSString *const kDefaultServerType = @"google";
   NSRect newFrame = NSMakeRect(oldFrame.origin.x, oldFrame.origin.y,
                                NSWidth(oldFrame), newSize.height);
   [self setFrame:newFrame];
-  
+
   return newSize.height - NSHeight(oldFrame);
 }
 
@@ -174,6 +177,9 @@ NSString *const kDefaultServerType = @"google";
 // Returns YES if we should send the report without asking the user first.
 - (BOOL)shouldSubmitSilently;
 
+// Returns YES if the minidump was generated on demand.
+- (BOOL)isOnDemand;
+
 // Returns YES if we should ask the user to provide comments.
 - (BOOL)shouldRequestComments;
 
@@ -187,11 +193,11 @@ NSString *const kDefaultServerType = @"google";
 
 // Returns the short description of the crash, suitable for use as a dialog
 // title (e.g., "The application Foo has quit unexpectedly").
-- (NSString*)shortCrashDialogMessage;
+- (NSString*)shortDialogMessage;
 
 // Return explanatory text about the crash and the reporter, suitable for the
 // body text of a dialog.
-- (NSString*)explanatoryCrashDialogText;
+- (NSString*)explanatoryDialogText;
 
 // Returns the amount of time the UI should be shown before timing out.
 - (NSTimeInterval)messageTimeout;
@@ -207,7 +213,7 @@ NSString *const kDefaultServerType = @"google";
 - (void)removeEmailPrompt;
 
 // Run an alert window with the given timeout. Returns
-// NSAlertButtonDefault if the timeout is exceeded. A timeout of 0
+// NSRunStoppedResponse if the timeout is exceeded. A timeout of 0
 // queues the message immediately in the modal run loop.
 - (int)runModalWindow:(NSWindow*)window withTimeout:(NSTimeInterval)timeout;
 
@@ -217,7 +223,34 @@ NSString *const kDefaultServerType = @"google";
 
 // Returns a dictionary that can be used to map Breakpad parameter names to
 // URL parameter names.
-- (NSDictionary *)dictionaryForServerType:(NSString *)serverType;
+- (NSMutableDictionary *)dictionaryForServerType:(NSString *)serverType;
+
+// Helper method to set HTTP parameters based on server type.  This is
+// called right before the upload - crashParameters will contain, on exit,
+// URL parameters that should be sent with the minidump.
+- (BOOL)populateServerDictionary:(NSMutableDictionary *)crashParameters;
+
+// Initialization helper to create dictionaries mapping Breakpad
+// parameters to URL parameters
+- (void)createServerParameterDictionaries;
+
+// Accessor method for the URL parameter dictionary
+- (NSMutableDictionary *)urlParameterDictionary;
+
+// This method adds a key/value pair to the dictionary that
+// will be uploaded to the crash server.
+- (void)addServerParameter:(id)value forKey:(NSString *)key;
+
+// This method is used to periodically update the UI with how many
+// seconds are left in the dialog display.
+- (void)updateSecondsLeftInDialogDisplay:(NSTimer*)theTimer;
+
+// When we receive this notification, it means that the user has
+// begun editing the email address or comments field, and we disable
+// the timers so that the user has as long as they want to type
+// in their comments/email.
+- (void)controlTextDidBeginEditing:(NSNotification *)aNotification;
+
 @end
 
 @implementation Reporter
@@ -244,6 +277,7 @@ NSString *const kDefaultServerType = @"google";
 - (id)initWithConfigurationFD:(int)fd {
   if ((self = [super init])) {
     configFile_ = fd;
+    remainingDialogTime_ = 0;
   }
 
   // Because the reporter is embedded in the framework (and many copies
@@ -308,7 +342,24 @@ NSString *const kDefaultServerType = @"google";
     id value = [[NSString alloc] initWithData:data
                                      encoding:NSUTF8StringEncoding];
 
-    [parameters_ setObject:value ? value : data forKey:key];
+    // If the keyname is prefixed by BREAKPAD_SERVER_PARAMETER_PREFIX
+    // that indicates that it should be uploaded to the server along
+    // with the minidump, so we treat it specially.
+    if ([key hasPrefix:@BREAKPAD_SERVER_PARAMETER_PREFIX]) {
+      NSString *urlParameterKey =
+        [key substringFromIndex:[@BREAKPAD_SERVER_PARAMETER_PREFIX length]];
+      if ([urlParameterKey length]) {
+        if (value) {
+          [self addServerParameter:value
+                            forKey:urlParameterKey];
+        } else {
+          [self addServerParameter:data
+                            forKey:urlParameterKey];
+        }
+      }
+    } else {
+      [parameters_ setObject:(value ? value : data) forKey:key];
+    }
     [value release];
   }
 
@@ -511,8 +562,8 @@ NSString *const kDefaultServerType = @"google";
     }
   } else {
     // Create an alert panel to tell the user something happened
-    NSPanel* alert = NSGetAlertPanel([self shortCrashDialogMessage],
-                                     [self explanatoryCrashDialogText],
+    NSPanel* alert = NSGetAlertPanel([self shortDialogMessage],
+                                     [self explanatoryDialogText],
                                      NSLocalizedString(@"sendReportButton", @""),
                                      NSLocalizedString(@"cancelButton", @""),
                                      nil);
@@ -532,11 +583,11 @@ NSString *const kDefaultServerType = @"google";
   // "fall" as text areas are shrunk from their overly-large IB sizes.
 
   // Localize the header. No resizing needed, as it has plenty of room.
-  [dialogTitle_ setStringValue:[self shortCrashDialogMessage]];
+  [dialogTitle_ setStringValue:[self shortDialogMessage]];
 
   // Localize the explanatory text field.
   [commentMessage_ setStringValue:[NSString stringWithFormat:@"%@\n\n%@",
-                                   [self explanatoryCrashDialogText],
+                                   [self explanatoryDialogText],
                                    NSLocalizedString(@"commentsMsg", @"")]];
   float commentHeightDelta = [commentMessage_ breakpad_adjustHeightToFit];
   [headerBox_ breakpad_shiftVertically:commentHeightDelta];
@@ -581,9 +632,13 @@ NSString *const kDefaultServerType = @"google";
 - (int)runModalWindow:(NSWindow*)window withTimeout:(NSTimeInterval)timeout {
   // Queue a |stopModal| message to be performed in |timeout| seconds.
   if (timeout > 0.001) {
-    [NSApp performSelector:@selector(stopModal)
-                withObject:nil
-                afterDelay:timeout];
+    remainingDialogTime_ = timeout;
+    SEL updateSelector = @selector(updateSecondsLeftInDialogDisplay:);
+    messageTimer_ = [NSTimer scheduledTimerWithTimeInterval:1.0
+                                                     target:self
+                                                   selector:updateSelector
+                                                   userInfo:nil
+                                                    repeats:YES];
   }
 
   // Run the window modally and wait for either a |stopModal| message or a
@@ -591,12 +646,6 @@ NSString *const kDefaultServerType = @"google";
   [NSApp activateIgnoringOtherApps:YES];
   int returnMethod = [NSApp runModalForWindow:window];
 
-  // Cancel the pending |stopModal| message.
-  if (returnMethod != NSRunStoppedResponse) {
-    [NSObject cancelPreviousPerformRequestsWithTarget:NSApp
-                                             selector:@selector(stopModal)
-                                               object:nil];
-  }
   return returnMethod;
 }
 
@@ -633,14 +682,60 @@ NSString *const kDefaultServerType = @"google";
            textView:(NSTextView*)textView
 doCommandBySelector:(SEL)commandSelector {
   BOOL result = NO;
-  // If the user has entered text, don't end editing on "return"
-  if (commandSelector == @selector(insertNewline:)
+  // If the user has entered text on the comment field, don't end
+  // editing on "return".
+  if (control == commentsEntryField_ &&
+      commandSelector == @selector(insertNewline:)
       && [[textView string] length] > 0) {
     [textView insertNewlineIgnoringFieldEditor:self];
     result = YES;
   }
   return result;
 }
+
+- (void)controlTextDidBeginEditing:(NSNotification *)aNotification {
+  [messageTimer_ invalidate];
+  [self setCountdownMessage:@""];
+}
+
+- (void)updateSecondsLeftInDialogDisplay:(NSTimer*)theTimer {
+  remainingDialogTime_ -= 1;
+
+  NSString *countdownMessage;
+  NSString *formatString;
+
+  int displayedTimeLeft; // This can be either minutes or seconds.
+  
+  if (remainingDialogTime_ > 59) {
+    // calculate minutes remaining for UI purposes
+    displayedTimeLeft = (remainingDialogTime_ / 60);
+    
+    if (displayedTimeLeft == 1) {
+      formatString = NSLocalizedString(@"countdownMsgMinuteSingular", @"");
+    } else {
+      formatString = NSLocalizedString(@"countdownMsgMinutesPlural", @"");
+    }
+  } else {
+    displayedTimeLeft = remainingDialogTime_;
+    if (remainingDialogTime_ == 1) {
+      formatString = NSLocalizedString(@"countdownMsgSecondSingular", @"");
+    } else {
+      formatString = NSLocalizedString(@"countdownMsgSecondsPlural", @"");
+    }
+  }
+  countdownMessage = [NSString stringWithFormat:formatString,
+                               displayedTimeLeft];
+  if (remainingDialogTime_ <= 30) {
+    [countdownLabel_ setTextColor:[NSColor redColor]];
+  }
+  [self setCountdownMessage:countdownMessage];
+  if (remainingDialogTime_ <= 0) {
+    [messageTimer_ invalidate];
+    [NSApp stopModal];
+  }
+}
+
+
 
 #pragma mark Accessors
 #pragma mark -
@@ -665,6 +760,17 @@ doCommandBySelector:(SEL)commandSelector {
   if (emailValue_ != value) {
     [emailValue_ release];
     emailValue_ = [value copy];
+  }
+}
+
+- (NSString *)countdownMessage {
+  return [[countdownMessage_ retain] autorelease];
+}
+
+- (void)setCountdownMessage:(NSString *)value {
+  if (countdownMessage_ != value) {
+    [countdownMessage_ release];
+    countdownMessage_ = [value copy];
   }
 }
 
@@ -696,6 +802,11 @@ doCommandBySelector:(SEL)commandSelector {
   return YES;
 }
 
+- (BOOL)isOnDemand {
+  return [[parameters_ objectForKey:@BREAKPAD_ON_DEMAND]
+	   isEqualToString:@"YES"];
+}
+
 - (BOOL)shouldSubmitSilently {
   return [[parameters_ objectForKey:@BREAKPAD_SKIP_CONFIRM]
             isEqualToString:@"YES"];
@@ -711,21 +822,40 @@ doCommandBySelector:(SEL)commandSelector {
             isEqualToString:@"YES"];
 }
 
-- (NSString*)shortCrashDialogMessage {
+- (NSString*)shortDialogMessage {
   NSString *displayName = [parameters_ objectForKey:@BREAKPAD_PRODUCT_DISPLAY];
   if (![displayName length])
     displayName = [parameters_ objectForKey:@BREAKPAD_PRODUCT];
 
-  return [NSString stringWithFormat:NSLocalizedString(@"headerFmt", @""),
-                                    displayName];
+  if ([self isOnDemand]) {
+    return [NSString
+             stringWithFormat:NSLocalizedString(@"noCrashDialogHeader", @""),
+             displayName];
+  } else {
+    return [NSString 
+             stringWithFormat:NSLocalizedString(@"crashDialogHeader", @""),
+             displayName];
+  }
 }
 
-- (NSString*)explanatoryCrashDialogText {
+- (NSString*)explanatoryDialogText {
+  NSString *displayName = [parameters_ objectForKey:@BREAKPAD_PRODUCT_DISPLAY];
+  if (![displayName length])
+    displayName = [parameters_ objectForKey:@BREAKPAD_PRODUCT];
+
   NSString *vendor = [parameters_ objectForKey:@BREAKPAD_VENDOR];
   if (![vendor length])
     vendor = @"unknown vendor";
 
-  return [NSString stringWithFormat:NSLocalizedString(@"msgFmt", @""), vendor];
+  if ([self isOnDemand]) {
+    return [NSString
+             stringWithFormat:NSLocalizedString(@"noCrashDialogMsg", @""),
+             vendor, displayName];
+  } else {
+    return [NSString
+             stringWithFormat:NSLocalizedString(@"crashDialogMsg", @""),
+             vendor];
+  }
 }
 
 - (NSTimeInterval)messageTimeout {
@@ -743,6 +873,7 @@ doCommandBySelector:(SEL)commandSelector {
   serverDictionary_ = [[NSMutableDictionary alloc] init];
   socorroDictionary_ = [[NSMutableDictionary alloc] init];
   googleDictionary_ = [[NSMutableDictionary alloc] init];
+  extraServerVars_ = [[NSMutableDictionary alloc] init];
 
   [serverDictionary_ setObject:socorroDictionary_ forKey:kSocorroServerType];
   [serverDictionary_ setObject:googleDictionary_ forKey:kGoogleServerType];
@@ -752,8 +883,6 @@ doCommandBySelector:(SEL)commandSelector {
   [googleDictionary_ setObject:@"comments" forKey:@BREAKPAD_COMMENTS];
   [googleDictionary_ setObject:@"prod" forKey:@BREAKPAD_PRODUCT];
   [googleDictionary_ setObject:@"ver" forKey:@BREAKPAD_VERSION];
-  // TODO: just for testing, google's server doesn't support it
-  [googleDictionary_ setObject:@"buildid" forKey:@BREAKPAD_BUILD_ID];
 
   [socorroDictionary_ setObject:@"Comments" forKey:@BREAKPAD_COMMENTS];
   [socorroDictionary_ setObject:@"CrashTime"
@@ -766,21 +895,23 @@ doCommandBySelector:(SEL)commandSelector {
                          forKey:@BREAKPAD_PRODUCT];
   [socorroDictionary_ setObject:@"ProductName"
                          forKey:@BREAKPAD_PRODUCT];
-  [socorroDictionary_ setObject:@"BuildID"
-                         forKey:@BREAKPAD_BUILD_ID];
 }
 
-- (NSDictionary *)dictionaryForServerType:(NSString *)serverType {
+- (NSMutableDictionary *)dictionaryForServerType:(NSString *)serverType {
   if (serverType == nil || [serverType length] == 0) {
     return [serverDictionary_ objectForKey:kDefaultServerType];
   }
   return [serverDictionary_ objectForKey:serverType];
 }
 
-// Helper method to set HTTP parameters based on server type
-- (BOOL)setPostParametersFromDictionary:(NSMutableDictionary *)crashParameters {
+- (NSMutableDictionary *)urlParameterDictionary {
   NSString *serverType = [parameters_ objectForKey:@BREAKPAD_SERVER_TYPE];
-  NSDictionary *urlParameterNames = [self dictionaryForServerType:serverType];
+  return [self dictionaryForServerType:serverType];
+
+}
+
+- (BOOL)populateServerDictionary:(NSMutableDictionary *)crashParameters {
+  NSDictionary *urlParameterNames = [self urlParameterDictionary];
 
   id key;
   NSEnumerator *enumerator = [parameters_ keyEnumerator];
@@ -802,7 +933,22 @@ doCommandBySelector:(SEL)commandSelector {
                           forKey:urlParameter];
     }
   }
+
+  // Now, add the parameters that were added by the application.
+  enumerator = [extraServerVars_ keyEnumerator];
+
+  while ((key = [enumerator nextObject])) {
+    NSString *urlParameterName = (NSString *)key;
+    NSString *urlParameterValue =
+      [extraServerVars_ objectForKey:urlParameterName];
+    [crashParameters setObject:urlParameterValue
+                        forKey:urlParameterName];
+  }
   return YES;
+}
+
+- (void)addServerParameter:(id)value forKey:(NSString *)key {
+  [extraServerVars_ setObject:value forKey:key];
 }
 
 //=============================================================================
@@ -811,7 +957,7 @@ doCommandBySelector:(SEL)commandSelector {
   HTTPMultipartUpload *upload = [[HTTPMultipartUpload alloc] initWithURL:url];
   NSMutableDictionary *uploadParameters = [NSMutableDictionary dictionary];
 
-  if (![self setPostParametersFromDictionary:uploadParameters]) {
+  if (![self populateServerDictionary:uploadParameters]) {
     return;
   }
 
@@ -886,7 +1032,79 @@ doCommandBySelector:(SEL)commandSelector {
   [googleDictionary_ release];
   [socorroDictionary_ release];
   [serverDictionary_ release];
+  [extraServerVars_ release];
   [super dealloc];
+}
+
+- (void)awakeFromNib {
+  [emailEntryField_ setMaximumLength:kEmailMaxLength];
+  [commentsEntryField_ setMaximumLength:kUserCommentsMaxLength];
+}
+
+@end
+
+//=============================================================================
+@implementation LengthLimitingTextField
+
+- (void) setMaximumLength:(unsigned int)maxLength {
+  maximumLength_ = maxLength;
+}
+
+// This is the method we're overriding in NSTextField, which lets us
+// limit the user's input if it makes the string too long.
+- (BOOL)       textView:(NSTextView *)textView
+shouldChangeTextInRange:(NSRange)affectedCharRange
+      replacementString:(NSString *)replacementString {
+
+  // Sometimes the range comes in invalid, so reject if we can't
+  // figure out if the replacement text is too long.
+  if (affectedCharRange.location == NSNotFound) {
+    return NO;
+  }
+  // Figure out what the new string length would be, taking into
+  // account user selections.
+  int newStringLength =
+    [[textView string] length] - affectedCharRange.length +
+    [replacementString length];
+  if (newStringLength > maximumLength_) {
+    return NO;
+  } else {
+    return YES;
+  }
+}
+
+// Cut, copy, and paste have to be caught specifically since there is no menu.
+- (BOOL)performKeyEquivalent:(NSEvent*)event {
+  // Only handle the key equivalent if |self| is the text field with focus.
+  NSText* fieldEditor = [self currentEditor];
+  if (fieldEditor != nil) {
+    // Check for a single "Command" modifier
+    unsigned int modifiers = [event modifierFlags];
+    modifiers &= NSDeviceIndependentModifierFlagsMask;
+    if (modifiers == NSCommandKeyMask) {
+      // Now, check for Select All, Cut, Copy, or Paste key equivalents.
+      NSString* characters = [event characters];
+      // Select All is Command-A.
+      if ([characters isEqualToString:@"a"]) {
+        [fieldEditor selectAll:self];
+        return YES;
+      // Cut is Command-X.
+      } else if ([characters isEqualToString:@"x"]) {
+        [fieldEditor cut:self];
+        return YES;
+      // Copy is Command-C.
+      } else if ([characters isEqualToString:@"c"]) {
+        [fieldEditor copy:self];
+        return YES;
+      // Paste is Command-V.
+      } else if ([characters isEqualToString:@"v"]) {
+        [fieldEditor paste:self];
+        return YES;
+      }
+    }
+  }
+  // Let the super class handle the rest (e.g. Command-Period will cancel).
+  return [super performKeyEquivalent:event];
 }
 
 @end
