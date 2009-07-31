@@ -89,7 +89,7 @@ a:link[href*="247realmedia.com"] img,
 a:link[href*="adserv.quality-channel.de"] img,
 a:link[href*="blogads.com"] img, 
 a:link[href*="interclick.com"] img, 
-a:link[href*="anad.tacoda.net/ads"] img, 
+a:link[href*="anad.tacoda.net/ads"] img,
 a:link[href*="sw.interpolls.com"] img,
 a:link[href*="kliptracker.com"] img,
 a:link[href*="klipmart.com"] img,
@@ -104,7 +104,7 @@ a:link[href*=".burstnet.com"] img,
 a:link[href*="adpeeps"] img,
 a:link[href*="adbrite"] img,
 a:link[class*="adText"], 
-a:link[class*="adHeadline"], 
+a:link[class*="adHeadline"],
 a:link[href*="hrtrak.net"] img,
 a:link[href*="specificclick.net"] img,
 a:link[href*="adremote.timeinc.net"] img,
@@ -402,7 +402,7 @@ iframe[src*="adspace"],
 iframe[src*="AdPlaceholder"],
 iframe[src*="ffxcam.fairfax.com.au"],
 iframe[src*="contextweb.com"],
-iframe[src*="ads-rm.looksmart.com"], 
+iframe[src*="ads-rm.looksmart.com"],
 iframe[src*=".ru4.com"],
 iframe[src*=".kanoodle.com"],
 iframe[src*="adpeeps"],
@@ -609,16 +609,16 @@ div[id^="right_ad_"],
 div[class$="WerberahmenOben"],
 div[class$="anzeige"]
 
-{ display: none ! important }
+{ display: none !important }
 
-@-moz-document domain(mail.google.com) {                                        
+@-moz-document domain(mail.google.com) {
 div#rhc>div.rh,
 div.slwyWc,
-div.oM {display: none ! important }                                    
+div.oM { display: none !important }
 }
 
 @-moz-document domain(wunderground.com) { 
-div[style*="statefarm_bg.gif"][style*="width: 300px"] {display: none ! important }
+div[style*="statefarm_bg.gif"][style*="width: 300px"] { display: none !important }
 }
 
 /* turn some false positives back off */
@@ -633,35 +633,35 @@ img[src*="buttons.googlesyndication.com"],
 iframe[src*="mozilla.org"],
 div[id*="Player"] iframe[src*="/ads."]
 
-{ display: inline ! important }
+{ display: inline !important }
 
 @-moz-document domain(wiki.caminobrowser.org) {
-img[src*="/ad/"] {display: inline !important }
+img[src*="/ad/"] { display: inline !important }
 }
 
 @-moz-document domain(apple.com) {
-img[src*="/ads/"] {display: inline !important }
-div[id="ad"] {display:block !important;}
+img[src*="/ads/"] { display: inline !important }
+div[id="ad"] { display:block !important }
 }
 
 @-moz-document domain(nasdaq.com) {
-div[id*="panel_content_ads"] {display: block !important }
+div[id*="panel_content_ads"] { display: block !important }
 }
 
 @-moz-document domain(slatev.com) {
-embed[type="application/x-shockwave-flash"][src*="slatev.com"] {display: inline !important }
+embed[type="application/x-shockwave-flash"][src*="slatev.com"] { display: inline !important }
 }
 
 @-moz-document domain(nationalgeographic.com) {
-embed[type="application/x-shockwave-flash"][src*="adserver"] {display: inline !important }
+embed[type="application/x-shockwave-flash"][src*="adserver"] { display: inline !important }
 }
 
 @-moz-document domain(priceminister.com) {
-a:link[href^="javascript"][href*="advert"] img {display: inline !important }
+a:link[href^="javascript"][href*="advert"] img { display: inline !important }
 }
 
 @-moz-document domain(mlb.com) {
-div[id="tw_secnav_mc_ad"] {display: block !important }
+div[id="tw_secnav_mc_ad"] { display: block !important }
 }
 
 @-moz-document domain(news.cnet.com) {
