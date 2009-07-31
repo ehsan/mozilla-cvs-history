@@ -840,6 +840,13 @@ PRStatus _MD_WindowsGetSysInfo(PRSysInfo cmd, char *name, PRUint32 namelen)
             							osvi.dwMinorVersion);
 			}
 			break;
+    case VER_PLATFORM_WIN32_CE:
+			if (PR_SI_SYSNAME == cmd)
+				(void)PR_snprintf(name, namelen, "Windows_CE");
+			else if (PR_SI_RELEASE == cmd)
+				(void)PR_snprintf(name, namelen, "%d.%d",osvi.dwMajorVersion, 
+            							osvi.dwMinorVersion);
+			break;
    		default:
 			if (PR_SI_SYSNAME == cmd)
 				(void)PR_snprintf(name, namelen, "Windows_Unknown");
