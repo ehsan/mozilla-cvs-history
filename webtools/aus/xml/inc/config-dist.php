@@ -107,7 +107,8 @@ $productThrottling = array(
 $throttleExceptions = array(
     '3.0.12' => array(
         'betatest',
-        'releasetest'
+        'releasetest',
+        'beta'
     ),
     '3.0.13' => array (
         'betatest',
