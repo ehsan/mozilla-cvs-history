@@ -184,8 +184,8 @@ static const int kBMBarScanningStep = 5;
     NSColor* startColor;
     NSColor* endColor;
     if (isLeopardOrHigher) {
-      startColor = [NSColor colorWithDeviceWhite:(233.0/255.0) alpha:1.0];
-      endColor = [NSColor colorWithDeviceWhite:(207.0/255.0) alpha:1.0];
+      startColor = [NSColor colorWithDeviceWhite:(217.0/255.0) alpha:1.0];
+      endColor = [NSColor colorWithDeviceWhite:(195.0/255.0) alpha:1.0];
     }
     else {
       startColor = [NSColor colorWithDeviceWhite:(235.0/255.0) alpha:1.0];
