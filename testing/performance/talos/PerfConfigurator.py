@@ -26,7 +26,7 @@ defaultTitle = "qm-pxp01"
 help_message = '''
 This is the buildbot performance runner's YAML configurator.bean
 
-USAGE: python PerfConfigurator.py --title title --executablePath path --configFilePath cpath --buildid id --branch branch --testDate date --resultsServer server --resultsLink link --activeTests testlist --oldresultsServer oldserver --oldresultsLink oldlink --branchName branchFullName --fast --symbolsPath path
+USAGE: python PerfConfigurator.py --title title --executablePath path --configFilePath cpath --buildid id --branch branch --testDate date --resultsServer server --resultsLink link --activeTests testlist --branchName branchFullName --fast --symbolsPath path
 
 example testlist: tp:tsspider:tdhtml:twinopen
 '''
@@ -45,8 +45,6 @@ class PerfConfigurator:
     useId = False
     resultsServer = ''
     resultsLink = ''
-    oldresultsServer = ''
-    oldresultsLink = ''
     activeTests = ''
     noChrome = False
     fast = False
@@ -65,8 +63,6 @@ class PerfConfigurator:
         print " - testDate = " + self.testDate
         print " - resultsServer = " + self.resultsServer
         print " - resultsLink = " + self.resultsLink
-        print " - oldresultsServer = " + self.oldresultsServer
-        print " - oldresultsLink = " + self.oldresultsLink
         print " - activeTests = " + self.activeTests
         if self.symbolsPath:
             print " - symbolsPath = " + self.symbolsPath
@@ -130,12 +126,6 @@ class PerfConfigurator:
                 elif self.useId:
                     newline += '\n'
                     newline += 'testdate: "%s"\n' % self._getTimeFromBuildId()
-                if self.oldresultsServer:
-                    newline += '\n'
-                    newline += 'old_results_server: %s\n' % self.oldresultsServer
-                if self.oldresultsLink:
-                    newline += '\n'
-                    newline += 'old_results_link: %s\n' % self.oldresultsLink
                 if self.branchName: 
                     newline += '\n'
                     newline += 'branch_name: %s\n' % self.branchName
@@ -206,10 +196,6 @@ class PerfConfigurator:
             self.resultsServer = kwargs['resultsServer']
         if 'resultsLink' in kwargs:
             self.resultsLink = kwargs['resultsLink']
-        if 'oldresultsServer' in kwargs:
-            self.oldresultsServer = kwargs['oldresultsServer']
-        if 'oldresultsLink' in kwargs:
-            self.oldresultsLink = kwargs['oldresultsLink']
         if 'activeTests' in kwargs:
             self.activeTests = kwargs['activeTests']
         if 'noChrome' in kwargs:
@@ -246,8 +232,6 @@ def main(argv=None):
     useId = False
     resultsServer = ''
     resultsLink = ''
-    oldresultsServer = ''
-    oldresultsLink = ''
     activeTests = ''
     noChrome = False
     fast = False
@@ -259,7 +243,7 @@ def main(argv=None):
         try:
             opts, args = getopt.getopt(argv[1:], "hvue:c:t:b:o:i:d:s:l:a:n", 
                 ["help", "verbose", "useId", "executablePath=", "configFilePath=", "title=", 
-                "branch=", "output=", "id=", "testDate=", "resultsServer=", "resultsLink=", "activeTests=", "noChrome", "oldresultsServer=", "oldresultsLink=", "branchName=", "fast", "symbolsPath="])
+                "branch=", "output=", "id=", "testDate=", "resultsServer=", "resultsLink=", "activeTests=", "noChrome", "branchName=", "fast", "symbolsPath="])
         except getopt.error, msg:
             raise Usage(msg)
         
@@ -291,10 +275,6 @@ def main(argv=None):
                 resultsServer = value
             if option in ("-l", "--resultsLink"):
                 resultsLink = value
-            if option in ("--oldresultsServer"):
-                oldresultsServer = value
-            if option in ("--oldresultsLink"):
-                oldresultsLink = value
             if option in ("-a", "--activeTests"):
                 activeTests = value
             if option in ("-n", "--noChrome"):
@@ -321,8 +301,6 @@ def main(argv=None):
                                     useId=useId,
                                     resultsServer=resultsServer,
                                     resultsLink=resultsLink,
-                                    oldresultsServer=oldresultsServer,
-                                    oldresultsLink=oldresultsLink,
                                     activeTests=activeTests,
                                     noChrome=noChrome,
                                     fast=fast,

@@ -85,29 +85,6 @@ def process_tpformat(line):
     val = 0
   return val, page
 
-def old_shortName(name):
-  if name == "tp_loadtime":
-    return "tp"
-  elif name == "tp_js_loadtime":
-    return "tp_js_l"
-  elif name == "tp_Percent Processor Time":
-    return "tp_%cpu"
-  elif name == "tp_Working Set":
-    return "tp_memset"
-  elif name == "tp_Private Bytes":
-    return "tp_pbytes"
-  else:
-    return name
-
-def old_process_Request(post):
-  str = ""
-  lines = post.split('\n')
-  for line in lines:
-    if line.find("RETURN:") > -1:
-        str += line.split(":")[3] + ":" + old_shortName(line.split(":")[1]) + ":" + line.split(":")[2] + '\n'
-    utils.debug("process_Request line: " + line.replace("RETURN", ""))
-  return str
-
 def process_Request(post):
   links = ""
   lines = post.split('\n')
@@ -248,103 +225,6 @@ def send_to_graph(results_server, results_link, machine, date, browser_config, r
 
   return links
 
-#To be removed when we stop sending data to the old graph server 
-def old_send_to_graph(results_server, results_link, title, date, browser_config, results):
-  tbox = title
-  url_format = "http://%s/%s"
-  link_format= "<a href=\"%s\">%s</a>"
-  #value, testname, tbox, timeval, date, branch, buildid, type, data
-  result_format = "%.2f,%s,%s,%d,%d,%s,%s,%s,%s,\n"
-  result_format2 = "%.2f,%s,%s,%d,%d,%s,%s,%s,\n"
-  links = ''
-
-  for res in results:
-    browser_dump, counter_dump = results[res]
-    utils.debug("Working with test: " + res)
-    utils.debug("Sending results: " + " ".join(browser_dump))
-    utils.stamped_msg("Transmitting test: " + res, "Started")
-    filename = tempfile.mktemp()
-    tmpf = open(filename, "w")
-    if res in ('ts', 'twinopen'):
-      i = 0
-      for val in browser_dump:
-        val_list = val.split('|')
-        for v in val_list:
-          tmpf.write(result_format % (float(v), res, tbox, i, date, browser_config['branch'], browser_config['buildid'], "discrete", "ms"))
-          i += 1
-    else:
-      # each line of the string is of the format i;page_name;median;mean;min;max;time vals\n
-      name = ''
-      res = res.replace('_fast', '')
-      if ((res == 'tp') or (res == 'tp_js')):
-          name = '_loadtime'
-      for bd in browser_dump:
-        bd.rstrip('\n')
-        page_results = bd.splitlines()
-        i = 0
-        for mypage in page_results:
-          r = mypage.split(';')
-          #skip this line if it isn't the correct format
-          if len(r) == 1:
-              continue
-          r[1] = r[1].rstrip('/')
-          if r[1].find('/') > -1 :
-             page = r[1].split('/')[1]
-          else:
-             page = r[1]
-          try:
-            val = float(r[2])
-          except ValueError:
-            print 'WARNING: value error for median in tp'
-            val = 0
-          tmpf.write(result_format % (val, res + name, tbox, i, date, browser_config['branch'], browser_config['buildid'], "discrete", page))
-          i += 1
-    tmpf.flush()
-    tmpf.close()
-    links += old_process_Request(post_test_result(results_server, results_link, filename))
-    os.remove(filename)
-    for cd in counter_dump:
-      for count_type in cd:
-        i = 0
-        filename = tempfile.mktemp()
-        tmpf = open(filename, "w")
-        for val in cd[count_type]:
-          tmpf.write(result_format2 % (float(val), res + "_" + count_type.replace("%", "Percent"), tbox, i, date, browser_config['branch'], browser_config['buildid'], "discrete"))
-          i += 1
-        tmpf.flush()
-        tmpf.close()
-        links += old_process_Request(post_test_result(results_server, results_link, filename))
-        os.remove(filename)
-    utils.stamped_msg("Transmitting test: " + res, "Stopped")
-
-  first_results = 'RETURN:<br>'
-  last_results = ''
-  full_results = '\nRETURN:<p style="font-size:smaller;">Details:<br>'
-  lines = links.split('\n')
-  for line in lines:
-    if line == "":
-      continue
-    values = line.split(":")
-    linkName = values[1]
-    if linkName in ('tp_pbytes', 'tp_%cpu'):
-      continue
-    if float(values[2]) > 0:
-      if linkName in ('tp_memset', 'tp_RSS',): #measured in bytes
-        linkName += ": " + filesizeformat(values[2])
-      else:
-        linkName += ": " + str(values[2])
-      url = url_format % (results_server, values[0])
-      link = link_format % (url, linkName)
-      first_results = first_results + "\nRETURN:" + link + "<br>"
-    else:
-      url = url_format % (results_server, values[0])
-      link = link_format % (url, linkName)
-      last_results = last_results + '| ' + link + ' '
-  full_results = first_results + full_results + last_results + '|</p>'
-  print 'RETURN: graph links'
-  print full_results
-
-
 def results_from_graph(links, results_server):
   #take the results from the graph server collection script and put it into a pretty format for the waterfall
   url_format = "http://%s/%s"
@@ -427,8 +307,6 @@ def test_file(filename):
   csv_dir = ''
   results_server = ''
   results_link = ''
-  old_results_server = ''
-  old_results_link = ''
   results = {}
   
   # Read in the profile info from the YAML config file
@@ -449,15 +327,8 @@ def test_file(filename):
        results_server = yaml_config[item]
     elif item == 'results_link' :
        results_link = yaml_config[item]
-    elif item == 'old_results_server':
-       old_results_server = yaml_config[item]
-    elif item == 'old_results_link' :
-       old_results_link = yaml_config[item]
   if (results_link != results_server != ''):
     if not post_file.link_exists(results_server, results_link):
-      sys.exit(0)
-  if (old_results_link != old_results_server != ''):
-    if not post_file.link_exists(old_results_server, old_results_link):
       sys.exit(0)
   browser_config = {'preferences'  : yaml_config['preferences'],
                     'extensions'   : yaml_config['extensions'],
@@ -524,12 +395,6 @@ def test_file(filename):
     utils.stamped_msg("Sending results", "Started")
     links = send_to_graph(results_server, results_link, title, date, browser_config, results)
     results_from_graph(links, results_server)
-    utils.stamped_msg("Completed sending results", "Stopped")
-  #process the results, yet again
-  if (old_results_server != '') and (old_results_link != ''):
-    #send results to the old graph server
-    utils.stamped_msg("Sending results", "Started")
-    old_send_to_graph(old_results_server, old_results_link, title, date, browser_config, results)
     utils.stamped_msg("Completed sending results", "Stopped")
   
 if __name__=='__main__':
