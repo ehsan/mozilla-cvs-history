@@ -697,7 +697,7 @@ const int kZoomActionsTag = 108;
 - (void)setUpSafeBrowsing
 {
   SafeBrowsingListManager *safeBrowsingService = [SafeBrowsingListManager sharedInstance];
-  [safeBrowsingService registerListWithName:@"goog-phish-shavar" type:eSafeBrowsingPhishingListType];
+  [safeBrowsingService registerListWithName:@"googpub-phish-shavar" type:eSafeBrowsingPhishingListType];
   [safeBrowsingService registerListWithName:@"goog-malware-shavar" type:eSafeBrowsingMalwareListType];
   [safeBrowsingService enableUpdateCheckingAccordingToPrefs];
 }
