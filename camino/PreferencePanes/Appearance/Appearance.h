@@ -68,10 +68,6 @@
 
   // advanced panel stuff
   IBOutlet NSPanel*       mAdvancedFontsDialog;
-  IBOutlet NSPopUpButton* mSerifFontPopup;
-  IBOutlet NSPopUpButton* mSansSerifFontPopup;
-  IBOutlet NSPopUpButton* mMonospaceFontPopup;
-
   IBOutlet NSPopUpButton* mMinFontSizePopup;
   IBOutlet NSTextField*   mAdvancedFontsLabel;
 

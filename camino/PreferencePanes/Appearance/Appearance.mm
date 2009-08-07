@@ -75,11 +75,6 @@
 - (NSTextField*)fontSampleForType:(NSString*)fontType;
 - (NSString*)fontSizeType:(NSString*)fontType;
 
-- (void)buildFontPopup:(NSPopUpButton*)popupButton;
-
-- (void)setupFontPopup:(NSPopUpButton*)popupButton forType:(NSString*)fontType fromDict:(NSDictionary*)regionDict;
-- (void)getFontFromPopup:(NSPopUpButton*)popupButton forType:(NSString*)fontType intoDict:(NSDictionary*)regionDict;
-
 - (IBAction)resetColorsToDefaults:(id)sender;
 - (IBAction)resetFontsToDefaults:(id)sender;
 
@@ -688,11 +683,6 @@ const int kDefaultFontSansSerifTag = 1;
                                                        [regionDict objectForKey:@"region"]];
   [mAdvancedFontsLabel setStringValue:advancedLabel];
   
-  // Set up the dialog for the current region.
-  [self setupFontPopup:mSerifFontPopup forType:@"serif" fromDict:regionDict];
-  [self setupFontPopup:mSansSerifFontPopup forType:@"sans-serif" fromDict:regionDict];
-  [self setupFontPopup:mMonospaceFontPopup forType:@"monospace" fromDict:regionDict];
-  
   // set up min size popup
   int itemIndex = 0;
   NSMutableDictionary* fontSizeDict = [regionDict objectForKey:@"fontsize"];
@@ -723,10 +713,6 @@ const int kDefaultFontSansSerifTag = 1;
   // save settings
   NSDictionary* regionDict = [self settingsForCurrentRegion];
   if (!regionDict) return;
-
-  [self getFontFromPopup:mSerifFontPopup forType:@"serif" intoDict:regionDict];
-  [self getFontFromPopup:mSansSerifFontPopup forType:@"sans-serif" intoDict:regionDict];
-  [self getFontFromPopup:mMonospaceFontPopup forType:@"monospace" intoDict:regionDict];
 
   int minSize = [[mMinFontSizePopup selectedItem] tag];
   // A value of 0 indicates "none"; we'll clear the pref on save.
@@ -817,104 +803,6 @@ const int kDefaultFontSansSerifTag = 1;
 
 - (void)advancedFontsSheetDidEnd:(NSWindow*)sheet returnCode:(int)returnCode contextInfo:(void*)contextInfo
 {
-}
-
-const int kMissingFontPopupItemTag = 9999;
-
-- (void)setupFontPopup:(NSPopUpButton*)popupButton forType:(NSString*)fontType fromDict:(NSDictionary*)regionDict
-{
-  NSDictionary* fontTypeDict = [regionDict objectForKey:fontType];
-  NSString*     defaultValue = [fontTypeDict objectForKey:@"fontfamily"];
-  
-  [self buildFontPopup:popupButton];
-
-  // Check to see if the font exists.
-  NSFont* foundFont = nil;
-  if (defaultValue) {
-    foundFont = [[NSFontManager sharedFontManager] fontWithFamily:defaultValue traits:0 weight:5 size:16.0];
-  }
-  else {
-    foundFont = [fontType isEqualToString:@"monospace"]
-                      ? [NSFont userFixedPitchFontOfSize:16.0]
-                      : [NSFont userFontOfSize:16.0];
-    defaultValue = [foundFont familyName];
-  }
-  
-  if (!foundFont) {
-    NSMenuItem* missingFontItem = [[popupButton menu] itemWithTag:kMissingFontPopupItemTag];
-    if (!missingFontItem) {
-      missingFontItem = [[[NSMenuItem alloc] initWithTitle:@"temp" action:NULL keyEquivalent:@""] autorelease];
-      [missingFontItem setTag:kMissingFontPopupItemTag];
-      [[popupButton menu] addItem:missingFontItem];
-    }
-
-    NSString* itemTitle = [NSString stringWithFormat:@"%@ %@", defaultValue, [self localizedStringForKey:@"Missing"]];
-    [missingFontItem setTitle:itemTitle];
-    [popupButton selectItem:missingFontItem];
-  }
-  else {
-    // Remove the missing item if it exists.
-    NSMenuItem* missingFontItem = [[popupButton menu] itemWithTag:kMissingFontPopupItemTag];
-    if (missingFontItem)
-      [[popupButton menu] removeItem: missingFontItem];
-
-    [popupButton selectItemWithTitle:defaultValue];
-  }
-}
-
-- (void)getFontFromPopup:(NSPopUpButton*)popupButton forType:(NSString*)fontType intoDict:(NSDictionary*)regionDict
-{
-  NSMenuItem* selectedItem = [popupButton selectedItem];
-  if ([selectedItem tag] != kMissingFontPopupItemTag)
-    [[regionDict objectForKey:fontType] setObject:[selectedItem title] forKey:@"fontfamily"];
-}
-
-- (void)buildFontPopup:(NSPopUpButton*)popupButton
-{
-  NSMenu* menu = [popupButton menu];
-
-  [menu setAutoenablesItems:NO];
-
-  // remove existing items
-  while ([menu numberOfItems] > 0)
-    [menu removeItemAtIndex:0];
-
-  NSArray* fontList = [[NSFontManager sharedFontManager] availableFontFamilies];
-  NSArray* sortedFontList = [fontList sortedArrayUsingSelector:@selector(caseInsensitiveCompare:)];
-  
-  for (unsigned int i = 0; i < [sortedFontList count]; i ++) {
-    NSString* fontFamilyName = [sortedFontList objectAtIndex:i];
-    unichar firstChar = [fontFamilyName characterAtIndex:0];
-    
-    if (firstChar == unichar('.') || firstChar == unichar('#'))
-      continue; // skip fonts with ugly names
-    
-    NSString* uiFamilyName = [[NSFontManager sharedFontManager] localizedNameForFamily:fontFamilyName face:nil];
-    NSMenuItem* newItem = [[NSMenuItem alloc] initWithTitle:uiFamilyName action:nil keyEquivalent:@""];
-
-#if SUBMENUS_FOR_VARIANTS
-    NSArray* fontFamilyMembers = [[NSFontManager sharedFontManager] availableMembersOfFontFamily:fontFamilyName];
-    if ([fontFamilyMembers count] > 1) {
-      NSMenu*  familySubmenu = [[NSMenu alloc] initWithTitle:fontFamilyName];
-      [familySubmenu setAutoenablesItems:NO];
-      
-      for (unsigned int j = 0; j < [fontFamilyMembers count]; j ++) {
-        NSArray* fontFamilyItems = [fontFamilyMembers objectAtIndex:j];
-        NSString* fontItemName = [fontFamilyItems objectAtIndex:1];
-
-        NSMenuItem* newSubmenuItem = [[NSMenuItem alloc] initWithTitle:fontItemName action:nil keyEquivalent:@""];
-        [familySubmenu addItem:newSubmenuItem];
-      }
-      
-      [newItem setSubmenu:familySubmenu];
-    }
-    else {
-      // Should we use the name from the font family info?
-    }
-#endif
-
-    [menu addItem:newItem];
-  }
 }
 
 @end

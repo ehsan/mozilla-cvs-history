@@ -6,12 +6,14 @@
             SUPERCLASS = NSObject;
         },
                 {
-            CLASS = FontReceiverView;
+            CLASS = NSMenu;
             LANGUAGE = ObjC;
-            OUTLETS =             {
-                delegate = id;
-            };
-            SUPERCLASS = NSView;
+            SUPERCLASS = NSObject;
+        },
+                {
+            CLASS = NSMenuItem;
+            LANGUAGE = ObjC;
+            SUPERCLASS = NSObject;
         },
                 {
             CLASS = NSObject;
@@ -27,6 +29,11 @@
                 "_window" = id;
             };
             SUPERCLASS = NSObject;
+        },
+                {
+            CLASS = NSView;
+            LANGUAGE = ObjC;
+            SUPERCLASS = NSResponder;
         },
                 {
             ACTIONS =             {
@@ -53,12 +60,9 @@
                 mFontSampleMonospace = NSTextField;
                 mFontSampleProportional = NSTextField;
                 mMinFontSizePopup = NSPopUpButton;
-                mMonospaceFontPopup = NSPopUpButton;
                 mProportionalSampleLabel = NSTextField;
                 mProportionalSubLabel = NSTextField;
                 mResetButton = NSButton;
-                mSansSerifFontPopup = NSPopUpButton;
-                mSerifFontPopup = NSPopUpButton;
                 mTabView = NSTabView;
                 mTextColorWell = NSColorWell;
                 mUnderlineLinksCheckbox = NSButton;
