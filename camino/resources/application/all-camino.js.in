@@ -213,6 +213,9 @@ pref("gfx.use_text_smoothing_setting", true);
 // force <select>s to display as Aqua rather than honor author styles
 pref("camino.use_aqua_selects", true);
 
+// enable full content zoom by default
+pref("browser.zoom.full", true);
+
 // Phishing and malware protection are temporarily disabled until the UI is
 // in a more polished state; see bug 479076.
 // Prevent loading of suspected phishing sites
@@ -239,8 +242,8 @@ pref("browser.safebrowsing.provider.0.reportMalwareErrorURL", "http://google.com
 // URL the user is forwarded to after submitting an error report
 pref("browser.safebrowsing.sendToURLAfterReporting", "http://caminobrowser.org/security/report-submitted.php");
 
-// Location to more information about the safe browsing feature
-pref("browser.safebrowsing.warning.infoURL", "http://en-us.www.mozilla.com/en-US/firefox/phishing-protection/");
+// Location of more information about the safe browsing feature
+pref("browser.safebrowsing.warning.infoURL", "http://caminobrowser.org/documentation/security/#safebrowsing");
 
 // Name of the about: page contributed by safebrowsing to handle display of error
 // pages on phishing/malware hits.

@@ -43,6 +43,7 @@
 #import "BrowserWindowController.h"
 #import "MainController.h"
 #import "AutoCompleteTextField.h"
+#import "PreferenceManager.h"
 
 static const int kEscapeKeyCode = 53;
 
@@ -131,7 +132,13 @@ static const int kEscapeKeyCode = 53;
       if ([[NSApp mainMenu] performKeyEquivalent:theEvent])
         return YES;
 
-      if ([theEvent modifierFlags] & NSAlternateKeyMask) {
+      BOOL zoomTextOnly = ![[PreferenceManager sharedInstance] getBooleanPref:kGeckoPrefFullContentZoom
+                                                                  withSuccess:NULL];
+
+      if (([theEvent modifierFlags] & NSAlternateKeyMask) != 0)
+        zoomTextOnly = !zoomTextOnly;
+
+      if (zoomTextOnly) {
         if ([windowController canMakeTextBigger])
           [windowController makeTextBigger:nil];
         else

@@ -102,6 +102,8 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 // Key in the defaults system used to determine if we crashed last time.
 NSString* const kPreviousSessionTerminatedNormallyKey = @"PreviousSessionTerminatedNormally";
 
+const int kZoomActionsTag = 108;
+
 @interface MainController(Private)<NetworkServicesClient>
 
 - (void)ensureGeckoInitted;
@@ -165,6 +167,10 @@ NSString* const kPreviousSessionTerminatedNormallyKey = @"PreviousSessionTermina
 
 - (void)dealloc
 {
+  [[NSNotificationCenter defaultCenter] removeObserver:self];
+
+  [[PreferenceManager sharedInstanceDontCreate] removeObserver:self forPref:kGeckoPrefFullContentZoom];
+
   [mCharsets release];
 
   [mGrowlController release];
@@ -272,6 +278,17 @@ NSString* const kPreviousSessionTerminatedNormallyKey = @"PreviousSessionTermina
     [JSConsole sharedJSConsole];
 
   [self setupRendezvous];
+
+  // Get the text zoom preference.
+  BOOL textZoomOnly = ![prefManager getBooleanPref:kGeckoPrefFullContentZoom
+                                       withSuccess:NULL];
+  if (textZoomOnly)  // Full content zoom is the default
+    [self toggleTextZoom:nil];
+  [prefManager addObserver:self forPref:kGeckoPrefFullContentZoom];
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(geckoPreferenceChanged:)
+                                               name:kPrefChangedNotificationName
+                                             object:self];
 
   // load up the charset dictionary with keys and menu titles.
   NSString* charsetPath = [NSBundle pathForResource:@"Charset" ofType:@"dict" inDirectory:[[NSBundle mainBundle] bundlePath]];
@@ -1015,6 +1032,18 @@ NSString* const kPreviousSessionTerminatedNormallyKey = @"PreviousSessionTermina
   [self delayedUpdatePageInfo];
 }
 
+// This gets called when any Gecko preference we are registered as an observer
+// of changes. The notification object's userInfo dictionary can be inspected
+// to find out which preference changed, if necessary.
+- (void)geckoPreferenceChanged:(NSNotification*)aNotification
+{
+  BOOL textZoomOnlyPref = ![[PreferenceManager sharedInstance] getBooleanPref:kGeckoPrefFullContentZoom
+                                                                  withSuccess:NULL];
+  BOOL textZoomOnlyUISet = ([mTextZoomOnlyMenuItem state] == NSOnState);
+  if (textZoomOnlyPref != textZoomOnlyUISet)
+    [self toggleTextZoom:nil];
+}
+
 #pragma mark -
 #pragma mark -
 #pragma mark Application Menu
@@ -1508,6 +1537,50 @@ NSString* const kPreviousSessionTerminatedNormallyKey = @"PreviousSessionTermina
 - (IBAction)makePageSmaller:(id)aSender
 {
   [[self mainWindowBrowserController] makePageSmaller:aSender];
+}
+
+//
+// -toggleTextZoom:
+//
+// Swaps the zoom mode between full content and text only. Swaps titles and
+// actions between each zoom menu item and its respective alternate.
+// aSender can be the Text Zoom Only menu item, its alternate, or nil.
+//
+- (IBAction)toggleTextZoom:(id)aSender
+{
+  // The regular state of zoom should become the inverse of whatever is on the
+  // screen at that moment. When the sender is the alternate menu item, the
+  // inverse is equal to the regular state, and thus should not be changed.
+  if (aSender && (aSender != mTextZoomOnlyMenuItem))
+    return;
+
+  int toggleMenuItemIndex = [mViewMenu indexOfItem:mTextZoomOnlyMenuItem];
+  BOOL textZoomOnly = ([mTextZoomOnlyMenuItem state] == NSOnState);
+  [mTextZoomOnlyMenuItem setState:!textZoomOnly];
+  [[mViewMenu itemAtIndex:(toggleMenuItemIndex+1)] setState:textZoomOnly];
+
+  // Find the zoom menu items, and swap their titles and actions with those of
+  // their respective alternate items.
+  NSEnumerator* itemEnumerator = [[mViewMenu itemArray] objectEnumerator];
+  NSMenuItem* regularItem;
+  while ((regularItem = [itemEnumerator nextObject])) {
+    if ([regularItem tag] == kZoomActionsTag) {
+      int regularItemIndex = [mViewMenu indexOfItem:regularItem];
+      NSMenuItem* alternateItem = [mViewMenu itemAtIndex:(regularItemIndex+1)];
+      NSString* tempTitle = [[[regularItem title] copy] autorelease];
+      [regularItem setTitle:[alternateItem title]];
+      [alternateItem setTitle:tempTitle];
+      SEL tempAction = [regularItem action];
+      [regularItem setAction:[alternateItem action]];
+      [alternateItem setAction:tempAction];
+    }
+  }
+
+  if (aSender) {
+    PreferenceManager* prefManager = [PreferenceManager sharedInstance];
+    [prefManager setPref:kGeckoPrefFullContentZoom
+               toBoolean:([mTextZoomOnlyMenuItem state] != NSOnState)]; 
+  }
 }
 
 - (IBAction)viewPageSource:(id)aSender

@@ -279,6 +279,7 @@
                 closeAllWindows = id; 
                 closeCurrentTab = id; 
                 connectToServer = id; 
+                copyPageLocation = id; 
                 displayPreferencesWindow = id; 
                 doSearch = id; 
                 downloadsWindow = id; 
@@ -322,6 +323,7 @@
                 toggleBookmarksToolbar = id; 
                 toggleOfflineMode = id; 
                 toggleTabThumbnailView = id; 
+                toggleTextZoom = id; 
                 viewPageSource = id; 
                 zoomAll = id; 
             }; 
@@ -347,6 +349,8 @@
                 mServersSubmenu = NSMenu; 
                 mShowAllBookmarksMenuItem = NSMenuItem; 
                 mTextEncodingsMenu = NSMenu; 
+                mTextZoomOnlyMenuItem = NSMenuItem; 
+                mViewMenu = NSMenu; 
             }; 
             SUPERCLASS = NSObject; 
         }, 

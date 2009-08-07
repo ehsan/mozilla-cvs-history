@@ -75,6 +75,9 @@ typedef enum EBookmarkOpenBehavior
     IBOutlet BookmarkMenu*  mDockMenu;
     IBOutlet NSMenu*        mServersSubmenu;
 
+    IBOutlet NSMenu*        mViewMenu;
+    IBOutlet NSMenuItem*    mTextZoomOnlyMenuItem;
+
     IBOutlet NSMenu*        mTextEncodingsMenu;
 
     IBOutlet NSMenu*        mBookmarksHelperMenu; // not shown, used to get enable state
@@ -148,6 +151,7 @@ typedef enum EBookmarkOpenBehavior
 - (IBAction)makePageBigger:(id)aSender;
 - (IBAction)makePageDefaultSize:(id)aSender;
 - (IBAction)makePageSmaller:(id)aSender;
+- (IBAction)toggleTextZoom:(id)aSender;
 - (IBAction)viewPageSource:(id)aSender;
 - (IBAction)reloadWithCharset:(id)aSender;
 - (IBAction)toggleAutoCharsetDetection:(id)aSender;
