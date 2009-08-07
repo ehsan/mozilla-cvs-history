@@ -667,3 +667,7 @@ div[id="tw_secnav_mc_ad"] { display: block !important }
 @-moz-document domain(news.cnet.com) {
 div[id="ads_backsplashSkin"] { display: block !important }
 }
+
+@-moz-document domain(lastfm.de) {
+html embed[type="application/x-shockwave-flash"][width][height] { display: inline !important }
+}
