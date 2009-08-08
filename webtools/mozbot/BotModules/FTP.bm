@@ -167,10 +167,17 @@ sub ftp_stamp {
         # so that we are less prone to time drift
         my @day=gmtime($event->{'time'}); my @tm=@day[0..2]; @day=@day[3..5];
         my (@filestamp, $filelist, $ahr,$amn,$asc);
-        if ($_[2]){  # this code's output is *VERY* ugly. But I just took it as is, so deal with it. Patches welcome.
+        if ($_[2]){  # Outputs the time of file modification
                 foreach my $filename (keys %latestbuilds){
                         my @ltm=gmtime($latestbuilds{$filename});
-                        $filelist.="$filename [".($ltm[5]+1900).'-'.($ltm[4]+1)."-$ltm[3] $ltm[2]:$ltm[1]:$ltm[0]]"
+                        $ltm[4] = $ltm[4]+1;
+                        $ltm[0] = "0$ltm[0]" if $ltm[0] < 10;
+                        $ltm[1] = "0$ltm[1]" if $ltm[1] < 10;
+                        $ltm[2] = "0$ltm[2]" if $ltm[2] < 10;
+                        $ltm[3] = "0$ltm[3]" if $ltm[3] < 10;
+                        $ltm[4] = "0$ltm[4]" if $ltm[4] < 10;
+                        $filelist .= '' if $filelist;
+                        $filelist.="$filename [".($ltm[5]+1900).'-'.($ltm[4])."-$ltm[3] $ltm[2]:$ltm[1]:$ltm[0]] "
                                 if $filename=~/$_[2]/;
                 }
                 $filelist=$filelist||'<nothing matched>';
