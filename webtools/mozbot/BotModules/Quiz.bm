@@ -490,8 +490,8 @@ sub quizSkip { # called by user
 sub pickQuestion {
     my $self = shift;
     my($event) = @_;
-    $self->{'questionIndex'} += 1 + $event->{'time'} % $self->{'skipMargin'};
-    $self->{'questionIndex'} %= @{$self->{'questions'}};
+    my $questionCount = scalar @{$self->.{'questions'}};
+    $self->{'questionIndex'} = int(rand(($questionCount-1)));
     return $self->{'questionIndex'};
 }
 
