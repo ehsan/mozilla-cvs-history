@@ -3,7 +3,7 @@
 # Quiz Module                  #
 ################################
 # some of these ideas are stolen from moxquizz (an eggdrop module)
-# see http://www.meta-x.de/moxquizz/
+# see http://moxquizz.de/
 
 package BotModules::Quiz;
 use vars qw(@ISA);
@@ -15,7 +15,7 @@ use vars qw(@ISA);
 # XXX make bot able to self-abort if no-one is taking part
 # XXX implement feature so that users that can be quiz admins in certain channels
 # XXX accept user submission
-# XXX README for database format (for now see http://www.meta-x.de/moxquizz/README.database)
+# XXX README for database format (for now see http://moxquizz.de/README.database)
 # XXX pause doesn't stop count of how long answer takes to answer
 # XXX different quiz formats, e.g. university challenge, weakest link (maybe implement by inheritance?)
 # XXX stats, e.g. number of questions skipped
