@@ -1679,9 +1679,9 @@ tools are selected during the Xcode/Developer Tools installation.])
 
     DLLFLAGS='-OUT:"$@"'
     if test -n "$MOZ_DEBUG_SYMBOLS"; then
-        OS_LDFLAGS=-DEBUG -DEBUGTYPE:CV
-        OS_DLLFLAGS=-DEBUG -DEBUGTYPE:CV
-        DSO_LDOPTS=-DEBUG -DEBUGTYPE:CV
+        OS_LDFLAGS='-DEBUG -DEBUGTYPE:CV'
+        OS_DLLFLAGS='-DEBUG -DEBUGTYPE:CV'
+        DSO_LDOPTS='-DEBUG -DEBUGTYPE:CV'
     fi
     _DEBUG_FLAGS=-Zi
     _OPTIMIZE_FLAGS=-O2
