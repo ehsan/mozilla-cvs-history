@@ -149,17 +149,18 @@ body[dir="rtl"] #brand {
 :root.blacklist #errorTitle, :root.blacklist #errorLongContent,
 :root.blacklist #errorShortDesc, :root.blacklist #errorLongDesc,
 :root.blacklist a {
-  background-color: #763033;
-  color: white;
+  background-color: #e8e8e8;
+  color: black;
 }
 
 :root.blacklist #errorPageContainer {
   background-image: url("chrome://global/skin/icons/blacklist.png");
-  background-color: #763033;
+  background-color: #e8e8e8;
+  border: 2px solid black;
 }
 
 :root.blacklist {
-  background: #353535;
+  background: #722;
 }
 
 :root.blacklist #errorTryAgain {
@@ -167,11 +168,13 @@ body[dir="rtl"] #brand {
 }
 
 :root.blacklist #errorShortDesc > p {
-  color: #ffdc00;
+  color: black;
+  font-weight: bold;
+  border-bottom: 1px solid black;
 }
 
 :root.blacklist #errorTitle h1 {
-  color: white;
+  color: #722;
 }
 
 :root.blacklist #buttons {

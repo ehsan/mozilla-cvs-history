@@ -519,15 +519,25 @@
 "GrowlShortDownloadComplete" = "Short Download Complete";
 
 /* Safe Browsing */
-"PhishingTitleText" = "Reported Web Forgery!";
-"MalwareTitleText" = "Reported Attack Site!";
+/* Please translate these strings with care, because we are required to
+   indicate that the protection provided by this feature is not perfect.
+   Specifically, not all malicious sites will be identified, and some sites may
+   falsely be indentifed as malicious, so warning messages should indicate
+   these are “suspected” or “reported” to be dangerous and that they “possibly” or
+   “may” steal your data. */
+"PhishingTitleText" = "Reported Phishing Site";
+"MalwareTitleText" = "Reported Malware Site";
 /* For the short descriptions, please do not translate the contents of the <span> tags. 
    They will be replaced at runtime with a domain name. */
-"PhishingShortDescText" = "This web site at <span id='phishing_sitename'/> has been reported as a web forgery and has been blocked based on your security preferences.";
-"MalwareShortDescText" = "This web site at <span id='malware_sitename'/> has been reported as an attack site and has been blocked based on your security preferences.";
-/* To create paragraphs within the long description text, please wrap each paragraph in <p></p> tags */
-"PhishingLongDescText" = "<p>Web forgeries are designed to trick you into revealing personal or financial information by imitating sources you may trust.</p><p>Entering any information on this web page may result in identity theft or other fraud.</p>";
-"MalwareLongDescText" = "<p>Attack sites try to install programs that steal private information, use your computer to attack others, or damage your system.</p><p>Some attack sites intentionally distribute harmful software, but many are compromised without the knowledge or permission of their owners.</p>";
+"PhishingShortDescText" = "This web site at <span id='phishing_sitename'/> has been reported as a phishing site and has been blocked for your protection.";
+"MalwareShortDescText" = "This web site at <span id='malware_sitename'/> has been reported as a malware site and has been blocked for your protection.";
+/* To create paragraphs within the long description text, please wrap each 
+   paragraph in <p></p> tags.  Because these strings appear in an XHTML page, 
+   each LongDescText string must begin with a <p> and end with a </p> or the 
+   safe browsing page will not display. */
+"PhishingLongDescText" = "<p>Phishing sites are designed to trick you into revealing personal or financial information by creating copies of trusted websites.</p><p>Entering any information on this web page may result in identity theft or other fraud.</p>";
+"MalwareLongDescText" = "<p>Malware sites try to install programs that steal private information, use your computer to attack others, or damage your system.</p><p>Some malware sites intentionally distribute harmful software, but many are compromised without the knowledge or permission of their owners.</p><p>Your computer can be infected just by proceeding to this site, without any further action on your part.</p>";
+/* Really would like to pull the URL for MoreInformationText from browser.safebrowsing.warning.infoURL in all-camino.js */
+"MoreInformationText" = "For more information about why this site was blocked, see Camino’s <a href='http://caminobrowser.org/documentation/security/#safebrowsing'>Safe Browsing Documentation</a>.";
 "GetMeOutButtonLabel" = "Get me out of here!";
-"MoreInformationButtonLabel" = "Why was this site blocked?";
 "IgnoreWarningButtonLabel" = "Ignore this warning";

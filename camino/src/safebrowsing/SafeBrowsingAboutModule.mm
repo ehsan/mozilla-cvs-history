@@ -56,7 +56,7 @@ static NSString *const kPhishingShortDescText = @"PhishingShortDescText";
 static NSString *const kMalwareShortDescText = @"MalwareShortDescText";
 static NSString *const kPhishingLongDescText = @"PhishingLongDescText";
 static NSString *const kMalwareLongDescText = @"MalwareLongDescText";
-static NSString *const kMoreInformationButtonLabel = @"MoreInformationButtonLabel";
+static NSString *const kMoreInformationText = @"MoreInformationText";
 static NSString *const kGetMeOutButtonLabel = @"GetMeOutButtonLabel";
 static NSString *const kIgnoreWarningButtonLabel = @"IgnoreWarningButtonLabel";
 
@@ -143,7 +143,7 @@ nsresult CHSafeBrowsingAboutModule::GetBlockedPageSource(nsACString &result) {
                                                                 kMalwareShortDescText,
                                                                 kPhishingLongDescText,
                                                                 kMalwareLongDescText,
-                                                                kMoreInformationButtonLabel,
+                                                                kMoreInformationText,
                                                                 kGetMeOutButtonLabel,
                                                                 kIgnoreWarningButtonLabel,
                                                                 nil];

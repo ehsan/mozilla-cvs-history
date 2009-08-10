@@ -32,6 +32,8 @@
    -   Jeff Walden <jwalden+code@mit.edu>
    -   Johnathan Nightingale <johnath@mozilla.com>
    -   Sean Murphy <murph@seanmurph.com>
+   -   Smokey Ardisson <alqahira@ardisson.org>
+   -   Christopher Henderson <trendyhendy2000@gmail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -103,6 +105,8 @@
             initPage_phishing();
             break;
         }
+        // Give the overlay a sane initial focus, the default button
+        document.getElementById("getMeOutButton").focus();
       }        
       
       /**
@@ -146,34 +150,48 @@
         document.title = document.getElementById("errorTitleText_phishing")
                                  .innerHTML;
       }
+
+      /**
+       * Handle keypress events in the overlay. Click the default button
+       * if the enter/return key was pressed.
+       */
+      function handleKeypress(anEvent)
+      {
+        var outButton = document.getElementById("getMeOutButton");
+        if (anEvent.which == 13) {
+          outButton.click();
+          return true;
+        }
+        return false;
+      }
     ]]></script>
     <style type="text/css">
-      /* Style warning button to look like a small text link in the
-         bottom right. This is preferable to just using a text link
-         since there is already a mechanism in browser.js for trapping
-         oncommand events from unprivileged chrome pages (BrowserOnCommand).*/
+      /* CSS rules to make the buttons appear somewhat like a Mac OS X dialog.
+         These probably belong in netError.css, but Firefox had similar weird 
+         style rules here. */
       #ignoreWarningButton {
-        -moz-appearance: none;
-        background: transparent;
-        border: none;
-        color: white;  /* Hard coded because netError.css forces this page's background to dark red */
-        text-decoration: underline;
-        margin: 0;
-        padding: 0;
-        position: relative;
-        top: 23px;
-        left: 20px;
-        font-size: smaller;
-        cursor: pointer;
+        /* Per HIG, there should be 24px between dangerous buttons and other
+           buttons. The buttons have a 6px margin on each side by default
+           (beginning after the 1px shadow) and the whitespace node between the
+           buttons takes 4px. Since Cocoa does not consider the shadow to be
+           part of the button’s width, use 12px as margin-right to achieve 24px
+           of space between the two buttons. */
+        margin-right: 12px;
       }
-      
-      #ignoreWarning {
+
+      #getMeOutButton {
+        /* Align the button’s right edge with the right edge of the 
+           border-bottom from the errorShortDesc div. */
+        margin-right: -2px;
+      }
+
+      #buttons {
         text-align: right;
       }
     </style>
   </head>
 
-  <body>
+  <body onkeypress="handleKeypress(event)">
     <div id="errorPageContainer">
     
       <!-- Error Title -->
@@ -194,20 +212,17 @@
         <div id="errorLongDesc">
           <p id="errorLongDescText_phishing">PhishingLongDescText</p>
           <p id="errorLongDescText_malware">MalwareLongDescText</p>
+          <p id="errorLongDescText_whyBlocked">MoreInformationText</p>
         </div>
         
         <!-- Action buttons -->
         <div id="buttons">
-          <!-- Commands handled in browser.js -->
+          <!-- Commands handled in BrowserWrapper -->
           <xul:button xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-                      id="getMeOutButton" label="GetMeOutButtonLabel"/>
+                      id="ignoreWarningButton" label="IgnoreWarningButtonLabel"/>
           <xul:button xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-                      id="whyBlockedButton" label="MoreInformationButtonLabel"/>
+                      id="getMeOutButton" label="GetMeOutButtonLabel" default="true"/>
         </div>
-      </div>
-      <div id="ignoreWarning">
-        <xul:button xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-                    id="ignoreWarningButton" label="IgnoreWarningButtonLabel"/>
       </div>
     </div>
     <!--
