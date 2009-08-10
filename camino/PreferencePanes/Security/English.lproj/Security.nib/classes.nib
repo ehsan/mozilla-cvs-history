@@ -1,134 +1,80 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-	<key>IBClasses</key>
-	<array>
-		<dict>
-			<key>CLASS</key>
-			<string>PreferencePaneBase</string>
-			<key>LANGUAGE</key>
-			<string>ObjC</string>
-			<key>SUPERCLASS</key>
-			<string>NSPreferencePane</string>
-		</dict>
-		<dict>
-			<key>ACTIONS</key>
-			<dict>
-				<key>clickCertificateSelectionBehavior</key>
-				<string>id</string>
-				<key>clickEnableLeaveEncrypted</key>
-				<string>id</string>
-				<key>clickEnableViewMixed</key>
-				<string>id</string>
-				<key>editOverrides</key>
-				<string>id</string>
-				<key>editOverridesDone</key>
-				<string>id</string>
-				<key>removeAllOverrides</key>
-				<string>id</string>
-				<key>removeOverrides</key>
-				<string>id</string>
-				<key>showCertificates</key>
-				<string>id</string>
-			</dict>
-			<key>CLASS</key>
-			<string>OrgMozillaCaminoPreferenceSecurity</string>
-			<key>LANGUAGE</key>
-			<string>ObjC</string>
-			<key>OUTLETS</key>
-			<dict>
-				<key>mCertificateBehavior</key>
-				<string>NSMatrix</string>
-				<key>mLeaveEncrypted</key>
-				<string>NSButton</string>
-				<key>mOverridePanel</key>
-				<string>id</string>
-				<key>mOverridesController</key>
-				<string>NSArrayController</string>
-				<key>mOverridesTable</key>
-				<string>ExtendedTableView</string>
-				<key>mViewMixed</key>
-				<string>NSButton</string>
-			</dict>
-			<key>SUPERCLASS</key>
-			<string>PreferencePaneBase</string>
-		</dict>
-		<dict>
-			<key>CLASS</key>
-			<string>PopupMenuButton</string>
-			<key>LANGUAGE</key>
-			<string>ObjC</string>
-			<key>SUPERCLASS</key>
-			<string>NSButton</string>
-		</dict>
-		<dict>
-			<key>CLASS</key>
-			<string>NSMenu</string>
-			<key>LANGUAGE</key>
-			<string>ObjC</string>
-			<key>SUPERCLASS</key>
-			<string>NSObject</string>
-		</dict>
-		<dict>
-			<key>CLASS</key>
-			<string>NSObject</string>
-			<key>LANGUAGE</key>
-			<string>ObjC</string>
-		</dict>
-		<dict>
-			<key>CLASS</key>
-			<string>ExtendedTableView</string>
-			<key>LANGUAGE</key>
-			<string>ObjC</string>
-			<key>SUPERCLASS</key>
-			<string>NSTableView</string>
-		</dict>
-		<dict>
-			<key>CLASS</key>
-			<string>NSView</string>
-			<key>LANGUAGE</key>
-			<string>ObjC</string>
-			<key>SUPERCLASS</key>
-			<string>NSResponder</string>
-		</dict>
-		<dict>
-			<key>CLASS</key>
-			<string>NSMenuItem</string>
-			<key>LANGUAGE</key>
-			<string>ObjC</string>
-			<key>SUPERCLASS</key>
-			<string>NSObject</string>
-		</dict>
-		<dict>
-			<key>CLASS</key>
-			<string>FirstResponder</string>
-			<key>LANGUAGE</key>
-			<string>ObjC</string>
-			<key>SUPERCLASS</key>
-			<string>NSObject</string>
-		</dict>
-		<dict>
-			<key>CLASS</key>
-			<string>NSPreferencePane</string>
-			<key>LANGUAGE</key>
-			<string>ObjC</string>
-			<key>OUTLETS</key>
-			<dict>
-				<key>_firstKeyView</key>
-				<string>id</string>
-				<key>_initialKeyView</key>
-				<string>id</string>
-				<key>_lastKeyView</key>
-				<string>id</string>
-				<key>_window</key>
-				<string>id</string>
-			</dict>
-			<key>SUPERCLASS</key>
-			<string>NSObject</string>
-		</dict>
-	</array>
-	<key>IBVersion</key>
-	<string>1</string>
-</dict>
-</plist>
+{
+    IBClasses =     (
+                {
+            CLASS = ExtendedTableView;
+            LANGUAGE = ObjC;
+            SUPERCLASS = NSTableView;
+        },
+                {
+            CLASS = FirstResponder;
+            LANGUAGE = ObjC;
+            SUPERCLASS = NSObject;
+        },
+                {
+            CLASS = NSMenu;
+            LANGUAGE = ObjC;
+            SUPERCLASS = NSObject;
+        },
+                {
+            CLASS = NSMenuItem;
+            LANGUAGE = ObjC;
+            SUPERCLASS = NSObject;
+        },
+                {
+            CLASS = NSObject;
+            LANGUAGE = ObjC;
+        },
+                {
+            CLASS = NSPreferencePane;
+            LANGUAGE = ObjC;
+            OUTLETS =             {
+                "_firstKeyView" = id;
+                "_initialKeyView" = id;
+                "_lastKeyView" = id;
+                "_window" = id;
+            };
+            SUPERCLASS = NSObject;
+        },
+                {
+            CLASS = NSView;
+            LANGUAGE = ObjC;
+            SUPERCLASS = NSResponder;
+        },
+                {
+            ACTIONS =             {
+                clickCertificateSelectionBehavior = id;
+                clickEnableLeaveEncrypted = id;
+                clickEnableViewMixed = id;
+                clickSafeBrowsing = id;
+                editOverrides = id;
+                editOverridesDone = id;
+                removeAllOverrides = id;
+                removeOverrides = id;
+                showCertificates = id;
+            };
+            CLASS = OrgMozillaCaminoPreferenceSecurity;
+            LANGUAGE = ObjC;
+            OUTLETS =             {
+                mCertificateBehavior = NSMatrix;
+                mLeaveEncrypted = NSButton;
+                mOverridePanel = id;
+                mOverridesController = NSArrayController;
+                mOverridesTable = ExtendedTableView;
+                mSafeBrowsing = NSButton;
+                mViewMixed = NSButton;
+            };
+            SUPERCLASS = PreferencePaneBase;
+        },
+                {
+            CLASS = PopupMenuButton;
+            LANGUAGE = ObjC;
+            SUPERCLASS = NSButton;
+        },
+                {
+            CLASS = PreferencePaneBase;
+            LANGUAGE = ObjC;
+            SUPERCLASS = NSPreferencePane;
+        }
+    );
+    IBVersion = 1;
+}

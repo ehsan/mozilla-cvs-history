@@ -44,6 +44,7 @@
 
 @interface OrgMozillaCaminoPreferenceSecurity : PreferencePaneBase
 {
+  IBOutlet NSButton* mSafeBrowsing;
   IBOutlet NSButton* mLeaveEncrypted;
   IBOutlet NSButton* mViewMixed;
   IBOutlet NSMatrix* mCertificateBehavior;
@@ -54,6 +55,8 @@
   IBOutlet ExtendedTableView* mOverridesTable;
   NSMutableArray*             mOverrides;      // strong
 }
+
+- (IBAction)clickSafeBrowsing:(id)sender;
 
 - (IBAction)clickEnableLeaveEncrypted:(id)sender;
 - (IBAction)clickEnableViewMixed:(id)sender;

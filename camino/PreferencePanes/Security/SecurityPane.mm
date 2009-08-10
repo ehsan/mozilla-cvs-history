@@ -69,6 +69,17 @@ static NSString* const kOverridePortKey = @"port";
 - (void)updateButtons
 {
   // Set initial value on Security checkboxes
+  BOOL phishingCheckingEnabled = [self getBooleanPref:kGeckoPrefSafeBrowsingPhishingCheckingEnabled 
+                                          withSuccess:NULL];
+  BOOL malwareCheckingEnabled = [self getBooleanPref:kGeckoPrefSafeBrowsingMalwareCheckingEnabled 
+                                         withSuccess:NULL];
+  if (phishingCheckingEnabled && malwareCheckingEnabled)
+    [mSafeBrowsing setState:NSOnState];
+  else if (phishingCheckingEnabled || malwareCheckingEnabled)
+    [mSafeBrowsing setState:NSMixedState];
+  else
+    [mSafeBrowsing setState:NSOffState];
+
   BOOL leaveEncrypted = [self getBooleanPref:LEAVE_SITE_PREF withSuccess:NULL];
   [mLeaveEncrypted setState:(leaveEncrypted ? NSOnState : NSOffState)];
 
@@ -131,6 +142,21 @@ static NSString* const kOverridePortKey = @"port";
   [[NSNotificationCenter defaultCenter] postNotificationName:@"ShowCertificatesNotification"
                                                       object:nil
                                                     userInfo:userInfoDict];
+}
+
+- (IBAction)clickSafeBrowsing:(id)sender
+{
+  // The safe browsing button allows mixed state, since the underlying prefs are 
+  // actually independent, but we only want this button to enable or disable
+  // safe browsing in its entirety.
+  if ([sender state] == NSMixedState)
+    [sender setState:NSOnState];
+
+  [self setPref:kGeckoPrefSafeBrowsingPhishingCheckingEnabled
+      toBoolean:[sender state] == NSOnState];
+
+  [self setPref:kGeckoPrefSafeBrowsingMalwareCheckingEnabled
+      toBoolean:[sender state] == NSOnState];
 }
 
 #pragma mark -

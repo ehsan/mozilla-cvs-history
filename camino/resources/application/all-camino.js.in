@@ -216,13 +216,11 @@ pref("camino.use_aqua_selects", true);
 // enable full content zoom by default
 pref("browser.zoom.full", true);
 
-// Phishing and malware protection are temporarily disabled until the UI is
-// in a more polished state; see bug 479076.
 // Prevent loading of suspected phishing sites
-pref("browser.safebrowsing.enabled", false);
+pref("browser.safebrowsing.enabled", true);
 
 // Prevent loading of suspected malware sites
-pref("browser.safebrowsing.malware.enabled", false);
+pref("browser.safebrowsing.malware.enabled", true);
 
 // The active safe browsing data provider
 pref("browser.safebrowsing.dataProvider", 0);
