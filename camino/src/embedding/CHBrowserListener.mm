@@ -747,17 +747,12 @@ CHBrowserListener::OnLocationChange(nsIWebProgress *aWebProgress, nsIRequest *aR
   if (aRequest) { // aRequest can be null (e.g. for relative anchors)
     nsresult status = NS_OK;
     aRequest->GetStatus(&status);
-    if (status == NS_ERROR_MALWARE_URI) {
-      [mContainer onSafeBrowsingBlockedURI:location reason:eSafeBrowsingBlockedAsMalware];
+    if (status == NS_ERROR_MALWARE_URI)
       requestStatus = eRequestBlocked;
-    }
-    else if (status == NS_ERROR_PHISHING_URI) {
-      [mContainer onSafeBrowsingBlockedURI:location reason:eSafeBrowsingBlockedAsPhishing];
+    else if (status == NS_ERROR_PHISHING_URI)
       requestStatus = eRequestBlocked;
-    }
-    else if (!NS_SUCCEEDED(status)) {
+    else if (!NS_SUCCEEDED(status))
       requestStatus = eRequestFailed;
-    }
   }
 
   NSEnumerator* enumerator = [mListeners objectEnumerator];

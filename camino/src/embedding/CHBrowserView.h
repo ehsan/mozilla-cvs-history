@@ -116,8 +116,6 @@ typedef enum {
 // Called when an XUL element was activated (e.g. clicked) in the content area, 
 // typically on an about: page.
 - (void)onXULCommand:(nsIDOMNSEvent*)aDOMEvent;
-- (void)onSafeBrowsingBlockedURI:(NSString*)aBlockedURI
-                          reason:(ESafeBrowsingBlockedReason)aBlockedReason;
 
 @end
 

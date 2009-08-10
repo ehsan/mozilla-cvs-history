@@ -193,7 +193,7 @@ extern NSString* const kBrowserInstanceClosedNotification;
 
   IBOutlet SafeBrowsingBar* mSafeBrowsingBar; // loaded on demand, can be nil, strong
   IBOutlet NSTextField*     mSafeBrowsingBarLabel;
-  NSMutableDictionary*      mBlockedSitesAndInfo; // strong
+  NSMutableDictionary*      mIgnoredBlockedSites; // strong
 }
 
 - (id)initWithTab:(NSTabViewItem*)aTab inWindow:(NSWindow*)window;

@@ -99,6 +99,7 @@ NSString* const kBrowserInstanceClosedNotification = @"BrowserInstanceClosed";
 
 static NSString* const kBlockedSiteInformationBlockedDateKey = @"BlockedDate";
 static NSString* const kBlockedSiteInformationBlockedReasonKey = @"BlockedReason";
+static NSString* const kSafeBrowsingErrorOverlayMalwareBlockedIndicator = @"e=malwareBlocked";
 
 static const NSTimeInterval kTimeIntervalToConsiderSiteBlockingStatusValid = 900.0;
 
@@ -138,9 +139,10 @@ static const NSTimeInterval kTimeIntervalToConsiderSiteBlockingStatusValid = 900
 
 - (void)xpcomTerminate:(NSNotification*)aNotification;
 
+- (void)ignoreBlockedSite:(NSString*)aBlockedURI withReason:(ESafeBrowsingBlockedReason)aBlockedReason;
 - (void)showSafeBrowsingBar;
 - (ESafeBrowsingBlockedReason)reasonForBlockingURL:(NSString*)aURL;
-- (BOOL)hasPreviouslyBlockedURLInRecentTimeframe:(NSString*)aURL;
+- (BOOL)hasIgnoredBlockingForURLInRecentTimeframe:(NSString*)aURL;
 
 @end
 
@@ -205,7 +207,7 @@ static const NSTimeInterval kTimeIntervalToConsiderSiteBlockingStatusValid = 900
     mLoadingResources = [[NSMutableSet alloc] init];
 
     mDetectedSearchPlugins = [[NSMutableArray alloc] initWithCapacity:1];
-    mBlockedSitesAndInfo = [[NSMutableDictionary alloc] init];
+    mIgnoredBlockedSites = [[NSMutableDictionary alloc] init];
 
     [self registerNotificationListeners];
   }
@@ -249,7 +251,7 @@ static const NSTimeInterval kTimeIntervalToConsiderSiteBlockingStatusValid = 900
   [mTopTransientBar release];
   [mBottomTransientBar release];
 
-  [mBlockedSitesAndInfo release];
+  [mIgnoredBlockedSites release];
 
   [super dealloc];
 }
@@ -684,10 +686,9 @@ static const NSTimeInterval kTimeIntervalToConsiderSiteBlockingStatusValid = 900
 
     BOOL blockedErrorOverlayIsDisplayed = (requestStatus == eRequestBlocked);
 
-    // If this site has been previously blocked and an error overlay is not being shown,
-    // the user has chosen to ignore the warning and proceed to the blocked site.
-    // In this situation, we display a safe browsing transient bar.
-    BOOL shouldDisplaySafeBrowsingBar = ([self hasPreviouslyBlockedURLInRecentTimeframe:urlSpec] &&
+    // If the safe browsing blocked warning was ignored for this page, and it is
+    // currently loading unblocked, display the safe browsing bar.
+    BOOL shouldDisplaySafeBrowsingBar = ([self hasIgnoredBlockingForURLInRecentTimeframe:urlSpec] &&
                                          !blockedErrorOverlayIsDisplayed);
     if (shouldDisplaySafeBrowsingBar)
       [self showSafeBrowsingBar];
@@ -993,20 +994,6 @@ static const NSTimeInterval kTimeIntervalToConsiderSiteBlockingStatusValid = 900
   [self performCommandForXULElementWithID:elementID onPage:documentURI];
 }
 
-- (void)onSafeBrowsingBlockedURI:(NSString*)aBlockedURI
-                          reason:(ESafeBrowsingBlockedReason)aBlockedReason
-{
-  // We keep track of blocked sites for cases when the user ignores the main error
-  // overlay and proceeds to the site. After ignoring a blocked error for a page 
-  // we will always present a bar on it, especially when it was loaded unblocked
-  // from session history.
-  NSDictionary *blockedSiteInformation = 
-    [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithInt:aBlockedReason], kBlockedSiteInformationBlockedReasonKey,
-                                               [NSDate date], kBlockedSiteInformationBlockedDateKey,
-                                               nil];
-  [mBlockedSitesAndInfo setObject:blockedSiteInformation forKey:aBlockedURI];
-}
-
 // The pageURI is supplied because it might differ from -[self currentURI], particularly
 // if the command was sent from an error page overlay.
 - (void)performCommandForXULElementWithID:(NSString*)elementIdentifier onPage:(NSString*)pageURI
@@ -1015,22 +1002,22 @@ static const NSTimeInterval kTimeIntervalToConsiderSiteBlockingStatusValid = 900
     [mDelegate addCertificateOverrideForSite:[self currentURI]];
   }
   else if ([pageURI hasPrefix:@"about:safebrowsingblocked"]) {
+    // pageURI contains an |e| parameter to indicate the type of
+    // blocking error, such as e=malwareBlocked.
+    ESafeBrowsingBlockedReason blockedReason = eSafeBrowsingBlockedAsPhishing;
+    if ([pageURI rangeOfString:kSafeBrowsingErrorOverlayMalwareBlockedIndicator].location != NSNotFound)
+      blockedReason = eSafeBrowsingBlockedAsMalware;
+
     if ([elementIdentifier isEqualToString:@"getMeOutButton"]) {
       [mDelegate runAwayFromSafeBrowsingBlockedSite];
     }
     else if ([elementIdentifier isEqualToString:@"ignoreWarningButton"]) {
-      [self loadURI:[self currentURI] 
-           referrer:nil 
-              flags:NSLoadFlagsBypassClassifier 
-       focusContent:YES 
-        allowPopups:NO];
+      [self ignoreBlockedSite:[self currentURI] withReason:blockedReason];
     }
     else if ([elementIdentifier isEqualToString:@"whyBlockedButton"]) {
-      // Examine pageURI for e=phishingBlocked or e=malwareBlocked
-      // to customize the blocking info location for each case.
-      if ([pageURI rangeOfString:@"e=malwareBlocked"].location != NSNotFound)
+      if (blockedReason == eSafeBrowsingBlockedAsMalware)
         [mDelegate showMalwareDiagnosticInformation];
-      else // e=phishingBlocked
+      else
         [mDelegate showSafeBrowsingInformation];
     }
   }
@@ -1668,12 +1655,36 @@ static const NSTimeInterval kTimeIntervalToConsiderSiteBlockingStatusValid = 900
 
 #pragma mark -
 
-// If |aURL| has been previously blocked by safe browsing upon visiting, returns
-// the reason it was blocked (e.g. malware or phishing).  If |aURL| hasn't
-// been visited and blocked, returns eSafeBrowsingNotBlocked.
+// Called when the user chooses to ignore the safe browsing blocked warning. 
+// Navigates to the blocked site, and ensures the safe browsing bar will 
+// appear now and on all subsequent visits to this site without the blocking
+// overlay.
+- (void)ignoreBlockedSite:(NSString*)aBlockedURI withReason:(ESafeBrowsingBlockedReason)aBlockedReason
+{
+  // Remember ignored blocked sites so we can display the safe browsing bar on them.
+  // If we only chose to display it now, right when the error was ignored, the bar
+  // would not appear when visiting the site from session history (which will also
+  // load bypassing safe browsing).
+  NSDictionary* blockedSiteInformation = 
+    [NSDictionary dictionaryWithObjectsAndKeys:
+      [NSNumber numberWithInt:aBlockedReason], kBlockedSiteInformationBlockedReasonKey,
+      [NSDate date], kBlockedSiteInformationBlockedDateKey,
+      nil];
+    [mIgnoredBlockedSites setObject:blockedSiteInformation forKey:aBlockedURI];
+
+  [self loadURI:[self currentURI] 
+       referrer:nil 
+          flags:NSLoadFlagsBypassClassifier 
+   focusContent:YES 
+    allowPopups:NO];
+}
+
+// If the safe browsing blocked warning was previously ignored for |aURL|, returns
+// the reason it was blocked (e.g. malware or phishing). If the blocked warning for
+// |aURL| was never ignored, eSafeBrowsingNotBlocked is returned.
 - (ESafeBrowsingBlockedReason)reasonForBlockingURL:(NSString*)aURL
 {
-  NSDictionary* blockedSiteInfo = [mBlockedSitesAndInfo objectForKey:aURL];
+  NSDictionary* blockedSiteInfo = [mIgnoredBlockedSites objectForKey:aURL];
   if (!blockedSiteInfo)
     return eSafeBrowsingNotBlocked;
 
@@ -1681,14 +1692,12 @@ static const NSTimeInterval kTimeIntervalToConsiderSiteBlockingStatusValid = 900
   return static_cast<ESafeBrowsingBlockedReason>([blockedReasonNumber intValue]);
 }
 
-// Returns YES if |aURL| was visited and blocked by safe browsing recently. 
-// (We stop remembering previously blocked sites after a certain amount
-// of time in case any were mistakingly blocked. The safe browsing database will
-// always offer current checking, this method is merely to check if the site was
-// blocked on a previous visit).
-- (BOOL)hasPreviouslyBlockedURLInRecentTimeframe:(NSString*)aURL
+// Returns YES if the safe browsing blocked warning was ignored recently for |aURL|.
+// (We stop remembering ignored blocked sites after a certain amount of time in
+// case any were mistakingly blocked.)
+- (BOOL)hasIgnoredBlockingForURLInRecentTimeframe:(NSString*)aURL
 {
-  NSDictionary* blockedSiteInfo = [mBlockedSitesAndInfo objectForKey:aURL];
+  NSDictionary* blockedSiteInfo = [mIgnoredBlockedSites objectForKey:aURL];
   if (!blockedSiteInfo)
     return NO;
 
@@ -1699,7 +1708,7 @@ static const NSTimeInterval kTimeIntervalToConsiderSiteBlockingStatusValid = 900
   }
   else {
     // Also remove the URL from our local cache since it was not blocked recently enough
-    [mBlockedSitesAndInfo removeObjectForKey:aURL];
+    [mIgnoredBlockedSites removeObjectForKey:aURL];
     return NO;
   }
 }
