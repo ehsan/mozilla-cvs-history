@@ -1,7 +1,6 @@
 #! /bin/bash
 
 HOST=$(hostname | cut -d. -f1)
-DOMSUF=$(domainname 2> /dev/null)
 ARCH=$(uname -s)
 
 ulimit -c unlimited 2> /dev/null
