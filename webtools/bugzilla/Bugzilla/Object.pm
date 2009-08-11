@@ -337,6 +337,15 @@ sub remove_from_db {
 ####      Subroutines    ######
 ###############################
 
+sub any_exist {
+    my $class = shift;
+    my $table = $class->DB_TABLE;
+    my $dbh = Bugzilla->dbh;
+    my $any_exist = $dbh->selectrow_array(
+        "SELECT 1 FROM $table " . $dbh->sql_limit(1));
+    return $any_exist ? 1 : 0;
+}
+
 sub create {
     my ($class, $params) = @_;
     my $dbh = Bugzilla->dbh;
@@ -881,6 +890,11 @@ Returns C<1> if the passed-in value is true, C<0> otherwise.
 =head1 CLASS FUNCTIONS
 
 =over
+
+=item C<any_exist>
+
+Returns C<1> if there are any of these objects in the database,
+C<0> otherwise.
 
 =item C<get_all>
 
