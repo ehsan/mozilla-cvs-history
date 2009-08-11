@@ -649,6 +649,7 @@ if test -n "$CROSS_COMPILE"; then
         mingw*)       OS_ARCH=WINNT ;;
         wince*)       OS_ARCH=WINCE ;;
         darwin*)      OS_ARCH=Darwin ;;
+        riscos*)      OS_ARCH=RISCOS ;;
     esac
 else
     OS_ARCH=`uname -s | sed -e 's|/|_|g'`
@@ -1881,8 +1882,9 @@ mips-sony-newsos*)
     USE_PTHREADS=1
     MDCPUCFG_H=_riscos.cfg
     PR_MD_CSRCS=riscos.c
-    DLL_SUFFIX=a
-    LD="/home/riscos/env/ro-ar cr"
+    DSO_CFLAGS=-fPIC
+    DSO_LDOPTS='-shared -Wl,-soname -Wl,$(notdir $@)'
+    MKSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
     ;;
 
 *-*-sco*)
