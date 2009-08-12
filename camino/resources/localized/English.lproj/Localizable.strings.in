@@ -537,7 +537,6 @@
    safe browsing page will not display. */
 "PhishingLongDescText" = "<p>Phishing sites are designed to trick you into revealing personal or financial information by creating copies of trusted websites.</p><p>Entering any information on this web page may result in identity theft or other fraud.</p>";
 "MalwareLongDescText" = "<p>Malware sites try to install programs that steal private information, use your computer to attack others, or damage your system.</p><p>Some malware sites intentionally distribute harmful software, but many are compromised without the knowledge or permission of their owners.</p><p>Your computer can be infected just by proceeding to this site, without any further action on your part.</p>";
-/* Really would like to pull the URL for MoreInformationText from browser.safebrowsing.warning.infoURL in all-camino.js */
-"MoreInformationText" = "For more information about why this site was blocked, see Camino’s <a href='http://caminobrowser.org/documentation/security/#safebrowsing'>Safe Browsing Documentation</a>.";
+"MoreInformationFormat" = "For more information about why this site was blocked, see Camino’s <a href='%@'>Safe Browsing Documentation</a>.";
 "GetMeOutButtonLabel" = "Get me out of here!";
 "IgnoreWarningButtonLabel" = "Ignore this warning";

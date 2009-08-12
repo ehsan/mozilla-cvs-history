@@ -38,6 +38,8 @@
 #import <Cocoa/Cocoa.h>
 #import "NSString+Gecko.h"
 #include "SafeBrowsingAboutModule.h"
+#import "PreferenceManager.h"
+#import "GeckoPrefConstants.h"
 
 #include "nsCOMPtr.h"
 #include "nsIChannel.h"
@@ -56,7 +58,7 @@ static NSString *const kPhishingShortDescText = @"PhishingShortDescText";
 static NSString *const kMalwareShortDescText = @"MalwareShortDescText";
 static NSString *const kPhishingLongDescText = @"PhishingLongDescText";
 static NSString *const kMalwareLongDescText = @"MalwareLongDescText";
-static NSString *const kMoreInformationText = @"MoreInformationText";
+static NSString *const kMoreInformationFormat = @"MoreInformationFormat";
 static NSString *const kGetMeOutButtonLabel = @"GetMeOutButtonLabel";
 static NSString *const kIgnoreWarningButtonLabel = @"IgnoreWarningButtonLabel";
 
@@ -143,7 +145,6 @@ nsresult CHSafeBrowsingAboutModule::GetBlockedPageSource(nsACString &result) {
                                                                 kMalwareShortDescText,
                                                                 kPhishingLongDescText,
                                                                 kMalwareLongDescText,
-                                                                kMoreInformationText,
                                                                 kGetMeOutButtonLabel,
                                                                 kIgnoreWarningButtonLabel,
                                                                 nil];
@@ -155,6 +156,19 @@ nsresult CHSafeBrowsingAboutModule::GetBlockedPageSource(nsACString &result) {
                                            withString:NSLocalizedString(currentPlaceholder, nil)
                                               options:NULL
                                                 range:NSMakeRange(0, [blockedSitePageSource length])];    
+  }
+
+  // Swap out the kMoreInformationText placeholder separately, since we need to
+  // insert the URL of the more information page.
+  NSString *moreInfoURL = [[PreferenceManager sharedInstance] getStringPref:kGeckoPrefSafeBrowsingInformationURL
+                                                                withSuccess:NULL];
+  if (moreInfoURL) {
+    NSString *moreInfoValue = [NSString stringWithFormat:NSLocalizedString(kMoreInformationFormat, nil),
+                                                         moreInfoURL];
+    [blockedSitePageSource replaceOccurrencesOfString:kMoreInformationFormat
+                                           withString:moreInfoValue
+                                              options:NULL
+                                                range:NSMakeRange(0, [blockedSitePageSource length])];
   }
 
   result.Assign([blockedSitePageSource UTF8String]);
