@@ -1331,6 +1331,8 @@ FeedWriter.prototype = {
 
   // nsIObserver
   observe: function FW_observe(subject, topic, data) {
+    subject = new XPCNativeWrapper(subject);
+
     if (!this._window) {
       // this._window is null unless this.write was called with a trusted
       // window object.
@@ -1402,6 +1404,8 @@ FeedWriter.prototype = {
 
    // nsINavHistoryService
    onPageChanged: function FW_onPageChanged(aURI, aWhat, aValue) {
+    aURI = new XPCNativeWrapper(aURI);
+
      if (aWhat == Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON) {
        // Go through the readers menu and look for the corresponding
        // reader menu-item for the page if any.
