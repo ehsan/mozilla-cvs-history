@@ -125,8 +125,9 @@ $productBranchVersions = array(
         '3.0*'   =>  'trunk',
         '3.1*'    => 'mozilla-1.9.1',
         '3.5*'    => 'mozilla-1.9.1',
+        '3.6*'    => 'mozilla-1.9.2',
         '3.2*'    => 'mozilla-central',
-        '3.6*'    => 'mozilla-central',
+        '3.7*'    => 'mozilla-central'
     ),
     'Thunderbird' =>  array(
         '1.5.0.*' =>  '1.5.0.x',
