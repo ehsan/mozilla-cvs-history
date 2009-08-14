@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certdata.c,v $ $Revision: 1.55 $ $Date: 2009/08/13 23:40:29 $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.55 $ $Date: 2009/08/13 23:40:29 $";
+static const char CVS_ID[] = "@(#) $RCSfile: certdata.c,v $ $Revision: 1.56 $ $Date: 2009/08/14 15:18:54 $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.56 $ $Date: 2009/08/14 15:18:54 $";
 #endif /* DEBUG */
 
 #ifndef BUILTINS_H
@@ -908,7 +908,7 @@ static const NSSItem nss_builtins_items_0 [] = {
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)"CVS ID", (PRUint32)7 },
   { (void *)"NSS", (PRUint32)4 },
-  { (void *)"@(#) $RCSfile: certdata.c,v $ $Revision: 1.55 $ $Date: 2009/08/13 23:40:29 $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.55 $ $Date: 2009/08/13 23:40:29 $", (PRUint32)160 }
+  { (void *)"@(#) $RCSfile: certdata.c,v $ $Revision: 1.56 $ $Date: 2009/08/14 15:18:54 $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.56 $ $Date: 2009/08/14 15:18:54 $", (PRUint32)160 }
 };
 #endif /* DEBUG */
 static const NSSItem nss_builtins_items_1 [] = {
