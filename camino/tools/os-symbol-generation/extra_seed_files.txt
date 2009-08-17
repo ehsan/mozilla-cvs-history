@@ -4,7 +4,6 @@
 # the crash server.
 /Library/Internet Plug-Ins/JavaPluginCocoa.bundle/
 /Library/Internet Plug-Ins/QuickTime Plugin.plugin/
-/Library/Internet Plug-Ins/Flash Player.plugin/
 /Library/Internet Plug-Ins/RealPlayer Plugin.plugin/Contents/MacOS/RealPlayer Plugin
 /System/Library/Frameworks/ApplicationServices.framework/Frameworks/ATS.framework/Resources/*.dylib
 /System/Library/Frameworks/ApplicationServices.framework/Frameworks/ImageIO.framework/Resources/*.dylib

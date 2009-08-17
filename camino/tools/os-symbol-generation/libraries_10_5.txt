@@ -5,7 +5,6 @@
 # - A current Thunderbird nightly
 # - The current Thunderbird release
 # as arguments, and feeding in extra_seed_files.txt
-/Library/Internet Plug-Ins/Flash Player.plugin/Contents/MacOS/Flash Player
 /Library/Internet Plug-Ins/JavaPluginCocoa.bundle/Contents/MacOS/JavaPluginCocoa
 /Library/Internet Plug-Ins/QuickTime Plugin.plugin/Contents/MacOS/QuickTime Plugin
 /Library/Internet Plug-Ins/RealPlayer Plugin.plugin/Contents/MacOS/RealPlayer Plugin

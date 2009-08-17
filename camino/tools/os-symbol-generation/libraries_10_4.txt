@@ -3,7 +3,6 @@
 # reports, as well as a few cherry-picked forward-looking files (CoreText).
 # AE and LaunchServices switched frameworks in Mac OS X 10.5, and 
 # FindByContent and WebServicesCore have no binary on 10.5.
-/Library/Internet Plug-Ins/Flash Player.plugin/Contents/MacOS/Flash Player
 /Library/Internet Plug-Ins/JavaPluginCocoa.bundle/Contents/MacOS/JavaPluginCocoa
 /Library/Internet Plug-Ins/QuickTime Plugin.plugin/Contents/MacOS/QuickTime Plugin
 /Library/Internet Plug-Ins/RealPlayer Plugin.plugin/Contents/MacOS/RealPlayer Plugin
