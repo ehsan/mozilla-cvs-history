@@ -99,7 +99,7 @@ def send_to_csv(csv_dir, results):
   for res in results:
     browser_dump, counter_dump = results[res]
     writer = csv.writer(open(os.path.join(csv_dir, res + '.csv'), "wb"))
-    if res in ('ts', 'twinopen'):
+    if res in ('ts', 'twinopen', 'ts_places_generated_max', 'ts_places_generated_min', 'ts_places_generated_med'):
       i = 0
       writer.writerow(['i', 'val'])
       for val in browser_dump:
@@ -191,7 +191,7 @@ def send_to_graph(results_server, results_link, machine, date, browser_config, r
     utils.debug("Working with test: " + testname)
     utils.debug("Sending results: " + " ".join(browser_dump))
     utils.stamped_msg("Generating results file: " + testname, "Started")
-    if testname in ('ts', 'twinopen'):
+    if testname in ('ts', 'twinopen', 'ts_places_generated_max', 'ts_places_generated_min', 'ts_places_generated_med'):
       #non-tpformat results
       for bd in browser_dump:
         vals.extend([[x, 'NULL'] for x in bd.split('|')])
@@ -211,7 +211,7 @@ def send_to_graph(results_server, results_link, machine, date, browser_config, r
       for count_type in cd:
         vals = [[x, 'NULL'] for x in cd[count_type]]
         counterName = testname + '_' + shortName(count_type)
-        if testname not in ('ts', 'twinopen'):
+        if testname in ('ts', 'twinopen', 'ts_places_generated_max', 'ts_places_generated_min', 'ts_places_generated_med'):
           counterName += browser_config['test_name_extension']
         utils.stamped_msg("Generating results file: " + counterName, "Started")
         files.append(construct_file(machine, counterName, browser_config['branch_name'], browser_config['sourcestamp'], browser_config['buildid'], date, vals))
@@ -340,7 +340,6 @@ def test_file(filename):
                     'extra_args'   : yaml_config['extra_args'],
                     'branch'       : yaml_config['branch'],
                     'buildid'      : yaml_config['buildid'],
-                    'profile_path' : yaml_config['profile_path'],
                     'env'          : yaml_config['env'],
                     'dirs'         : yaml_config['dirs'],
                     'init_url'     : yaml_config['init_url']}
@@ -352,8 +351,6 @@ def test_file(filename):
       browser_config['test_name_extension'] = ''
   #normalize paths to work accross platforms
   browser_config['browser_path'] = os.path.normpath(browser_config['browser_path'])
-  if browser_config['profile_path'] != {}:
-    browser_config['profile_path'] = os.path.normpath(browser_config['profile_path'])
   for dir in browser_config['dirs']:
     browser_config['dirs'][dir] = os.path.normpath(browser_config['dirs'][dir])
   tests = yaml_config['tests']
