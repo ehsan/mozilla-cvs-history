@@ -1808,6 +1808,11 @@ const int kZoomActionsTag = 108;
     [self loadApplicationPage:pageToLoad];
 }
 
+- (IBAction)reportPhishingPage:(id)aSender
+{
+  [[self mainWindowBrowserController] reportPhishingPage:aSender];
+}
+
 - (IBAction)aboutPlugins:(id)aSender
 {
   [self loadApplicationPage:@"about:plugins"];
@@ -1918,7 +1923,8 @@ const int kZoomActionsTag = 108;
       action == @selector(viewPageSource:) ||
       action == @selector(sendURL:) ||
       action == @selector(printDocument:) ||
-      action == @selector(pageSetup:))
+      action == @selector(pageSetup:) ||
+      action == @selector(reportPhishingPage:))
   {
     if ([browserController shouldSuppressWindowActions])
       return NO;

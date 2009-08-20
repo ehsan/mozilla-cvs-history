@@ -252,6 +252,10 @@ typedef enum  {
 - (IBAction)makeTextSmaller:(id)aSender;
 - (IBAction)makeTextDefaultSize:(id)aSender;
 
+// Returns YES if the current page is reasonable to report to the safe browsing
+// data provider as a suspected phishing site.
+- (BOOL)canReportCurrentPageAsPhishing;
+
 - (BOOL)canMakePageBigger;
 - (BOOL)canMakePageSmaller;
 - (BOOL)canMakePageDefaultSize;
@@ -298,6 +302,9 @@ typedef enum  {
 - (IBAction)frameToNewWindow:(id)sender;
 - (IBAction)frameToNewTab:(id)sender;
 - (IBAction)frameToThisWindow:(id)sender;
+
+// Reports the current page as one suspected of phishing.
+- (IBAction)reportPhishingPage:(id)aSender;
 
 - (BrowserWindowController*)openNewWindowWithURL: (NSString*)aURLSpec referrer:(NSString*)aReferrer loadInBackground: (BOOL)aLoadInBG allowPopups:(BOOL)inAllowPopups;
 - (void)openNewTabWithURL: (NSString*)aURLSpec referrer: (NSString*)aReferrer loadInBackground: (BOOL)aLoadInBG allowPopups:(BOOL)inAllowPopups setJumpback:(BOOL)inSetJumpback;

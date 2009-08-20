@@ -182,6 +182,7 @@ typedef enum EBookmarkOpenBehavior
 - (IBAction)supportLink:(id)aSender;
 - (IBAction)keyboardShortcutsLink:(id)aSender;
 - (IBAction)infoLink:(id)aSender;
+- (IBAction)reportPhishingPage:(id)aSender;
 - (IBAction)aboutPlugins:(id)aSender;
 
 // used by export bookmarks popup to set file extension for the resulting bookmarks file

@@ -1355,6 +1355,11 @@ static const NSTimeInterval kTimeIntervalToConsiderSiteBlockingStatusValid = 900
   return NO;
 }
 
+- (BOOL)isPageLoadErrorOverlayShowing
+{
+  return [[self documentURI] hasPrefix:@"about:neterror"];
+}
+
 //
 // -isBookmarkable
 //

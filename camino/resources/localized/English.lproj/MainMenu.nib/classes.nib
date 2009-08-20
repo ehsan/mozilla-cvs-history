@@ -152,6 +152,7 @@
                 reloadAllTabs = id; 
                 reloadSendersTab = id; 
                 reloadWithNewCharset = NSString; 
+                reportPhishingPage = id; 
                 saveFrameAs = id; 
                 saveImageAs = id; 
                 saveLinkAs = id; 
@@ -166,6 +167,7 @@
                 stop = id; 
                 toggleStatusBar = id; 
                 toggleTabThumbnailView = id; 
+                unblockFlashFromCurrentDomain = id; 
                 viewOnlyThisImage = id; 
                 viewPageSource = id; 
                 viewSource = id; 
@@ -216,6 +218,13 @@
             CLASS = CHBrowserView; 
             LANGUAGE = ObjC; 
             SUPERCLASS = NSView; 
+        }, 
+        {CLASS = CHShrinkWrapView; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
+        {
+            CLASS = CHStackView; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {mDataSource = id; }; 
+            SUPERCLASS = CHShrinkWrapView; 
         }, 
         {
             ACTIONS = {copy = id; cut = id; delete = id; paste = id; }; 
@@ -311,6 +320,7 @@
                 reload = id; 
                 reloadAllTabs = id; 
                 reloadWithCharset = id; 
+                reportPhishingPage = id; 
                 resetBrowser = id; 
                 savePage = id; 
                 sendURL = id; 
@@ -361,6 +371,22 @@
         {CLASS = NSString; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
         {CLASS = NSView; LANGUAGE = ObjC; SUPERCLASS = NSResponder; }, 
         {CLASS = PageProxyIcon; LANGUAGE = ObjC; SUPERCLASS = NSImageView; }, 
+        {
+            ACTIONS = {
+                cancel = id; 
+                cleanUpDownloads = id; 
+                open = id; 
+                pause = id; 
+                remove = id; 
+                resume = id; 
+                reveal = id; 
+                selectAll = id; 
+            }; 
+            CLASS = ProgressDlgController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {mScrollView = NSScrollView; mStackView = CHStackView; }; 
+            SUPERCLASS = NSWindowController; 
+        }, 
         {
             ACTIONS = {checkForUpdates = id; }; 
             CLASS = SUUpdater; 

@@ -1940,6 +1940,9 @@ public:
     return (![self bookmarkManagerIsVisible] && ![[self browserWrapper] isBlockedErrorOverlayShowing]);
   }
 
+  if (action == @selector(reportPhishingPage:))
+    return [self canReportCurrentPageAsPhishing];
+
   return YES;
 }
 
@@ -5311,6 +5314,34 @@ public:
     [self loadURL:reportURL referrer:nil focusContent:YES allowPopups:NO];
   else
     NSLog(@"Unable to find an error reporting URL for the current safe browsing data provider");
+}
+
+- (IBAction)reportPhishingPage:(id)aSender
+{
+  NSString* urlToReport = [[self browserWrapper] currentURI];
+  if (!urlToReport)
+    return;
+
+  SafeBrowsingListManager* listManager = [SafeBrowsingListManager sharedInstance];
+
+  NSString* reportURL = [listManager listReportingURLForPrefKey:kGeckoPrefSafeBrowsingDataProviderReportPhishingURL
+                                                    urlToReport:urlToReport];
+  if (reportURL)
+    [self loadURL:reportURL referrer:nil focusContent:YES allowPopups:NO];
+}
+
+- (BOOL)canReportCurrentPageAsPhishing
+{
+  BrowserWrapper* browserWrapper = [self browserWrapper];
+
+  if ([browserWrapper isBlockedErrorOverlayShowing] || [browserWrapper isPageLoadErrorOverlayShowing])
+    return NO;
+
+  NSString* currentURI = [browserWrapper currentURI];
+  if (!([currentURI hasPrefix:@"http://"] || [currentURI hasPrefix:@"https://"]))
+    return NO;
+
+  return YES;
 }
 
 @end
