@@ -84,27 +84,33 @@ RESULTS_TP_REGEX = re.compile('__start_tp_report(.*?)__end_tp_report.*?__startTi
                       re.DOTALL | re.MULTILINE)
 RESULTS_REGEX_FAIL = re.compile('__FAIL(.*?)__FAIL', re.DOTALL|re.MULTILINE)
 
-def createProfile(profile_path, browser_config):
-  # Create the new profile
-  temp_dir, profile_dir = ffsetup.CreateTempProfileDir(profile_path,
-                                             browser_config['preferences'],
-                                             browser_config['extensions'])
-  utils.debug("created profile") 
+def createProfile(browser_config):
+  if browser_config["profile_path"] != {}:
+      # Create the new profile
+      temp_dir, profile_dir = ffsetup.CreateTempProfileDir(browser_config['profile_path'],
+                                                 browser_config['preferences'],
+                                                 browser_config['extensions'])
+      utils.debug("created profile") 
+  else:
+      # no profile path was set in the config, set the profile_dir to an empty string.
+      profile_dir = ""
   return profile_dir, temp_dir
 
 def initializeProfile(profile_dir, browser_config):
-  if not (ffsetup.InitializeNewProfile(browser_config['browser_path'], browser_config['process'], browser_config['browser_wait'], browser_config['extra_args'], profile_dir, browser_config['init_url'], browser_config['browser_log'])):
-     raise talosError("failed to initialize browser")
-  time.sleep(browser_config['browser_wait'])
-  if ffprocess.checkAllProcesses(browser_config['process']):
-     raise talosError("browser failed to close after being initialized") 
+  if browser_config["profile_path"] != {}:
+      if not (ffsetup.InitializeNewProfile(browser_config['browser_path'], browser_config['process'], browser_config['browser_wait'], browser_config['extra_args'], profile_dir, browser_config['init_url'], browser_config['browser_log'])):
+         raise talosError("failed to initialize browser")
+      time.sleep(browser_config['browser_wait'])
+      if ffprocess.checkAllProcesses(browser_config['process']):
+         raise talosError("browser failed to close after being initialized") 
 
-def cleanupProfile(dir):
+def cleanupProfile(dir, browser_config):
   # Delete the temp profile directory  Make it writeable first,
   # because every once in a while browser seems to drop a read-only
   # file into it.
-  ffsetup.MakeDirectoryContentsWritable(dir)
-  shutil.rmtree(dir)
+  if browser_config["profile_path"] != {}:
+    ffsetup.MakeDirectoryContentsWritable(dir)
+    shutil.rmtree(dir)
 
 def checkForCrashes(browser_config, profile_dir):
     if platform.system() in ('Windows', 'Microsoft'):
@@ -165,10 +171,8 @@ def runTest(browser_config, test_config):
     # add any provided directories to the installed browser
     for dir in browser_config['dirs']:
       ffsetup.InstallInBrowser(browser_config['browser_path'], browser_config['dirs'][dir])
-  
-    # make profile path work cross-platform
-    test_config['profile_path'] = os.path.normpath(test_config['profile_path'])
-    profile_dir, temp_dir = createProfile(test_config['profile_path'], browser_config)
+   
+    profile_dir, temp_dir = createProfile(browser_config)
     if os.path.isfile(browser_config['browser_log']):
       os.chmod(browser_config['browser_log'], 0777)
       os.remove(browser_config['browser_log'])
@@ -281,7 +285,7 @@ def runTest(browser_config, test_config):
       all_counter_results.append(counter_results)
      
     ffprocess.cleanupProcesses(browser_config['process'], browser_config['browser_wait']) 
-    cleanupProfile(temp_dir)
+    cleanupProfile(temp_dir, browser_config)
 
     utils.restoreEnvironmentVars()
     if test_config['shutdown']:
@@ -307,7 +311,7 @@ def runTest(browser_config, test_config):
               pass
 
       if vars().has_key('temp_dir'):
-        cleanupProfile(temp_dir)
+        cleanupProfile(temp_dir, browser_config)
     except talosError, te:
       utils.debug("cleanup error: " + te.msg)
     except:
