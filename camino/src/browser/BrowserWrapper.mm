@@ -1746,7 +1746,7 @@ static const NSTimeInterval kTimeIntervalToConsiderSiteBlockingStatusValid = 900
   [mDelegate reportIncorrectlyBlockedSite:blockedURL reason:blockedReason];
 }
 
-// Sent when the user chooses to leave a dangerous page via the "Get Me Out" button.
+// Sent when the user chooses to leave a dangerous page via the "Close Page" button.
 - (IBAction)runAwayFromBlockedSite:(id)sender
 {
   [self closeBrowserWindow];
