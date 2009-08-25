@@ -1,131 +1,76 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-	<key>IBClasses</key>
-	<array>
-		<dict>
-			<key>CLASS</key>
-			<string>NSString</string>
-			<key>LANGUAGE</key>
-			<string>ObjC</string>
-			<key>SUPERCLASS</key>
-			<string>NSObject</string>
-		</dict>
-		<dict>
-			<key>CLASS</key>
-			<string>NSMenu</string>
-			<key>LANGUAGE</key>
-			<string>ObjC</string>
-			<key>SUPERCLASS</key>
-			<string>NSObject</string>
-		</dict>
-		<dict>
-			<key>CLASS</key>
-			<string>RolloverImageButton</string>
-			<key>LANGUAGE</key>
-			<string>ObjC</string>
-			<key>SUPERCLASS</key>
-			<string>NSButton</string>
-		</dict>
-		<dict>
-			<key>CLASS</key>
-			<string>NSObject</string>
-			<key>LANGUAGE</key>
-			<string>ObjC</string>
-		</dict>
-		<dict>
-			<key>CLASS</key>
-			<string>TransientBar</string>
-			<key>LANGUAGE</key>
-			<string>ObjC</string>
-			<key>SUPERCLASS</key>
-			<string>NSView</string>
-		</dict>
-		<dict>
-			<key>ACTIONS</key>
-			<dict>
-				<key>blacklistPopups</key>
-				<string>id</string>
-				<key>closeSafeBrowsingBar</key>
-				<string>id</string>
-				<key>hideBlockedPopupView</key>
-				<string>id</string>
-				<key>reloadWithNewCharset</key>
-				<string>NSString</string>
-				<key>reportIncorrectlyBlockedSite</key>
-				<string>id</string>
-				<key>runAwayFromBlockedSite</key>
-				<string>id</string>
-				<key>showPopups</key>
-				<string>id</string>
-				<key>unblockPopups</key>
-				<string>id</string>
-			</dict>
-			<key>CLASS</key>
-			<string>BrowserWrapper</string>
-			<key>LANGUAGE</key>
-			<string>ObjC</string>
-			<key>OUTLETS</key>
-			<dict>
-				<key>mBlockedPopupBar</key>
-				<string>TransientBar</string>
-				<key>mBlockedPopupCloseButton</key>
-				<string>RolloverImageButton</string>
-				<key>mBlockedPopupLabel</key>
-				<string>NSTextField</string>
-				<key>mCreateDelegate</key>
-				<string>id</string>
-				<key>mDelegate</key>
-				<string>id</string>
-				<key>mSafeBrowsingBar</key>
-				<string>SafeBrowsingBar</string>
-				<key>mSafeBrowsingBarLabel</key>
-				<string>NSTextField</string>
-				<key>mSafeBrowsingBlockedBar</key>
-				<string>SafeBrowsingBlockedBar</string>
-			</dict>
-			<key>SUPERCLASS</key>
-			<string>NSView</string>
-		</dict>
-		<dict>
-			<key>CLASS</key>
-			<string>NSView</string>
-			<key>LANGUAGE</key>
-			<string>ObjC</string>
-			<key>SUPERCLASS</key>
-			<string>NSResponder</string>
-		</dict>
-		<dict>
-			<key>CLASS</key>
-			<string>SafeBrowsingBar</string>
-			<key>LANGUAGE</key>
-			<string>ObjC</string>
-			<key>OUTLETS</key>
-			<dict>
-				<key>mCloseButton</key>
-				<string>RolloverImageButton</string>
-				<key>mWarningLabelTextField</key>
-				<string>NSTextField</string>
-			</dict>
-			<key>SUPERCLASS</key>
-			<string>TransientBar</string>
-		</dict>
-		<dict>
-			<key>CLASS</key>
-			<string>SafeBrowsingBlockedBar</string>
-			<key>LANGUAGE</key>
-			<string>ObjC</string>
-			<key>OUTLETS</key>
-			<dict>
-				<key>mCloseButton</key>
-				<string>RolloverImageButton</string>
-			</dict>
-			<key>SUPERCLASS</key>
-			<string>TransientBar</string>
-		</dict>
-	</array>
-	<key>IBVersion</key>
-	<string>1</string>
-</dict>
-</plist>
+{
+    IBClasses =     (
+                {
+            ACTIONS =             {
+                blacklistPopups = id;
+                closeSafeBrowsingBar = id;
+                hideBlockedPopupView = id;
+                reloadWithNewCharset = NSString;
+                reportIncorrectlyBlockedSite = id;
+                runAwayFromBlockedSite = id;
+                showPopups = id;
+                unblockPopups = id;
+            };
+            CLASS = BrowserWrapper;
+            LANGUAGE = ObjC;
+            OUTLETS =             {
+                mBlockedPopupBar = TransientBar;
+                mBlockedPopupCloseButton = RolloverImageButton;
+                mBlockedPopupLabel = NSTextField;
+                mCreateDelegate = id;
+                mDelegate = id;
+                mSafeBrowsingBar = SafeBrowsingBar;
+                mSafeBrowsingBarLabel = NSTextField;
+                mSafeBrowsingBlockedBar = SafeBrowsingBlockedBar;
+            };
+            SUPERCLASS = NSView;
+        },
+                {
+            CLASS = NSMenu;
+            LANGUAGE = ObjC;
+            SUPERCLASS = NSObject;
+        },
+                {
+            CLASS = NSObject;
+            LANGUAGE = ObjC;
+        },
+                {
+            CLASS = NSString;
+            LANGUAGE = ObjC;
+            SUPERCLASS = NSObject;
+        },
+                {
+            CLASS = NSView;
+            LANGUAGE = ObjC;
+            SUPERCLASS = NSResponder;
+        },
+                {
+            CLASS = RolloverImageButton;
+            LANGUAGE = ObjC;
+            SUPERCLASS = NSButton;
+        },
+                {
+            CLASS = SafeBrowsingBar;
+            LANGUAGE = ObjC;
+            OUTLETS =             {
+                mCloseButton = RolloverImageButton;
+                mWarningLabelTextField = NSTextField;
+            };
+            SUPERCLASS = TransientBar;
+        },
+                {
+            CLASS = SafeBrowsingBlockedBar;
+            LANGUAGE = ObjC;
+            OUTLETS =             {
+                mCloseButton = RolloverImageButton;
+            };
+            SUPERCLASS = TransientBar;
+        },
+                {
+            CLASS = TransientBar;
+            LANGUAGE = ObjC;
+            SUPERCLASS = NSView;
+        }
+    );
+    IBVersion = 1;
+}

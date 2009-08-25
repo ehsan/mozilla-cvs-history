@@ -1009,7 +1009,7 @@ static const NSTimeInterval kTimeIntervalToConsiderSiteBlockingStatusValid = 900
       blockedReason = eSafeBrowsingBlockedAsMalware;
 
     if ([elementIdentifier isEqualToString:@"getMeOutButton"]) {
-      [mDelegate runAwayFromSafeBrowsingBlockedSite];
+      [self runAwayFromBlockedSite:self];
     }
     else if ([elementIdentifier isEqualToString:@"ignoreWarningButton"]) {
       [self ignoreBlockedSite:[self currentURI] withReason:blockedReason];
@@ -1746,10 +1746,10 @@ static const NSTimeInterval kTimeIntervalToConsiderSiteBlockingStatusValid = 900
   [mDelegate reportIncorrectlyBlockedSite:blockedURL reason:blockedReason];
 }
 
-// IBAction from the safe browsing bar, sent from the "Get me out of here" button.
+// Sent when the user chooses to leave a dangerous page via the "Get Me Out" button.
 - (IBAction)runAwayFromBlockedSite:(id)sender
 {
-  [mDelegate runAwayFromSafeBrowsingBlockedSite];
+  [self closeBrowserWindow];
 }
 
 @end

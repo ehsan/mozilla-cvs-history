@@ -5277,14 +5277,6 @@ public:
   }
 }
 
-- (void)runAwayFromSafeBrowsingBlockedSite
-{
-  if ([[mBrowserView browserView] canGoBack])
-    [self back:self];
-  else
-    [self home:self];
-}
-
 - (void)showSafeBrowsingInformation
 {
   NSString *blockingInformationURL = 
