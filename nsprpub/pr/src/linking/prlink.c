@@ -752,7 +752,9 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
     {
     HINSTANCE h;
 
-    h = LoadLibraryW(wname);
+    h = LoadLibraryExW(wname, NULL,
+                       (flags & PR_LD_ALT_SEARCH_PATH) ?
+                       LOAD_WITH_ALTERED_SEARCH_PATH : 0);
     if (h == NULL) {
         oserr = _MD_ERRNO();
         PR_DELETE(lm);
