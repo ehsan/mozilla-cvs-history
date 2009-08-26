@@ -882,25 +882,23 @@ nsTreeBodyFrame::UpdateScrollbars(const ScrollParts& aParts)
 {
   nscoord rowHeightAsPixels = nsPresContext::AppUnitsToIntCSSPixels(mRowHeight);
 
-  // Keep strong ref.
-  nsCOMPtr<nsIContent> hScroll = aParts.mHScrollbarContent;
-
   if (aParts.mVScrollbar) {
-    nsCOMPtr<nsIContent> vScroll = aParts.mVScrollbarContent;
     nsAutoString curPos;
     curPos.AppendInt(mTopRowIndex*rowHeightAsPixels);
-    vScroll->SetAttr(kNameSpaceID_None, nsGkAtoms::curpos, curPos, PR_TRUE);
+    aParts.mVScrollbarContent->
+      SetAttr(kNameSpaceID_None, nsGkAtoms::curpos, curPos, PR_TRUE);
   }
 
   if (aParts.mHScrollbar) {
     nsAutoString curPos;
     curPos.AppendInt(mHorzPosition);
-    hScroll->SetAttr(kNameSpaceID_None, nsGkAtoms::curpos, curPos, PR_TRUE);
+    aParts.mHScrollbarContent->
+      SetAttr(kNameSpaceID_None, nsGkAtoms::curpos, curPos, PR_TRUE);
   }
 }
 
 void
-nsTreeBodyFrame::CheckOverflow(const ScrollParts& aParts)
+nsTreeBodyFrame::CheckOverflow(const ScrollParts& aParts, nsWeakFrame& aWeakColumnsFrame)
 {
   PRBool verticalOverflowChanged = PR_FALSE;
   PRBool horizontalOverflowChanged = PR_FALSE;
@@ -914,7 +912,7 @@ nsTreeBodyFrame::CheckOverflow(const ScrollParts& aParts)
     verticalOverflowChanged = PR_TRUE;
   }
 
-  if (aParts.mColumnsFrame) {
+  if (aParts.mColumnsFrame && aWeakColumnsFrame.IsAlive()) {
     nsRect bounds = aParts.mColumnsFrame->GetRect();
     if (bounds.width != 0) {
       /* Ignore overflows that are less than half a pixel. Yes these happen
@@ -951,14 +949,12 @@ nsTreeBodyFrame::CheckOverflow(const ScrollParts& aParts)
 }
 
 void
-nsTreeBodyFrame::InvalidateScrollbars(const ScrollParts& aParts)
+nsTreeBodyFrame::InvalidateScrollbars(const ScrollParts& aParts, nsWeakFrame& aWeakColumnsFrame)
 {
   if (mUpdateBatchNest || !mView)
     return;
   nsWeakFrame weakFrame(this);
 
-  nsCOMPtr<nsIContent> vScrollbar = aParts.mVScrollbarContent;
-  nsCOMPtr<nsIContent> hScrollbar = aParts.mHScrollbarContent;
   if (aParts.mVScrollbar) {
     // Do Vertical Scrollbar 
     nsAutoString maxposStr;
@@ -967,34 +963,39 @@ nsTreeBodyFrame::InvalidateScrollbars(const ScrollParts& aParts)
 
     PRInt32 size = rowHeightAsPixels * (mRowCount > mPageLength ? mRowCount - mPageLength : 0);
     maxposStr.AppendInt(size);
-    vScrollbar->SetAttr(kNameSpaceID_None, nsGkAtoms::maxpos, maxposStr, PR_TRUE);
+    aParts.mVScrollbarContent->
+      SetAttr(kNameSpaceID_None, nsGkAtoms::maxpos, maxposStr, PR_TRUE);
     ENSURE_TRUE(weakFrame.IsAlive());
 
     // Also set our page increment and decrement.
     nscoord pageincrement = mPageLength*rowHeightAsPixels;
     nsAutoString pageStr;
     pageStr.AppendInt(pageincrement);
-    vScrollbar->SetAttr(kNameSpaceID_None, nsGkAtoms::pageincrement, pageStr, PR_TRUE);
+    aParts.mVScrollbarContent->
+      SetAttr(kNameSpaceID_None, nsGkAtoms::pageincrement, pageStr, PR_TRUE);
     ENSURE_TRUE(weakFrame.IsAlive());
   }
 
-  if (aParts.mHScrollbar && aParts.mColumnsFrame) {
+  if (aParts.mHScrollbar && aParts.mColumnsFrame && aWeakColumnsFrame.IsAlive()) {
     // And now Horizontal scrollbar
     nsRect bounds = aParts.mColumnsFrame->GetRect();
     nsAutoString maxposStr;
 
     maxposStr.AppendInt(mHorzWidth > bounds.width ? mHorzWidth - bounds.width : 0);
-    hScrollbar->SetAttr(kNameSpaceID_None, nsGkAtoms::maxpos, maxposStr, PR_TRUE);
+    aParts.mHScrollbarContent->
+      SetAttr(kNameSpaceID_None, nsGkAtoms::maxpos, maxposStr, PR_TRUE);
     ENSURE_TRUE(weakFrame.IsAlive());
   
     nsAutoString pageStr;
     pageStr.AppendInt(bounds.width);
-    hScrollbar->SetAttr(kNameSpaceID_None, nsGkAtoms::pageincrement, pageStr, PR_TRUE);
+    aParts.mHScrollbarContent->
+      SetAttr(kNameSpaceID_None, nsGkAtoms::pageincrement, pageStr, PR_TRUE);
     ENSURE_TRUE(weakFrame.IsAlive());
   
     pageStr.Truncate();
     pageStr.AppendInt(nsPresContext::CSSPixelsToAppUnits(16));
-    hScrollbar->SetAttr(kNameSpaceID_None, nsGkAtoms::increment, pageStr, PR_TRUE);
+    aParts.mHScrollbarContent->
+      SetAttr(kNameSpaceID_None, nsGkAtoms::increment, pageStr, PR_TRUE);
   }
 }
 
@@ -4544,13 +4545,14 @@ nsTreeBodyFrame::FullScrollbarsUpdate(PRBool aNeedsFullInvalidation)
 {
   ScrollParts parts = GetScrollParts();
   nsWeakFrame weakFrame(this);
+  nsWeakFrame weakColumnsFrame(parts.mColumnsFrame);
   UpdateScrollbars(parts);
   NS_ENSURE_TRUE(weakFrame.IsAlive(), PR_FALSE);
   if (aNeedsFullInvalidation) {
     Invalidate();
   }
-  InvalidateScrollbars(parts);
+  InvalidateScrollbars(parts, weakColumnsFrame);
   NS_ENSURE_TRUE(weakFrame.IsAlive(), PR_FALSE);
-  CheckOverflow(parts);
+  CheckOverflow(parts, weakColumnsFrame);
   return weakFrame.IsAlive();
 }
