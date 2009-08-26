@@ -84,7 +84,7 @@ const PRTime _pr_filetime_divisor = 10i64;
 
 #ifdef WINCE
 
-#define FILETIME2INT64(ft) \
+#define FILETIME_TO_INT64(ft) \
   (((PRInt64)ft.dwHighDateTime) << 32 | (PRInt64)ft.dwLowDateTime)
 
 static void
@@ -110,8 +110,8 @@ typedef struct CalibrationData {
 
 static CalibrationData calibration;
 
-typedef void (*PGETSYSTEMTIMEASFILETIME) (LPFILETIME);
-static PGETSYSTEMTIMEASFILETIME ce6_GetSystemTimeAsFileTime = NULL;
+typedef void (*GetSystemTimeAsFileTimeFcn)(LPFILETIME);
+static GetSystemTimeAsFileTimeFcn ce6_GetSystemTimeAsFileTime = NULL;
 
 static void
 NowCalibrate(void)
@@ -141,11 +141,11 @@ NowCalibrate(void)
 	timeEndPeriod(1);
 
 	calibration.granularity = 
-	    (FILETIME2INT64(ft) - FILETIME2INT64(ftStart))/10;
+	    (FILETIME_TO_INT64(ft) - FILETIME_TO_INT64(ftStart))/10;
 
 	QueryPerformanceCounter(&now);
 
-	calibration.offset = (long double) FILETIME2INT64(ft);
+	calibration.offset = (long double) FILETIME_TO_INT64(ft);
 	calibration.timer_offset = (long double) now.QuadPart;
 	/*
 	 * The windows epoch is around 1600. The unix epoch is around 1970. 
@@ -168,8 +168,8 @@ void
 _MD_InitTime(void)
 {
     /* try for CE6 GetSystemTimeAsFileTime first */
-    HANDLE h = LoadLibraryW(L"coredll.dll");
-    ce6_GetSystemTimeAsFileTime = (PGETSYSTEMTIMEASFILETIME)
+    HANDLE h = GetModuleHandleW(L"coredll.dll");
+    ce6_GetSystemTimeAsFileTime = (GetSystemTimeAsFileTimeFcn)
         GetProcAddressA(h, "GetSystemTimeAsFileTime");
 
     /* otherwise go the slow route */
@@ -218,15 +218,20 @@ PR_Now(void)
     long double cachedOffset = 0.0;
 
     if (ce6_GetSystemTimeAsFileTime) {
+        union {
+            FILETIME ft;
+            PRTime prt;
+        } currentTime;
+
         PR_ASSERT(sizeof(FILETIME) == sizeof(PRTime));
 
-        ce6_GetSystemTimeAsFileTime((FILETIME*) &returnedTime);
+        ce6_GetSystemTimeAsFileTime(&currentTime.ft);
 
         /* written this way on purpose, since the second term becomes
          * a constant, and the entire expression is faster to execute.
          */
-        return returnedTime/_pr_filetime_divisor -
-               _pr_filetime_offset/_pr_filetime_divisor;
+        return currentTime.prt/_pr_filetime_divisor -
+            _pr_filetime_offset/_pr_filetime_divisor;
     }
 
     do {
@@ -255,8 +260,8 @@ PR_Now(void)
 
 	/* Calculate a low resolution time */
 	LowResTime(&ft);
-	lowresTime = ((long double)(FILETIME2INT64(ft) - _pr_filetime_offset))
-		     * 0.1;
+	lowresTime =
+            ((long double)(FILETIME_TO_INT64(ft) - _pr_filetime_offset)) * 0.1;
 
 	if (calibration.freq > 0.0) {
 	    long double highresTime, diff;
@@ -500,7 +505,7 @@ static int assembleEnvBlock(char **envp, char **envBlock)
 
 #ifdef WINCE
     {
-        PRUnichar *wideCurEnv = (PRUnichar *) mozce_GetEnvString();
+        PRUnichar *wideCurEnv = mozce_GetEnvString();
         int len = WideCharToMultiByte(CP_ACP, 0, wideCurEnv, -1,
                                       NULL, 0, NULL, NULL);
         curEnv = (char *) PR_MALLOC(len * sizeof(char));
