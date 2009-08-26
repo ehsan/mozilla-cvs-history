@@ -120,8 +120,6 @@ public:
 
   void GenerateAnonymousContent();
   void InstallAnonymousContent(nsIContent* aAnonParent, nsIContent* aElement);
-  static void UninstallAnonymousContent(nsIDocument* aDocument,
-                                        nsIContent* aAnonParent);
   void InstallEventHandlers();
   nsresult InstallImplementation();
 
