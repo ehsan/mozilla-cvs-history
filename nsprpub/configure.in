@@ -2231,7 +2231,6 @@ mips-sony-newsos*)
     if test -n "$MOZ_OPTIMIZE"; then
       DSO_LDOPTS="$DSO_LDOPTS -Zlinker /EXEPACK:2 -Zlinker /PACKCODE -Zlinker /PACKDATA"
     fi
-    OS_LIBS="-lsocket"
     IMPLIB='emximp -o'
     FILTER='emxexp -o'
     if test -n "$MOZ_OS2_HIGH_MEMORY"; then
@@ -2281,9 +2280,10 @@ dnl AC_CHECK_LIB(vms_jackets, main)
 dnl We don't want anything to link with libdl even if it's present on OS X, 
 dnl since it's not used and not part of the default installation.
 dnl The same goes for BeOS.
+dnl OS/2 has dlfcn in libc.
 
 case $target in
-*-darwin*|*-beos*)
+*-darwin*|*-beos*|*-os2*)
     ;;
 *)
     AC_CHECK_LIB(dl, dlopen,
