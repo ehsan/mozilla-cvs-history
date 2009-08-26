@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -76,8 +76,10 @@ PRIntn _PR_MD_PUT_ENV(const char *name)
  */
 #ifdef __GNUC__
 const PRTime _pr_filetime_offset = 116444736000000000LL;
+const PRTime _pr_filetime_divisor = 10LL;
 #else
 const PRTime _pr_filetime_offset = 116444736000000000i64;
+const PRTime _pr_filetime_divisor = 10i64;
 #endif
 
 #ifdef WINCE
@@ -107,6 +109,9 @@ typedef struct CalibrationData {
 } CalibrationData;
 
 static CalibrationData calibration;
+
+typedef void (*PGETSYSTEMTIMEASFILETIME) (LPFILETIME);
+static PGETSYSTEMTIMEASFILETIME ce6_GetSystemTimeAsFileTime = NULL;
 
 static void
 NowCalibrate(void)
@@ -159,26 +164,33 @@ NowCalibrate(void)
 #define DATALOCK_SPINCOUNT 4096
 #define LASTLOCK_SPINCOUNT 4096
 
-static PRStatus
+void
 _MD_InitTime(void)
 {
-    memset(&calibration, 0, sizeof(calibration));
-    NowCalibrate();
-    InitializeCriticalSection(&calibration.calibration_lock);
-    InitializeCriticalSection(&calibration.data_lock);
-    return PR_SUCCESS;
+    /* try for CE6 GetSystemTimeAsFileTime first */
+    HANDLE h = LoadLibraryW(L"coredll.dll");
+    ce6_GetSystemTimeAsFileTime = (PGETSYSTEMTIMEASFILETIME)
+        GetProcAddressA(h, "GetSystemTimeAsFileTime");
+
+    /* otherwise go the slow route */
+    if (ce6_GetSystemTimeAsFileTime == NULL) {
+        memset(&calibration, 0, sizeof(calibration));
+        NowCalibrate();
+        InitializeCriticalSection(&calibration.calibration_lock);
+        InitializeCriticalSection(&calibration.data_lock);
+    }
 }
 
 void
 _MD_CleanupTime(void)
 {
-    DeleteCriticalSection(&calibration.calibration_lock);
-    DeleteCriticalSection(&calibration.data_lock);
+    if (ce6_GetSystemTimeAsFileTime == NULL) {
+        DeleteCriticalSection(&calibration.calibration_lock);
+        DeleteCriticalSection(&calibration.data_lock);
+    }
 }
 
 #define MUTEX_SETSPINCOUNT(m, c)
-
-static PRCallOnceType calibrationOnce;
 
 /*
  *-----------------------------------------------------------------------
@@ -205,8 +217,18 @@ PR_Now(void)
     PRInt64 returnedTime;
     long double cachedOffset = 0.0;
 
-    /* For non threadsafe platforms, _MD_InitTime is not necessary */
-    PR_CallOnce(&calibrationOnce, _MD_InitTime);
+    if (ce6_GetSystemTimeAsFileTime) {
+        PR_ASSERT(sizeof(FILETIME) == sizeof(PRTime));
+
+        ce6_GetSystemTimeAsFileTime((FILETIME*) &returnedTime);
+
+        /* written this way on purpose, since the second term becomes
+         * a constant, and the entire expression is faster to execute.
+         */
+        return returnedTime/_pr_filetime_divisor -
+               _pr_filetime_offset/_pr_filetime_divisor;
+    }
+
     do {
 	if (!calibration.calibrated || needsCalibration) {
 	    EnterCriticalSection(&calibration.calibration_lock);
@@ -478,7 +500,7 @@ static int assembleEnvBlock(char **envp, char **envBlock)
 
 #ifdef WINCE
     {
-        PRUnichar *wideCurEnv = mozce_GetEnvString();
+        PRUnichar *wideCurEnv = (PRUnichar *) mozce_GetEnvString();
         int len = WideCharToMultiByte(CP_ACP, 0, wideCurEnv, -1,
                                       NULL, 0, NULL, NULL);
         curEnv = (char *) PR_MALLOC(len * sizeof(char));
