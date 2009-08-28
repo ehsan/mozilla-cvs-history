@@ -46,9 +46,9 @@ function browserDetect() {
   var matches = [
     { regexp: /SeaMonkey/, product: "SeaMonkey" },
     { regexp: /Camino/, product: "Camino" },
-    { regexp: /\/3\.1[ab]\d+([^p]|$)/, product: "Shiretoko" },
+    { regexp: /\/3\.6[ab]\d+([^p]|$)/, product: "Namoroka" },
     { regexp: /Minefield/, product: "Minefield" },
-    { regexp: /Shiretoko/, product: "Shiretoko" },
+    { regexp: /Namoroka/, product: "Namoroka" },
   ];
   
   var defaultProduct = "[% form.product FILTER remove('"') %]";
@@ -109,17 +109,17 @@ projects.</p>
 <form id="feedback-form" method="POST">
   <table id="feedback-table">
     <tr>
-      <td class="label">Name:</td>
+      <td class="label">Name&nbsp;(optional):</td>
       <td class="widget">
         <input id="name" name="name" type="text" 
                value="[% form.email FILTER html %]"/>
       </td>
     </tr>
     <tr>
-      <td class="label">Email:</td>
+      <td class="label">Email&nbsp;(optional):</td>
       <td class="widget">
         <input id="email" name="email" type="text"
-               value="[% form.email FILTER html %]"/> (optional)
+               value="[% form.email FILTER html %]"/>
       </td>
     </tr>
     <tr>
@@ -149,7 +149,7 @@ projects.</p>
     </tr>
     <tr>
       <td class="label">
-        Detailed Feedback: 
+        Detailed&nbsp;Feedback: 
       </td>
       <td class="widget">
         <textarea id="comments" name="comments" wrap="hard" cols="72"
@@ -158,7 +158,7 @@ projects.</p>
     </tr>
     <tr>
       <td class="label">
-        Humanness Check: 
+        Humanness&nbsp;Check: 
       </td>
       <td class="widget">
       
@@ -181,7 +181,7 @@ projects.</p>
       <td></td>
       <td>
         <p>
-        <b>All</b> information submitted here, including name and email address, will be publicly-readable. <b>Do not submit private information.</b> Your email address will be obfuscated to make life difficult for spammers.
+        <b>All</b> information submitted here, including name and email address, will be world-readable. <b>Do not submit information you want to keep private.</b> Your email address will be obfuscated to make life difficult for spammers.
         </p>
       </td>
     </tr>

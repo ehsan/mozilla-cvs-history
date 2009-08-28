@@ -50,7 +50,7 @@ my $RECAPTCHA_PRIVATE = "6LckBgMAAAAAACSa3zXC9K3_TU2KaDsLyt9UXSW2";
 my %product_destination_map = (
 	"Firefox"                       => "mozilla.feedback.firefox",
 	"Firefox Release Candidate"     => "mozilla.feedback.firefox.prerelease",
-	"Shiretoko"                     => "mozilla.feedback.firefox.prerelease",
+	"Namoroka"                      => "mozilla.feedback.firefox.prerelease",
 	"Minefield"                     => "mozilla.feedback",
 	"Thunderbird"                   => "mozilla.feedback.thunderbird",
 	"Thunderbird Release Candidate" => "mozilla.feedback.thunderbird.prerelease",
@@ -65,7 +65,7 @@ my %product_destination_map = (
 # List of products to show on the main Hendrix page (in order)
 my @products_list = (
 	"Firefox", "Firefox Release Candidate", "Thunderbird", 
-  "Thunderbird Release Candidate", "Shiretoko", "Minefield", 
+  "Thunderbird Release Candidate", "Namoroka", "Minefield", 
   "Camino", "SeaMonkey", "Sunbird", 
 	"Developer Center", "Other"
 );
@@ -120,7 +120,7 @@ my $action = $cgi->param("action");
 
 if (!$action) {
     # If no action, show the submission form
-    print "Content-Type: text/html\n\n";
+    print "Content-Type: text/html;charset=UTF-8\n\n";
     $template->process("index.html.tmpl", $vars)
       || die("Template process failed: " . $template->error() . "\n");
 }
@@ -157,7 +157,7 @@ elsif ($action eq "submit") {
     # Format the parameters and send to the newsgroup.
     
     # Check for compulsory parameters
-    if (!$form->{'name'} || !$form->{'subject'} || !$form->{'product'}) {
+    if (!$form->{'subject'} || !$form->{'product'}) {
       throwError("bad_parameters");
     }
 
@@ -187,7 +187,7 @@ elsif ($action eq "submit") {
     $vars->{'headers'} = $headers;
     $vars->{'message'} = $message;
 
-    print "Content-Type: text/html\n\n";
+    print "Content-Type: text/html;charset=UTF-8\n\n";
     $template->process("submit-successful.html.tmpl", $vars)
       || die("Template process failed: " . $template->error() . "\n");
 }
@@ -220,7 +220,7 @@ sub throwError {
     $vars->{'error'} = $error;
     $vars->{'info'} = $info || "";
     
-    print "Content-Type: text/html\n\n";
+    print "Content-Type: text/html;charset=UTF-8\n\n";
     $template->process("error.html.tmpl", $vars)
       || die("Template process failed: " . $template->error() . "\n");
     
