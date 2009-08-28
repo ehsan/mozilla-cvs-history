@@ -172,6 +172,9 @@
 - (void)mouseDown:(NSEvent*)theEvent
 {
   [self updateImage:NO];
+  // [super mouseDown:] might destroy this object (e.g., the tab close button),
+  // so make sure that the updateImage is safe.
+  [[self retain] autorelease];
   [super mouseDown:theEvent];
   // update button's image based on location of mouse after button has been released
   [self updateImage:[self isMouseInside]];
