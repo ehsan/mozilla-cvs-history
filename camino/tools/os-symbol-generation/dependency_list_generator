@@ -143,7 +143,6 @@ def expanded_load_path(path, executable_path, loader_path)
   if expanded_path.match('@executable_path')
     if executable_path.nil?
       $stderr.puts "@executable_path encountered in #{path}, but no path was set:\n"
-      puts library_path
       return nil
     end
     expanded_path.sub!('@executable_path', executable_path)
