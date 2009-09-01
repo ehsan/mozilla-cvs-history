@@ -488,7 +488,7 @@ div[id$="_ads"],
 div[id*="ad_google"],
 div.top_ad_image,
 div[class*="_ad_"],
-div[class^="ad_"],
+div[class^="ad_IDS"],
 div[id*="swf_728x90"],
 div[id*="swf_171x600"],
 div[id*="swf_banner"],
@@ -567,6 +567,8 @@ div[class^="adBlock"],
 div[class^="AdBorder"],
 div[class~="adcolumn"],
 div[class="adbottom"],
+div[class="adwide"],
+div[class="module adimg"],
 div[class$="_ad"],
 div[class*="publicite"],
 div[id*="blogbang"],
@@ -586,6 +588,7 @@ div[class="ads"],
 div[class^="adSpot"],
 div[class="relatedAds"],
 div[class^="adGoogle"],
+div[class="adgoogle"],
 div[id^="p360_ad"],
 div[id^="p360-autotag"],
 div[class^="p360_"],
@@ -607,7 +610,9 @@ div[id="upperad"],
 div[id="web_kelkoo"],
 div[id^="right_ad_"],
 div[class$="WerberahmenOben"],
-div[class$="anzeige"]
+div[class$="anzeige"],
+div[class~="sb_adsW"],
+div[class="sb_adsN"]
 
 { display: none !important }
 
@@ -658,6 +663,7 @@ embed[type="application/x-shockwave-flash"][src*="adserver"] { display: inline !
 
 @-moz-document domain(priceminister.com) {
 a:link[href^="javascript"][href*="advert"] img { display: inline !important }
+div[id="advert_list"] { display: block !important }
 }
 
 @-moz-document domain(mlb.com) {
