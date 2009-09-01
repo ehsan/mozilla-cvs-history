@@ -1,5 +1,3 @@
 /pub/mozilla.org/firefox/nightly/latest-electrolysis/firefox-3.7a1pre.en-US.linux-i686.tar.bz2
-/pub/mozilla.org/firefox/nightly/latest-electrolysis/firefox-3.7a1pre.en-US.mac.dmg
-/pub/mozilla.org/firefox/nightly/latest-electrolysis/firefox-3.7a1pre.en-US.mac-shark.dmg
 /pub/mozilla.org/firefox/nightly/latest-electrolysis/firefox-3.7a1pre.en-US.win32.installer.exe
 /pub/mozilla.org/firefox/nightly/latest-electrolysis/firefox-3.7a1pre.en-US.win32.zip
