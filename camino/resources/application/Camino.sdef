@@ -42,7 +42,7 @@
 			<property name="name" code="pnam" description="The full title of the window." type="text">
 				<cocoa key="title"/>
 			</property>
-			<property name="id" code="ID  " description="The unique identifier of the window." type="number" access="r">
+			<property name="id" code="ID  " description="The unique identifier of the window." type="integer" access="r">
 				<cocoa key="uniqueID"/>
 			</property>
 			<property name="bounds" code="pbnd" description="The bounding rectangle of the window." type="rectangle">
@@ -310,7 +310,7 @@
 			<property name="last visit date" code="pvst" description="The date the bookmark was last visited." type="date" access="r">
 				<cocoa key="lastVisit"/>
 			</property>
-			<property name="visit count" code="pvct" description="The number of times the bookmark has been visited." type="number" access="r">
+			<property name="visit count" code="pvct" description="The number of times the bookmark has been visited." type="integer" access="r">
 				<cocoa key="numberOfVisits"/>
 			</property>
 		</class>
