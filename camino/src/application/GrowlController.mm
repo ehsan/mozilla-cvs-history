@@ -63,8 +63,6 @@ static NSTimeInterval const kShortDownloadInterval = 15.0;
 - (id)init
 {
   if ((self = [super init])) {
-    [GrowlApplicationBridge setGrowlDelegate:self];
-
     NSNotificationCenter* notificationCenter = [NSNotificationCenter defaultCenter];
     [notificationCenter addObserver:self
                            selector:@selector(growlForNotification:)
@@ -85,7 +83,9 @@ static NSTimeInterval const kShortDownloadInterval = 15.0;
 - (void)dealloc
 {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
-  [GrowlApplicationBridge setGrowlDelegate:@""];
+  if (mGrowlIsInitialized) {
+    [GrowlApplicationBridge setGrowlDelegate:@""];
+  }
   [super dealloc];
 }
 
@@ -108,6 +108,10 @@ static NSTimeInterval const kShortDownloadInterval = 15.0;
 
 - (void)growlForNotification:(NSNotification*)notification
 {
+  if (!mGrowlIsInitialized) {
+    mGrowlIsInitialized = YES;
+    [GrowlApplicationBridge setGrowlDelegate:self];
+  }
   NSString* notificationName = [notification name];
   ProgressViewController* download = [notification object];
   NSNumber* downloadIdentifier = [NSNumber numberWithUnsignedInt:[download uniqueIdentifier]];

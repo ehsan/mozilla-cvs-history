@@ -41,6 +41,8 @@
 #import <Growl/Growl.h>
 
 @interface GrowlController : NSObject <GrowlApplicationBridgeDelegate> {
+ @private
+  BOOL mGrowlIsInitialized;
 }
 
 @end

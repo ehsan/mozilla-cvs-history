@@ -158,9 +158,6 @@ const int kZoomActionsTag = 108;
     mMenuBookmarks = nil;
 
     [NSApp setServicesProvider:self];
-
-    // Initialize growl support
-    mGrowlController = [[GrowlController alloc] init];
   }
   return self;
 }
@@ -347,6 +344,9 @@ const int kZoomActionsTag = 108;
   [self checkForProblemAddOns];
   [self prelaunchHelperApps];
   [self setUpSafeBrowsing];
+
+  // Initialize growl support
+  mGrowlController = [[GrowlController alloc] init];
 
   // open a new browser window if we don't already have one or we have a specific
   // start URL we need to show
