@@ -9,7 +9,7 @@
 #import "SUInstaller.h"
 #import "SUPlainInstaller.h"
 #import "SUPackageInstaller.h"
-#import "SUHost.h"
+#import "SUHost.h" 
 
 @implementation SUInstaller
 
@@ -68,14 +68,9 @@
 			}
 		}
 		
-		// Some DMGs have symlinks into /Applications! That's no good! And there's no point in looking in bundles.
-		if ([self _isAliasFolderAtPath:currentPath] ||
-			[[currentFile pathExtension] isEqualToString:[[host bundlePath] pathExtension]] ||
-			[[currentFile pathExtension] isEqualToString:@"pkg"] ||
-			[[currentFile pathExtension] isEqualToString:@"mpkg"])
-		{
+		// Some DMGs have symlinks into /Applications! That's no good!
+		if ([self _isAliasFolderAtPath:currentPath])
 			[dirEnum skipDescendents];
-		}		
 	}
 	
 	if (newAppDownloadPath == nil)
