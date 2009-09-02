@@ -540,3 +540,4 @@
 "MoreInformationFormat" = "For more information about why this site was blocked, see Camino’s <a href='%@'>Safe Browsing Documentation</a>.";
 "GetMeOutButtonLabel" = "Close Page";
 "IgnoreWarningButtonLabel" = "Ignore this warning";
+"PhishReportingDisabledToolTip" = "“Warn me when visiting potentially malicious sites” must be enabled to report phishing pages.";

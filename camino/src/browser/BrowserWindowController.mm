@@ -1940,9 +1940,6 @@ public:
     return (![self bookmarkManagerIsVisible] && ![[self browserWrapper] isBlockedErrorOverlayShowing]);
   }
 
-  if (action == @selector(reportPhishingPage:))
-    return [self canReportCurrentPageAsPhishing];
-
   return YES;
 }
 

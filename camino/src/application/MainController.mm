@@ -1923,8 +1923,7 @@ const int kZoomActionsTag = 108;
       action == @selector(viewPageSource:) ||
       action == @selector(sendURL:) ||
       action == @selector(printDocument:) ||
-      action == @selector(pageSetup:) ||
-      action == @selector(reportPhishingPage:))
+      action == @selector(pageSetup:))
   {
     if ([browserController shouldSuppressWindowActions])
       return NO;
@@ -1937,6 +1936,22 @@ const int kZoomActionsTag = 108;
     // Disable update checking if it's been turned off for this build.
     [aMenuItem setToolTip:NSLocalizedString(@"AutoUpdateDisabledToolTip", @"")];
     return NO;
+  }
+
+  if (action == @selector(reportPhishingPage:)) {
+    if ([browserController shouldSuppressWindowActions])
+      return NO;
+
+    BOOL phishingCheckingIsEnabled = 
+      [[SafeBrowsingListManager sharedInstance] updatesAreEnabledInPrefsForListType:eSafeBrowsingPhishingListType];
+    if (phishingCheckingIsEnabled) {
+      [aMenuItem setToolTip:nil];
+      return (browserController && [browserController canReportCurrentPageAsPhishing]);
+    }
+    else {
+      [aMenuItem setToolTip:NSLocalizedString(@"PhishReportingDisabledToolTip", @"")];
+      return NO;
+    }
   }
 
   // default return
