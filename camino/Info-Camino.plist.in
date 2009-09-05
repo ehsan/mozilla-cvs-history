@@ -226,6 +226,8 @@
 	<%APP_UPDATES_ENABLED%/>
 	<key>SUExpectsDSASignature</key>
 	<true/>
+	<key>SUFeedURL</key>
+	<string>https://</string>
 	<key>SUPublicDSAKey</key>
 	<string>-----BEGIN PUBLIC KEY-----
 MIIDOjCCAi0GByqGSM44BAEwggIgAoIBAQDQ4Easn8ybXNil3l8UXWHnu2s7Q4Kk
