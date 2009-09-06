@@ -59,7 +59,7 @@ define('UPDATE_VERSION','1.0+');
 define('UPDATE_EXTENSION_VERSION','1.0+');
 
 // Define cookie parameters
-define('COOKIE_NAME', 'aus2');
+define('COOKIE_NAME', 'aus2a');
 define('COOKIE_DOMAIN', 'aus2.mozilla.org');
 
 // Turns global throttling on and off.
