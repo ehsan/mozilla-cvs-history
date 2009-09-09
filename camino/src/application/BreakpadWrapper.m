@@ -12,15 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Camino code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * Stuart Morgan
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Simon Fraser <sfraser@netscape.com>
+ *   Stuart Morgan <stuart.morgan@alumni.case.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,56 +36,59 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#import <Cocoa/Cocoa.h>
-
-#include <sys/resource.h>
-#include <sys/types.h>
-#include <time.h>
-
 #import "BreakpadWrapper.h"
 
-static void SetupRuntimeOptions(int argc, const char *argv[])
-{
-  if (getenv("MOZ_UNBUFFERED_STDIO")) {
-    printf("stdout and stderr unbuffered\n");
-    setbuf(stdout, 0);
-    setbuf(stderr, 0);
-  }
-}
+#import <Breakpad/Breakpad.h>
 
-static void SetMaxFileDescriptors(unsigned int target)
+#import "NSString+Utils.h"
+
+static BreakpadWrapper* sGlobalBreakpadInstance = nil;
+
+@implementation BreakpadWrapper
+
+- (id)init
 {
-  struct rlimit rl;
-  if (getrlimit(RLIMIT_NOFILE, &rl) == 0) {
-    if (rl.rlim_max > 0 && rl.rlim_max < target)
-      target = rl.rlim_max;
-    if (target > rl.rlim_cur) {
-      rl.rlim_cur = target;
-      setrlimit(RLIMIT_NOFILE, &rl);
+  if ((self = [super init])) {
+    if (!sGlobalBreakpadInstance) {
+      NSDictionary* info = [[NSBundle mainBundle] infoDictionary];
+      mBreakpadReference = BreakpadCreate(info);
+      if (!mBreakpadReference) {
+        [self autorelease];
+        return nil;
+      }
+      sGlobalBreakpadInstance = self;
+
+      // Breakpad uses CFBundleVersion, but we want our short version instead.
+      BreakpadSetKeyValue(mBreakpadReference, @BREAKPAD_VERSION,
+                          [info valueForKey:@"CFBundleShortVersionString"]);
+    }
+    else {
+      NSLog(@"WARNING: attempting to create a second BreakpadWrapper");
+      [self autorelease];
     }
   }
+  return sGlobalBreakpadInstance;
 }
 
-int main(int argc, const char *argv[])
+- (void)dealloc
 {
-  BreakpadWrapper* breakpad = nil;
-  NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
-  NSDictionary* info = [[NSBundle mainBundle] infoDictionary];
-  if ([[info valueForKey:@"BreakpadURL"] length] > 0) {
-    breakpad = [[BreakpadWrapper alloc] init];
-  }
-  [pool release];
+  if (self == sGlobalBreakpadInstance)
+    sGlobalBreakpadInstance = nil;
 
-  SetupRuntimeOptions(argc, argv);
-
-  // Because of a nasty file descriptor leak when viewing Flash
-  // (bug 397053), bump up our limit up to 1024 so that it takes longer for
-  // the world to end.
-  SetMaxFileDescriptors(1024);
-
-  int rv = NSApplicationMain(argc, argv);
-
-  [breakpad release];
-
-  return rv;
+  if (mBreakpadReference)
+    BreakpadRelease(mBreakpadReference);
+  [super dealloc];
 }
+
++ (BreakpadWrapper*)sharedInstance
+{
+  return sGlobalBreakpadInstance;
+}
+
+- (void)setReportedURL:(NSString*)url
+{
+  if (![url isBlankURL])
+    BreakpadAddUploadParameter(mBreakpadReference, @"URL", url);
+}
+
+@end

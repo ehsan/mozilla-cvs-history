@@ -89,6 +89,7 @@
 // For search plugin description keys:
 #import "XMLSearchPluginParser.h"
 #import "SafeBrowsingListManager.h"
+#import "BreakpadWrapper.h"
 
 #import "CHPermissionManager.h"
 #import "CHBrowserService.h"
@@ -669,6 +670,8 @@ public:
   // of sending focus and activate events to gecko,
   // but we still need to call the embedding activate API
   [self setGeckoActive:YES];
+
+  [[BreakpadWrapper sharedInstance] setReportedURL:[mBrowserView currentURI]];
 }
 
 - (void)windowDidResignKey:(NSNotification *)notification
@@ -2311,6 +2314,8 @@ public:
   [self updateLocationFields:[mBrowserView currentURI] ignoreTyping:NO];
   [self showFeedDetected:[mBrowserView feedsDetected]];
   [self showSearchPluginDetected:[[mBrowserView detectedSearchPlugins] count]];
+
+  [[BreakpadWrapper sharedInstance] setReportedURL:[mBrowserView currentURI]];
 }
 
 #pragma mark -

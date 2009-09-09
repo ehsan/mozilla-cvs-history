@@ -57,6 +57,7 @@
 #import "NSString+Gecko.h"
 #import "NSString+Utils.h"
 #import "SafeBrowsingBar.h"
+#import "BreakpadWrapper.h"
 
 #include "CHBrowserService.h"
 #include "ContentClickListener.h"
@@ -486,6 +487,8 @@ static const NSTimeInterval kTimeIntervalToConsiderSiteBlockingStatusValid = 900
   // trying to load, even if it doesn't work
   if (![urlSpec hasCaseInsensitivePrefix:@"javascript:"])
     [mDelegate updateLocationFields:urlSpec ignoreTyping:YES];
+
+  [[BreakpadWrapper sharedInstance] setReportedURL:urlSpec];
 
   [self setPendingURI:urlSpec];
 
