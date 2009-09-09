@@ -149,7 +149,7 @@ const char* const kHTMLMIMEType = "text/html";
 #define MIN_TEXT_ZOOM 0.01f
 #define MAX_TEXT_ZOOM 20.0f
 
-#define PAGE_ZOOM_INCREMENT 0.25f
+#define PAGE_ZOOM_INCREMENT 0.125f
 #define DEFAULT_PAGE_ZOOM 1.0f
 #define MIN_PAGE_ZOOM 0.25f
 #define MAX_PAGE_ZOOM 5.0f
