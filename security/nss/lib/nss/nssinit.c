@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nssinit.c,v 1.99 2009/07/23 01:56:40 nelson%bolyard.com Exp $ */
+/* $Id: nssinit.c,v 1.100 2009/09/09 14:17:27 wtc%google.com Exp $ */
 
 #include <ctype.h>
 #include <string.h>
@@ -935,9 +935,9 @@ NSS_VersionCheck(const char *importedVersion)
      * check algorithm.  This release is not backward
      * compatible with previous major releases.  It is
      * not compatible with future major, minor, or
-     * patch releases.
+     * patch releases or builds.
      */
-    int vmajor = 0, vminor = 0, vpatch = 0;
+    int vmajor = 0, vminor = 0, vpatch = 0, vbuild = 0;
     const char *ptr = importedVersion;
     volatile char c; /* force a reference that won't get optimized away */
 
@@ -959,6 +959,13 @@ NSS_VersionCheck(const char *importedVersion)
                 vpatch = 10 * vpatch + *ptr - '0';
                 ptr++;
             }
+            if (*ptr == '.') {
+                ptr++;
+                while (isdigit(*ptr)) {
+                    vbuild = 10 * vbuild + *ptr - '0';
+                    ptr++;
+                }
+            }
         }
     }
 
@@ -969,6 +976,10 @@ NSS_VersionCheck(const char *importedVersion)
         return PR_FALSE;
     }
     if (vmajor == NSS_VMAJOR && vminor == NSS_VMINOR && vpatch > NSS_VPATCH) {
+        return PR_FALSE;
+    }
+    if (vmajor == NSS_VMAJOR && vminor == NSS_VMINOR &&
+        vpatch == NSS_VPATCH && vbuild > NSS_VBUILD) {
         return PR_FALSE;
     }
     /* Check dependent libraries */
