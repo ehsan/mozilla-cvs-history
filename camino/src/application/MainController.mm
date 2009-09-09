@@ -304,7 +304,11 @@ const int kZoomActionsTag = 108;
   BOOL shouldRestoreWindowState = NO;
   if ([[SessionManager sharedInstance] hasSavedState]) {
     if (previousSessionTerminatedNormally) {
-      shouldRestoreWindowState = [prefManager getBooleanPref:kGeckoPrefSessionSaveEnabled withSuccess:NULL];
+      shouldRestoreWindowState =
+          [prefManager getBooleanPref:kGeckoPrefSessionSaveEnabled
+                          withSuccess:NULL] ||
+          [prefManager getBooleanPref:kGeckoPrefRelaunchingForAutoupdate
+                          withSuccess:NULL];
     }
     else if ([prefManager getBooleanPref:kGeckoPrefSessionSaveRestoreAfterCrash withSuccess:NULL]) {
       NSAlert* restoreAfterCrashAlert = [[[NSAlert alloc] init] autorelease];
@@ -322,6 +326,8 @@ const int kZoomActionsTag = 108;
         shouldRestoreWindowState = YES;
     }
   }
+
+  [prefManager clearPref:kGeckoPrefRelaunchingForAutoupdate];
 
   if (shouldRestoreWindowState) {
     // if we've already opened a window (e.g., command line argument or apple event), we need
@@ -432,6 +438,13 @@ const int kZoomActionsTag = 108;
   return NSTerminateNow;
 }
 
+// Called by Sparkle just before it relaunches for an update. We set a temporary
+// pref so that we can handle the relaunch differently.
+- (void)updaterWillRelaunchApplication:(SUUpdater *)updater {
+  PreferenceManager* prefManager = [PreferenceManager sharedInstanceDontCreate];
+  [prefManager setPref:kGeckoPrefRelaunchingForAutoupdate toBoolean:YES];
+}
+
 - (void)applicationWillTerminate:(NSNotification*)aNotification
 {
 #if DEBUG
@@ -440,10 +453,13 @@ const int kZoomActionsTag = 108;
   // If there's no pref manager then we didn't really start up, so we do nothing.
   PreferenceManager* prefManager = [PreferenceManager sharedInstanceDontCreate];
   if (prefManager) {
-    if ([prefManager getBooleanPref:kGeckoPrefSessionSaveEnabled withSuccess:NULL])
+    if ([prefManager getBooleanPref:kGeckoPrefSessionSaveEnabled withSuccess:NULL] ||
+        [prefManager getBooleanPref:kGeckoPrefRelaunchingForAutoupdate withSuccess:NULL]) {
       [[SessionManager sharedInstance] saveWindowState];
-    else
+    }
+    else {
       [[SessionManager sharedInstance] clearSavedState];
+    }
   }
 
   [NetworkServices shutdownNetworkServices];

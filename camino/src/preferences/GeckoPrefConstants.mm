@@ -150,6 +150,7 @@ const char* const kGeckoPrefTabFocusBehavior = "accessibility.tabfocus";
 
 const char* const kGeckoPrefUpdateURL = "app.update.url";
 const char* const kGeckoPrefUpdateURLOverride = "app.update.url.override";
+const char* const kGeckoPrefRelaunchingForAutoupdate = "camino.relaunching_for_autoupdate";
 
 #pragma mark i18n
 

@@ -207,6 +207,9 @@ extern const char* const kGeckoPrefUpdateURL;                          // string
 // A user-override for kGeckoPrefUpdateURL
 extern const char* const kGeckoPrefUpdateURLOverride;                  // string
 
+// Tracks whether we are doing an auto-update relaunch
+extern const char* const kGeckoPrefRelaunchingForAutoupdate;           // bool
+
 #pragma mark i18n
 
 // The ranked languages to send in the Accept-Languages header

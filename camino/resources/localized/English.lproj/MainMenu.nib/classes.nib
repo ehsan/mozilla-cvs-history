@@ -391,6 +391,7 @@
             ACTIONS = {checkForUpdates = id; }; 
             CLASS = SUUpdater; 
             LANGUAGE = ObjC; 
+            OUTLETS = {delegate = id; }; 
             SUPERCLASS = NSObject; 
         }, 
         {
