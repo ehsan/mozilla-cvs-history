@@ -66,6 +66,9 @@
   PR_BEGIN_MACRO                                           \
   if (aErrorHandler) {                                     \
     aErrorHandler->OnError(status, statusMessage);         \
+  } else {                                                 \
+    printf("Error while loading schema: %s\n",             \
+           NS_ConvertUTF16toUTF8(statusMessage).get());    \
   }                                                        \
   PR_END_MACRO
 
