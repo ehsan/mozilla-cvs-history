@@ -42,7 +42,6 @@ import time
 import yaml
 import sys
 import urllib 
-import tempfile
 import os
 import string
 import socket
@@ -92,6 +91,8 @@ def process_Request(post):
     if line.find("RETURN\t") > -1:
         links += line.replace("RETURN\t", "") + '\n'
     utils.debug("process_Request line: " + line.replace("RETURN\t", ""))
+  if not links:
+    raise talosError("send failed, graph server says:\n" + post)
   return links
 
 def send_to_csv(csv_dir, results):
@@ -134,16 +135,6 @@ def send_to_csv(csv_dir, results):
           writer.writerow([i, val])
           i += 1
 
-def post_test_result(results_server, results_link, filename):
-  tmpf = open(filename, "r")
-  file_data = tmpf.read()
-  try:
-    ret = post_file.post_multipart(results_server, results_link, [("key", "value")], [("filename", filename, file_data)])
-  except:
-    print "FAIL: error in post data"
-    sys.exit(0)
-  return ret
-
 def filesizeformat(bytes):
     """
     Format the value like a 'human-readable' file size (i.e. 13 KB, 4.1 MB, 102
@@ -158,32 +149,29 @@ def filesizeformat(bytes):
         return "%.1fMB" % (bytes / (1024 * 1024))
     return "%.1fGB" % (bytes / (1024 * 1024 * 1024))
 
-def construct_file (machine, testname, branch, sourcestamp, buildid, date, vals):
+def construct_results (machine, testname, branch, sourcestamp, buildid, date, vals):
   """ 
-  Creates file formated for the collector script of the graph server
-  Returns the filename
+  Creates string formated for the collector script of the graph server
+  Returns the completed string
   """
   #machine_name,test_name,branch_name,sourcestamp,buildid,date_run
   info_format = "%s,%s,%s,%s,%s,%s\n"
-  filename = tempfile.mktemp()
-  tmpf = open(filename, "w")
-  tmpf.write("START\n")
-  tmpf.write("VALUES\n")
-  tmpf.write(info_format % (machine, testname, branch, sourcestamp, buildid, date))
+  data_string = ""
+  data_string += "START\n"
+  data_string += "VALUES\n"
+  data_string += info_format % (machine, testname, branch, sourcestamp, buildid, date)
   i = 0
   for val, page in vals:
-    tmpf.write("%d,%.2f,%s\n" % (i,float(val), page))
+    data_string += "%d,%.2f,%s\n" % (i,float(val), page)
     i += 1
-  tmpf.write("END")
-  tmpf.flush()
-  tmpf.close()
-  return filename
+  data_string += "END"
+  return data_string
 
 def send_to_graph(results_server, results_link, machine, date, browser_config, results):
   links = ''
-  files = []
+  result_strings = []
 
-  #construct all the files of data, one file per test and one file per counter
+  #construct all the strings of data, one string per test and one string  per counter
   for testname in results:
     vals = []
     fullname = testname
@@ -205,22 +193,38 @@ def send_to_graph(results_server, results_link, machine, date, browser_config, r
           val, page = process_tpformat(line)
           if val > -1 :
             vals.append([val, page])
-    files.append(construct_file(machine, fullname, browser_config['branch_name'], browser_config['sourcestamp'], browser_config['buildid'], date, vals))
+    result_strings.append(construct_results(machine, fullname, browser_config['branch_name'], browser_config['sourcestamp'], browser_config['buildid'], date, vals))
     utils.stamped_msg("Generating results file: " + testname, "Stopped")
+    #counters collected for this test
     for cd in counter_dump:
       for count_type in cd:
         vals = [[x, 'NULL'] for x in cd[count_type]]
         counterName = testname + '_' + shortName(count_type)
-        if testname in ('ts', 'twinopen', 'ts_places_generated_max', 'ts_places_generated_min', 'ts_places_generated_med'):
+        utils.stamped_msg("Generating results file: " + counterName, "Started")
+        if testname not in ('ts', 'twinopen', 'ts_places_generated_max', 'ts_places_generated_min', 'ts_places_generated_med'):
           counterName += browser_config['test_name_extension']
         utils.stamped_msg("Generating results file: " + counterName, "Started")
-        files.append(construct_file(machine, counterName, browser_config['branch_name'], browser_config['sourcestamp'], browser_config['buildid'], date, vals))
+        result_strings.append(construct_results(machine, counterName, browser_config['branch_name'], browser_config['sourcestamp'], browser_config['buildid'], date, vals))
         utils.stamped_msg("Generating results file: " + counterName, "Stopped")
     
-  #send all the files along to the graph server
-  for filename in files:
-    links += process_Request(post_test_result(results_server, results_link, filename))
-    os.remove(filename)
+  #send all the strings along to the graph server
+  for data_string in result_strings:
+    RETRIES = 5
+    wait_time = 5
+    times = 0
+    msg = ""
+    while (times < RETRIES):
+      try:
+        utils.stamped_msg("Transmitting test: " + testname, "Started")
+        links += process_Request(post_file.post_multipart(results_server, results_link, [("key", "value")], [("filename", "data_string", data_string)]))
+        break
+      except talosError, e:
+        times += 1
+        msg = e.msg
+        time.sleep(wait_time)
+        wait_time += wait_time
+    if times == RETRIES:
+        raise talosError("Failed to send data %d times... quitting\n%s" % (RETRIES, msg))
     utils.stamped_msg("Transmitting test: " + testname, "Stopped")
 
   return links
@@ -380,7 +384,7 @@ def test_file(filename):
     except talosError, e:
       utils.stamped_msg("Failed " + testname, "Stopped")
       print 'FAIL: Busted: ' + testname
-      print 'FAIL: ' + e.msg
+      print 'FAIL: ' + e.msg.replace('\n','\nRETURN:')
     utils.stamped_msg("Completed test " + testname, "Stopped")
   elapsed = utils.stopTimer()
   print "RETURN: cycle time: " + elapsed + "<br>"
@@ -389,10 +393,14 @@ def test_file(filename):
   #process the results
   if (results_server != '') and (results_link != ''):
     #send results to the graph server
-    utils.stamped_msg("Sending results", "Started")
-    links = send_to_graph(results_server, results_link, title, date, browser_config, results)
-    results_from_graph(links, results_server)
-    utils.stamped_msg("Completed sending results", "Stopped")
+    try:
+      utils.stamped_msg("Sending results", "Started")
+      links = send_to_graph(results_server, results_link, title, date, browser_config, results)
+      results_from_graph(links, results_server)
+      utils.stamped_msg("Completed sending results", "Stopped")
+    except talosError, e:
+      utils.stamped_msg("Failed sending results", "Stopped")
+      print 'FAIL: ' + e.msg.replace('\n', '\nRETURN:')
   
 if __name__=='__main__':
   optlist, args = getopt.getopt(sys.argv[1:], 'dn', ['debug', 'noisy'])
