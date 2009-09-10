@@ -3,7 +3,7 @@ functionality. See http://sparkle.andymatuschak.org/ for more information about
 Sparkle. The Sparkle framework is shipped inside Camino's bundle, and some glue
 code is included in Camino itself.
 
-This is a pull of e7435964a2654b2e89fd1eafbe229dd7123417f6 from git://github.com/andymatuschak/Sparkle.git
+This is a pull of 7bfbe83d87a88d106a935858a569414132b01614 from git://github.com/andymatuschak/Sparkle.git
 with the following changes:
 - Commented out used of [arch=<foo>] notation in ConfigCommon.xcconfig to allow building with our toolchain
 - Commented out ARCHS in ConfigCommonRelease.xcconfig and replaced it with a version that doesn't include x86_64
