@@ -94,6 +94,7 @@
 #include "nsICookieManager.h"
 #include "nsIBrowserHistory.h"
 #include "nsICacheService.h"
+#include "nsIStringBundle.h"
 
 extern const nsModuleComponentInfo* GetAppComponents(unsigned int* outNumComponents);
 
@@ -198,6 +199,17 @@ const int kZoomActionsTag = 108;
   unsigned int numComps = 0;
   const nsModuleComponentInfo* comps = GetAppComponents(&numComps);
   CHBrowserService::RegisterAppComponents(comps, numComps);
+
+  // This is a hack to make sure that the string bundle service knows about our
+  // override as soon as possible, since some core components cache their string
+  // bundle instance when they are inited, and will bypass us if we aren't in
+  // place.
+  nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(NS_STRINGBUNDLE_CONTRACTID));
+  nsCOMPtr<nsIObserver> bundleServiceAsObserver = do_QueryInterface(bundleService);
+  if (bundleServiceAsObserver) {
+    bundleServiceAsObserver->Observe(NULL, "xpcom-category-entry-added",
+                                     NS_LITERAL_STRING("xpcom-autoregistration").get());
+  }
 
   // add our OpenSearch handler
   AddSearchProviderHandler::InstallHandler();
