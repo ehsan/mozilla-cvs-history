@@ -71,6 +71,7 @@
 - (void)setFontSampleOfType:(NSString*)fontType withFont:(NSFont*)font andDict:(NSDictionary*)regionDict;
 - (void)saveFont:(NSFont*)font toDict:(NSMutableDictionary*)regionDict forType:(NSString*)fontType;
 
+- (void)updateAdvancedFontControls;
 - (void)updateFontSampleOfType:(NSString*)fontType;
 - (NSTextField*)fontSampleForType:(NSString*)fontType;
 - (NSString*)fontSizeType:(NSString*)fontType;
@@ -130,13 +131,6 @@
   [super dealloc];
 }
 
-- (id)initWithBundle:(NSBundle*)bundle
-{
-  self = [super initWithBundle:bundle];
-  mFontButtonForEditor = nil;
-  return self;
-}
-
 - (void)mainViewDidLoad
 {
   // should save and restore this
@@ -162,6 +156,7 @@
 
   [self loadFontPrefs];
   [self updateFontPreviews];
+  [self updateAdvancedFontControls];
 }
 
 - (void)didUnselect
@@ -170,8 +165,28 @@
   [self saveFontPrefs];
 }
 
+// The colors and fonts tab views are different heights. We need to resize
+// the window when each is selected so the spacing looks correct.
 - (void)tabView:(NSTabView*)tabView didSelectTabViewItem:(NSTabViewItem*)tabViewItem
 {
+  NSControl* bottomControl = nil;
+  if ([[tabViewItem identifier] isEqualToString:@"colors"])
+    bottomControl = mUseMyColorsCheckbox;
+  else if ([[tabViewItem identifier] isEqualToString:@"fonts"])
+    bottomControl = mUseMyFontsCheckbox;
+
+  if (bottomControl && bottomControl != mPreviousBottomControl) {
+    NSWindow* prefsWindow = [mTabView window];
+    float heightChange = [mPreviousBottomControl frame].origin.y -
+                           [bottomControl frame].origin.y;
+
+    NSRect windowFrame = [prefsWindow frame];
+    windowFrame.size.height += heightChange;
+    windowFrame.origin.y -= heightChange;
+    [prefsWindow setFrame:windowFrame display:YES animate:[prefsWindow isVisible]];
+
+    mPreviousBottomControl = bottomControl;
+  }
 }
 
 - (void)setupFontRegionPopup
@@ -248,6 +263,7 @@
 {
   // save the old values
   [self updateFontPreviews];
+  [self updateAdvancedFontControls];
 }
 
 - (void)loadFontPrefs
@@ -656,15 +672,6 @@
   NSString* propLabelString = [NSString stringWithFormat:[self localizedStringForKey:@"ProportionalLabelFormat"],
                                                          [self localizedStringForKey:defaultFontType]];
   [mProportionalSampleLabel setStringValue:propLabelString];
-  
-  NSString* sublabelValue = [self localizedStringForKey:[defaultFontType stringByAppendingString:@"_note"]];
-  [mProportionalSubLabel setStringValue:sublabelValue];
-
-  NSString* noteFontExample = [defaultFontType isEqualToString:@"serif"] ? @"Times" : @"Helvetica";
-  [mProportionalSubLabel setFont:[[NSFontManager sharedFontManager] fontWithFamily:noteFontExample
-                                                                            traits:0
-                                                                            weight:5 /* normal weight */
-                                                                              size:[[mProportionalSubLabel font] pointSize]]];
 
   [self setupFontSamplesFromDict:regionDict];
 }
@@ -674,15 +681,11 @@
 const int kDefaultFontSerifTag = 0;
 const int kDefaultFontSansSerifTag = 1;
 
-- (IBAction)showAdvancedFontsDialog:(id)sender
+- (void)updateAdvancedFontControls
 {
   NSDictionary* regionDict = [self settingsForCurrentRegion];
   if (!regionDict) return;
 
-  NSString* advancedLabel = [NSString stringWithFormat:[self localizedStringForKey:@"AdditionalFontsLabelFormat"],
-                                                       [regionDict objectForKey:@"region"]];
-  [mAdvancedFontsLabel setStringValue:advancedLabel];
-  
   // set up min size popup
   int itemIndex = 0;
   NSMutableDictionary* fontSizeDict = [regionDict objectForKey:@"fontsize"];
@@ -693,24 +696,14 @@ const int kDefaultFontSansSerifTag = 1;
       itemIndex = 0;
   }
   [mMinFontSizePopup selectItemAtIndex:itemIndex];
-  
+
   // set up default font radio buttons (default to serif)
   NSString* defaultFontType = [self defaultProportionalFontTypeForCurrentRegion];
   [mDefaultFontMatrix selectCellWithTag:([defaultFontType isEqualToString:@"sans-serif"] ? kDefaultFontSansSerifTag : kDefaultFontSerifTag)];
-  
-  mFontPanelWasVisible = [[NSFontPanel sharedFontPanel] isVisible];
-  [[NSFontPanel sharedFontPanel] orderOut:nil];
-  
-  [NSApp beginSheet:mAdvancedFontsDialog
-     modalForWindow:[mTabView window] // any old window accessor
-      modalDelegate:self
-     didEndSelector:@selector(advancedFontsSheetDidEnd:returnCode:contextInfo:)
-        contextInfo:NULL];
 }
 
-- (IBAction)advancedFontsDone:(id)sender
+- (IBAction)minFontSizePopupClicked:(id)sender
 {
-  // save settings
   NSDictionary* regionDict = [self settingsForCurrentRegion];
   if (!regionDict) return;
 
@@ -719,21 +712,21 @@ const int kDefaultFontSansSerifTag = 1;
   NSMutableDictionary* fontSizeDict = [regionDict objectForKey:@"fontsize"];
   [fontSizeDict setObject:[NSNumber numberWithInt:(int)minSize] forKey:@"minimum"];
 
-  // Save the default font type.
+  [self saveFontSizePrefsForRegion:regionDict];
+  [self updateFontPreviews];
+}
+
+- (IBAction)defaultFontTypeClicked:(id)sender
+{
+  NSDictionary* regionDict = [self settingsForCurrentRegion];
+  if (!regionDict) return;
+
   NSMutableDictionary* defaultFontTypeDict = [regionDict objectForKey:@"defaultFontType"];
   NSString* defaultFontType = ([[mDefaultFontMatrix selectedCell] tag] == kDefaultFontSerifTag) ? @"serif" : @"sans-serif";
   [defaultFontTypeDict setObject:defaultFontType forKey:@"type"];
-  
-  [mAdvancedFontsDialog orderOut:self];
-  [NSApp endSheet:mAdvancedFontsDialog];
 
-  // Apply the changes for the current region.
-  [self saveAllFontPrefsForRegion:regionDict];
-
+  [self saveDefaultFontTypePrefForRegion:regionDict];
   [self updateFontPreviews];
-
-  if (mFontPanelWasVisible)
-     [[NSFontPanel sharedFontPanel] makeKeyAndOrderFront:self];    
 }
 
 - (IBAction)resetToDefaults:(id)sender {
@@ -798,11 +791,8 @@ const int kDefaultFontSansSerifTag = 1;
   // Update the UI. Order is important here -- syncing the font panel depends on the
   // font previews being correct.
   [self updateFontPreviews];
+  [self updateAdvancedFontControls];
   [mUseMyFontsCheckbox setState:[self useMyFontsPref]];
-}
-
-- (void)advancedFontsSheetDidEnd:(NSWindow*)sheet returnCode:(int)returnCode contextInfo:(void*)contextInfo
-{
 }
 
 @end
@@ -839,10 +829,6 @@ const int kDefaultFontSansSerifTag = 1;
 
 - (void)changeFont:(id)sender
 {
-  // Ignore font panel changes if the advanced panel is up.
-  if ([mAdvancedFontsDialog isVisible])
-    return;
-  
   NSDictionary* regionDict = [self settingsForCurrentRegion];
 
   if (mFontButtonForEditor == mChooseProportionalFontButton) {

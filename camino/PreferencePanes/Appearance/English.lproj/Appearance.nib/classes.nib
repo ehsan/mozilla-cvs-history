@@ -1,83 +1,144 @@
-{
-    IBClasses =     (
-                {
-            CLASS = FirstResponder;
-            LANGUAGE = ObjC;
-            SUPERCLASS = NSObject;
-        },
-                {
-            CLASS = NSMenu;
-            LANGUAGE = ObjC;
-            SUPERCLASS = NSObject;
-        },
-                {
-            CLASS = NSMenuItem;
-            LANGUAGE = ObjC;
-            SUPERCLASS = NSObject;
-        },
-                {
-            CLASS = NSObject;
-            LANGUAGE = ObjC;
-        },
-                {
-            CLASS = NSPreferencePane;
-            LANGUAGE = ObjC;
-            OUTLETS =             {
-                "_firstKeyView" = id;
-                "_initialKeyView" = id;
-                "_lastKeyView" = id;
-                "_window" = id;
-            };
-            SUPERCLASS = NSObject;
-        },
-                {
-            CLASS = NSView;
-            LANGUAGE = ObjC;
-            SUPERCLASS = NSResponder;
-        },
-                {
-            ACTIONS =             {
-                advancedFontsDone = id;
-                buttonClicked = id;
-                colorChanged = id;
-                fontRegionPopupClicked = id;
-                monospaceFontChoiceButtonClicked = id;
-                proportionalFontChoiceButtonClicked = id;
-                resetToDefaults = id;
-                showAdvancedFontsDialog = id;
-                useMyFontsButtonClicked = id;
-            };
-            CLASS = OrgMozillaCaminoPreferenceAppearance;
-            LANGUAGE = ObjC;
-            OUTLETS =             {
-                mAdvancedFontsDialog = NSPanel;
-                mAdvancedFontsLabel = NSTextField;
-                mBackgroundColorWell = NSColorWell;
-                mChooseMonospaceFontButton = NSButton;
-                mChooseProportionalFontButton = NSButton;
-                mDefaultFontMatrix = NSMatrix;
-                mFontRegionPopup = NSPopUpButton;
-                mFontSampleMonospace = NSTextField;
-                mFontSampleProportional = NSTextField;
-                mMinFontSizePopup = NSPopUpButton;
-                mProportionalSampleLabel = NSTextField;
-                mProportionalSubLabel = NSTextField;
-                mResetButton = NSButton;
-                mTabView = NSTabView;
-                mTextColorWell = NSColorWell;
-                mUnderlineLinksCheckbox = NSButton;
-                mUnvisitedLinksColorWell = NSColorWell;
-                mUseMyColorsCheckbox = NSButton;
-                mUseMyFontsCheckbox = NSButton;
-                mVisitedLinksColorWell = NSColorWell;
-            };
-            SUPERCLASS = PreferencePaneBase;
-        },
-                {
-            CLASS = PreferencePaneBase;
-            LANGUAGE = ObjC;
-            SUPERCLASS = NSPreferencePane;
-        }
-    );
-    IBVersion = 1;
-}
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IBClasses</key>
+	<array>
+		<dict>
+			<key>CLASS</key>
+			<string>PreferencePaneBase</string>
+			<key>LANGUAGE</key>
+			<string>ObjC</string>
+			<key>SUPERCLASS</key>
+			<string>NSPreferencePane</string>
+		</dict>
+		<dict>
+			<key>CLASS</key>
+			<string>NSView</string>
+			<key>LANGUAGE</key>
+			<string>ObjC</string>
+			<key>SUPERCLASS</key>
+			<string>NSResponder</string>
+		</dict>
+		<dict>
+			<key>CLASS</key>
+			<string>NSMenuItem</string>
+			<key>LANGUAGE</key>
+			<string>ObjC</string>
+			<key>SUPERCLASS</key>
+			<string>NSObject</string>
+		</dict>
+		<dict>
+			<key>CLASS</key>
+			<string>NSMenu</string>
+			<key>LANGUAGE</key>
+			<string>ObjC</string>
+			<key>SUPERCLASS</key>
+			<string>NSObject</string>
+		</dict>
+		<dict>
+			<key>CLASS</key>
+			<string>FirstResponder</string>
+			<key>LANGUAGE</key>
+			<string>ObjC</string>
+			<key>SUPERCLASS</key>
+			<string>NSObject</string>
+		</dict>
+		<dict>
+			<key>CLASS</key>
+			<string>NSObject</string>
+			<key>LANGUAGE</key>
+			<string>ObjC</string>
+		</dict>
+		<dict>
+			<key>CLASS</key>
+			<string>NSPreferencePane</string>
+			<key>LANGUAGE</key>
+			<string>ObjC</string>
+			<key>OUTLETS</key>
+			<dict>
+				<key>_firstKeyView</key>
+				<string>id</string>
+				<key>_initialKeyView</key>
+				<string>id</string>
+				<key>_lastKeyView</key>
+				<string>id</string>
+				<key>_window</key>
+				<string>id</string>
+			</dict>
+			<key>SUPERCLASS</key>
+			<string>NSObject</string>
+		</dict>
+		<dict>
+			<key>ACTIONS</key>
+			<dict>
+				<key>buttonClicked</key>
+				<string>id</string>
+				<key>colorChanged</key>
+				<string>id</string>
+				<key>defaultFontTypeClicked</key>
+				<string>id</string>
+				<key>fontRegionPopupClicked</key>
+				<string>id</string>
+				<key>minFontSizePopupClicked</key>
+				<string>id</string>
+				<key>monospaceFontChoiceButtonClicked</key>
+				<string>id</string>
+				<key>proportionalFontChoiceButtonClicked</key>
+				<string>id</string>
+				<key>resetToDefaults</key>
+				<string>id</string>
+				<key>useMyFontsButtonClicked</key>
+				<string>id</string>
+			</dict>
+			<key>CLASS</key>
+			<string>OrgMozillaCaminoPreferenceAppearance</string>
+			<key>LANGUAGE</key>
+			<string>ObjC</string>
+			<key>OUTLETS</key>
+			<dict>
+				<key>mBackgroundColorWell</key>
+				<string>NSColorWell</string>
+				<key>mChooseMonospaceFontButton</key>
+				<string>NSButton</string>
+				<key>mChooseProportionalFontButton</key>
+				<string>NSButton</string>
+				<key>mDefaultFontMatrix</key>
+				<string>NSMatrix</string>
+				<key>mFontRegionPopup</key>
+				<string>NSPopUpButton</string>
+				<key>mFontSampleMonospace</key>
+				<string>NSTextField</string>
+				<key>mFontSampleProportional</key>
+				<string>NSTextField</string>
+				<key>mMinFontSizePopup</key>
+				<string>NSPopUpButton</string>
+				<key>mPreviousBottomControl</key>
+				<string>NSView</string>
+				<key>mProportionalSampleLabel</key>
+				<string>NSTextField</string>
+				<key>mResetButton</key>
+				<string>NSButton</string>
+				<key>mTabView</key>
+				<string>NSTabView</string>
+				<key>mTextColorWell</key>
+				<string>NSColorWell</string>
+				<key>mUnderlineLinksCheckbox</key>
+				<string>NSButton</string>
+				<key>mUnvisitedLinksColorWell</key>
+				<string>NSColorWell</string>
+				<key>mUseMyColorsCheckbox</key>
+				<string>NSButton</string>
+				<key>mUseMyFontsCheckbox</key>
+				<string>NSButton</string>
+				<key>mVisitedLinksColorWell</key>
+				<string>NSColorWell</string>
+			</dict>
+			<key>SUPERCLASS</key>
+			<string>PreferencePaneBase</string>
+		</dict>
+	</array>
+	<key>IBVersion</key>
+	<string>1</string>
+</dict>
+</plist>

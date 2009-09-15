@@ -62,16 +62,12 @@
   IBOutlet NSTextField*   mFontSampleMonospace;
 
   IBOutlet NSTextField*   mProportionalSampleLabel;
-  IBOutlet NSTextField*   mProportionalSubLabel;
 
+  IBOutlet NSPopUpButton* mMinFontSizePopup;
+  IBOutlet NSMatrix*      mDefaultFontMatrix;
   IBOutlet NSButton*      mUseMyFontsCheckbox;
 
-  // advanced panel stuff
-  IBOutlet NSPanel*       mAdvancedFontsDialog;
-  IBOutlet NSPopUpButton* mMinFontSizePopup;
-  IBOutlet NSTextField*   mAdvancedFontsLabel;
-
-  IBOutlet NSMatrix*      mDefaultFontMatrix;
+  IBOutlet NSView*        mPreviousBottomControl;
 
   NSArray*                mRegionMappingTable;
 
@@ -93,8 +89,8 @@
 - (IBAction)monospaceFontChoiceButtonClicked:(id)sender;
 - (IBAction)fontRegionPopupClicked:(id)sender;
 
-- (IBAction)showAdvancedFontsDialog:(id)sender;
-- (IBAction)advancedFontsDone:(id)sender;
+- (IBAction)minFontSizePopupClicked:(id)sender;
+- (IBAction)defaultFontTypeClicked:(id)sender;
 
 - (IBAction)resetToDefaults:(id)sender;
 

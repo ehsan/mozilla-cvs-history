@@ -5,9 +5,6 @@
 "ProportionalLabelFormat" = "Proportional (%@):";
 "serif" = "Serif";
 "sans-serif" = "Sans-serif";
-"AdditionalFontsLabelFormat" = "Additional fonts for %@ pages";
-"serif_note" = "(like Times)";
-"sans-serif_note" = "(like Helvetica)";
 
 /* Displayed when there is no font specified in prefs for a given language group and type */
 "NoFontSelected" = "No font selected";
