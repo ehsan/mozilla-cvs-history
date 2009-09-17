@@ -98,9 +98,9 @@ def process_Request(post):
 def send_to_csv(csv_dir, results):
   import csv
   for res in results:
-    browser_dump, counter_dump = results[res]
+    browser_dump, counter_dump, print_format = results[res]
     writer = csv.writer(open(os.path.join(csv_dir, res + '.csv'), "wb"))
-    if res in ('ts', 'twinopen', 'ts_places_generated_max', 'ts_places_generated_min', 'ts_places_generated_med'):
+    if print_format == 'tsformat':
       i = 0
       writer.writerow(['i', 'val'])
       for val in browser_dump:
@@ -108,7 +108,7 @@ def send_to_csv(csv_dir, results):
         for v in val_list:
           writer.writerow([i, v])
           i += 1
-    else:
+    elif print_format == 'tpformat':
       writer.writerow(['i', 'page', 'median', 'mean', 'min' , 'max', 'runs'])
       for bd in browser_dump:
         bd.rstrip('\n')
@@ -126,6 +126,8 @@ def send_to_csv(csv_dir, results):
              page = r[1]
           writer.writerow([i, page, r[2], r[3], r[4], r[5], '|'.join(r[6:])])
           i += 1
+    else:
+      raise talosError("Unknown print format in send_to_csv")
     for cd in counter_dump:
       for count_type in cd:
         writer = csv.writer(open(os.path.join(csv_dir, res + '_' + count_type + '.csv'), "wb"))
@@ -175,15 +177,15 @@ def send_to_graph(results_server, results_link, machine, date, browser_config, r
   for testname in results:
     vals = []
     fullname = testname
-    browser_dump, counter_dump = results[testname]
+    browser_dump, counter_dump, print_format = results[testname]
     utils.debug("Working with test: " + testname)
     utils.debug("Sending results: " + " ".join(browser_dump))
     utils.stamped_msg("Generating results file: " + testname, "Started")
-    if testname in ('ts', 'twinopen', 'ts_places_generated_max', 'ts_places_generated_min', 'ts_places_generated_med'):
+    if print_format == 'tsformat':
       #non-tpformat results
       for bd in browser_dump:
         vals.extend([[x, 'NULL'] for x in bd.split('|')])
-    else:
+    elif print_format == 'tpformat':
       #tpformat results
       fullname += browser_config['test_name_extension']
       for bd in browser_dump:
@@ -193,6 +195,8 @@ def send_to_graph(results_server, results_link, machine, date, browser_config, r
           val, page = process_tpformat(line)
           if val > -1 :
             vals.append([val, page])
+    else:
+      raise talosError("Unknown print format in send_to_graph")
     result_strings.append(construct_results(machine, fullname, browser_config['branch_name'], browser_config['sourcestamp'], browser_config['buildid'], date, vals))
     utils.stamped_msg("Generating results file: " + testname, "Stopped")
     #counters collected for this test
@@ -201,7 +205,7 @@ def send_to_graph(results_server, results_link, machine, date, browser_config, r
         vals = [[x, 'NULL'] for x in cd[count_type]]
         counterName = testname + '_' + shortName(count_type)
         utils.stamped_msg("Generating results file: " + counterName, "Started")
-        if testname not in ('ts', 'twinopen', 'ts_places_generated_max', 'ts_places_generated_min', 'ts_places_generated_med'):
+        if print_format == "tpformat":
           counterName += browser_config['test_name_extension']
         utils.stamped_msg("Generating results file: " + counterName, "Started")
         result_strings.append(construct_results(machine, counterName, browser_config['branch_name'], browser_config['sourcestamp'], browser_config['buildid'], date, vals))
@@ -375,9 +379,9 @@ def test_file(filename):
     testname = test['name']
     utils.stamped_msg("Running test " + testname, "Started")
     try:
-      browser_dump, counter_dump = ttest.runTest(browser_config, test)
+      browser_dump, counter_dump, print_format = ttest.runTest(browser_config, test)
       utils.debug("Received test results: " + " ".join(browser_dump))
-      results[testname] = [browser_dump, counter_dump]
+      results[testname] = [browser_dump, counter_dump, print_format]
       # If we're doing CSV, write this test immediately (bug 419367)
       if csv_dir != '':
         send_to_csv(csv_dir, {testname : results[testname]})

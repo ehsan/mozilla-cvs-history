@@ -145,6 +145,7 @@ def runTest(browser_config, test_config):
   resolution = test_config['resolution']
   all_browser_results = []
   all_counter_results = []
+  format = ""
   utils.setEnvironmentVars(browser_config['env'])
   utils.setEnvironmentVars({'MOZ_CRASHREPORTER_NO_REPORT': '1'})
 
@@ -244,6 +245,7 @@ def runTest(browser_config, test_config):
             startTime = int(match.group(2))
             endTime = int(match.group(3))
             utils.debug("Matched basic results: " + browser_results)
+            format = "tsformat"
             break
           #TODO: this a stop gap until all of the tests start outputting the same format
           match = RESULTS_TP_REGEX.search(results_raw)
@@ -252,6 +254,7 @@ def runTest(browser_config, test_config):
             startTime = int(match.group(2))
             endTime = int(match.group(3))
             utils.debug("Matched tp results: " + browser_results)
+            format = "tpformat"
             break
           match = RESULTS_REGEX_FAIL.search(results_raw)
           if match:
@@ -286,7 +289,7 @@ def runTest(browser_config, test_config):
     utils.restoreEnvironmentVars()
     if test_config['shutdown']:
       all_counter_results.append({'shutdown' : shutdown})      
-    return (all_browser_results, all_counter_results)
+    return (all_browser_results, all_counter_results, format)
   except:
     try:
       if 'cm' in vars():
