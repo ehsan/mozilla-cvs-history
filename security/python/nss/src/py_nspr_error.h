@@ -14,8 +14,8 @@
  * The Original Code is a Python binding for Network Security Services (NSS).
  *
  * The Initial Developer of the Original Code is Red Hat, Inc.
- *   (Author: John Dennis <jdennis@redhat.com>) 
- * 
+ *   (Author: John Dennis <jdennis@redhat.com>)
+ *
  * Portions created by the Initial Developer are Copyright (C) 2008,2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -45,9 +45,9 @@ typedef struct {
     PyObject     *(*set_nspr_error)(const char *format, ...);
 } PyNSPR_ERROR_C_API_Type;
 
-#ifdef NSPR_ERROR_MODULE
+#ifdef NSS_ERROR_MODULE
 
-#else  /* not NSPR_ERROR_MODULE */
+#else  /* not NSS_ERROR_MODULE */
 
 static PyNSPR_ERROR_C_API_Type nspr_error_c_api;
 
@@ -67,7 +67,7 @@ import_nspr_error_c_api(void)
         Py_DECREF(module);
         return -1;
     }
-    
+
     if (!(PyCObject_Check(c_api_object))) {
         Py_DECREF(c_api_object);
         Py_DECREF(module);
@@ -86,4 +86,4 @@ import_nspr_error_c_api(void)
     return 0;
 }
 
-#endif /* NSPR_ERROR_MODULE */
+#endif /* NSS_ERROR_MODULE */

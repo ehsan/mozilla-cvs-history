@@ -14,8 +14,8 @@
  * The Original Code is a Python binding for Network Security Services (NSS).
  *
  * The Initial Developer of the Original Code is Red Hat, Inc.
- *   (Author: John Dennis <jdennis@redhat.com>) 
- * 
+ *   (Author: John Dennis <jdennis@redhat.com>)
+ *
  * Portions created by the Initial Developer are Copyright (C) 2008,2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -39,6 +39,7 @@
 // FIXME: PyIntObjects represent their value as a long, but in many places we declared their C representation as
 //        as int, we should change it to long, and at the same time match the parameters used in the NSPR/NSS API
 
+#define PY_SSIZE_T_CLEAN
 #include "Python.h"
 #include "structmember.h"
 
@@ -439,7 +440,7 @@ ssl_auth_certificate(void *arg, PRFileDesc *pr_socket, PRBool check_sig, PRBool 
         Py_DECREF(args);
         return SECFailure;
     }
-    
+
     sec_status = PyObject_IsTrue(result) ? SECSuccess : SECFailure;
 
     Py_DECREF(args);
@@ -620,7 +621,7 @@ get_client_auth_data(void *arg, PRFileDesc *fd, CERTDistNames *caNames, CERTCert
         PyErr_Print();
         goto fail;
     }
-    
+
     if (PyBool_Check(return_args)) {
         if (return_args == Py_False) {
             goto fail;          // callback returned failure, boolean == false
@@ -830,7 +831,7 @@ ssl_handshake_callback(PRFileDesc *fd, void *arg)
         Py_DECREF(args);
         return;
     }
-    
+
     Py_DECREF(args);
 }
 
@@ -977,7 +978,7 @@ SSLSocket_config_secure_server(SSLSocket *self, PyObject *args)
     Certificate *py_cert = NULL;
     PrivateKey *py_priv_key = NULL;
     int kea = 0;
-    
+
     TraceMethodEnter("SSLSocket_config_secure_server", self);
 
     if (!PyArg_ParseTuple(args, "O!O!i:config_secure_server",
@@ -988,7 +989,7 @@ SSLSocket_config_secure_server(SSLSocket *self, PyObject *args)
 
     if (SSL_ConfigSecureServer(self->pr_socket, py_cert->cert, py_priv_key->private_key, kea) != SECSuccess)
         return set_nspr_error(NULL);
-    
+
     Py_RETURN_NONE;
 
 }
@@ -1326,7 +1327,7 @@ SSLSocket_get_cipher_pref(SSLSocket *self, PyObject *args)
     else
         Py_RETURN_FALSE;
 }
- 
+
 PyDoc_STRVAR(SSLSocket_set_hostname_doc,
 "set_hostname(url)\n\
 \n\
@@ -1360,7 +1361,7 @@ SSLSocket_set_hostname(SSLSocket *self, PyObject *args)
 
     Py_RETURN_NONE;
 }
- 
+
 PyDoc_STRVAR(SSLSocket_get_hostname_doc,
 "get_hostname()\n\
 \n\
@@ -1385,7 +1386,7 @@ SSLSocket_get_hostname(SSLSocket *self, PyObject *args)
     PR_Free(url);
     return py_hostname;
 }
- 
+
 PyDoc_STRVAR(SSLSocket_set_certificate_db_doc,
 "set_certificate_db(certdb)\n\
 \n\
@@ -1440,7 +1441,7 @@ static PyObject *
 SSLSocket_reset_handshake(SSLSocket *self, PyObject *args)
 {
     int as_server = 0;
-    
+
     TraceMethodEnter("SSLSocket_reset_handshake", self);
 
     if (!PyArg_ParseTuple(args, "i:reset_handshake", &as_server))
@@ -1448,7 +1449,7 @@ SSLSocket_reset_handshake(SSLSocket *self, PyObject *args)
 
     if (SSL_ResetHandshake(self->pr_socket, as_server) != SECSuccess)
         return set_nspr_error(NULL);
-    
+
     Py_RETURN_NONE;
 
 }
@@ -1515,7 +1516,7 @@ static PyObject *
 SSLSocket_force_handshake_timeout(SSLSocket *self, PyObject *args)
 {
     unsigned int timeout = PR_INTERVAL_NO_TIMEOUT;
-    
+
     if (!PyArg_ParseTuple(args, "I:force_handshake_timeout", &timeout))
         return NULL;
 
@@ -1591,7 +1592,7 @@ SSLSocket_rehandshake_timeout(SSLSocket *self, PyObject *args)
 {
     int flush_cache;
     unsigned int timeout = PR_INTERVAL_NO_TIMEOUT;
-    
+
     if (!PyArg_ParseTuple(args, "iI:rehandshake_timeout", &flush_cache, &timeout))
         return NULL;
 
@@ -1810,7 +1811,7 @@ PyTypeObject SSLSocketType = {
 
 
 /*
- * WARNING: nssinit(), nss_init(), nss_shutdown() were deprecated in June 2009, 
+ * WARNING: nssinit(), nss_init(), nss_shutdown() were deprecated in June 2009,
  * they should be removed after a suitible grace period. Each of these will
  * emit a deprecation warning upon use.
  */
@@ -2014,7 +2015,7 @@ SSL_get_default_cipher_pref(PyObject *self, PyObject *args)
     else
         Py_RETURN_FALSE;
 }
- 
+
 PyDoc_STRVAR(SSL_set_cipher_policy_doc,
 "set_cipher_pref(cipher, enabled)\n\
 \n\
@@ -2079,7 +2080,7 @@ SSL_get_cipher_policy(PyObject *self, PyObject *args)
     else
         Py_RETURN_FALSE;
 }
- 
+
 PyDoc_STRVAR(SSL_config_server_session_id_cache_doc,
 "config_server_session_id_cache([max_cache_entries=0, ssl2_timeout=0, ssl3_timeout=0, directory=None])\n\
 \n\
@@ -2242,7 +2243,7 @@ PyDoc_STRVAR(module_doc,
 "This module implements the SSL functionality in NSS");
 
 PyMODINIT_FUNC
-initssl(void) 
+initssl(void)
 {
     PyObject *m;
     int i;
@@ -2334,7 +2335,7 @@ initssl(void)
     AddIntConstant(SSL_RSA_EXPORT_WITH_DES40_CBC_SHA);
     AddIntConstant(SSL_RSA_WITH_DES_CBC_SHA);
     AddIntConstant(SSL_RSA_WITH_3DES_EDE_CBC_SHA);
-						       
+
     AddIntConstant(SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA);
     AddIntConstant(SSL_RSA_FIPS_WITH_DES_CBC_SHA);
 
@@ -2344,14 +2345,14 @@ initssl(void)
     AddIntConstant(SSL_DH_RSA_EXPORT_WITH_DES40_CBC_SHA);
     AddIntConstant(SSL_DH_RSA_WITH_DES_CBC_SHA);
     AddIntConstant(SSL_DH_RSA_WITH_3DES_EDE_CBC_SHA);
-						       
+
     AddIntConstant(SSL_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA);
     AddIntConstant(SSL_DHE_DSS_WITH_DES_CBC_SHA);
     AddIntConstant(SSL_DHE_DSS_WITH_3DES_EDE_CBC_SHA);
     AddIntConstant(SSL_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA);
     AddIntConstant(SSL_DHE_RSA_WITH_DES_CBC_SHA);
     AddIntConstant(SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA);
-						       
+
     AddIntConstant(SSL_DH_ANON_EXPORT_WITH_RC4_40_MD5);
     AddIntConstant(SSL_DH_ANON_WITH_RC4_128_MD5);
     AddIntConstant(SSL_DH_ANON_EXPORT_WITH_DES40_CBC_SHA);

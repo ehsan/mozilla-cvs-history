@@ -14,8 +14,8 @@
  * The Original Code is a Python binding for Network Security Services (NSS).
  *
  * The Initial Developer of the Original Code is Red Hat, Inc.
- *   (Author: John Dennis <jdennis@redhat.com>) 
- * 
+ *   (Author: John Dennis <jdennis@redhat.com>)
+ *
  * Portions created by the Initial Developer are Copyright (C) 2008,2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -35,10 +35,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#define PY_SSIZE_T_CLEAN
 #include "Python.h"
 #include "structmember.h"
 
-#define NSPR_ERROR_MODULE
+#define NSS_ERROR_MODULE
 #include "py_nspr_error.h"
 
 
@@ -95,12 +96,12 @@ init_nspr_errors(void) {
         err_num = nspr_errors[i].num;
         if (err_num <= last_num) {
             result = SECFailure;
-            fprintf(stderr, 
+            fprintf(stderr,
 "sequence error in error strings at item %d\n"
 "error %d (%s)\n"
 "should come after \n"
 "error %d (%s)\n",
-                    i, last_num, nspr_errors[i-1].string, 
+                    i, last_num, nspr_errors[i-1].string,
                     err_num, nspr_errors[i].string);
         }
         last_num = err_num;
@@ -123,7 +124,7 @@ lookup_nspr_error(PRErrorCode num) {
 	    return &nspr_errors[i];
         if (num < err_num)
 	    high = i;
-	else 
+	else
 	    low = i;
     }
     if (num == nspr_errors[low].num)
@@ -247,7 +248,7 @@ init_py_nspr_errors(PyObject *module)
 
 /* ============================== Module Exports ============================= */
 
-static PyNSPR_ERROR_C_API_Type nspr_error_c_api = 
+static PyNSPR_ERROR_C_API_Type nspr_error_c_api =
 {
     NULL,                       /* nspr_exception */
     set_nspr_error,             /* set_nspr_error */
@@ -261,7 +262,7 @@ manipulate them.\n\
 ");
 
 PyMODINIT_FUNC
-initerror(void) 
+initerror(void)
 {
     PyObject *m;
     PyObject *py_error_doc = NULL;

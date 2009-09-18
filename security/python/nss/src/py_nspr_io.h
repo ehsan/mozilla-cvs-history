@@ -14,8 +14,8 @@
  * The Original Code is a Python binding for Network Security Services (NSS).
  *
  * The Initial Developer of the Original Code is Red Hat, Inc.
- *   (Author: John Dennis <jdennis@redhat.com>) 
- * 
+ *   (Author: John Dennis <jdennis@redhat.com>)
+ *
  * Portions created by the Initial Developer are Copyright (C) 2008,2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -113,12 +113,12 @@ typedef struct {
     void         (*Socket_init_from_prfiledesc)(Socket *py_socket, PRFileDesc *pr_socket, int family);
 } PyNSPR_IO_C_API_Type;
 
-#ifdef NSPR_IO_MODULE
+#ifdef NSS_IO_MODULE
 
 static PyObject *
 HostEntry_new_from_prnetaddr(PRNetAddr *pr_netaddr);
 
-#else  /* not NSPR_IO_MODULE */
+#else  /* not NSS_IO_MODULE */
 
 static PyNSPR_IO_C_API_Type nspr_io_c_api;
 
@@ -142,7 +142,7 @@ import_nspr_io_c_api(void)
         Py_DECREF(module);
         return -1;
     }
-    
+
     if (!(PyCObject_Check(c_api_object))) {
         Py_DECREF(c_api_object);
         Py_DECREF(module);
@@ -161,4 +161,4 @@ import_nspr_io_c_api(void)
     return 0;
 }
 
-#endif /* NSPR_IO_MODULE */
+#endif /* NSS_IO_MODULE */

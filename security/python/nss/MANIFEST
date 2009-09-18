@@ -8,6 +8,8 @@ doc/ChangeLog
 doc/examples/httplib_example.py
 doc/examples/ssl_example.py
 lib/httplib.py
+test/cipher_test.py
+test/digest_test.py
 src/NSPRerrs.h
 src/SECerrs.h
 src/SSLerrs.h
@@ -21,3 +23,4 @@ src/py_nss.c
 src/py_nss.h
 src/py_ssl.c
 src/py_ssl.h
+

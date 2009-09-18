@@ -14,8 +14,8 @@
  * The Original Code is a Python binding for Network Security Services (NSS).
  *
  * The Initial Developer of the Original Code is Red Hat, Inc.
- *   (Author: John Dennis <jdennis@redhat.com>) 
- * 
+ *   (Author: John Dennis <jdennis@redhat.com>)
+ *
  * Portions created by the Initial Developer are Copyright (C) 2008,2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -41,11 +41,12 @@
 // FIXME: change where class initializers appear in the file, should be first so class methods can use them
 //        or just add prototypes for everything (maybe better solution).
 
+#define PY_SSIZE_T_CLEAN
 #include "Python.h"
 #include "structmember.h"
 
 #include "py_nspr_common.h"
-#define NSPR_IO_MODULE
+#define NSS_IO_MODULE
 #include "py_nspr_io.h"
 #include "py_nspr_error.h"
 
@@ -213,12 +214,12 @@ NetworkAddress_set_port(NetworkAddress *self, PyObject *value, void *closure)
         PyErr_SetString(PyExc_TypeError, "Cannot delete the port attribute");
         return -1;
     }
-  
+
     if (!PyInt_Check(value)) {
         PyErr_SetString(PyExc_TypeError, "The port attribute value must be an integer");
         return -1;
     }
-      
+
     port = PyInt_AsLong(value);
     if (PR_InitializeNetAddr(PR_IpAddrNull, port, &self->addr) != PR_SUCCESS) {
         set_nspr_error(NULL);
@@ -394,8 +395,8 @@ NetworkAddress_init(NetworkAddress *self, PyObject *args, PyObject *kwds)
     TraceMethodEnter("NetworkAddress_init", self);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|Oi", kwlist, &addr, &port))
-        return -1; 
-    
+        return -1;
+
     if (addr && !(PyInt_Check(addr) || PyString_Check(addr))) {
         PyErr_SetString(PyExc_ValueError, "addr must be an int or a string");
         return -1;
@@ -714,7 +715,7 @@ HostEntry_init(HostEntry *self, PyObject *args)
     TraceMethodEnter("HostEntry_init", self);
 
     if (!PyArg_ParseTuple(args, "O", &addr))
-        return -1; 
+        return -1;
 
     if (PyString_Check(addr)) {
         if (PR_GetHostByName(PyString_AsString(addr), self->buffer, sizeof(self->buffer), &self->entry) != PR_SUCCESS) {
@@ -1465,7 +1466,7 @@ Socket_accept_read(Socket *self, PyObject *args, PyObject *kwds)
                                      &requested_amount, &timeout))
         return NULL;
 
-    if ((buf = PyString_FromStringAndSize((char *) 0, requested_amount)) == NULL)
+    if ((buf = PyString_FromStringAndSize(NULL, requested_amount)) == NULL)
         return NULL;
 
     if ((amount_read = PR_AcceptRead(self->pr_socket, &pr_socket, &pr_netaddr,
@@ -1661,7 +1662,7 @@ Socket_readline(Socket *self, PyObject *args, PyObject *kwds)
     long size = 0;
     long read_len, space_available, amount_read, line_len;
     PyObject *line = NULL;
-    
+
     TraceMethodEnter("Socket_readline", self);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|l:readline", kwlist, &size))
@@ -1750,7 +1751,7 @@ Socket_recv(Socket *self, PyObject *args, PyObject *kwds)
     PyObject *buf = NULL;
     long read_len, amount_read, result_len;
     char *dst = NULL;
-    
+
     TraceMethodEnter("Socket_recv", self);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "i|I:recv", kwlist,
@@ -1802,7 +1803,6 @@ Socket_recv(Socket *self, PyObject *args, PyObject *kwds)
 
     if (result_len != requested_amount) {
         if (_PyString_Resize(&buf, result_len) < 0) {
-            Py_DECREF(buf);
             return NULL;
 	}
     }
@@ -1829,7 +1829,7 @@ Socket_read(Socket *self, PyObject *args, PyObject *kwds)
     unsigned int timeout = PR_INTERVAL_NO_TIMEOUT;
     PyObject *buf = NULL;
     long read_len, space_available, amount_read;
-    
+
     TraceMethodEnter("Socket_read", self);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|l:read", kwlist, &requested_amount))
@@ -1894,7 +1894,7 @@ Socket_recv_from(Socket *self, PyObject *args, PyObject *kwds)
     unsigned int timeout = PR_INTERVAL_NO_TIMEOUT;
     int amount_read;
     PyObject *buf = NULL;
-    
+
     /* FIXME: for consistency should use readahead buffering, but since this is the first read
      * the readahead would be empty anyway */
 
@@ -1921,7 +1921,6 @@ Socket_recv_from(Socket *self, PyObject *args, PyObject *kwds)
 
     if (amount_read != requested_amount) {
         if (_PyString_Resize(&buf, amount_read) < 0) {
-            Py_DECREF(buf);
             return NULL;
 	}
     }
@@ -1949,10 +1948,10 @@ Socket_send(Socket *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"buf", "timeout", NULL};
     char *buf = NULL;
-    int len = 0;
+    Py_ssize_t len = 0;
     unsigned int timeout = PR_INTERVAL_NO_TIMEOUT;
     int amount;
-    
+
     TraceMethodEnter("Socket_send", self);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "s#|I:send", kwlist,
@@ -1991,7 +1990,7 @@ Socket_send_to(Socket *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"buf", "addr", "timeout", NULL};
     char *buf = NULL;
-    int len = 0;
+    Py_ssize_t len = 0;
     NetworkAddress *py_netaddr = NULL;
     unsigned int timeout = PR_INTERVAL_NO_TIMEOUT;
     int amount;
@@ -2405,9 +2404,9 @@ Socket_init(Socket *self, PyObject *args, PyObject *kwds)
 
     TraceMethodEnter("Socket_init", self);
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|ii", kwlist, 
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|ii", kwlist,
                                      &family, &desc_type))
-        return -1; 
+        return -1;
 
     /* If reinitializing, first close down previous socket */
     if (self->pr_socket) {
@@ -2420,7 +2419,7 @@ Socket_init(Socket *self, PyObject *args, PyObject *kwds)
         self->pr_socket = NULL;
     }
 
-    
+
     switch (desc_type) {
     case PR_DESC_SOCKET_TCP:
         if ((pr_socket = PR_OpenTCPSocket(family)) == NULL) {
@@ -2793,7 +2792,7 @@ module_methods[] = {
 
 /* ============================== Module Exports ============================= */
 
-static PyNSPR_IO_C_API_Type nspr_io_c_api = 
+static PyNSPR_IO_C_API_Type nspr_io_c_api =
 {
     &NetworkAddressType,        /* network_address_type */
     &HostEntryType,             /* host_entry_type */
@@ -2809,7 +2808,7 @@ PyDoc_STRVAR(module_doc,
 ");
 
 PyMODINIT_FUNC
-initio(void) 
+initio(void)
 {
     PyObject *m;
 

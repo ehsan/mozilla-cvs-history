@@ -14,8 +14,8 @@
  * The Original Code is a Python binding for Network Security Services (NSS).
  *
  * The Initial Developer of the Original Code is Red Hat, Inc.
- *   (Author: John Dennis <jdennis@redhat.com>) 
- * 
+ *   (Author: John Dennis <jdennis@redhat.com>)
+ *
  * Portions created by the Initial Developer are Copyright (C) 2008,2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -35,6 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+// FIXME: clean up usage of buffer vs. string
+// FIXME: change all parameter checking to use set_arg_*error()
+// FIXME: change all variable paramter handling (e.g. user_data extra args)
+//        to use PyArg_ParseTuple by slicing the arg list into n_base_args
 // FIXME: change all Python _from_ NSS function names to use the NSS typedef for clarity
 //        e.g. PrivateKey_new_from_private_key should be PrivateKey_new_from_SECKEYPrivateKey
 // FIXME: should we be calling these?
@@ -43,15 +47,17 @@
 // SECKEY_DestroyPrivateKeyList	   SECKEY_DestroyPublicKey
 // SECKEY_DestroyPublicKeyList	   SECKEY_DestroySubjectPublicKeyInfo
 
+#define PY_SSIZE_T_CLEAN
 #include "Python.h"
 #include "structmember.h"
 
 #include "py_nspr_common.h"
-#define NSPR_NSS_MODULE
+#define NSS_NSS_MODULE
 #include "py_nss.h"
 #include "py_nspr_error.h"
 
 #include "secder.h"
+#include "sechash.h"
 #include "certdb.h"
 #include "hasht.h"
 
@@ -81,8 +87,19 @@
 static char time_format[] = "%a %b %d %H:%M:%S %Y UTC";
 static char hex_chars[] = "0123456789abcdef";
 static PyObject *empty_tuple = NULL;
+static PyTypeObject PK11SymKeyType;
+static PyTypeObject PK11ContextType;
+static PyObject *sec_oid_name_to_value = NULL;
+static PyObject *sec_oid_value_to_name = NULL;
+static PyObject *ckm_name_to_value = NULL;
+static PyObject *ckm_value_to_name = NULL;
+static PyObject *cka_name_to_value = NULL;
+static PyObject *cka_value_to_name = NULL;
 
 typedef PyObject *(*format_lines_func)(PyObject *self, PyObject *args, PyObject *kwds);
+
+static PyTypeObject SecItemType;
+static PyTypeObject PK11SymKeyType;
 
 /* === Prototypes === */
 
@@ -120,7 +137,7 @@ static PyObject *
 sec_string_str(SECItem *item);
 
 static PyObject *
-sec_oid_str(SECItem *oid);
+sec_oid_str_by_secitem(SECItem *oid);
 
 static PyObject *
 sec_encoded_oid_str(SECItem *item);
@@ -162,22 +179,161 @@ static PyObject *
 nss_indented_format(PyObject *self, PyObject *args, PyObject *kwds);
 
 static PyObject *
-cert_md5_digest(PyObject *self, PyObject *args);
+pk11_md5_digest(PyObject *self, PyObject *args);
 
 static PyObject *
-cert_sha1_digest(PyObject *self, PyObject *args);
+pk11_sha1_digest(PyObject *self, PyObject *args);
 
 static PyObject *
-cert_sha256_digest(PyObject *self, PyObject *args);
+pk11_sha256_digest(PyObject *self, PyObject *args);
 
 static PyObject *
-cert_sha512_digest(PyObject *self, PyObject *args);
+pk11_sha512_digest(PyObject *self, PyObject *args);
+
+static PyObject *
+PyPK11Context_new_from_PK11Context(PK11Context *pk11_context);
+
+static PyObject *
+PyPK11SymKey_new_from_PK11SymKey(PK11SymKey *pk11_sym_key);
+
+static const char *
+key_mechanism_type_name(CK_MECHANISM_TYPE mechanism);
+
+static const char *
+pk11_attribute_type_name(CK_ATTRIBUTE_TYPE type);
 
 /* ==================================== */
 
-static char *
+int
+_AddIntConstantWithLookup(PyObject *module, const char *name, long value, const char *prefix,
+                          PyObject *name_to_value, PyObject *value_to_name)
+{
+    PyObject *module_dict;
+    PyObject *py_name;
+    PyObject *py_value;
+
+    if (!PyModule_Check(module)) {
+        PyErr_SetString(PyExc_TypeError, "_AddIntConstantWithLookup() needs module as first arg");
+        return -1;
+    }
+
+    if ((module_dict = PyModule_GetDict(module)) == NULL) {
+        PyErr_Format(PyExc_SystemError, "module '%s' has no __dict__",
+                     PyModule_GetName(module));
+        return -1;
+    }
+
+    if ((py_name = PyString_FromString(name)) == NULL) {
+        return -1;
+    }
+
+    if ((py_value = PyInt_FromLong(value)) == NULL) {
+        return -1;
+    }
+
+    if (PyDict_SetItem(module_dict, py_name, py_value) != 0) {
+        Py_DECREF(py_name);
+        Py_DECREF(py_value);
+        return -1;
+    }
+
+    if (PyDict_SetItem(value_to_name, py_value, py_name) != 0) {
+        Py_DECREF(py_name);
+        Py_DECREF(py_value);
+        return -1;
+    }
+
+    if (PyDict_SetItem(name_to_value, py_name, py_value) != 0) {
+        Py_DECREF(py_name);
+        Py_DECREF(py_value);
+        return -1;
+    }
+
+    if (prefix) {
+        size_t prefix_len = strlen(prefix);
+
+        if (strlen(name) > prefix_len &&
+            strncmp(prefix, name, prefix_len) == 0) {
+
+            if ((py_name = PyString_FromString(name + prefix_len)) == NULL) {
+                Py_DECREF(py_name);
+                Py_DECREF(py_value);
+                return -1;
+            }
+
+            if (PyDict_SetItem(name_to_value, py_name, py_value) != 0) {
+                Py_DECREF(py_name);
+                Py_DECREF(py_value);
+                return -1;
+            }
+        }
+    }
+
+    Py_DECREF(py_name);
+    Py_DECREF(py_value);
+    return 0;
+}
+
+/* FIXME: these should be general utility available to all modules */
+/* FIXME: convert all equality tests to Py_None to PyNone_Check() */
+#define PyNone_Check(x) ((x) == Py_None)
+
+static PyObject *
+set_arg_count_error(const char *name, Py_ssize_t expected, Py_ssize_t actual)
+{
+    PyErr_Format(PyExc_TypeError, "%s expected %zd arguments, got %zd",
+                 name, expected, actual);
+    return NULL;
+}
+
+static PyObject *
+set_arg_type_error(const char *name, const char *expected, PyObject *arg)
+{
+    PyErr_Format(PyExc_TypeError, "%.50s parameter must be %.50s, not %.50s",
+                 name, expected,
+                 PyNone_Check(arg) ? "None" : arg->ob_type->tp_name);
+    return NULL;
+}
+
+int SecItemOrNoneConvert(PyObject *obj, PyObject **param)
+{
+    if (PySecItem_Check(obj)) {
+        *param = obj;
+        return 1;
+    }
+
+    if (PyNone_Check(obj)) {
+        *param = NULL;
+        return 1;
+    }
+
+    PyErr_Format(PyExc_TypeError, "must be %.50s or None, not %.50s",
+                 SecItemType.tp_name, obj->ob_type->tp_name);
+    return 0;
+}
+
+int SymKeyOrNoneConvert(PyObject *obj, PyObject **param)
+{
+    if (PySymKey_Check(obj)) {
+        *param = obj;
+        return 1;
+    }
+
+    if (PyNone_Check(obj)) {
+        *param = NULL;
+        return 1;
+    }
+
+    PyErr_Format(PyExc_TypeError, "must be %.50s or None, not %.50s",
+                 PK11SymKeyType.tp_name, obj->ob_type->tp_name);
+    return 0;
+}
+
+static const char *
 key_type_str(KeyType key_type)
 {
+    static char buf[80];
+
     switch(key_type) {
     case nullKey:     return "NULL";
     case rsaKey:      return "RSA";
@@ -186,8 +342,25 @@ key_type_str(KeyType key_type)
     case dhKey:       return "Diffie Helman";
     case keaKey:      return "Key Exchange Algorithm";
     case ecKey:       return "Elliptic Curve";
+    default:
+        snprintf(buf, sizeof(buf), "unknown(%#x)", key_type);
+        return buf;
     }
-    return "unknown";
+}
+
+
+const char *
+sec_oid_tag_str(SECOidTag tag)
+{
+    static char buf[80];
+
+    SECOidData *oiddata;
+
+    if ((oiddata = SECOID_FindOIDByTag(tag)) != NULL) {
+	return oiddata->desc;
+    }
+    snprintf(buf, sizeof(buf), "unknown(%#x)", tag);
+    return buf;
 }
 
 PyDoc_STRVAR(generic_format_doc,
@@ -267,7 +440,7 @@ fmt_pair(int level, char *label, PyObject *obj)
 
     PyTuple_SET_ITEM(pair, 0, PyInt_FromLong(level));
     PyTuple_SET_ITEM(pair, 1, obj_str);
-    
+
     return pair;
 }
 
@@ -287,7 +460,7 @@ fmt_label(int level, char *label)
 
     PyTuple_SET_ITEM(pair, 0, PyInt_FromLong(level));
     PyTuple_SET_ITEM(pair, 1, label_str);
-    
+
     return pair;
 }
 
@@ -303,7 +476,7 @@ format_from_lines(format_lines_func formatter, PyObject *self, PyObject *args, P
     PyObject *tmp_args = NULL;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|iS:format", kwlist, &level, &py_indent))
-        return NULL; 
+        return NULL;
 
     if (!py_indent) {
         if ((py_indent = PyString_FromString("    ")) == NULL)
@@ -345,6 +518,7 @@ obj_to_hex(PyObject *obj, int octets_per_line, char *separator)
 
 }
 
+/* see cert_data_to_hex() for documentation */
 static PyObject *
 raw_data_to_hex(unsigned char *data, int data_len, int octets_per_line, char *separator)
 {
@@ -358,20 +532,21 @@ raw_data_to_hex(unsigned char *data, int data_len, int octets_per_line, char *se
     PyObject *line = NULL;
     int line_number, i, j;
     int num_octets = 0;
-    
+
 
     if (octets_per_line < 0)
-        octets_per_line = OCTETS_PER_LINE_DEFAULT;
+        octets_per_line = 0;
 
     if (!separator)
-        separator = HEX_SEPARATOR_DEFAULT;
+        separator = "";
 
     separator_len = strlen(separator);
     separator_end = separator + separator_len;
 
-    if (octets_per_line <= 0) {
+    if (octets_per_line == 0) {
         num_octets = data_len;
         line_size = (num_octets * 2) + ((num_octets-1) * separator_len);
+        if (line_size < 0) line_size = 0;
 
         if ((line = PyString_FromStringAndSize(NULL, line_size)) == NULL) {
             return NULL;
@@ -387,6 +562,7 @@ raw_data_to_hex(unsigned char *data, int data_len, int octets_per_line, char *se
         return line;
     } else {
         num_lines = (data_len + octets_per_line - 1) / octets_per_line;
+        if (num_lines < 0) num_lines = 0;
 
         if ((lines = PyList_New(num_lines)) == NULL) {
             return NULL;
@@ -400,6 +576,8 @@ raw_data_to_hex(unsigned char *data, int data_len, int octets_per_line, char *se
             } else {
                 line_size = (num_octets * 2) + ((num_octets-1) * separator_len);
             }
+
+            if (line_size < 0) line_size = 0;
             if ((line = PyString_FromStringAndSize(NULL, line_size)) == NULL) {
                 Py_DECREF(lines);
                 return NULL;
@@ -418,19 +596,195 @@ raw_data_to_hex(unsigned char *data, int data_len, int octets_per_line, char *se
     }
 }
 
+PyDoc_STRVAR(cert_data_to_hex_doc,
+"data_to_hex(data, octets_per_line=0, separator=None) -> string or list of strings\n\
+\n\
+:Parameters:\n\
+    data : buffer\n\
+        Binary data\n\
+    octets_per_line : integer\n\
+        Number of octets formatted on one line, if 0 then\n\
+        return a single string instead of an array of lines\n\
+    separator : string\n\
+        String used to seperate each octet\n\
+        If None it will be as if the empty string had been\n\
+        passed and no separator will be used.\n\
+\n\
+Format the binary data as hex string(s).\n\
+Either a list of strings is returned or a single string.\n\
+\n\
+If octets_per_line is greater than zero then a list of\n\
+strings will be returned where each string contains\n\
+octets_per_line number of octets (except for the last\n\
+string in the list which will contain the remainder of the\n\
+octets). Returning a list of \"lines\" makes it convenient\n\
+for a caller to format a block of hexadecimal data with line\n\
+wrapping. If octets_per_line is greater than zero indicating\n\
+a list result is desired a list is always returned even if\n\
+the number of octets would produce only a single line.\n\
+\n\
+If octets_per_line is zero then a single string is returned,\n\
+(no line splitting is performed). This is the default.\n\
+\n\
+The separator string is used to separate each octet. If None\n\
+it will be as if the empty string had been passed and no\n\
+separator will be used. This is the default.\n\
+");
+
 static PyObject *
 cert_data_to_hex(PyObject *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"data", "octets_per_line", "separator", NULL};
     PyObject *obj = NULL;
-    int octets_per_line = -1;
-    char *separator = NULL;
+    int octets_per_line = 0;
+    char *separator = "";
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|is:cert_data_to_hex", kwlist, 
+    TraceMethodEnter("cert_data_to_hex", self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|iz:cert_data_to_hex", kwlist,
                                      &obj, &octets_per_line, &separator))
-        return NULL; 
+        return NULL;
 
     return obj_to_hex(obj, octets_per_line, separator);
+}
+
+PyDoc_STRVAR(read_hex_doc,
+"read_hex(input, separators=\" ,:\\t\\n\") -> buffer\n\
+\n\
+:Parameters:\n\
+    input : string\n\
+        string containing hexadecimal data\n\
+    separators : string or None\n\
+        string containing set of separator characters\n\
+        Any character encountered during parsing which is in\n\
+        this string will be skipped and considered a separator\n\
+        between pairs of hexadecimal characters.\n\
+\n\
+\n\
+Parse a string containing hexadecimal data and return a buffer\n\
+object containing the binary octets. Each octet in the string is\n\
+represented as a pair of case insensitive hexadecimal characters\n\
+(0123456789abcdef). Each octet must be a pair of\n\
+characters. Octets may optionally be preceded by 0x or 0X. Octets\n\
+may be separated by separator characters specified in the\n\
+separators string. The separators string is a set of\n\
+characters. Any character in the separators character set will be\n\
+ignored when it occurs between octets. If no separators should be\n\
+considered then pass an empty string.\n\
+\n\
+Using the default separators each of these strings is valid input\n\
+representing the same 8 octet sequence:\n\
+\n\
+01, 23, 45, 67, 89, ab, cd, ef\n\
+01, 23, 45, 67, 89, AB, CD, EF\n\
+0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef\n\
+01:23:45:67:89:ab:cd:ef\n\
+0123456789abcdef\n\
+01 23 45 67 89 ab cd ef\n\
+0x010x230x450x670x890xab0xcd0xef\n\
+");
+static PyObject *
+read_hex(PyObject *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"input", "separators", NULL};
+    const char *input;
+    const char *separators = " ,:\t\n";
+    size_t input_len, separators_len;
+    Py_ssize_t n_octets;
+    unsigned char octet, *data, *dst;
+    const char *src, *input_end;
+    const char *sep, *separators_end;
+    PyObject *py_out_buf;
+
+    TraceMethodEnter("read_hex", self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "s|s:read_hex", kwlist,
+                                     &input, &separators))
+        return NULL;
+
+    input_len = strlen(input);
+    src = input;
+    input_end = input + input_len;
+    separators_len = strlen(separators);
+    n_octets = 0;
+
+    /*
+     * The maximum number of octets is half the string length
+     * because they must occur in pairs. If there are separators
+     * in the string then the number of octets will be less than
+     * half. Thus len/2 is an upper bound.
+     */
+    if ((data = PyMem_Malloc(input_len/2)) == NULL) {
+        return PyErr_NoMemory();
+    }
+    dst = data;
+
+    separators_end = separators + separators_len;
+    while (src < input_end) {
+        for (; *src; src++) {
+            for (sep = separators; sep < separators_end && *src != *sep; sep++);
+            if (sep == separators_end) break;
+        }
+        if (!*src) break;
+        if (src[0] == '0' && (tolower(src[1]) == 'x')) src +=2; /* skip 0x or 0X */
+        octet = 0;
+        switch (tolower(src[0])) {
+        case '0': octet = 0x0 << 4; break;
+        case '1': octet = 0x1 << 4; break;
+        case '2': octet = 0x2 << 4; break;
+        case '3': octet = 0x3 << 4; break;
+        case '4': octet = 0x4 << 4; break;
+        case '5': octet = 0x5 << 4; break;
+        case '6': octet = 0x6 << 4; break;
+        case '7': octet = 0x7 << 4; break;
+        case '8': octet = 0x8 << 4; break;
+        case '9': octet = 0x9 << 4; break;
+        case 'a': octet = 0xa << 4; break;
+        case 'b': octet = 0xb << 4; break;
+        case 'c': octet = 0xc << 4; break;
+        case 'd': octet = 0xd << 4; break;
+        case 'e': octet = 0xe << 4; break;
+        case 'f': octet = 0xf << 4; break;
+        default:
+            PyMem_Free(data);
+            PyErr_Format(PyExc_ValueError, "invalid hexadecimal string beginning at offset %d \"%s\"",
+                         src - input, src);
+            return NULL;
+        }
+        switch (tolower(src[1])) {
+        case '0': octet |= 0x0; break;
+        case '1': octet |= 0x1; break;
+        case '2': octet |= 0x2; break;
+        case '3': octet |= 0x3; break;
+        case '4': octet |= 0x4; break;
+        case '5': octet |= 0x5; break;
+        case '6': octet |= 0x6; break;
+        case '7': octet |= 0x7; break;
+        case '8': octet |= 0x8; break;
+        case '9': octet |= 0x9; break;
+        case 'a': octet |= 0xa; break;
+        case 'b': octet |= 0xb; break;
+        case 'c': octet |= 0xc; break;
+        case 'd': octet |= 0xd; break;
+        case 'e': octet |= 0xe; break;
+        case 'f': octet |= 0xf; break;
+        default:
+            PyMem_Free(data);
+            PyErr_Format(PyExc_ValueError, "invalid hexadecimal string beginning at offset %d \"%s\"",
+                         src - input, src);
+            return NULL;
+        }
+        src += 2;
+        data[n_octets++] = octet;
+    }
+
+    if ((py_out_buf = PyString_FromStringAndSize((char *)data, n_octets)) == NULL) {
+        PyMem_Free(data);
+        return NULL;
+    }
+    PyMem_Free(data);
+
+    return py_out_buf;
 }
 
 static SECStatus
@@ -464,7 +818,7 @@ sec_context_specific_str(SECItem *item)
     } else {
         tmp = *item;
         if (sec_strip_tag_and_length(&tmp) == SECSuccess) {
-            if ((hex_str = raw_data_to_hex(tmp.data, tmp.len, 0, NULL))) {
+            if ((hex_str = raw_data_to_hex(tmp.data, tmp.len, 0, HEX_SEPARATOR_DEFAULT))) {
                 str = PyString_FromFormat("[%d] %s", type, PyString_AsString(hex_str));
                 Py_DECREF(hex_str);
             }
@@ -489,7 +843,7 @@ sec_any_str(SECItem *item)
 	    return sec_universal_item_str(item);
 	    break;
 	default:
-	    return raw_data_to_hex(item->data, item->len, 0, NULL);
+	    return raw_data_to_hex(item->data, item->len, 0, HEX_SEPARATOR_DEFAULT);
 	}
     }
     return PyString_FromString("(null)");
@@ -508,7 +862,7 @@ sec_set_str_list(SECItem *item)
     PyObject *py_item = NULL;
 
     if (!constructed) {
-        return raw_data_to_hex(item->data, item->len, 0, NULL);
+        return raw_data_to_hex(item->data, item->len, 0, HEX_SEPARATOR_DEFAULT);
     }
 
     if (sec_strip_tag_and_length(&stripped_item) != SECSuccess)
@@ -516,7 +870,7 @@ sec_set_str_list(SECItem *item)
 
     if ((py_items = PyList_New(0)) == NULL)
         return NULL;
-    
+
     if (type == SEC_ASN1_SET)
     	label = "Set ";
     else if (type == SEC_ASN1_SEQUENCE)
@@ -557,7 +911,7 @@ static PyObject *
 sec_boolean_str(SECItem *item)
 {
     int val = 0;
-    
+
     if (item->data && item->len) {
 	val = item->data[0];
     }
@@ -589,7 +943,7 @@ sec_integer_str(SECItem *item)
     if (!item || !item->len || !item->data) {
         str = PyString_FromFormat("(null)");
     } else if (item->len > 4) {
-        str = raw_data_to_hex(item->data, item->len, 0, NULL);
+        str = raw_data_to_hex(item->data, item->len, 0, HEX_SEPARATOR_DEFAULT);
     } else {
 	ival = DER_GetInteger(item);
         str = PyString_FromFormat("%d (0x%x)", ival, ival);
@@ -623,15 +977,15 @@ sec_string_str(SECItem *item)
 
 /* This function does NOT expect a DER type and length. */
 static PyObject *
-sec_oid_str(SECItem *oid)
+sec_oid_str_by_secitem(SECItem *oid)
 {
     SECOidData *oiddata;
     char *oidString = NULL;
     PyObject *py_oid_str = NULL;
-    
+
     if ((oiddata = SECOID_FindOID(oid)) != NULL) {
 	return PyString_FromString(oiddata->desc);
-    } 
+    }
     if ((oidString = CERT_GetOidString(oid)) != NULL) {
         py_oid_str = PyString_FromString(oidString);
 	PR_smprintf_free(oidString);
@@ -647,7 +1001,7 @@ sec_encoded_oid_str(SECItem *item)
     SECItem stripped_item = *item;
 
     if (sec_strip_tag_and_length(&stripped_item) == SECSuccess)
-	str = sec_oid_str(&stripped_item);
+	str = sec_oid_str_by_secitem(&stripped_item);
 
     return str;
 }
@@ -656,7 +1010,7 @@ static PyObject *
 sec_utc_time_str(SECItem *item)
 {
     PRTime pr_time = 0;
-    PRExplodedTime exploded_time; 
+    PRExplodedTime exploded_time;
     char time_str[100];
 
     if ((DER_UTCTimeToTime(&pr_time, item) != SECSuccess))
@@ -672,7 +1026,7 @@ static PyObject *
 sec_generalized_time_str(SECItem *item)
 {
     PRTime pr_time = 0;
-    PRExplodedTime exploded_time; 
+    PRExplodedTime exploded_time;
     char time_str[100];
 
     if ((DER_GeneralizedTimeToTime(&pr_time, item) != SECSuccess))
@@ -706,7 +1060,7 @@ static PyObject *
 sec_time_choice_str(SECItem *item)
 {
     PRTime pr_time = 0;
-    PRExplodedTime exploded_time; 
+    PRExplodedTime exploded_time;
     char time_str[100];
 
     pr_time = sec_time_choice(item);
@@ -723,7 +1077,7 @@ sec_octet_str(SECItem *item)
     SECItem stripped_item = *item;
 
     if (sec_strip_tag_and_length(&stripped_item) == SECSuccess)
-        str = raw_data_to_hex(item->data, item->len, 0, NULL);
+        str = raw_data_to_hex(item->data, item->len, 0, HEX_SEPARATOR_DEFAULT);
 
     return str;
 }
@@ -741,7 +1095,7 @@ sec_bit_str(SECItem *item)
     unused_bits = *stripped_item.data++;
     stripped_item.len--;
 
-    str = raw_data_to_hex(stripped_item.data, stripped_item.len, 0, NULL);
+    str = raw_data_to_hex(stripped_item.data, stripped_item.len, 0, HEX_SEPARATOR_DEFAULT);
 
     if (unused_bits) {
 	PyString_ConcatAndDel(&str, PyString_FromFormat("(%d least significant bits unused)", unused_bits));
@@ -763,7 +1117,7 @@ sec_bmp_str(SECItem *item)
     if (sec_strip_tag_and_length(&stripped_item) != SECSuccess)
 	goto loser;
 
-    if (stripped_item.len % 2) 
+    if (stripped_item.len % 2)
     	goto loser;
 
     len = (int)(stripped_item.len / 2);
@@ -785,7 +1139,7 @@ sec_bmp_str(SECItem *item)
     return str;
 
 loser:
-    str = raw_data_to_hex(stripped_item.data, stripped_item.len, 0, NULL);
+    str = raw_data_to_hex(stripped_item.data, stripped_item.len, 0, HEX_SEPARATOR_DEFAULT);
     if (tmp_item.data)
 	PORT_Free(tmp_item.data);
     return str;
@@ -804,7 +1158,7 @@ sec_universal_str(SECItem *item)
     if (sec_strip_tag_and_length(&stripped_item) != SECSuccess)
 	goto loser;
 
-    if (stripped_item.len % 4) 
+    if (stripped_item.len % 4)
     	goto loser;
 
     len = (int)(stripped_item.len / 4);
@@ -826,7 +1180,7 @@ sec_universal_str(SECItem *item)
     return str;
 
 loser:
-    str = raw_data_to_hex(stripped_item.data, stripped_item.len, 0, NULL);
+    str = raw_data_to_hex(stripped_item.data, stripped_item.len, 0, HEX_SEPARATOR_DEFAULT);
     if (tmp_item.data)
 	PORT_Free(tmp_item.data);
     return str;
@@ -868,7 +1222,7 @@ sec_universal_item_str(SECItem *item)
     case SEC_ASN1_UNIVERSAL_STRING:
         return sec_universal_str(item);
     default:
-        return raw_data_to_hex(item->data, item->len, 0, NULL);
+        return raw_data_to_hex(item->data, item->len, 0, HEX_SEPARATOR_DEFAULT);
     }
     Py_RETURN_NONE;
 }
@@ -878,7 +1232,7 @@ get_algorithm_id_str(SECAlgorithmID *a)
 {
     PyObject *str = NULL;
 
-    if ((str = sec_oid_str(&a->algorithm)) == NULL)
+    if ((str = sec_oid_str_by_secitem(&a->algorithm)) == NULL)
         Py_RETURN_NONE;
 
     if ((a->parameters.len == 0) ||
@@ -888,7 +1242,7 @@ get_algorithm_id_str(SECAlgorithmID *a)
 	/* Print args to algorithm */
         PyObject *hex_args = NULL;
 
-        if ((hex_args = raw_data_to_hex(a->parameters.data, a->parameters.len, 0, NULL)) != NULL) {
+        if ((hex_args = raw_data_to_hex(a->parameters.data, a->parameters.len, 0, HEX_SEPARATOR_DEFAULT)) != NULL) {
             PyString_ConcatAndDel(&str, hex_args);
         }
     }
@@ -971,24 +1325,6 @@ cert_trust_flags_str(unsigned int flags)
     return py_flags;
 }
 
-static PyObject *
-data_to_buffer(unsigned char *data, Py_ssize_t len)
-{
-    PyObject *buf = NULL;
-    Py_ssize_t buf_len;
-    void* raw_buffer;
-
-    if ((buf = PyBuffer_New(len)) == NULL)
-        return NULL;
-
-    if (PyObject_AsWriteBuffer(buf, &raw_buffer, &buf_len) || buf_len < len) {
-        Py_DECREF(buf);
-        return NULL;
-    }
-
-    memcpy(raw_buffer, data, len);
-    return buf;
-}
 
 /* ========================================================================== */
 /* =============================== SecItem Class ============================ */
@@ -1043,12 +1379,42 @@ SecItem_dealloc(SecItem* self)
 }
 
 PyDoc_STRVAR(SecItem_doc,
-"DER encoded data. Used internally by NSS");
-
+"SecItem(data=None)\n\
+\n\
+:Parameters:\n\
+    data : any read buffer compatible object (e.g. buffer or string)\n\
+        raw data to initialize from\n\
+\n\
+Encoded data. Used internally by NSS\n\
+");
 static int
 SecItem_init(SecItem *self, PyObject *args, PyObject *kwds)
 {
+    static char *kwlist[] = {"data", NULL};
+    const void *buffer = NULL;
+    Py_ssize_t buffer_len;
+
     TraceMethodEnter("SecItem_init", self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|z#:SecItem", kwlist, &buffer, &buffer_len))
+        return -1;
+
+    if (buffer) {
+        self->kind = SECITEM_buffer;
+        self->item.type = siBuffer;
+        self->item.len = buffer_len;
+        if ((self->item.data = PyMem_MALLOC(buffer_len)) == NULL) {
+            PyErr_Format(PyExc_MemoryError, "not enough memory to copy buffer of size %d into SecItem",
+                         buffer_len);
+            return -1;
+        }
+        memmove(self->item.data, buffer, buffer_len);
+    } else {                    /* empty buffer */
+        self->kind = SECITEM_buffer;
+        self->item.type = siBuffer;
+        self->item.len = 0;
+        self->item.data = NULL;
+    }
 
     return 0;
 }
@@ -1069,18 +1435,19 @@ SecItem_str(SecItem *self)
     case SECITEM_dist_name:
         {
             char *name;
-            
+
             if ((name = CERT_DerNameToAscii(&self->item)) == NULL) {
                 return set_nspr_error(NULL);
             }
             return_value = PyString_FromString(name);
             PORT_Free(name);
-        }     
+        }
         break;
     case SECITEM_algorithm:
-        return sec_oid_str(&self->item);
+        return sec_oid_str_by_secitem(&self->item);
     default:
-        return_value =  PyString_Encode((char *)self->item.data, self->item.len, "hex", NULL);
+        return_value =  obj_to_hex((PyObject *)self, 0, HEX_SEPARATOR_DEFAULT);
+
         break;
     }
     return return_value;
@@ -1275,7 +1642,7 @@ SignatureAlgorithm_str(SignatureAlgorithm *self)
 static PyTypeObject SignatureAlgorithmType = {
     PyObject_HEAD_INIT(NULL)
     0,						/* ob_size */
-    "nss.nss.SignatureAlgorithm",			/* tp_name */
+    "nss.nss.SignatureAlgorithm",		/* tp_name */
     sizeof(SignatureAlgorithm),			/* tp_basicsize */
     0,						/* tp_itemsize */
     (destructor)SignatureAlgorithm_dealloc,	/* tp_dealloc */
@@ -1435,6 +1802,8 @@ KEYPQGParams_str(KEYPQGParams *self)
     PyObject *args = NULL;
     PyObject *str = NULL;
 
+    TraceMethodEnter("KEYPQGParams_str", self);
+
     if ((fmt = PyString_FromString("prime(p)=%s subprime(q)=%s base(g)=%s")) == NULL)
         return NULL;
     if ((args = PyTuple_New(3)) == NULL)
@@ -1445,7 +1814,7 @@ KEYPQGParams_str(KEYPQGParams *self)
     PyTuple_SET_ITEM(args, 2, PyObject_Str(self->py_base));
 
     str = PyString_Format(fmt, args);
-                          
+
     Py_DECREF(fmt);
     Py_DECREF(args);
     return str;
@@ -1560,8 +1929,10 @@ RSAPublicKey_format_lines(RSAPublicKey *self, PyObject *args, PyObject *kwds)
     int i;
     Py_ssize_t len;
 
+    TraceMethodEnter("RSAPublicKey_format_lines", self);
+
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i:format_lines", kwlist, &level))
-        return NULL; 
+        return NULL;
 
     if ((lines = PyList_New(0)) == NULL) {
         return NULL;
@@ -1571,7 +1942,7 @@ RSAPublicKey_format_lines(RSAPublicKey *self, PyObject *args, PyObject *kwds)
 
     if ((obj = RSAPublicKey_get_modulus(self, NULL)) == NULL)
         goto fail;
-    obj_lines = obj_to_hex(obj, -1, NULL);
+    obj_lines = obj_to_hex(obj, OCTETS_PER_LINE_DEFAULT, HEX_SEPARATOR_DEFAULT);
     Py_DECREF(obj);
 
     level += 1;
@@ -1593,6 +1964,8 @@ RSAPublicKey_format_lines(RSAPublicKey *self, PyObject *args, PyObject *kwds)
 static PyObject *
 RSAPublicKey_format(RSAPublicKey *self, PyObject *args, PyObject *kwds)
 {
+    TraceMethodEnter("RSAPublicKey_format", self);
+
     return format_from_lines((format_lines_func)RSAPublicKey_format_lines, (PyObject *)self, args, kwds);
 }
 
@@ -1600,6 +1973,8 @@ static PyObject *
 RSAPublicKey_str(RSAPublicKey *self)
 {
     PyObject *py_formatted_result = NULL;
+
+    TraceMethodEnter("RSAPublicKey_str", self);
 
     py_formatted_result =  RSAPublicKey_format(self, empty_tuple, NULL);
     return py_formatted_result;
@@ -1812,6 +2187,8 @@ DSAPublicKey_str(DSAPublicKey *self)
     PyObject *args = NULL;
     PyObject *str = NULL;
 
+    TraceMethodEnter("DSAPublicKey_str", self);
+
     if ((fmt = PyString_FromString("pqg_params=[%s] public_value=%s")) == NULL)
         return NULL;
     if ((args = PyTuple_New(2)) == NULL)
@@ -1821,7 +2198,7 @@ DSAPublicKey_str(DSAPublicKey *self)
     PyTuple_SET_ITEM(args, 1, PyObject_Str(self->py_public_value));
 
     str = PyString_Format(fmt, args);
-                          
+
     Py_DECREF(fmt);
     Py_DECREF(args);
     return str;
@@ -1933,8 +2310,10 @@ SignedData_format_lines(SignedData *self, PyObject *args, PyObject *kwds)
     int i;
     Py_ssize_t len;
 
+    TraceMethodEnter("SignedData_format_lines", self);
+
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i:format_lines", kwlist, &level))
-        return NULL; 
+        return NULL;
 
     if ((lines = PyList_New(0)) == NULL) {
         return NULL;
@@ -1949,7 +2328,7 @@ SignedData_format_lines(SignedData *self, PyObject *args, PyObject *kwds)
 
     if ((obj = SignedData_get_signature(self, NULL)) == NULL)
         goto fail;
-    obj_lines = obj_to_hex(obj, -1, NULL);
+    obj_lines = obj_to_hex(obj, OCTETS_PER_LINE_DEFAULT, HEX_SEPARATOR_DEFAULT);
     Py_DECREF(obj);
 
     level += 1;
@@ -1971,6 +2350,8 @@ SignedData_format_lines(SignedData *self, PyObject *args, PyObject *kwds)
 static PyObject *
 SignedData_format(SignedData *self, PyObject *args, PyObject *kwds)
 {
+    TraceMethodEnter("SignedData_format", self);
+
     return format_from_lines((format_lines_func)SignedData_format_lines, (PyObject *)self, args, kwds);
 }
 
@@ -2008,7 +2389,7 @@ SignedData_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     if ((self->arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE)) == NULL ) {
         return PyErr_NoMemory();
     }
-    
+
     memset(&self->signed_data, 0, sizeof(self->signed_data));
 
     TraceObjNewLeave("SignedData_new", self);
@@ -2189,8 +2570,10 @@ PublicKey_format_lines(PublicKey *self, PyObject *args, PyObject *kwds)
     Py_ssize_t len;
     PyObject *tmp_args = NULL;
 
+    TraceMethodEnter("PublicKey_format_lines", self);
+
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i:format_lines", kwlist, &level))
-        return NULL; 
+        return NULL;
 
     if ((lines = PyList_New(0)) == NULL)
         goto fail;
@@ -2236,6 +2619,8 @@ PublicKey_format_lines(PublicKey *self, PyObject *args, PyObject *kwds)
 static PyObject *
 PublicKey_format(PublicKey *self, PyObject *args, PyObject *kwds)
 {
+    TraceMethodEnter("PublicKey_format", self);
+
     return format_from_lines((format_lines_func)PublicKey_format_lines, (PyObject *)self, args, kwds);
 }
 
@@ -2437,8 +2822,10 @@ SubjectPublicKeyInfo_format_lines(SubjectPublicKeyInfo *self, PyObject *args, Py
     PublicKey *py_public_key = NULL;
     PyObject *tmp_args = NULL;
 
+    TraceMethodEnter("SubjectPublicKeyInfo_format_lines", self);
+
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i:format_lines", kwlist, &level))
-        return NULL; 
+        return NULL;
 
     if ((lines = PyList_New(0)) == NULL) {
         return NULL;
@@ -2478,6 +2865,8 @@ SubjectPublicKeyInfo_format_lines(SubjectPublicKeyInfo *self, PyObject *args, Py
 static PyObject *
 SubjectPublicKeyInfo_format(SubjectPublicKeyInfo *self, PyObject *args, PyObject *kwds)
 {
+    TraceMethodEnter("SubjectPublicKeyInfo_format", self);
+
     return format_from_lines((format_lines_func)SubjectPublicKeyInfo_format_lines, (PyObject *)self, args, kwds);
 }
 
@@ -2634,20 +3023,20 @@ cert_distnames_as_CERTDistNames(PyObject *py_distnames)
         PyErr_NoMemory();
         return NULL;
     }
-    
+
     /* allocate the header structure */
     if ((names = (CERTDistNames *)PORT_ArenaAlloc(arena, sizeof(CERTDistNames))) == NULL) {
         PORT_FreeArena(arena, PR_FALSE);
         PyErr_NoMemory();
         return NULL;
     }
-    
+
     /* initialize the header struct */
     names->arena = arena;
     names->head = NULL;
     names->nnames = PySequence_Size(py_distnames);
     names->names = NULL;
-    
+
     /* construct the array from the list */
     if (names->nnames) {
 	names->names = (SECItem *)PORT_ArenaAlloc(arena, names->nnames * sizeof(SECItem));
@@ -2657,7 +3046,7 @@ cert_distnames_as_CERTDistNames(PyObject *py_distnames)
             PyErr_NoMemory();
             return NULL;
 	}
-    
+
 	for (i = 0; i < names->nnames; i++) {
             py_sec_item = (SecItem *)PySequence_GetItem(py_distnames, i);
             if ((!PySecItem_Check(py_sec_item)) || (py_sec_item->kind != SECITEM_dist_name)) {
@@ -2897,7 +3286,7 @@ Certificate_get_version(Certificate *self, void *closure)
     if (self->cert->version.len) {
         version = DER_GetInteger(&self->cert->version);
     }
-        
+
     return PyInt_FromLong(version);
 }
 
@@ -2909,7 +3298,7 @@ Certificate_get_serial_number(Certificate *self, void *closure)
     if (self->cert->serialNumber.len) {
         serial_number = DER_GetInteger(&self->cert->serialNumber);
     }
-        
+
     return PyInt_FromLong(serial_number);
 }
 
@@ -2931,13 +3320,10 @@ Certificate_get_signed_data(Certificate *self, void *closure)
 static PyObject *
 Certificate_get_der_data(Certificate *self, void *closure)
 {
-    PyObject *sig_buf = NULL;
     SECItem der;
 
     der = self->cert->derCert;
-    sig_buf = data_to_buffer(der.data, der.len);
-
-    return sig_buf;
+    return PyString_FromStringAndSize((char *)der.data, der.len);
 }
 
 static PyObject *
@@ -3046,6 +3432,8 @@ May be one of the following:\n\
 static PyObject *
 Certificate_find_kea_type(Certificate *self, PyObject *args)
 {
+    TraceMethodEnter("Certificate_find_kea_type", self);
+
     return PyInt_FromLong(NSS_FindCertKEAType(self->cert));
 }
 
@@ -3172,7 +3560,7 @@ Certificate_check_valid_times(Certificate *self, PyObject *args, PyObject *kwds)
     TraceMethodEnter("check_valid_times", self);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|Oi:check_valid_times", kwlist, &py_time, &allow_override))
-        return NULL; 
+        return NULL;
 
     if (py_time) {
         if (PyFloat_Check(py_time)) {
@@ -3286,7 +3674,7 @@ Certificate_verify_now(Certificate *self, PyObject *args)
                                   required_usages, pin_args, &returned_usages) != SECSuccess) {
         Py_DECREF(pin_args);
         return set_nspr_error(NULL);
-    } 
+    }
 
     Py_DECREF(pin_args);
 
@@ -3307,8 +3695,10 @@ Certificate_format_lines(Certificate *self, PyObject *args, PyObject *kwds)
     Py_ssize_t len;
     PyObject *tmp_args = NULL;
 
+    TraceMethodEnter("Certificate_format_lines", self);
+
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i:format_lines", kwlist, &level))
-        return NULL; 
+        return NULL;
 
     if ((lines = PyList_New(0)) == NULL)
         goto fail;
@@ -3415,11 +3805,11 @@ Certificate_format_lines(Certificate *self, PyObject *args, PyObject *kwds)
 
     if ((obj = Certificate_get_der_data(self, NULL)) == NULL)
         goto fail;
-    
+
     if ((tmp_args = Py_BuildValue("(O)", obj)) == NULL)
         goto fail;
     Py_DECREF(obj);
-    if ((obj = cert_md5_digest(NULL, tmp_args)) == NULL)
+    if ((obj = pk11_md5_digest(NULL, tmp_args)) == NULL)
         goto fail;
     Py_DECREF(tmp_args);
 
@@ -3441,11 +3831,11 @@ Certificate_format_lines(Certificate *self, PyObject *args, PyObject *kwds)
 
     if ((obj = Certificate_get_der_data(self, NULL)) == NULL)
         goto fail;
-    
+
     if ((tmp_args = Py_BuildValue("(O)", obj)) == NULL)
         goto fail;
     Py_DECREF(obj);
-    if ((obj = cert_sha1_digest(NULL, tmp_args)) == NULL)
+    if ((obj = pk11_sha1_digest(NULL, tmp_args)) == NULL)
         goto fail;
     Py_DECREF(tmp_args);
 
@@ -3496,6 +3886,8 @@ Certificate_format_lines(Certificate *self, PyObject *args, PyObject *kwds)
 static PyObject *
 Certificate_format(Certificate *self, PyObject *args, PyObject *kwds)
 {
+    TraceMethodEnter("Certificate_format", self);
+
     return format_from_lines((format_lines_func)Certificate_format_lines, (PyObject *)self, args, kwds);
 }
 
@@ -3757,6 +4149,8 @@ cert_get_default_certdb(PyObject *self, PyObject *args)
 {
     CERTCertDBHandle *cert_handle;
 
+    TraceMethodEnter("cert_get_default_certdb", self);
+
     if ((cert_handle = CERT_GetDefaultCertDB()) == NULL)
         Py_RETURN_NONE;
 
@@ -3795,7 +4189,7 @@ cert_get_cert_nicknames(PyObject *self, PyObject *args)
     PyObject *py_nicknames = NULL;
     PyObject *py_nickname = NULL;
     int i, len;
-    
+
     TraceMethodEnter("cert_get_cert_nicknames", self);
 
     argc = PyTuple_Size(args);
@@ -3825,7 +4219,7 @@ cert_get_cert_nicknames(PyObject *self, PyObject *args)
     if ((cert_nicknames = CERT_GetCertNicknames(((CertDB *)py_certdb)->handle, what, pin_args)) == NULL) {
         Py_DECREF(pin_args);
         return set_nspr_error(NULL);
-    } 
+    }
 
     Py_DECREF(pin_args);
 
@@ -3848,7 +4242,62 @@ cert_get_cert_nicknames(PyObject *self, PyObject *args)
     return py_nicknames;
 }
 
-PyDoc_STRVAR(cert_md5_digest_doc,
+PyDoc_STRVAR(pk11_hash_buf_doc,
+"hash_buf(hash_alg, data) --> digest\n\
+\n\
+:Parameters:\n\
+    hash_alg : int\n\
+        hash algorithm enumeration (SEC_OID_*)\n\
+        e.g.: SEC_OID_MD5, SEC_OID_SHA1, SEC_OID_SHA256, SEC_OID_SHA512, etc.\n\
+    data : buffer or string\n\
+        buffer the digest will be computed for\n\
+\n\
+Computes a digest according to the hash_alg type.\n\
+Return the digest data as buffer object.\n\
+\n\
+Note, if a hexidecimal string representation is desired then pass\n\
+result to data_to_hex()\n\
+");
+static PyObject *
+pk11_hash_buf(PyObject *self, PyObject *args)
+{
+    unsigned long hash_alg;
+    unsigned char *in_data = NULL;
+    Py_ssize_t in_data_len = 0;
+    unsigned int hash_len;
+    PyObject *py_out_buf = NULL;
+    void *out_buf = NULL;
+    Py_ssize_t out_buf_len;
+
+    TraceMethodEnter("pk11_hash_buf", self);
+
+    if (!PyArg_ParseTuple(args, "kt#:hash_buf",
+                          &hash_alg, &in_data, &in_data_len)) {
+        return NULL;
+    }
+
+    if ((hash_len = HASH_ResultLenByOidTag(hash_alg)) == 0) {
+        return set_nspr_error("unable to determine resulting hash length for hash_alg = %s",
+                              sec_oid_tag_str(hash_alg));
+    }
+
+    out_buf_len = hash_len;
+
+    if ((py_out_buf = PyString_FromStringAndSize(NULL, out_buf_len)) == NULL) {
+        return NULL;
+    }
+
+    if ((out_buf = PyString_AsString(py_out_buf)) == NULL) {
+        return NULL;
+    }
+
+    if (PK11_HashBuf(hash_alg, out_buf, in_data, in_data_len) != SECSuccess)
+        return set_nspr_error(NULL);
+
+    return py_out_buf;
+}
+
+PyDoc_STRVAR(pk11_md5_digest_doc,
 "md5_digest(data) --> digest\n\
 \n\
 :Parameters:\n\
@@ -3860,42 +4309,36 @@ Returns 16 octet MD5 digest data as buffer object.\n\
 Note, if a hexidecimal string representation is desired then pass\n\
 result to data_to_hex()\n\
 ");
-
 static PyObject *
-cert_md5_digest(PyObject *self, PyObject *args)
+pk11_md5_digest(PyObject *self, PyObject *args)
 {
-    PyObject *data_buf = NULL; 
-    unsigned char *raw_data = NULL;
-    Py_ssize_t raw_data_len = 0;
-    PK11Context *md5  = NULL;
-    unsigned char digest[MD5_LENGTH];
-    unsigned int digest_len = 0;
+    unsigned char *in_data = NULL;
+    Py_ssize_t in_data_len = 0;
+    PyObject *py_out_buf = NULL;
+    void *out_buf;
 
-    if (!PyArg_ParseTuple(args, "O!:cert_md5_digest", &PyBuffer_Type, &data_buf)) {
+    TraceMethodEnter("pk11_md5_digest", self);
+
+    if (!PyArg_ParseTuple(args, "t#:md5_digest", &in_data, &in_data_len)) {
         return NULL;
     }
 
-    if (PyObject_AsReadBuffer(data_buf, (void *)&raw_data, &raw_data_len))
+    if ((py_out_buf = PyString_FromStringAndSize(NULL, MD5_LENGTH)) == NULL) {
         return NULL;
+    }
 
-    if ((md5  = PK11_CreateDigestContext (SEC_OID_MD5)) == NULL)
-        return set_nspr_error(NULL);
-        
-    if (PK11_DigestBegin (md5) != SECSuccess)
-        return set_nspr_error(NULL);
+    if ((out_buf = PyString_AsString(py_out_buf)) == NULL) {
+        return NULL;
+    }
 
-    if (PK11_DigestOp (md5,  (unsigned char*)raw_data, raw_data_len) != SECSuccess)
+    if (PK11_HashBuf(SEC_OID_MD5, out_buf, in_data, in_data_len) != SECSuccess) {
         return set_nspr_error(NULL);
+    }
 
-    if (PK11_DigestFinal (md5,  digest,  &digest_len,  MD5_LENGTH) != SECSuccess)
-        return set_nspr_error(NULL);
-
-    PK11_DestroyContext (md5,  PR_TRUE);
-  
-    return data_to_buffer(digest, digest_len);
+    return py_out_buf;
 }
 
-PyDoc_STRVAR(cert_sha1_digest_doc,
+PyDoc_STRVAR(pk11_sha1_digest_doc,
 "sha1_digest(data) --> digest\n\
 \n\
 :Parameters:\n\
@@ -3907,42 +4350,36 @@ Returns 20 octet SHA1 digest data as buffer object.\n\
 Note, if a hexidecimal string representation is desired then pass\n\
 result to data_to_hex()\n\
 ");
-
 static PyObject *
-cert_sha1_digest(PyObject *self, PyObject *args)
+pk11_sha1_digest(PyObject *self, PyObject *args)
 {
-    PyObject *data_buf = NULL; 
-    unsigned char *raw_data = NULL;
-    Py_ssize_t raw_data_len = 0;
-    PK11Context *sha1  = NULL;
-    unsigned char digest[SHA1_LENGTH];
-    unsigned int digest_len = 0;
+    unsigned char *in_data = NULL;
+    Py_ssize_t in_data_len = 0;
+    PyObject *py_out_buf = NULL;
+    void *out_buf;
 
-    if (!PyArg_ParseTuple(args, "O!:cert_sha1_digest", &PyBuffer_Type, &data_buf)) {
+    TraceMethodEnter("pk11_sha1_digest", self);
+
+    if (!PyArg_ParseTuple(args, "t#:sha1_digest", &in_data, &in_data_len)) {
         return NULL;
     }
 
-    if (PyObject_AsReadBuffer(data_buf, (void *)&raw_data, &raw_data_len))
+    if ((py_out_buf = PyString_FromStringAndSize(NULL, SHA1_LENGTH)) == NULL) {
         return NULL;
+    }
 
-    if ((sha1  = PK11_CreateDigestContext (SEC_OID_SHA1)) == NULL)
-        return set_nspr_error(NULL);
-        
-    if (PK11_DigestBegin (sha1) != SECSuccess)
-        return set_nspr_error(NULL);
+    if ((out_buf = PyString_AsString(py_out_buf)) == NULL) {
+        return NULL;
+    }
 
-    if (PK11_DigestOp (sha1,  (unsigned char*)raw_data, raw_data_len) != SECSuccess)
+    if (PK11_HashBuf(SEC_OID_SHA1, out_buf, in_data, in_data_len) != SECSuccess) {
         return set_nspr_error(NULL);
+    }
 
-    if (PK11_DigestFinal (sha1,  digest,  &digest_len,  SHA1_LENGTH) != SECSuccess)
-        return set_nspr_error(NULL);
-
-    PK11_DestroyContext (sha1,  PR_TRUE);
-  
-    return data_to_buffer(digest, digest_len);
+    return py_out_buf;
 }
 
-PyDoc_STRVAR(cert_sha256_digest_doc,
+PyDoc_STRVAR(pk11_sha256_digest_doc,
 "sha256_digest(data) --> digest\n\
 \n\
 :Parameters:\n\
@@ -3956,40 +4393,35 @@ result to data_to_hex()\n\
 ");
 
 static PyObject *
-cert_sha256_digest(PyObject *self, PyObject *args)
+pk11_sha256_digest(PyObject *self, PyObject *args)
 {
-    PyObject *data_buf = NULL; 
-    unsigned char *raw_data = NULL;
-    Py_ssize_t raw_data_len = 0;
-    PK11Context *sha256  = NULL;
-    unsigned char digest[SHA256_LENGTH];
-    unsigned int digest_len = 0;
+    unsigned char *in_data = NULL;
+    Py_ssize_t in_data_len = 0;
+    PyObject *py_out_buf = NULL;
+    void *out_buf;
 
-    if (!PyArg_ParseTuple(args, "O!:cert_sha256_digest", &PyBuffer_Type, &data_buf)) {
+    TraceMethodEnter("pk11_sha256_digest", self);
+
+    if (!PyArg_ParseTuple(args, "t#:sha256_digest", &in_data, &in_data_len)) {
         return NULL;
     }
 
-    if (PyObject_AsReadBuffer(data_buf, (void *)&raw_data, &raw_data_len))
+    if ((py_out_buf = PyString_FromStringAndSize(NULL, SHA256_LENGTH)) == NULL) {
         return NULL;
+    }
 
-    if ((sha256  = PK11_CreateDigestContext (SEC_OID_SHA256)) == NULL)
-        return set_nspr_error(NULL);
-        
-    if (PK11_DigestBegin (sha256) != SECSuccess)
-        return set_nspr_error(NULL);
+    if ((out_buf = PyString_AsString(py_out_buf)) == NULL) {
+        return NULL;
+    }
 
-    if (PK11_DigestOp (sha256,  (unsigned char*)raw_data, raw_data_len) != SECSuccess)
+    if (PK11_HashBuf(SEC_OID_SHA256, out_buf, in_data, in_data_len) != SECSuccess) {
         return set_nspr_error(NULL);
+    }
 
-    if (PK11_DigestFinal (sha256,  digest,  &digest_len,  SHA256_LENGTH) != SECSuccess)
-        return set_nspr_error(NULL);
-
-    PK11_DestroyContext (sha256,  PR_TRUE);
-  
-    return data_to_buffer(digest, digest_len);
+    return py_out_buf;
 }
 
-PyDoc_STRVAR(cert_sha512_digest_doc,
+PyDoc_STRVAR(pk11_sha512_digest_doc,
 "sha512_digest(data) --> digest\n\
 \n\
 :Parameters:\n\
@@ -4001,39 +4433,33 @@ Returns 64 octet SHA512 digest data as buffer object.\n\
 Note, if a hexidecimal string representation is desired then pass\n\
 result to data_to_hex()\n\
 ");
-
 static PyObject *
-cert_sha512_digest(PyObject *self, PyObject *args)
+pk11_sha512_digest(PyObject *self, PyObject *args)
 {
-    PyObject *data_buf = NULL; 
-    unsigned char *raw_data = NULL;
-    Py_ssize_t raw_data_len = 0;
-    PK11Context *sha512  = NULL;
-    unsigned char digest[SHA512_LENGTH];
-    unsigned int digest_len = 0;
+    unsigned char *in_data = NULL;
+    Py_ssize_t in_data_len = 0;
+    PyObject *py_out_buf = NULL;
+    void *out_buf;
 
-    if (!PyArg_ParseTuple(args, "O!:cert_sha512_digest", &PyBuffer_Type, &data_buf)) {
+    TraceMethodEnter("pk11_sha512_digest", self);
+
+    if (!PyArg_ParseTuple(args, "t#:sha512_digest", &in_data, &in_data_len)) {
         return NULL;
     }
 
-    if (PyObject_AsReadBuffer(data_buf, (void *)&raw_data, &raw_data_len))
+    if ((py_out_buf = PyString_FromStringAndSize(NULL, SHA512_LENGTH)) == NULL) {
         return NULL;
+    }
 
-    if ((sha512  = PK11_CreateDigestContext (SEC_OID_SHA512)) == NULL)
-        return set_nspr_error(NULL);
-        
-    if (PK11_DigestBegin (sha512) != SECSuccess)
-        return set_nspr_error(NULL);
+    if ((out_buf = PyString_AsString(py_out_buf)) == NULL) {
+        return NULL;
+    }
 
-    if (PK11_DigestOp (sha512,  (unsigned char*)raw_data, raw_data_len) != SECSuccess)
+    if (PK11_HashBuf(SEC_OID_SHA512, out_buf, in_data, in_data_len) != SECSuccess) {
         return set_nspr_error(NULL);
+    }
 
-    if (PK11_DigestFinal (sha512,  digest,  &digest_len,  SHA512_LENGTH) != SECSuccess)
-        return set_nspr_error(NULL);
-
-    PK11_DestroyContext (sha512,  PR_TRUE);
-  
-    return data_to_buffer(digest, digest_len);
+    return py_out_buf;
 }
 
 /* ========================================================================== */
@@ -4083,8 +4509,10 @@ PyDoc_STRVAR(PK11Slot_is_hw_doc,
 Finds out whether a slot is implemented in hardware or software.\n\
 ");
 static PyObject *
-PK11Slot_is_hw(PK11Slot *self, PyObject *args, PyObject *kwds)
+PK11Slot_is_hw(PK11Slot *self, PyObject *args)
 {
+    TraceMethodEnter("PK11Slot_is_hw", self);
+
     if (PK11_IsHW(self->slot))
         Py_RETURN_TRUE;
     else
@@ -4098,8 +4526,10 @@ PyDoc_STRVAR(PK11Slot_is_present_doc,
 Finds out whether the token for a slot is available.\n\
 ");
 static PyObject *
-PK11Slot_is_present(PK11Slot *self, PyObject *args, PyObject *kwds)
+PK11Slot_is_present(PK11Slot *self, PyObject *args)
 {
+    TraceMethodEnter("PK11Slot_is_present", self);
+
     if (PK11_IsPresent(self->slot))
         Py_RETURN_TRUE;
     else
@@ -4113,8 +4543,10 @@ PyDoc_STRVAR(PK11Slot_is_read_only_doc,
 Finds out whether a slot is read-only.\n\
 ");
 static PyObject *
-PK11Slot_is_read_only(PK11Slot *self, PyObject *args, PyObject *kwds)
+PK11Slot_is_read_only(PK11Slot *self, PyObject *args)
 {
+    TraceMethodEnter("PK11Slot_is_read_only", self);
+
     if (PK11_IsReadOnly(self->slot))
         Py_RETURN_TRUE;
     else
@@ -4122,10 +4554,120 @@ PK11Slot_is_read_only(PK11Slot *self, PyObject *args, PyObject *kwds)
 
 }
 
+PyDoc_STRVAR(PK11Slot_get_best_wrap_mechanism_doc,
+"get_best_wrap_mechanism() -> mechanism\n\
+\n\
+Find the best key wrap mechanism for this slot.\n\
+");
+static PyObject *
+PK11Slot_get_best_wrap_mechanism(PK11Slot *self, PyObject *args)
+{
+    CK_MECHANISM_TYPE mechanism;
+
+    TraceMethodEnter("PK11Slot_get_best_wrap_mechanism", self);
+
+    mechanism = PK11_GetBestWrapMechanism(self->slot);
+    return PyInt_FromLong(mechanism);
+}
+
+
+PyDoc_STRVAR(PK11Slot_get_best_key_length_doc,
+"get_best_key_length(mechanism) -> length\n\
+\n\
+:Parameters:\n\
+    mechanism : int\n\
+        key mechanism enumeration constant (CKM_*)\n\
+\n\
+Return the best key length for this slot and mechanism.\n\
+A zero result means that token knows how long the key should be,\n\
+the result is typically used with key_gen(), token_key_gen(), or\n\
+token_key_gen_with_flags()\n\
+");
+static PyObject *
+PK11Slot_get_best_key_length(PK11Slot *self, PyObject *args)
+{
+    unsigned long mechanism;
+    int length;
+
+    TraceMethodEnter("PK11Slot_get_best_key_length", self);
+
+    if (!PyArg_ParseTuple(args, "k:get_best_key_length", &mechanism))
+        return NULL;
+
+    length = PK11_GetBestKeyLength(self->slot, mechanism);
+    return PyInt_FromLong(length);
+}
+
+PyDoc_STRVAR(PK11Slot_key_gen_doc,
+"key_gen(mechanism, sec_param, key_size, [user_data1, ...]) -> PK11SymKey object\n\
+\n\
+:Parameters:\n\
+    mechanism : int\n\
+        key mechanism enumeration constant (CKM_*)\n\
+    key_param : SecItem object or None\n\
+        SecItem key parameters. None is also valid.\n\
+    key_size : int\n\
+        key length (use get_best_key_length())\n\
+    user_dataN : object ...\n\
+        zero or more caller supplied parameters which will\n\
+        be passed to the password callback function\n\
+\n\
+Generate a symmetric key.\n\
+");
+static PyObject *
+PK11Slot_key_gen(PK11Slot *self, PyObject *args)
+{
+    Py_ssize_t n_base_args = 3;
+    Py_ssize_t argc;
+    PyObject *parse_args = NULL;
+    PyObject *pin_args = NULL;
+    unsigned long mechanism;
+    int key_size;
+    SecItem *py_sec_param;
+    PK11SymKey *sym_key;
+
+    TraceMethodEnter("PK11Slot_key_gen", self);
+
+    argc = PyTuple_Size(args);
+    if (argc == n_base_args) {
+        parse_args = args;
+    } else {
+        parse_args = PyTuple_GetSlice(args, 0, n_base_args);
+    }
+
+    if (!PyArg_ParseTuple(parse_args, "kO&i:key_gen",
+                          &mechanism, SecItemOrNoneConvert, &py_sec_param, &key_size))
+        return NULL;
+
+    printf("py_sec_param = %p\n", py_sec_param);
+
+    pin_args = PyTuple_GetSlice(args, n_base_args, argc);
+    Py_INCREF(pin_args);
+
+    if ((sym_key = PK11_KeyGen(self->slot, mechanism, py_sec_param ? &py_sec_param->item : NULL,
+                               key_size, pin_args)) == NULL) {
+        if (parse_args != args) {
+            Py_DECREF(parse_args);
+        }
+        Py_DECREF(pin_args);
+        return set_nspr_error(NULL);
+    }
+
+    if (parse_args != args) {
+        Py_DECREF(parse_args);
+    }
+    Py_DECREF(pin_args);
+
+    return PyPK11SymKey_new_from_PK11SymKey(sym_key);
+}
+
 static PyMethodDef PK11Slot_methods[] = {
-    {"is_hw",        (PyCFunction)PK11Slot_is_hw,        METH_NOARGS, PK11Slot_is_hw_doc},
-    {"is_present",   (PyCFunction)PK11Slot_is_present,   METH_NOARGS, PK11Slot_is_present_doc},
-    {"is_read_only", (PyCFunction)PK11Slot_is_read_only, METH_NOARGS, PK11Slot_is_read_only_doc},
+    {"is_hw",                   (PyCFunction)PK11Slot_is_hw,                   METH_NOARGS,  PK11Slot_is_hw_doc},
+    {"is_present",              (PyCFunction)PK11Slot_is_present,              METH_NOARGS,  PK11Slot_is_present_doc},
+    {"is_read_only",            (PyCFunction)PK11Slot_is_read_only,            METH_NOARGS,  PK11Slot_is_read_only_doc},
+    {"get_best_wrap_mechanism", (PyCFunction)PK11Slot_get_best_wrap_mechanism, METH_NOARGS,  PK11Slot_get_best_wrap_mechanism_doc},
+    {"get_best_key_length",     (PyCFunction)PK11Slot_get_best_key_length,     METH_VARARGS, PK11Slot_get_best_key_length_doc},
+    {"key_gen",                 (PyCFunction)PK11Slot_key_gen,                 METH_VARARGS, PK11Slot_key_gen_doc},
     {NULL, NULL}  /* Sentinel */
 };
 
@@ -4164,9 +4706,9 @@ PK11Slot_init(PK11Slot *self, PyObject *args, PyObject *kwds)
 
     TraceMethodEnter("PK11Slot_init", self);
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O", kwlist, 
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O", kwlist,
                                      &arg1))
-        return -1; 
+        return -1;
 
     return 0;
 }
@@ -4228,6 +4770,585 @@ PK11Slot_new_from_slotinfo(PK11SlotInfo *slot)
     return (PyObject *) self;
 }
 
+/* ========================================================================== */
+/* =========================== PK11SymKey Class =========================== */
+/* ========================================================================== */
+
+/* ============================ Attribute Access ============================ */
+
+static PyObject *
+PK11SymKey_get_mechanism(PyPK11SymKey *self, void *closure)
+{
+    return PyInt_FromLong(PK11_GetMechanism(self->pk11_sym_key));
+}
+
+static
+PyGetSetDef PK11SymKey_getseters[] = {
+    {"mechanism",  (getter)PK11SymKey_get_mechanism,  (setter)NULL, "CK_MECHANISM_TYPE mechanism", NULL},
+    {NULL}  /* Sentinel */
+};
+
+static PyMemberDef PK11SymKey_members[] = {
+    {NULL}  /* Sentinel */
+};
+
+/* ============================== Class Methods ============================= */
+
+PyDoc_STRVAR(PK11SymKey_derive_doc,
+"derive(mechanism, sec_param, target, operation, key_size) -> PK11SymKey\n\
+\n\
+:Parameters:\n\
+    mechanism : int\n\
+        key mechanism enumeration constant (CKM_*)\n\
+    sec_param : SecItem object or None\n\
+        mechanism parameters or None.\n\
+    target : int\n\
+        key mechanism enumeration constant (CKM_*)\n\
+    operation : int\n\
+        type of operation. A (CKA_*) constant\n\
+        (e.g. CKA_ENCRYPT, CKA_DECRYPT, CKA_SIGN, CKA_VERIFY, CKA_DIGEST)\n\
+    key_size : int\n\
+        key size.\n\
+\n\
+Derive a new key from this key.\n\
+Return a key which can do exactly one operation, it is\n\
+ephemeral (session key).\n\
+");
+static PyObject *
+PK11SymKey_derive(PyPK11SymKey *self, PyObject *args)
+{
+    unsigned long mechanism;
+    SecItem *py_sec_param;
+    unsigned long target;
+    unsigned long operation;
+    int key_size;
+    PK11SymKey *derived_key = NULL;
+
+    TraceMethodEnter("PK11SymKey_derive", self);
+
+    if (!PyArg_ParseTuple(args, "kO&kki:derive",
+                          &mechanism, SecItemOrNoneConvert, &py_sec_param,
+                          &target, &operation, &key_size))
+        return NULL;
+
+    if ((derived_key = PK11_Derive(self->pk11_sym_key, mechanism,
+                                   py_sec_param ? &py_sec_param->item : NULL,
+                                   target, operation, key_size)) == NULL) {
+        return set_nspr_error(NULL);
+    }
+
+    return PyPK11SymKey_new_from_PK11SymKey(derived_key);
+}
+
+PyDoc_STRVAR(PK11SymKey_get_key_length_doc,
+"get_key_length() -> length\n\
+\n\
+Return the key length for this key.\n\
+");
+static PyObject *
+PK11SymKey_get_key_length(PyPK11SymKey *self, PyObject *args)
+{
+    int length;
+
+    TraceMethodEnter("PK11SymKey_get_key_length", self);
+
+    length = PK11_GetKeyLength(self->pk11_sym_key);
+    return PyInt_FromLong(length);
+}
+
+static PyObject *
+PK11SymKey_repr(PyPK11SymKey *self)
+{
+    return PyString_FromFormat("<%s object at %p>",
+                               self->ob_type->tp_name, self);
+}
+
+static PyObject *
+PK11SymKey_str(PyPK11SymKey *self)
+{
+    return PK11SymKey_repr(self);
+}
+
+static PyMethodDef PK11SymKey_methods[] = {
+    {"derive",         (PyCFunction)PK11SymKey_derive,           METH_VARARGS, PK11SymKey_derive_doc},
+    {"get_key_length", (PyCFunction)PK11SymKey_get_key_length,   METH_NOARGS,  PK11SymKey_get_key_length_doc},
+    {NULL, NULL}  /* Sentinel */
+};
+
+/* =========================== Class Construction =========================== */
+
+static void
+PK11SymKey_dealloc(PyPK11SymKey* self)
+{
+    TraceMethodEnter("PK11SymKey_dealloc", self);
+
+    if (self->pk11_sym_key)
+        PK11_FreeSymKey(self->pk11_sym_key);
+
+    self->ob_type->tp_free((PyObject*)self);
+}
+
+PyDoc_STRVAR(PK11SymKey_doc,
+"Holds a hash, encryption or signing context for multi-part operations.\n\
+");
+static int
+PK11SymKey_init(PyPK11SymKey *self, PyObject *args, PyObject *kwds)
+{
+    TraceMethodEnter("PK11SymKey_init", self);
+
+    return 0;
+}
+
+static PyTypeObject PK11SymKeyType = {
+    PyObject_HEAD_INIT(NULL)
+    0,						/* ob_size */
+    "nss.nss.PK11SymKey",			/* tp_name */
+    sizeof(PyPK11SymKey),			/* tp_basicsize */
+    0,						/* tp_itemsize */
+    (destructor)PK11SymKey_dealloc,		/* tp_dealloc */
+    0,						/* tp_print */
+    0,						/* tp_getattr */
+    0,						/* tp_setattr */
+    0,						/* tp_compare */
+    (reprfunc)PK11SymKey_repr,			/* tp_repr */
+    0,						/* tp_as_number */
+    0,						/* tp_as_sequence */
+    0,						/* tp_as_mapping */
+    0,						/* tp_hash */
+    0,						/* tp_call */
+    (reprfunc)PK11SymKey_str,			/* tp_str */
+    0,						/* tp_getattro */
+    0,						/* tp_setattro */
+    0,						/* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,	/* tp_flags */
+    PK11SymKey_doc,				/* tp_doc */
+    0,						/* tp_traverse */
+    0,						/* tp_clear */
+    0,						/* tp_richcompare */
+    0,						/* tp_weaklistoffset */
+    0,						/* tp_iter */
+    0,						/* tp_iternext */
+    PK11SymKey_methods,				/* tp_methods */
+    PK11SymKey_members,				/* tp_members */
+    PK11SymKey_getseters,			/* tp_getset */
+    0,						/* tp_base */
+    0,						/* tp_dict */
+    0,						/* tp_descr_get */
+    0,						/* tp_descr_set */
+    0,						/* tp_dictoffset */
+    (initproc)PK11SymKey_init,			/* tp_init */
+    0,						/* tp_alloc */
+    0,/* NULL cannot be directly created */	/* tp_new */
+};
+
+static PyObject *
+PyPK11SymKey_new_from_PK11SymKey(PK11SymKey *pk11_sym_key)
+{
+    PyPK11SymKey *self = NULL;
+
+    TraceObjNewEnter("PyPK11SymKey_new_from_PK11SymKey", NULL);
+
+    if ((self = PyObject_NEW(PyPK11SymKey, &PK11SymKeyType)) == NULL)
+        return NULL;
+
+    self->pk11_sym_key = pk11_sym_key;
+
+    TraceObjNewLeave("PyPK11SymKey_new_from_PK11SymKey", self);
+    return (PyObject *) self;
+}
+
+/* ========================================================================== */
+/* ============================ PK11Context Class =========================== */
+/* ========================================================================== */
+
+/* ============================ Attribute Access ============================ */
+
+static
+PyGetSetDef PK11Context_getseters[] = {
+    {NULL}  /* Sentinel */
+};
+
+static PyMemberDef PK11Context_members[] = {
+    {NULL}  /* Sentinel */
+};
+
+/* ============================== Class Methods ============================= */
+
+PyDoc_STRVAR(PK11Context_digest_key_doc,
+"digest_key(sym_key)\n\
+\n\
+:Parameters:\n\
+    sym_key : PK11SymKey object\n\
+        symmetric key\n\
+\n\
+Continues a multiple-part message-digesting operation by digesting the\n\
+value of a secret key.\n\
+");
+static PyObject *
+PK11Context_digest_key(PyPK11Context *self, PyObject *args)
+{
+    PyPK11SymKey *py_sym_key;
+
+    TraceMethodEnter("PK11Context_digest_key", self);
+
+    if (!PyArg_ParseTuple(args, "O!:digest_key", &PK11SymKeyType, &py_sym_key))
+        return NULL;
+
+    if (PK11_DigestKey(self->pk11_context, py_sym_key->pk11_sym_key) != SECSuccess) {
+        return set_nspr_error(NULL);
+    }
+    Py_RETURN_NONE;
+}
+
+PyDoc_STRVAR(PK11Context_clone_context_doc,
+"clone_context(context) -> PK11Context\n\
+\n\
+:Parameters:\n\
+    context : PK11Context object\n\
+        The PK11Context to be cloned\n\
+\n\
+Create a new PK11Context which is clone of the supplied context.\n\
+");
+static PyObject *
+PK11Context_clone_context(PyPK11Context *self, PyObject *args)
+{
+    PK11Context *pk11_context;
+    PyObject *py_pk11_context;
+
+    TraceMethodEnter("PK11Context_clone_context", self);
+
+    if (!PyArg_ParseTuple(args, "O!:clone_context", &PK11ContextType, &py_pk11_context))
+        return NULL;
+
+    if ((pk11_context = PK11_CloneContext(self->pk11_context)) == NULL) {
+        return set_nspr_error(NULL);
+    }
+
+    if ((py_pk11_context =
+         PyPK11Context_new_from_PK11Context(pk11_context)) == NULL) {
+        PyErr_SetString(PyExc_MemoryError, "unable to create PK11Context object");
+        return NULL;
+    }
+
+    return py_pk11_context;
+}
+
+PyDoc_STRVAR(PK11Context_digest_begin_doc,
+"digest_begin()\n\
+\n\
+Start a new digesting or Mac'ing operation on this context.\n\
+");
+static PyObject *
+PK11Context_digest_begin(PyPK11Context *self, PyObject *args)
+{
+    TraceMethodEnter("PK11Context_digest_begin", self);
+
+    if (PK11_DigestBegin(self->pk11_context) != SECSuccess) {
+        return set_nspr_error(NULL);
+    }
+
+    Py_RETURN_NONE;
+}
+
+PyDoc_STRVAR(PK11Context_digest_op_doc,
+"digest_op(data)\n\
+:Parameters:\n\
+    data : any read buffer compatible object (e.g. buffer or string)\n\
+        raw data to compute digest from\n\
+\n\
+Execute a digest/signature operation.\n\
+");
+static PyObject *
+PK11Context_digest_op(PyPK11Context *self, PyObject *args)
+{
+    const void *buffer = NULL;
+    Py_ssize_t buffer_len;
+
+    TraceMethodEnter("PK11Context_digest_op", self);
+
+    if (!PyArg_ParseTuple(args, "t#:digest_op", &buffer, &buffer_len))
+        return NULL;
+
+    if (PK11_DigestOp(self->pk11_context, buffer, buffer_len) != SECSuccess) {
+        return set_nspr_error(NULL);
+    }
+
+    Py_RETURN_NONE;
+}
+
+PyDoc_STRVAR(PK11Context_cipher_op_doc,
+"cipher_op(data) -> data\n\
+:Parameters:\n\
+    data : any read buffer compatible object (e.g. buffer or string)\n\
+        raw data to compute digest from\n\
+\n\
+Execute a digest/signature operation.\n\
+");
+static PyObject *
+PK11Context_cipher_op(PyPK11Context *self, PyObject *args)
+{
+    const void *in_buf = NULL;
+    void *out_buf = NULL;
+    PyObject *out_string;
+    Py_ssize_t in_buf_len;
+    Py_ssize_t out_buf_alloc_len;
+    int suggested_out_len = 0, actual_out_len;
+
+    TraceMethodEnter("PK11Context_cipher_op", self);
+
+    if (!PyArg_ParseTuple(args, "t#:cipher_op", &in_buf, &in_buf_len))
+        return NULL;
+
+    /*
+     * Create an output buffer to hold the result.
+     */
+
+    /*
+     * We call the PK11 function with a NULL output buffer and it returns an
+     * upper bound on the size of the output data buffer. We create a string to
+     * hold the data using the upper bound as it's size. We then invoke the PK11
+     * function again which performs the operation writing into string buffer.
+     * It returns the exact number of bytes written. If the allocated size does
+     * not equal the actual number of bytes written we resize the string before
+     * returning it so the caller sees a string whose length exactly matches
+     * the number of bytes written by the PK11 function.
+     */
+    if (PK11_CipherOp(self->pk11_context, NULL, &suggested_out_len, 0,
+                      (unsigned char *)in_buf, in_buf_len) != SECSuccess) {
+        return set_nspr_error(NULL);
+    }
+
+    out_buf_alloc_len = suggested_out_len;
+
+    if ((out_string = PyString_FromStringAndSize(NULL, out_buf_alloc_len)) == NULL) {
+        return NULL;
+    }
+    out_buf = PyString_AsString(out_string);
+
+    /*
+     * Now that we have both the input and output buffers perform the cipher operation.
+     */
+    if (PK11_CipherOp(self->pk11_context, out_buf, &actual_out_len, out_buf_alloc_len,
+                      (unsigned char *)in_buf, in_buf_len) != SECSuccess) {
+        Py_DECREF(out_string);
+        return set_nspr_error(NULL);
+    }
+
+    if (actual_out_len != out_buf_alloc_len) {
+        if (_PyString_Resize(&out_string, actual_out_len) < 0) {
+        return NULL;
+        }
+    }
+
+    return out_string;
+}
+
+PyDoc_STRVAR(PK11Context_finalize_doc,
+"finalize()\n\
+\n\
+Clean up cipher operation so that any pending multi-part\n\
+operations have been flushed. Any pending output which would\n\
+have been available as a result of the flush is discarded.\n\
+The context is left in a state available for reuse.\n\
+\n\
+WARNING: Currently context reuse only works for digest contexts\n\
+not encryption/decryption contexts\n\
+");
+static PyObject *
+PK11Context_finalize(PyPK11Context *self, PyObject *args)
+{
+    TraceMethodEnter("PK11Context_finalize", self);
+
+    if (PK11_Finalize(self->pk11_context) != SECSuccess) {
+        return set_nspr_error(NULL);
+    }
+
+    Py_RETURN_NONE;
+}
+
+PyDoc_STRVAR(PK11Context_digest_final_doc,
+"digest_final() -> data\n\
+\n\
+Completes the multi-part cryptographic operation in progress\n\
+on this context and returns any final data which may have been\n\
+pending in the context (i.e. the output data is flushed from the\n\
+context). If there was no final data the returned\n\
+data buffer will have a length of zero.\n\
+");
+static PyObject *
+PK11Context_digest_final(PyPK11Context *self, PyObject *args)
+{
+    void *out_buf = NULL;
+    Py_ssize_t out_buf_alloc_len;
+    unsigned int suggested_out_len = 0, actual_out_len;
+    PyObject *out_string;
+
+    TraceMethodEnter("PK11Context_digest_final", self);
+
+    /*
+     * We call the PK11 function with a NULL output buffer and it returns an
+     * upper bound on the size of the output data buffer. We create a string to
+     * hold the data using the upper bound as it's size. We then invoke the PK11
+     * function again which performs the operation writing into string buffer.
+     * It returns the exact number of bytes written. If the allocated size does
+     * not equal the actual number of bytes written we resize the string before
+     * returning it so the caller sees a string whose length exactly matches
+     * the number of bytes written by the PK11 function.
+     */
+
+    if (PK11_DigestFinal(self->pk11_context, NULL, &suggested_out_len, 0) != SECSuccess) {
+        return set_nspr_error(NULL);
+    }
+
+    out_buf_alloc_len = suggested_out_len;
+
+    if ((out_string = PyString_FromStringAndSize(NULL, out_buf_alloc_len)) == NULL) {
+        return NULL;
+    }
+    out_buf = PyString_AsString(out_string);
+
+    /*
+     * Now that we have the output buffer perform the cipher operation.
+     */
+    if (PK11_DigestFinal(self->pk11_context, out_buf,
+                         &actual_out_len, out_buf_alloc_len) != SECSuccess) {
+        Py_DECREF(out_string);
+        return set_nspr_error(NULL);
+    }
+
+    if (actual_out_len != out_buf_alloc_len) {
+        if (_PyString_Resize(&out_string, actual_out_len) < 0) {
+        return NULL;
+        }
+    }
+
+    return out_string;
+}
+
+static PyObject *
+PK11Context_repr(PyPK11Context *self)
+{
+    return PyString_FromFormat("<%s object at %p>",
+                               self->ob_type->tp_name, self);
+}
+
+static PyObject *
+PK11Context_str(PyPK11Context *self)
+{
+    return PK11Context_repr(self);
+}
+
+static PyMethodDef PK11Context_methods[] = {
+    {"digest_key",    (PyCFunction)PK11Context_digest_key,    METH_VARARGS, PK11Context_digest_key_doc},
+    {"clone_context", (PyCFunction)PK11Context_clone_context, METH_VARARGS, PK11Context_clone_context_doc},
+    {"digest_begin",  (PyCFunction)PK11Context_digest_begin,  METH_NOARGS,  PK11Context_digest_begin_doc},
+    {"digest_op",     (PyCFunction)PK11Context_digest_op,     METH_VARARGS, PK11Context_digest_op_doc},
+    {"cipher_op",     (PyCFunction)PK11Context_cipher_op,     METH_VARARGS, PK11Context_cipher_op_doc},
+    {"finalize",      (PyCFunction)PK11Context_finalize,      METH_NOARGS,  PK11Context_finalize_doc},
+    {"digest_final",  (PyCFunction)PK11Context_digest_final,  METH_NOARGS,  PK11Context_digest_final_doc},
+    {NULL, NULL}  /* Sentinel */
+};
+
+/* =========================== Class Construction =========================== */
+
+static PyObject *
+PK11Context_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
+    PyPK11Context *self;
+
+    TraceObjNewEnter("PK11Context_new", type);
+
+    if ((self = (PyPK11Context *)type->tp_alloc(type, 0)) == NULL) return NULL;
+
+    self->pk11_context = NULL;
+
+    TraceObjNewLeave("PK11Context_new", self);
+    return (PyObject *)self;
+}
+
+static void
+PK11Context_dealloc(PyPK11Context* self)
+{
+    TraceMethodEnter("PK11Context_dealloc", self);
+
+    if (self->pk11_context)
+        PK11_DestroyContext(self->pk11_context, PR_TRUE);
+
+    self->ob_type->tp_free((PyObject*)self);
+}
+
+PyDoc_STRVAR(PK11Context_doc,
+"\n\
+");
+static int
+PK11Context_init(PyPK11Context *self, PyObject *args, PyObject *kwds)
+{
+    TraceMethodEnter("PK11Context_init", self);
+
+    return 0;
+}
+
+static PyTypeObject PK11ContextType = {
+    PyObject_HEAD_INIT(NULL)
+    0,						/* ob_size */
+    "nss.nss.PK11Context",			/* tp_name */
+    sizeof(PyPK11Context),			/* tp_basicsize */
+    0,						/* tp_itemsize */
+    (destructor)PK11Context_dealloc,		/* tp_dealloc */
+    0,						/* tp_print */
+    0,						/* tp_getattr */
+    0,						/* tp_setattr */
+    0,						/* tp_compare */
+    (reprfunc)PK11Context_repr,			/* tp_repr */
+    0,						/* tp_as_number */
+    0,						/* tp_as_sequence */
+    0,						/* tp_as_mapping */
+    0,						/* tp_hash */
+    0,						/* tp_call */
+    (reprfunc)PK11Context_str,			/* tp_str */
+    0,						/* tp_getattro */
+    0,						/* tp_setattro */
+    0,						/* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,	/* tp_flags */
+    PK11Context_doc,				/* tp_doc */
+    0,						/* tp_traverse */
+    0,						/* tp_clear */
+    0,						/* tp_richcompare */
+    0,						/* tp_weaklistoffset */
+    0,						/* tp_iter */
+    0,						/* tp_iternext */
+    PK11Context_methods,			/* tp_methods */
+    PK11Context_members,			/* tp_members */
+    PK11Context_getseters,			/* tp_getset */
+    0,						/* tp_base */
+    0,						/* tp_dict */
+    0,						/* tp_descr_get */
+    0,						/* tp_descr_set */
+    0,						/* tp_dictoffset */
+    (initproc)PK11Context_init,			/* tp_init */
+    0,						/* tp_alloc */
+    PK11Context_new,				/* tp_new */
+};
+
+static PyObject *
+PyPK11Context_new_from_PK11Context(PK11Context *pk11_context)
+
+{
+    PyPK11Context *self = NULL;
+
+    TraceObjNewEnter("PK11Context_new_from_pk11_context", NULL);
+
+    if ((self = (PyPK11Context *) PK11ContextType.tp_new(&PK11ContextType, NULL, NULL)) == NULL)
+        return NULL;
+
+    self->pk11_context = pk11_context;
+
+    TraceObjNewLeave("PK11Context_new_from_pk11_context", self);
+    return (PyObject *) self;
+}
+
+/* ========================== PK11 Module Methods =========================== */
+
 static PyObject *password_callback = NULL;
 
 static char *
@@ -4274,7 +5395,7 @@ PK11_password_callback(PK11SlotInfo *slot, PRBool retry, void *arg)
         goto exit;
         return NULL;;
     }
-    
+
     PyTuple_SetItem(new_args, 0, py_slot);
     PyTuple_SetItem(new_args, 1, py_retry);
 
@@ -4289,7 +5410,7 @@ PK11_password_callback(PK11SlotInfo *slot, PRBool retry, void *arg)
         PyErr_Print();  /* this also clears the error */
         goto exit;
     }
-    
+
     if (!PyString_Check(result)) {
         PySys_WriteStderr("Error, PK11 password callback expected string result.\n");
         goto exit;
@@ -4311,9 +5432,7 @@ PK11_password_callback(PK11SlotInfo *slot, PRBool retry, void *arg)
         return NULL;
 }
 
-/* ========================== PK11 Module Methods =========================== */
-
-PyDoc_STRVAR(PK11_set_password_callback_doc,
+PyDoc_STRVAR(pk11_set_password_callback_doc,
 "set_password_callback(callback)\n\
 \n\
 :Parameters:\n\
@@ -4330,14 +5449,14 @@ retry\n\
     boolean indicating if this is a retry\n\
 user_dataN\n\
     zero or more caller supplied optional parameters\n\
-");    
+");
 
 static PyObject *
-PK11_set_password_callback(PyObject *self, PyObject *args)
+pk11_set_password_callback(PyObject *self, PyObject *args)
 {
     PyObject *callback;
 
-    TraceMethodEnter("PK11_set_password_callback", self);
+    TraceMethodEnter("pk11_set_password_callback", self);
 
     if (!PyArg_ParseTuple(args, "O:set_password_callback", &callback)) {
         return NULL;
@@ -4357,7 +5476,7 @@ PK11_set_password_callback(PyObject *self, PyObject *args)
     Py_RETURN_NONE;
 }
 
-PyDoc_STRVAR(PK11_find_cert_from_nickname_doc,
+PyDoc_STRVAR(pk11_find_cert_from_nickname_doc,
 "find_cert_from_nickname(nickname, [user_data1, ...]) -> Certificate\n\
 \n\
 :Parameters:\n\
@@ -4375,16 +5494,16 @@ certificate.\n\
 ");
 
 static PyObject *
-PK11_find_cert_from_nickname(PyObject *self, PyObject *args)
+pk11_find_cert_from_nickname(PyObject *self, PyObject *args)
 {
-    PyObject *py_nickname = NULL;
-    char *nickname = NULL;
     Py_ssize_t argc;
     PyObject *pin_args = NULL;
+    PyObject *py_nickname = NULL;
+    char *nickname = NULL;
     CERTCertificate *cert = NULL;
     PyObject *py_cert = NULL;
 
-    TraceMethodEnter("PK11_find_cert_from_nickname", self);
+    TraceMethodEnter("pk11_find_cert_from_nickname", self);
 
     argc = PyTuple_Size(args);
 
@@ -4405,7 +5524,7 @@ PK11_find_cert_from_nickname(PyObject *self, PyObject *args)
     if ((cert = PK11_FindCertFromNickname(nickname, pin_args)) == NULL) {
         Py_DECREF(pin_args);
         return set_nspr_error(NULL);
-    } 
+    }
 
     Py_DECREF(pin_args);
 
@@ -4416,7 +5535,7 @@ PK11_find_cert_from_nickname(PyObject *self, PyObject *args)
     return py_cert;
 }
 
-PyDoc_STRVAR(PK11_find_key_by_any_cert_doc,
+PyDoc_STRVAR(pk11_find_key_by_any_cert_doc,
 "find_key_by_any_cert(cert, [user_data1, ...]) -> Certificate\n\
 \n\
 :Parameters:\n\
@@ -4431,7 +5550,7 @@ available slot.\n\
 ");
 
 static PyObject *
-PK11_find_key_by_any_cert(PyObject *self, PyObject *args)
+pk11_find_key_by_any_cert(PyObject *self, PyObject *args)
 {
     PyObject *py_cert = NULL;
     Py_ssize_t argc;
@@ -4439,7 +5558,7 @@ PK11_find_key_by_any_cert(PyObject *self, PyObject *args)
     SECKEYPrivateKey *private_key;
     PyObject *py_private_key = NULL;
 
-    TraceMethodEnter("PK11_find_key_by_any_cert", self);
+    TraceMethodEnter("pk11_find_key_by_any_cert", self);
 
     argc = PyTuple_Size(args);
 
@@ -4459,7 +5578,7 @@ PK11_find_key_by_any_cert(PyObject *self, PyObject *args)
     if ((private_key = PK11_FindKeyByAnyCert(((Certificate *)py_cert)->cert, pin_args)) == NULL) {
         Py_DECREF(pin_args);
         return set_nspr_error(NULL);
-    } 
+    }
 
     Py_DECREF(pin_args);
 
@@ -4470,7 +5589,7 @@ PK11_find_key_by_any_cert(PyObject *self, PyObject *args)
     return py_private_key;
 }
 
-PyDoc_STRVAR(PK11_generate_random_doc,
+PyDoc_STRVAR(pk11_generate_random_doc,
 "generate_random(num_bytes) -> string\n\
 \n\
 :Parameters:\n\
@@ -4481,14 +5600,14 @@ Generates random data..\n\
 ");
 
 static PyObject *
-PK11_generate_random(PyObject *self, PyObject *args)
+pk11_generate_random(PyObject *self, PyObject *args)
 {
     int num_bytes;
     unsigned char *buf;
     SECStatus status;
     PyObject *res;
 
-    TraceMethodEnter("PK11_generate_random", self);
+    TraceMethodEnter("pk11_generate_random", self);
 
     if (!PyArg_ParseTuple(args, "i:generate_random", &num_bytes))
         return NULL;
@@ -4512,22 +5631,6 @@ PK11_generate_random(PyObject *self, PyObject *args)
     PyMem_Free(buf);
     return res;
 }
-
-PyDoc_STRVAR(cert_data_to_hex_doc,
-"data_to_hex(data, octets_per_line=16, separator=\":\")\n\
-\n\
-:Parameters:\n\
-    data : buffer\n\
-        binary data\n\
-    octets_per_line : integer\n\
-        number of octets formatted on one line, if 0 then\n\
-        return a single string instead of an array of lines\n\
-    separator : string\n\
-        string used to seperate each octet\n\
-\n\
-Format the binary data as a hex string. If octets_per_line is an integer then return a list of lines\n\
-otherwise return a single string\n\
-");
 
 PyDoc_STRVAR(nss_indented_format_doc,
 "indented_format(line_pairs, indent='    ') -> string\n\
@@ -4584,9 +5687,11 @@ nss_indented_format(PyObject *self, PyObject *args, PyObject *kwds)
     char *formatted_str;
     long i;
 
+    TraceMethodEnter("nss_indented_format", self);
+
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!|S:indented_format", kwlist,
                                      &PyList_Type, &py_lines, &py_indent))
-        return NULL; 
+        return NULL;
 
     if (!py_indent) {
         if ((py_indent = PyString_FromString("    ")) == NULL)
@@ -4608,7 +5713,7 @@ nss_indented_format(PyObject *self, PyObject *args, PyObject *kwds)
             PyErr_Format(PyExc_TypeError, "lines[%ld] must be a 2 valued tuple", i);
             goto fail;
         }
-        
+
         py_level = PyTuple_GET_ITEM(py_pair, 0);
         py_line  = PyTuple_GET_ITEM(py_pair, 1);
 
@@ -4628,7 +5733,7 @@ nss_indented_format(PyObject *self, PyObject *args, PyObject *kwds)
         }
         if (PyString_AsStringAndSize(py_line, &line, &line_len) == -1)
             goto fail;
-        
+
         cur_indent_len = line_level * indent_len;
         cur_formatted_line_len = cur_indent_len + line_len + 1; /* +1 for newline */
         formatted_str_len += cur_formatted_line_len;
@@ -4681,7 +5786,7 @@ nss_indented_format(PyObject *self, PyObject *args, PyObject *kwds)
 
 /* ============================== Module Methods ============================= */
 
-PyDoc_STRVAR(NSS_init_doc,
+PyDoc_STRVAR(nss_init_doc,
 "nss_init(cert_dir)\n\
 \n\
 :Parameters:\n\
@@ -4694,9 +5799,11 @@ Network Security Services.\n\
 ");
 
 static PyObject *
-NSS_init(PyObject *self, PyObject *args)
+nss_init(PyObject *self, PyObject *args)
 {
     char *cert_dir;
+
+    TraceMethodEnter("nss_init", self);
 
     if (!PyArg_ParseTuple(args, "s:nss_init", &cert_dir)) {
         return NULL;
@@ -4708,7 +5815,7 @@ NSS_init(PyObject *self, PyObject *args)
     Py_RETURN_NONE;
 }
 
-PyDoc_STRVAR(NSS_init_nodb_doc,
+PyDoc_STRVAR(nss_init_nodb_doc,
 "nss_init_nodb()\n\
 \n\
 Performs tasks required to run Network Security Services without setting up\n\
@@ -4726,15 +5833,17 @@ the SSL Export Policy Functions.\n\
 ");
 
 static PyObject *
-NSS_init_nodb(PyObject *self, PyObject *args)
+nss_init_nodb(PyObject *self, PyObject *args)
 {
+    TraceMethodEnter("nss_init_nodb", self);
+
     if (NSS_NoDB_Init(NULL) != SECSuccess) {
         return set_nspr_error(NULL);
     }
     Py_RETURN_NONE;
 }
 
-PyDoc_STRVAR(NSS_shutdown_doc,
+PyDoc_STRVAR(nss_shutdown_doc,
 "nss_shutdown()\n\
 \n\
 Closes the key and certificate databases that were opened by nss_init().\n\
@@ -4745,38 +5854,751 @@ with the error code SEC_ERROR_BUSY.\n\
 ");
 
 static PyObject *
-NSS_shutdown(PyObject *self, PyObject *args)
+nss_shutdown(PyObject *self, PyObject *args)
 {
+    TraceMethodEnter("nss_shutdown", self);
+
     if (NSS_Shutdown() != SECSuccess) {
         return set_nspr_error(NULL);
     }
     Py_RETURN_NONE;
 }
 
+PyDoc_STRVAR(cert_sec_oid_tag_str_doc,
+"sec_oid_tag_str(oid_tag) -> string\n\
+\n\
+:Parameters:\n\
+    oid_tag : int\n\
+        sec_oid constant\n\
+\n\
+Given a sec_oid constant return it's name as a string\n\
+");
+static PyObject *
+cert_sec_oid_tag_str(PyObject *self, PyObject *args)
+{
+    unsigned long tag;
+
+    TraceMethodEnter("cert_sec_oid_tag_str", self);
+
+    if (!PyArg_ParseTuple(args, "k:sec_oid_tag_str", &tag))
+        return NULL;
+
+    return PyString_FromString(sec_oid_tag_str(tag));
+}
+
+PyDoc_STRVAR(cert_sec_oid_tag_from_name_doc,
+"sec_oid_tag_from_name(name) -> int\n\
+\n\
+:Parameters:\n\
+    name : string\n\
+        name of a sec oid constant (SEC_OID_*)\n\
+\n\
+Given the name of a sec_oid constant return it's integer constant\n\
+The string comparison is case insensitive and will match with\n\
+or without the SEC_OID\\_ prefix\n\
+");
+static PyObject *
+cert_sec_oid_tag_from_name(PyObject *self, PyObject *args)
+{
+    PyObject *py_name;
+    PyObject *py_upper_name;
+    PyObject *py_value;
+
+    TraceMethodEnter("cert_sec_oid_tag_from_name", self);
+
+    if (!PyArg_ParseTuple(args, "S:sec_oid_tag_from_name", &py_name))
+        return NULL;
+
+    if ((py_upper_name = PyObject_CallMethod(py_name, "upper", NULL)) == NULL) {
+        return NULL;
+    }
+
+    if ((py_value = PyDict_GetItem(sec_oid_name_to_value, py_upper_name)) == NULL) {
+	PyErr_Format(PyExc_KeyError, "oid tag name not found: %s", PyString_AsString(py_name));
+        Py_DECREF(py_upper_name);
+        return NULL;
+    }
+
+    Py_DECREF(py_upper_name);
+    Py_INCREF(py_value);
+
+    return py_value;
+}
+
+PyDoc_STRVAR(cert_sec_oid_tag_name_doc,
+"sec_oid_tag_name(tag) -> string\n\
+\n\
+:Parameters:\n\
+    tag : integer\n\
+        sec oid constant (SEC_OID_*)\n\
+\n\
+Given an integer constant (SEC_OID_*) return the string name\n\
+of the constant.  Note, this is different from\n\
+sec_oid_tag_str() which returns a more verbose description\n\
+of the tag constant. This returns the actual constant name.\n\
+");
+static PyObject *
+cert_sec_oid_tag_name(PyObject *self, PyObject *args)
+{
+    unsigned long tag;
+    PyObject *py_value;
+    PyObject *py_name;
+
+    TraceMethodEnter("cert_sec_oid_tag_name", self);
+
+    if (!PyArg_ParseTuple(args, "k:sec_oid_tag_name", &tag))
+        return NULL;
+
+    if ((py_value = PyInt_FromLong(tag)) == NULL) {
+        return NULL;
+    }
+
+    if ((py_name = PyDict_GetItem(sec_oid_value_to_name, py_value)) == NULL) {
+	PyErr_Format(PyExc_KeyError, "oid tag not found: %#lx", tag);
+        Py_DECREF(py_value);
+        return NULL;
+    }
+
+    Py_DECREF(py_value);
+    Py_INCREF(py_name);
+    return py_name;
+}
+
+static const char *
+key_mechanism_type_name(CK_MECHANISM_TYPE mechanism)
+{
+    PyObject *py_value;
+    PyObject *py_name;
+    const char *name;
+    static char buf[80];
+
+    if ((py_value = PyInt_FromLong(mechanism)) == NULL) {
+        goto fail;
+    }
+
+    if ((py_name = PyDict_GetItem(ckm_value_to_name, py_value)) == NULL) {
+        goto fail;
+    }
+
+    name = PyString_AsString(py_name);
+    strncpy(buf, name, sizeof(buf));
+    buf[sizeof(buf) - 1] = 0;
+    Py_DECREF(py_value);
+    return buf;
+
+ fail:
+    Py_XDECREF(py_value);
+    snprintf(buf, sizeof(buf), "unknown(%#lx)", mechanism);
+    return buf;
+}
+
+PyDoc_STRVAR(pk11_key_mechanism_type_name_doc,
+"key_mechanism_type_name(mechanism) -> string\n\
+\n\
+:Parameters:\n\
+    mechanism : int\n\
+        key mechanism enumeration constant (CKM_*)\n\
+\n\
+Given a key mechanism enumeration constant (CKM_*)\n\
+return it's name as a string\n\
+");
+static PyObject *
+pk11_key_mechanism_type_name(PyObject *self, PyObject *args)
+{
+    unsigned long mechanism;
+
+    TraceMethodEnter("pk11_key_mechanism_type_name", self);
+
+    if (!PyArg_ParseTuple(args, "k:key_mechanism_type_name", &mechanism))
+        return NULL;
+
+    return PyString_FromString(key_mechanism_type_name(mechanism));
+}
+
+PyDoc_STRVAR(pk11_key_mechanism_type_from_name_doc,
+"key_mechanism_type_from_name(name) -> int\n\
+\n\
+:Parameters:\n\
+    name : string\n\
+        name of key mechanism enumeration constant (CKM_*)\n\
+\n\
+Given the name of a key mechanism enumeration constant (CKM_*)\n\
+return it's integer constant\n\
+The string comparison is case insensitive and will match with\n\
+or without the CKM\\_ prefix\n\
+");
+static PyObject *
+pk11_key_mechanism_type_from_name(PyObject *self, PyObject *args)
+{
+    PyObject *py_name;
+    PyObject *py_upper_name;
+    PyObject *py_value;
+
+    TraceMethodEnter("pk11_key_mechanism_type_from_name", self);
+
+    if (!PyArg_ParseTuple(args, "S:key_mechanism_type_from_name", &py_name))
+        return NULL;
+
+    if ((py_upper_name = PyObject_CallMethod(py_name, "upper", NULL)) == NULL) {
+        return NULL;
+    }
+
+    if ((py_value = PyDict_GetItem(ckm_name_to_value, py_upper_name)) == NULL) {
+	PyErr_Format(PyExc_KeyError, "mechanism name not found: %s", PyString_AsString(py_name));
+        Py_DECREF(py_upper_name);
+        return NULL;
+    }
+
+    Py_DECREF(py_upper_name);
+    Py_INCREF(py_value);
+
+    return py_value;
+}
+
+static const char *
+pk11_attribute_type_name(CK_ATTRIBUTE_TYPE type)
+{
+    PyObject *py_value;
+    PyObject *py_name;
+    const char *name;
+    static char buf[80];
+
+    if ((py_value = PyInt_FromLong(type)) == NULL) {
+        goto fail;
+    }
+
+    if ((py_name = PyDict_GetItem(cka_value_to_name, py_value)) == NULL) {
+        goto fail;
+    }
+
+    name = PyString_AsString(py_name);
+    strncpy(buf, name, sizeof(buf));
+    buf[sizeof(buf) - 1] = 0;
+    Py_DECREF(py_value);
+    return buf;
+
+ fail:
+    Py_XDECREF(py_value);
+    snprintf(buf, sizeof(buf), "unknown(%#lx)", type);
+    return buf;
+
+}
+
+PyDoc_STRVAR(pk11_attribute_type_name_doc,
+"pk11_attribute_type_name(type) -> string\n\
+\n\
+:Parameters:\n\
+    type : int\n\
+        PK11 attribute type constant (CKA_*)\n\
+\n\
+Given a PK11 attribute type constant (CKA_*)\n\
+return it's name as a string\n\
+");
+static PyObject *
+pk11_pk11_attribute_type_name(PyObject *self, PyObject *args)
+{
+    unsigned long type;
+
+    TraceMethodEnter("pk11_pk11_attribute_type_name", self);
+
+    if (!PyArg_ParseTuple(args, "k:pk11_attribute_type_name", &type))
+        return NULL;
+
+    return PyString_FromString(pk11_attribute_type_name(type));
+}
+
+PyDoc_STRVAR(pk11_pk11_attribute_type_from_name_doc,
+"pk11_attribute_type_from_name(name) -> int\n\
+\n\
+:Parameters:\n\
+    name : string\n\
+        name of PK11 attribute type constant (CKA_*)\n\
+\n\
+Given the name of a PK11 attribute type constant (CKA_*)\n\
+return it's integer constant\n\
+The string comparison is case insensitive and will match with\n\
+or without the CKA\\_ prefix\n\
+");
+static PyObject *
+pk11_pk11_attribute_type_from_name(PyObject *self, PyObject *args)
+{
+    PyObject *py_name;
+    PyObject *py_upper_name;
+    PyObject *py_value;
+
+    TraceMethodEnter("pk11_pk11_attribute_type_from_name", self);
+
+    if (!PyArg_ParseTuple(args, "S:pk11_attribute_type_from_name", &py_name))
+        return NULL;
+
+    if ((py_upper_name = PyObject_CallMethod(py_name, "upper", NULL)) == NULL) {
+        return NULL;
+    }
+
+    if ((py_value = PyDict_GetItem(cka_name_to_value, py_upper_name)) == NULL) {
+	PyErr_Format(PyExc_KeyError, "attribute name not found: %s", PyString_AsString(py_name));
+        Py_DECREF(py_upper_name);
+        return NULL;
+    }
+
+    Py_DECREF(py_upper_name);
+    Py_INCREF(py_value);
+
+    return py_value;
+}
+
+PyDoc_STRVAR(pk11_get_best_slot_doc,
+"get_best_slot(mechanism, [user_data1, ...]) -> PK11Slot\n\
+\n\
+:Parameters:\n\
+    mechanism : int\n\
+        key mechanism enumeration constant (CKM_*)\n\
+    user_dataN : object ...\n\
+        zero or more caller supplied parameters which will\n\
+        be passed to the password callback function\n\
+\n\
+Find the best slot which supports the given mechanism.\n\
+");
+
+static PyObject *
+pk11_get_best_slot(PyObject *self, PyObject *args)
+{
+    Py_ssize_t argc;
+    PyObject *pin_args = NULL;
+    unsigned long mechanism;
+    PyObject *py_mech = NULL;
+    PK11SlotInfo *slot = NULL;
+    PyObject *py_slot = NULL;
+
+    TraceMethodEnter("pk11_get_best_slot", self);
+
+    argc = PyTuple_Size(args);
+
+    if ((py_mech = PyTuple_GetItem(args, 0)) == NULL) {
+        PyErr_SetString(PyExc_TypeError, "get_best_slot: missing mechanism argument");
+        return NULL;
+    }
+
+    if (PyInt_Check(py_mech)) {
+        mechanism = PyInt_AsUnsignedLongMask(py_mech);
+    } else {
+        if (PyLong_Check(py_mech)) {
+            mechanism = PyLong_AsUnsignedLongMask(py_mech);
+        } else {
+            PyErr_SetString(PyExc_TypeError, "get_best_slot: mechanism parameter must be an integer");
+            return NULL;
+        }
+    }
+
+    pin_args = PyTuple_GetSlice(args, 1, argc);
+    Py_INCREF(pin_args);
+
+    if ((slot = PK11_GetBestSlot(mechanism, pin_args)) == NULL) {
+        Py_DECREF(pin_args);
+        return set_nspr_error(NULL);
+    }
+
+    Py_DECREF(pin_args);
+
+    if ((py_slot = PK11Slot_new_from_slotinfo(slot)) == NULL) {
+        PyErr_SetString(PyExc_MemoryError, "unable to create PK11Slot object");
+        return NULL;
+    }
+
+    return py_slot;
+}
+
+PyDoc_STRVAR(pk11_get_internal_key_slot_doc,
+"get_internal_key_slot() -> PK11Slot\n\
+\n\
+Get the internal default slot.\n\
+");
+
+static PyObject *
+pk11_get_internal_key_slot(PyObject *self, PyObject *args)
+{
+    PK11SlotInfo *slot = NULL;
+    PyObject *py_slot = NULL;
+
+    TraceMethodEnter("pk11_get_internal_key_slot", self);
+
+    if ((slot = PK11_GetInternalKeySlot()) == NULL) {
+        return set_nspr_error(NULL);
+    }
+
+    if ((py_slot = PK11Slot_new_from_slotinfo(slot)) == NULL) {
+        PyErr_SetString(PyExc_MemoryError, "unable to create PK11Slot object");
+        return NULL;
+    }
+
+    return py_slot;
+}
+
+PyDoc_STRVAR(pk11_create_context_by_sym_key_doc,
+"create_context_by_sym_key(mechanism, operation, sym_key, sec_param) -> PK11Context\n\
+\n\
+:Parameters:\n\
+    mechanism : int\n\
+        key mechanism enumeration constant (CKM_*)\n\
+    operation : int\n\
+        type of operation this context will be doing. A (CKA_*) constant\n\
+        (e.g. CKA_ENCRYPT, CKA_DECRYPT, CKA_SIGN, CKA_VERIFY, CKA_DIGEST)\n\
+    sym_key : PK11SymKey object\n\
+        symmetric key\n\
+    sec_param : SecItem object or None\n\
+        mechanism parameters used to build this context or None.\n\
+\n\
+Create a context from a symmetric key)\n\
+");
+static PyObject *
+pk11_create_context_by_sym_key(PyObject *self, PyObject *args)
+{
+    unsigned long mechanism;
+    unsigned long operation;
+    PyPK11SymKey *py_sym_key;
+    SecItem *py_sec_param;
+    PK11Context *pk11_context;
+    PyObject *py_pk11_context;
+    SECItem null_param = {0};
+
+    TraceMethodEnter("pk11_create_context_by_sym_key", self);
+
+    if (!PyArg_ParseTuple(args, "kkO!O&:create_context_by_sym_key",
+                          &mechanism, &operation,
+                          &PK11SymKeyType, &py_sym_key,
+                          SecItemOrNoneConvert, &py_sec_param))
+        return NULL;
+
+    if ((pk11_context =
+         PK11_CreateContextBySymKey(mechanism, operation, py_sym_key->pk11_sym_key,
+                                    py_sec_param ? &py_sec_param->item : &null_param)) == NULL) {
+        return set_nspr_error(NULL);
+    }
+
+    if ((py_pk11_context = PyPK11Context_new_from_PK11Context(pk11_context)) == NULL) {
+        PyErr_SetString(PyExc_MemoryError, "unable to create PK11Context object");
+        return NULL;
+    }
+
+    return py_pk11_context;
+}
+
+PyDoc_STRVAR(pk11_import_sym_key_doc,
+"import_sym_key(slot, mechanism, origin, operation, key_data, [user_data1, ...]) -> PK11SymKey\n\
+\n\
+:Parameters:\n\
+    slot : PK11Slot object\n\
+        designated PK11 slot\n\
+    mechanism : int\n\
+        key mechanism enumeration constant (CKM_*)\n\
+    origin : int\n\
+        PK11 origin enumeration (PK11Origin*)\n\
+        e.g. PK11_OriginDerive, PK11_OriginUnwrap, etc.\n\
+    operation : int\n\
+        type of operation this context will be doing. A (CKA_*) constant\n\
+        (e.g. CKA_ENCRYPT, CKA_DECRYPT, CKA_SIGN, CKA_VERIFY, CKA_DIGEST)\n\
+    key_data: SecItem object\n\
+        key data encapsulated in a SECItem used to build the symmetric key.\n\
+    user_dataN : object ...\n\
+        zero or more caller supplied parameters which will\n\
+        be passed to the password callback function\n\
+\n\
+Create a PK11SymKey from data)\n\
+");
+static PyObject *
+pk11_import_sym_key(PyObject *self, PyObject *args)
+{
+    Py_ssize_t n_base_args = 5;
+    Py_ssize_t argc;
+    PyObject *parse_args = NULL;
+    PyObject *pin_args = NULL;
+    PK11Slot *py_slot;
+    unsigned long mechanism;
+    unsigned long origin;
+    unsigned long operation;
+    SecItem *py_key_data;
+    PK11SymKey *sym_key;
+
+    TraceMethodEnter("pk11_import_sym_key", self);
+
+    argc = PyTuple_Size(args);
+    if (argc == n_base_args) {
+        parse_args = args;
+    } else {
+        parse_args = PyTuple_GetSlice(args, 0, n_base_args);
+    }
+
+    if (!PyArg_ParseTuple(parse_args, "O!kkkO!:import_sym_key",
+                          &PK11SlotType, &py_slot,
+                          &mechanism, &origin, &operation,
+                          &SecItemType, &py_key_data))
+        return NULL;
+
+
+    pin_args = PyTuple_GetSlice(args, n_base_args, argc);
+    Py_INCREF(pin_args);
+
+    if ((sym_key = PK11_ImportSymKey(py_slot->slot, mechanism, origin, operation,
+                                     &py_key_data->item, pin_args)) == NULL) {
+        if (parse_args != args) {
+            Py_DECREF(parse_args);
+        }
+        Py_DECREF(pin_args);
+        return set_nspr_error(NULL);
+    }
+
+    if (parse_args != args) {
+        Py_DECREF(parse_args);
+    }
+    Py_DECREF(pin_args);
+
+    return PyPK11SymKey_new_from_PK11SymKey(sym_key);
+}
+
+PyDoc_STRVAR(pk11_create_digest_context_doc,
+"create_digest_context(hash_alg) -> PK11Context\n\
+\n\
+:Parameters:\n\
+    hash_alg : int\n\
+        hash algorithm enumeration (SEC_OID_*)\n\
+        e.g.: SEC_OID_MD5, SEC_OID_SHA1, SEC_OID_SHA256, SEC_OID_SHA512, etc.\n\
+\n\
+Create a context for performing digest (hash) operations)\n\
+");
+static PyObject *
+pk11_create_digest_context(PyObject *self, PyObject *args)
+{
+    unsigned long hash_alg;
+    PK11Context *pk11_context;
+    PyObject *py_pk11_context;
+
+    TraceMethodEnter("pk11_create_digest_context", self);
+
+    if (!PyArg_ParseTuple(args, "k:create_digest_context", &hash_alg))
+        return NULL;
+
+    if ((pk11_context = PK11_CreateDigestContext(hash_alg)) == NULL) {
+        return set_nspr_error(NULL);
+    }
+
+    if ((py_pk11_context =
+         PyPK11Context_new_from_PK11Context(pk11_context)) == NULL) {
+        PyErr_SetString(PyExc_MemoryError, "unable to create PK11Context object");
+        return NULL;
+    }
+
+    return py_pk11_context;
+}
+
+PyDoc_STRVAR(pk11_param_from_iv_doc,
+"param_from_iv(mechanism, iv) -> SecItem\n\
+\n\
+:Parameters:\n\
+    mechanism : int\n\
+        key mechanism enumeration constant (CKM_*)\n\
+    iv : SecItem object\n\
+        initial value. If there is no initial value you may also pass\n\
+        None or an empty SecItem object (e.g. SecItem())\n\
+\n\
+Return a SecItem to be used as the initial value for encryption.\n\
+");
+static PyObject *
+pk11_param_from_iv(PyObject *self, PyObject *args)
+{
+    Py_ssize_t n_base_args = 2;
+    Py_ssize_t argc;
+    PyObject *arg;
+    unsigned long mechanism;
+    SECItem *iv;
+    SECItem *sec_param;
+
+    TraceMethodEnter("pk11_param_from_iv", self);
+
+    argc = PyTuple_Size(args);
+    if (argc != n_base_args) {
+        return set_arg_count_error("param_from_iv", n_base_args, argc);
+    }
+
+    arg = PyTuple_GetItem(args, 0);
+    if (!PyInt_Check(arg)) {
+        return set_arg_type_error("mechanism", "integer", arg);
+    }
+    mechanism = PyInt_AsLong(arg);
+
+    arg = PyTuple_GetItem(args, 1);
+    if (!(PySecItem_Check(arg) || PyNone_Check(arg))) {
+        return set_arg_type_error("iv", "SecItem or None", arg);
+    }
+    iv = PyNone_Check(arg) ? NULL : &((SecItem *)arg)->item;
+
+    if ((sec_param = PK11_ParamFromIV(mechanism, iv)) == NULL) {
+        return set_nspr_error(NULL);
+    }
+
+    return SecItem_new_from_sec_item(sec_param, SECITEM_iv_param);
+}
+
+PyDoc_STRVAR(pk11_param_from_algid_doc,
+"param_from_algid(algid) -> SecItem\n\
+\n\
+:Parameters:\n\
+    algid : SignatureAlgorithm object\n\
+        algorithm id\n\
+\n\
+Return a SecItem containing a encryption param derived from a SignatureAlgorithm.\n\
+");
+static PyObject *
+pk11_param_from_algid(PyObject *self, PyObject *args)
+{
+    SignatureAlgorithm *py_algorithm;
+    SECItem *param;
+
+    TraceMethodEnter("pk11_param_from_algid", self);
+
+    if (!PyArg_ParseTuple(args, "O!:param_from_algid", &SignatureAlgorithmType, &py_algorithm))
+        return NULL;
+
+    if ((param = PK11_ParamFromAlgid(&py_algorithm->id)) == NULL) {
+        return set_nspr_error(NULL);
+    }
+
+    return SecItem_new_from_sec_item(param, SECITEM_unknown);
+}
+
+PyDoc_STRVAR(pk11_generate_new_param_doc,
+"generate_new_param(mechanism, sym_key) -> SecItem\n\
+\n\
+:Parameters:\n\
+    mechanism : int\n\
+        key mechanism enumeration constant (CKM_*)\n\
+    sym_key : PK11SymKey object or None\n\
+        symmetric key or None\n\
+\n\
+Return a SecItem containing a encryption param.\n\
+");
+static PyObject *
+pk11_generate_new_param(PyObject *self, PyObject *args)
+{
+    unsigned long mechanism;
+    PyPK11SymKey *py_sym_key;
+    SECItem *param;
+
+    TraceMethodEnter("pk11_generate_new_param", self);
+
+    if (!PyArg_ParseTuple(args, "kO&:generate_new_param",
+                          &mechanism, SymKeyOrNoneConvert, &py_sym_key))
+        return NULL;
+
+    if ((param = PK11_GenerateNewParam(mechanism,
+                                       py_sym_key ? py_sym_key->pk11_sym_key : NULL)) == NULL) {
+        return set_nspr_error(NULL);
+    }
+
+    return SecItem_new_from_sec_item(param, SECITEM_unknown);
+}
+
+PyDoc_STRVAR(pk11_algtag_to_mechanism_doc,
+"algtag_to_mechanism(algtag) -> mechanism\n\
+\n\
+:Parameters:\n\
+    algtag : int\n\
+        algorithm tag (e.g. SEC_OID_*)\n\
+\n\
+Returns the key mechanism enumeration constant (CKM_*)\n\
+given an algorithm tag. Throws a KeyError exception if the \n\
+algorithm tag is invalid.\n\
+");
+static PyObject *
+pk11_algtag_to_mechanism(PyObject *self, PyObject *args)
+{
+    unsigned long algtag;
+    unsigned long mechanism;
+
+    TraceMethodEnter("pk11_algtag_to_mechanism", self);
+
+    if (!PyArg_ParseTuple(args, "k:algtag_to_mechanism", &algtag))
+        return NULL;
+
+    if ((mechanism = PK11_AlgtagToMechanism(algtag)) == CKM_INVALID_MECHANISM) {
+	PyErr_Format(PyExc_KeyError, "algtag not found: %#lx", algtag);
+        return NULL;
+    }
+
+    return PyInt_FromLong(mechanism);
+}
+
+PyDoc_STRVAR(pk11_mechanism_to_algtag_doc,
+"mechanism_to_algtag(mechanism) -> algtag\n\
+\n\
+:Parameters:\n\
+    mechanism : int\n\
+        key mechanism enumeration constant (CKM_*)\n\
+\n\
+Returns the algtag given key mechanism enumeration constant (CKM_*)\n\
+Throws an KeyError exception if the mechanism is invalid.\n\
+");
+static PyObject *
+pk11_mechanism_to_algtag(PyObject *self, PyObject *args)
+{
+    unsigned long algtag;
+    unsigned long mechanism;
+
+    TraceMethodEnter("pk11_mechanism_to_algtag", self);
+
+    if (!PyArg_ParseTuple(args, "k:mechanism_to_algtag", &mechanism))
+        return NULL;
+
+    if ((algtag = PK11_MechanismToAlgtag(mechanism)) == SEC_OID_UNKNOWN) {
+	PyErr_Format(PyExc_KeyError, "mechanism not found: %#lx", mechanism);
+        return NULL;
+    }
+
+    return PyInt_FromLong(algtag);
+}
+
 /* List of functions exported by this module. */
 static PyMethodDef
 module_methods[] = {
-    {"nss_init",                (PyCFunction)NSS_init,           METH_VARARGS,               NSS_init_doc},
-    {"nss_init_nodb",           (PyCFunction)NSS_init_nodb,      METH_NOARGS,                NSS_init_nodb_doc},
-    {"nss_shutdown",            (PyCFunction)NSS_shutdown,       METH_NOARGS,                NSS_shutdown_doc},
-    {"set_password_callback",   PK11_set_password_callback,      METH_VARARGS,               PK11_set_password_callback_doc},
-    {"find_cert_from_nickname", PK11_find_cert_from_nickname,    METH_VARARGS,               PK11_find_cert_from_nickname_doc},
-    {"find_key_by_any_cert",    PK11_find_key_by_any_cert,       METH_VARARGS,               PK11_find_key_by_any_cert_doc},
-    {"generate_random",         PK11_generate_random,            METH_VARARGS,               PK11_generate_random_doc},
-    {"get_default_certdb",      cert_get_default_certdb,         METH_NOARGS,                cert_get_default_certdb_doc},
-    {"get_cert_nicknames",      cert_get_cert_nicknames,         METH_VARARGS,               cert_get_cert_nicknames_doc},
-    {"data_to_hex",             (PyCFunction)cert_data_to_hex,   METH_VARARGS|METH_KEYWORDS, cert_data_to_hex_doc},
-    {"md5_digest",              (PyCFunction)cert_md5_digest,    METH_VARARGS,               cert_md5_digest_doc},
-    {"sha1_digest",             (PyCFunction)cert_sha1_digest,   METH_VARARGS,               cert_sha1_digest_doc},
-    {"sha256_digest",           (PyCFunction)cert_sha256_digest, METH_VARARGS,               cert_sha256_digest_doc},
-    {"sha512_digest",           (PyCFunction)cert_sha512_digest, METH_VARARGS,               cert_sha512_digest_doc},
-    {"indented_format",         (PyCFunction)nss_indented_format,METH_VARARGS|METH_KEYWORDS, nss_indented_format_doc},
+    {"nss_init",                      (PyCFunction)nss_init,                           METH_VARARGS,               nss_init_doc},
+    {"nss_init_nodb",                 (PyCFunction)nss_init_nodb,                      METH_NOARGS,                nss_init_nodb_doc},
+    {"nss_shutdown",                  (PyCFunction)nss_shutdown,                       METH_NOARGS,                nss_shutdown_doc},
+    {"set_password_callback",         (PyCFunction)pk11_set_password_callback,         METH_VARARGS,               pk11_set_password_callback_doc},
+    {"find_cert_from_nickname",       (PyCFunction)pk11_find_cert_from_nickname,       METH_VARARGS,               pk11_find_cert_from_nickname_doc},
+    {"find_key_by_any_cert",          (PyCFunction)pk11_find_key_by_any_cert,          METH_VARARGS,               pk11_find_key_by_any_cert_doc},
+    {"generate_random",               (PyCFunction)pk11_generate_random,               METH_VARARGS,               pk11_generate_random_doc},
+    {"get_default_certdb",            (PyCFunction)cert_get_default_certdb,            METH_NOARGS,                cert_get_default_certdb_doc},
+    {"get_cert_nicknames",            (PyCFunction)cert_get_cert_nicknames,            METH_VARARGS,               cert_get_cert_nicknames_doc},
+    {"data_to_hex",                   (PyCFunction)cert_data_to_hex,                   METH_VARARGS|METH_KEYWORDS, cert_data_to_hex_doc},
+    {"read_hex",                      (PyCFunction)read_hex,                           METH_VARARGS|METH_KEYWORDS, read_hex_doc},
+    {"hash_buf",                      (PyCFunction)pk11_hash_buf,                      METH_VARARGS,               pk11_hash_buf_doc},
+    {"md5_digest",                    (PyCFunction)pk11_md5_digest,                    METH_VARARGS,               pk11_md5_digest_doc},
+    {"sha1_digest",                   (PyCFunction)pk11_sha1_digest,                   METH_VARARGS,               pk11_sha1_digest_doc},
+    {"sha256_digest",                 (PyCFunction)pk11_sha256_digest,                 METH_VARARGS,               pk11_sha256_digest_doc},
+    {"sha512_digest",                 (PyCFunction)pk11_sha512_digest,                 METH_VARARGS,               pk11_sha512_digest_doc},
+    {"indented_format",               (PyCFunction)nss_indented_format,                METH_VARARGS|METH_KEYWORDS, nss_indented_format_doc},
+    {"sec_oid_tag_str",               (PyCFunction)cert_sec_oid_tag_str,               METH_VARARGS,               cert_sec_oid_tag_str_doc},
+    {"sec_oid_tag_name",              (PyCFunction)cert_sec_oid_tag_name,              METH_VARARGS,               cert_sec_oid_tag_name_doc},
+    {"sec_oid_tag_from_name",         (PyCFunction)cert_sec_oid_tag_from_name,         METH_VARARGS,               cert_sec_oid_tag_from_name_doc},
+    {"key_mechanism_type_name",       (PyCFunction)pk11_key_mechanism_type_name,       METH_VARARGS,               pk11_key_mechanism_type_name_doc},
+    {"key_mechanism_type_from_name",  (PyCFunction)pk11_key_mechanism_type_from_name,  METH_VARARGS,               pk11_key_mechanism_type_from_name_doc},
+    {"pk11_attribute_type_name",      (PyCFunction)pk11_pk11_attribute_type_name,      METH_VARARGS,               pk11_attribute_type_name_doc},
+    {"pk11_attribute_type_from_name", (PyCFunction)pk11_pk11_attribute_type_from_name, METH_VARARGS,               pk11_pk11_attribute_type_from_name_doc},
+    {"get_best_slot",                 (PyCFunction)pk11_get_best_slot,                 METH_VARARGS,               pk11_get_best_slot_doc},
+    {"get_internal_key_slot",         (PyCFunction)pk11_get_internal_key_slot,         METH_NOARGS,                pk11_get_internal_key_slot_doc},
+    {"create_context_by_sym_key",     (PyCFunction)pk11_create_context_by_sym_key,     METH_VARARGS,               pk11_create_context_by_sym_key_doc},
+    {"import_sym_key",                (PyCFunction)pk11_import_sym_key,                METH_VARARGS,               pk11_import_sym_key_doc},
+    {"create_digest_context",         (PyCFunction)pk11_create_digest_context,         METH_VARARGS,               pk11_create_digest_context_doc},
+    {"param_from_iv",                 (PyCFunction)pk11_param_from_iv,                 METH_VARARGS,               pk11_param_from_iv_doc},
+    {"param_from_algid",              (PyCFunction)pk11_param_from_algid,              METH_VARARGS,               pk11_param_from_algid_doc},
+    {"generate_new_param",            (PyCFunction)pk11_generate_new_param,            METH_VARARGS,               pk11_generate_new_param_doc},
+    {"algtag_to_mechanism",           (PyCFunction)pk11_algtag_to_mechanism,           METH_VARARGS,               pk11_algtag_to_mechanism_doc},
+    {"mechanism_to_algtag",           (PyCFunction)pk11_mechanism_to_algtag,           METH_VARARGS,               pk11_mechanism_to_algtag_doc},
     {NULL, NULL} /* Sentinel */
 };
 
 /* ============================== Module Exports ============================= */
 
-static PyNSPR_NSS_C_API_Type nspr_nss_c_api = 
+static PyNSPR_NSS_C_API_Type nspr_nss_c_api =
 {
     &PK11SlotType,
     &CertDBType,
@@ -4806,18 +6628,22 @@ PyDoc_STRVAR(module_doc,
 ");
 
 PyMODINIT_FUNC
-initnss(void) 
+initnss(void)
 {
     PyObject *m;
 
-    if (import_nspr_error_c_api() < 0)
+    if (import_nspr_error_c_api() < 0) {
         return;
+    }
 
-    if ((m = Py_InitModule3("nss.nss", module_methods, module_doc)) == NULL)
+    if ((m = Py_InitModule3("nss.nss", module_methods, module_doc)) == NULL) {
         return;
+    }
 
-    if ((empty_tuple = PyTuple_New(0)) == NULL)
+    if ((empty_tuple = PyTuple_New(0)) == NULL) {
         return;
+    }
+
     Py_INCREF(empty_tuple);
 
     TYPE_READY(SecItemType);
@@ -4832,10 +6658,13 @@ initnss(void)
     TYPE_READY(CertificateType);
     TYPE_READY(PrivateKeyType);
     TYPE_READY(PK11SlotType);
+    TYPE_READY(PK11SymKeyType);
+    TYPE_READY(PK11ContextType);
 
     /* Export C API */
-    if (PyModule_AddObject(m, "_C_API", PyCObject_FromVoidPtr((void *)&nspr_nss_c_api, NULL)) != 0)
+    if (PyModule_AddObject(m, "_C_API", PyCObject_FromVoidPtr((void *)&nspr_nss_c_api, NULL)) != 0) {
         return;
+    }
 
     AddIntConstant(certificateUsageCheckAllUsages);
     AddIntConstant(certificateUsageSSLClient);
@@ -4875,4 +6704,916 @@ initnss(void)
     AddIntConstant(secCertTimeNotValidYet);
 
 
+    /***************************************************************************
+     * Mechanism Types
+     ***************************************************************************/
+
+    if ((ckm_name_to_value = PyDict_New()) == NULL) {
+        return;
+    }
+    if ((ckm_value_to_name = PyDict_New()) == NULL) {
+        return;
+    }
+
+#define ExportConstant(constant)                      \
+if (_AddIntConstantWithLookup(m, #constant, constant, \
+    "CKM_", ckm_name_to_value, ckm_value_to_name) < 0) return;
+
+    ExportConstant(CKM_RSA_PKCS_KEY_PAIR_GEN);
+    ExportConstant(CKM_RSA_PKCS);
+    ExportConstant(CKM_RSA_9796);
+    ExportConstant(CKM_RSA_X_509);
+
+    /* CKM_MD2_RSA_PKCS, CKM_MD5_RSA_PKCS, and CKM_SHA1_RSA_PKCS
+     * are new for v2.0.  They are mechanisms which hash and sign */
+    ExportConstant(CKM_MD2_RSA_PKCS);
+    ExportConstant(CKM_MD5_RSA_PKCS);
+    ExportConstant(CKM_SHA1_RSA_PKCS);
+
+    /* CKM_RIPEMD128_RSA_PKCS, CKM_RIPEMD160_RSA_PKCS, and
+     * CKM_RSA_PKCS_OAEP are new for v2.10 */
+    ExportConstant(CKM_RIPEMD128_RSA_PKCS);
+    ExportConstant(CKM_RIPEMD160_RSA_PKCS);
+    ExportConstant(CKM_RSA_PKCS_OAEP);
+
+    /* CKM_RSA_X9_31_KEY_PAIR_GEN, CKM_RSA_X9_31, CKM_SHA1_RSA_X9_31,
+     * CKM_RSA_PKCS_PSS, and CKM_SHA1_RSA_PKCS_PSS are new for v2.11 */
+    ExportConstant(CKM_RSA_X9_31_KEY_PAIR_GEN);
+    ExportConstant(CKM_RSA_X9_31);
+    ExportConstant(CKM_SHA1_RSA_X9_31);
+    ExportConstant(CKM_RSA_PKCS_PSS);
+    ExportConstant(CKM_SHA1_RSA_PKCS_PSS);
+
+    ExportConstant(CKM_DSA_KEY_PAIR_GEN);
+    ExportConstant(CKM_DSA);
+    ExportConstant(CKM_DSA_SHA1);
+    ExportConstant(CKM_DH_PKCS_KEY_PAIR_GEN);
+    ExportConstant(CKM_DH_PKCS_DERIVE);
+
+    /* CKM_X9_42_DH_KEY_PAIR_GEN, CKM_X9_42_DH_DERIVE,
+     * CKM_X9_42_DH_HYBRID_DERIVE, and CKM_X9_42_MQV_DERIVE are new for
+     * v2.11 */
+    ExportConstant(CKM_X9_42_DH_KEY_PAIR_GEN);
+    ExportConstant(CKM_X9_42_DH_DERIVE);
+    ExportConstant(CKM_X9_42_DH_HYBRID_DERIVE);
+    ExportConstant(CKM_X9_42_MQV_DERIVE);
+
+    /* CKM_SHA256/384/512 are new for v2.20 */
+    ExportConstant(CKM_SHA256_RSA_PKCS);
+    ExportConstant(CKM_SHA384_RSA_PKCS);
+    ExportConstant(CKM_SHA512_RSA_PKCS);
+    ExportConstant(CKM_SHA256_RSA_PKCS_PSS);
+    ExportConstant(CKM_SHA384_RSA_PKCS_PSS);
+    ExportConstant(CKM_SHA512_RSA_PKCS_PSS);
+
+    /* CKM_SHA224 new for v2.20 amendment 3 */
+    ExportConstant(CKM_SHA224_RSA_PKCS);
+    ExportConstant(CKM_SHA224_RSA_PKCS_PSS);
+
+    ExportConstant(CKM_RC2_KEY_GEN);
+    ExportConstant(CKM_RC2_ECB);
+    ExportConstant(CKM_RC2_CBC);
+    ExportConstant(CKM_RC2_MAC);
+
+    /* CKM_RC2_MAC_GENERAL and CKM_RC2_CBC_PAD are new for v2.0 */
+    ExportConstant(CKM_RC2_MAC_GENERAL);
+    ExportConstant(CKM_RC2_CBC_PAD);
+
+    ExportConstant(CKM_RC4_KEY_GEN);
+    ExportConstant(CKM_RC4);
+    ExportConstant(CKM_DES_KEY_GEN);
+    ExportConstant(CKM_DES_ECB);
+    ExportConstant(CKM_DES_CBC);
+    ExportConstant(CKM_DES_MAC);
+
+    /* CKM_DES_MAC_GENERAL and CKM_DES_CBC_PAD are new for v2.0 */
+    ExportConstant(CKM_DES_MAC_GENERAL);
+    ExportConstant(CKM_DES_CBC_PAD);
+
+    ExportConstant(CKM_DES2_KEY_GEN);
+    ExportConstant(CKM_DES3_KEY_GEN);
+    ExportConstant(CKM_DES3_ECB);
+    ExportConstant(CKM_DES3_CBC);
+    ExportConstant(CKM_DES3_MAC);
+
+    /* CKM_DES3_MAC_GENERAL, CKM_DES3_CBC_PAD, CKM_CDMF_KEY_GEN,
+     * CKM_CDMF_ECB, CKM_CDMF_CBC, CKM_CDMF_MAC,
+     * CKM_CDMF_MAC_GENERAL, and CKM_CDMF_CBC_PAD are new for v2.0 */
+    ExportConstant(CKM_DES3_MAC_GENERAL);
+    ExportConstant(CKM_DES3_CBC_PAD);
+    ExportConstant(CKM_CDMF_KEY_GEN);
+    ExportConstant(CKM_CDMF_ECB);
+    ExportConstant(CKM_CDMF_CBC);
+    ExportConstant(CKM_CDMF_MAC);
+    ExportConstant(CKM_CDMF_MAC_GENERAL);
+    ExportConstant(CKM_CDMF_CBC_PAD);
+
+    /* the following four DES mechanisms are new for v2.20 */
+    ExportConstant(CKM_DES_OFB64);
+    ExportConstant(CKM_DES_OFB8);
+    ExportConstant(CKM_DES_CFB64);
+    ExportConstant(CKM_DES_CFB8);
+
+    ExportConstant(CKM_MD2);
+
+    /* CKM_MD2_HMAC and CKM_MD2_HMAC_GENERAL are new for v2.0 */
+    ExportConstant(CKM_MD2_HMAC);
+    ExportConstant(CKM_MD2_HMAC_GENERAL);
+
+    ExportConstant(CKM_MD5);
+
+    /* CKM_MD5_HMAC and CKM_MD5_HMAC_GENERAL are new for v2.0 */
+    ExportConstant(CKM_MD5_HMAC);
+    ExportConstant(CKM_MD5_HMAC_GENERAL);
+
+    ExportConstant(CKM_SHA_1);
+
+    /* CKM_SHA_1_HMAC and CKM_SHA_1_HMAC_GENERAL are new for v2.0 */
+    ExportConstant(CKM_SHA_1_HMAC);
+    ExportConstant(CKM_SHA_1_HMAC_GENERAL);
+
+    /* CKM_RIPEMD128, CKM_RIPEMD128_HMAC,
+     * CKM_RIPEMD128_HMAC_GENERAL, CKM_RIPEMD160, CKM_RIPEMD160_HMAC,
+     * and CKM_RIPEMD160_HMAC_GENERAL are new for v2.10 */
+    ExportConstant(CKM_RIPEMD128);
+    ExportConstant(CKM_RIPEMD128_HMAC);
+    ExportConstant(CKM_RIPEMD128_HMAC_GENERAL);
+    ExportConstant(CKM_RIPEMD160);
+    ExportConstant(CKM_RIPEMD160_HMAC);
+    ExportConstant(CKM_RIPEMD160_HMAC_GENERAL);
+
+    /* CKM_SHA256/384/512 are new for v2.20 */
+    ExportConstant(CKM_SHA256);
+    ExportConstant(CKM_SHA256_HMAC);
+    ExportConstant(CKM_SHA256_HMAC_GENERAL);
+    ExportConstant(CKM_SHA384);
+    ExportConstant(CKM_SHA384_HMAC);
+    ExportConstant(CKM_SHA384_HMAC_GENERAL);
+    ExportConstant(CKM_SHA512);
+    ExportConstant(CKM_SHA512_HMAC);
+    ExportConstant(CKM_SHA512_HMAC_GENERAL);
+
+    /* CKM_SHA224 new for v2.20 amendment 3 */
+    ExportConstant(CKM_SHA224);
+    ExportConstant(CKM_SHA224_HMAC);
+    ExportConstant(CKM_SHA224_HMAC_GENERAL);
+
+    /* All of the following mechanisms are new for v2.0 */
+    /* Note that CAST128 and CAST5 are the same algorithm */
+    ExportConstant(CKM_CAST_KEY_GEN);
+    ExportConstant(CKM_CAST_ECB);
+    ExportConstant(CKM_CAST_CBC);
+    ExportConstant(CKM_CAST_MAC);
+    ExportConstant(CKM_CAST_MAC_GENERAL);
+    ExportConstant(CKM_CAST_CBC_PAD);
+    ExportConstant(CKM_CAST3_KEY_GEN);
+    ExportConstant(CKM_CAST3_ECB);
+    ExportConstant(CKM_CAST3_CBC);
+    ExportConstant(CKM_CAST3_MAC);
+    ExportConstant(CKM_CAST3_MAC_GENERAL);
+    ExportConstant(CKM_CAST3_CBC_PAD);
+    ExportConstant(CKM_CAST5_KEY_GEN);
+    ExportConstant(CKM_CAST128_KEY_GEN);
+    ExportConstant(CKM_CAST5_ECB);
+    ExportConstant(CKM_CAST128_ECB);
+    ExportConstant(CKM_CAST5_CBC);
+    ExportConstant(CKM_CAST128_CBC);
+    ExportConstant(CKM_CAST5_MAC);
+    ExportConstant(CKM_CAST128_MAC);
+    ExportConstant(CKM_CAST5_MAC_GENERAL);
+    ExportConstant(CKM_CAST128_MAC_GENERAL);
+    ExportConstant(CKM_CAST5_CBC_PAD);
+    ExportConstant(CKM_CAST128_CBC_PAD);
+    ExportConstant(CKM_RC5_KEY_GEN);
+    ExportConstant(CKM_RC5_ECB);
+    ExportConstant(CKM_RC5_CBC);
+    ExportConstant(CKM_RC5_MAC);
+    ExportConstant(CKM_RC5_MAC_GENERAL);
+    ExportConstant(CKM_RC5_CBC_PAD);
+    ExportConstant(CKM_IDEA_KEY_GEN);
+    ExportConstant(CKM_IDEA_ECB);
+    ExportConstant(CKM_IDEA_CBC);
+    ExportConstant(CKM_IDEA_MAC);
+    ExportConstant(CKM_IDEA_MAC_GENERAL);
+    ExportConstant(CKM_IDEA_CBC_PAD);
+    ExportConstant(CKM_GENERIC_SECRET_KEY_GEN);
+    ExportConstant(CKM_CONCATENATE_BASE_AND_KEY);
+    ExportConstant(CKM_CONCATENATE_BASE_AND_DATA);
+    ExportConstant(CKM_CONCATENATE_DATA_AND_BASE);
+    ExportConstant(CKM_XOR_BASE_AND_DATA);
+    ExportConstant(CKM_EXTRACT_KEY_FROM_KEY);
+    ExportConstant(CKM_SSL3_PRE_MASTER_KEY_GEN);
+    ExportConstant(CKM_SSL3_MASTER_KEY_DERIVE);
+    ExportConstant(CKM_SSL3_KEY_AND_MAC_DERIVE);
+
+    /* CKM_SSL3_MASTER_KEY_DERIVE_DH, CKM_TLS_PRE_MASTER_KEY_GEN,
+     * CKM_TLS_MASTER_KEY_DERIVE, CKM_TLS_KEY_AND_MAC_DERIVE, and
+     * CKM_TLS_MASTER_KEY_DERIVE_DH are new for v2.11 */
+    ExportConstant(CKM_SSL3_MASTER_KEY_DERIVE_DH);
+    ExportConstant(CKM_TLS_PRE_MASTER_KEY_GEN);
+    ExportConstant(CKM_TLS_MASTER_KEY_DERIVE);
+    ExportConstant(CKM_TLS_KEY_AND_MAC_DERIVE);
+    ExportConstant(CKM_TLS_MASTER_KEY_DERIVE_DH);
+
+    /* CKM_TLS_PRF is new for v2.20 */
+    ExportConstant(CKM_TLS_PRF);
+
+    ExportConstant(CKM_SSL3_MD5_MAC);
+    ExportConstant(CKM_SSL3_SHA1_MAC);
+    ExportConstant(CKM_MD5_KEY_DERIVATION);
+    ExportConstant(CKM_MD2_KEY_DERIVATION);
+    ExportConstant(CKM_SHA1_KEY_DERIVATION);
+
+    /* CKM_SHA256/384/512 are new for v2.20 */
+    ExportConstant(CKM_SHA256_KEY_DERIVATION);
+    ExportConstant(CKM_SHA384_KEY_DERIVATION);
+    ExportConstant(CKM_SHA512_KEY_DERIVATION);
+
+    /* CKM_SHA224 new for v2.20 amendment 3 */
+    ExportConstant(CKM_SHA224_KEY_DERIVATION);
+
+    ExportConstant(CKM_PBE_MD2_DES_CBC);
+    ExportConstant(CKM_PBE_MD5_DES_CBC);
+    ExportConstant(CKM_PBE_MD5_CAST_CBC);
+    ExportConstant(CKM_PBE_MD5_CAST3_CBC);
+    ExportConstant(CKM_PBE_MD5_CAST5_CBC);
+    ExportConstant(CKM_PBE_MD5_CAST128_CBC);
+    ExportConstant(CKM_PBE_SHA1_CAST5_CBC);
+    ExportConstant(CKM_PBE_SHA1_CAST128_CBC);
+    ExportConstant(CKM_PBE_SHA1_RC4_128);
+    ExportConstant(CKM_PBE_SHA1_RC4_40);
+    ExportConstant(CKM_PBE_SHA1_DES3_EDE_CBC);
+    ExportConstant(CKM_PBE_SHA1_DES2_EDE_CBC);
+    ExportConstant(CKM_PBE_SHA1_RC2_128_CBC);
+    ExportConstant(CKM_PBE_SHA1_RC2_40_CBC);
+
+    /* CKM_PKCS5_PBKD2 is new for v2.10 */
+    ExportConstant(CKM_PKCS5_PBKD2);
+
+    ExportConstant(CKM_PBA_SHA1_WITH_SHA1_HMAC);
+
+    /* WTLS mechanisms are new for v2.20 */
+    ExportConstant(CKM_WTLS_PRE_MASTER_KEY_GEN);
+    ExportConstant(CKM_WTLS_MASTER_KEY_DERIVE);
+    ExportConstant(CKM_WTLS_MASTER_KEY_DERIVE_DH_ECC);
+    ExportConstant(CKM_WTLS_PRF);
+    ExportConstant(CKM_WTLS_SERVER_KEY_AND_MAC_DERIVE);
+    ExportConstant(CKM_WTLS_CLIENT_KEY_AND_MAC_DERIVE);
+
+    ExportConstant(CKM_KEY_WRAP_LYNKS);
+    ExportConstant(CKM_KEY_WRAP_SET_OAEP);
+
+    /* CKM_CMS_SIG is new for v2.20 */
+    ExportConstant(CKM_CMS_SIG);
+
+    /* Fortezza mechanisms */
+    ExportConstant(CKM_SKIPJACK_KEY_GEN);
+    ExportConstant(CKM_SKIPJACK_ECB64);
+    ExportConstant(CKM_SKIPJACK_CBC64);
+    ExportConstant(CKM_SKIPJACK_OFB64);
+    ExportConstant(CKM_SKIPJACK_CFB64);
+    ExportConstant(CKM_SKIPJACK_CFB32);
+    ExportConstant(CKM_SKIPJACK_CFB16);
+    ExportConstant(CKM_SKIPJACK_CFB8);
+    ExportConstant(CKM_SKIPJACK_WRAP);
+    ExportConstant(CKM_SKIPJACK_PRIVATE_WRAP);
+    ExportConstant(CKM_SKIPJACK_RELAYX);
+    ExportConstant(CKM_KEA_KEY_PAIR_GEN);
+    ExportConstant(CKM_KEA_KEY_DERIVE);
+    ExportConstant(CKM_FORTEZZA_TIMESTAMP);
+    ExportConstant(CKM_BATON_KEY_GEN);
+    ExportConstant(CKM_BATON_ECB128);
+    ExportConstant(CKM_BATON_ECB96);
+    ExportConstant(CKM_BATON_CBC128);
+    ExportConstant(CKM_BATON_COUNTER);
+    ExportConstant(CKM_BATON_SHUFFLE);
+    ExportConstant(CKM_BATON_WRAP);
+
+    /* CKM_ECDSA_KEY_PAIR_GEN is deprecated in v2.11,
+     * CKM_EC_KEY_PAIR_GEN is preferred */
+    ExportConstant(CKM_ECDSA_KEY_PAIR_GEN);
+    ExportConstant(CKM_EC_KEY_PAIR_GEN);
+
+    ExportConstant(CKM_ECDSA);
+    ExportConstant(CKM_ECDSA_SHA1);
+
+    /* CKM_ECDH1_DERIVE, CKM_ECDH1_COFACTOR_DERIVE, and CKM_ECMQV_DERIVE
+     * are new for v2.11 */
+    ExportConstant(CKM_ECDH1_DERIVE);
+    ExportConstant(CKM_ECDH1_COFACTOR_DERIVE);
+    ExportConstant(CKM_ECMQV_DERIVE);
+
+    ExportConstant(CKM_JUNIPER_KEY_GEN);
+    ExportConstant(CKM_JUNIPER_ECB128);
+    ExportConstant(CKM_JUNIPER_CBC128);
+    ExportConstant(CKM_JUNIPER_COUNTER);
+    ExportConstant(CKM_JUNIPER_SHUFFLE);
+    ExportConstant(CKM_JUNIPER_WRAP);
+    ExportConstant(CKM_FASTHASH);
+
+    /* CKM_AES_KEY_GEN, CKM_AES_ECB, CKM_AES_CBC, CKM_AES_MAC,
+     * CKM_AES_MAC_GENERAL, CKM_AES_CBC_PAD, CKM_DSA_PARAMETER_GEN,
+     * CKM_DH_PKCS_PARAMETER_GEN, and CKM_X9_42_DH_PARAMETER_GEN are
+     * new for v2.11 */
+    ExportConstant(CKM_AES_KEY_GEN);
+    ExportConstant(CKM_AES_ECB);
+    ExportConstant(CKM_AES_CBC);
+    ExportConstant(CKM_AES_MAC);
+    ExportConstant(CKM_AES_MAC_GENERAL);
+    ExportConstant(CKM_AES_CBC_PAD);
+
+    /* BlowFish and TwoFish are new for v2.20 */
+    ExportConstant(CKM_BLOWFISH_KEY_GEN);
+    ExportConstant(CKM_BLOWFISH_CBC);
+    ExportConstant(CKM_TWOFISH_KEY_GEN);
+    ExportConstant(CKM_TWOFISH_CBC);
+
+    /* Camellia is proposed for v2.20 Amendment 3 */
+    ExportConstant(CKM_CAMELLIA_KEY_GEN);
+    ExportConstant(CKM_CAMELLIA_ECB);
+    ExportConstant(CKM_CAMELLIA_CBC);
+    ExportConstant(CKM_CAMELLIA_MAC);
+    ExportConstant(CKM_CAMELLIA_MAC_GENERAL);
+    ExportConstant(CKM_CAMELLIA_CBC_PAD);
+    ExportConstant(CKM_CAMELLIA_ECB_ENCRYPT_DATA);
+    ExportConstant(CKM_CAMELLIA_CBC_ENCRYPT_DATA);
+
+    ExportConstant(CKM_SEED_KEY_GEN);
+    ExportConstant(CKM_SEED_ECB);
+    ExportConstant(CKM_SEED_CBC);
+    ExportConstant(CKM_SEED_MAC);
+    ExportConstant(CKM_SEED_MAC_GENERAL);
+    ExportConstant(CKM_SEED_CBC_PAD);
+    ExportConstant(CKM_SEED_ECB_ENCRYPT_DATA);
+    ExportConstant(CKM_SEED_CBC_ENCRYPT_DATA);
+
+    /* CKM_xxx_ENCRYPT_DATA mechanisms are new for v2.20 */
+    ExportConstant(CKM_DES_ECB_ENCRYPT_DATA);
+    ExportConstant(CKM_DES_CBC_ENCRYPT_DATA);
+    ExportConstant(CKM_DES3_ECB_ENCRYPT_DATA);
+    ExportConstant(CKM_DES3_CBC_ENCRYPT_DATA);
+    ExportConstant(CKM_AES_ECB_ENCRYPT_DATA);
+    ExportConstant(CKM_AES_CBC_ENCRYPT_DATA);
+
+    ExportConstant(CKM_DSA_PARAMETER_GEN);
+    ExportConstant(CKM_DH_PKCS_PARAMETER_GEN);
+    ExportConstant(CKM_X9_42_DH_PARAMETER_GEN);
+
+#undef ExportConstant
+
+    /***************************************************************************
+     * Attribute Types
+     ***************************************************************************/
+    if ((cka_name_to_value = PyDict_New()) == NULL) {
+        return;
+    }
+    if ((cka_value_to_name = PyDict_New()) == NULL) {
+        return;
+    }
+
+#define ExportConstant(constant)                      \
+if (_AddIntConstantWithLookup(m, #constant, constant, \
+    "CKA_", cka_name_to_value, cka_value_to_name) < 0) return;
+
+    /* The following attribute types are defined: */
+    ExportConstant(CKA_CLASS);
+    ExportConstant(CKA_TOKEN);
+    ExportConstant(CKA_PRIVATE);
+    ExportConstant(CKA_LABEL);
+    ExportConstant(CKA_APPLICATION);
+    ExportConstant(CKA_VALUE);
+
+    /* CKA_OBJECT_ID is new for v2.10 */
+    ExportConstant(CKA_OBJECT_ID);
+
+    ExportConstant(CKA_CERTIFICATE_TYPE);
+    ExportConstant(CKA_ISSUER);
+    ExportConstant(CKA_SERIAL_NUMBER);
+
+    /* CKA_AC_ISSUER, CKA_OWNER, and CKA_ATTR_TYPES are new for v2.10 */
+    ExportConstant(CKA_AC_ISSUER);
+    ExportConstant(CKA_OWNER);
+    ExportConstant(CKA_ATTR_TYPES);
+
+    /* CKA_TRUSTED is new for v2.11 */
+    ExportConstant(CKA_TRUSTED);
+
+    /* CKA_CERTIFICATE_CATEGORY ...
+     * CKA_CHECK_VALUE are new for v2.20 */
+    ExportConstant(CKA_CERTIFICATE_CATEGORY);
+    ExportConstant(CKA_JAVA_MIDP_SECURITY_DOMAIN);
+    ExportConstant(CKA_URL);
+    ExportConstant(CKA_HASH_OF_SUBJECT_PUBLIC_KEY);
+    ExportConstant(CKA_HASH_OF_ISSUER_PUBLIC_KEY);
+    ExportConstant(CKA_CHECK_VALUE);
+
+    ExportConstant(CKA_KEY_TYPE);
+    ExportConstant(CKA_SUBJECT);
+    ExportConstant(CKA_ID);
+    ExportConstant(CKA_SENSITIVE);
+    ExportConstant(CKA_ENCRYPT);
+    ExportConstant(CKA_DECRYPT);
+    ExportConstant(CKA_WRAP);
+    ExportConstant(CKA_UNWRAP);
+    ExportConstant(CKA_SIGN);
+    ExportConstant(CKA_SIGN_RECOVER);
+    ExportConstant(CKA_VERIFY);
+    ExportConstant(CKA_VERIFY_RECOVER);
+    ExportConstant(CKA_DERIVE);
+    ExportConstant(CKA_START_DATE);
+    ExportConstant(CKA_END_DATE);
+    ExportConstant(CKA_MODULUS);
+    ExportConstant(CKA_MODULUS_BITS);
+    ExportConstant(CKA_PUBLIC_EXPONENT);
+    ExportConstant(CKA_PRIVATE_EXPONENT);
+    ExportConstant(CKA_PRIME_1);
+    ExportConstant(CKA_PRIME_2);
+    ExportConstant(CKA_EXPONENT_1);
+    ExportConstant(CKA_EXPONENT_2);
+    ExportConstant(CKA_COEFFICIENT);
+    ExportConstant(CKA_PRIME);
+    ExportConstant(CKA_SUBPRIME);
+    ExportConstant(CKA_BASE);
+
+    /* CKA_PRIME_BITS and CKA_SUB_PRIME_BITS are new for v2.11 */
+    ExportConstant(CKA_PRIME_BITS);
+    ExportConstant(CKA_SUBPRIME_BITS);
+    ExportConstant(CKA_SUB_PRIME_BITS);
+    /* (To retain backwards-compatibility) */
+
+    ExportConstant(CKA_VALUE_BITS);
+    ExportConstant(CKA_VALUE_LEN);
+
+    /* CKA_EXTRACTABLE, CKA_LOCAL, CKA_NEVER_EXTRACTABLE,
+     * CKA_ALWAYS_SENSITIVE, CKA_MODIFIABLE, CKA_ECDSA_PARAMS,
+     * and CKA_EC_POINT are new for v2.0 */
+    ExportConstant(CKA_EXTRACTABLE);
+    ExportConstant(CKA_LOCAL);
+    ExportConstant(CKA_NEVER_EXTRACTABLE);
+    ExportConstant(CKA_ALWAYS_SENSITIVE);
+
+    /* CKA_KEY_GEN_MECHANISM is new for v2.11 */
+    ExportConstant(CKA_KEY_GEN_MECHANISM);
+
+    ExportConstant(CKA_MODIFIABLE);
+
+    /* CKA_ECDSA_PARAMS is deprecated in v2.11,
+     * CKA_EC_PARAMS is preferred. */
+    ExportConstant(CKA_ECDSA_PARAMS);
+    ExportConstant(CKA_EC_PARAMS);
+
+    ExportConstant(CKA_EC_POINT);
+
+    /* CKA_SECONDARY_AUTH, CKA_AUTH_PIN_FLAGS,
+     * are new for v2.10. Deprecated in v2.11 and onwards. */
+    ExportConstant(CKA_SECONDARY_AUTH);
+    ExportConstant(CKA_AUTH_PIN_FLAGS);
+
+    /* CKA_ALWAYS_AUTHENTICATE ...
+     * CKA_UNWRAP_TEMPLATE are new for v2.20 */
+    ExportConstant(CKA_ALWAYS_AUTHENTICATE);
+
+    ExportConstant(CKA_WRAP_WITH_TRUSTED);
+    ExportConstant(CKA_WRAP_TEMPLATE);
+    ExportConstant(CKA_UNWRAP_TEMPLATE);
+
+    /* CKA_HW_FEATURE_TYPE, CKA_RESET_ON_INIT, and CKA_HAS_RESET
+     * are new for v2.10 */
+    ExportConstant(CKA_HW_FEATURE_TYPE);
+    ExportConstant(CKA_RESET_ON_INIT);
+    ExportConstant(CKA_HAS_RESET);
+
+    /* The following attributes are new for v2.20 */
+    ExportConstant(CKA_PIXEL_X);
+    ExportConstant(CKA_PIXEL_Y);
+    ExportConstant(CKA_RESOLUTION);
+    ExportConstant(CKA_CHAR_ROWS);
+    ExportConstant(CKA_CHAR_COLUMNS);
+    ExportConstant(CKA_COLOR);
+    ExportConstant(CKA_BITS_PER_PIXEL);
+    ExportConstant(CKA_CHAR_SETS);
+    ExportConstant(CKA_ENCODING_METHODS);
+    ExportConstant(CKA_MIME_TYPES);
+    ExportConstant(CKA_MECHANISM_TYPE);
+    ExportConstant(CKA_REQUIRED_CMS_ATTRIBUTES);
+    ExportConstant(CKA_DEFAULT_CMS_ATTRIBUTES);
+    ExportConstant(CKA_SUPPORTED_CMS_ATTRIBUTES);
+    ExportConstant(CKA_ALLOWED_MECHANISMS);
+
+    ExportConstant(CKA_VENDOR_DEFINED);
+
+#undef ExportConstant
+
+    /***************************************************************************
+     * SEC OID TAGS
+     ***************************************************************************/
+
+    if ((sec_oid_name_to_value = PyDict_New()) == NULL) {
+        return;
+    }
+    if ((sec_oid_value_to_name = PyDict_New()) == NULL) {
+        return;
+    }
+
+#define ExportConstant(constant)                      \
+if (_AddIntConstantWithLookup(m, #constant, constant, \
+    "SEC_OID_", sec_oid_name_to_value, sec_oid_value_to_name) < 0) return;
+
+    ExportConstant(SEC_OID_UNKNOWN);
+    ExportConstant(SEC_OID_MD2);
+    ExportConstant(SEC_OID_MD4);
+    ExportConstant(SEC_OID_MD5);
+    ExportConstant(SEC_OID_SHA1);
+    ExportConstant(SEC_OID_RC2_CBC);
+    ExportConstant(SEC_OID_RC4);
+    ExportConstant(SEC_OID_DES_EDE3_CBC);
+    ExportConstant(SEC_OID_RC5_CBC_PAD);
+    ExportConstant(SEC_OID_DES_ECB);
+    ExportConstant(SEC_OID_DES_CBC);
+    ExportConstant(SEC_OID_DES_OFB);
+    ExportConstant(SEC_OID_DES_CFB);
+    ExportConstant(SEC_OID_DES_MAC);
+    ExportConstant(SEC_OID_DES_EDE);
+    ExportConstant(SEC_OID_ISO_SHA_WITH_RSA_SIGNATURE);
+    ExportConstant(SEC_OID_PKCS1_RSA_ENCRYPTION);
+    ExportConstant(SEC_OID_PKCS1_MD2_WITH_RSA_ENCRYPTION);
+    ExportConstant(SEC_OID_PKCS1_MD4_WITH_RSA_ENCRYPTION);
+    ExportConstant(SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION);
+    ExportConstant(SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION);
+    ExportConstant(SEC_OID_PKCS5_PBE_WITH_MD2_AND_DES_CBC);
+    ExportConstant(SEC_OID_PKCS5_PBE_WITH_MD5_AND_DES_CBC);
+    ExportConstant(SEC_OID_PKCS5_PBE_WITH_SHA1_AND_DES_CBC);
+    ExportConstant(SEC_OID_PKCS7);
+    ExportConstant(SEC_OID_PKCS7_DATA);
+    ExportConstant(SEC_OID_PKCS7_SIGNED_DATA);
+    ExportConstant(SEC_OID_PKCS7_ENVELOPED_DATA);
+    ExportConstant(SEC_OID_PKCS7_SIGNED_ENVELOPED_DATA);
+    ExportConstant(SEC_OID_PKCS7_DIGESTED_DATA);
+    ExportConstant(SEC_OID_PKCS7_ENCRYPTED_DATA);
+    ExportConstant(SEC_OID_PKCS9_EMAIL_ADDRESS);
+    ExportConstant(SEC_OID_PKCS9_UNSTRUCTURED_NAME);
+    ExportConstant(SEC_OID_PKCS9_CONTENT_TYPE);
+    ExportConstant(SEC_OID_PKCS9_MESSAGE_DIGEST);
+    ExportConstant(SEC_OID_PKCS9_SIGNING_TIME);
+    ExportConstant(SEC_OID_PKCS9_COUNTER_SIGNATURE);
+    ExportConstant(SEC_OID_PKCS9_CHALLENGE_PASSWORD);
+    ExportConstant(SEC_OID_PKCS9_UNSTRUCTURED_ADDRESS);
+    ExportConstant(SEC_OID_PKCS9_EXTENDED_CERTIFICATE_ATTRIBUTES);
+    ExportConstant(SEC_OID_PKCS9_SMIME_CAPABILITIES);
+    ExportConstant(SEC_OID_AVA_COMMON_NAME);
+    ExportConstant(SEC_OID_AVA_COUNTRY_NAME);
+    ExportConstant(SEC_OID_AVA_LOCALITY);
+    ExportConstant(SEC_OID_AVA_STATE_OR_PROVINCE);
+    ExportConstant(SEC_OID_AVA_ORGANIZATION_NAME);
+    ExportConstant(SEC_OID_AVA_ORGANIZATIONAL_UNIT_NAME);
+    ExportConstant(SEC_OID_AVA_DN_QUALIFIER);
+    ExportConstant(SEC_OID_AVA_DC);
+
+    ExportConstant(SEC_OID_NS_TYPE_GIF);
+    ExportConstant(SEC_OID_NS_TYPE_JPEG);
+    ExportConstant(SEC_OID_NS_TYPE_URL);
+    ExportConstant(SEC_OID_NS_TYPE_HTML);
+    ExportConstant(SEC_OID_NS_TYPE_CERT_SEQUENCE);
+    ExportConstant(SEC_OID_MISSI_KEA_DSS_OLD);
+    ExportConstant(SEC_OID_MISSI_DSS_OLD);
+    ExportConstant(SEC_OID_MISSI_KEA_DSS);
+    ExportConstant(SEC_OID_MISSI_DSS);
+    ExportConstant(SEC_OID_MISSI_KEA);
+    ExportConstant(SEC_OID_MISSI_ALT_KEA);
+
+    /* Netscape private certificate extensions */
+    ExportConstant(SEC_OID_NS_CERT_EXT_NETSCAPE_OK);
+    ExportConstant(SEC_OID_NS_CERT_EXT_ISSUER_LOGO);
+    ExportConstant(SEC_OID_NS_CERT_EXT_SUBJECT_LOGO);
+    ExportConstant(SEC_OID_NS_CERT_EXT_CERT_TYPE);
+    ExportConstant(SEC_OID_NS_CERT_EXT_BASE_URL);
+    ExportConstant(SEC_OID_NS_CERT_EXT_REVOCATION_URL);
+    ExportConstant(SEC_OID_NS_CERT_EXT_CA_REVOCATION_URL);
+    ExportConstant(SEC_OID_NS_CERT_EXT_CA_CRL_URL);
+    ExportConstant(SEC_OID_NS_CERT_EXT_CA_CERT_URL);
+    ExportConstant(SEC_OID_NS_CERT_EXT_CERT_RENEWAL_URL);
+    ExportConstant(SEC_OID_NS_CERT_EXT_CA_POLICY_URL);
+    ExportConstant(SEC_OID_NS_CERT_EXT_HOMEPAGE_URL);
+    ExportConstant(SEC_OID_NS_CERT_EXT_ENTITY_LOGO);
+    ExportConstant(SEC_OID_NS_CERT_EXT_USER_PICTURE);
+    ExportConstant(SEC_OID_NS_CERT_EXT_SSL_SERVER_NAME);
+    ExportConstant(SEC_OID_NS_CERT_EXT_COMMENT);
+    ExportConstant(SEC_OID_NS_CERT_EXT_LOST_PASSWORD_URL);
+    ExportConstant(SEC_OID_NS_CERT_EXT_CERT_RENEWAL_TIME);
+    ExportConstant(SEC_OID_NS_KEY_USAGE_GOVT_APPROVED);
+
+    /* x.509 v3 Extensions */
+    ExportConstant(SEC_OID_X509_SUBJECT_DIRECTORY_ATTR);
+    ExportConstant(SEC_OID_X509_SUBJECT_KEY_ID);
+    ExportConstant(SEC_OID_X509_KEY_USAGE);
+    ExportConstant(SEC_OID_X509_PRIVATE_KEY_USAGE_PERIOD);
+    ExportConstant(SEC_OID_X509_SUBJECT_ALT_NAME);
+    ExportConstant(SEC_OID_X509_ISSUER_ALT_NAME);
+    ExportConstant(SEC_OID_X509_BASIC_CONSTRAINTS);
+    ExportConstant(SEC_OID_X509_NAME_CONSTRAINTS);
+    ExportConstant(SEC_OID_X509_CRL_DIST_POINTS);
+    ExportConstant(SEC_OID_X509_CERTIFICATE_POLICIES);
+    ExportConstant(SEC_OID_X509_POLICY_MAPPINGS);
+    ExportConstant(SEC_OID_X509_POLICY_CONSTRAINTS);
+    ExportConstant(SEC_OID_X509_AUTH_KEY_ID);
+    ExportConstant(SEC_OID_X509_EXT_KEY_USAGE);
+    ExportConstant(SEC_OID_X509_AUTH_INFO_ACCESS);
+
+    ExportConstant(SEC_OID_X509_CRL_NUMBER);
+    ExportConstant(SEC_OID_X509_REASON_CODE);
+    ExportConstant(SEC_OID_X509_INVALID_DATE);
+    /* End of x.509 v3 Extensions */
+
+    ExportConstant(SEC_OID_X500_RSA_ENCRYPTION);
+
+    /* alg 1485 additions */
+    ExportConstant(SEC_OID_RFC1274_UID);
+    ExportConstant(SEC_OID_RFC1274_MAIL);
+
+    /* PKCS 12 additions */
+    ExportConstant(SEC_OID_PKCS12);
+    ExportConstant(SEC_OID_PKCS12_MODE_IDS);
+    ExportConstant(SEC_OID_PKCS12_ESPVK_IDS);
+    ExportConstant(SEC_OID_PKCS12_BAG_IDS);
+    ExportConstant(SEC_OID_PKCS12_CERT_BAG_IDS);
+    ExportConstant(SEC_OID_PKCS12_OIDS);
+    ExportConstant(SEC_OID_PKCS12_PBE_IDS);
+    ExportConstant(SEC_OID_PKCS12_SIGNATURE_IDS);
+    ExportConstant(SEC_OID_PKCS12_ENVELOPING_IDS);
+   /* SEC_OID_PKCS12_OFFLINE_TRANSPORT_MODE,
+    SEC_OID_PKCS12_ONLINE_TRANSPORT_MODE, */
+    ExportConstant(SEC_OID_PKCS12_PKCS8_KEY_SHROUDING);
+    ExportConstant(SEC_OID_PKCS12_KEY_BAG_ID);
+    ExportConstant(SEC_OID_PKCS12_CERT_AND_CRL_BAG_ID);
+    ExportConstant(SEC_OID_PKCS12_SECRET_BAG_ID);
+    ExportConstant(SEC_OID_PKCS12_X509_CERT_CRL_BAG);
+    ExportConstant(SEC_OID_PKCS12_SDSI_CERT_BAG);
+    ExportConstant(SEC_OID_PKCS12_PBE_WITH_SHA1_AND_128_BIT_RC4);
+    ExportConstant(SEC_OID_PKCS12_PBE_WITH_SHA1_AND_40_BIT_RC4);
+    ExportConstant(SEC_OID_PKCS12_PBE_WITH_SHA1_AND_TRIPLE_DES_CBC);
+    ExportConstant(SEC_OID_PKCS12_PBE_WITH_SHA1_AND_128_BIT_RC2_CBC);
+    ExportConstant(SEC_OID_PKCS12_PBE_WITH_SHA1_AND_40_BIT_RC2_CBC);
+    ExportConstant(SEC_OID_PKCS12_RSA_ENCRYPTION_WITH_128_BIT_RC4);
+    ExportConstant(SEC_OID_PKCS12_RSA_ENCRYPTION_WITH_40_BIT_RC4);
+    ExportConstant(SEC_OID_PKCS12_RSA_ENCRYPTION_WITH_TRIPLE_DES);
+    ExportConstant(SEC_OID_PKCS12_RSA_SIGNATURE_WITH_SHA1_DIGEST);
+    /* end of PKCS 12 additions */
+
+    /* DSA signatures */
+    ExportConstant(SEC_OID_ANSIX9_DSA_SIGNATURE);
+    ExportConstant(SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST);
+    ExportConstant(SEC_OID_BOGUS_DSA_SIGNATURE_WITH_SHA1_DIGEST);
+
+    /* Verisign OIDs */
+    ExportConstant(SEC_OID_VERISIGN_USER_NOTICES);
+
+    /* PKIX OIDs */
+    ExportConstant(SEC_OID_PKIX_CPS_POINTER_QUALIFIER);
+    ExportConstant(SEC_OID_PKIX_USER_NOTICE_QUALIFIER);
+    ExportConstant(SEC_OID_PKIX_OCSP);
+    ExportConstant(SEC_OID_PKIX_OCSP_BASIC_RESPONSE);
+    ExportConstant(SEC_OID_PKIX_OCSP_NONCE);
+    ExportConstant(SEC_OID_PKIX_OCSP_CRL);
+    ExportConstant(SEC_OID_PKIX_OCSP_RESPONSE);
+    ExportConstant(SEC_OID_PKIX_OCSP_NO_CHECK);
+    ExportConstant(SEC_OID_PKIX_OCSP_ARCHIVE_CUTOFF);
+    ExportConstant(SEC_OID_PKIX_OCSP_SERVICE_LOCATOR);
+    ExportConstant(SEC_OID_PKIX_REGCTRL_REGTOKEN);
+    ExportConstant(SEC_OID_PKIX_REGCTRL_AUTHENTICATOR);
+    ExportConstant(SEC_OID_PKIX_REGCTRL_PKIPUBINFO);
+    ExportConstant(SEC_OID_PKIX_REGCTRL_PKI_ARCH_OPTIONS);
+    ExportConstant(SEC_OID_PKIX_REGCTRL_OLD_CERT_ID);
+    ExportConstant(SEC_OID_PKIX_REGCTRL_PROTOCOL_ENC_KEY);
+    ExportConstant(SEC_OID_PKIX_REGINFO_UTF8_PAIRS);
+    ExportConstant(SEC_OID_PKIX_REGINFO_CERT_REQUEST);
+    ExportConstant(SEC_OID_EXT_KEY_USAGE_SERVER_AUTH);
+    ExportConstant(SEC_OID_EXT_KEY_USAGE_CLIENT_AUTH);
+    ExportConstant(SEC_OID_EXT_KEY_USAGE_CODE_SIGN);
+    ExportConstant(SEC_OID_EXT_KEY_USAGE_EMAIL_PROTECT);
+    ExportConstant(SEC_OID_EXT_KEY_USAGE_TIME_STAMP);
+    ExportConstant(SEC_OID_OCSP_RESPONDER);
+
+    /* Netscape Algorithm OIDs */
+    ExportConstant(SEC_OID_NETSCAPE_SMIME_KEA);
+
+    /* Skipjack OID -- ### mwelch temporary */
+    ExportConstant(SEC_OID_FORTEZZA_SKIPJACK);
+
+    /* PKCS 12 V2 oids */
+    ExportConstant(SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_128_BIT_RC4);
+    ExportConstant(SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_40_BIT_RC4);
+    ExportConstant(SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_3KEY_TRIPLE_DES_CBC);
+    ExportConstant(SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_2KEY_TRIPLE_DES_CBC);
+    ExportConstant(SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_128_BIT_RC2_CBC);
+    ExportConstant(SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_40_BIT_RC2_CBC);
+    ExportConstant(SEC_OID_PKCS12_SAFE_CONTENTS_ID);
+    ExportConstant(SEC_OID_PKCS12_PKCS8_SHROUDED_KEY_BAG_ID);
+
+    ExportConstant(SEC_OID_PKCS12_V1_KEY_BAG_ID);
+    ExportConstant(SEC_OID_PKCS12_V1_PKCS8_SHROUDED_KEY_BAG_ID);
+    ExportConstant(SEC_OID_PKCS12_V1_CERT_BAG_ID);
+    ExportConstant(SEC_OID_PKCS12_V1_CRL_BAG_ID);
+    ExportConstant(SEC_OID_PKCS12_V1_SECRET_BAG_ID);
+    ExportConstant(SEC_OID_PKCS12_V1_SAFE_CONTENTS_BAG_ID);
+    ExportConstant(SEC_OID_PKCS9_X509_CERT);
+    ExportConstant(SEC_OID_PKCS9_SDSI_CERT);
+    ExportConstant(SEC_OID_PKCS9_X509_CRL);
+    ExportConstant(SEC_OID_PKCS9_FRIENDLY_NAME);
+    ExportConstant(SEC_OID_PKCS9_LOCAL_KEY_ID);
+    ExportConstant(SEC_OID_BOGUS_KEY_USAGE);
+
+    /*Diffe Helman OIDS */
+    ExportConstant(SEC_OID_X942_DIFFIE_HELMAN_KEY);
+
+    /* Netscape other name types */
+    ExportConstant(SEC_OID_NETSCAPE_NICKNAME);
+
+    /* Cert Server OIDS */
+    ExportConstant(SEC_OID_NETSCAPE_RECOVERY_REQUEST);
+
+    /* New PSM certificate management OIDs */
+    ExportConstant(SEC_OID_CERT_RENEWAL_LOCATOR);
+    ExportConstant(SEC_OID_NS_CERT_EXT_SCOPE_OF_USE);
+
+    /* CMS (RFC2630) OIDs */
+    ExportConstant(SEC_OID_CMS_EPHEMERAL_STATIC_DIFFIE_HELLMAN);
+    ExportConstant(SEC_OID_CMS_3DES_KEY_WRAP);
+    ExportConstant(SEC_OID_CMS_RC2_KEY_WRAP);
+
+    /* SMIME attributes */
+    ExportConstant(SEC_OID_SMIME_ENCRYPTION_KEY_PREFERENCE);
+
+    /* AES OIDs */
+    ExportConstant(SEC_OID_AES_128_ECB);
+    ExportConstant(SEC_OID_AES_128_CBC);
+    ExportConstant(SEC_OID_AES_192_ECB);
+    ExportConstant(SEC_OID_AES_192_CBC);
+    ExportConstant(SEC_OID_AES_256_ECB);
+    ExportConstant(SEC_OID_AES_256_CBC);
+
+    ExportConstant(SEC_OID_SDN702_DSA_SIGNATURE);
+
+    ExportConstant(SEC_OID_MS_SMIME_ENCRYPTION_KEY_PREFERENCE);
+
+    ExportConstant(SEC_OID_SHA256);
+    ExportConstant(SEC_OID_SHA384);
+    ExportConstant(SEC_OID_SHA512);
+
+    ExportConstant(SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION);
+    ExportConstant(SEC_OID_PKCS1_SHA384_WITH_RSA_ENCRYPTION);
+    ExportConstant(SEC_OID_PKCS1_SHA512_WITH_RSA_ENCRYPTION);
+
+    ExportConstant(SEC_OID_AES_128_KEY_WRAP);
+    ExportConstant(SEC_OID_AES_192_KEY_WRAP);
+    ExportConstant(SEC_OID_AES_256_KEY_WRAP);
+
+    /* Elliptic Curve Cryptography (ECC) OIDs */
+    ExportConstant(SEC_OID_ANSIX962_EC_PUBLIC_KEY);
+    ExportConstant(SEC_OID_ANSIX962_ECDSA_SHA1_SIGNATURE);
+
+    ExportConstant(SEC_OID_ANSIX962_ECDSA_SIGNATURE_WITH_SHA1_DIGEST);
+
+    /* ANSI X9.62 named elliptic curves (prime field) */
+    ExportConstant(SEC_OID_ANSIX962_EC_PRIME192V1);
+    ExportConstant(SEC_OID_ANSIX962_EC_PRIME192V2);
+    ExportConstant(SEC_OID_ANSIX962_EC_PRIME192V3);
+    ExportConstant(SEC_OID_ANSIX962_EC_PRIME239V1);
+    ExportConstant(SEC_OID_ANSIX962_EC_PRIME239V2);
+    ExportConstant(SEC_OID_ANSIX962_EC_PRIME239V3);
+    ExportConstant(SEC_OID_ANSIX962_EC_PRIME256V1);
+
+    /* SECG named elliptic curves (prime field) */
+    ExportConstant(SEC_OID_SECG_EC_SECP112R1);
+    ExportConstant(SEC_OID_SECG_EC_SECP112R2);
+    ExportConstant(SEC_OID_SECG_EC_SECP128R1);
+    ExportConstant(SEC_OID_SECG_EC_SECP128R2);
+    ExportConstant(SEC_OID_SECG_EC_SECP160K1);
+    ExportConstant(SEC_OID_SECG_EC_SECP160R1);
+    ExportConstant(SEC_OID_SECG_EC_SECP160R2);
+    ExportConstant(SEC_OID_SECG_EC_SECP192K1);
+    /* SEC_OID_SECG_EC_SECP192R1 is SEC_OID_ANSIX962_EC_PRIME192V1 */
+    ExportConstant(SEC_OID_SECG_EC_SECP224K1);
+    ExportConstant(SEC_OID_SECG_EC_SECP224R1);
+    ExportConstant(SEC_OID_SECG_EC_SECP256K1);
+    /* SEC_OID_SECG_EC_SECP256R1 is SEC_OID_ANSIX962_EC_PRIME256V1 */
+    ExportConstant(SEC_OID_SECG_EC_SECP384R1);
+    ExportConstant(SEC_OID_SECG_EC_SECP521R1);
+
+    /* ANSI X9.62 named elliptic curves (characteristic two field) */
+    ExportConstant(SEC_OID_ANSIX962_EC_C2PNB163V1);
+    ExportConstant(SEC_OID_ANSIX962_EC_C2PNB163V2);
+    ExportConstant(SEC_OID_ANSIX962_EC_C2PNB163V3);
+    ExportConstant(SEC_OID_ANSIX962_EC_C2PNB176V1);
+    ExportConstant(SEC_OID_ANSIX962_EC_C2TNB191V1);
+    ExportConstant(SEC_OID_ANSIX962_EC_C2TNB191V2);
+    ExportConstant(SEC_OID_ANSIX962_EC_C2TNB191V3);
+    ExportConstant(SEC_OID_ANSIX962_EC_C2ONB191V4);
+    ExportConstant(SEC_OID_ANSIX962_EC_C2ONB191V5);
+    ExportConstant(SEC_OID_ANSIX962_EC_C2PNB208W1);
+    ExportConstant(SEC_OID_ANSIX962_EC_C2TNB239V1);
+    ExportConstant(SEC_OID_ANSIX962_EC_C2TNB239V2);
+    ExportConstant(SEC_OID_ANSIX962_EC_C2TNB239V3);
+    ExportConstant(SEC_OID_ANSIX962_EC_C2ONB239V4);
+    ExportConstant(SEC_OID_ANSIX962_EC_C2ONB239V5);
+    ExportConstant(SEC_OID_ANSIX962_EC_C2PNB272W1);
+    ExportConstant(SEC_OID_ANSIX962_EC_C2PNB304W1);
+    ExportConstant(SEC_OID_ANSIX962_EC_C2TNB359V1);
+    ExportConstant(SEC_OID_ANSIX962_EC_C2PNB368W1);
+    ExportConstant(SEC_OID_ANSIX962_EC_C2TNB431R1);
+
+    /* SECG named elliptic curves (characteristic two field) */
+    ExportConstant(SEC_OID_SECG_EC_SECT113R1);
+    ExportConstant(SEC_OID_SECG_EC_SECT113R2);
+    ExportConstant(SEC_OID_SECG_EC_SECT131R1);
+    ExportConstant(SEC_OID_SECG_EC_SECT131R2);
+    ExportConstant(SEC_OID_SECG_EC_SECT163K1);
+    ExportConstant(SEC_OID_SECG_EC_SECT163R1);
+    ExportConstant(SEC_OID_SECG_EC_SECT163R2);
+    ExportConstant(SEC_OID_SECG_EC_SECT193R1);
+    ExportConstant(SEC_OID_SECG_EC_SECT193R2);
+    ExportConstant(SEC_OID_SECG_EC_SECT233K1);
+    ExportConstant(SEC_OID_SECG_EC_SECT233R1);
+    ExportConstant(SEC_OID_SECG_EC_SECT239K1);
+    ExportConstant(SEC_OID_SECG_EC_SECT283K1);
+    ExportConstant(SEC_OID_SECG_EC_SECT283R1);
+    ExportConstant(SEC_OID_SECG_EC_SECT409K1);
+    ExportConstant(SEC_OID_SECG_EC_SECT409R1);
+    ExportConstant(SEC_OID_SECG_EC_SECT571K1);
+    ExportConstant(SEC_OID_SECG_EC_SECT571R1);
+
+    ExportConstant(SEC_OID_NETSCAPE_AOLSCREENNAME);
+
+    ExportConstant(SEC_OID_AVA_SURNAME);
+    ExportConstant(SEC_OID_AVA_SERIAL_NUMBER);
+    ExportConstant(SEC_OID_AVA_STREET_ADDRESS);
+    ExportConstant(SEC_OID_AVA_TITLE);
+    ExportConstant(SEC_OID_AVA_POSTAL_ADDRESS);
+    ExportConstant(SEC_OID_AVA_POSTAL_CODE);
+    ExportConstant(SEC_OID_AVA_POST_OFFICE_BOX);
+    ExportConstant(SEC_OID_AVA_GIVEN_NAME);
+    ExportConstant(SEC_OID_AVA_INITIALS);
+    ExportConstant(SEC_OID_AVA_GENERATION_QUALIFIER);
+    ExportConstant(SEC_OID_AVA_HOUSE_IDENTIFIER);
+    ExportConstant(SEC_OID_AVA_PSEUDONYM);
+
+    /* More OIDs */
+    ExportConstant(SEC_OID_PKIX_CA_ISSUERS);
+    ExportConstant(SEC_OID_PKCS9_EXTENSION_REQUEST);
+
+    /* new EC Signature oids */
+    ExportConstant(SEC_OID_ANSIX962_ECDSA_SIGNATURE_RECOMMENDED_DIGEST);
+    ExportConstant(SEC_OID_ANSIX962_ECDSA_SIGNATURE_SPECIFIED_DIGEST);
+    ExportConstant(SEC_OID_ANSIX962_ECDSA_SHA224_SIGNATURE);
+    ExportConstant(SEC_OID_ANSIX962_ECDSA_SHA256_SIGNATURE);
+    ExportConstant(SEC_OID_ANSIX962_ECDSA_SHA384_SIGNATURE);
+    ExportConstant(SEC_OID_ANSIX962_ECDSA_SHA512_SIGNATURE);
+
+    /* More id-ce and id-pe OIDs from RFC 3280 */
+    ExportConstant(SEC_OID_X509_HOLD_INSTRUCTION_CODE);
+    ExportConstant(SEC_OID_X509_DELTA_CRL_INDICATOR);
+    ExportConstant(SEC_OID_X509_ISSUING_DISTRIBUTION_POINT);
+    ExportConstant(SEC_OID_X509_CERT_ISSUER);
+    ExportConstant(SEC_OID_X509_FRESHEST_CRL);
+    ExportConstant(SEC_OID_X509_INHIBIT_ANY_POLICY);
+    ExportConstant(SEC_OID_X509_SUBJECT_INFO_ACCESS);
+
+    /* Camellia OIDs (RFC3657)*/
+    ExportConstant(SEC_OID_CAMELLIA_128_CBC);
+    ExportConstant(SEC_OID_CAMELLIA_192_CBC);
+    ExportConstant(SEC_OID_CAMELLIA_256_CBC);
+
+    /* PKCS 5 V2 OIDS */
+    ExportConstant(SEC_OID_PKCS5_PBKDF2);
+    ExportConstant(SEC_OID_PKCS5_PBES2);
+    ExportConstant(SEC_OID_PKCS5_PBMAC1);
+    ExportConstant(SEC_OID_HMAC_SHA1);
+    ExportConstant(SEC_OID_HMAC_SHA224);
+    ExportConstant(SEC_OID_HMAC_SHA256);
+    ExportConstant(SEC_OID_HMAC_SHA384);
+    ExportConstant(SEC_OID_HMAC_SHA512);
+
+    ExportConstant(SEC_OID_PKIX_TIMESTAMPING);
+    ExportConstant(SEC_OID_PKIX_CA_REPOSITORY);
+
+    ExportConstant(SEC_OID_ISO_SHA1_WITH_RSA_SIGNATURE);
+
+    ExportConstant(SEC_OID_SEED_CBC);
+
+    ExportConstant(SEC_OID_X509_ANY_POLICY);
+
+    ExportConstant(SEC_OID_SECG_EC_SECP192R1);
+    ExportConstant(SEC_OID_SECG_EC_SECP256R1);
+    ExportConstant(SEC_OID_PKCS12_KEY_USAGE);
+
+#undef ExportConstant
+
+    /***************************************************************************
+     * PK11Origin
+     ***************************************************************************/
+    AddIntConstant(PK11_OriginNULL);         /* There is not key, it's a null SymKey */
+    AddIntConstant(PK11_OriginDerive);       /* Key was derived from some other key */
+    AddIntConstant(PK11_OriginGenerated);    /* Key was generated (also PBE keys) */
+    AddIntConstant(PK11_OriginFortezzaHack); /* Key was marked for fortezza hack */
+    AddIntConstant(PK11_OriginUnwrap);       /* Key was unwrapped or decrypted */
 }
+

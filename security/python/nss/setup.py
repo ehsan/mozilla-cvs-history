@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -14,8 +15,8 @@
 # The Original Code is a Python binding for Network Security Services (NSS).
 #
 # The Initial Developer of the Original Code is Red Hat, Inc.
-#   (Author: John Dennis <jdennis@redhat.com>) 
-# 
+#   (Author: John Dennis <jdennis@redhat.com>)
+#
 # Portions created by the Initial Developer are Copyright (C) 2008,2009
 # the Initial Developer. All Rights Reserved.
 #
@@ -49,7 +50,7 @@ from distutils.util import subst_vars, change_root
 from distutils.command.build_py import build_py as _build_py
 from distutils.command.sdist import sdist as _sdist
 
-version = "0.6"
+version = "0.7"
 
 def update_version():
     """If the version string in __init__.py doesn't match the current
@@ -88,7 +89,7 @@ class BuildPy(_build_py):
     def run(self):
         update_version()
         _build_py.run(self)
-    
+
 
 class SDist(_sdist):
     """Specialized Python source builder."""
@@ -96,7 +97,7 @@ class SDist(_sdist):
     def run(self):
         update_version()
         _sdist.run(self)
-    
+
 
 class BuildDoc(Command):
     description = 'generate documentation'
@@ -123,7 +124,7 @@ class BuildDoc(Command):
                                    ('build_lib', 'build_lib'))
         if self.docdir is None:
             self.docdir = change_root(self.build_base, 'doc')
-    
+
     def run(self):
         self.run_command('build')
         for cmd_name in self.get_sub_commands():
@@ -190,7 +191,7 @@ class InstallDoc(Command):
 
         if self.docdir is None:
             self.docdir = change_root(self.build_base, 'doc')
-    
+
     def run(self):
         if not self.skip_build:
             self.run_command('build_doc')
@@ -211,7 +212,7 @@ class InstallDoc(Command):
         install_spec. A sequence of install_spec's allows one to build
         up the destrination tree in any structure desired.
 
-        Each install_spec consists of 3 components 
+        Each install_spec consists of 3 components
         (manifest_template, dst_xforms, dst_dir):
 
         The manifest_template is a sequence where each item is identical

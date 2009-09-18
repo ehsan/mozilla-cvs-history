@@ -14,8 +14,8 @@
  * The Original Code is a Python binding for Network Security Services (NSS).
  *
  * The Initial Developer of the Original Code is Red Hat, Inc.
- *   (Author: John Dennis <jdennis@redhat.com>) 
- * 
+ *   (Author: John Dennis <jdennis@redhat.com>)
+ *
  * Portions created by the Initial Developer are Copyright (C) 2008,2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -94,17 +94,19 @@ typedef struct {
 
 typedef enum SECItemKindEnum {
     SECITEM_unknown,
+    SECITEM_buffer,
     SECITEM_dist_name,
     SECITEM_session_id,
     SECITEM_signed_data,
     SECITEM_signature,
     SECITEM_algorithm,
+    SECITEM_iv_param,
 } SECItemKind;
 
 typedef struct {
     PyObject_HEAD
     SECItem item;
-    SECItemKind kind;    
+    SECItemKind kind;
 } SecItem;
 
 /* ========================================================================== */
@@ -186,6 +188,26 @@ typedef struct {
     PyObject *py_public_key;
 } SubjectPublicKeyInfo;
 
+/* ========================================================================== */
+/* ============================= PK11SymKey Class =========================== */
+/* ========================================================================== */
+
+typedef struct {
+    PyObject_HEAD
+    PK11SymKey *pk11_sym_key;
+} PyPK11SymKey;
+
+/* ========================================================================== */
+/* ============================= PK11Context Class ========================== */
+/* ========================================================================== */
+
+typedef struct {
+    PyObject_HEAD
+    PK11Context *pk11_context;
+} PyPK11Context;
+
+/* ========================================================================== */
+
 typedef struct {
     PyTypeObject *pk11slot_type;
     PyTypeObject *certdb_type;
@@ -199,18 +221,19 @@ typedef struct {
     CERTDistNames *(*cert_distnames_as_CERTDistNames)(PyObject *py_distnames);
 } PyNSPR_NSS_C_API_Type;
 
-#ifdef NSPR_NSS_MODULE
+#ifdef NSS_NSS_MODULE
 
 #define PyPK11Slot_Check(op) PyObject_TypeCheck(op, &PK11SlotType)
 #define PyCertDB_Check(op) PyObject_TypeCheck(op, &CertDBType)
 #define PyCertificate_Check(op) PyObject_TypeCheck(op, &CertificateType)
 #define PyPrivateKey_Check(op) PyObject_TypeCheck(op, &PrivateKeyType)
 #define PySecItem_Check(op) PyObject_TypeCheck(op, &SecItemType)
+#define PySymKey_Check(op) PyObject_TypeCheck(op, &PK11SymKeyType)
 
 PyObject *
 PK11Slot_new_from_slotinfo(PK11SlotInfo *slot);
 
-#else  /* not NSPR_NSS_MODULE */
+#else  /* not NSS_NSS_MODULE */
 
 #define CertDBType (*nspr_nss_c_api.certdb_type)
 #define CertificateType (*nspr_nss_c_api.certificate_type)
@@ -245,7 +268,7 @@ import_nspr_nss_c_api(void)
         Py_DECREF(module);
         return -1;
     }
-    
+
     if (!(PyCObject_Check(c_api_object))) {
         Py_DECREF(c_api_object);
         Py_DECREF(module);
@@ -264,4 +287,4 @@ import_nspr_nss_c_api(void)
     return 0;
 }
 
-#endif /* NSPR_NSS_MODULE */
+#endif /* NSS_NSS_MODULE */
