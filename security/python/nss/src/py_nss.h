@@ -101,6 +101,7 @@ typedef enum SECItemKindEnum {
     SECITEM_signature,
     SECITEM_algorithm,
     SECITEM_iv_param,
+    SECITEM_wrapped_key,
 } SECItemKind;
 
 typedef struct {

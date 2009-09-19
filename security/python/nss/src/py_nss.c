@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// FIXME: clean up usage of buffer vs. string
 // FIXME: change all parameter checking to use set_arg_*error()
 // FIXME: change all variable paramter handling (e.g. user_data extra args)
 //        to use PyArg_ParseTuple by slicing the arg list into n_base_args
@@ -4840,6 +4839,94 @@ PK11SymKey_derive(PyPK11SymKey *self, PyObject *args)
     return PyPK11SymKey_new_from_PK11SymKey(derived_key);
 }
 
+PyDoc_STRVAR(PK11SymKey_wrap_sym_key_doc,
+"wrap_sym_key(mechanism, sec_param, sym_key) -> SecItem\n\
+\n\
+:Parameters:\n\
+    mechanism : int\n\
+        key mechanism enumeration constant (CKM_*)\n\
+    sec_param : SecItem object or None\n\
+        mechanism parameters or None.\n\
+    sym_key : PK11SymKey object\n\
+        the symmetric key to wrap\n\
+\n\
+Wrap (encrypt) the supplied sym_key using the mechanism\n\
+and parameter. Return the wrapped key as a SecItem.\n\
+");
+static PyObject *
+PK11SymKey_wrap_sym_key(PyPK11SymKey *self, PyObject *args)
+{
+    unsigned long mechanism;
+    SecItem *py_sec_param;
+    PyPK11SymKey *py_sym_key = NULL;
+    SECItem wrapped_key;
+
+    TraceMethodEnter("PK11SymKey_wrap_sym_key", self);
+
+    if (!PyArg_ParseTuple(args, "kO&O!:wrap_sym_key",
+                          &mechanism, SecItemOrNoneConvert, &py_sec_param,
+                          &PK11SymKeyType, &py_sym_key))
+        return NULL;
+
+    if (PK11_WrapSymKey(mechanism, py_sec_param ? &py_sec_param->item : NULL,
+                        self->pk11_sym_key, py_sym_key->pk11_sym_key,
+                        &wrapped_key) != SECSuccess) {
+        return set_nspr_error(NULL);
+    }
+
+    return SecItem_new_from_sec_item(&wrapped_key, SECITEM_wrapped_key);
+}
+
+PyDoc_STRVAR(PK11SymKey_unwrap_sym_key_doc,
+"unwrap_sym_key(mechanism, sec_param, wrapped_key, target, operation, key_size) -> PK11SymKey\n\
+\n\
+:Parameters:\n\
+    mechanism : int\n\
+        key mechanism enumeration constant (CKM_*)\n\
+    sec_param : SecItem object or None\n\
+        mechanism parameters or None.\n\
+    wrapped_key : SecItem object\n\
+        the symmetric key to unwrap\n\
+    target : int\n\
+        key mechanism enumeration constant (CKM_*)\n\
+    operation : int\n\
+        type of operation. A (CKA_*) constant\n\
+        (e.g. CKA_ENCRYPT, CKA_DECRYPT, CKA_SIGN, CKA_VERIFY, CKA_DIGEST)\n\
+    key_size : int\n\
+        key size.\n\
+\n\
+Unwrap (decrypt) the supplied wrapped key.\n\
+Return the unwrapped key as a PK11SymKey.\n\
+");
+static PyObject *
+PK11SymKey_unwrap_sym_key(PyPK11SymKey *self, PyObject *args)
+{
+    unsigned long mechanism;
+    SecItem *py_sec_param;
+    unsigned long target;
+    unsigned long operation;
+    int key_size;
+    SecItem *py_wrapped_key = NULL;
+    PK11SymKey *sym_key = NULL;
+
+    TraceMethodEnter("PK11SymKey_unwrap_sym_key", self);
+
+    if (!PyArg_ParseTuple(args, "kO&O!kki:unwrap_sym_key",
+                          &mechanism, SecItemOrNoneConvert, &py_sec_param,
+                          &SecItemType, &py_wrapped_key,
+                          &target, &operation, &key_size))
+        return NULL;
+
+    if ((sym_key = PK11_UnwrapSymKey(self->pk11_sym_key, mechanism,
+                                     py_sec_param ? &py_sec_param->item : NULL,
+                                     &py_wrapped_key->item,
+                                     target, operation, key_size)) == NULL) {
+        return set_nspr_error(NULL);
+    }
+
+    return PyPK11SymKey_new_from_PK11SymKey(sym_key);
+}
+
 PyDoc_STRVAR(PK11SymKey_get_key_length_doc,
 "get_key_length() -> length\n\
 \n\
@@ -4871,6 +4958,8 @@ PK11SymKey_str(PyPK11SymKey *self)
 
 static PyMethodDef PK11SymKey_methods[] = {
     {"derive",         (PyCFunction)PK11SymKey_derive,           METH_VARARGS, PK11SymKey_derive_doc},
+    {"wrap_sym_key",   (PyCFunction)PK11SymKey_wrap_sym_key,     METH_VARARGS, PK11SymKey_wrap_sym_key_doc},
+    {"unwrap_sym_key", (PyCFunction)PK11SymKey_unwrap_sym_key,   METH_VARARGS, PK11SymKey_unwrap_sym_key_doc},
     {"get_key_length", (PyCFunction)PK11SymKey_get_key_length,   METH_NOARGS,  PK11SymKey_get_key_length_doc},
     {NULL, NULL}  /* Sentinel */
 };
