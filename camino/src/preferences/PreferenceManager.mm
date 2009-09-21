@@ -738,6 +738,20 @@ static BOOL gMadePrefManager;
 
   [prefsToolbarConfiguration removeObjectForKey:@"TB Item Identifiers"];
   [defaults setObject:prefsToolbarConfiguration forKey:@"NSToolbar Configuration preferences.toolbar.1"];
+
+  // Clean up the 1.6.x + 10.6 + Java mess.
+  const char* kSuppressionPref = "camino.java_suppressed";
+  const char* kOldValuePref = "camino.java_enabled_pre_suppression";
+  BOOL javaSuppressed = [self getBooleanPref:kSuppressionPref withSuccess:NULL];
+  if (javaSuppressed) {
+    BOOL prefExisted = NO;
+    BOOL javaPreviouslyEnabled = [self getBooleanPref:kOldValuePref
+                                          withSuccess:&prefExisted];
+    [self clearPref:kSuppressionPref];
+    [self clearPref:kOldValuePref];
+    [self setPref:kGeckoPrefEnableJava toBoolean:(!prefExisted ||
+                                                  javaPreviouslyEnabled)];
+  }
 }
 
 // Convert an Apple locale (or language with the dialect specified) from the form "en_GB"
