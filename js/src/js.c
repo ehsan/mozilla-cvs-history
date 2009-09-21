@@ -140,8 +140,8 @@ JS_END_EXTERN_C
 static char *
 GetLine(FILE *file, const char * prompt)
 {
-    size_t size;
-    char *buffer;
+    size_t size, len;
+    char *buffer, *current;
 #ifdef EDITLINE
     /*
      * Use readline only if file is stdin, because there's no way to specify
@@ -164,7 +164,7 @@ GetLine(FILE *file, const char * prompt)
         return linep;
     }
 #endif
-    size_t len = 0;
+    len = 0;
     if (*prompt != '\0') {
         fprintf(gOutFile, "%s", prompt);
         fflush(gOutFile);
@@ -173,18 +173,22 @@ GetLine(FILE *file, const char * prompt)
     buffer = (char *) malloc(size);
     if (!buffer)
         return NULL;
-    char *current = buffer;
+    current = buffer;
     while (fgets(current, size - len, file)) {
+        char *t;
+
         len += strlen(current);
-        char *t = buffer + len - 1;
+        t = buffer + len - 1;
         if (*t == '\n') {
             /* Line was read. We remove '\n' and exit. */
             *t = '\0';
             return buffer;
         }
         if (len + 1 == size) {
+            char *tmp;
+
             size = size * 2;
-            char *tmp = (char *) realloc(buffer, size);
+            tmp = (char *) realloc(buffer, size);
             if (!tmp) {
                 free(buffer);
                 return NULL;
@@ -323,8 +327,10 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
          */
         startline = lineno;
         do {
+            char *line;
+
             errno = 0;
-            char *line = GetLine(file, startline == lineno ? "js> " : "");
+            line = GetLine(file, startline == lineno ? "js> " : "");
             if (!line) {
                 if (errno) {
                     JS_ReportError(cx, strerror(errno));
@@ -343,9 +349,12 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
                  * len + 1 is required to store '\n' in the end of line.
                  */
                 size_t newlen = strlen(line) + (len ? len + 1 : 0);
+                char *current;
                 if (newlen + 1 > size) {
+                    char *newBuf;
+
                     size = newlen + 1 > size * 2 ? newlen + 1 : size * 2;
-                    char *newBuf = (char *) realloc(buffer, size);
+                    newBuf = (char *) realloc(buffer, size);
                     if (!newBuf) {
                         free(buffer);
                         free(line);
@@ -354,7 +363,7 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
                     }
                     buffer = newBuf;
                 }
-                char *current = buffer + len;
+                current = buffer + len;
                 if (startline != lineno)
                     *current++ = '\n';
                 strcpy(current, line);
