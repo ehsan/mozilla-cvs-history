@@ -1900,7 +1900,9 @@ public:
     return ([mTabBrowser numberOfTabViewItems] > 1);
   }
   if (action == @selector(closeCurrentTab:))
-    return ([mTabBrowser numberOfTabViewItems] > 1 && [[self window] isKeyWindow]);
+    return ([mTabBrowser numberOfTabViewItems] > 1 &&
+            ([[self window] isKeyWindow] || ([NSApp keyWindow] == nil &&
+                                             [[self window] isMainWindow])));
   if (action == @selector(addBookmark:) ||
       action == @selector(addBookmarkWithoutPrompt:))
   {
