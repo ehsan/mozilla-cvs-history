@@ -41,6 +41,7 @@
 
 /* NSPR header files */
 #undef HAVE_LONG_LONG           /* FIXME: both Python.h and nspr.h define HAVE_LONG_LONG  */
+#include <stdbool.h>
 #include "nspr.h"
 #include "cert.h"
 #include "nss.h"
@@ -110,6 +111,8 @@ typedef struct {
     SECItemKind kind;
 } SecItem;
 
+#define SecItem_GET_SIZE(op)  (Py_ssize_t)(op->item.len)
+
 /* ========================================================================== */
 /* ============================ RSAPublicKey Class ========================== */
 /* ========================================================================== */
@@ -172,7 +175,6 @@ typedef struct {
 typedef struct {
     PyObject_HEAD
     SECKEYPublicKey *pk;
-    PyObject *py_pk11slot;
     PyObject *py_rsa_key;
     PyObject *py_dsa_key;
 } PublicKey;

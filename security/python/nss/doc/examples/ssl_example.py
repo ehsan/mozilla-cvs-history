@@ -16,8 +16,8 @@
 # The Original Code is a Python binding for Network Security Services (NSS).
 #
 # The Initial Developer of the Original Code is Red Hat, Inc.
-#   (Author: John Dennis <jdennis@redhat.com>) 
-# 
+#   (Author: John Dennis <jdennis@redhat.com>)
+#
 # Portions created by the Initial Developer are Copyright (C) 2008,2009
 # the Initial Developer. All Rights Reserved.
 #
@@ -199,7 +199,7 @@ def Server():
 
     if use_ssl:
         sock = ssl.SSLSocket()
-        
+
         # Set server SSL socket options
         sock.set_pkcs11_pin_arg(password)
         sock.set_ssl_option(ssl.SSL_SECURITY, True)
@@ -247,7 +247,7 @@ def Server():
         break
 
     sock.shutdown()
-    
+
 
 # -----------------------------------------------------------------------------
 

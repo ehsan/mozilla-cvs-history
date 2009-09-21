@@ -1,9 +1,5 @@
 #!/usr/bin/python
 
-# used for local testing
-#from test_util import insert_build_dir_into_path
-#insert_build_dir_into_path()
-
 import sys
 import os
 import getopt
@@ -28,14 +24,24 @@ def setup_contexts(mechanism, key, iv):
             print "generating key data"
         sym_key = slot.key_gen(mechanism, None, slot.get_best_key_length(mechanism))
 
-    # If initial value was supplied use it, otherwise set it to None
+    # If initialization vector was supplied use it, otherwise set it to None
     if iv:
         if verbose:
-            print "iv:\n%s" % (iv)
-        iv_si = nss.SecItem(nss.read_hex(iv))
+            print "supplied iv:\n%s" % (iv)
+        iv_data = nss.read_hex(iv)
+        iv_si = nss.SecItem(iv_data)
         iv_param = nss.param_from_iv(mechanism, iv_si)
     else:
-        iv_param = None
+        iv_length = nss.get_iv_length(mechanism)
+        if iv_length > 0:
+            iv_data = nss.generate_random(iv_length)
+            iv_si = nss.SecItem(iv_data)
+            iv_param = nss.param_from_iv(mechanism, iv_si)
+            if verbose:
+                print "generated %d byte initialization vector: %s" % \
+                    (iv_length, nss.data_to_hex(iv_data, separator=":"))
+        else:
+            iv_param = None
 
     # Create an encoding context
     encoding_ctx = nss.create_context_by_sym_key(mechanism, nss.CKA_ENCRYPT,
@@ -156,7 +162,7 @@ digest_test [-v -h] filename
                  name is case insensitive, CKM_ prefix is optional
     -t --text    plain text
     -k --key     key (in hexadecimal format)
-    -i --iv      parameter initial value (in hexadecimal format)
+    -i --iv      initialization vector (in hexadecimal format)
 '''
 
 def main():

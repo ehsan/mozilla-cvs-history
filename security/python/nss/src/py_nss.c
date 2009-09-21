@@ -35,12 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// FIXME: change all parameter checking to use set_arg_*error()
-// FIXME: change all variable paramter handling (e.g. user_data extra args)
-//        to use PyArg_ParseTuple by slicing the arg list into n_base_args
 // FIXME: change all Python _from_ NSS function names to use the NSS typedef for clarity
 //        e.g. PrivateKey_new_from_private_key should be PrivateKey_new_from_SECKEYPrivateKey
 // FIXME: should we be calling these?
+// PK11_FreeSlot (yes, and yes we are)
 // SECKEY_DestroyEncryptedPrivateKeyInfo
 // SECKEY_DestroyPrivateKey	   SECKEY_DestroyPrivateKeyInfo
 // SECKEY_DestroyPrivateKeyList	   SECKEY_DestroyPublicKey
@@ -273,26 +271,8 @@ _AddIntConstantWithLookup(PyObject *module, const char *name, long value, const 
     return 0;
 }
 
-/* FIXME: these should be general utility available to all modules */
 /* FIXME: convert all equality tests to Py_None to PyNone_Check() */
 #define PyNone_Check(x) ((x) == Py_None)
-
-static PyObject *
-set_arg_count_error(const char *name, Py_ssize_t expected, Py_ssize_t actual)
-{
-    PyErr_Format(PyExc_TypeError, "%s expected %zd arguments, got %zd",
-                 name, expected, actual);
-    return NULL;
-}
-
-static PyObject *
-set_arg_type_error(const char *name, const char *expected, PyObject *arg)
-{
-    PyErr_Format(PyExc_TypeError, "%.50s parameter must be %.50s, not %.50s",
-                 name, expected,
-                 PyNone_Check(arg) ? "None" : arg->ob_type->tp_name);
-    return NULL;
-}
 
 int SecItemOrNoneConvert(PyObject *obj, PyObject **param)
 {
@@ -307,7 +287,7 @@ int SecItemOrNoneConvert(PyObject *obj, PyObject **param)
     }
 
     PyErr_Format(PyExc_TypeError, "must be %.50s or None, not %.50s",
-                 SecItemType.tp_name, obj->ob_type->tp_name);
+                 SecItemType.tp_name, Py_TYPE(obj)->tp_name);
     return 0;
 }
 
@@ -324,7 +304,7 @@ int SymKeyOrNoneConvert(PyObject *obj, PyObject **param)
     }
 
     PyErr_Format(PyExc_TypeError, "must be %.50s or None, not %.50s",
-                 PK11SymKeyType.tp_name, obj->ob_type->tp_name);
+                 PK11SymKeyType.tp_name, Py_TYPE(obj)->tp_name);
     return 0;
 }
 
@@ -1331,8 +1311,29 @@ cert_trust_flags_str(unsigned int flags)
 
 /* ============================ Attribute Access ============================ */
 
+static PyObject *
+SecItem_get_type(SecItem *self, void *closure)
+{
+    return PyInt_FromLong(self->item.type);
+}
+
+static PyObject *
+SecItem_get_len(SecItem *self, void *closure)
+{
+    return PyInt_FromLong(self->item.len);
+}
+
+static PyObject *
+SecItem_get_data(SecItem *self, void *closure)
+{
+    return PyString_FromStringAndSize((const char *)self->item.data, self->item.len);
+}
+
 static
 PyGetSetDef SecItem_getseters[] = {
+    {"type", (getter)SecItem_get_type, (setter)NULL, "the SecItem type (si* constant)", NULL},
+    {"len",  (getter)SecItem_get_len,  (setter)NULL, "number of octets in SecItem buffer", NULL},
+    {"data", (getter)SecItem_get_data, (setter)NULL, "contents of SecItem buffer", NULL},
     {NULL}  /* Sentinel */
 };
 
@@ -1378,29 +1379,33 @@ SecItem_dealloc(SecItem* self)
 }
 
 PyDoc_STRVAR(SecItem_doc,
-"SecItem(data=None)\n\
+"SecItem(data=None, type=siBuffer)\n\
 \n\
 :Parameters:\n\
     data : any read buffer compatible object (e.g. buffer or string)\n\
         raw data to initialize from\n\
+    type : int\n\
+        SECItemType constant (e.g. si*)\n\
 \n\
 Encoded data. Used internally by NSS\n\
 ");
 static int
 SecItem_init(SecItem *self, PyObject *args, PyObject *kwds)
 {
-    static char *kwlist[] = {"data", NULL};
+    static char *kwlist[] = {"data", "type", NULL};
     const void *buffer = NULL;
     Py_ssize_t buffer_len;
+    int type = siBuffer;
 
     TraceMethodEnter("SecItem_init", self);
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|z#:SecItem", kwlist, &buffer, &buffer_len))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|z#i:SecItem", kwlist,
+                                     &buffer, &buffer_len, &type))
         return -1;
 
     if (buffer) {
         self->kind = SECITEM_buffer;
-        self->item.type = siBuffer;
+        self->item.type = type;
         self->item.len = buffer_len;
         if ((self->item.data = PyMem_MALLOC(buffer_len)) == NULL) {
             PyErr_Format(PyExc_MemoryError, "not enough memory to copy buffer of size %d into SecItem",
@@ -1422,7 +1427,7 @@ static PyObject *
 SecItem_repr(SecItem *self)
 {
     return PyString_FromFormat("<%s object at %p>",
-                               self->ob_type->tp_name, self);
+                               Py_TYPE(self)->tp_name, self);
 }
 
 static PyObject *
@@ -1482,23 +1487,100 @@ static PyBufferProcs SecItem_as_buffer = {
 };
 
 static Py_ssize_t
-SecItem_sq_length(PyObject *obj)
+SecItem_length(SecItem *self)
 {
-    SecItem *self = (SecItem *) obj;
     return self->item.len;
 }
 
+static PyObject *
+SecItem_item(SecItem *self, register Py_ssize_t i)
+{
+    char octet;
+
+    if (i < 0 || i >= self->item.len) {
+        PyErr_SetString(PyExc_IndexError, "SecItem index out of range");
+        return NULL;
+    }
+    octet = self->item.data[i];
+    return PyString_FromStringAndSize(&octet, 1);
+}
+
+/* slice a[i:j] consists of octets a[i] ... a[j-1], j -- may be negative! */
+static PyObject *
+SecItem_slice(SecItem *a, Py_ssize_t i, Py_ssize_t j)
+{
+    if (i < 0)
+        i = 0;
+    if (j < 0)
+        j = 0;
+    if (j > SecItem_GET_SIZE(a))
+        j = SecItem_GET_SIZE(a);
+    if (j < i)
+        j = i;
+    return PyString_FromStringAndSize((const char *)(a->item.data + i), j-i);
+}
+
+static PyObject*
+SecItem_subscript(SecItem *self, PyObject* item)
+{
+    if (PyIndex_Check(item)) {
+        Py_ssize_t i = PyNumber_AsSsize_t(item, PyExc_IndexError);
+        if (i == -1 && PyErr_Occurred())
+            return NULL;
+        if (i < 0)
+            i += SecItem_GET_SIZE(self);
+        return SecItem_item(self, i);
+    }
+    else if (PySlice_Check(item)) {
+        Py_ssize_t start, stop, step, slice_len, cur, i;
+        unsigned char* src;
+        unsigned char* dst;
+        PyObject* result;
+
+        if (PySlice_GetIndicesEx((PySliceObject*)item, SecItem_GET_SIZE(self),
+				 &start, &stop, &step, &slice_len) < 0) {
+            return NULL;
+        }
+
+        if (slice_len <= 0) {
+            return PyString_FromStringAndSize("", 0);
+        } else if (step == 1) {
+            return PyString_FromStringAndSize((char *)self->item.data + start, slice_len);
+        } else {
+            src = self->item.data;
+            if ((result = PyString_FromStringAndSize(NULL, slice_len)) == NULL) {
+                return NULL;
+            }
+            dst = (unsigned char *)PyString_AsString(result);
+            for (cur = start, i = 0; i < slice_len; cur += step, i++) {
+                dst[i] = src[cur];
+            }
+            return result;
+        }
+    } else {
+        PyErr_Format(PyExc_TypeError, "SecItem indices must be integers, not %.200s",
+                     Py_TYPE(item)->tp_name);
+        return NULL;
+    }
+}
+
 static PySequenceMethods SecItem_as_sequence = {
-	SecItem_sq_length,	/* sq_length */
-	0,			/* sq_concat */
-	0,			/* sq_repeat */
-	0,			/* sq_item */
-	0,			/* sq_slice */
-	0,			/* sq_ass_item */
-	0,			/* sq_ass_slice */
-	0,			/* sq_contains */
-	0,			/* sq_inplace_concat */
-	0,			/* sq_inplace_repeat */
+    (lenfunc)SecItem_length,			/* sq_length */
+    0,						/* sq_concat */
+    0,						/* sq_repeat */
+    (ssizeargfunc)SecItem_item,			/* sq_item */
+    (ssizessizeargfunc)SecItem_slice,		/* sq_slice */
+    0,						/* sq_ass_item */
+    0,						/* sq_ass_slice */
+    0,						/* sq_contains */
+    0,						/* sq_inplace_concat */
+    0,						/* sq_inplace_repeat */
+};
+
+static PyMappingMethods SecItem_as_mapping = {
+    (lenfunc)SecItem_length,			/* mp_length */
+    (binaryfunc)SecItem_subscript,		/* mp_subscript */
+    0,						/* mp_ass_subscript */
 };
 
 static PyTypeObject SecItemType = {
@@ -1515,7 +1597,7 @@ static PyTypeObject SecItemType = {
     (reprfunc)SecItem_repr,			/* tp_repr */
     0,						/* tp_as_number */
     &SecItem_as_sequence,			/* tp_as_sequence */
-    0,						/* tp_as_mapping */
+    &SecItem_as_mapping,			/* tp_as_mapping */
     0,						/* tp_hash */
     0,						/* tp_call */
     (reprfunc)SecItem_str,			/* tp_str */
@@ -1629,7 +1711,7 @@ static PyObject *
 SignatureAlgorithm_repr(SignatureAlgorithm *self)
 {
     return PyString_FromFormat("<%s object at %p>",
-                               self->ob_type->tp_name, self);
+                               Py_TYPE(self)->tp_name, self);
 }
 
 static PyObject *
@@ -1791,7 +1873,7 @@ static PyObject *
 KEYPQGParams_repr(KEYPQGParams *self)
 {
     return PyString_FromFormat("<%s object at %p>",
-                               self->ob_type->tp_name, self);
+                               Py_TYPE(self)->tp_name, self);
 }
 
 static PyObject *
@@ -2030,7 +2112,7 @@ static PyObject *
 RSAPublicKey_repr(RSAPublicKey *self)
 {
     return PyString_FromFormat("<%s object at %p>",
-                               self->ob_type->tp_name, self);
+                               Py_TYPE(self)->tp_name, self);
 }
 
 static PyTypeObject RSAPublicKeyType = {
@@ -2176,7 +2258,7 @@ static PyObject *
 DSAPublicKey_repr(DSAPublicKey *self)
 {
     return PyString_FromFormat("<%s object at %p>",
-                               self->ob_type->tp_name, self);
+                               Py_TYPE(self)->tp_name, self);
 }
 
 static PyObject *
@@ -2424,7 +2506,7 @@ static PyObject *
 SignedData_repr(SignedData *self)
 {
     return PyString_FromFormat("<%s object at %p>",
-                               self->ob_type->tp_name, self);
+                               Py_TYPE(self)->tp_name, self);
 }
 
 static PyTypeObject SignedDataType = {
@@ -2524,7 +2606,7 @@ PublicKey_get_rsa(PublicKey *self, void *closure)
         return self->py_rsa_key;
     } else {
         PyErr_Format(PyExc_AttributeError, "when '%.50s' object has key_type=%s there is no attribute 'rsa'",
-                     self->ob_type->tp_name, key_type_str(self->pk->keyType));
+                     Py_TYPE(self)->tp_name, key_type_str(self->pk->keyType));
         return NULL;
     }
 }
@@ -2537,7 +2619,7 @@ PublicKey_get_dsa(PublicKey *self, void *closure)
         return self->py_dsa_key;
     } else {
         PyErr_Format(PyExc_AttributeError, "when '%.50s' object has key_type=%s there is no attribute 'dsa'",
-                     self->ob_type->tp_name, key_type_str(self->pk->keyType));
+                     Py_TYPE(self)->tp_name, key_type_str(self->pk->keyType));
         return NULL;
     }
 }
@@ -2650,7 +2732,6 @@ PublicKey_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
     if ((self = (PublicKey *)type->tp_alloc(type, 0)) == NULL) return NULL;
 
-    self->py_pk11slot = NULL;
     self->py_rsa_key = NULL;
     self->py_dsa_key = NULL;
 
@@ -2665,7 +2746,6 @@ PublicKey_dealloc(PublicKey* self)
 {
     TraceMethodEnter("PublicKey_dealloc", self);
 
-    Py_XDECREF(self->py_pk11slot);
     Py_XDECREF(self->py_rsa_key);
     Py_XDECREF(self->py_dsa_key);
 
@@ -2689,7 +2769,7 @@ static PyObject *
 PublicKey_repr(PublicKey *self)
 {
     return PyString_FromFormat("<%s object at %p>",
-                               self->ob_type->tp_name, self);
+                               Py_TYPE(self)->tp_name, self);
 }
 
 static PyTypeObject PublicKeyType = {
@@ -2746,15 +2826,6 @@ PublicKey_new_from_SECKEYPublicKey(SECKEYPublicKey *pk)
 
 
     self->pk = pk;
-
-    if (self->pk->pkcs11Slot) {
-        if ((self->py_pk11slot = PK11Slot_new_from_slotinfo(self->pk->pkcs11Slot)) == NULL)
-            return NULL;
-    } else {
-        Py_INCREF(Py_None);
-        self->py_pk11slot = Py_None;
-
-    }
 
     switch(pk->keyType) {       /* FIXME: handle the other cases */
     case rsaKey:
@@ -2929,7 +3000,7 @@ static PyObject *
 SubjectPublicKeyInfo_repr(SubjectPublicKeyInfo *self)
 {
     return PyString_FromFormat("<%s object at %p>",
-                               self->ob_type->tp_name, self);
+                               Py_TYPE(self)->tp_name, self);
 }
 
 static PyTypeObject SubjectPublicKeyInfoType = {
@@ -3579,21 +3650,6 @@ Certificate_check_valid_times(Certificate *self, PyObject *args, PyObject *kwds)
     return PyInt_FromLong(validity);
 }
 
-#if 0
-extern SECStatus
-CERT_VerifyCertificate(CERTCertDBHandle *handle, CERTCertificate *cert,
-		PRBool checkSig, SECCertificateUsage requiredUsages,
-                int64 t, void *wincx, CERTVerifyLog *log,
-                SECCertificateUsage* returnedUsages);
-
-/* same as above, but uses current time */
-extern SECStatus
-CERT_VerifyCertificateNow(CERTCertDBHandle *handle, CERTCertificate *cert,
-		   PRBool checkSig, SECCertificateUsage requiredUsages,
-                   void *wincx, SECCertificateUsage* returnedUsages);
-
-#endif
-
 PyDoc_STRVAR(Certificate_verify_now_doc,
 "verify_now(certdb, check_sig, required_usages) -> valid_usages\n\
 \n\
@@ -3632,49 +3688,46 @@ required usages, otherwise it is for all possible usages.\n\
 static PyObject *
 Certificate_verify_now(Certificate *self, PyObject *args)
 {
+    Py_ssize_t n_base_args = 3;
     Py_ssize_t argc;
+    PyObject *parse_args = NULL;
     PyObject *pin_args = NULL;
-    PyObject *py_certdb = NULL;
+    CertDB *py_certdb = NULL;
     PyObject *py_check_sig = NULL;
-    PyObject *py_required_usages = NULL;
     int check_sig = 0;
-    unsigned long required_usages = 0;
+    long required_usages = 0;
     SECCertificateUsage returned_usages;
 
     TraceMethodEnter("verify_now", self);
 
     argc = PyTuple_Size(args);
-    if (argc < 3) {
-        PyErr_Format(PyExc_TypeError, "verify_now: expected at least 3 arguments, but got %jd", (intmax_t)argc);
+    if (argc == n_base_args) {
+        parse_args = args;
+    } else {
+        parse_args = PyTuple_GetSlice(args, 0, n_base_args);
+    }
+    if (!PyArg_ParseTuple(parse_args, "O!O!l:verify_now",
+                          &CertDBType, &py_certdb,
+                          &PyBool_Type, &py_check_sig,
+                          &required_usages)) {
+        if (parse_args != args) {
+            Py_DECREF(parse_args);
+        }
         return NULL;
+    }
+    if (parse_args != args) {
+        Py_DECREF(parse_args);
     }
 
-    py_certdb          = PyTuple_GetItem(args, 0);
-    py_check_sig       = PyTuple_GetItem(args, 1);
-    py_required_usages = PyTuple_GetItem(args, 2);
-
-    if (!PyCertDB_Check(py_certdb)) {
-        PyErr_Format(PyExc_TypeError, "verify_now: certdb parameter must be a %s", CertDBType.tp_name);
-        return NULL;
-    }
-    if (!(PyBool_Check(py_check_sig) || PyInt_Check(py_check_sig))) {
-        PyErr_SetString(PyExc_TypeError, "verify_now: check_sig parameter must be a boolean or integer");
-        return NULL;
-    }
-    if (!PyInt_Check(py_required_usages)) {
-        PyErr_SetString(PyExc_TypeError, "verify_now: required_usages parameter must be an integer");
-        return NULL;
-    }
-
-    pin_args = PyTuple_GetSlice(args, 3, argc);
+    check_sig = PyInt_AsLong(py_check_sig);
+    pin_args = PyTuple_GetSlice(args, n_base_args, argc);
     Py_INCREF(pin_args);
 
-    if (CERT_VerifyCertificateNow(((CertDB *)py_certdb)->handle, self->cert, check_sig,
+    if (CERT_VerifyCertificateNow(py_certdb->handle, self->cert, check_sig,
                                   required_usages, pin_args, &returned_usages) != SECSuccess) {
         Py_DECREF(pin_args);
         return set_nspr_error(NULL);
     }
-
     Py_DECREF(pin_args);
 
     return PyInt_FromLong(returned_usages);
@@ -3957,7 +4010,7 @@ static PyObject *
 Certificate_repr(Certificate *self)
 {
     return PyString_FromFormat("<%s object at %p Certificate %p>",
-                               self->ob_type->tp_name, self, self->cert);
+                               Py_TYPE(self)->tp_name, self, self->cert);
 }
 
 static PyTypeObject CertificateType = {
@@ -4179,11 +4232,12 @@ certificate database.\n\
 static PyObject *
 cert_get_cert_nicknames(PyObject *self, PyObject *args)
 {
+    Py_ssize_t n_base_args = 2;
     Py_ssize_t argc;
+    PyObject *parse_args = NULL;
     PyObject *pin_args = NULL;
-    PyObject *py_what = NULL;
     int what;
-    PyObject *py_certdb = NULL;
+    CertDB *py_certdb = NULL;
     CERTCertNicknames *cert_nicknames = NULL;
     PyObject *py_nicknames = NULL;
     PyObject *py_nickname = NULL;
@@ -4192,30 +4246,26 @@ cert_get_cert_nicknames(PyObject *self, PyObject *args)
     TraceMethodEnter("cert_get_cert_nicknames", self);
 
     argc = PyTuple_Size(args);
+    if (argc == n_base_args) {
+        parse_args = args;
+    } else {
+        parse_args = PyTuple_GetSlice(args, 0, n_base_args);
+    }
+    if (!PyArg_ParseTuple(parse_args, "O!i:get_cert_nicknames",
+                          &CertDBType, &py_certdb, &what)) {
+        if (parse_args != args) {
+            Py_DECREF(parse_args);
+        }
+        return NULL;
+    }
+    if (parse_args != args) {
+        Py_DECREF(parse_args);
+    }
 
-    if ((py_certdb = PyTuple_GetItem(args, 0)) == NULL) {
-        PyErr_SetString(PyExc_TypeError, "get_cert_nicknames: missing certdb argument");
-        return NULL;
-    }
-    if (!PyCertDB_Check(py_certdb)) {
-        PyErr_Format(PyExc_TypeError, "get_cert_nicknames: certdb parameter must be a %s", CertDBType.tp_name);
-        return NULL;
-    }
-
-    if ((py_what = PyTuple_GetItem(args, 1)) == NULL) {
-        PyErr_SetString(PyExc_TypeError, "get_cert_nicknames: missing what argument");
-        return NULL;
-    }
-    if (!PyInt_Check(py_what)) {
-        PyErr_SetString(PyExc_TypeError, "get_cert_nicknames: what parameter must be an int");
-        return NULL;
-    }
-    what = PyInt_AsLong(py_what);
-
-    pin_args = PyTuple_GetSlice(args, 2, argc);
+    pin_args = PyTuple_GetSlice(args, n_base_args, argc);
     Py_INCREF(pin_args);
 
-    if ((cert_nicknames = CERT_GetCertNicknames(((CertDB *)py_certdb)->handle, what, pin_args)) == NULL) {
+    if ((cert_nicknames = CERT_GetCertNicknames(py_certdb->handle, what, pin_args)) == NULL) {
         Py_DECREF(pin_args);
         return set_nspr_error(NULL);
     }
@@ -4633,28 +4683,27 @@ PK11Slot_key_gen(PK11Slot *self, PyObject *args)
     } else {
         parse_args = PyTuple_GetSlice(args, 0, n_base_args);
     }
-
     if (!PyArg_ParseTuple(parse_args, "kO&i:key_gen",
-                          &mechanism, SecItemOrNoneConvert, &py_sec_param, &key_size))
+                          &mechanism, SecItemOrNoneConvert, &py_sec_param,
+                          &key_size)) {
+        if (parse_args != args) {
+            Py_DECREF(parse_args);
+        }
         return NULL;
-
-    printf("py_sec_param = %p\n", py_sec_param);
+    }
+    if (parse_args != args) {
+        Py_DECREF(parse_args);
+    }
 
     pin_args = PyTuple_GetSlice(args, n_base_args, argc);
     Py_INCREF(pin_args);
 
     if ((sym_key = PK11_KeyGen(self->slot, mechanism, py_sec_param ? &py_sec_param->item : NULL,
                                key_size, pin_args)) == NULL) {
-        if (parse_args != args) {
-            Py_DECREF(parse_args);
-        }
         Py_DECREF(pin_args);
         return set_nspr_error(NULL);
     }
 
-    if (parse_args != args) {
-        Py_DECREF(parse_args);
-    }
     Py_DECREF(pin_args);
 
     return PyPK11SymKey_new_from_PK11SymKey(sym_key);
@@ -4691,6 +4740,7 @@ PK11Slot_dealloc(PK11Slot* self)
 {
     TraceMethodEnter("PK11Slot_dealloc", self);
 
+    PK11_FreeSlot(self->slot);
     self->ob_type->tp_free((PyObject*)self);
 }
 
@@ -4765,6 +4815,7 @@ PK11Slot_new_from_slotinfo(PK11SlotInfo *slot)
         return NULL;
 
     self->slot = slot;
+
     TraceObjNewLeave("PK11Slot_new_from_slotinfo", self);
     return (PyObject *) self;
 }
@@ -4781,9 +4832,48 @@ PK11SymKey_get_mechanism(PyPK11SymKey *self, void *closure)
     return PyInt_FromLong(PK11_GetMechanism(self->pk11_sym_key));
 }
 
+static PyObject *
+PK11SymKey_get_key_data(PyPK11SymKey *self, void *closure)
+{
+    SECItem *sec_item;
+
+    if (PK11_ExtractKeyValue(self->pk11_sym_key) != SECSuccess) {
+        return set_nspr_error(NULL);
+    }
+
+    if ((sec_item = PK11_GetKeyData(self->pk11_sym_key)) == NULL) {
+        return PyString_FromStringAndSize("", 0);
+    }
+
+    return PyString_FromStringAndSize((const char *)sec_item->data, sec_item->len);
+}
+
+static PyObject *
+PK11SymKey_get_key_length(PyPK11SymKey *self, void *closure)
+{
+    return PyInt_FromLong(PK11_GetKeyLength(self->pk11_sym_key));
+}
+
+static PyObject *
+PK11SymKey_get_slot(PyPK11SymKey *self, void *closure)
+{
+    PK11SlotInfo *slot = NULL;
+    PyObject *py_slot = NULL;
+
+    slot = PK11_GetSlotFromKey(self->pk11_sym_key);
+    if ((py_slot = PK11Slot_new_from_slotinfo(slot)) == NULL) {
+        PyErr_SetString(PyExc_MemoryError, "unable to create PK11Slot object");
+        return NULL;
+    }
+    return py_slot;
+}
+
 static
 PyGetSetDef PK11SymKey_getseters[] = {
     {"mechanism",  (getter)PK11SymKey_get_mechanism,  (setter)NULL, "CK_MECHANISM_TYPE mechanism", NULL},
+    {"key_data",   (getter)PK11SymKey_get_key_data,   (setter)NULL, "key data", NULL},
+    {"key_length", (getter)PK11SymKey_get_key_length, (setter)NULL, "key length", NULL},
+    {"slot",       (getter)PK11SymKey_get_slot,       (setter)NULL, "slot", NULL},
     {NULL}  /* Sentinel */
 };
 
@@ -4927,27 +5017,12 @@ PK11SymKey_unwrap_sym_key(PyPK11SymKey *self, PyObject *args)
     return PyPK11SymKey_new_from_PK11SymKey(sym_key);
 }
 
-PyDoc_STRVAR(PK11SymKey_get_key_length_doc,
-"get_key_length() -> length\n\
-\n\
-Return the key length for this key.\n\
-");
-static PyObject *
-PK11SymKey_get_key_length(PyPK11SymKey *self, PyObject *args)
-{
-    int length;
-
-    TraceMethodEnter("PK11SymKey_get_key_length", self);
-
-    length = PK11_GetKeyLength(self->pk11_sym_key);
-    return PyInt_FromLong(length);
-}
 
 static PyObject *
 PK11SymKey_repr(PyPK11SymKey *self)
 {
     return PyString_FromFormat("<%s object at %p>",
-                               self->ob_type->tp_name, self);
+                               Py_TYPE(self)->tp_name, self);
 }
 
 static PyObject *
@@ -4960,7 +5035,6 @@ static PyMethodDef PK11SymKey_methods[] = {
     {"derive",         (PyCFunction)PK11SymKey_derive,           METH_VARARGS, PK11SymKey_derive_doc},
     {"wrap_sym_key",   (PyCFunction)PK11SymKey_wrap_sym_key,     METH_VARARGS, PK11SymKey_wrap_sym_key_doc},
     {"unwrap_sym_key", (PyCFunction)PK11SymKey_unwrap_sym_key,   METH_VARARGS, PK11SymKey_unwrap_sym_key_doc},
-    {"get_key_length", (PyCFunction)PK11SymKey_get_key_length,   METH_NOARGS,  PK11SymKey_get_key_length_doc},
     {NULL, NULL}  /* Sentinel */
 };
 
@@ -5318,7 +5392,7 @@ static PyObject *
 PK11Context_repr(PyPK11Context *self)
 {
     return PyString_FromFormat("<%s object at %p>",
-                               self->ob_type->tp_name, self);
+                               Py_TYPE(self)->tp_name, self);
 }
 
 static PyObject *
@@ -5585,9 +5659,10 @@ certificate.\n\
 static PyObject *
 pk11_find_cert_from_nickname(PyObject *self, PyObject *args)
 {
+    Py_ssize_t n_base_args = 1;
     Py_ssize_t argc;
+    PyObject *parse_args = NULL;
     PyObject *pin_args = NULL;
-    PyObject *py_nickname = NULL;
     char *nickname = NULL;
     CERTCertificate *cert = NULL;
     PyObject *py_cert = NULL;
@@ -5595,19 +5670,22 @@ pk11_find_cert_from_nickname(PyObject *self, PyObject *args)
     TraceMethodEnter("pk11_find_cert_from_nickname", self);
 
     argc = PyTuple_Size(args);
-
-    if ((py_nickname = PyTuple_GetItem(args, 0)) == NULL) {
-        PyErr_SetString(PyExc_TypeError, "find_cert_from_nickname: missing nickname argument");
+    if (argc == n_base_args) {
+        parse_args = args;
+    } else {
+        parse_args = PyTuple_GetSlice(args, 0, n_base_args);
+    }
+    if (!PyArg_ParseTuple(parse_args, "s:find_cert_from_nickname", &nickname)) {
+        if (parse_args != args) {
+            Py_DECREF(parse_args);
+        }
         return NULL;
     }
-
-    if (!PyString_Check(py_nickname)) {
-        PyErr_SetString(PyExc_TypeError, "find_cert_from_nickname: nickname parameter must be a string");
-        return NULL;
+    if (parse_args != args) {
+        Py_DECREF(parse_args);
     }
 
-    nickname = PyString_AsString(py_nickname);
-    pin_args = PyTuple_GetSlice(args, 1, argc);
+    pin_args = PyTuple_GetSlice(args, n_base_args, argc);
     Py_INCREF(pin_args);
 
     if ((cert = PK11_FindCertFromNickname(nickname, pin_args)) == NULL) {
@@ -5641,8 +5719,10 @@ available slot.\n\
 static PyObject *
 pk11_find_key_by_any_cert(PyObject *self, PyObject *args)
 {
-    PyObject *py_cert = NULL;
+    Py_ssize_t n_base_args = 1;
     Py_ssize_t argc;
+    PyObject *parse_args = NULL;
+    Certificate *py_cert = NULL;
     PyObject *pin_args = NULL;
     SECKEYPrivateKey *private_key;
     PyObject *py_private_key = NULL;
@@ -5650,21 +5730,26 @@ pk11_find_key_by_any_cert(PyObject *self, PyObject *args)
     TraceMethodEnter("pk11_find_key_by_any_cert", self);
 
     argc = PyTuple_Size(args);
-
-    if ((py_cert = PyTuple_GetItem(args, 0)) == NULL) {
-        PyErr_SetString(PyExc_TypeError, "find_key_by_any_cert: missing cert argument");
+    if (argc == n_base_args) {
+        parse_args = args;
+    } else {
+        parse_args = PyTuple_GetSlice(args, 0, n_base_args);
+    }
+    if (!PyArg_ParseTuple(parse_args, "O!:find_key_by_any_cert",
+                          &CertificateType, &py_cert)) {
+        if (parse_args != args) {
+            Py_DECREF(parse_args);
+        }
         return NULL;
     }
-
-    if (!PyCertificate_Check(py_cert)) {
-        PyErr_Format(PyExc_TypeError, "find_key_by_any_cert: cert parameter must be a %s", CertificateType.tp_name);
-        return NULL;
+    if (parse_args != args) {
+        Py_DECREF(parse_args);
     }
 
-    pin_args = PyTuple_GetSlice(args, 1, argc);
+    pin_args = PyTuple_GetSlice(args, n_base_args, argc);
     Py_INCREF(pin_args);
 
-    if ((private_key = PK11_FindKeyByAnyCert(((Certificate *)py_cert)->cert, pin_args)) == NULL) {
+    if ((private_key = PK11_FindKeyByAnyCert(py_cert->cert, pin_args)) == NULL) {
         Py_DECREF(pin_args);
         return set_nspr_error(NULL);
     }
@@ -6252,34 +6337,33 @@ Find the best slot which supports the given mechanism.\n\
 static PyObject *
 pk11_get_best_slot(PyObject *self, PyObject *args)
 {
+    Py_ssize_t n_base_args = 1;
     Py_ssize_t argc;
+    PyObject *parse_args = NULL;
     PyObject *pin_args = NULL;
     unsigned long mechanism;
-    PyObject *py_mech = NULL;
     PK11SlotInfo *slot = NULL;
     PyObject *py_slot = NULL;
 
     TraceMethodEnter("pk11_get_best_slot", self);
 
     argc = PyTuple_Size(args);
-
-    if ((py_mech = PyTuple_GetItem(args, 0)) == NULL) {
-        PyErr_SetString(PyExc_TypeError, "get_best_slot: missing mechanism argument");
+    if (argc == n_base_args) {
+        parse_args = args;
+    } else {
+        parse_args = PyTuple_GetSlice(args, 0, n_base_args);
+    }
+    if (!PyArg_ParseTuple(parse_args, "k:get_best_slot", &mechanism)) {
+        if (parse_args != args) {
+            Py_DECREF(parse_args);
+        }
         return NULL;
     }
-
-    if (PyInt_Check(py_mech)) {
-        mechanism = PyInt_AsUnsignedLongMask(py_mech);
-    } else {
-        if (PyLong_Check(py_mech)) {
-            mechanism = PyLong_AsUnsignedLongMask(py_mech);
-        } else {
-            PyErr_SetString(PyExc_TypeError, "get_best_slot: mechanism parameter must be an integer");
-            return NULL;
-        }
+    if (parse_args != args) {
+        Py_DECREF(parse_args);
     }
 
-    pin_args = PyTuple_GetSlice(args, 1, argc);
+    pin_args = PyTuple_GetSlice(args, n_base_args, argc);
     Py_INCREF(pin_args);
 
     if ((slot = PK11_GetBestSlot(mechanism, pin_args)) == NULL) {
@@ -6324,7 +6408,7 @@ pk11_get_internal_key_slot(PyObject *self, PyObject *args)
 }
 
 PyDoc_STRVAR(pk11_create_context_by_sym_key_doc,
-"create_context_by_sym_key(mechanism, operation, sym_key, sec_param) -> PK11Context\n\
+"create_context_by_sym_key(mechanism, operation, sym_key, sec_param=None) -> PK11Context\n\
 \n\
 :Parameters:\n\
     mechanism : int\n\
@@ -6340,8 +6424,9 @@ PyDoc_STRVAR(pk11_create_context_by_sym_key_doc,
 Create a context from a symmetric key)\n\
 ");
 static PyObject *
-pk11_create_context_by_sym_key(PyObject *self, PyObject *args)
+pk11_create_context_by_sym_key(PyObject *self, PyObject *args, PyObject *kwds)
 {
+    static char *kwlist[] = {"mechanism", "operation", "sym_key", "sec_param", NULL};
     unsigned long mechanism;
     unsigned long operation;
     PyPK11SymKey *py_sym_key;
@@ -6352,10 +6437,10 @@ pk11_create_context_by_sym_key(PyObject *self, PyObject *args)
 
     TraceMethodEnter("pk11_create_context_by_sym_key", self);
 
-    if (!PyArg_ParseTuple(args, "kkO!O&:create_context_by_sym_key",
-                          &mechanism, &operation,
-                          &PK11SymKeyType, &py_sym_key,
-                          SecItemOrNoneConvert, &py_sec_param))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "kkO!|O&:create_context_by_sym_key", kwlist,
+                                     &mechanism, &operation,
+                                     &PK11SymKeyType, &py_sym_key,
+                                     SecItemOrNoneConvert, &py_sec_param))
         return NULL;
 
     if ((pk11_context =
@@ -6420,25 +6505,25 @@ pk11_import_sym_key(PyObject *self, PyObject *args)
     if (!PyArg_ParseTuple(parse_args, "O!kkkO!:import_sym_key",
                           &PK11SlotType, &py_slot,
                           &mechanism, &origin, &operation,
-                          &SecItemType, &py_key_data))
+                          &SecItemType, &py_key_data)) {
+        if (parse_args != args) {
+            Py_DECREF(parse_args);
+        }
         return NULL;
-
+    }
+    if (parse_args != args) {
+        Py_DECREF(parse_args);
+    }
 
     pin_args = PyTuple_GetSlice(args, n_base_args, argc);
     Py_INCREF(pin_args);
 
     if ((sym_key = PK11_ImportSymKey(py_slot->slot, mechanism, origin, operation,
                                      &py_key_data->item, pin_args)) == NULL) {
-        if (parse_args != args) {
-            Py_DECREF(parse_args);
-        }
         Py_DECREF(pin_args);
         return set_nspr_error(NULL);
     }
 
-    if (parse_args != args) {
-        Py_DECREF(parse_args);
-    }
     Py_DECREF(pin_args);
 
     return PyPK11SymKey_new_from_PK11SymKey(sym_key);
@@ -6480,47 +6565,32 @@ pk11_create_digest_context(PyObject *self, PyObject *args)
 }
 
 PyDoc_STRVAR(pk11_param_from_iv_doc,
-"param_from_iv(mechanism, iv) -> SecItem\n\
+"param_from_iv(mechanism, iv=None) -> SecItem\n\
 \n\
 :Parameters:\n\
     mechanism : int\n\
         key mechanism enumeration constant (CKM_*)\n\
     iv : SecItem object\n\
-        initial value. If there is no initial value you may also pass\n\
+        initialization vector. If there is no initialization vector you may also pass\n\
         None or an empty SecItem object (e.g. SecItem())\n\
 \n\
-Return a SecItem to be used as the initial value for encryption.\n\
+Return a SecItem to be used as the initialization vector for encryption/decryption.\n\
 ");
 static PyObject *
-pk11_param_from_iv(PyObject *self, PyObject *args)
+pk11_param_from_iv(PyObject *self, PyObject *args, PyObject *kwds)
 {
-    Py_ssize_t n_base_args = 2;
-    Py_ssize_t argc;
-    PyObject *arg;
+    static char *kwlist[] = {"mechanism", "iv", NULL};
     unsigned long mechanism;
-    SECItem *iv;
+    SecItem *py_iv;
     SECItem *sec_param;
 
     TraceMethodEnter("pk11_param_from_iv", self);
 
-    argc = PyTuple_Size(args);
-    if (argc != n_base_args) {
-        return set_arg_count_error("param_from_iv", n_base_args, argc);
-    }
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "k|O&:param_from_iv", kwlist,
+                                     &mechanism, SecItemOrNoneConvert, &py_iv))
+        return NULL;
 
-    arg = PyTuple_GetItem(args, 0);
-    if (!PyInt_Check(arg)) {
-        return set_arg_type_error("mechanism", "integer", arg);
-    }
-    mechanism = PyInt_AsLong(arg);
-
-    arg = PyTuple_GetItem(args, 1);
-    if (!(PySecItem_Check(arg) || PyNone_Check(arg))) {
-        return set_arg_type_error("iv", "SecItem or None", arg);
-    }
-    iv = PyNone_Check(arg) ? NULL : &((SecItem *)arg)->item;
-
-    if ((sec_param = PK11_ParamFromIV(mechanism, iv)) == NULL) {
+    if ((sec_param = PK11_ParamFromIV(mechanism, py_iv ? &py_iv->item : NULL)) == NULL) {
         return set_nspr_error(NULL);
     }
 
@@ -6555,7 +6625,7 @@ pk11_param_from_algid(PyObject *self, PyObject *args)
 }
 
 PyDoc_STRVAR(pk11_generate_new_param_doc,
-"generate_new_param(mechanism, sym_key) -> SecItem\n\
+"generate_new_param(mechanism, sym_key=None) -> SecItem\n\
 \n\
 :Parameters:\n\
     mechanism : int\n\
@@ -6566,16 +6636,17 @@ PyDoc_STRVAR(pk11_generate_new_param_doc,
 Return a SecItem containing a encryption param.\n\
 ");
 static PyObject *
-pk11_generate_new_param(PyObject *self, PyObject *args)
+pk11_generate_new_param(PyObject *self, PyObject *args, PyObject *kwds)
 {
+    static char *kwlist[] = {"mechanism", "sym_key", NULL};
     unsigned long mechanism;
     PyPK11SymKey *py_sym_key;
     SECItem *param;
 
     TraceMethodEnter("pk11_generate_new_param", self);
 
-    if (!PyArg_ParseTuple(args, "kO&:generate_new_param",
-                          &mechanism, SymKeyOrNoneConvert, &py_sym_key))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "k|O&:generate_new_param", kwlist,
+                                     &mechanism, SymKeyOrNoneConvert, &py_sym_key))
         return NULL;
 
     if ((param = PK11_GenerateNewParam(mechanism,
@@ -6644,6 +6715,86 @@ pk11_mechanism_to_algtag(PyObject *self, PyObject *args)
 
     return PyInt_FromLong(algtag);
 }
+PyDoc_STRVAR(pk11_get_iv_length_doc,
+"get_iv_length(mechanism) -> algtag\n\
+\n\
+:Parameters:\n\
+    mechanism : int\n\
+        key mechanism enumeration constant (CKM_*)\n\
+\n\
+Returns the length of the mechanism's initialization vector.\n\
+");
+static PyObject *
+pk11_get_iv_length(PyObject *self, PyObject *args)
+{
+    unsigned long mechanism;
+    int iv_length;
+
+    TraceMethodEnter("pk11_get_iv_length", self);
+
+    if (!PyArg_ParseTuple(args, "k:get_iv_length", &mechanism))
+        return NULL;
+
+    iv_length = PK11_GetIVLength(mechanism);
+
+    return PyInt_FromLong(iv_length);
+}
+
+PyDoc_STRVAR(pk11_get_block_size_doc,
+"get_block_size(mechanism, sec_param=None) -> int\n\
+\n\
+:Parameters:\n\
+    mechanism : int\n\
+        key mechanism enumeration constant (CKM_*)\n\
+    sec_param : SecItem object or None\n\
+        mechanism parameters used to build this context or None.\n\
+\n\
+Get the mechanism block size\n\
+");
+static PyObject *
+pk11_get_block_size(PyObject *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"mechanism", "sec_param", NULL};
+    unsigned long mechanism;
+    SecItem *py_sec_param;
+    int block_size;
+
+    TraceMethodEnter("pk11_get_block_size", self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "k|O&:get_block_size", kwlist,
+                                     &mechanism, SecItemOrNoneConvert, &py_sec_param))
+        return NULL;
+
+    block_size = PK11_GetBlockSize(mechanism, py_sec_param ? &py_sec_param->item : NULL);
+
+    return PyInt_FromLong(block_size);
+}
+
+PyDoc_STRVAR(pk11_get_pad_mechanism_doc,
+"get_pad_mechanism(mechanism) -> int\n\
+\n\
+:Parameters:\n\
+    mechanism : int\n\
+        key mechanism enumeration constant (CKM_*)\n\
+\n\
+Determine appropriate mechanism to use when padding is required.\n\
+If the mechanism does not map to a padding mechanism return the mechanism.\n\
+");
+static PyObject *
+pk11_get_pad_mechanism(PyObject *self, PyObject *args)
+{
+    unsigned long mechanism;
+    unsigned long pad_mechanism;
+
+    TraceMethodEnter("pk11_get_pad_mechanism", self);
+
+    if (!PyArg_ParseTuple(args, "k:get_pad_mechanism", &mechanism))
+        return NULL;
+
+    pad_mechanism = PK11_GetPadMechanism(mechanism);
+
+    return PyInt_FromLong(pad_mechanism);
+}
 
 /* List of functions exported by this module. */
 static PyMethodDef
@@ -6674,14 +6825,17 @@ module_methods[] = {
     {"pk11_attribute_type_from_name", (PyCFunction)pk11_pk11_attribute_type_from_name, METH_VARARGS,               pk11_pk11_attribute_type_from_name_doc},
     {"get_best_slot",                 (PyCFunction)pk11_get_best_slot,                 METH_VARARGS,               pk11_get_best_slot_doc},
     {"get_internal_key_slot",         (PyCFunction)pk11_get_internal_key_slot,         METH_NOARGS,                pk11_get_internal_key_slot_doc},
-    {"create_context_by_sym_key",     (PyCFunction)pk11_create_context_by_sym_key,     METH_VARARGS,               pk11_create_context_by_sym_key_doc},
+    {"create_context_by_sym_key",     (PyCFunction)pk11_create_context_by_sym_key,     METH_VARARGS|METH_KEYWORDS, pk11_create_context_by_sym_key_doc},
     {"import_sym_key",                (PyCFunction)pk11_import_sym_key,                METH_VARARGS,               pk11_import_sym_key_doc},
     {"create_digest_context",         (PyCFunction)pk11_create_digest_context,         METH_VARARGS,               pk11_create_digest_context_doc},
-    {"param_from_iv",                 (PyCFunction)pk11_param_from_iv,                 METH_VARARGS,               pk11_param_from_iv_doc},
+    {"param_from_iv",                 (PyCFunction)pk11_param_from_iv,                 METH_VARARGS|METH_KEYWORDS, pk11_param_from_iv_doc},
     {"param_from_algid",              (PyCFunction)pk11_param_from_algid,              METH_VARARGS,               pk11_param_from_algid_doc},
-    {"generate_new_param",            (PyCFunction)pk11_generate_new_param,            METH_VARARGS,               pk11_generate_new_param_doc},
+    {"generate_new_param",            (PyCFunction)pk11_generate_new_param,            METH_VARARGS|METH_KEYWORDS, pk11_generate_new_param_doc},
     {"algtag_to_mechanism",           (PyCFunction)pk11_algtag_to_mechanism,           METH_VARARGS,               pk11_algtag_to_mechanism_doc},
     {"mechanism_to_algtag",           (PyCFunction)pk11_mechanism_to_algtag,           METH_VARARGS,               pk11_mechanism_to_algtag_doc},
+    {"get_iv_length",                 (PyCFunction)pk11_get_iv_length,                 METH_VARARGS,               pk11_get_iv_length_doc},
+    {"get_block_size",                (PyCFunction)pk11_get_block_size,                METH_VARARGS|METH_KEYWORDS, pk11_get_block_size_doc},
+    {"get_pad_mechanism",             (PyCFunction)pk11_get_pad_mechanism,             METH_VARARGS,               pk11_get_pad_mechanism_doc},
     {NULL, NULL} /* Sentinel */
 };
 

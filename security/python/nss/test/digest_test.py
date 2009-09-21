@@ -1,9 +1,5 @@
 #!/usr/bin/python
 
-# used for local testing
-#from test_util import insert_build_dir_into_path
-#insert_build_dir_into_path()
-
 import subprocess
 import sys
 import os
@@ -37,11 +33,9 @@ def do_test(name, ref_cmd, nss_digest_func, hash_oid, in_filename, chunk_size):
 
     hash_oid_name = nss.sec_oid_tag_str(hash_oid)
 
-    print "running test %s: nss_digest_func=%s hash_oid=%s" % \
-        (name, nss_digest_func.__name__, hash_oid_name)
-
-    print nss.sec_oid_tag_from_name("sha512")
-    print "%s = %d" % (nss.sec_oid_tag_name(hash_oid), nss.sec_oid_tag_from_name(nss.sec_oid_tag_name(hash_oid)))
+    if verbose:
+        print "running test %s: nss_digest_func=%s hash_oid=%s" % \
+            (name, nss_digest_func.__name__, hash_oid_name)
 
     # read the data in from the file
     ref_data = open(in_filename).read()
@@ -59,8 +53,6 @@ def do_test(name, ref_cmd, nss_digest_func, hash_oid, in_filename, chunk_size):
     reference_digest = proc.stdout.read().split()[0]
     if verbose:
         print "reference_digest\n%s" % (reference_digest)
-    else:
-        print reference_digest
 
     # Run the test with convenience digest function (e.g. nss.sha256_digest, etc.).
     test_digest =  nss.data_to_hex(nss_digest_func(ref_data))

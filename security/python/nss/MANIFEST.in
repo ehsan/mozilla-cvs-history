@@ -1,5 +1,0 @@
-include LICENSE.mpl LICENSE.gpl LICENSE.lgpl
-recursive-include src *.c *.h *.py
-recursive-include lib *.py
-recursive-include doc ChangeLog *.txt *.py
-recursive-exclude doc http.py examples.py notes.txt coverage.txt

@@ -1,3 +1,16 @@
+2009-09-21  John Dennis  <jdennis@redhat.com> 0.8
+  * The following methods, properties  and functions were added:
+    SecItem.type SecItem.len, SecItem.data
+    PK11SymKey.key_data, PK11SymKey.key_length, PK11SymKey.slot
+    create_context_by_sym_key
+    param_from_iv
+    generate_new_param
+    get_iv_length
+    get_block_size
+    get_pad_mechanism
+  * SecItem's now support indexing and slicing on their data
+  * Clean up parsing and parameter validation of variable arg functions
+
 2009-09-18  John Dennis  <jdennis@redhat.com> 0.7
   * add support for symmetric encryption/decryption
     more support for digests (hashes)
