@@ -55,34 +55,34 @@ static PyObject *py_ssl_implemented_ciphers = NULL;
 
 // FIXME: this should be imported from socket module
 static PyObject *
-NetworkAddress_new_from_prnetaddr(PRNetAddr *pr_netaddr)
+NetworkAddress_new_from_PRNetAddr(PRNetAddr *pr_netaddr)
 {
     NetworkAddress *self = NULL;
 
-    TraceObjNewEnter("NetworkAddress_new_from_prnetaddr", NULL);
+    TraceObjNewEnter("NetworkAddress_new_from_PRNetAddr", NULL);
 
     if ((self = (NetworkAddress *) NetworkAddressType.tp_new(&NetworkAddressType, NULL, NULL)) == NULL)
         return NULL;
 
     self->addr = *pr_netaddr;
 
-    TraceObjNewLeave("NetworkAddress_new_from_prnetaddr", self);
+    TraceObjNewLeave("NetworkAddress_new_from_PRNetAddr", self);
     return (PyObject *) self;
 }
 
 static PyObject *
-SSLSocket_new_from_prfiledesc(PRFileDesc *pr_socket, int family)
+SSLSocket_new_from_PRFileDesc(PRFileDesc *pr_socket, int family)
 {
     SSLSocket *self = NULL;
 
-    TraceObjNewEnter("SSLSocket_new_from_prfiledesc", NULL);
+    TraceObjNewEnter("SSLSocket_new_from_PRFileDesc", NULL);
 
     if ((self = (SSLSocket *) SSLSocketType.tp_new(&SSLSocketType, NULL, NULL)) == NULL)
         return NULL;
 
-    Socket_init_from_prfiledesc((Socket *)self, pr_socket, family);
+    Socket_init_from_PRFileDesc((Socket *)self, pr_socket, family);
 
-    TraceObjNewLeave("SSLSocket_new_from_prfiledesc", self);
+    TraceObjNewLeave("SSLSocket_new_from_PRFileDesc", self);
     return (PyObject *) self;
 }
 
@@ -380,10 +380,10 @@ SSLSocket_accept(SSLSocket *self, PyObject *args, PyObject *kwds)
     if ((pr_socket = PR_Accept(self->pr_socket, &pr_netaddr, timeout)) == NULL)
         return set_nspr_error(NULL);
 
-    if ((py_netaddr = NetworkAddress_new_from_prnetaddr(&pr_netaddr)) == NULL)
+    if ((py_netaddr = NetworkAddress_new_from_PRNetAddr(&pr_netaddr)) == NULL)
         goto error;
 
-    if ((py_ssl_socket = SSLSocket_new_from_prfiledesc(pr_socket, self->family)) == NULL)
+    if ((py_ssl_socket = SSLSocket_new_from_PRFileDesc(pr_socket, self->family)) == NULL)
         goto error;
 
     if ((return_value = Py_BuildValue("OO", py_ssl_socket, py_netaddr)) == NULL)
@@ -419,7 +419,7 @@ ssl_auth_certificate(void *arg, PRFileDesc *pr_socket, PRBool check_sig, PRBool 
         return SECFailure;
     }
 
-    if ((py_ssl_socket = SSLSocket_new_from_prfiledesc(pr_socket, self->family)) == NULL) { /* FIXME: cached? what is family? */
+    if ((py_ssl_socket = SSLSocket_new_from_PRFileDesc(pr_socket, self->family)) == NULL) { /* FIXME: cached? what is family? */
         PySys_WriteStderr("SSLSocket.auth_certificate_func: cannot create socket object\n");
         return SECFailure;
     }
@@ -1016,7 +1016,7 @@ SSLSocket_get_peer_certificate(SSLSocket *self, PyObject *args)
     if (cert == NULL)
         Py_RETURN_NONE;
 
-    if ((py_cert = Certificate_new_from_cert(cert)) == NULL) {
+    if ((py_cert = Certificate_new_from_CERTCertificate(cert)) == NULL) {
         return NULL;
     }
 
@@ -1040,7 +1040,7 @@ SSLSocket_get_certificate(SSLSocket *self, PyObject *args)
     if (cert == NULL)
         Py_RETURN_NONE;
 
-    if ((py_cert = Certificate_new_from_cert(cert)) == NULL) {
+    if ((py_cert = Certificate_new_from_CERTCertificate(cert)) == NULL) {
         return NULL;
     }
 
@@ -1184,7 +1184,7 @@ SSLSocket_get_session_id(SSLSocket *self, PyObject *args)
     if ((sec_item = SSL_GetSessionID(self->pr_socket)) == NULL)
         return set_nspr_error(NULL);
 
-    return_value = SecItem_new_from_sec_item(sec_item, SECITEM_session_id);
+    return_value = SecItem_new_from_SECItem(sec_item, SECITEM_session_id);
 
     SECITEM_FreeItem(sec_item, PR_TRUE);
 
@@ -1637,7 +1637,7 @@ SSLSocket_import_tcp_socket(Socket *unused_class, PyObject *args)
 	set_nspr_error(NULL);
 	goto error;
     }
-    if ((return_value = SSLSocket_new_from_prfiledesc(sock,
+    if ((return_value = SSLSocket_new_from_PRFileDesc(sock,
 						      PR_NetAddrFamily(&addr)))
 	== NULL)
 	goto error;

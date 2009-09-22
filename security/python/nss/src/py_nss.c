@@ -35,10 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// FIXME: change all Python _from_ NSS function names to use the NSS typedef for clarity
-//        e.g. PrivateKey_new_from_private_key should be PrivateKey_new_from_SECKEYPrivateKey
 // FIXME: should we be calling these?
-// PK11_FreeSlot (yes, and yes we are)
 // SECKEY_DestroyEncryptedPrivateKeyInfo
 // SECKEY_DestroyPrivateKey	   SECKEY_DestroyPrivateKeyInfo
 // SECKEY_DestroyPrivateKeyList	   SECKEY_DestroyPublicKey
@@ -1626,11 +1623,11 @@ static PyTypeObject SecItemType = {
 };
 
 PyObject *
-SecItem_new_from_sec_item(SECItem *item, SECItemKind kind)
+SecItem_new_from_SECItem(SECItem *item, SECItemKind kind)
 {
     SecItem *self = NULL;
 
-    TraceObjNewEnter("SecItem_new_from_sec_item", NULL);
+    TraceObjNewEnter("SecItem_new_from_SECItem", NULL);
 
     if ((self = (SecItem *) SecItemType.tp_new(&SecItemType, NULL, NULL)) == NULL)
         return NULL;
@@ -1644,7 +1641,7 @@ SecItem_new_from_sec_item(SECItem *item, SECItemKind kind)
 
     self->kind = kind;
 
-    TraceObjNewLeave("SecItem_new_from_sec_item", self);
+    TraceObjNewLeave("SecItem_new_from_SECItem", self);
     return (PyObject *) self;
 }
 
@@ -1763,22 +1760,22 @@ static PyTypeObject SignatureAlgorithmType = {
 };
 
 PyObject *
-SignatureAlgorithm_new_from_algorithm_id(SECAlgorithmID *id)
+SignatureAlgorithm_new_from_SECAlgorithmID(SECAlgorithmID *id)
 {
     SignatureAlgorithm *self = NULL;
 
-    TraceObjNewEnter("SignatureAlgorithm_new_from_sec_item", NULL);
+    TraceObjNewEnter("SignatureAlgorithm_new_from_SECAlgorithmID", NULL);
 
     if ((self = (SignatureAlgorithm *) SignatureAlgorithmType.tp_new(&SignatureAlgorithmType, NULL, NULL)) == NULL)
         return NULL;
 
     self->id = *id;
-    if ((self->py_id = SecItem_new_from_sec_item(&id->algorithm, SECITEM_algorithm)) == NULL)
+    if ((self->py_id = SecItem_new_from_SECItem(&id->algorithm, SECITEM_algorithm)) == NULL)
         return NULL;
-    if ((self->py_parameters = SecItem_new_from_sec_item(&id->parameters, SECITEM_unknown)) == NULL)
+    if ((self->py_parameters = SecItem_new_from_SECItem(&id->parameters, SECITEM_unknown)) == NULL)
         return NULL;
 
-    TraceObjNewLeave("SignatureAlgorithm_new_from_sec_item", self);
+    TraceObjNewLeave("SignatureAlgorithm_new_from_SECAlgorithmID", self);
     return (PyObject *) self;
 }
 
@@ -1948,21 +1945,21 @@ KEYPQGParams_new_from_SECKEYPQGParams(SECKEYPQGParams *params)
 {
     KEYPQGParams *self = NULL;
 
-    TraceObjNewEnter("KEYPQGParams_new_from_sec_item", NULL);
+    TraceObjNewEnter("KEYPQGParams_new_from_SECKEYPQGParams", NULL);
 
     if ((self = (KEYPQGParams *) KEYPQGParamsType.tp_new(&KEYPQGParamsType, NULL, NULL)) == NULL)
         return NULL;
 
-    if ((self->py_prime = SecItem_new_from_sec_item(&params->prime, SECITEM_unknown)) == NULL)
+    if ((self->py_prime = SecItem_new_from_SECItem(&params->prime, SECITEM_unknown)) == NULL)
         return NULL;
 
-    if ((self->py_subprime = SecItem_new_from_sec_item(&params->subPrime, SECITEM_unknown)) == NULL)
+    if ((self->py_subprime = SecItem_new_from_SECItem(&params->subPrime, SECITEM_unknown)) == NULL)
         return NULL;
 
-    if ((self->py_base = SecItem_new_from_sec_item(&params->base, SECITEM_unknown)) == NULL)
+    if ((self->py_base = SecItem_new_from_SECItem(&params->base, SECITEM_unknown)) == NULL)
         return NULL;
 
-    TraceObjNewLeave("KEYPQGParams_new_from_sec_item", self);
+    TraceObjNewLeave("KEYPQGParams_new_from_SECKEYPQGParams", self);
     return (PyObject *) self;
 }
 
@@ -2162,18 +2159,18 @@ RSAPublicKey_new_from_SECKEYRSAPublicKey(SECKEYRSAPublicKey *rsa)
 {
     RSAPublicKey *self = NULL;
 
-    TraceObjNewEnter("RSAPublicKey_new_from_sec_item", NULL);
+    TraceObjNewEnter("RSAPublicKey_new_from_SECKEYRSAPublicKey", NULL);
 
     if ((self = (RSAPublicKey *) RSAPublicKeyType.tp_new(&RSAPublicKeyType, NULL, NULL)) == NULL)
         return NULL;
 
-    if ((self->py_modulus = SecItem_new_from_sec_item(&rsa->modulus, SECITEM_unknown)) == NULL)
+    if ((self->py_modulus = SecItem_new_from_SECItem(&rsa->modulus, SECITEM_unknown)) == NULL)
         return NULL;
 
-    if ((self->py_exponent = SecItem_new_from_sec_item(&rsa->publicExponent, SECITEM_unknown)) == NULL)
+    if ((self->py_exponent = SecItem_new_from_SECItem(&rsa->publicExponent, SECITEM_unknown)) == NULL)
         return NULL;
 
-    TraceObjNewLeave("RSAPublicKey_new_from_sec_item", self);
+    TraceObjNewLeave("RSAPublicKey_new_from_SECKEYRSAPublicKey", self);
     return (PyObject *) self;
 }
 
@@ -2332,7 +2329,7 @@ DSAPublicKey_new_from_SECKEYDSAPublicKey(SECKEYDSAPublicKey *dsa)
 {
     DSAPublicKey *self = NULL;
 
-    TraceObjNewEnter("DSAPublicKey_new_from_sec_item", NULL);
+    TraceObjNewEnter("DSAPublicKey_new_from_SECKEYDSAPublicKey", NULL);
 
     if ((self = (DSAPublicKey *) DSAPublicKeyType.tp_new(&DSAPublicKeyType, NULL, NULL)) == NULL)
         return NULL;
@@ -2340,10 +2337,10 @@ DSAPublicKey_new_from_SECKEYDSAPublicKey(SECKEYDSAPublicKey *dsa)
     if ((self->py_pqg_params = KEYPQGParams_new_from_SECKEYPQGParams(&dsa->params)) == NULL)
         return NULL;
 
-    if ((self->py_public_value = SecItem_new_from_sec_item(&dsa->publicValue, SECITEM_unknown)) == NULL)
+    if ((self->py_public_value = SecItem_new_from_SECItem(&dsa->publicValue, SECITEM_unknown)) == NULL)
         return NULL;
 
-    TraceObjNewLeave("DSAPublicKey_new_from_sec_item", self);
+    TraceObjNewLeave("DSAPublicKey_new_from_SECKEYDSAPublicKey", self);
     return (PyObject *) self;
 }
 
@@ -2552,11 +2549,11 @@ static PyTypeObject SignedDataType = {
 };
 
 PyObject *
-SignedData_new_from_sec_item(SECItem *item)
+SignedData_new_from_SECItem(SECItem *item)
 {
     SignedData *self = NULL;
 
-    TraceObjNewEnter("SignedData_new_from_sec_item", NULL);
+    TraceObjNewEnter("SignedData_new_from_SECItem", NULL);
 
     if ((self = (SignedData *) SignedDataType.tp_new(&SignedDataType, NULL, NULL)) == NULL)
         return NULL;
@@ -2566,17 +2563,17 @@ SignedData_new_from_sec_item(SECItem *item)
         return NULL;
     }
 
-    if ((self->py_data = SecItem_new_from_sec_item(&self->signed_data.data, SECITEM_unknown)) == NULL)
+    if ((self->py_data = SecItem_new_from_SECItem(&self->signed_data.data, SECITEM_unknown)) == NULL)
         return NULL;
 
-    if ((self->py_algorithm = SignatureAlgorithm_new_from_algorithm_id(&self->signed_data.signatureAlgorithm)) == NULL)
+    if ((self->py_algorithm = SignatureAlgorithm_new_from_SECAlgorithmID(&self->signed_data.signatureAlgorithm)) == NULL)
         return NULL;
 
     DER_ConvertBitString(&self->signed_data.signature);
-    if ((self->py_signature = SecItem_new_from_sec_item(&self->signed_data.signature, SECITEM_signature)) == NULL)
+    if ((self->py_signature = SecItem_new_from_SECItem(&self->signed_data.signature, SECITEM_signature)) == NULL)
         return NULL;
 
-    TraceObjNewLeave("SignedData_new_from_sec_item", self);
+    TraceObjNewLeave("SignedData_new_from_SECItem", self);
     return (PyObject *) self;
 }
 
@@ -2819,7 +2816,7 @@ PublicKey_new_from_SECKEYPublicKey(SECKEYPublicKey *pk)
 {
     PublicKey *self = NULL;
 
-    TraceObjNewEnter("PublicKey_new_from_sec_item", NULL);
+    TraceObjNewEnter("PublicKey_new_from_SECKEYPublicKey", NULL);
 
     if ((self = (PublicKey *) PublicKeyType.tp_new(&PublicKeyType, NULL, NULL)) == NULL)
         return NULL;
@@ -2842,7 +2839,7 @@ PublicKey_new_from_SECKEYPublicKey(SECKEYPublicKey *pk)
         break;
     }
 
-    TraceObjNewLeave("PublicKey_new_from_sec_item", self);
+    TraceObjNewLeave("PublicKey_new_from_SECKEYPublicKey", self);
     return (PyObject *) self;
 }
 
@@ -3051,12 +3048,12 @@ SubjectPublicKeyInfo_new_from_CERTSubjectPublicKeyInfo(CERTSubjectPublicKeyInfo 
     SubjectPublicKeyInfo *self = NULL;
     SECKEYPublicKey *pk = NULL;
 
-    TraceObjNewEnter("SubjectPublicKeyInfo_new_from_sec_item", NULL);
+    TraceObjNewEnter("SubjectPublicKeyInfo_new_from_CERTSubjectPublicKeyInfo", NULL);
 
     if ((self = (SubjectPublicKeyInfo *) SubjectPublicKeyInfoType.tp_new(&SubjectPublicKeyInfoType, NULL, NULL)) == NULL)
         return NULL;
 
-    if ((self->py_algorithm = SignatureAlgorithm_new_from_algorithm_id(&spki->algorithm)) == NULL)
+    if ((self->py_algorithm = SignatureAlgorithm_new_from_SECAlgorithmID(&spki->algorithm)) == NULL)
         return NULL;
 
     if ((pk = SECKEY_ExtractPublicKey(spki)) == NULL) {
@@ -3069,7 +3066,7 @@ SubjectPublicKeyInfo_new_from_CERTSubjectPublicKeyInfo(CERTSubjectPublicKeyInfo 
         return NULL;
     }
 
-    TraceObjNewLeave("SubjectPublicKeyInfo_new_from_sec_item", self);
+    TraceObjNewLeave("SubjectPublicKeyInfo_new_from_CERTSubjectPublicKeyInfo", self);
     return (PyObject *) self;
 }
 
@@ -3228,17 +3225,17 @@ static PyTypeObject CertDBType = {
 };
 
 PyObject *
-CertDB_new_from_handle(CERTCertDBHandle *cert_handle)
+CertDB_new_from_CERTCertDBHandle(CERTCertDBHandle *cert_handle)
 {
     CertDB *self = NULL;
 
-    TraceObjNewEnter("CertDB_new_from_handle", NULL);
+    TraceObjNewEnter("CertDB_new_from_CERTCertDBHandle", NULL);
     if ((self = (CertDB *) CertDBType.tp_new(&CertDBType, NULL, NULL)) == NULL)
         return NULL;
 
     self->handle = cert_handle;
 
-    TraceObjNewLeave("CertDB_new_from_handle", self);
+    TraceObjNewLeave("CertDB_new_from_CERTCertDBHandle", self);
     return (PyObject *) self;
 }
 
@@ -3254,7 +3251,7 @@ cert_distnames_new_from_CERTDistNames(CERTDistNames *names)
         return NULL;
 
     for (i = 0; i< names->nnames; i++) {
-        if ((py_sec_item = SecItem_new_from_sec_item(&names->names[i], SECITEM_dist_name)) == NULL) {
+        if ((py_sec_item = SecItem_new_from_SECItem(&names->names[i], SECITEM_dist_name)) == NULL) {
             return NULL;
         }
         PyTuple_SetItem(py_distnames, i, py_sec_item);
@@ -3376,7 +3373,7 @@ Certificate_get_serial_number(Certificate *self, void *closure)
 static PyObject *
 Certificate_get_signature_algorithm(Certificate *self, void *closure)
 {
-    return SignatureAlgorithm_new_from_algorithm_id(&self->cert->signature);
+    return SignatureAlgorithm_new_from_SECAlgorithmID(&self->cert->signature);
 }
 
 static PyObject *
@@ -3384,7 +3381,7 @@ Certificate_get_signed_data(Certificate *self, void *closure)
 {
     PyObject *py_signed_data = NULL;
 
-    return py_signed_data = SignedData_new_from_sec_item(&self->cert->derCert);
+    return py_signed_data = SignedData_new_from_SECItem(&self->cert->derCert);
 }
 
 static PyObject *
@@ -4056,11 +4053,11 @@ static PyTypeObject CertificateType = {
 };
 
 PyObject *
-Certificate_new_from_cert(CERTCertificate *cert)
+Certificate_new_from_CERTCertificate(CERTCertificate *cert)
 {
     Certificate *self = NULL;
 
-    TraceObjNewEnter("Certificate_new_from_cert", NULL);
+    TraceObjNewEnter("Certificate_new_from_CERTCertificate", NULL);
 
     if ((self = (Certificate *) CertificateType.tp_new(&CertificateType, NULL, NULL)) == NULL)
         return NULL;
@@ -4068,7 +4065,7 @@ Certificate_new_from_cert(CERTCertificate *cert)
     self->cert = cert;
     self->py_subject_public_key_info = SubjectPublicKeyInfo_new_from_CERTSubjectPublicKeyInfo(&cert->subjectPublicKeyInfo);
 
-    TraceObjNewLeave("Certificate_new_from_cert", self);
+    TraceObjNewLeave("Certificate_new_from_CERTCertificate", self);
     return (PyObject *) self;
 }
 
@@ -4174,17 +4171,17 @@ static PyTypeObject PrivateKeyType = {
 };
 
 PyObject *
-PrivateKey_new_from_private_key(SECKEYPrivateKey *private_key)
+PrivateKey_new_from_SECKEYPrivateKey(SECKEYPrivateKey *private_key)
 {
     PrivateKey *self = NULL;
 
-    TraceObjNewEnter("PrivateKey_new_from_private_key", NULL);
+    TraceObjNewEnter("PrivateKey_new_from_SECKEYPrivateKey", NULL);
     if ((self = (PrivateKey *) PrivateKeyType.tp_new(&PrivateKeyType, NULL, NULL)) == NULL)
         return NULL;
 
     self->private_key = private_key;
 
-    TraceObjNewLeave("PrivateKey_new_from_private_key", self);
+    TraceObjNewLeave("PrivateKey_new_from_SECKEYPrivateKey", self);
     return (PyObject *) self;
 }
 
@@ -4206,7 +4203,7 @@ cert_get_default_certdb(PyObject *self, PyObject *args)
     if ((cert_handle = CERT_GetDefaultCertDB()) == NULL)
         Py_RETURN_NONE;
 
-    return CertDB_new_from_handle(cert_handle);
+    return CertDB_new_from_CERTCertDBHandle(cert_handle);
 }
 
 PyDoc_STRVAR(cert_get_cert_nicknames_doc,
@@ -4805,18 +4802,18 @@ static PyTypeObject PK11SlotType = {
 };
 
 PyObject *
-PK11Slot_new_from_slotinfo(PK11SlotInfo *slot)
+PK11Slot_new_from_PK11SlotInfo(PK11SlotInfo *slot)
 {
     PK11Slot *self = NULL;
 
-    TraceObjNewEnter("PK11Slot_new_from_slotinfo", NULL);
+    TraceObjNewEnter("PK11Slot_new_from_PK11SlotInfo", NULL);
 
     if ((self = (PK11Slot *) PK11SlotType.tp_new(&PK11SlotType, NULL, NULL)) == NULL)
         return NULL;
 
     self->slot = slot;
 
-    TraceObjNewLeave("PK11Slot_new_from_slotinfo", self);
+    TraceObjNewLeave("PK11Slot_new_from_PK11SlotInfo", self);
     return (PyObject *) self;
 }
 
@@ -4861,7 +4858,7 @@ PK11SymKey_get_slot(PyPK11SymKey *self, void *closure)
     PyObject *py_slot = NULL;
 
     slot = PK11_GetSlotFromKey(self->pk11_sym_key);
-    if ((py_slot = PK11Slot_new_from_slotinfo(slot)) == NULL) {
+    if ((py_slot = PK11Slot_new_from_PK11SlotInfo(slot)) == NULL) {
         PyErr_SetString(PyExc_MemoryError, "unable to create PK11Slot object");
         return NULL;
     }
@@ -4964,7 +4961,7 @@ PK11SymKey_wrap_sym_key(PyPK11SymKey *self, PyObject *args)
         return set_nspr_error(NULL);
     }
 
-    return SecItem_new_from_sec_item(&wrapped_key, SECITEM_wrapped_key);
+    return SecItem_new_from_SECItem(&wrapped_key, SECITEM_wrapped_key);
 }
 
 PyDoc_STRVAR(PK11SymKey_unwrap_sym_key_doc,
@@ -5552,7 +5549,7 @@ PK11_password_callback(PK11SlotInfo *slot, PRBool retry, void *arg)
     py_retry = PyBool_FromLong(retry);
     Py_INCREF(py_retry);
 
-    if ((py_slot = PK11Slot_new_from_slotinfo(slot)) == NULL) {
+    if ((py_slot = PK11Slot_new_from_PK11SlotInfo(slot)) == NULL) {
         PySys_WriteStderr("exception in PK11 password callback\n");
         PyErr_Print();
         goto exit;
@@ -5695,7 +5692,7 @@ pk11_find_cert_from_nickname(PyObject *self, PyObject *args)
 
     Py_DECREF(pin_args);
 
-    if ((py_cert = Certificate_new_from_cert(cert)) == NULL) {
+    if ((py_cert = Certificate_new_from_CERTCertificate(cert)) == NULL) {
         return NULL;
     }
 
@@ -5756,7 +5753,7 @@ pk11_find_key_by_any_cert(PyObject *self, PyObject *args)
 
     Py_DECREF(pin_args);
 
-    if ((py_private_key = PrivateKey_new_from_private_key(private_key)) == NULL) {
+    if ((py_private_key = PrivateKey_new_from_SECKEYPrivateKey(private_key)) == NULL) {
         return NULL;
     }
 
@@ -6373,7 +6370,7 @@ pk11_get_best_slot(PyObject *self, PyObject *args)
 
     Py_DECREF(pin_args);
 
-    if ((py_slot = PK11Slot_new_from_slotinfo(slot)) == NULL) {
+    if ((py_slot = PK11Slot_new_from_PK11SlotInfo(slot)) == NULL) {
         PyErr_SetString(PyExc_MemoryError, "unable to create PK11Slot object");
         return NULL;
     }
@@ -6399,7 +6396,7 @@ pk11_get_internal_key_slot(PyObject *self, PyObject *args)
         return set_nspr_error(NULL);
     }
 
-    if ((py_slot = PK11Slot_new_from_slotinfo(slot)) == NULL) {
+    if ((py_slot = PK11Slot_new_from_PK11SlotInfo(slot)) == NULL) {
         PyErr_SetString(PyExc_MemoryError, "unable to create PK11Slot object");
         return NULL;
     }
@@ -6594,7 +6591,7 @@ pk11_param_from_iv(PyObject *self, PyObject *args, PyObject *kwds)
         return set_nspr_error(NULL);
     }
 
-    return SecItem_new_from_sec_item(sec_param, SECITEM_iv_param);
+    return SecItem_new_from_SECItem(sec_param, SECITEM_iv_param);
 }
 
 PyDoc_STRVAR(pk11_param_from_algid_doc,
@@ -6621,7 +6618,7 @@ pk11_param_from_algid(PyObject *self, PyObject *args)
         return set_nspr_error(NULL);
     }
 
-    return SecItem_new_from_sec_item(param, SECITEM_unknown);
+    return SecItem_new_from_SECItem(param, SECITEM_unknown);
 }
 
 PyDoc_STRVAR(pk11_generate_new_param_doc,
@@ -6654,7 +6651,7 @@ pk11_generate_new_param(PyObject *self, PyObject *args, PyObject *kwds)
         return set_nspr_error(NULL);
     }
 
-    return SecItem_new_from_sec_item(param, SECITEM_unknown);
+    return SecItem_new_from_SECItem(param, SECITEM_unknown);
 }
 
 PyDoc_STRVAR(pk11_algtag_to_mechanism_doc,
@@ -6848,9 +6845,9 @@ static PyNSPR_NSS_C_API_Type nspr_nss_c_api =
     &CertificateType,
     &PrivateKeyType,
     &SecItemType,
-    Certificate_new_from_cert,
-    PrivateKey_new_from_private_key,
-    SecItem_new_from_sec_item,
+    Certificate_new_from_CERTCertificate,
+    PrivateKey_new_from_SECKEYPrivateKey,
+    SecItem_new_from_SECItem,
     cert_distnames_new_from_CERTDistNames,
     cert_distnames_as_CERTDistNames
 };

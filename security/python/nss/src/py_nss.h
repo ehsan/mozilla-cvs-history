@@ -217,9 +217,9 @@ typedef struct {
     PyTypeObject *certificate_type;
     PyTypeObject *private_key_type;
     PyTypeObject *sec_item_type;
-    PyObject *(*Certificate_new_from_cert)(CERTCertificate *cert);
-    PyObject *(*PrivateKey_new_from_private_key)(SECKEYPrivateKey *private_key);
-    PyObject *(*SecItem_new_from_sec_item)(SECItem *item, SECItemKind type);
+    PyObject *(*Certificate_new_from_CERTCertificate)(CERTCertificate *cert);
+    PyObject *(*PrivateKey_new_from_SECKEYPrivateKey)(SECKEYPrivateKey *private_key);
+    PyObject *(*SecItem_new_from_SECItem)(SECItem *item, SECItemKind type);
     PyObject *(*cert_distnames_new_from_CERTDistNames)(CERTDistNames *names);
     CERTDistNames *(*cert_distnames_as_CERTDistNames)(PyObject *py_distnames);
 } PyNSPR_NSS_C_API_Type;
@@ -234,7 +234,7 @@ typedef struct {
 #define PySymKey_Check(op) PyObject_TypeCheck(op, &PK11SymKeyType)
 
 PyObject *
-PK11Slot_new_from_slotinfo(PK11SlotInfo *slot);
+PK11Slot_new_from_PK11SlotInfo(PK11SlotInfo *slot);
 
 #else  /* not NSS_NSS_MODULE */
 
@@ -251,9 +251,9 @@ PK11Slot_new_from_slotinfo(PK11SlotInfo *slot);
 
 static PyNSPR_NSS_C_API_Type nspr_nss_c_api;
 
-#define Certificate_new_from_cert (*nspr_nss_c_api.Certificate_new_from_cert)
-#define PrivateKey_new_from_private_key (*nspr_nss_c_api.PrivateKey_new_from_private_key)
-#define SecItem_new_from_sec_item (*nspr_nss_c_api.SecItem_new_from_sec_item)
+#define Certificate_new_from_CERTCertificate (*nspr_nss_c_api.Certificate_new_from_CERTCertificate)
+#define PrivateKey_new_from_SECKEYPrivateKey (*nspr_nss_c_api.PrivateKey_new_from_SECKEYPrivateKey)
+#define SecItem_new_from_SECItem (*nspr_nss_c_api.SecItem_new_from_SECItem)
 #define cert_distnames_new_from_CERTDistNames (*nspr_nss_c_api.cert_distnames_new_from_CERTDistNames)
 #define cert_distnames_as_CERTDistNames (*nspr_nss_c_api.cert_distnames_as_CERTDistNames)
 

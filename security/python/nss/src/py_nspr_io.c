@@ -176,7 +176,7 @@ static PyObject *
 NetworkAddress_get_hostentry(NetworkAddress *self, void *closure)
 {
     if (self->py_hostentry == NULL) {
-        self->py_hostentry = (HostEntry *)HostEntry_new_from_prnetaddr(&self->addr);
+        self->py_hostentry = (HostEntry *)HostEntry_new_from_PRNetAddr(&self->addr);
     }
     return (PyObject *)self->py_hostentry;
 }
@@ -189,7 +189,7 @@ NetworkAddress_get_hostname(NetworkAddress *self, void *closure)
         return self->py_hostname;
     }
     if (self->py_hostentry == NULL) {
-        if ((self->py_hostentry = (HostEntry *)HostEntry_new_from_prnetaddr(&self->addr)) == NULL)
+        if ((self->py_hostentry = (HostEntry *)HostEntry_new_from_PRNetAddr(&self->addr)) == NULL)
             return NULL;
     }
     if ((self->py_hostname = HostEntry_get_hostname(self->py_hostentry, NULL)) == NULL)
@@ -310,18 +310,18 @@ NetworkAddress_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 }
 
 static PyObject *
-NetworkAddress_new_from_prnetaddr(PRNetAddr *pr_netaddr)
+NetworkAddress_new_from_PRNetAddr(PRNetAddr *pr_netaddr)
 {
     NetworkAddress *self = NULL;
 
-    TraceObjNewEnter("NetworkAddress_new_from_prnetaddr", NULL);
+    TraceObjNewEnter("NetworkAddress_new_from_PRNetAddr", NULL);
 
     if ((self = (NetworkAddress *) NetworkAddressType.tp_new(&NetworkAddressType, NULL, NULL)) == NULL)
         return NULL;
 
     self->addr = *pr_netaddr;
 
-    TraceObjNewLeave("NetworkAddress_new_from_prnetaddr", self);
+    TraceObjNewLeave("NetworkAddress_new_from_PRNetAddr", self);
     return (PyObject *) self;
 }
 
@@ -595,7 +595,7 @@ HostEntry_get_network_addresses(HostEntry *self, PyObject *args, PyObject *kwds)
             Py_DECREF(addr_tuple);
             return set_nspr_error(NULL);
         }
-        if ((py_netaddr = NetworkAddress_new_from_prnetaddr(&pr_netaddr)) == NULL) {
+        if ((py_netaddr = NetworkAddress_new_from_PRNetAddr(&pr_netaddr)) == NULL) {
             Py_DECREF(addr_tuple);
             return NULL;
         }
@@ -669,11 +669,11 @@ HostEntry_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 }
 
 static PyObject *
-HostEntry_new_from_prnetaddr(PRNetAddr *pr_netaddr)
+HostEntry_new_from_PRNetAddr(PRNetAddr *pr_netaddr)
 {
     HostEntry *self = NULL;
 
-    TraceObjNewEnter("HostEntry_new_from_prnetaddr", NULL);
+    TraceObjNewEnter("HostEntry_new_from_PRNetAddr", NULL);
 
     if ((self = (HostEntry *) HostEntryType.tp_new(&HostEntryType, NULL, NULL)) == NULL)
         return NULL;
@@ -682,7 +682,7 @@ HostEntry_new_from_prnetaddr(PRNetAddr *pr_netaddr)
         return set_nspr_error(NULL);
     }
 
-    TraceObjNewLeave("HostEntry_new_from_prnetaddr", self);
+    TraceObjNewLeave("HostEntry_new_from_PRNetAddr", self);
     return (PyObject *) self;
 }
 
@@ -833,9 +833,9 @@ HostEntryType = {
 /* ========================================================================== */
 
 static void
-Socket_init_from_prfiledesc(Socket *self, PRFileDesc *pr_socket, int family)
+Socket_init_from_PRFileDesc(Socket *self, PRFileDesc *pr_socket, int family)
 {
-    TraceMethodEnter("Socket_init_from_prfiledesc", self);
+    TraceMethodEnter("Socket_init_from_PRFileDesc", self);
 
     self->pr_socket = pr_socket;
     self->family = family;
@@ -843,18 +843,18 @@ Socket_init_from_prfiledesc(Socket *self, PRFileDesc *pr_socket, int family)
 
 
 static PyObject *
-Socket_new_from_prfiledesc(PRFileDesc *pr_socket, int family)
+Socket_new_from_PRFileDesc(PRFileDesc *pr_socket, int family)
 {
     Socket *self = NULL;
 
-    TraceObjNewEnter("Socket_new_from_prfiledesc", NULL);
+    TraceObjNewEnter("Socket_new_from_PRFileDesc", NULL);
 
     if ((self = (Socket *) SocketType.tp_new(&SocketType, NULL, NULL)) == NULL)
         return NULL;
 
-    Socket_init_from_prfiledesc(self, pr_socket, family);
+    Socket_init_from_PRFileDesc(self, pr_socket, family);
 
-    TraceObjNewLeave("Socket_new_from_prfiledesc", self);
+    TraceObjNewLeave("Socket_new_from_PRFileDesc", self);
     return (PyObject *) self;
 }
 
@@ -1257,27 +1257,27 @@ Socket_get_socket_option(Socket *self, PyObject *args)
         return Py_BuildValue("I", data.value.tos);
         break;
     case PR_SockOpt_AddMember:
-        if ((mcaddr = NetworkAddress_new_from_prnetaddr(&data.value.add_member.mcaddr)) == NULL) {
+        if ((mcaddr = NetworkAddress_new_from_PRNetAddr(&data.value.add_member.mcaddr)) == NULL) {
             return NULL;
         }
-        if ((ifaddr = NetworkAddress_new_from_prnetaddr(&data.value.add_member.ifaddr)) == NULL) {
+        if ((ifaddr = NetworkAddress_new_from_PRNetAddr(&data.value.add_member.ifaddr)) == NULL) {
             Py_DECREF(mcaddr);
             return NULL;
         }
         return Py_BuildValue("OO", mcaddr, ifaddr);
         break;
     case PR_SockOpt_DropMember:
-        if ((mcaddr = NetworkAddress_new_from_prnetaddr(&data.value.drop_member.mcaddr)) == NULL) {
+        if ((mcaddr = NetworkAddress_new_from_PRNetAddr(&data.value.drop_member.mcaddr)) == NULL) {
             return NULL;
         }
-        if ((ifaddr = NetworkAddress_new_from_prnetaddr(&data.value.drop_member.ifaddr)) == NULL) {
+        if ((ifaddr = NetworkAddress_new_from_PRNetAddr(&data.value.drop_member.ifaddr)) == NULL) {
             Py_DECREF(mcaddr);
             return NULL;
         }
         return Py_BuildValue("OO", mcaddr, ifaddr);
         break;
     case PR_SockOpt_McastInterface:
-        if ((ifaddr = NetworkAddress_new_from_prnetaddr(&data.value.mcast_if)) == NULL) {
+        if ((ifaddr = NetworkAddress_new_from_PRNetAddr(&data.value.mcast_if)) == NULL) {
             return NULL;
         }
         return ifaddr;
@@ -1405,10 +1405,10 @@ Socket_accept(Socket *self, PyObject *args, PyObject *kwds)
     if ((pr_socket = PR_Accept(self->pr_socket, &pr_netaddr, timeout)) == NULL)
         return set_nspr_error(NULL);
 
-    if ((py_netaddr = NetworkAddress_new_from_prnetaddr(&pr_netaddr)) == NULL)
+    if ((py_netaddr = NetworkAddress_new_from_PRNetAddr(&pr_netaddr)) == NULL)
         goto error;
 
-    if ((py_socket = Socket_new_from_prfiledesc(pr_socket, self->family)) == NULL)
+    if ((py_socket = Socket_new_from_PRFileDesc(pr_socket, self->family)) == NULL)
         goto error;
 
     if ((return_values = Py_BuildValue("OO", py_socket, py_netaddr)) == NULL)
@@ -1482,10 +1482,10 @@ Socket_accept_read(Socket *self, PyObject *args, PyObject *kwds)
 	}
     }
 
-    if ((py_netaddr = NetworkAddress_new_from_prnetaddr(pr_netaddr)) == NULL)
+    if ((py_netaddr = NetworkAddress_new_from_PRNetAddr(pr_netaddr)) == NULL)
         goto error;
 
-    if ((py_socket = Socket_new_from_prfiledesc(pr_socket, self->family)) == NULL)
+    if ((py_socket = Socket_new_from_PRFileDesc(pr_socket, self->family)) == NULL)
         goto error;
 
     if ((return_values = Py_BuildValue("OOO", py_socket, py_netaddr, buf)) == NULL)
@@ -2028,7 +2028,7 @@ Socket_get_sock_name(Socket *self, PyObject *args)
 
     if (PR_GetSockName(self->pr_socket, &pr_netaddr) != PR_SUCCESS)
         return set_nspr_error(NULL);
-    if ((py_netaddr = NetworkAddress_new_from_prnetaddr(&pr_netaddr)) == NULL)
+    if ((py_netaddr = NetworkAddress_new_from_PRNetAddr(&pr_netaddr)) == NULL)
         return NULL;
 
     return py_netaddr;
@@ -2048,7 +2048,7 @@ Socket_get_peer_name(Socket *self, PyObject *args)
 
     if (PR_GetPeerName(self->pr_socket, &pr_netaddr) != PR_SUCCESS)
         return set_nspr_error(NULL);
-    if ((py_netaddr = NetworkAddress_new_from_prnetaddr(&pr_netaddr)) == NULL)
+    if ((py_netaddr = NetworkAddress_new_from_PRNetAddr(&pr_netaddr)) == NULL)
         return NULL;
 
     return py_netaddr;
@@ -2165,11 +2165,11 @@ Socket_new_tcp_pair(Socket *unused_class, PyObject *args)
 	return_value = set_nspr_error(NULL);
 	goto error_socks;
     }
-    if ((py_sock0 = Socket_new_from_prfiledesc(socks[0],
+    if ((py_sock0 = Socket_new_from_PRFileDesc(socks[0],
 					       PR_NetAddrFamily(&addr0)))
 	== NULL)
 	goto error_socks;
-    if ((py_sock1 = Socket_new_from_prfiledesc(socks[1],
+    if ((py_sock1 = Socket_new_from_PRFileDesc(socks[1],
 					       PR_NetAddrFamily(&addr1)))
 	== NULL)
 	goto error_socks1;
@@ -2306,7 +2306,7 @@ Socket_import_tcp_socket(Socket *unused_class, PyObject *args)
 	return_value = set_nspr_error(NULL);
 	goto error;
     }
-    if ((return_value = Socket_new_from_prfiledesc(sock,
+    if ((return_value = Socket_new_from_PRFileDesc(sock,
 						   PR_NetAddrFamily(&addr)))
 	== NULL)
 	goto error;
@@ -2439,7 +2439,7 @@ Socket_init(Socket *self, PyObject *args, PyObject *kwds)
     }
 
 
-    Socket_init_from_prfiledesc(self, pr_socket, family);
+    Socket_init_from_PRFileDesc(self, pr_socket, family);
 
     return 0;
 }
@@ -2797,7 +2797,7 @@ static PyNSPR_IO_C_API_Type nspr_io_c_api =
     &NetworkAddressType,        /* network_address_type */
     &HostEntryType,             /* host_entry_type */
     &SocketType,                /* socket_type */
-    Socket_init_from_prfiledesc /* Socket_init_from_prfiledesc */
+    Socket_init_from_PRFileDesc /* Socket_init_from_PRFileDesc */
 };
 
 /* ============================== Module Construction ============================= */

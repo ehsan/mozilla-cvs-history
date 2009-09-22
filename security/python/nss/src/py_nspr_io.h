@@ -110,13 +110,13 @@ typedef struct {
     PyTypeObject *network_address_type;
     PyTypeObject *host_entry_type;
     PyTypeObject *socket_type;
-    void         (*Socket_init_from_prfiledesc)(Socket *py_socket, PRFileDesc *pr_socket, int family);
+    void         (*Socket_init_from_PRFileDesc)(Socket *py_socket, PRFileDesc *pr_socket, int family);
 } PyNSPR_IO_C_API_Type;
 
 #ifdef NSS_IO_MODULE
 
 static PyObject *
-HostEntry_new_from_prnetaddr(PRNetAddr *pr_netaddr);
+HostEntry_new_from_PRNetAddr(PRNetAddr *pr_netaddr);
 
 #else  /* not NSS_IO_MODULE */
 
@@ -126,7 +126,7 @@ static PyNSPR_IO_C_API_Type nspr_io_c_api;
 #define HostEntryType (*nspr_io_c_api.host_entry_type)
 #define SocketType (*nspr_io_c_api.socket_type)
 
-#define Socket_init_from_prfiledesc (*nspr_io_c_api.Socket_init_from_prfiledesc)
+#define Socket_init_from_PRFileDesc (*nspr_io_c_api.Socket_init_from_PRFileDesc)
 
 static int
 import_nspr_io_c_api(void)
