@@ -298,14 +298,14 @@ NetworkAddress_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     NetworkAddress *self = NULL;
 
-    TraceObjNewEnter("NetworkAddress_new", type);
+    TraceObjNewEnter(type);
 
     if ((self = (NetworkAddress *)type->tp_alloc(type, 0)) == NULL) return NULL;
     memset(&self->addr, 0, sizeof(self->addr));
     self->py_hostname = NULL;
     self->py_hostentry = NULL;
 
-    TraceObjNewLeave("NetworkAddress_new", self);
+    TraceObjNewLeave(self);
     return (PyObject *)self;
 }
 
@@ -314,21 +314,21 @@ NetworkAddress_new_from_PRNetAddr(PRNetAddr *pr_netaddr)
 {
     NetworkAddress *self = NULL;
 
-    TraceObjNewEnter("NetworkAddress_new_from_PRNetAddr", NULL);
+    TraceObjNewEnter(NULL);
 
     if ((self = (NetworkAddress *) NetworkAddressType.tp_new(&NetworkAddressType, NULL, NULL)) == NULL)
         return NULL;
 
     self->addr = *pr_netaddr;
 
-    TraceObjNewLeave("NetworkAddress_new_from_PRNetAddr", self);
+    TraceObjNewLeave(self);
     return (PyObject *) self;
 }
 
 static void
 NetworkAddress_dealloc(NetworkAddress* self)
 {
-    TraceMethodEnter("NetworkAddress_dealloc", self);
+    TraceMethodEnter(self);
 
     Py_XDECREF(self->py_hostname);
     Py_XDECREF(self->py_hostentry);
@@ -392,7 +392,7 @@ NetworkAddress_init(NetworkAddress *self, PyObject *args, PyObject *kwds)
     char *addr_str = NULL;
 
 
-    TraceMethodEnter("NetworkAddress_init", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|Oi", kwlist, &addr, &port))
         return -1;
@@ -658,13 +658,13 @@ HostEntry_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     HostEntry *self = NULL;
 
-    TraceObjNewEnter("HostEntry_new", type);
+    TraceObjNewEnter(type);
 
     if ((self = (HostEntry *)type->tp_alloc(type, 0)) == NULL) return NULL;
     memset(&self->entry,  0, sizeof(self->entry));
     memset(&self->buffer, 0, sizeof(self->buffer));
 
-    TraceObjNewLeave("HostEntry_new", self);
+    TraceObjNewLeave(self);
     return (PyObject *)self;
 }
 
@@ -673,7 +673,7 @@ HostEntry_new_from_PRNetAddr(PRNetAddr *pr_netaddr)
 {
     HostEntry *self = NULL;
 
-    TraceObjNewEnter("HostEntry_new_from_PRNetAddr", NULL);
+    TraceObjNewEnter(NULL);
 
     if ((self = (HostEntry *) HostEntryType.tp_new(&HostEntryType, NULL, NULL)) == NULL)
         return NULL;
@@ -682,14 +682,14 @@ HostEntry_new_from_PRNetAddr(PRNetAddr *pr_netaddr)
         return set_nspr_error(NULL);
     }
 
-    TraceObjNewLeave("HostEntry_new_from_PRNetAddr", self);
+    TraceObjNewLeave(self);
     return (PyObject *) self;
 }
 
 static void
 HostEntry_dealloc(HostEntry* self)
 {
-    TraceMethodEnter("HostEntry_dealloc", self);
+    TraceMethodEnter(self);
 
     self->ob_type->tp_free((PyObject*)self);
 }
@@ -712,7 +712,7 @@ HostEntry_init(HostEntry *self, PyObject *args)
 {
     PyObject *addr = NULL;
 
-    TraceMethodEnter("HostEntry_init", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "O", &addr))
         return -1;
@@ -835,7 +835,7 @@ HostEntryType = {
 static void
 Socket_init_from_PRFileDesc(Socket *self, PRFileDesc *pr_socket, int family)
 {
-    TraceMethodEnter("Socket_init_from_PRFileDesc", self);
+    TraceMethodEnter(self);
 
     self->pr_socket = pr_socket;
     self->family = family;
@@ -847,14 +847,14 @@ Socket_new_from_PRFileDesc(PRFileDesc *pr_socket, int family)
 {
     Socket *self = NULL;
 
-    TraceObjNewEnter("Socket_new_from_PRFileDesc", NULL);
+    TraceObjNewEnter(NULL);
 
     if ((self = (Socket *) SocketType.tp_new(&SocketType, NULL, NULL)) == NULL)
         return NULL;
 
     Socket_init_from_PRFileDesc(self, pr_socket, family);
 
-    TraceObjNewLeave("Socket_new_from_PRFileDesc", self);
+    TraceObjNewLeave(self);
     return (PyObject *) self;
 }
 
@@ -1005,7 +1005,7 @@ Socket_set_socket_option(Socket *self, PyObject *args)
     NetworkAddress *ifaddr = NULL;
     PRSocketOptionData data;
 
-    TraceMethodEnter("Socket_set_socket_option", self);
+    TraceMethodEnter(self);
 
     if ((py_option = PyTuple_GetItem(args, 0)) == NULL) {
         PyErr_SetString(PyExc_TypeError, "set_socket_option: missing option argument");
@@ -1222,7 +1222,7 @@ Socket_get_socket_option(Socket *self, PyObject *args)
     PyObject *ifaddr = NULL;
     PRSocketOptionData data;
 
-    TraceMethodEnter("Socket_get_socket_option", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "i:get_socket_option", &option))
         return NULL;
@@ -1342,7 +1342,7 @@ Socket_connect(Socket *self, PyObject *args, PyObject *kwds)
     NetworkAddress *py_netaddr = NULL;
     unsigned int timeout = PR_INTERVAL_NO_TIMEOUT;
 
-    TraceMethodEnter("Socket_connect", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!|I:connect", kwlist,
                                      &NetworkAddressType, &py_netaddr, &timeout))
@@ -1396,7 +1396,7 @@ Socket_accept(Socket *self, PyObject *args, PyObject *kwds)
     PRFileDesc *pr_socket = NULL;
     PyObject *return_values = NULL;
 
-    TraceMethodEnter("Socket_accept", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|I:accept", kwlist,
                                      &timeout))
@@ -1460,7 +1460,7 @@ Socket_accept_read(Socket *self, PyObject *args, PyObject *kwds)
     /* FIXME: for consistency should use readahead buffering, but since this is the first read
      * the readahead would be empty anyway */
 
-    TraceMethodEnter("Socket_accept_read", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "i|I:accept_read", kwlist,
                                      &requested_amount, &timeout))
@@ -1527,7 +1527,7 @@ Socket_bind(Socket *self, PyObject *args)
 {
     NetworkAddress *py_netaddr = NULL;
 
-    TraceMethodEnter("Socket_bind", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "O!:bind", &NetworkAddressType, &py_netaddr))
         return NULL;
@@ -1566,7 +1566,7 @@ Socket_listen(Socket *self, PyObject *args, PyObject *kwds)
     static char *kwlist[] = {"backlog", NULL};
     int backlog = 5;
 
-    TraceMethodEnter("Socket_listen", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|I:listen", kwlist, &backlog))
         return NULL;
@@ -1600,7 +1600,7 @@ Socket_shutdown(Socket *self, PyObject *args, PyObject *kwds)
     static char *kwlist[] = {"how", NULL};
     int how = PR_SHUTDOWN_BOTH;
 
-    TraceMethodEnter("Socket_shutdown", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|I:shutdown", kwlist, &how))
         return NULL;
@@ -1620,7 +1620,7 @@ Close the socket.\n\
 static PyObject *
 Socket_close(Socket *self, PyObject *args)
 {
-    TraceMethodEnter("Socket_close", self);
+    TraceMethodEnter(self);
 
     if (PR_Close(self->pr_socket) != PR_SUCCESS)
         return set_nspr_error(NULL);
@@ -1663,7 +1663,7 @@ Socket_readline(Socket *self, PyObject *args, PyObject *kwds)
     long read_len, space_available, amount_read, line_len;
     PyObject *line = NULL;
 
-    TraceMethodEnter("Socket_readline", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|l:readline", kwlist, &size))
         return NULL;
@@ -1752,7 +1752,7 @@ Socket_recv(Socket *self, PyObject *args, PyObject *kwds)
     long read_len, amount_read, result_len;
     char *dst = NULL;
 
-    TraceMethodEnter("Socket_recv", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "i|I:recv", kwlist,
                                      &requested_amount, &timeout))
@@ -1830,7 +1830,7 @@ Socket_read(Socket *self, PyObject *args, PyObject *kwds)
     PyObject *buf = NULL;
     long read_len, space_available, amount_read;
 
-    TraceMethodEnter("Socket_read", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|l:read", kwlist, &requested_amount))
         return NULL;
@@ -1898,7 +1898,7 @@ Socket_recv_from(Socket *self, PyObject *args, PyObject *kwds)
     /* FIXME: for consistency should use readahead buffering, but since this is the first read
      * the readahead would be empty anyway */
 
-    TraceMethodEnter("Socket_recv_from", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "iO!|I:recv_from", kwlist,
                                      &requested_amount, &NetworkAddressType, &py_netaddr, &timeout))
@@ -1952,7 +1952,7 @@ Socket_send(Socket *self, PyObject *args, PyObject *kwds)
     unsigned int timeout = PR_INTERVAL_NO_TIMEOUT;
     int amount;
 
-    TraceMethodEnter("Socket_send", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "s#|I:send", kwlist,
                                      &buf, &len, &timeout))
@@ -1995,7 +1995,7 @@ Socket_send_to(Socket *self, PyObject *args, PyObject *kwds)
     unsigned int timeout = PR_INTERVAL_NO_TIMEOUT;
     int amount;
 
-    TraceMethodEnter("Socket_send_to", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "s#O!|I:send_to", kwlist,
                                      &buf, &len, &NetworkAddressType, &py_netaddr, &timeout))
@@ -2148,14 +2148,14 @@ the other and vice versa.\n\
 ");
 
 static PyObject *
-Socket_new_tcp_pair(Socket *unused_class, PyObject *args)
+Socket_new_tcp_pair(Socket *self, PyObject *args)
 {
     PRFileDesc *socks[2];
     PRNetAddr addr0, addr1;
     PyObject *py_sock0 = NULL, *py_sock1 = NULL;
     PyObject *return_value = NULL;
 
-    TraceMethodEnter("Socket_new_tcp_pair", self);
+    TraceMethodEnter(self);
 
     if (PR_NewTCPSocketPair(socks) != PR_SUCCESS)
         return set_nspr_error(NULL);
@@ -2354,7 +2354,7 @@ Socket_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     Socket *self;
 
-    TraceObjNewEnter("Socket_new", type);
+    TraceObjNewEnter(type);
 
     if ((self = (Socket *)type->tp_alloc(type, 0)) == NULL) return NULL;
     self->pr_socket = NULL;
@@ -2362,14 +2362,14 @@ Socket_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     self->py_netaddr = NULL;
     INIT_READAHEAD(&self->readahead);
 
-    TraceObjNewLeave("Socket_new", self);
+    TraceObjNewLeave(self);
     return (PyObject *)self;
 }
 
 static void
 Socket_dealloc(Socket* self)
 {
-    TraceMethodEnter("Socket_dealloc", self);
+    TraceMethodEnter(self);
 
     Py_XDECREF(self->py_netaddr);
     FREE_READAHEAD(&self->readahead);
@@ -2402,7 +2402,7 @@ Socket_init(Socket *self, PyObject *args, PyObject *kwds)
     int desc_type = PR_DESC_SOCKET_TCP;
     PRFileDesc *pr_socket = NULL;
 
-    TraceMethodEnter("Socket_init", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|ii", kwlist,
                                      &family, &desc_type))

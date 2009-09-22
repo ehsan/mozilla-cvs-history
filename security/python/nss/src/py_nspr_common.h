@@ -60,7 +60,7 @@ typedef int Py_ssize_t;
     printf("%s\n", _msg);                       \
 }
 
-#define TraceMethodEnter(_name, _obj)                           \
+#define TraceMethodEnter(_obj)                                  \
 {                                                               \
     PyObject *repr = NULL;                                      \
     char *repr_str = NULL;                                      \
@@ -69,11 +69,11 @@ typedef int Py_ssize_t;
         repr = _obj->ob_type->tp_repr((PyObject *)_obj);        \
         repr_str = PyString_AsString(repr);                     \
     }                                                           \
-    printf("%s: %s\n", _name, repr_str);                        \
+    printf("%s: %s\n", __FUNCTION__, repr_str);                 \
     Py_XDECREF(repr);                                           \
 }
 
-#define TraceMethodLeave(_name, _obj)                           \
+#define TraceMethodLeave(_obj)                                  \
 {                                                               \
     PyObject *repr = NULL;                                      \
     char *repr_str = NULL;                                      \
@@ -82,35 +82,35 @@ typedef int Py_ssize_t;
         repr = _obj->ob_type->tp_repr((PyObject *)_obj);        \
         repr_str = PyString_AsString(repr);                     \
     }                                                           \
-    printf("%s: %s\n", _name, repr_str);                        \
+    printf("%s: %s\n", __FUNCTION__, repr_str);                 \
     Py_XDECREF(repr);                                           \
 }
 
-#define TraceObjNewEnter(_name, _tp)            \
-{                                               \
-    PyTypeObject *tp = _tp;                     \
-    if (tp != NULL)                             \
-        printf("%s %s\n", _name, tp->tp_name);  \
-    else                                        \
-        printf("%s\n", _name);                  \
+#define TraceObjNewEnter(_tp)                           \
+{                                                       \
+    PyTypeObject *tp = _tp;                             \
+    if (tp != NULL)                                     \
+        printf("%s %s\n", __FUNCTION__, tp->tp_name);   \
+    else                                                \
+        printf("%s\n", __FUNCTION__);                   \
 }
 
 
-#define TraceObjNewLeave(_name, _obj)                                   \
+#define TraceObjNewLeave(_obj)                                          \
 {                                                                       \
     PyObject *repr = NULL;                                              \
                                                                         \
     if ((repr = _obj->ob_type->tp_repr((PyObject *)_obj))) {            \
-        printf("%s: returns %s\n", _name, PyString_AsString(repr));     \
+        printf("%s: returns %s\n", __FUNCTION__, PyString_AsString(repr)); \
         Py_DECREF(repr);                                                \
     }                                                                   \
 }
 
 #else
 #define TraceMessage(_msg)
-#define TraceMethodEnter(_name, _obj)
-#define TraceMethodLeave(_name, _obj)
-#define TraceObjNewEnter(_name, _tp)
-#define TraceObjNewLeave(_name, _obj)
+#define TraceMethodEnter(_obj)
+#define TraceMethodLeave(_obj)
+#define TraceObjNewEnter(_tp)
+#define TraceObjNewLeave(_obj)
 #endif
 

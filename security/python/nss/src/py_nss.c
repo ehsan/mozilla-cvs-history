@@ -615,7 +615,7 @@ cert_data_to_hex(PyObject *self, PyObject *args, PyObject *kwds)
     int octets_per_line = 0;
     char *separator = "";
 
-    TraceMethodEnter("cert_data_to_hex", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|iz:cert_data_to_hex", kwlist,
                                      &obj, &octets_per_line, &separator))
@@ -672,7 +672,7 @@ read_hex(PyObject *self, PyObject *args, PyObject *kwds)
     const char *sep, *separators_end;
     PyObject *py_out_buf;
 
-    TraceMethodEnter("read_hex", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "s|s:read_hex", kwlist,
                                      &input, &separators))
@@ -1351,7 +1351,7 @@ SecItem_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     SecItem *self;
 
-    TraceObjNewEnter("SecItem_new", type);
+    TraceObjNewEnter(type);
 
     if ((self = (SecItem *)type->tp_alloc(type, 0)) == NULL) return NULL;
     self->item.type = 0;
@@ -1359,14 +1359,14 @@ SecItem_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     self->item.data = NULL;
     self->kind = SECITEM_unknown;
 
-    TraceObjNewLeave("SecItem_new", self);
+    TraceObjNewLeave(self);
     return (PyObject *)self;
 }
 
 static void
 SecItem_dealloc(SecItem* self)
 {
-    TraceMethodEnter("SecItem_dealloc", self);
+    TraceMethodEnter(self);
 
     if (self->item.data) {
         PyMem_FREE(self->item.data);
@@ -1394,7 +1394,7 @@ SecItem_init(SecItem *self, PyObject *args, PyObject *kwds)
     Py_ssize_t buffer_len;
     int type = siBuffer;
 
-    TraceMethodEnter("SecItem_init", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|z#i:SecItem", kwlist,
                                      &buffer, &buffer_len, &type))
@@ -1627,7 +1627,7 @@ SecItem_new_from_SECItem(SECItem *item, SECItemKind kind)
 {
     SecItem *self = NULL;
 
-    TraceObjNewEnter("SecItem_new_from_SECItem", NULL);
+    TraceObjNewEnter(NULL);
 
     if ((self = (SecItem *) SecItemType.tp_new(&SecItemType, NULL, NULL)) == NULL)
         return NULL;
@@ -1641,7 +1641,7 @@ SecItem_new_from_SECItem(SECItem *item, SECItemKind kind)
 
     self->kind = kind;
 
-    TraceObjNewLeave("SecItem_new_from_SECItem", self);
+    TraceObjNewLeave(self);
     return (PyObject *) self;
 }
 
@@ -1673,7 +1673,7 @@ SignatureAlgorithm_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     SignatureAlgorithm *self;
 
-    TraceObjNewEnter("SignatureAlgorithm_new", type);
+    TraceObjNewEnter(type);
 
     if ((self = (SignatureAlgorithm *)type->tp_alloc(type, 0)) == NULL) return NULL;
 
@@ -1681,14 +1681,14 @@ SignatureAlgorithm_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     self->py_id = NULL;
     self->py_parameters = NULL;
 
-    TraceObjNewLeave("SignatureAlgorithm_new", self);
+    TraceObjNewLeave(self);
     return (PyObject *)self;
 }
 
 static void
 SignatureAlgorithm_dealloc(SignatureAlgorithm* self)
 {
-    TraceMethodEnter("SignatureAlgorithm_dealloc", self);
+    TraceMethodEnter(self);
 
     self->ob_type->tp_free((PyObject*)self);
 }
@@ -1699,7 +1699,7 @@ PyDoc_STRVAR(SignatureAlgorithm_doc,
 static int
 SignatureAlgorithm_init(SignatureAlgorithm *self, PyObject *args, PyObject *kwds)
 {
-    TraceMethodEnter("SignatureAlgorithm_init", self);
+    TraceMethodEnter(self);
 
     return 0;
 }
@@ -1764,7 +1764,7 @@ SignatureAlgorithm_new_from_SECAlgorithmID(SECAlgorithmID *id)
 {
     SignatureAlgorithm *self = NULL;
 
-    TraceObjNewEnter("SignatureAlgorithm_new_from_SECAlgorithmID", NULL);
+    TraceObjNewEnter(NULL);
 
     if ((self = (SignatureAlgorithm *) SignatureAlgorithmType.tp_new(&SignatureAlgorithmType, NULL, NULL)) == NULL)
         return NULL;
@@ -1775,7 +1775,7 @@ SignatureAlgorithm_new_from_SECAlgorithmID(SECAlgorithmID *id)
     if ((self->py_parameters = SecItem_new_from_SECItem(&id->parameters, SECITEM_unknown)) == NULL)
         return NULL;
 
-    TraceObjNewLeave("SignatureAlgorithm_new_from_SECAlgorithmID", self);
+    TraceObjNewLeave(self);
     return (PyObject *) self;
 }
 
@@ -1831,7 +1831,7 @@ KEYPQGParams_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     KEYPQGParams *self;
 
-    TraceObjNewEnter("KEYPQGParams_new", type);
+    TraceObjNewEnter(type);
 
     if ((self = (KEYPQGParams *)type->tp_alloc(type, 0)) == NULL) return NULL;
 
@@ -1839,14 +1839,14 @@ KEYPQGParams_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     self->py_subprime = NULL;
     self->py_base = NULL;
 
-    TraceObjNewLeave("KEYPQGParams_new", self);
+    TraceObjNewLeave(self);
     return (PyObject *)self;
 }
 
 static void
 KEYPQGParams_dealloc(KEYPQGParams* self)
 {
-    TraceMethodEnter("KEYPQGParams_dealloc", self);
+    TraceMethodEnter(self);
 
     self->ob_type->tp_free((PyObject*)self);
 }
@@ -1861,7 +1861,7 @@ PyDoc_STRVAR(KEYPQGParams_doc,
 static int
 KEYPQGParams_init(KEYPQGParams *self, PyObject *args, PyObject *kwds)
 {
-    TraceMethodEnter("KEYPQGParams_init", self);
+    TraceMethodEnter(self);
 
     return 0;
 }
@@ -1880,7 +1880,7 @@ KEYPQGParams_str(KEYPQGParams *self)
     PyObject *args = NULL;
     PyObject *str = NULL;
 
-    TraceMethodEnter("KEYPQGParams_str", self);
+    TraceMethodEnter(self);
 
     if ((fmt = PyString_FromString("prime(p)=%s subprime(q)=%s base(g)=%s")) == NULL)
         return NULL;
@@ -1945,7 +1945,7 @@ KEYPQGParams_new_from_SECKEYPQGParams(SECKEYPQGParams *params)
 {
     KEYPQGParams *self = NULL;
 
-    TraceObjNewEnter("KEYPQGParams_new_from_SECKEYPQGParams", NULL);
+    TraceObjNewEnter(NULL);
 
     if ((self = (KEYPQGParams *) KEYPQGParamsType.tp_new(&KEYPQGParamsType, NULL, NULL)) == NULL)
         return NULL;
@@ -1959,7 +1959,7 @@ KEYPQGParams_new_from_SECKEYPQGParams(SECKEYPQGParams *params)
     if ((self->py_base = SecItem_new_from_SECItem(&params->base, SECITEM_unknown)) == NULL)
         return NULL;
 
-    TraceObjNewLeave("KEYPQGParams_new_from_SECKEYPQGParams", self);
+    TraceObjNewLeave(self);
     return (PyObject *) self;
 }
 
@@ -2007,7 +2007,7 @@ RSAPublicKey_format_lines(RSAPublicKey *self, PyObject *args, PyObject *kwds)
     int i;
     Py_ssize_t len;
 
-    TraceMethodEnter("RSAPublicKey_format_lines", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i:format_lines", kwlist, &level))
         return NULL;
@@ -2042,7 +2042,7 @@ RSAPublicKey_format_lines(RSAPublicKey *self, PyObject *args, PyObject *kwds)
 static PyObject *
 RSAPublicKey_format(RSAPublicKey *self, PyObject *args, PyObject *kwds)
 {
-    TraceMethodEnter("RSAPublicKey_format", self);
+    TraceMethodEnter(self);
 
     return format_from_lines((format_lines_func)RSAPublicKey_format_lines, (PyObject *)self, args, kwds);
 }
@@ -2052,7 +2052,7 @@ RSAPublicKey_str(RSAPublicKey *self)
 {
     PyObject *py_formatted_result = NULL;
 
-    TraceMethodEnter("RSAPublicKey_str", self);
+    TraceMethodEnter(self);
 
     py_formatted_result =  RSAPublicKey_format(self, empty_tuple, NULL);
     return py_formatted_result;
@@ -2072,21 +2072,21 @@ RSAPublicKey_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     RSAPublicKey *self;
 
-    TraceObjNewEnter("RSAPublicKey_new", type);
+    TraceObjNewEnter(type);
 
     if ((self = (RSAPublicKey *)type->tp_alloc(type, 0)) == NULL) return NULL;
 
     self->py_modulus = NULL;
     self->py_exponent = NULL;
 
-    TraceObjNewLeave("RSAPublicKey_new", self);
+    TraceObjNewLeave(self);
     return (PyObject *)self;
 }
 
 static void
 RSAPublicKey_dealloc(RSAPublicKey* self)
 {
-    TraceMethodEnter("RSAPublicKey_dealloc", self);
+    TraceMethodEnter(self);
 
     Py_XDECREF(self->py_modulus);
     Py_XDECREF(self->py_exponent);
@@ -2100,7 +2100,7 @@ PyDoc_STRVAR(RSAPublicKey_doc,
 static int
 RSAPublicKey_init(RSAPublicKey *self, PyObject *args, PyObject *kwds)
 {
-    TraceMethodEnter("RSAPublicKey_init", self);
+    TraceMethodEnter(self);
 
     return 0;
 }
@@ -2159,7 +2159,7 @@ RSAPublicKey_new_from_SECKEYRSAPublicKey(SECKEYRSAPublicKey *rsa)
 {
     RSAPublicKey *self = NULL;
 
-    TraceObjNewEnter("RSAPublicKey_new_from_SECKEYRSAPublicKey", NULL);
+    TraceObjNewEnter(NULL);
 
     if ((self = (RSAPublicKey *) RSAPublicKeyType.tp_new(&RSAPublicKeyType, NULL, NULL)) == NULL)
         return NULL;
@@ -2170,7 +2170,7 @@ RSAPublicKey_new_from_SECKEYRSAPublicKey(SECKEYRSAPublicKey *rsa)
     if ((self->py_exponent = SecItem_new_from_SECItem(&rsa->publicExponent, SECITEM_unknown)) == NULL)
         return NULL;
 
-    TraceObjNewLeave("RSAPublicKey_new_from_SECKEYRSAPublicKey", self);
+    TraceObjNewLeave(self);
     return (PyObject *) self;
 }
 
@@ -2218,21 +2218,21 @@ DSAPublicKey_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     DSAPublicKey *self;
 
-    TraceObjNewEnter("DSAPublicKey_new", type);
+    TraceObjNewEnter(type);
 
     if ((self = (DSAPublicKey *)type->tp_alloc(type, 0)) == NULL) return NULL;
 
     self->py_pqg_params = NULL;
     self->py_public_value = NULL;
 
-    TraceObjNewLeave("DSAPublicKey_new", self);
+    TraceObjNewLeave(self);
     return (PyObject *)self;
 }
 
 static void
 DSAPublicKey_dealloc(DSAPublicKey* self)
 {
-    TraceMethodEnter("DSAPublicKey_dealloc", self);
+    TraceMethodEnter(self);
 
     Py_XDECREF(self->py_pqg_params);
     Py_XDECREF(self->py_public_value);
@@ -2246,7 +2246,7 @@ PyDoc_STRVAR(DSAPublicKey_doc,
 static int
 DSAPublicKey_init(DSAPublicKey *self, PyObject *args, PyObject *kwds)
 {
-    TraceMethodEnter("DSAPublicKey_init", self);
+    TraceMethodEnter(self);
 
     return 0;
 }
@@ -2265,7 +2265,7 @@ DSAPublicKey_str(DSAPublicKey *self)
     PyObject *args = NULL;
     PyObject *str = NULL;
 
-    TraceMethodEnter("DSAPublicKey_str", self);
+    TraceMethodEnter(self);
 
     if ((fmt = PyString_FromString("pqg_params=[%s] public_value=%s")) == NULL)
         return NULL;
@@ -2329,7 +2329,7 @@ DSAPublicKey_new_from_SECKEYDSAPublicKey(SECKEYDSAPublicKey *dsa)
 {
     DSAPublicKey *self = NULL;
 
-    TraceObjNewEnter("DSAPublicKey_new_from_SECKEYDSAPublicKey", NULL);
+    TraceObjNewEnter(NULL);
 
     if ((self = (DSAPublicKey *) DSAPublicKeyType.tp_new(&DSAPublicKeyType, NULL, NULL)) == NULL)
         return NULL;
@@ -2340,7 +2340,7 @@ DSAPublicKey_new_from_SECKEYDSAPublicKey(SECKEYDSAPublicKey *dsa)
     if ((self->py_public_value = SecItem_new_from_SECItem(&dsa->publicValue, SECITEM_unknown)) == NULL)
         return NULL;
 
-    TraceObjNewLeave("DSAPublicKey_new_from_SECKEYDSAPublicKey", self);
+    TraceObjNewLeave(self);
     return (PyObject *) self;
 }
 
@@ -2388,7 +2388,7 @@ SignedData_format_lines(SignedData *self, PyObject *args, PyObject *kwds)
     int i;
     Py_ssize_t len;
 
-    TraceMethodEnter("SignedData_format_lines", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i:format_lines", kwlist, &level))
         return NULL;
@@ -2428,7 +2428,7 @@ SignedData_format_lines(SignedData *self, PyObject *args, PyObject *kwds)
 static PyObject *
 SignedData_format(SignedData *self, PyObject *args, PyObject *kwds)
 {
-    TraceMethodEnter("SignedData_format", self);
+    TraceMethodEnter(self);
 
     return format_from_lines((format_lines_func)SignedData_format_lines, (PyObject *)self, args, kwds);
 }
@@ -2456,7 +2456,7 @@ SignedData_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     SignedData *self;
 
-    TraceObjNewEnter("SignedData_new", type);
+    TraceObjNewEnter(type);
 
     if ((self = (SignedData *)type->tp_alloc(type, 0)) == NULL) return NULL;
 
@@ -2470,14 +2470,14 @@ SignedData_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
     memset(&self->signed_data, 0, sizeof(self->signed_data));
 
-    TraceObjNewLeave("SignedData_new", self);
+    TraceObjNewLeave(self);
     return (PyObject *)self;
 }
 
 static void
 SignedData_dealloc(SignedData* self)
 {
-    TraceMethodEnter("SignedData_dealloc", self);
+    TraceMethodEnter(self);
 
     Py_XDECREF(self->py_data);
     Py_XDECREF(self->py_algorithm);
@@ -2494,7 +2494,7 @@ PyDoc_STRVAR(SignedData_doc,
 static int
 SignedData_init(SignedData *self, PyObject *args, PyObject *kwds)
 {
-    TraceMethodEnter("SignedData_init", self);
+    TraceMethodEnter(self);
 
     return 0;
 }
@@ -2553,7 +2553,7 @@ SignedData_new_from_SECItem(SECItem *item)
 {
     SignedData *self = NULL;
 
-    TraceObjNewEnter("SignedData_new_from_SECItem", NULL);
+    TraceObjNewEnter(NULL);
 
     if ((self = (SignedData *) SignedDataType.tp_new(&SignedDataType, NULL, NULL)) == NULL)
         return NULL;
@@ -2573,7 +2573,7 @@ SignedData_new_from_SECItem(SECItem *item)
     if ((self->py_signature = SecItem_new_from_SECItem(&self->signed_data.signature, SECITEM_signature)) == NULL)
         return NULL;
 
-    TraceObjNewLeave("SignedData_new_from_SECItem", self);
+    TraceObjNewLeave(self);
     return (PyObject *) self;
 }
 
@@ -2648,7 +2648,7 @@ PublicKey_format_lines(PublicKey *self, PyObject *args, PyObject *kwds)
     Py_ssize_t len;
     PyObject *tmp_args = NULL;
 
-    TraceMethodEnter("PublicKey_format_lines", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i:format_lines", kwlist, &level))
         return NULL;
@@ -2697,7 +2697,7 @@ PublicKey_format_lines(PublicKey *self, PyObject *args, PyObject *kwds)
 static PyObject *
 PublicKey_format(PublicKey *self, PyObject *args, PyObject *kwds)
 {
-    TraceMethodEnter("PublicKey_format", self);
+    TraceMethodEnter(self);
 
     return format_from_lines((format_lines_func)PublicKey_format_lines, (PyObject *)self, args, kwds);
 }
@@ -2725,7 +2725,7 @@ PublicKey_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     PublicKey *self;
 
-    TraceObjNewEnter("PublicKey_new", type);
+    TraceObjNewEnter(type);
 
     if ((self = (PublicKey *)type->tp_alloc(type, 0)) == NULL) return NULL;
 
@@ -2734,14 +2734,14 @@ PublicKey_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
     memset(&self->pk, 0, sizeof(self->pk));
 
-    TraceObjNewLeave("PublicKey_new", self);
+    TraceObjNewLeave(self);
     return (PyObject *)self;
 }
 
 static void
 PublicKey_dealloc(PublicKey* self)
 {
-    TraceMethodEnter("PublicKey_dealloc", self);
+    TraceMethodEnter(self);
 
     Py_XDECREF(self->py_rsa_key);
     Py_XDECREF(self->py_dsa_key);
@@ -2757,7 +2757,7 @@ PyDoc_STRVAR(PublicKey_doc,
 static int
 PublicKey_init(PublicKey *self, PyObject *args, PyObject *kwds)
 {
-    TraceMethodEnter("PublicKey_init", self);
+    TraceMethodEnter(self);
 
     return 0;
 }
@@ -2816,7 +2816,7 @@ PublicKey_new_from_SECKEYPublicKey(SECKEYPublicKey *pk)
 {
     PublicKey *self = NULL;
 
-    TraceObjNewEnter("PublicKey_new_from_SECKEYPublicKey", NULL);
+    TraceObjNewEnter(NULL);
 
     if ((self = (PublicKey *) PublicKeyType.tp_new(&PublicKeyType, NULL, NULL)) == NULL)
         return NULL;
@@ -2839,7 +2839,7 @@ PublicKey_new_from_SECKEYPublicKey(SECKEYPublicKey *pk)
         break;
     }
 
-    TraceObjNewLeave("PublicKey_new_from_SECKEYPublicKey", self);
+    TraceObjNewLeave(self);
     return (PyObject *) self;
 }
 
@@ -2889,7 +2889,7 @@ SubjectPublicKeyInfo_format_lines(SubjectPublicKeyInfo *self, PyObject *args, Py
     PublicKey *py_public_key = NULL;
     PyObject *tmp_args = NULL;
 
-    TraceMethodEnter("SubjectPublicKeyInfo_format_lines", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i:format_lines", kwlist, &level))
         return NULL;
@@ -2932,7 +2932,7 @@ SubjectPublicKeyInfo_format_lines(SubjectPublicKeyInfo *self, PyObject *args, Py
 static PyObject *
 SubjectPublicKeyInfo_format(SubjectPublicKeyInfo *self, PyObject *args, PyObject *kwds)
 {
-    TraceMethodEnter("SubjectPublicKeyInfo_format", self);
+    TraceMethodEnter(self);
 
     return format_from_lines((format_lines_func)SubjectPublicKeyInfo_format_lines, (PyObject *)self, args, kwds);
 }
@@ -2960,21 +2960,21 @@ SubjectPublicKeyInfo_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     SubjectPublicKeyInfo *self;
 
-    TraceObjNewEnter("SubjectPublicKeyInfo_new", type);
+    TraceObjNewEnter(type);
 
     if ((self = (SubjectPublicKeyInfo *)type->tp_alloc(type, 0)) == NULL) return NULL;
 
     self->py_algorithm = NULL;
     self->py_public_key = NULL;
 
-    TraceObjNewLeave("SubjectPublicKeyInfo_new", self);
+    TraceObjNewLeave(self);
     return (PyObject *)self;
 }
 
 static void
 SubjectPublicKeyInfo_dealloc(SubjectPublicKeyInfo* self)
 {
-    TraceMethodEnter("SubjectPublicKeyInfo_dealloc", self);
+    TraceMethodEnter(self);
 
     Py_XDECREF(self->py_algorithm);
     Py_XDECREF(self->py_public_key);
@@ -2988,7 +2988,7 @@ PyDoc_STRVAR(SubjectPublicKeyInfo_doc,
 static int
 SubjectPublicKeyInfo_init(SubjectPublicKeyInfo *self, PyObject *args, PyObject *kwds)
 {
-    TraceMethodEnter("SubjectPublicKeyInfo_init", self);
+    TraceMethodEnter(self);
 
     return 0;
 }
@@ -3048,7 +3048,7 @@ SubjectPublicKeyInfo_new_from_CERTSubjectPublicKeyInfo(CERTSubjectPublicKeyInfo 
     SubjectPublicKeyInfo *self = NULL;
     SECKEYPublicKey *pk = NULL;
 
-    TraceObjNewEnter("SubjectPublicKeyInfo_new_from_CERTSubjectPublicKeyInfo", NULL);
+    TraceObjNewEnter(NULL);
 
     if ((self = (SubjectPublicKeyInfo *) SubjectPublicKeyInfoType.tp_new(&SubjectPublicKeyInfoType, NULL, NULL)) == NULL)
         return NULL;
@@ -3066,7 +3066,7 @@ SubjectPublicKeyInfo_new_from_CERTSubjectPublicKeyInfo(CERTSubjectPublicKeyInfo 
         return NULL;
     }
 
-    TraceObjNewLeave("SubjectPublicKeyInfo_new_from_CERTSubjectPublicKeyInfo", self);
+    TraceObjNewLeave(self);
     return (PyObject *) self;
 }
 
@@ -3155,19 +3155,19 @@ CertDB_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     CertDB *self;
 
-    TraceObjNewEnter("CertDB_new", type);
+    TraceObjNewEnter(type);
 
     if ((self = (CertDB *)type->tp_alloc(type, 0)) == NULL) return NULL;
     self->handle = NULL;
 
-    TraceObjNewLeave("CertDB_new", self);
+    TraceObjNewLeave(self);
     return (PyObject *)self;
 }
 
 static void
 CertDB_dealloc(CertDB* self)
 {
-    TraceMethodEnter("CertDB_dealloc", self);
+    TraceMethodEnter(self);
 
     self->ob_type->tp_free((PyObject*)self);
 }
@@ -3178,7 +3178,7 @@ PyDoc_STRVAR(CertDB_doc,
 static int
 CertDB_init(CertDB *self, PyObject *args, PyObject *kwds)
 {
-    TraceMethodEnter("CertDB_init", self);
+    TraceMethodEnter(self);
     return 0;
 }
 
@@ -3229,13 +3229,13 @@ CertDB_new_from_CERTCertDBHandle(CERTCertDBHandle *cert_handle)
 {
     CertDB *self = NULL;
 
-    TraceObjNewEnter("CertDB_new_from_CERTCertDBHandle", NULL);
+    TraceObjNewEnter(NULL);
     if ((self = (CertDB *) CertDBType.tp_new(&CertDBType, NULL, NULL)) == NULL)
         return NULL;
 
     self->handle = cert_handle;
 
-    TraceObjNewLeave("CertDB_new_from_CERTCertDBHandle", self);
+    TraceObjNewLeave(self);
     return (PyObject *) self;
 }
 
@@ -3499,7 +3499,7 @@ May be one of the following:\n\
 static PyObject *
 Certificate_find_kea_type(Certificate *self, PyObject *args)
 {
-    TraceMethodEnter("Certificate_find_kea_type", self);
+    TraceMethodEnter(self);
 
     return PyInt_FromLong(NSS_FindCertKEAType(self->cert));
 }
@@ -3542,7 +3542,7 @@ Certificate_verify_hostname(Certificate *self, PyObject *args)
     char *hostname;
     SECStatus sec_status;
 
-    TraceMethodEnter("verify_hostname", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "s:verify_hostname", &hostname))
         return NULL;
@@ -3575,7 +3575,7 @@ Certificate_has_signer_in_ca_names(Certificate *self, PyObject *args)
     CERTDistNames *ca_names = NULL;
     SECStatus sec_status;
 
-    TraceMethodEnter("has_signer_in_ca_names", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "s:has_signer_in_ca_names", py_ca_names))
         return NULL;
@@ -3624,7 +3624,7 @@ Certificate_check_valid_times(Certificate *self, PyObject *args, PyObject *kwds)
     PRTime time;
     SECCertTimeValidity validity;
 
-    TraceMethodEnter("check_valid_times", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|Oi:check_valid_times", kwlist, &py_time, &allow_override))
         return NULL;
@@ -3695,7 +3695,7 @@ Certificate_verify_now(Certificate *self, PyObject *args)
     long required_usages = 0;
     SECCertificateUsage returned_usages;
 
-    TraceMethodEnter("verify_now", self);
+    TraceMethodEnter(self);
 
     argc = PyTuple_Size(args);
     if (argc == n_base_args) {
@@ -3744,7 +3744,7 @@ Certificate_format_lines(Certificate *self, PyObject *args, PyObject *kwds)
     Py_ssize_t len;
     PyObject *tmp_args = NULL;
 
-    TraceMethodEnter("Certificate_format_lines", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i:format_lines", kwlist, &level))
         return NULL;
@@ -3935,7 +3935,7 @@ Certificate_format_lines(Certificate *self, PyObject *args, PyObject *kwds)
 static PyObject *
 Certificate_format(Certificate *self, PyObject *args, PyObject *kwds)
 {
-    TraceMethodEnter("Certificate_format", self);
+    TraceMethodEnter(self);
 
     return format_from_lines((format_lines_func)Certificate_format_lines, (PyObject *)self, args, kwds);
 }
@@ -3969,20 +3969,20 @@ Certificate_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     Certificate *self;
 
-    TraceObjNewEnter("Certificate_new", type);
+    TraceObjNewEnter(type);
 
     if ((self = (Certificate *)type->tp_alloc(type, 0)) == NULL) return NULL;
     self->cert = NULL;
     self->py_subject_public_key_info = NULL;
 
-    TraceObjNewLeave("Certificate_new", self);
+    TraceObjNewLeave(self);
     return (PyObject *)self;
 }
 
 static void
 Certificate_dealloc(Certificate* self)
 {
-    TraceMethodEnter("Certificate_dealloc", self);
+    TraceMethodEnter(self);
 
     if (self->cert)
         CERT_DestroyCertificate(self->cert);
@@ -3998,7 +3998,7 @@ PyDoc_STRVAR(Certificate_doc,
 static int
 Certificate_init(Certificate *self, PyObject *args, PyObject *kwds)
 {
-    TraceMethodEnter("Certificate_init", self);
+    TraceMethodEnter(self);
 
     return 0;
 }
@@ -4057,7 +4057,7 @@ Certificate_new_from_CERTCertificate(CERTCertificate *cert)
 {
     Certificate *self = NULL;
 
-    TraceObjNewEnter("Certificate_new_from_CERTCertificate", NULL);
+    TraceObjNewEnter(NULL);
 
     if ((self = (Certificate *) CertificateType.tp_new(&CertificateType, NULL, NULL)) == NULL)
         return NULL;
@@ -4065,7 +4065,7 @@ Certificate_new_from_CERTCertificate(CERTCertificate *cert)
     self->cert = cert;
     self->py_subject_public_key_info = SubjectPublicKeyInfo_new_from_CERTSubjectPublicKeyInfo(&cert->subjectPublicKeyInfo);
 
-    TraceObjNewLeave("Certificate_new_from_CERTCertificate", self);
+    TraceObjNewLeave(self);
     return (PyObject *) self;
 }
 
@@ -4098,19 +4098,19 @@ PrivateKey_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     PrivateKey *self;
 
-    TraceObjNewEnter("PrivateKey_new", type);
+    TraceObjNewEnter(type);
 
     if ((self = (PrivateKey *)type->tp_alloc(type, 0)) == NULL) return NULL;
     self->private_key = NULL;
 
-    TraceObjNewLeave("PrivateKey_new", self);
+    TraceObjNewLeave(self);
     return (PyObject *)self;
 }
 
 static void
 PrivateKey_dealloc(PrivateKey* self)
 {
-    TraceMethodEnter("PrivateKey_dealloc", self);
+    TraceMethodEnter(self);
 
     if (self->private_key)
         SECKEY_DestroyPrivateKey(self->private_key);
@@ -4124,7 +4124,7 @@ PyDoc_STRVAR(PrivateKey_doc,
 static int
 PrivateKey_init(PrivateKey *self, PyObject *args, PyObject *kwds)
 {
-    TraceMethodEnter("PrivateKey_init", self);
+    TraceMethodEnter(self);
     return 0;
 }
 
@@ -4175,13 +4175,13 @@ PrivateKey_new_from_SECKEYPrivateKey(SECKEYPrivateKey *private_key)
 {
     PrivateKey *self = NULL;
 
-    TraceObjNewEnter("PrivateKey_new_from_SECKEYPrivateKey", NULL);
+    TraceObjNewEnter(NULL);
     if ((self = (PrivateKey *) PrivateKeyType.tp_new(&PrivateKeyType, NULL, NULL)) == NULL)
         return NULL;
 
     self->private_key = private_key;
 
-    TraceObjNewLeave("PrivateKey_new_from_SECKEYPrivateKey", self);
+    TraceObjNewLeave(self);
     return (PyObject *) self;
 }
 
@@ -4198,7 +4198,7 @@ cert_get_default_certdb(PyObject *self, PyObject *args)
 {
     CERTCertDBHandle *cert_handle;
 
-    TraceMethodEnter("cert_get_default_certdb", self);
+    TraceMethodEnter(self);
 
     if ((cert_handle = CERT_GetDefaultCertDB()) == NULL)
         Py_RETURN_NONE;
@@ -4240,7 +4240,7 @@ cert_get_cert_nicknames(PyObject *self, PyObject *args)
     PyObject *py_nickname = NULL;
     int i, len;
 
-    TraceMethodEnter("cert_get_cert_nicknames", self);
+    TraceMethodEnter(self);
 
     argc = PyTuple_Size(args);
     if (argc == n_base_args) {
@@ -4315,7 +4315,7 @@ pk11_hash_buf(PyObject *self, PyObject *args)
     void *out_buf = NULL;
     Py_ssize_t out_buf_len;
 
-    TraceMethodEnter("pk11_hash_buf", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "kt#:hash_buf",
                           &hash_alg, &in_data, &in_data_len)) {
@@ -4363,7 +4363,7 @@ pk11_md5_digest(PyObject *self, PyObject *args)
     PyObject *py_out_buf = NULL;
     void *out_buf;
 
-    TraceMethodEnter("pk11_md5_digest", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "t#:md5_digest", &in_data, &in_data_len)) {
         return NULL;
@@ -4404,7 +4404,7 @@ pk11_sha1_digest(PyObject *self, PyObject *args)
     PyObject *py_out_buf = NULL;
     void *out_buf;
 
-    TraceMethodEnter("pk11_sha1_digest", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "t#:sha1_digest", &in_data, &in_data_len)) {
         return NULL;
@@ -4446,7 +4446,7 @@ pk11_sha256_digest(PyObject *self, PyObject *args)
     PyObject *py_out_buf = NULL;
     void *out_buf;
 
-    TraceMethodEnter("pk11_sha256_digest", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "t#:sha256_digest", &in_data, &in_data_len)) {
         return NULL;
@@ -4487,7 +4487,7 @@ pk11_sha512_digest(PyObject *self, PyObject *args)
     PyObject *py_out_buf = NULL;
     void *out_buf;
 
-    TraceMethodEnter("pk11_sha512_digest", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "t#:sha512_digest", &in_data, &in_data_len)) {
         return NULL;
@@ -4557,7 +4557,7 @@ Finds out whether a slot is implemented in hardware or software.\n\
 static PyObject *
 PK11Slot_is_hw(PK11Slot *self, PyObject *args)
 {
-    TraceMethodEnter("PK11Slot_is_hw", self);
+    TraceMethodEnter(self);
 
     if (PK11_IsHW(self->slot))
         Py_RETURN_TRUE;
@@ -4574,7 +4574,7 @@ Finds out whether the token for a slot is available.\n\
 static PyObject *
 PK11Slot_is_present(PK11Slot *self, PyObject *args)
 {
-    TraceMethodEnter("PK11Slot_is_present", self);
+    TraceMethodEnter(self);
 
     if (PK11_IsPresent(self->slot))
         Py_RETURN_TRUE;
@@ -4591,7 +4591,7 @@ Finds out whether a slot is read-only.\n\
 static PyObject *
 PK11Slot_is_read_only(PK11Slot *self, PyObject *args)
 {
-    TraceMethodEnter("PK11Slot_is_read_only", self);
+    TraceMethodEnter(self);
 
     if (PK11_IsReadOnly(self->slot))
         Py_RETURN_TRUE;
@@ -4610,7 +4610,7 @@ PK11Slot_get_best_wrap_mechanism(PK11Slot *self, PyObject *args)
 {
     CK_MECHANISM_TYPE mechanism;
 
-    TraceMethodEnter("PK11Slot_get_best_wrap_mechanism", self);
+    TraceMethodEnter(self);
 
     mechanism = PK11_GetBestWrapMechanism(self->slot);
     return PyInt_FromLong(mechanism);
@@ -4635,7 +4635,7 @@ PK11Slot_get_best_key_length(PK11Slot *self, PyObject *args)
     unsigned long mechanism;
     int length;
 
-    TraceMethodEnter("PK11Slot_get_best_key_length", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "k:get_best_key_length", &mechanism))
         return NULL;
@@ -4672,7 +4672,7 @@ PK11Slot_key_gen(PK11Slot *self, PyObject *args)
     SecItem *py_sec_param;
     PK11SymKey *sym_key;
 
-    TraceMethodEnter("PK11Slot_key_gen", self);
+    TraceMethodEnter(self);
 
     argc = PyTuple_Size(args);
     if (argc == n_base_args) {
@@ -4723,19 +4723,19 @@ PK11Slot_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     PK11Slot *self;
 
-    TraceObjNewEnter("PK11Slot_new", type);
+    TraceObjNewEnter(type);
 
     if ((self = (PK11Slot *)type->tp_alloc(type, 0)) == NULL) return NULL;
     self->slot = NULL;
 
-    TraceObjNewLeave("PK11Slot_new", type);
+    TraceObjNewLeave(type);
     return (PyObject *)self;
 }
 
 static void
 PK11Slot_dealloc(PK11Slot* self)
 {
-    TraceMethodEnter("PK11Slot_dealloc", self);
+    TraceMethodEnter(self);
 
     PK11_FreeSlot(self->slot);
     self->ob_type->tp_free((PyObject*)self);
@@ -4750,7 +4750,7 @@ PK11Slot_init(PK11Slot *self, PyObject *args, PyObject *kwds)
     PyObject *arg1 = NULL;
     static char *kwlist[] = {"arg1", NULL};
 
-    TraceMethodEnter("PK11Slot_init", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O", kwlist,
                                      &arg1))
@@ -4806,14 +4806,14 @@ PK11Slot_new_from_PK11SlotInfo(PK11SlotInfo *slot)
 {
     PK11Slot *self = NULL;
 
-    TraceObjNewEnter("PK11Slot_new_from_PK11SlotInfo", NULL);
+    TraceObjNewEnter(NULL);
 
     if ((self = (PK11Slot *) PK11SlotType.tp_new(&PK11SlotType, NULL, NULL)) == NULL)
         return NULL;
 
     self->slot = slot;
 
-    TraceObjNewLeave("PK11Slot_new_from_PK11SlotInfo", self);
+    TraceObjNewLeave(self);
     return (PyObject *) self;
 }
 
@@ -4910,7 +4910,7 @@ PK11SymKey_derive(PyPK11SymKey *self, PyObject *args)
     int key_size;
     PK11SymKey *derived_key = NULL;
 
-    TraceMethodEnter("PK11SymKey_derive", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "kO&kki:derive",
                           &mechanism, SecItemOrNoneConvert, &py_sec_param,
@@ -4948,7 +4948,7 @@ PK11SymKey_wrap_sym_key(PyPK11SymKey *self, PyObject *args)
     PyPK11SymKey *py_sym_key = NULL;
     SECItem wrapped_key;
 
-    TraceMethodEnter("PK11SymKey_wrap_sym_key", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "kO&O!:wrap_sym_key",
                           &mechanism, SecItemOrNoneConvert, &py_sec_param,
@@ -4996,7 +4996,7 @@ PK11SymKey_unwrap_sym_key(PyPK11SymKey *self, PyObject *args)
     SecItem *py_wrapped_key = NULL;
     PK11SymKey *sym_key = NULL;
 
-    TraceMethodEnter("PK11SymKey_unwrap_sym_key", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "kO&O!kki:unwrap_sym_key",
                           &mechanism, SecItemOrNoneConvert, &py_sec_param,
@@ -5040,7 +5040,7 @@ static PyMethodDef PK11SymKey_methods[] = {
 static void
 PK11SymKey_dealloc(PyPK11SymKey* self)
 {
-    TraceMethodEnter("PK11SymKey_dealloc", self);
+    TraceMethodEnter(self);
 
     if (self->pk11_sym_key)
         PK11_FreeSymKey(self->pk11_sym_key);
@@ -5054,7 +5054,7 @@ PyDoc_STRVAR(PK11SymKey_doc,
 static int
 PK11SymKey_init(PyPK11SymKey *self, PyObject *args, PyObject *kwds)
 {
-    TraceMethodEnter("PK11SymKey_init", self);
+    TraceMethodEnter(self);
 
     return 0;
 }
@@ -5106,14 +5106,14 @@ PyPK11SymKey_new_from_PK11SymKey(PK11SymKey *pk11_sym_key)
 {
     PyPK11SymKey *self = NULL;
 
-    TraceObjNewEnter("PyPK11SymKey_new_from_PK11SymKey", NULL);
+    TraceObjNewEnter(NULL);
 
     if ((self = PyObject_NEW(PyPK11SymKey, &PK11SymKeyType)) == NULL)
         return NULL;
 
     self->pk11_sym_key = pk11_sym_key;
 
-    TraceObjNewLeave("PyPK11SymKey_new_from_PK11SymKey", self);
+    TraceObjNewLeave(self);
     return (PyObject *) self;
 }
 
@@ -5149,7 +5149,7 @@ PK11Context_digest_key(PyPK11Context *self, PyObject *args)
 {
     PyPK11SymKey *py_sym_key;
 
-    TraceMethodEnter("PK11Context_digest_key", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "O!:digest_key", &PK11SymKeyType, &py_sym_key))
         return NULL;
@@ -5175,7 +5175,7 @@ PK11Context_clone_context(PyPK11Context *self, PyObject *args)
     PK11Context *pk11_context;
     PyObject *py_pk11_context;
 
-    TraceMethodEnter("PK11Context_clone_context", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "O!:clone_context", &PK11ContextType, &py_pk11_context))
         return NULL;
@@ -5201,7 +5201,7 @@ Start a new digesting or Mac'ing operation on this context.\n\
 static PyObject *
 PK11Context_digest_begin(PyPK11Context *self, PyObject *args)
 {
-    TraceMethodEnter("PK11Context_digest_begin", self);
+    TraceMethodEnter(self);
 
     if (PK11_DigestBegin(self->pk11_context) != SECSuccess) {
         return set_nspr_error(NULL);
@@ -5224,7 +5224,7 @@ PK11Context_digest_op(PyPK11Context *self, PyObject *args)
     const void *buffer = NULL;
     Py_ssize_t buffer_len;
 
-    TraceMethodEnter("PK11Context_digest_op", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "t#:digest_op", &buffer, &buffer_len))
         return NULL;
@@ -5254,7 +5254,7 @@ PK11Context_cipher_op(PyPK11Context *self, PyObject *args)
     Py_ssize_t out_buf_alloc_len;
     int suggested_out_len = 0, actual_out_len;
 
-    TraceMethodEnter("PK11Context_cipher_op", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "t#:cipher_op", &in_buf, &in_buf_len))
         return NULL;
@@ -5317,7 +5317,7 @@ not encryption/decryption contexts\n\
 static PyObject *
 PK11Context_finalize(PyPK11Context *self, PyObject *args)
 {
-    TraceMethodEnter("PK11Context_finalize", self);
+    TraceMethodEnter(self);
 
     if (PK11_Finalize(self->pk11_context) != SECSuccess) {
         return set_nspr_error(NULL);
@@ -5343,7 +5343,7 @@ PK11Context_digest_final(PyPK11Context *self, PyObject *args)
     unsigned int suggested_out_len = 0, actual_out_len;
     PyObject *out_string;
 
-    TraceMethodEnter("PK11Context_digest_final", self);
+    TraceMethodEnter(self);
 
     /*
      * We call the PK11 function with a NULL output buffer and it returns an
@@ -5416,20 +5416,20 @@ PK11Context_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     PyPK11Context *self;
 
-    TraceObjNewEnter("PK11Context_new", type);
+    TraceObjNewEnter(type);
 
     if ((self = (PyPK11Context *)type->tp_alloc(type, 0)) == NULL) return NULL;
 
     self->pk11_context = NULL;
 
-    TraceObjNewLeave("PK11Context_new", self);
+    TraceObjNewLeave(self);
     return (PyObject *)self;
 }
 
 static void
 PK11Context_dealloc(PyPK11Context* self)
 {
-    TraceMethodEnter("PK11Context_dealloc", self);
+    TraceMethodEnter(self);
 
     if (self->pk11_context)
         PK11_DestroyContext(self->pk11_context, PR_TRUE);
@@ -5443,7 +5443,7 @@ PyDoc_STRVAR(PK11Context_doc,
 static int
 PK11Context_init(PyPK11Context *self, PyObject *args, PyObject *kwds)
 {
-    TraceMethodEnter("PK11Context_init", self);
+    TraceMethodEnter(self);
 
     return 0;
 }
@@ -5496,14 +5496,14 @@ PyPK11Context_new_from_PK11Context(PK11Context *pk11_context)
 {
     PyPK11Context *self = NULL;
 
-    TraceObjNewEnter("PK11Context_new_from_pk11_context", NULL);
+    TraceObjNewEnter(NULL);
 
     if ((self = (PyPK11Context *) PK11ContextType.tp_new(&PK11ContextType, NULL, NULL)) == NULL)
         return NULL;
 
     self->pk11_context = pk11_context;
 
-    TraceObjNewLeave("PK11Context_new_from_pk11_context", self);
+    TraceObjNewLeave(self);
     return (PyObject *) self;
 }
 
@@ -5616,7 +5616,7 @@ pk11_set_password_callback(PyObject *self, PyObject *args)
 {
     PyObject *callback;
 
-    TraceMethodEnter("pk11_set_password_callback", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "O:set_password_callback", &callback)) {
         return NULL;
@@ -5664,7 +5664,7 @@ pk11_find_cert_from_nickname(PyObject *self, PyObject *args)
     CERTCertificate *cert = NULL;
     PyObject *py_cert = NULL;
 
-    TraceMethodEnter("pk11_find_cert_from_nickname", self);
+    TraceMethodEnter(self);
 
     argc = PyTuple_Size(args);
     if (argc == n_base_args) {
@@ -5724,7 +5724,7 @@ pk11_find_key_by_any_cert(PyObject *self, PyObject *args)
     SECKEYPrivateKey *private_key;
     PyObject *py_private_key = NULL;
 
-    TraceMethodEnter("pk11_find_key_by_any_cert", self);
+    TraceMethodEnter(self);
 
     argc = PyTuple_Size(args);
     if (argc == n_base_args) {
@@ -5778,7 +5778,7 @@ pk11_generate_random(PyObject *self, PyObject *args)
     SECStatus status;
     PyObject *res;
 
-    TraceMethodEnter("pk11_generate_random", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "i:generate_random", &num_bytes))
         return NULL;
@@ -5858,7 +5858,7 @@ nss_indented_format(PyObject *self, PyObject *args, PyObject *kwds)
     char *formatted_str;
     long i;
 
-    TraceMethodEnter("nss_indented_format", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!|S:indented_format", kwlist,
                                      &PyList_Type, &py_lines, &py_indent))
@@ -5974,7 +5974,7 @@ nss_init(PyObject *self, PyObject *args)
 {
     char *cert_dir;
 
-    TraceMethodEnter("nss_init", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "s:nss_init", &cert_dir)) {
         return NULL;
@@ -6006,7 +6006,7 @@ the SSL Export Policy Functions.\n\
 static PyObject *
 nss_init_nodb(PyObject *self, PyObject *args)
 {
-    TraceMethodEnter("nss_init_nodb", self);
+    TraceMethodEnter(self);
 
     if (NSS_NoDB_Init(NULL) != SECSuccess) {
         return set_nspr_error(NULL);
@@ -6027,7 +6027,7 @@ with the error code SEC_ERROR_BUSY.\n\
 static PyObject *
 nss_shutdown(PyObject *self, PyObject *args)
 {
-    TraceMethodEnter("nss_shutdown", self);
+    TraceMethodEnter(self);
 
     if (NSS_Shutdown() != SECSuccess) {
         return set_nspr_error(NULL);
@@ -6049,7 +6049,7 @@ cert_sec_oid_tag_str(PyObject *self, PyObject *args)
 {
     unsigned long tag;
 
-    TraceMethodEnter("cert_sec_oid_tag_str", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "k:sec_oid_tag_str", &tag))
         return NULL;
@@ -6075,7 +6075,7 @@ cert_sec_oid_tag_from_name(PyObject *self, PyObject *args)
     PyObject *py_upper_name;
     PyObject *py_value;
 
-    TraceMethodEnter("cert_sec_oid_tag_from_name", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "S:sec_oid_tag_from_name", &py_name))
         return NULL;
@@ -6115,7 +6115,7 @@ cert_sec_oid_tag_name(PyObject *self, PyObject *args)
     PyObject *py_value;
     PyObject *py_name;
 
-    TraceMethodEnter("cert_sec_oid_tag_name", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "k:sec_oid_tag_name", &tag))
         return NULL;
@@ -6178,7 +6178,7 @@ pk11_key_mechanism_type_name(PyObject *self, PyObject *args)
 {
     unsigned long mechanism;
 
-    TraceMethodEnter("pk11_key_mechanism_type_name", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "k:key_mechanism_type_name", &mechanism))
         return NULL;
@@ -6205,7 +6205,7 @@ pk11_key_mechanism_type_from_name(PyObject *self, PyObject *args)
     PyObject *py_upper_name;
     PyObject *py_value;
 
-    TraceMethodEnter("pk11_key_mechanism_type_from_name", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "S:key_mechanism_type_from_name", &py_name))
         return NULL;
@@ -6270,7 +6270,7 @@ pk11_pk11_attribute_type_name(PyObject *self, PyObject *args)
 {
     unsigned long type;
 
-    TraceMethodEnter("pk11_pk11_attribute_type_name", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "k:pk11_attribute_type_name", &type))
         return NULL;
@@ -6297,7 +6297,7 @@ pk11_pk11_attribute_type_from_name(PyObject *self, PyObject *args)
     PyObject *py_upper_name;
     PyObject *py_value;
 
-    TraceMethodEnter("pk11_pk11_attribute_type_from_name", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "S:pk11_attribute_type_from_name", &py_name))
         return NULL;
@@ -6342,7 +6342,7 @@ pk11_get_best_slot(PyObject *self, PyObject *args)
     PK11SlotInfo *slot = NULL;
     PyObject *py_slot = NULL;
 
-    TraceMethodEnter("pk11_get_best_slot", self);
+    TraceMethodEnter(self);
 
     argc = PyTuple_Size(args);
     if (argc == n_base_args) {
@@ -6390,7 +6390,7 @@ pk11_get_internal_key_slot(PyObject *self, PyObject *args)
     PK11SlotInfo *slot = NULL;
     PyObject *py_slot = NULL;
 
-    TraceMethodEnter("pk11_get_internal_key_slot", self);
+    TraceMethodEnter(self);
 
     if ((slot = PK11_GetInternalKeySlot()) == NULL) {
         return set_nspr_error(NULL);
@@ -6432,7 +6432,7 @@ pk11_create_context_by_sym_key(PyObject *self, PyObject *args, PyObject *kwds)
     PyObject *py_pk11_context;
     SECItem null_param = {0};
 
-    TraceMethodEnter("pk11_create_context_by_sym_key", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "kkO!|O&:create_context_by_sym_key", kwlist,
                                      &mechanism, &operation,
@@ -6490,7 +6490,7 @@ pk11_import_sym_key(PyObject *self, PyObject *args)
     SecItem *py_key_data;
     PK11SymKey *sym_key;
 
-    TraceMethodEnter("pk11_import_sym_key", self);
+    TraceMethodEnter(self);
 
     argc = PyTuple_Size(args);
     if (argc == n_base_args) {
@@ -6543,7 +6543,7 @@ pk11_create_digest_context(PyObject *self, PyObject *args)
     PK11Context *pk11_context;
     PyObject *py_pk11_context;
 
-    TraceMethodEnter("pk11_create_digest_context", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "k:create_digest_context", &hash_alg))
         return NULL;
@@ -6581,7 +6581,7 @@ pk11_param_from_iv(PyObject *self, PyObject *args, PyObject *kwds)
     SecItem *py_iv;
     SECItem *sec_param;
 
-    TraceMethodEnter("pk11_param_from_iv", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "k|O&:param_from_iv", kwlist,
                                      &mechanism, SecItemOrNoneConvert, &py_iv))
@@ -6609,7 +6609,7 @@ pk11_param_from_algid(PyObject *self, PyObject *args)
     SignatureAlgorithm *py_algorithm;
     SECItem *param;
 
-    TraceMethodEnter("pk11_param_from_algid", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "O!:param_from_algid", &SignatureAlgorithmType, &py_algorithm))
         return NULL;
@@ -6640,7 +6640,7 @@ pk11_generate_new_param(PyObject *self, PyObject *args, PyObject *kwds)
     PyPK11SymKey *py_sym_key;
     SECItem *param;
 
-    TraceMethodEnter("pk11_generate_new_param", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "k|O&:generate_new_param", kwlist,
                                      &mechanism, SymKeyOrNoneConvert, &py_sym_key))
@@ -6671,7 +6671,7 @@ pk11_algtag_to_mechanism(PyObject *self, PyObject *args)
     unsigned long algtag;
     unsigned long mechanism;
 
-    TraceMethodEnter("pk11_algtag_to_mechanism", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "k:algtag_to_mechanism", &algtag))
         return NULL;
@@ -6700,7 +6700,7 @@ pk11_mechanism_to_algtag(PyObject *self, PyObject *args)
     unsigned long algtag;
     unsigned long mechanism;
 
-    TraceMethodEnter("pk11_mechanism_to_algtag", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "k:mechanism_to_algtag", &mechanism))
         return NULL;
@@ -6727,7 +6727,7 @@ pk11_get_iv_length(PyObject *self, PyObject *args)
     unsigned long mechanism;
     int iv_length;
 
-    TraceMethodEnter("pk11_get_iv_length", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "k:get_iv_length", &mechanism))
         return NULL;
@@ -6756,7 +6756,7 @@ pk11_get_block_size(PyObject *self, PyObject *args, PyObject *kwds)
     SecItem *py_sec_param;
     int block_size;
 
-    TraceMethodEnter("pk11_get_block_size", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "k|O&:get_block_size", kwlist,
                                      &mechanism, SecItemOrNoneConvert, &py_sec_param))
@@ -6783,7 +6783,7 @@ pk11_get_pad_mechanism(PyObject *self, PyObject *args)
     unsigned long mechanism;
     unsigned long pad_mechanism;
 
-    TraceMethodEnter("pk11_get_pad_mechanism", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "k:get_pad_mechanism", &mechanism))
         return NULL;

@@ -59,14 +59,14 @@ NetworkAddress_new_from_PRNetAddr(PRNetAddr *pr_netaddr)
 {
     NetworkAddress *self = NULL;
 
-    TraceObjNewEnter("NetworkAddress_new_from_PRNetAddr", NULL);
+    TraceObjNewEnter(NULL);
 
     if ((self = (NetworkAddress *) NetworkAddressType.tp_new(&NetworkAddressType, NULL, NULL)) == NULL)
         return NULL;
 
     self->addr = *pr_netaddr;
 
-    TraceObjNewLeave("NetworkAddress_new_from_PRNetAddr", self);
+    TraceObjNewLeave(self);
     return (PyObject *) self;
 }
 
@@ -75,14 +75,14 @@ SSLSocket_new_from_PRFileDesc(PRFileDesc *pr_socket, int family)
 {
     SSLSocket *self = NULL;
 
-    TraceObjNewEnter("SSLSocket_new_from_PRFileDesc", NULL);
+    TraceObjNewEnter(NULL);
 
     if ((self = (SSLSocket *) SSLSocketType.tp_new(&SSLSocketType, NULL, NULL)) == NULL)
         return NULL;
 
     Socket_init_from_PRFileDesc((Socket *)self, pr_socket, family);
 
-    TraceObjNewLeave("SSLSocket_new_from_PRFileDesc", self);
+    TraceObjNewLeave(self);
     return (PyObject *) self;
 }
 
@@ -287,7 +287,7 @@ SSLSocket_set_ssl_option(SSLSocket *self, PyObject *args)
     int option;
     int value;
 
-    TraceMethodEnter("SSLSocket_set_ssl_option", self);
+    TraceMethodEnter(self);
 
     /*
      * Note, although most of the options are booleans, at least one
@@ -323,7 +323,7 @@ SSLSocket_get_ssl_option(SSLSocket *self, PyObject *args)
     int option;
     int value;
 
-    TraceMethodEnter("SSLSocket_get_ssl_option", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "i:get_ssl_option", &option)) {
         return NULL;
@@ -371,7 +371,7 @@ SSLSocket_accept(SSLSocket *self, PyObject *args, PyObject *kwds)
     PRFileDesc *pr_socket = NULL;
     PyObject *return_value = NULL;
 
-    TraceMethodEnter("SSLSocket_accept", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|I:accept", kwlist,
                                      &timeout))
@@ -550,7 +550,7 @@ SSLSocket_set_auth_certificate_callback(SSLSocket *self, PyObject *args)
     PyObject *callback;
     PyObject *callback_args = NULL;
 
-    TraceMethodEnter("SSLSocket_set_auth_certificate_callback", self);
+    TraceMethodEnter(self);
 
     argc = PyTuple_Size(args);
 
@@ -767,7 +767,7 @@ SSLSocket_set_client_auth_data_callback(SSLSocket *self, PyObject *args)
     PyObject *callback;
     PyObject *callback_args = NULL;
 
-    TraceMethodEnter("SSLSocket_set_client_auth_data_callback", self);
+    TraceMethodEnter(self);
 
     argc = PyTuple_Size(args);
 
@@ -873,7 +873,7 @@ SSLSocket_set_handshake_callback(SSLSocket *self, PyObject *args)
     PyObject *callback;
     PyObject *callback_args = NULL;
 
-    TraceMethodEnter("SSLSocket_set_handshake_callback", self);
+    TraceMethodEnter(self);
 
     argc = PyTuple_Size(args);
 
@@ -916,7 +916,7 @@ PyDoc_STRVAR(SSLSocket_set_pkcs11_pin_arg_doc,
 static PyObject *
 SSLSocket_set_pkcs11_pin_arg(SSLSocket *self, PyObject *args)
 {
-    TraceMethodEnter("SSLSocket_set_pkcs11_pin_arg", self);
+    TraceMethodEnter(self);
 
     Py_XDECREF(self->pk11_pin_args);
     Py_INCREF(args);
@@ -942,7 +942,7 @@ SSLSocket_get_pkcs11_pin_arg(SSLSocket *self, PyObject *args)
 {
     PyObject *pk11_pin_args = NULL;
 
-    TraceMethodEnter("SSLSocket_get_pkcs11_pin_arg", self);
+    TraceMethodEnter(self);
 
     self->pk11_pin_args = args;
     pk11_pin_args = SSL_RevealPinArg(self->pr_socket);
@@ -979,7 +979,7 @@ SSLSocket_config_secure_server(SSLSocket *self, PyObject *args)
     PrivateKey *py_priv_key = NULL;
     int kea = 0;
 
-    TraceMethodEnter("SSLSocket_config_secure_server", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "O!O!i:config_secure_server",
                           &CertificateType, &py_cert,
@@ -1059,7 +1059,7 @@ resume this SSL session.\n\
 static PyObject *
 SSLSocket_invalidate_session(SSLSocket *self, PyObject *args)
 {
-    TraceMethodEnter("SSLSocket_invalidate_session", self);
+    TraceMethodEnter(self);
 
     if (SSL_InvalidateSession(self->pr_socket) != SECSuccess)
         return set_nspr_error(NULL);
@@ -1084,7 +1084,7 @@ SSLSocket_data_pending(SSLSocket *self, PyObject *args)
 {
     int data_pending = 0;
 
-    TraceMethodEnter("SSLSocket_data_pending", self);
+    TraceMethodEnter(self);
 
     data_pending = SSL_DataPending(self->pr_socket);
     return PyInt_FromLong(data_pending);
@@ -1147,7 +1147,7 @@ SSLSocket_get_security_status(SSLSocket *self, PyObject *args)
     char *subject = NULL;
     PyObject *return_value = NULL;
 
-    TraceMethodEnter("SSLSocket_get_security_status", self);
+    TraceMethodEnter(self);
 
     if (SSL_SecurityStatus(self->pr_socket, &on, &cipher, &key_size,
                            &secret_key_size, &issuer, &subject) != SECSuccess) {
@@ -1179,7 +1179,7 @@ SSLSocket_get_session_id(SSLSocket *self, PyObject *args)
     SECItem *sec_item = NULL;
     PyObject *return_value = NULL;
 
-    TraceMethodEnter("SSLSocket_get_session_id", self);
+    TraceMethodEnter(self);
 
     if ((sec_item = SSL_GetSessionID(self->pr_socket)) == NULL)
         return set_nspr_error(NULL);
@@ -1249,7 +1249,7 @@ SSLSocket_set_sock_peer_id(SSLSocket *self, PyObject *args)
 {
     char *id = NULL;
 
-    TraceMethodEnter("SSLSocket_set_sock_peer_id", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "s:set_sock_peer_id"))
         return NULL;
@@ -1286,7 +1286,7 @@ SSLSocket_set_cipher_pref(SSLSocket *self, PyObject *args)
     int cipher;
     int enabled;
 
-    TraceMethodEnter("SSLSocket_set_cipher_pref", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "ii:set_cipher_pref", &cipher, &enabled))
         return NULL;
@@ -1314,7 +1314,7 @@ SSLSocket_get_cipher_pref(SSLSocket *self, PyObject *args)
     int cipher;
     int enabled;
 
-    TraceMethodEnter("SSLSocket_get_cipher_pref", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "i:get_cipher_pref", &cipher))
         return NULL;
@@ -1351,7 +1351,7 @@ SSLSocket_set_hostname(SSLSocket *self, PyObject *args)
 {
     char *url = NULL;
 
-    TraceMethodEnter("SSLSocket_set_hostname", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "s:set_hostname", &url))
         return NULL;
@@ -1377,7 +1377,7 @@ SSLSocket_get_hostname(SSLSocket *self, PyObject *args)
     char *url = NULL;
     PyObject *py_hostname = NULL;
 
-    TraceMethodEnter("SSLSocket_get_hostname", self);
+    TraceMethodEnter(self);
 
     if ((url = SSL_RevealURL(self->pr_socket)) == NULL)
         return set_nspr_error(NULL);
@@ -1442,7 +1442,7 @@ SSLSocket_reset_handshake(SSLSocket *self, PyObject *args)
 {
     int as_server = 0;
 
-    TraceMethodEnter("SSLSocket_reset_handshake", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "i:reset_handshake", &as_server))
         return NULL;
@@ -1689,7 +1689,7 @@ SSLSocket_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     SSLSocket *self;
 
-    TraceObjNewEnter("SSLSocket_new", type);
+    TraceObjNewEnter(type);
 
     if ((self = (SSLSocket *)SocketType.tp_new(type, args, kwds)) == NULL)
         return NULL;
@@ -1702,7 +1702,7 @@ SSLSocket_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     self->client_auth_data_callback = NULL;
     self->client_auth_data_callback_data = NULL;
 
-    TraceObjNewLeave("SSLSocket_new", self);
+    TraceObjNewLeave(self);
     return (PyObject *)self;
 }
 
@@ -1710,7 +1710,7 @@ static void
 SSLSocket_dealloc(SSLSocket* self)
 {
 
-    TraceMethodEnter("SSLSocket_dealloc", self);
+    TraceMethodEnter(self);
 
     Py_XDECREF(self->auth_certificate_callback);
     Py_XDECREF(self->auth_certificate_callback_data);
@@ -1746,7 +1746,7 @@ SSLSocket_init(SSLSocket *self, PyObject *args, PyObject *kwds)
 {
     PRFileDesc *ssl_socket = NULL;
 
-    TraceMethodEnter("SSLSocket_init", self);
+    TraceMethodEnter(self);
 
     if (SocketType.tp_init((PyObject *)self, args, kwds) < 0)
         return -1;
@@ -1757,7 +1757,7 @@ SSLSocket_init(SSLSocket *self, PyObject *args, PyObject *kwds)
     }
 
     assert(self->pr_socket == ssl_socket);
-    TraceMethodLeave("SSLSocket_init", self);
+    TraceMethodLeave(self);
     return 0;
 }
 
@@ -2136,7 +2136,7 @@ SSL_config_server_session_id_cache(PyObject *self, PyObject *args, PyObject *kwd
     PRUint32 ssl3_timeout = 0;
     char *directory = NULL;
 
-    TraceMethodEnter("config_server_session_id_cache", self);
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|iIIz:config_server_session_id_cache", kwlist,
                                      &max_cache_entries, &ssl2_timeout, &ssl3_timeout, &directory))
