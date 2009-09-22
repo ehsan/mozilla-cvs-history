@@ -407,8 +407,13 @@ void nsGIFDecoder2::EndImageFrame()
     if (mGIFStruct.images_decoded)
       mImageContainer->AppendFrame(mImageFrame);
     mImageContainer->EndFrameDecode(mGIFStruct.images_decoded, mGIFStruct.delay_time);
-    mGIFStruct.images_decoded++; 
   }
+
+  // Unconditionally increment images_decoded, because we unconditionally
+  // append frames in BeginImageFrame(). This ensures that images_decoded
+  // always refers to the frame in mImageContainer we're currently decoding,
+  // even if some of them weren't decoded properly and thus are blank.
+  mGIFStruct.images_decoded++;
 
   if (mObserver)
     mObserver->OnStopFrame(nsnull, mImageFrame);
