@@ -45,7 +45,7 @@
 
 /* ==================================================================== */
 
-static inline int ParsingFailure(struct list_state *state)
+static inline int ParsingFailed(struct list_state *state)
 {
   if (state->parsed_one || state->lstyle) /* junk if we fail to parse */
     return '?';      /* this time but had previously parsed successfully */
@@ -131,7 +131,7 @@ int ParseFTPList(const char *line, struct list_state *state,
     }    
 
     if (!numtoks)
-      return ParsingFailure(state);
+      return ParsingFailed(state);
 
     linelen_sans_wsp = &(tokens[numtoks-1][toklen[numtoks-1]]) - tokens[0];
     if (numtoks == (sizeof(tokens)/sizeof(tokens[0])) )
@@ -1648,7 +1648,7 @@ int ParseFTPList(const char *line, struct list_state *state,
 
   } /* if (linelen > 0) */
 
-  return ParsingFailure(state);
+  return ParsingFailed(state);
 }
 
 /* ==================================================================== */
