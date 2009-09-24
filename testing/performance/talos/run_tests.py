@@ -240,6 +240,7 @@ def results_from_graph(links, results_server):
   first_results = 'RETURN:<br>'
   last_results = '' 
   full_results = '\nRETURN:<p style="font-size:smaller;">Details:<br>'  
+  memory_metric = ['memset', 'rss', 'pbytes']
   lines = links.split('\n')
   for line in lines:
     if line == "":
@@ -253,10 +254,8 @@ def results_from_graph(links, results_server):
     else:
       linkvalue = float(values[1])
       linkdetail = values[2]
-    if linkName in ('tp_pbytes', 'tp_%cpu', 'tp_pbytes_nochrome', 'tp_%cpu_nochrome', 'tp_fast_pbytes', 'tp_fast_%cpu'):
-      continue
     if linkvalue > -1:
-      if linkName in ('tp_memset', 'tp_rss', 'tp_memset_nochrome', 'tp_rss_nochrome', 'tp_fast_memset', 'tp_fast_rss'): #measured in bytes
+      if filter(lambda x: x in linkName, memory_metric): #measured in bytes
         linkName += ": " + filesizeformat(linkvalue)
       else:
         linkName += ": " + str(linkvalue)
