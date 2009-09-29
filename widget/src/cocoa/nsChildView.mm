@@ -5256,7 +5256,20 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
     return;
   }
 
+#ifdef MOZ_MACBROWSER
+  PRBool handled = [self processKeyDownEvent:theEvent keyEquiv:NO];
+  if (!handled) {
+    NSResponder* targetResponder = self;
+    do {
+      targetResponder = [targetResponder nextResponder];
+      if (!targetResponder || (targetResponder == self))
+        return;
+    } while ([targetResponder class] == [ChildView class]);
+    [targetResponder keyDown:theEvent];
+  }
+#else
   [self processKeyDownEvent:theEvent keyEquiv:NO];
+#endif
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
