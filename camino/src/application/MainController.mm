@@ -1443,7 +1443,6 @@ const int kZoomActionsTag = 108;
 {
   NSSavePanel* savePanel = [NSSavePanel savePanel];
   [savePanel setPrompt:NSLocalizedString(@"Export", @"Export")];
-  [savePanel setRequiredFileType:@"html"];
   [savePanel setCanSelectHiddenExtension:YES];
 
   // get an accessory view for HTML or Safari .plist output
@@ -1454,10 +1453,13 @@ const int kZoomActionsTag = 108;
   [[button itemAtIndex:1] setRepresentedObject:savePanel];
   [savePanel setAccessoryView:mExportPanelView];
 
+  // Set the initial extension based on the remembered value for the output type.
+  int selectedButton = [button indexOfSelectedItem];
+  [self setFileExtension:[button itemAtIndex:selectedButton]];
+
   // start the save panel
   [NSMenu cancelAllTracking];
   int saveResult = [savePanel runModalForDirectory:nil file:NSLocalizedString(@"ExportedBookmarkFile", @"Exported Bookmarks")];
-  int selectedButton = [button indexOfSelectedItem];
   if (saveResult != NSFileHandlingPanelOKButton)
     return;
   if (0 == selectedButton)
