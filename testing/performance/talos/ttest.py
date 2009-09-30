@@ -110,7 +110,10 @@ def checkForCrashes(browser_config, profile_dir):
     if platform.system() in ('Windows', 'Microsoft'):
         stackwalkpaths = ['win32', 'minidump_stackwalk.exe']
     elif platform.system() == 'Linux':
-        stackwalkpaths = ['linux', 'minidump_stackwalk']
+        if platform.machine() == 'armv6l':
+            stackwalkpaths = ['maemo', 'minidump_stackwalk']
+        else:
+            stackwalkpaths = ['linux', 'minidump_stackwalk']
     elif platform.system() == 'Darwin':
         stackwalkpaths = ['osx', 'minidump_stackwalk']
     else:
@@ -218,10 +221,17 @@ def runTest(browser_config, test_config):
         counter_results[counter] = []
      
       startTime = -1
+      dumpResult = ""
       while total_time < timeout: #the main test loop, monitors counters and checks for browser ouptut
         # Sleep for [resolution] seconds
         time.sleep(resolution)
         total_time += resolution
+        if os.path.isfile(browser_config['browser_log']):
+          results_file = open(browser_config['browser_log'], "r")
+          fileData = results_file.read()
+          results_file.close()
+          utils.noisy(fileData.replace(dumpResult, ''))
+          dumpResult = fileData
         
         # Get the output from all the possible counters
         for count_type in counters:
@@ -237,14 +247,12 @@ def runTest(browser_config, test_config):
           results_file = open(browser_config['browser_log'], "r")
           results_raw = results_file.read()
           results_file.close()
-          utils.noisy(results_raw)
   
           match = RESULTS_REGEX.search(results_raw)
           if match:
             browser_results += match.group(1)
             startTime = int(match.group(2))
             endTime = int(match.group(3))
-            utils.debug("Matched basic results: " + browser_results)
             format = "tsformat"
             break
           #TODO: this a stop gap until all of the tests start outputting the same format
@@ -253,13 +261,11 @@ def runTest(browser_config, test_config):
             browser_results += match.group(1)
             startTime = int(match.group(2))
             endTime = int(match.group(3))
-            utils.debug("Matched tp results: " + browser_results)
             format = "tpformat"
             break
           match = RESULTS_REGEX_FAIL.search(results_raw)
           if match:
             browser_results += match.group(1)
-            utils.debug("Matched fail results: " + browser_results)
             raise talosError(match.group(1))
           raise talosError("unrecognized output format")
   
@@ -278,7 +284,6 @@ def runTest(browser_config, test_config):
 
       checkForCrashes(browser_config, profile_dir)
 
-      utils.debug("Completed test with: " + browser_results)
   
       all_browser_results.append(browser_results)
       all_counter_results.append(counter_results)

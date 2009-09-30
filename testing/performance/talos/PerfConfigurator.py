@@ -26,7 +26,7 @@ defaultTitle = "qm-pxp01"
 help_message = '''
 This is the buildbot performance runner's YAML configurator.bean
 
-USAGE: python PerfConfigurator.py --title title --executablePath path --configFilePath cpath --buildid id --branch branch --testDate date --resultsServer server --resultsLink link --activeTests testlist --branchName branchFullName --fast --symbolsPath path
+USAGE: python PerfConfigurator.py --title title --executablePath path --configFilePath cpath --buildid id --branch branch --testDate date --resultsServer server --resultsLink link --activeTests testlist --branchName branchFullName --fast --symbolsPath path --sampleConfig cfile --browserWait seconds
 
 example testlist: tp:tsspider:tdhtml:twinopen
 '''
@@ -34,12 +34,14 @@ example testlist: tp:tsspider:tdhtml:twinopen
 class PerfConfigurator:
     exePath = ""
     configPath = "."
+    sampleConfig = "sample.config"
     outputName = ""
     title = ""
     branch = ""
     branchName = ""
     buildid = ""
     currentDate = ""
+    browserWait = "5"
     verbose = False
     testDate = ""
     useId = False
@@ -55,11 +57,13 @@ class PerfConfigurator:
         print " - title = " + self.title
         print " - executablePath = " + self.exePath
         print " - configPath = " + self.configPath
+        print " - sampleConfig = " + self.sampleConfig
         print " - outputName = " + self.outputName
         print " - branch = " + self.branch
         print " - branchName = " + self.branchName
         print " - buildid = " + self.buildid
         print " - currentDate = " + self.currentDate
+        print " - browserWait = " + self.browserWait
         print " - testDate = " + self.testDate
         print " - resultsServer = " + self.resultsServer
         print " - resultsLink = " + self.resultsLink
@@ -106,7 +110,7 @@ class PerfConfigurator:
         return time.strftime("%a, %d %b %Y %H:%M:%S GMT", buildIdTime)
     
     def writeConfigFile(self):
-        configFile = open(path.join(self.configPath, "sample.config"))
+        configFile = open(path.join(self.configPath, self.sampleConfig))
         destination = open(self.outputName, "w")
         config = configFile.readlines()
         configFile.close()
@@ -144,6 +148,9 @@ class PerfConfigurator:
             #only change the results_link if the user has provided one
             if self.resultsLink and ('results_link' in line):
                 newline = 'results_link: ' + self.resultsLink + '\n'
+            #only change the browser_wait if the user has provided one
+            if self.browserWait and ('browser_wait' in line):
+                newline = 'browser_wait: ' + self.browserWait + '\n'
             if testMode:
                 #only do this if the user has provided a list of tests to turn on/off
                 # otherwise, all tests are considered to be active
@@ -184,6 +191,8 @@ class PerfConfigurator:
             self.exePath = kwargs['executablePath']
         if 'configFilePath' in kwargs:
             self.configPath = kwargs['configFilePath']
+        if 'sampleConfig' in kwargs:
+            self.sampleConfig = kwargs['sampleConfig']
         if 'outputName' in kwargs:
             self.outputName = kwargs['outputName']
         if 'buildid' in kwargs:
@@ -192,6 +201,8 @@ class PerfConfigurator:
             self.verbose = kwargs['verbose']
         if 'testDate' in kwargs:
             self.testDate = kwargs['testDate']
+        if 'browserWait' in kwargs:
+            self.browserWait = kwargs['browserWait']
         if 'resultsServer' in kwargs:
             self.resultsServer = kwargs['resultsServer']
         if 'resultsLink' in kwargs:
@@ -222,11 +233,13 @@ class Usage(Exception):
 def main(argv=None):
     exePath = ""
     configPath = ""
+    sampleConfig = "sample.config"
     output = ""
     title = defaultTitle
     branch = ""
     branchName = ""
     testDate = ""
+    browserWait = "5"
     verbose = False
     buildid = ""
     useId = False
@@ -242,8 +255,8 @@ def main(argv=None):
     try:
         try:
             opts, args = getopt.getopt(argv[1:], "hvue:c:t:b:o:i:d:s:l:a:n", 
-                ["help", "verbose", "useId", "executablePath=", "configFilePath=", "title=", 
-                "branch=", "output=", "id=", "testDate=", "resultsServer=", "resultsLink=", "activeTests=", "noChrome", "branchName=", "fast", "symbolsPath="])
+                ["help", "verbose", "useId", "executablePath=", "configFilePath=", "sampleConfig=", "title=", 
+                "branch=", "output=", "id=", "testDate=", "browserWait=", "resultsServer=", "resultsLink=", "activeTests=", "noChrome", "branchName=", "fast", "symbolsPath="])
         except getopt.error, msg:
             raise Usage(msg)
         
@@ -257,6 +270,8 @@ def main(argv=None):
                 exePath = value
             if option in ("-c", "--configFilePath"):
                 configPath = value
+            if option in ("-f", "--sampleConfig"):
+                sampleConfig = value
             if option in ("-t", "--title"):
                 title = value
             if option in ("-b", "--branch"):
@@ -269,6 +284,8 @@ def main(argv=None):
                 buildid = value
             if option in ("-d", "--testDate"):
                 testDate = value
+            if option in ("-w", "--browserWait"):
+                browserWait = value
             if option in ("-u", "--useId"):
                 useId = True
             if option in ("-s", "--resultsServer"):
@@ -292,11 +309,13 @@ def main(argv=None):
     configurator = PerfConfigurator(title=title,
                                     executablePath=exePath,
                                     configFilePath=configPath,
+                                    sampleConfig=sampleConfig,
                                     buildid=buildid,
                                     branch=branch,
                                     branchName=branchName,
                                     verbose=verbose,
                                     testDate=testDate,
+                                    browserWait=browserWait,
                                     outputName=output,
                                     useId=useId,
                                     resultsServer=resultsServer,
