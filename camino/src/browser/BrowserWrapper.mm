@@ -145,6 +145,8 @@ static const NSTimeInterval kTimeIntervalToConsiderSiteBlockingStatusValid = 900
 - (ESafeBrowsingBlockedReason)reasonForBlockingURL:(NSString*)aURL;
 - (BOOL)hasIgnoredBlockingForURLInRecentTimeframe:(NSString*)aURL;
 
+- (void)handleDelete:(NSEvent*)theEvent;
+
 @end
 
 #pragma mark -
@@ -1058,26 +1060,43 @@ static const NSTimeInterval kTimeIntervalToConsiderSiteBlockingStatusValid = 900
   return [super performKeyEquivalent:theEvent];
 }
 
-// -deleteBackward:
-//
-// map backspace key to Back according to browser.backspace_action pref
-//
-- (void)deleteBackward:(id)sender
+- (void)keyDown:(NSEvent*)theEvent
 {
-  // there are times when backspaces can seep through from IME gone wrong. As a
-  // workaround until we can get them all fixed, ignore backspace when the
-  // focused widget is a text field or plugin
+  // ChildView incorrectly forwards events that should have been consumed by
+  // IME, so don't trust events that came from a text field or plugin.
   if ([mBrowserView isTextFieldFocused] || [mBrowserView isPluginFocused])
     return;
 
+  const int kDeleteKey = 51;
+  const int kEscKey = 53;
+  switch ([theEvent keyCode]) {
+    case kDeleteKey:
+      [self handleDelete:theEvent];
+      break;
+    case kEscKey:
+      if (!([theEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask))
+      [mBrowserView stop:NSStopLoadAll];
+      break;
+  }
+  // Eat everything rather than propagate unhandled events, to prevent
+  // unexpected beeping (again, since ChildView lets some handled events
+  // through).
+}
+
+// -handleDelete:
+//
+// map delete key to Back according to browser.backspace_action pref
+//
+- (void)handleDelete:(NSEvent*)theEvent
+{
   int backspaceAction = [[PreferenceManager sharedInstance] getIntPref:kGeckoPrefBackspaceAction
                                                            withSuccess:NULL];
-
   if (backspaceAction == kBackspaceActionBack) {
-    if ([[NSApp currentEvent] modifierFlags] & NSShiftKeyMask)
-      [mBrowserView goForward];
-    else
+    unsigned int modifiers = [theEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask;
+    if (modifiers == 0)
       [mBrowserView goBack];
+    else if (modifiers == NSShiftKeyMask)
+      [mBrowserView goForward];
   }
   // Any other value means no action for backspace. We deliberately don't
   // support 1 (PgUp/PgDn) as it has no precedent on Mac OS.
