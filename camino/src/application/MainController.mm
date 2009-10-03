@@ -611,6 +611,7 @@ const int kZoomActionsTag = 108;
                                         @"GrowlCamino", @"GrowlCamino",
                                          @"CamiScript", @"CamiScript",
                                         @"UnifyCamino", @"UnifyCamino",
+                                     @"Google Desktop", @"GDCaminoExtensionLoader",
                                                         nil];
       NSMutableArray* addOnsPresent = [NSMutableArray array];
       NSEnumerator* classNameEnumerator = [[problemAddOns allKeys] objectEnumerator];
