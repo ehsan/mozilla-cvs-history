@@ -1034,15 +1034,16 @@ static const NSTimeInterval kTimeIntervalToConsiderSiteBlockingStatusValid = 900
   // there is a text area or plugin focused in the Gecko view.
   if ((([theEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask) ==
        (NSCommandKeyMask | NSNumericPadKeyMask | NSFunctionKeyMask)) &&
+      mBrowserView &&
       !([mBrowserView isTextFieldFocused] || [mBrowserView isPluginFocused]))
   {
     // ... but only if the content area is focused, so we don't interefere with
     // chrome shortcuts.
     NSResponder* responder = [[self window] firstResponder];
-    while (responder && responder != self) {
+    while (responder && responder != mBrowserView) {
       responder = [responder nextResponder];
     }
-    if (responder == self) {
+    if (responder == mBrowserView) {
       NSString* characters = [theEvent charactersIgnoringModifiers];
       if ([characters length] > 0) {
         unichar keyChar = [characters characterAtIndex:0];
