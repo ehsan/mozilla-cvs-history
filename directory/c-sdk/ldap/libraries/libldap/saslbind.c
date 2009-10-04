@@ -631,7 +631,7 @@ ldap_sasl_bind(
 		    cred->bv_len );
 
 	} else {		/* SASL bind; requires LDAPv3 or better */
-		if ( cred == NULL ) {
+		if ( cred == NULL || cred->bv_val == NULL || cred->bv_len == 0) {
 			rc = ber_printf( ber, "{it{ist{s}}", msgid,
 			    LDAP_REQ_BIND, ldapversion, dn, LDAP_AUTH_SASL,
 			    mechanism );
