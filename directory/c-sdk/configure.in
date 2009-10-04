@@ -1543,11 +1543,15 @@ tools are selected during the Xcode/Developer Tools installation.])
                                    # combo is not yet good at debugging inlined
                                    # functions (even when using DWARF2 as the
                                    # debugging format)
-    if echo "$OS_TEST" | grep -c 86 >/dev/null; then
+    case "$OS_TEST" in
+    i*86)
         CPU_ARCH=x86
-    else
+        ;;
+    *)
         CPU_ARCH=$OS_TEST
-    fi
+        ;;
+    esac
+
     case "${target_cpu}" in
     alpha)
         AC_DEFINE(_ALPHA_)
