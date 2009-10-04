@@ -64,7 +64,7 @@ ldap_create_passwordpolicy_control (
 	}
 	
 	rc = nsldapi_build_control( LDAP_CONTROL_PASSWD_POLICY, 
-								NULL, NULL, 0, ctrlp );
+								NULL, 0, 0, ctrlp );
 	
 	LDAP_SET_LDERRNO( ld, rc, NULL, NULL );
 	return( rc );
@@ -104,7 +104,7 @@ ldap_create_passwordpolicy_control_ext (
 	}
 	
 	rc = nsldapi_build_control( LDAP_CONTROL_PASSWD_POLICY, 
-								NULL, NULL, ctl_iscritical, ctrlp );
+								NULL, 0, ctl_iscritical, ctrlp );
 	
 	LDAP_SET_LDERRNO( ld, rc, NULL, NULL );
 	return( rc );

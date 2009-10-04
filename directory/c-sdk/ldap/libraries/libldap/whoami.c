@@ -71,8 +71,6 @@ ldap_parse_whoami (
 {	
 	int				rc;
 	char			*retoidp = NULL;
-	char			*authzidp = NULL;
-	struct berval	*retdatap = NULL;
 	
 	if ( !NSLDAPI_VALID_LDAP_POINTER( ld )) {
 		LDAP_SET_LDERRNO( ld, LDAP_PARAM_ERROR, NULL, NULL );

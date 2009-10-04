@@ -396,7 +396,7 @@ ber_flush( Sockbuf *sb, BerElement *ber, int freeit )
 #ifdef LDAP_DEBUG
 	if ( lber_debug ) {
 		char msg[80];
-		sprintf( msg, "ber_flush: %d bytes to sd %ld%s\n", towrite,
+		sprintf( msg, "ber_flush: %d bytes to sd %ld%s\n", (int)towrite,
 		    sb->sb_sd, ber->ber_rwptr != ber->ber_buf ? " (re-flush)"
 		    : "" );
 		ber_err_print( msg );

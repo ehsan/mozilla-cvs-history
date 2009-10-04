@@ -70,7 +70,7 @@ ldap_create_authzid_control (
 	}
 	
 	rc = nsldapi_build_control( LDAP_CONTROL_AUTHZID_REQ, 
-								NULL, NULL, ctl_iscritical, ctrlp );
+								NULL, 0, ctl_iscritical, ctrlp );
 	
 	LDAP_SET_LDERRNO( ld, rc, NULL, NULL );
 	return( rc );

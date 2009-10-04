@@ -302,7 +302,7 @@ wait4msg( LDAP *ld, int msgid, int all, int unlock_permitted,
 		    0, 0, 0 );
 	} else {
 		LDAPDebug( LDAP_DEBUG_TRACE, "wait4msg (timeout %ld sec, %ld usec)\n",
-		    timeout->tv_sec, timeout->tv_usec, 0 );
+		    timeout->tv_sec, (long) timeout->tv_usec, 0 );
 	}
 #endif /* LDAP_DEBUG */
 

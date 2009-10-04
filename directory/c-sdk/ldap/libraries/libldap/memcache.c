@@ -508,7 +508,7 @@ LDAP_CALL
 ldap_memcache_flush_results( LDAPMemCache *cache, char *dn, int scope )
 {
     LDAPDebug( LDAP_DEBUG_TRACE,
-        "ldap_memcache_flush_results( cache: 0x%x, dn: %s, scope: %d)\n",
+        "ldap_memcache_flush_results( cache: 0x%p, dn: %s, scope: %d)\n",
         cache, ( dn == NULL ) ? "(null)" : dn, scope );
     memcache_flush(cache, dn, scope, 1 /* Use result flush mode */);
 }

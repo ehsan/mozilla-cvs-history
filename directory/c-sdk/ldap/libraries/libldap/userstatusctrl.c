@@ -70,7 +70,7 @@ ldap_create_userstatus_control (
 	}
 
 	rc = nsldapi_build_control( LDAP_CONTROL_ACCOUNT_USABLE, 
-								NULL, NULL, ctl_iscritical, ctrlp );
+								NULL, 0, ctl_iscritical, ctrlp );
 
 	LDAP_SET_LDERRNO( ld, rc, NULL, NULL );
 	return( rc );
@@ -101,7 +101,6 @@ ldap_parse_userstatus_control (
 	BerElement *ber = NULL;
 	int			i, foundUSControl;
 	LDAPControl *USCtrlp = NULL;
-	ber_len_t	len;
 	ber_tag_t	tag;
 
 	if ( !NSLDAPI_VALID_LDAP_POINTER( ld ) || us == NULL ) {
