@@ -274,7 +274,7 @@ sub convertYards {
 sub convertMiles {
     my $self = shift;
     my($event, $miles) = @_;
-    my $inches = $miles * 190080.0;
+    my $inches = $miles * 63360.0;
     # imperial
     # (inches)
     my $feet = sigfig(3, $inches / 12.0);
