@@ -1640,13 +1640,6 @@ PR_strtod
 
 	if (!_pr_initialized) _PR_ImplicitInitialization();
 
-	for(s = s00, i = 0; *s && i < 64 * 1024; s++, i++)
-		;
-	if (*s) {
-		PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
-		return 0.0;
-		}
-
 	sign = nz0 = nz = 0;
 	dval(rv) = 0.;
 	for(s = s00;;s++) switch(*s) {
@@ -1772,6 +1765,8 @@ PR_strtod
 		else
 			s = s00;
 		}
+	if (nd > 64 * 1024)
+		goto ret0;
 	if (!nd) {
 		if (!nz && !nz0) {
 #ifdef INFNAN_CHECK
@@ -1802,6 +1797,7 @@ PR_strtod
 			  }
 #endif /* INFNAN_CHECK */
  ret0:
+			PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
 			s = s00;
 			sign = 0;
 			}
