@@ -250,7 +250,7 @@ sub ReportAll {
                                  "$event->{'from'}: ", ' -- ', @output);
 
     if (@output > $self->{'maxLines'}) {
-        splice(@output, $self->{'maxLines'} + 1);
+        splice(@output, $self->{'maxLines'});
         unshift(@output, "The list is longer than $self->{'maxLines'}"
             . " lines, only the first $self->{'maxLines'} will be shown.");
     }
