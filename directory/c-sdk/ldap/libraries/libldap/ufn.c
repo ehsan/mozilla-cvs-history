@@ -471,8 +471,14 @@ ldap_ufn_expand( LDAP *ld, LDAP_CANCELPROC_CALLBACK *cancelproc,
 		if (( msgid = ldap_search( ld, dn, scope, filter, attrs,
 		    aonly )) == -1 ) {
 			ldap_msgfree( tmpcand );
+                        tmpcand = NULL;
 			*err = LDAP_GET_LDERRNO( ld, NULL, NULL );
-			return( NULL );
+                        // Compiling with gcc-4.2 on Mac:
+                        // gcc-4.2 -arch ppc -c -o ufn.o -gdwarf-2 -01 ufn.c
+                        // having a return NULL statement here causes gcc to
+                        // hang. Therefore set tmpcand to null (above) and break
+                        // out of this loop to make gcc happy.
+                        break;
 		}
 
 		tv.tv_sec = 0;
@@ -498,6 +504,11 @@ ldap_ufn_expand( LDAP *ld, LDAP_CANCELPROC_CALLBACK *cancelproc,
 
 		i++;
 	} while ( dns != NULL && dns[i] != NULL );
+
+        // Catch the tmpcand = NULL case as required by breaking out the loop
+        // to prevent gcc-4.2 hanging on Mac.
+        if (!tmpcand)
+          return NULL;
 
 	if ( ldap_count_entries( ld, tmpcand ) > 0 ) {
 		return( tmpcand );
