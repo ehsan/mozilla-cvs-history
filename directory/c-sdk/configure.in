@@ -390,8 +390,11 @@ dnl ========================================================
 
 dnl add other runtime environments that use unix style paths
 dnl *-cygwin*|*-mingw*|*-msvc*|*-mks*)
+dnl mozilla-build msys seems not to convert -L to /LIBPATH
+dnl it just converts -L to /L and link issues an error
 case "$target" in
 *-cygwin*) USE_WINDOWS_PATHS=1 ;;
+*-mingw*) CONVERT_LIBPATH=1 ;;
 esac
 
 if test -n "$_WIN32_MSVC" -a -n "$USE_WINDOWS_PATHS" ; then
@@ -417,6 +420,10 @@ if test -n "$_WIN32_MSVC" -a -n "$USE_WINDOWS_PATHS" ; then
         path=`cygpath -m $path`
         NSS_LIBS="/LIBPATH:$path"
     fi
+    if test -n "$NSS_LIBS" -a -n "$CONVERT_LIBPATH" ; then
+        path=`echo $NSS_LIBS | sed -e 's/^-L//'`
+        NSS_LIBS="/LIBPATH:$path"
+    fi
 
     if test -n "$SVRCORE_CFLAGS" ; then
         path=`echo $SVRCORE_CFLAGS | sed -e 's/^-I//'`
@@ -429,6 +436,32 @@ if test -n "$_WIN32_MSVC" -a -n "$USE_WINDOWS_PATHS" ; then
         path=`cygpath -m $path`
         SVRCORE_LIBS="/LIBPATH:$path"
     fi
+    if test -n "$SVRCORE_LIBS" -a -n "$CONVERT_LIBPATH" ; then
+        path=`echo $SVRCORE_LIBS | sed -e 's/^-L//'`
+        SVRCORE_LIBS="/LIBPATH:$path"
+    fi
+fi
+
+dnl there seems to be no way to pass /libpath:/msys/style/path
+dnl to the link command line and have that converted to
+dnl /libpath:c:\dos\style\path
+dnl i've tried -libpath, /libpath, //libpath
+dnl msys does not have the cygpath command - however, pwd -W will
+dnl return the current directory in a suitable fornat
+if test -n "$_WIN32_MSVC" -a -n "$NSPR_LIBS" -a -n "$CONVERT_LIBPATH" ; then
+    path=`echo $NSPR_LIBS | sed -e 's/^-L//'`
+    path=`cd "$path" ; pwd -W`
+    NSPR_LIBS="/LIBPATH:$path"
+fi
+if test -n "$_WIN32_MSVC" -a -n "$NSS_LIBS" -a -n "$CONVERT_LIBPATH" ; then
+    path=`echo $NSS_LIBS | sed -e 's/^-L//'`
+    path=`cd "$path" ; pwd -W`
+    NSS_LIBS="/LIBPATH:$path"
+fi
+if test -n "$_WIN32_MSVC" -a -n "$SVRCORE_LIBS" -a -n "$CONVERT_LIBPATH" ; then
+    path=`echo $SVRCORE_LIBS | sed -e 's/^-L//'`
+    path=`cd "$path" ; pwd -W`
+    SVRCORE_LIBS="/LIBPATH:$path"
 fi
 
 dnl ========================================================
