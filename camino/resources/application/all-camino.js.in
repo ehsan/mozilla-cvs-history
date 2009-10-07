@@ -131,9 +131,9 @@ pref("network.protocol-handler.warn-external.nntp", false);
 // cookies: 0 = accept all, 1 = don't accept third-party, 2 = don't accept any
 pref("network.cookie.cookieBehavior", 0);
 
-// defaults for cmd-click opening windows or tabs (default to windows)
-pref("browser.tabs.opentabfor.middleclick", false);
-// ...and default to opening new pages in the foreground
+// default to opening tabs instead of windows for command-click
+pref("browser.tabs.opentabfor.middleclick", true);
+// ... and default to opening new tabs in the foreground
 pref("browser.tabs.loadInBackground", false);
 
 // hide the tab bar when only one tab is open
