@@ -1063,6 +1063,14 @@ static const NSTimeInterval kTimeIntervalToConsiderSiteBlockingStatusValid = 900
 
 - (void)keyDown:(NSEvent*)theEvent
 {
+  // We only want to handle events from Gecko; if this came from another view,
+  // don't interfere with it.
+  NSResponder* firstResponder = [[self window] firstResponder];
+  if (!([firstResponder isKindOfClass:[NSView class]] &&
+        [(NSView*)firstResponder isDescendantOf:mBrowserView])) {
+    [super keyDown:theEvent];
+    return;
+  }
   // ChildView incorrectly forwards events that should have been consumed by
   // IME, so don't trust events that came from a text field or plugin.
   if ([mBrowserView isTextFieldFocused] || [mBrowserView isPluginFocused])
