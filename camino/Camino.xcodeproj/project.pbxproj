@@ -2951,7 +2951,7 @@
 		DEE9EBA30AF5C379002BC511 /* SessionManager.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SessionManager.h; path = src/application/SessionManager.h; sourceTree = "<group>"; };
 		DEE9EBA60AF5C390002BC511 /* SessionManager.mm */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.objcpp; name = SessionManager.mm; path = src/application/SessionManager.mm; sourceTree = SOURCE_ROOT; };
 		DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Growl.xcodeproj; path = growl/Growl.xcodeproj; sourceTree = SOURCE_ROOT; };
-		DEFAA3430F241C1600BD51C1 /* Growl.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; name = Growl.framework; path = "growl/build/$(CONFIGURATION)/Growl.framework"; sourceTree = "<group>"; };
+		DEFAA3430F241C1600BD51C1 /* Growl.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; name = Growl.framework; path = "growl/build/Release/Growl.framework"; sourceTree = "<group>"; };
 		DEFD234F0D021C3A006899B9 /* dom_loadsave.xpt */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = file; name = dom_loadsave.xpt; path = ../dist/bin/components/dom_loadsave.xpt; sourceTree = SOURCE_ROOT; };
 		DEFD23520D021C48006899B9 /* dom_storage.xpt */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = file; name = dom_storage.xpt; path = ../dist/bin/components/dom_storage.xpt; sourceTree = SOURCE_ROOT; };
 		DEFD23550D021C63006899B9 /* content_xmldoc.xpt */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = file; name = content_xmldoc.xpt; path = ../dist/bin/components/content_xmldoc.xpt; sourceTree = SOURCE_ROOT; };

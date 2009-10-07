@@ -176,7 +176,7 @@ CAMINO_SYMBOL_SOURCE_FILES = \
 	$(XCODE_PRODUCT_DIR)/*.dSYM/Contents/Resources/DWARF/* \
 	google-breakpad/src/client/mac/build/Release/Breakpad.framework.dSYM/Contents/Resources/DWARF/Breakpad \
 	google-breakpad/src/client/mac/build/Release/breakpadUtilities.dylib.dSYM/Contents/Resources/DWARF/breakpadUtilities.dylib \
-	growl/build/Deployment/Growl.framework.dSYM/Contents/Resources/DWARF/Growl \
+	growl/build/Release/Growl.framework.dSYM/Contents/Resources/DWARF/Growl \
 	sparkle/build/Release/Sparkle.framework.dSYM/Contents/Resources/DWARF/Sparkle \
 	$(NULL)
 

@@ -3,8 +3,14 @@ notifications to users.  See http://www.growl.info/ for more information about
 Growl. The Growl framework is shipped inside Camino's bundle, and some glue
 code is included in Camino itself.
 
-This is Growl 1.1.4 (4886) from http://www.growl.info/files/source/Growl-1.1.4-src.tar.bz2
+This is Growl 1.2+ (4461:fac59330ff0c) from http://growl.info/hg/growl-development/archive/fac59330ff0c.zip
 with the following changes:
 - Only the source files needed to build the "Growl.framework" target have been included.
-- Commented out the SDK declarations in Growl.xcodeproj to support mozconfig-based configurations.
-- Debug symbol format for Deployment was changed to DWARF+dSYM for better breakpad symbol generation, and the incompatible save-repository disabled.
+- Made the following changes to Growl.xcodeproj:
+  - Converted to Xcode 3.0 format to make it more compatible with Xcode 2.5 toolchain on 10.4.
+  - Commented out the SDK declarations to support mozconfig-based configurations.
+  - Commented out any Xcode 3.1-style [arch=<foo>] notation and supplied non-arch-specific values where appropriate.
+  - Supplied valid archs for building with toolchains on Mac OS X 10.4 and 10.5.
+  - Set the MACOSX_DEPLOYMENT_TARGET to 10.4 in all configurations.
+  - Changed the default build configuration to Release.
+  - Disabled the incompatible save-repository setting to prevent bustage when building on 10.4.
