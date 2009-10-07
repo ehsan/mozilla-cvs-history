@@ -77,6 +77,7 @@
 - (NSScriptObjectSpecifier *)objectSpecifier;
 - (NSArray *)tabs;
 - (BrowserWrapper *)currentTab;
+- (void)setCurrentTab:(BrowserWrapper *)newTabItemView;
 @end
 
 @interface BrowserWrapper (ScriptingSupport)
@@ -276,6 +277,22 @@
 - (BrowserWrapper *)currentTab
 {
   return [self valueForKeyPath:@"windowController.tabBrowser.selectedTabViewItem.view"];
+}
+
+// Changes the current tab in a given browser window to a tab (BrowserWrapper)
+// specified by the user. Make sure that the BrowserWrapper we are given is
+// actually in the same browser window and warn the user if it is not.
+- (void)setCurrentTab:(BrowserWrapper *)newTabItemView;
+{
+  NSTabViewItem *newTabItem = [newTabItemView tab];
+  BrowserTabView *tabView = [[self windowController] tabBrowser];
+  if ([tabView indexOfTabViewItem:newTabItem] != NSNotFound) {
+    [tabView selectTabViewItem:newTabItem];
+  }
+  else {
+    [[NSScriptCommand currentCommand] setScriptErrorNumber:NSArgumentsWrongScriptError];
+    [[NSScriptCommand currentCommand] setScriptErrorString:@"The tab to select must be in the same window."];
+  }
 }
 
 @end
