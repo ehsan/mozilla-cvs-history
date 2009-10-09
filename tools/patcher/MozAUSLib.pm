@@ -89,6 +89,7 @@ $MAKE_BIN = '/usr/bin/make';
 $TMPDIR_PREFIX = '/dev/shm/tmp/MozAUSLib';
 
 %BOUNCER_PLATFORMS = ( 'win32' => 'win',
+                       'wince-arm' => 'wince',
                        'linux-i686' => 'linux',
                        'mac' => 'osx',
                        'unimac' => 'osx',
@@ -97,7 +98,9 @@ $TMPDIR_PREFIX = '/dev/shm/tmp/MozAUSLib';
 %AUS2_PLATFORMS = ( 'macppc' => 'Darwin_ppc-gcc3',
                     'mac' => 'Darwin_Universal-gcc3',
                     'linux-i686' => 'Linux_x86-gcc3',
-                    'win32' => 'WINNT_x86-msvc' );
+                    'win32' => 'WINNT_x86-msvc',
+                    'wince-arm' => 'WINCE_arm-msvc',
+                  );
 
 $DEFAULT_PARTIAL_MAR_OUTPUT_FILE = 'partial.mar';
 
