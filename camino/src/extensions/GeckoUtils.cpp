@@ -69,7 +69,9 @@
 
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMLocation.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsIDOMNSDocument.h"
 #include "nsIDOMNSHTMLElement.h"
 
 /* static */
@@ -202,6 +204,21 @@ void GeckoUtils::GetEnclosingLinkElementAndHref(nsIDOMNode* aNode, nsIDOMElement
   aHref = href;
 }
 
+PRBool GeckoUtils::GetURIForDocument(nsIDOMDocument* aDocument, nsString& aURI)
+{
+  if (!aDocument)
+    return PR_FALSE;
+  nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(aDocument));
+  if (!nsDoc)
+    return PR_FALSE;
+  nsCOMPtr<nsIDOMLocation> location;
+  nsDoc->GetLocation(getter_AddRefs(location));
+  if (!location)
+    return PR_FALSE;
+  nsresult rv = location->GetHref(aURI);
+  return NS_SUCCEEDED(rv);
+}
+
 /*static*/
 PRBool GeckoUtils::isProtocolInternal(const char* aProtocol)
 {
@@ -221,18 +238,6 @@ PRBool GeckoUtils::isProtocolInternal(const char* aProtocol)
 }
 
 /* static */
-void GeckoUtils::GetURIForDocShell(nsIDocShell* aDocShell, nsACString& aURI)
-{
-  nsCOMPtr<nsIWebNavigation> nav = do_QueryInterface(aDocShell);
-  nsCOMPtr<nsIURI> uri;
-  nav->GetCurrentURI(getter_AddRefs(uri));
-  if (!uri)
-    aURI.Truncate();
-  else
-    uri->GetSpec(aURI);
-}
-
-/* static */
 PRBool 
 GeckoUtils::IsSafeToOpenURIFromReferrer(const char* aTargetUri, const char* aReferrerUri)
 {
@@ -249,53 +254,6 @@ GeckoUtils::IsSafeToOpenURIFromReferrer(const char* aTargetUri, const char* aRef
   }
 
   return isUnsafeLink;
-}
-
-// NOTE: this addrefs the result!
-/* static */
-void GeckoUtils::FindDocShellForURI (nsIURI *aURI, nsIDocShell *aRoot, nsIDocShell **outMatch)
-{
-  *outMatch = nsnull;
-  if (!aURI || !aRoot)
-    return;
-
-  // get the URI we're looking for
-  nsCAutoString soughtURI;
-  aURI->GetSpec (soughtURI);
-
-  nsCOMPtr<nsISimpleEnumerator> docShellEnumerator;
-  aRoot->GetDocShellEnumerator (nsIDocShellTreeItem::typeContent, 
-                                nsIDocShell::ENUMERATE_FORWARDS, 
-                                getter_AddRefs (docShellEnumerator));
-  if (!docShellEnumerator)
-    return;
-
-  PRBool hasMore = PR_FALSE;
-  nsCOMPtr<nsIDocShellTreeItem> curItem;
-
-  while (NS_SUCCEEDED (docShellEnumerator->HasMoreElements (&hasMore)) && hasMore) {
-    // get the next element
-    nsCOMPtr<nsISupports> curSupports;
-    docShellEnumerator->GetNext (getter_AddRefs (curSupports));
-    if (!curSupports)
-      return;
-
-    nsCOMPtr<nsIDocShell> curDocShell = do_QueryInterface (curSupports);
-    if (!curDocShell)
-      return;
-
-    // get this docshell's URI
-    nsCAutoString docShellURI;
-    GetURIForDocShell (curDocShell, docShellURI);
-
-    if (docShellURI.Equals (soughtURI)) {
-      // we found it!
-      NS_ADDREF (*outMatch = curDocShell.get());
-      return;
-    }
-  }
-
-  // We never found the docshell.
 }
 
 //

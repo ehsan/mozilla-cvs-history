@@ -349,8 +349,6 @@ extern const char* const kHTMLMIMEType;
 - (already_AddRefed<nsISupports>)pageDescriptorByFocus:(BOOL)byFocus;
 - (void)setPageDescriptor:(nsISupports*)aDesc displayType:(PRUint32)aDisplayType;
 
-- (already_AddRefed<nsIDocShell>)findDocShellForURI:(nsIURI*)aURI;
-
 @end
 
 #endif // __nsCocoaBrowserView_h__

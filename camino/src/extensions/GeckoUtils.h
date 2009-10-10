@@ -47,7 +47,7 @@
 class nsIDOMWindow;
 class nsIDOMNode;
 class nsIDOMElement;
-class nsIDocShell;
+class nsIDOMDocument;
 class nsIURI;
 class nsIEditor;
 
@@ -59,12 +59,13 @@ class GeckoUtils
     static void GatherTextUnder(nsIDOMNode* aNode, nsString& aResult);
     static void GetEnclosingLinkElementAndHref(nsIDOMNode* aNode, nsIDOMElement** aLinkContent, nsString& aHref);
 
+    // Gets the URI for the given document, returning PR_TRUE if the location
+    // was found.
+    static PRBool GetURIForDocument(nsIDOMDocument* aDocument, nsString& aURI);
+
     // Returns whether or not the given protocol ('http', 'file', 'mailto', etc.)
     // is handled internally. Returns PR_TRUE in error cases.
     static PRBool isProtocolInternal(const char* aProtocol);
-
-    /* Ouputs the docshell |aDocShell|'s URI as a nsACString. */
-    static void GetURIForDocShell(nsIDocShell* aDocShell, nsACString& aURI);
     
     // Find out if a URI is safe to load given the referrer URI.
     // An unsafe URI could be a 'file://' or 'chrome://' from a referrer of a different URI scheme.
@@ -73,12 +74,6 @@ class GeckoUtils
   
     // Finds the anchor node for the selection in the given editor
     static void GetAnchorNodeFromSelection(nsIEditor* inEditor, nsIDOMNode** outAnchorNode, PRInt32* outAnchorOffset);
-    
-    /* Given a URI, and a docshell node, will traverse the tree looking for the docshell with the
-       given URI.  This is used for example when unblocking popups, because the popup "windows" are docshells
-       found somewhere in a document's docshell tree.  NOTE: Addrefs the found docshell! 
-    */
-    static void FindDocShellForURI(nsIURI *aURI, nsIDocShell *aRoot, nsIDocShell **outMatch);
     
     /* Finds the preferred size (ie the minimum size where scrollbars are not needed) of the content window. */
     static void GetIntrinsicSize(nsIDOMWindow* aWindow, PRInt32* outWidth, PRInt32* outHeight);

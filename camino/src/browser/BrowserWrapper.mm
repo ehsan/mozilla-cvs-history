@@ -59,6 +59,7 @@
 #import "SafeBrowsingBar.h"
 #import "BreakpadWrapper.h"
 
+#include "GeckoUtils.h"
 #include "CHBrowserService.h"
 #include "ContentClickListener.h"
 #import "FlashblockWhitelistManager.h"
@@ -136,7 +137,9 @@ static const NSTimeInterval kTimeIntervalToConsiderSiteBlockingStatusValid = 900
 - (void)addFindBarViewAndDisplay;
 - (void)removeFindBarViewAndDisplay;
 
-- (void)performCommandForXULElementWithID:(NSString*)elementIdentifier onPage:(NSString*)pageURI;
+- (void)performCommandForXULElementWithID:(NSString*)elementIdentifier
+                                   onPage:(NSString*)pageURI
+                                     site:(NSString*)siteURI;
 
 - (void)xpcomTerminate:(NSNotification*)aNotification;
 
@@ -996,15 +999,38 @@ static const NSTimeInterval kTimeIntervalToConsiderSiteBlockingStatusValid = 900
   // from -[self currentURI] if the command was send from an error overlay, for instance.
   NSString* documentURI = [self documentURI];
 
-  [self performCommandForXULElementWithID:elementID onPage:documentURI];
+  // Get the enclosing site URI as well (currentURI doesn't give us what we need
+  // on framed sites).
+  NSString* siteURI = nil;
+  nsCOMPtr<nsIDOMNode> targetNode = do_QueryInterface(eventTarget);
+  if (targetNode) {
+    nsCOMPtr<nsIDOMDocument> domDocument;
+    targetNode->GetOwnerDocument(getter_AddRefs(domDocument));
+    if (domDocument) {
+      nsAutoString urlStr;
+      if (GeckoUtils::GetURIForDocument(domDocument, urlStr))
+        siteURI = [NSString stringWith_nsAString:urlStr];
+    }
+  }
+  // If something goes wrong, fall back to the top-level URI.
+  if (!siteURI)
+    siteURI = [self currentURI];
+
+  [self performCommandForXULElementWithID:elementID
+                                   onPage:documentURI
+                                     site:siteURI];
 }
 
 // The pageURI is supplied because it might differ from -[self currentURI], particularly
-// if the command was sent from an error page overlay.
-- (void)performCommandForXULElementWithID:(NSString*)elementIdentifier onPage:(NSString*)pageURI
+// if the command was sent from an error page overlay. siteURI is the site the
+// command is ultimately coming from, which will differ from -[self currentURI]
+// if the site uses frames.
+- (void)performCommandForXULElementWithID:(NSString*)elementIdentifier
+                                   onPage:(NSString*)pageURI
+                                     site:(NSString*)siteURI
 {
   if ([elementIdentifier isEqualToString:@"exceptionDialogButton"]) {
-    [mDelegate addCertificateOverrideForSite:[self currentURI]];
+    [mDelegate addCertificateOverrideForSite:siteURI];
   }
   else if ([pageURI hasPrefix:@"about:safebrowsingblocked"]) {
     // pageURI contains an |e| parameter to indicate the type of

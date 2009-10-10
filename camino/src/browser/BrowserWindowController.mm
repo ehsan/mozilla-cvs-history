@@ -104,9 +104,7 @@
 #include "nsIHistoryEntry.h"
 #include "nsIHistoryItems.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMNSDocument.h"
 #include "nsIDOMNSHTMLDocument.h"
-#include "nsIDOMLocation.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEvent.h"
 #include "nsIContextMenuListener.h"
@@ -3430,16 +3428,9 @@ public:
 
   nsCOMPtr<nsIDOMDocument> ownerDoc;
   mDataOwner->mContextMenuNode->GetOwnerDocument(getter_AddRefs(ownerDoc));
-
-  nsCOMPtr<nsIDOMNSDocument> nsDoc = do_QueryInterface(ownerDoc);
-  if (!nsDoc) return @"";
-
-  nsCOMPtr<nsIDOMLocation> location;
-  nsDoc->GetLocation(getter_AddRefs(location));
-  if (!location) return @"";
-
   nsAutoString urlStr;
-  location->GetHref(urlStr);
+  if (!GeckoUtils::GetURIForDocument(ownerDoc, urlStr))
+    return @"";
   return [NSString stringWith_nsAString:urlStr];
 }
 

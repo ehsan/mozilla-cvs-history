@@ -1060,20 +1060,15 @@ const char* const kHTMLMIMEType = "text/html";
 
 - (NSString*)locationFromDOMWindow:(nsIDOMWindow*)inDOMWindow
 {
-  if (!inDOMWindow) return nil;
+  if (!inDOMWindow)
+    return nil;
   nsCOMPtr<nsIDOMDocument> domDocument;
   inDOMWindow->GetDocument(getter_AddRefs(domDocument));
   if (!domDocument)
     return nil;
-  nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(domDocument));
-  if (!nsDoc)
-    return nil;
-  nsCOMPtr<nsIDOMLocation> location;
-  nsDoc->GetLocation(getter_AddRefs(location));
-  if (!location)
-    return nil;
   nsAutoString urlStr;
-  location->GetHref(urlStr);
+  if (!GeckoUtils::GetURIForDocument(domDocument, urlStr))
+    return nil;
   return [NSString stringWith_nsAString:urlStr];
 }
 
@@ -1552,16 +1547,6 @@ const char* const kHTMLMIMEType = "text/html";
     return NULL;
   return privWin->GetDocShell();
 }
-
-// used for finding a blocked popup's docshell
-// addrefs the result!
-- (already_AddRefed<nsIDocShell>)findDocShellForURI:(nsIURI*)aURI
-{
-  nsIDocShell *match;
-  GeckoUtils::FindDocShellForURI(aURI, [self docShell], &match);
-  return match;
-}
-
 
 - (id<CHBrowserContainer>)browserContainer
 {
