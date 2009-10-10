@@ -221,8 +221,8 @@ const int kMenuTruncationChars = 60;
     return NO;
 
   // TODO: find another way to do this that doesn't involve knowledge about BWC.
-  BrowserWindowController *windowController = (BrowserWindowController *)[[[self view] window] windowController];
-  if (dragSource == [windowController proxyIconView])
+  BrowserWindowController *windowController = [[[self view] window] windowController];
+  if (dragSource && dragSource == [windowController proxyIconView])
     return NO;
 
   return [(BrowserTabView*)[self tabView] shouldAcceptDrag:dragInfo];
