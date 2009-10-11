@@ -1633,6 +1633,9 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
     if (action == @selector(addBookmarkSeparator:))
       return NO;
 
+    if (action == @selector(getInfo:))
+      return NO;
+
   }
   return YES;
 }
