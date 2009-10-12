@@ -1172,7 +1172,8 @@ const char* const kHTMLMIMEType = "text/html";
   
   NSString* mimeType = [NSString stringWith_nsAString:contentType];
   if ([mimeType hasPrefix:@"text/"] ||
-      [mimeType hasSuffix:@"+xml"] ||
+      ([mimeType hasSuffix:@"+xml"] && 
+      ![mimeType isEqualToString:@"application/vnd.mozilla.xul+xml"]) ||
       [mimeType isEqualToString:@"application/x-javascript"] ||
       [mimeType isEqualToString:@"application/javascript"] ||
       [mimeType isEqualToString:@"application/ecmascript"] ||
