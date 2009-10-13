@@ -620,7 +620,7 @@ const int kZoomActionsTag = 108;
         if (NSClassFromString(className))
           [addOnsPresent addObject:[problemAddOns objectForKey:className]];
       }
-      // Check for CamiTools by path, since it's a preference pane rather than an InputManager.
+      // Check for CamiTools and ExtraFonts by path, since they're preference panes rather than InputManagers.
       NSString* userPreferencePanesPath = [[prefManager profilePath] stringByAppendingPathComponent:@"PreferencePanes"];
       NSString* globalPreferencePanesPath = @"/Library/Application Support/Camino/PreferencePanes";
       NSFileManager* fileManager = [NSFileManager defaultManager];
@@ -634,6 +634,8 @@ const int kZoomActionsTag = 108;
       while ((paneName = [prefPaneEnumerator nextObject])) {
         if ([paneName rangeOfString:@"CamiTools" options:NSCaseInsensitiveSearch].location != NSNotFound)
           [addOnsPresent addObject:@"CamiTools"];
+        if ([paneName rangeOfString:@"ExtraFonts" options:NSCaseInsensitiveSearch].location != NSNotFound)
+          [addOnsPresent addObject:@"ExtraFonts"];
       }
 
       if ([addOnsPresent count] > 0) {
