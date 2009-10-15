@@ -411,9 +411,9 @@ static Bigint *Balloc(int32 k)
     }
 #endif
 
-    if (k <= Kmax && (rv = freelist[k]) != NULL)
+    if (k <= Kmax && (rv = freelist[k]))
         freelist[k] = rv->next;
-    if (rv == NULL) {
+    else {
         x = 1 << k;
 #ifdef Omit_Private_Memory
         rv = (Bigint *)MALLOC(sizeof(Bigint) + (x-1)*sizeof(ULong));
