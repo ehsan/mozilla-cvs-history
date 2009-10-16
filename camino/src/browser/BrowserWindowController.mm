@@ -5269,6 +5269,10 @@ public:
   else {
     [mURLBar setEditable:YES];
     [mSearchBar setEditable:YES];
+    // If we don't have focus anywhere useful when coming out of tab overview
+    // mode (due to the view shuffling) set it on the content area.
+    if ([[[self window] firstResponder] isEqual:[self window]])
+      [[self window] makeFirstResponder:[mBrowserView browserView]];
   }
 }
 
