@@ -65,6 +65,7 @@ extern NSString* const CertificateChangedNotificationName;
   unsigned long   mVerification;    // we cache this because it's slow to obtain
   BOOL            mGotVerification;
   BOOL            mDomainIsMismatched;
+  NSString*       mFallbackProblemMessageKey;  // owned
 }
 
 + (CertificateItem*)certificateItemWithCert:(nsIX509Cert*)inCert;
@@ -143,6 +144,11 @@ extern NSString* const CertificateChangedNotificationName;
 // Indicates that we are using this certificate in the context of a domain it
 // isn't valid for, so it should not be considered valid.
 - (void)setDomainIsMismatched:(BOOL)isMismatched;
+
+// This is a hack to work around our inability to get correct certificate
+// problem descriptions (bug 453075), for the cert override dialog case. It
+// should be removed when that bug is fixed.
+- (void)setFallbackProblemMessageKey:(NSString*)problemKey;
 
 @end
 

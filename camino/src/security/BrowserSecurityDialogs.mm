@@ -271,6 +271,12 @@ static int kInvalidCertCancelOverride = 0;
       if (cert) {
         CertificateItem* certItem = [CertificateItem certificateItemWithCert:cert];
         [certItem setDomainIsMismatched:isDomainMismatch];
+        // Partially work around bug 453075, so the certificate failure message
+        // matches what we are telling the user in the dialog text.
+        if (isUntrusted)
+          [certItem setFallbackProblemMessageKey:@"InvalidStateCertNotTrusted"];
+        else if (isInvalidTime)
+          [certItem setFallbackProblemMessageKey:@"InvalidStateExpired"];
         [self setCertificateItem:certItem];
         return certItem;
       }

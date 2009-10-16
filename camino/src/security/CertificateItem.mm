@@ -113,6 +113,7 @@ NSString* const CertificateChangedNotificationName = @"CertificateChangedNotific
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   [mASN1InfoDict release];
   NS_RELEASE(mCert);
+  [mFallbackProblemMessageKey release];
   [super dealloc];
 }
 
@@ -568,7 +569,12 @@ NSString* const CertificateChangedNotificationName = @"CertificateChangedNotific
       break;
     default:
     case nsIX509Cert::USAGE_NOT_ALLOWED:
-    case nsIX509Cert::NOT_VERIFIED_UNKNOWN: stateKey = @"InvalidStateVerifyFailed";       break;
+    case nsIX509Cert::NOT_VERIFIED_UNKNOWN:
+      if (mFallbackProblemMessageKey)
+        stateKey = mFallbackProblemMessageKey;
+      else
+        stateKey = @"InvalidStateVerifyFailed";
+      break;
     case nsIX509Cert::CERT_REVOKED:         stateKey = @"InvalidStateRevoked";            break;
     case nsIX509Cert::CERT_NOT_TRUSTED:     stateKey = @"InvalidStateCertNotTrusted";     break;
     case nsIX509Cert::ISSUER_NOT_TRUSTED:
@@ -683,6 +689,12 @@ NSString* const CertificateChangedNotificationName = @"CertificateChangedNotific
 - (void)setDomainIsMismatched:(BOOL)isMismatched
 {
   mDomainIsMismatched = isMismatched;
+}
+
+- (void)setFallbackProblemMessageKey:(NSString*)problemKey
+{
+  [mFallbackProblemMessageKey autorelease];
+  mFallbackProblemMessageKey = [problemKey copy];
 }
 
 
