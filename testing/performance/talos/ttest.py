@@ -190,6 +190,14 @@ def runTest(browser_config, test_config):
       # check to see if the previous cycle is still hanging around 
       if (i > 0) and ffprocess.checkAllProcesses(browser_config['process']):
         raise talosError("previous cycle still running")
+
+      # Execute the test's head script if there is one
+      if 'head' in test_config:
+        try:
+          subprocess.call(test_config['head'])
+        except:
+          raise talosError("error executing head script: %s" % sys.exc_info()[0])
+
       # Run the test 
       browser_results = ""
       if 'timeout' in test_config:
@@ -284,9 +292,16 @@ def runTest(browser_config, test_config):
 
       checkForCrashes(browser_config, profile_dir)
 
-  
       all_browser_results.append(browser_results)
       all_counter_results.append(counter_results)
+
+      # Execute the test's tail script if there is one
+      if 'tail' in test_config:
+        try:
+          subprocess.call(test_config['tail'])
+        except:
+          raise talosError("error executing tail script: %s" % sys.exc_info()[0])
+
      
     ffprocess.cleanupProcesses(browser_config['process'], browser_config['browser_wait']) 
     cleanupProfile(temp_dir)
