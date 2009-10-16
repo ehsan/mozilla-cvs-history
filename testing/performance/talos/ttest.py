@@ -194,7 +194,7 @@ def runTest(browser_config, test_config):
       # Execute the test's head script if there is one
       if 'head' in test_config:
         try:
-          subprocess.call(test_config['head'])
+          subprocess.call(['python', test_config['head']])
         except:
           raise talosError("error executing head script: %s" % sys.exc_info()[0])
 
@@ -298,7 +298,7 @@ def runTest(browser_config, test_config):
       # Execute the test's tail script if there is one
       if 'tail' in test_config:
         try:
-          subprocess.call(test_config['tail'])
+          subprocess.call(['python', test_config['tail']])
         except:
           raise talosError("error executing tail script: %s" % sys.exc_info()[0])
 
