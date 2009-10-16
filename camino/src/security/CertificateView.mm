@@ -107,6 +107,7 @@ const float kGapUnderCheckboxLine = 3.0f;
 - (void)rebuildTrustSettings;
 
 - (BOOL)showTrustSettings;
+- (BOOL)shouldEnableTrustUI;
 
 - (IBAction)trustCheckboxClicked:(id)inSender;
 
@@ -201,6 +202,17 @@ const float kGapUnderCheckboxLine = 3.0f;
             mCertTrustType == nsIX509Cert::EMAIL_CERT));
 }
 
+- (BOOL)shouldEnableTrustUI
+{
+  // I don't know why the original code was written this way and then changed,
+  // since we have no useful audit trail for this file, but I'm preserving it in
+  // this refactoring in case it makes sense to future generations.
+
+  // XXX do we need a more comprehensive check than this?
+  // return [mCertItem isValid] || [mCertItem isUntrustedRootCACert];
+  return YES;
+}
+
 - (IBAction)trustCheckboxClicked:(id)inSender
 {
   if (inSender == mTrustForWebSitesCheckbox)
@@ -235,8 +247,7 @@ const float kGapUnderCheckboxLine = 3.0f;
 {
   unsigned int certTrustMask = 0;
 
-  BOOL canGetTrust = ([mCertItem isValid] || [mCertItem isUntrustedRootCACert]);
-  if (canGetTrust)
+  if ([self shouldEnableTrustUI])
   {
     if (mTrustedForWebSites)
       certTrustMask |= nsIX509CertDB::TRUSTED_SSL;
@@ -674,8 +685,7 @@ const float kGapUnderCheckboxLine = 3.0f;
   if (!mTrustExpanded)
     return;
 
-  // XXX do we need a more comprehensive check than this?
-  BOOL enableCheckboxes = YES;  // [mCertItem isValid] || [mCertItem isUntrustedRootCACert];
+  BOOL enableCheckboxes = [self shouldEnableTrustUI];
   
   // XXX only show relevant checkboxes? (see nsNSSCertificateDB::SetCertTrust)
   // XXX only show checkboxes for allowed usages?
