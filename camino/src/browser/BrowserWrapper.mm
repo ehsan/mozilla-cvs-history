@@ -1092,6 +1092,10 @@ static const NSTimeInterval kTimeIntervalToConsiderSiteBlockingStatusValid = 900
   // We only want to handle events from Gecko; if this came from another view,
   // don't interfere with it.
   NSResponder* firstResponder = [[self window] firstResponder];
+  // It's possible for the Gecko key handling to have destroyed the view,
+  // in which case it's clearly been handled already.
+  if (!firstResponder)
+    return;
   if (!([firstResponder isKindOfClass:[NSView class]] &&
         [(NSView*)firstResponder isDescendantOf:mBrowserView])) {
     [super keyDown:theEvent];
