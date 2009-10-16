@@ -324,6 +324,10 @@ static int kInvalidCertCancelOverride = 0;
   else if (mCertFailureFlags & CHCertificateOverrideFlagDomainMismatch) {
     NSString* messageFormat = NSLocalizedStringFromTable(@"MismatchedCertMessageFormat", @"CertificateDialogs", nil);
     problemDescription = [NSString stringWithFormat:messageFormat, [certItem commonName], mSourceHost];
+  }
+  else if (mCertFailureFlags & CHCertificateOverrideFlagInvalidTime) {
+    NSString* messageFormat = NSLocalizedStringFromTable(@"ExpiredCertMessageFormat", @"CertificateDialogs", nil);
+    problemDescription = [NSString stringWithFormat:messageFormat, mSourceHost];
   } else {
     NSString* messageFormat = NSLocalizedStringFromTable(@"InvalidCertMessageFormat", @"CertificateDialogs", nil);
     problemDescription = [NSString stringWithFormat:messageFormat, mSourceHost];
