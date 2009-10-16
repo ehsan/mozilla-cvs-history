@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslcon.c,v 1.36 2009/03/04 21:57:18 nelson%bolyard.com Exp $ */
+/* $Id: sslcon.c,v 1.37 2009/10/16 17:45:35 wtc%google.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -2731,7 +2731,8 @@ ssl2_HandleVerifyMessage(sslSocket *ss)
     DUMP_MSG(29, (ss, data, ss->gs.recordLen));
     if ((ss->gs.recordLen != 1 + SSL_CHALLENGE_BYTES) ||
 	(data[0] != SSL_MT_SERVER_VERIFY) ||
-	PORT_Memcmp(data+1, ss->sec.ci.clientChallenge, SSL_CHALLENGE_BYTES)) {
+	NSS_SecureMemcmp(data+1, ss->sec.ci.clientChallenge,
+	                 SSL_CHALLENGE_BYTES)) {
 	/* Bad server */
 	PORT_SetError(SSL_ERROR_BAD_SERVER);
 	goto loser;

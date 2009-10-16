@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.116 2009/03/04 21:57:18 nelson%bolyard.com Exp $ */
+/* $Id: ssl3con.c,v 1.117 2009/10/16 17:45:35 wtc%google.com Exp $ */
 
 #include "cert.h"
 #include "ssl.h"
@@ -7723,7 +7723,7 @@ ssl3_HandleFinished(sslSocket *ss, SSL3Opaque *b, PRUint32 length,
 	rv = ssl3_ComputeTLSFinished(ss->ssl3.crSpec, !isServer, 
 	                             hashes, &tlsFinished);
 	if (rv != SECSuccess ||
-	    0 != PORT_Memcmp(&tlsFinished, b, length)) {
+	    0 != NSS_SecureMemcmp(&tlsFinished, b, length)) {
 	    (void)SSL3_SendAlert(ss, alert_fatal, decrypt_error);
 	    PORT_SetError(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE);
 	    return SECFailure;
@@ -7735,7 +7735,7 @@ ssl3_HandleFinished(sslSocket *ss, SSL3Opaque *b, PRUint32 length,
 	    return SECFailure;
 	}
 
-	if (0 != PORT_Memcmp(hashes, b, length)) {
+	if (0 != NSS_SecureMemcmp(hashes, b, length)) {
 	    (void)ssl3_HandshakeFailure(ss);
 	    PORT_SetError(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE);
 	    return SECFailure;
@@ -8286,7 +8286,8 @@ const ssl3BulkCipherDef *cipher_def;
 
     /* Check the MAC */
     if (hashBytes != (unsigned)crSpec->mac_size || padIsBad || 
-	PORT_Memcmp(databuf->buf + databuf->len, hash, crSpec->mac_size) != 0) {
+	NSS_SecureMemcmp(databuf->buf + databuf->len, hash,
+	                 crSpec->mac_size) != 0) {
 	/* must not hold spec lock when calling SSL3_SendAlert. */
 	ssl_ReleaseSpecReadLock(ss);
 	SSL3_SendAlert(ss, alert_fatal, bad_record_mac);

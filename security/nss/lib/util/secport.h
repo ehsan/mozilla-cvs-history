@@ -37,7 +37,7 @@
 /*
  * secport.h - portability interfaces for security libraries
  *
- * $Id: secport.h,v 1.21 2009/04/08 01:07:00 julien.pierre.boogz%sun.com Exp $
+ * $Id: secport.h,v 1.22 2009/10/16 17:45:36 wtc%google.com Exp $
  */
 
 #ifndef _SECPORT_H_
@@ -239,6 +239,8 @@ sec_port_iso88591_utf8_conversion_function
 );
 
 extern int NSS_PutEnv(const char * envVarName, const char * envValue);
+
+extern int NSS_SecureMemcmp(const void *a, const void *b, size_t n);
 
 SEC_END_PROTOS
 
