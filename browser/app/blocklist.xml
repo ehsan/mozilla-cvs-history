@@ -21,6 +21,7 @@
     <emItem id="support@daemon-tools.cc">
       <versionRange minVersion=" " maxVersion="1.0.0.5"/>
     </emItem>
+    <emItem id="{20a82645-c095-46ed-80e3-08825760534b}"/>
     <emItem id="{2224e955-00e9-4613-a844-ce69fccaae91}"/>
     <emItem id="{3f963a5b-e555-4543-90e2-c3908898db71}">
       <versionRange minVersion=" " maxVersion="8.0">
@@ -59,6 +60,14 @@
   </pluginItem>
   <pluginItem>
     <match name="filename" exp="NPFFAddOn.dll"/>
+    <versionRange>
+      <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+        <versionRange minVersion="" maxVersion="*"/>
+      </targetApplication>
+    </versionRange>
+  </pluginItem>
+  <pluginItem>
+    <match name="name" exp="Windows Presentation Foundation"/>
     <versionRange>
       <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
         <versionRange minVersion="" maxVersion="*"/>
