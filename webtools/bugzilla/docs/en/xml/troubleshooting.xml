@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: troubleshooting.xml,v 1.13 2008/04/04 06:48:25 timeless%mozdev.org Exp $ -->
+<!-- $Id: troubleshooting.xml,v 1.14 2009/10/18 23:35:00 lpsolit%gmail.com Exp $ -->
 
 <appendix id="troubleshooting">
 <title>Troubleshooting</title>
@@ -212,35 +212,6 @@ TEST-OK Webserver is preventing fetch of http://landfill.bugzilla.org/bugzilla-t
     browser (this is true starting with Bugzilla 2.18 and Bugzilla 2.16.5).
     </para>
   </section>
-
-  <section id="trbl-relogin-some">
-  <title>Some users are constantly being forced to relogin</title>
-
-    <para>First, make sure cookies are enabled in the user's browser.
-    </para>
-
-    <para>If that doesn't fix the problem, it may be that the user's ISP
-     implements a rotating proxy server. This causes the user's effective IP
-     address (the address which the Bugzilla server perceives him coming from)
-     to change periodically. Since Bugzilla cookies are tied to a specific IP
-     address, each time the effective address changes, the user will have to
-     log in again.
-     </para>
-
-     <para>If you are using 2.18 (or later), there is a
-     parameter called <quote>loginnetmask</quote>, which you can use to set
-     the number of bits of the user's IP address to require to be matched when
-     authenticating the cookies. If you set this to something less than 32,
-     then the user will be given a checkbox for <quote>Restrict this login to
-     my IP address</quote> on the login screen, which defaults to checked. If
-     they leave the box checked, Bugzilla will behave the same as it did
-     before, requiring an exact match on their IP address to remain logged in.
-     If they uncheck the box, then only the left side of their IP address (up
-     to the number of bits you specified in the parameter) has to match to
-     remain logged in.
-     </para>
-
-   </section>
 
   <section id="trbl-index">
   <title><filename>index.cgi</filename> doesn't show up unless specified in the URL</title>
