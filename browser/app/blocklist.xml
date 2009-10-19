@@ -60,11 +60,17 @@
   <pluginItem>
     <match name="filename" exp="NPFFAddOn.dll"/>
     <versionRange>
+      <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+        <versionRange minVersion="" maxVersion="*"/>
+      </targetApplication>
     </versionRange>
   </pluginItem>
-  <pluginItem>
+  <pluginItem severity="1">
     <match name="name" exp="Windows Presentation Foundation"/>
-    <versionRange severity="1">
+    <versionRange>
+      <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+        <versionRange minVersion="" maxVersion="*"/>
+      </targetApplication>
     </versionRange>
   </pluginItem>
 </pluginItems>
