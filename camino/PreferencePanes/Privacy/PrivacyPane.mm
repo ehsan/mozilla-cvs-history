@@ -332,17 +332,9 @@ const int kSortReverse = 1;
 
 - (IBAction)removeCookiesAndBlockSites:(id)aSender
 {
-  // Block the sites...
-  CHPermissionManager* permManager = [CHPermissionManager permissionManager];
-  NSArray* selectedSites = [self selectedCookieSites];
-  NSEnumerator* sitesEnum = [selectedSites objectEnumerator];
-  NSString* curSite;
-  while ((curSite = [sitesEnum nextObject])) {
-    [permManager setPolicy:CHPermissionDeny
-                    forHost:curSite
-                      type:CHPermissionTypeCookie];
-  }
-
+  // Block the selected sites...
+  [self addPermissionForSelection:CHPermissionDeny];
+  
   // ...then remove the cookies.
   [self removeCookies:aSender];
 }
@@ -365,17 +357,16 @@ const int kSortReverse = 1;
 - (void)addPermissionForSelection:(int)inPermission
 {
   CHPermissionManager* permManager = [CHPermissionManager permissionManager];
-  NSIndexSet* selectedIndexes = [mCookiesTable selectedRowIndexes];
-  for (unsigned int index = [selectedIndexes lastIndex];
-       index != NSNotFound;
-       index = [selectedIndexes indexLessThanIndex:index])
-  {
-    NSString* host = [[mCookies objectAtIndex:index] domain];
-    if ([host hasPrefix:@"."] && [host length] > 1)
-      host = [host substringFromIndex:1];
-    [permManager setPolicy:inPermission
-                   forHost:host
-                      type:CHPermissionTypeCookie];
+  NSArray* selectedSites = [self selectedCookieSites];
+  NSEnumerator* sitesEnum = [selectedSites objectEnumerator];
+  NSString* curSite;
+  while ((curSite = [sitesEnum nextObject])) {
+    NSString* curHost = [self permissionsBlockingNameForCookieHostname:curSite];
+    if ([curHost length] > 0) {
+      [permManager setPolicy:inPermission
+                     forHost:curHost
+                        type:CHPermissionTypeCookie];
+    }
   }
 }
 
