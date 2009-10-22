@@ -31,14 +31,9 @@ BEGIN {
     (/fatal error/  # . . . . . . . . . . . . . . . . . Link
       or /^g?make(?:\[\d\d?\])?: \*\*\*/ #. . . . . . . gmake
       or /^C /  # . . . . . . . . . . . . . . . . . . . cvs merge conflict
-      or /\WError: /i # . . . . . . . . . . . . . . . . C
       or / error\([0-9]*\)\:/ # . . . . . . . . . . . . C
       or /\[checkout aborted\]/   # . . . . . . . . . . cvs
       or /\: cannot find module/  # . . . . . . . . . . cvs
-      or /REFTEST UNEXPECTED/ # . . . . . . . . . . . . reftest
-      or /^\*\*\* \d+ ERROR (?:FAIL|TODO WORKED)/ # . . mochitest
-      or /^\s+FAIL -/ # . . . . . . . . . . . . . . . . browser chrome test
-      or /: FAIL$/  # . . . . . . . . . . . . . . . . . xpcshell unit test
       or /TEST-UNEXPECTED-(?:PASS|FAIL) / # . . . . . . new unified error output
       or /buildbot\.slave\.commands\.TimeoutError:/ # . buildbot error
       ) and !/TEST-INFO /;  # . . . . . . . . . . . . . information line
