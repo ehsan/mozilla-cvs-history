@@ -62,5 +62,10 @@
     <versionRange>
     </versionRange>
   </pluginItem>
+  <pluginItem>
+    <match name="name" exp="Windows Presentation Foundation"/>
+    <versionRange severity="1">
+    </versionRange>
+  </pluginItem>
 </pluginItems>
 </blocklist>
