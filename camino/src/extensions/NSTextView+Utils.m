@@ -15,8 +15,8 @@
  *
  * The Original Code is Camino code.
  *
- * The Initial Developer of the Original Code is The Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2007
+ * The Initial Developer of the Original Code is Ian Leue.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
