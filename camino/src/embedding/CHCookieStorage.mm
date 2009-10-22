@@ -51,6 +51,28 @@
 #include "nsISimpleEnumerator.h"
 
 static NSString* const kCookieNullPlaceholderString = @"<null>";
+// The weird string break here is to avoid creating an ANSI C trigraph.
+static NSString* const kCookieUnreadablePlaceholderString = @"<???" ">";
+
+// Returns a best-effort conversion of cString into a displayable string.
+// Guaranteed never to return nil.
+static NSString* BestGuessStringFromCString(const char* cString)
+{
+  // Cookie values can be arbitrary data, so we can't reliably interpret them as
+  // any given encoding. Start with UTF-8, since it's a good default choice and
+  // we can usually tell if it's wrong.
+  NSString* displayString = [NSString stringWithUTF8String:cString];
+  // Next, try ISO-Latin-1, since it's a fairly common web encoding.
+  if (!displayString) {
+    displayString = [NSString stringWithCString:cString
+                                       encoding:NSISOLatin1StringEncoding];
+  }
+  // If all else fails, use a placeholder.
+  if (!displayString)
+    displayString = kCookieUnreadablePlaceholderString;
+
+  return displayString;
+}
 
 // Xcode 2.x's ld dead-strips this symbol.  Xcode 3.0's ld is fine.
 asm(".no_dead_strip .objc_class_name_CHCookieStorage");
@@ -66,40 +88,57 @@ asm(".no_dead_strip .objc_class_name_CHCookieStorage");
 {
   NSMutableDictionary* properties = [NSMutableDictionary dictionaryWithCapacity:6];
 
-  nsCAutoString val;
-  geckoCookie->GetHost(val);
-  [properties setObject:[NSString stringWithUTF8String:val.get()] forKey:NSHTTPCookieDomain];
+  id convertedCookie = nil;
+  @try {
+    nsCAutoString val;
+    geckoCookie->GetHost(val);
+    [properties setObject:[NSString stringWithUTF8String:val.get()]
+                   forKey:NSHTTPCookieDomain];
 
-  geckoCookie->GetName(val);
-  // NSHTTPCookie (and RFC 2109 and RFC 2965) requires that cookies have a name.
-  // Core doesn't and will happily set nameless cookies. Substitute a placeholder
-  // string for the missing name so NSHTTPCookie doesn't choke on it.
-  if (val.Length() == 0)
-    [properties setObject:kCookieNullPlaceholderString forKey:NSHTTPCookieName];
-  else
-    [properties setObject:[NSString stringWithUTF8String:val.get()] forKey:NSHTTPCookieName];
+    geckoCookie->GetPath(val);
+    [properties setObject:[NSString stringWithUTF8String:val.get()]
+                   forKey:NSHTTPCookiePath];
 
-  geckoCookie->GetPath(val);
-  [properties setObject:[NSString stringWithUTF8String:val.get()] forKey:NSHTTPCookiePath];
+    geckoCookie->GetName(val);
+    // NSHTTPCookie (and RFC 2109 and RFC 2965) requires that cookies have a
+    // name. Core doesn't and will happily set nameless cookies. Substitute a
+    // placeholder string for the missing name so NSHTTPCookie doesn't choke
+    // on it.
+    if (val.Length() == 0) {
+      [properties setObject:kCookieNullPlaceholderString
+                     forKey:NSHTTPCookieName];
+    }
+    else {
+      [properties setObject:BestGuessStringFromCString(val.get())
+                     forKey:NSHTTPCookieName];
+    }
 
-  geckoCookie->GetValue(val);
-  [properties setObject:[NSString stringWithUTF8String:val.get()] forKey:NSHTTPCookieValue];
+    geckoCookie->GetValue(val);
+    [properties setObject:BestGuessStringFromCString(val.get())
+                   forKey:NSHTTPCookieValue];
 
-  PRBool secure = PR_FALSE;
-  geckoCookie->GetIsSecure(&secure);
-  [properties setObject:(secure ? @"TRUE" : @"FALSE") forKey:NSHTTPCookieSecure];
+    PRBool secure = PR_FALSE;
+    geckoCookie->GetIsSecure(&secure);
+    [properties setObject:(secure ? @"TRUE" : @"FALSE")
+                   forKey:NSHTTPCookieSecure];
 
-  PRUint64 expiry = 0;
-  geckoCookie->GetExpires(&expiry);
-  NSDate *date = [NSDate dateWithTimeIntervalSince1970:(NSTimeInterval)expiry];
-  [properties setObject:date forKey:NSHTTPCookieExpires];
+    PRUint64 expiry = 0;
+    geckoCookie->GetExpires(&expiry);
+    NSDate *date = [NSDate dateWithTimeIntervalSince1970:(NSTimeInterval)expiry];
+    [properties setObject:date forKey:NSHTTPCookieExpires];
 
-  PRBool isSession = PR_FALSE;
-  geckoCookie->GetIsSession(&isSession);
-  if (isSession)
-    [properties setObject:@"TRUE" forKey:NSHTTPCookieDiscard];
+    PRBool isSession = PR_FALSE;
+    geckoCookie->GetIsSession(&isSession);
+    if (isSession)
+      [properties setObject:@"TRUE" forKey:NSHTTPCookieDiscard];
 
-  return [self cookieWithProperties:properties];
+    convertedCookie = [self cookieWithProperties:properties];
+  }
+  @catch (NSException* e) {
+    NSLog(@"Failed to convert cookie: %@ %@", [e reason], properties);
+  }
+
+  return convertedCookie;
 }
 
 @end
