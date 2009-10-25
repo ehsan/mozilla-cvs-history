@@ -47,7 +47,7 @@ if ($command eq 'create_tree') {
     $tree = &require_only_one_tree($tree);
 }
 
-print "Content-type: text/html\n\n<HTML>\n";
+print "Content-Type: text/html; charset=utf-8\n\n<HTML>\n";
 
 if( $command eq 'create_tree' || $command eq 'edit_tree' ){
     &create_tree;

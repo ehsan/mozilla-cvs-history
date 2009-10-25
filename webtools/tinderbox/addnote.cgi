@@ -50,7 +50,7 @@ if (defined($args = $form{log})) {
   $buildtime   = $form{buildtime};
 }
 
-print "Content-Type:text/html\n";
+print "Content-Type:text/html; charset=utf-8\n";
 
 # Remember email address in cookie
 #

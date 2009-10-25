@@ -29,7 +29,7 @@ my %form = &split_cgi_args();
 
 $|=1;
 
-print "Content-type: text/html\n\n";
+print "Content-Type: text/html; charset=utf-8\n\n";
 
 $form{noignore} = 1;            # Force us to load all build info, not
                                 # paying any attention to ignore_builds stuff.

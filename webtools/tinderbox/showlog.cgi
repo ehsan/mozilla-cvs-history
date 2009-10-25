@@ -138,7 +138,7 @@ else
 ############################################################
 
 sub print_fragment {
-  print "Content-type: text/html\n";
+  print "Content-Type: text/html; charset=utf-8\n";
   print "Last-Modified: " . gmtime($last_modified_time) . "\n";
   print "Expires: " . gmtime($expires_time) . "\n";
   print "\n";
@@ -172,7 +172,7 @@ sub print_fragment {
 }
 
 sub print_header {
-  print "Content-type: text/html\n";
+  print "Content-Type: text/html; charset=utf-8\n";
   print "Last-Modified: " . gmtime($last_modified_time) . "\n";
   print "Expires: " . gmtime($expires_time) . "\n";
   print "\n";

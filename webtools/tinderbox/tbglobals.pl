@@ -139,7 +139,7 @@ sub require_only_one_tree {
 
 sub show_tree_selector {
 
-    print "Content-type: text/html\n\n";
+    print "Content-Type: text/html; charset=utf-8\n\n";
 
     &EmitHtmlHeader("tinderbox");
 
@@ -721,7 +721,7 @@ sub tb_check_password($$) {
 
     require 'header.pl';
 
-    print "Content-type: text/html\n";
+    print "Content-Type: text/html; charset=utf-8\n";
     print "Set-Cookie: tinderbox_password= ; path=/ ; "
         ." Expires = Sun, 1-Mar-2020 00:00:00 GMT\n";
     print "\n";

@@ -40,7 +40,7 @@ foreach my $mode ('quickparse', 'express', 'rdf', 'flash',
 }
 
 if ($mode_count > 1) {
-    print "Content-type: text/plain\n\n";
+    print "Content-Type: text/plain; charset=utf-8\n\n";
     print "Error: Only one mode type can be specified at a time.\n";
     exit(0);
 }
