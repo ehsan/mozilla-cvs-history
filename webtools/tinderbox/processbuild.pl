@@ -276,8 +276,8 @@ sub check_required_variables {
   if ($tbx->{status} eq '') {
     $err_string .= "Variable 'tinderbox:status' not set.\n";
   }
-  elsif (not $tbx->{status} =~ /success|busted|building|testfailed/) {
-    $err_string .= "Variable 'tinderbox:status' must be 'success', 'busted', 'testfailed', or 'building'\n";
+  elsif (not $tbx->{status} =~ /success|busted|building|testfailed|exception/) {
+    $err_string .= "Variable 'tinderbox:status' must be 'success', 'busted', 'testfailed', 'exception' or 'building'\n";
   }
 
   # Build End Date - Only present in final status message

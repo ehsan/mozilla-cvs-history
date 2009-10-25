@@ -28,6 +28,7 @@ my %colormap = (
                 success    => '11DD11',
                 busted     => 'EE0000',
                 building   => 'EEFF00',
+                exception  => '770088',
                 testfailed => 'FFAA00'
                 );
 
@@ -35,6 +36,7 @@ my %titlemap = (
                 success    => 'success',
                 busted     => 'busted',
                 building   => 'building',
+                exception  => 'exception',
                 testfailed => 'testfailed',
                 flames     => 'burning',
                 star       => ''
@@ -44,6 +46,7 @@ my %textmap = (
                success    => 'L',
                busted     => 'L!',
                building   => 'L/',
+               exception  => 'L?',
                testfailed => 'L-',
                flames     => '%',
                star       => '*'
@@ -212,6 +215,7 @@ sub print_page_head($$) {
                 <tr>
                 <td colspan=2>
                 <table cellspacing=1 cellpadding=1 border=1>
+                </tr>
                 <tr bgcolor="$colormap{success}">
                 <td>
                 Successful Build, optional bloaty stats:<br>
@@ -221,14 +225,22 @@ sub print_page_head($$) {
                 <tt>Txul:TT.T</tt> (XUL openwindow time, ms)<br>
                 <tt>Ts:TT.T</tt>   (startup time, sec)<br>
                 </td>
+                </tr>
                 <tr bgcolor="$colormap{null}">
                 <td>No build in progress</td>
+                </tr>
                 <tr bgcolor="$colormap{building}">
                 <td>Build in progress</td>
+                </tr>
                 <tr bgcolor="$colormap{testfailed}">
                 <td>Successful build, but tests failed</td>
+                </tr>
                 <tr bgcolor="$colormap{busted}">
                 <td>Build failed</td>
+                </tr>
+                <tr bgcolor="$colormap{exception}">
+                <td>Non-build failure</td>
+                </tr>
                 </table>
                 </td></tr></table>
                 </td>
@@ -1196,7 +1208,7 @@ sub do_hdml($) {
                 <display title=Tinderbox>
                 <action type=help task=go dest=#help>
             };
-    my %state_symbols = (success=>'+',busted=>'!',testfailed=>'~');
+    my %state_symbols = (success=>'+',busted=>'!',testfailed=>'~',exception=>'?');
 
     if (&is_tree_state_available($tree)) {
         print "<LINE>$tree is " . (&is_tree_open($tree) ? 'open' : 'closed');
@@ -1235,7 +1247,7 @@ sub do_vxml($) {
     print '<pause>500</pause>';
     print "\n";
 
-    my %state_symbols = (success=>'green.',busted=>'red.',testfailed=>'orange.');
+    my %state_symbols = (success=>'green.',busted=>'red.',testfailed=>'orange.',exception=>'purple.');
 
     if (&is_tree_state_available($tree)) {
         print "<audio>$tree is " .  (&is_tree_open($tree) ? 'open.' : 'closed.') . "</audio>";
@@ -1301,7 +1313,7 @@ sub do_wml($) {
     print '<do type="accept" label="Builds"><go href="#Builds"/></do>';
     print '<p align ="center"><b><u>Moz Tinderbox</u></b></p>';
 
-    my %state_symbols = (success=>'green.',busted=>'red.',testfailed=>'orange.');
+    my %state_symbols = (success=>'green.',busted=>'red.',testfailed=>'orange.',exception=>'purple.');
 
     if (&is_tree_state_available($tree)) {
         print "<p align='left'>$tree is " .  (&is_tree_open($tree) ? 'open.' : 'closed.') . "</p>";
@@ -1342,6 +1354,8 @@ sub do_wml($) {
         print "<tr><td>[";
         if ($quickdata{$buildname}->{buildstatus} eq 'busted') {
             print '<b>RED</b>';
+        } elsif ($quickdata{$buildname}->{buildstatus} eq 'exception') {
+            print '<b>PURPLE</b>';
         } elsif ($quickdata{$buildname}->{buildstatus} eq 'testfailed') {
             print '<b>TEST FAILED</b>';
         } else {

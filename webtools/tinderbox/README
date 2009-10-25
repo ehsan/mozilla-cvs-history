@@ -265,7 +265,7 @@ separated columns:
    ( note: that 2 & 3 together uniquely identify the build 
         and all relevant build data)
 4) the architecture dependent error parser to use on the log files
-5) status of the build (success|busted|building|testfailed)
+5) status of the build (success|busted|building|testfailed|exception)
 6) The log file for this build (if completed)
 7) the name of the binary (if any) that came from the build
 

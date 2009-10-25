@@ -645,7 +645,7 @@ sub tb_loadquickparseinfo {
     my ($buildtime, $buildname, $buildstatus, $binaryurl) = (split /\|/)[1,2,4,6];
     
     if ($includeStatusOfBuilding or
-        $buildstatus =~ /^success|busted|testfailed$/) {
+        $buildstatus =~ /^success|busted|testfailed|exception$/) {
 
       # Ignore stuff in the future.
       next if $buildtime > $maxdate;
@@ -683,7 +683,7 @@ sub tb_last_status($$) {
   for (my $tt=0; $tt < $td->{time_count}; $tt++) {
     my $br = $td->{build_table}->[$tt][$build_index];
     next unless defined $br and $br != -1 and $br->{buildstatus};
-    next unless $br->{buildstatus} =~ /^(success|busted|testfailed)$/;
+    next unless $br->{buildstatus} =~ /^(success|busted|exception|testfailed)$/;
     return $br->{buildstatus};
   }
   return 'building';
