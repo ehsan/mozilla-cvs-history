@@ -333,6 +333,10 @@ BEGIN {
       $last_was_error = 1;
     } else {
       $last_was_error = 0;
+      if ($line =~ /^TinderboxSummaryMessage:/) {
+        $line =~ s/^TinderboxSummaryMessage:\s*//;
+        logprint("<font color='008000'>$line</font>");
+      }
     }
     return $last_was_error;
   }
