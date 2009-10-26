@@ -1,0 +1,16 @@
+#
+## hostname: cb-xserve04.mozilla.com
+## uname: Darwin cb-xserve04.mozilla.com 9.8.0 Darwin Kernel Version 9.8.0: Wed Jul 15 16:55:01 PDT 2009; root:xnu-1228.15.4~1/RELEASE_I386 i386
+#
+
+# symbols for breakpad
+export CFLAGS="-gdwarf-2"
+export CXXFLAGS="-gdwarf-2"
+
+. $topsrcdir/camino/config/mozconfig
+. $topsrcdir/build/macosx/universal/mozconfig
+# Don't add explicit optimize flags here, set them in configure.in, see bug 407794.
+ac_add_options --enable-optimize
+ac_add_options --enable-static
+mk_add_options MOZ_MAKE_FLAGS=-j8
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/../build
