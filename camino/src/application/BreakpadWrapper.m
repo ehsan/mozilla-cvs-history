@@ -50,7 +50,8 @@ static BreakpadWrapper* sGlobalBreakpadInstance = nil;
 {
   if ((self = [super init])) {
     if (!sGlobalBreakpadInstance) {
-      NSDictionary* info = [[NSBundle mainBundle] infoDictionary];
+      NSBundle* mainBundle = [NSBundle mainBundle];
+      NSDictionary* info = [mainBundle infoDictionary];
       mBreakpadReference = BreakpadCreate(info);
       if (!mBreakpadReference) {
         [self autorelease];
@@ -61,6 +62,9 @@ static BreakpadWrapper* sGlobalBreakpadInstance = nil;
       // Breakpad uses CFBundleVersion, but we want our short version instead.
       BreakpadSetKeyValue(mBreakpadReference, @BREAKPAD_VERSION,
                           [info valueForKey:@"CFBundleShortVersionString"]);
+      // Get the localized vendor, which infoDictionary doesn't do.
+      BreakpadSetKeyValue(mBreakpadReference, @BREAKPAD_VENDOR,
+                          [mainBundle objectForInfoDictionaryKey:@"BreakpadVendor"]);
     }
     else {
       NSLog(@"WARNING: attempting to create a second BreakpadWrapper");
