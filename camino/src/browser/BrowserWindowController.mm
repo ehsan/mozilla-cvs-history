@@ -5045,6 +5045,13 @@ public:
 
   if (oldResponderIsGecko != newResponderIsGecko && [[self window] isKeyWindow])
     [mBrowserView setBrowserActive:newResponderIsGecko];
+
+  // When the blocked page overlay shows up, Gecko causes us to lose content
+  // focus; manually restore it if that happens.
+  if (newResponder == [self window] && oldResponderIsGecko &&
+      [mBrowserView isBlockedErrorOverlayShowing]) {
+    [[self window] makeFirstResponder:[mBrowserView browserView]];
+  }
 }
 
 //
