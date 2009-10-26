@@ -203,6 +203,7 @@ static const float kMinBrowserViewHeight = 100.0;
   [mBrowserContainerView setHidden:YES];
 
   [self addSubview:mTabThumbnailGridView];
+  [[self window] makeFirstResponder:[mTabThumbnailGridView nextValidKeyView]];
 }
 
 - (void)hideTabThumbnailGridView

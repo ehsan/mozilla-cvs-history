@@ -54,6 +54,7 @@ const int kHorizontalPadding = 25;
 @interface TabThumbnailGridView (Private)
 - (void)updateGridSizeFor:(int)num;
 - (void)layoutThumbnails;
+- (void)setUpKeyViewLoopWithInitialIndex:(unsigned int)startIndex;
 - (void)createThumbnailViews;
 - (BOOL)validateTabExists:(ThumbnailView*)tabThumb;
 @end
@@ -100,9 +101,6 @@ const int kHorizontalPadding = 25;
 
   NSMutableArray* thumbViewsToLoad = [NSMutableArray arrayWithCapacity:[openTabs count]];
 
-  NSEnumerator* tabEnum = [openTabs objectEnumerator];
-  BrowserTabViewItem* tabViewItem;
-
   NSSize browserContentSize = [[bwc browserWrapper] frame].size;
   NSImage* placeholderThumb = [[[NSImage alloc] initWithSize:browserContentSize] autorelease];
   [placeholderThumb lockFocus];
@@ -110,6 +108,8 @@ const int kHorizontalPadding = 25;
   [NSBezierPath fillRect:NSMakeRect(0, 0, browserContentSize.width, browserContentSize.height)];
   [placeholderThumb unlockFocus];
 
+  NSEnumerator* tabEnum = [openTabs objectEnumerator];
+  BrowserTabViewItem* tabViewItem;
   while ((tabViewItem = [tabEnum nextObject])) {
     ThumbnailView* curThumbView = [[[ThumbnailView alloc] init] autorelease];
     if (curThumbView) {
@@ -123,6 +123,8 @@ const int kHorizontalPadding = 25;
   }
 
   [self layoutThumbnails];
+  unsigned int selectedIndex = [tabView indexOfTabViewItem:[tabView selectedTabViewItem]];
+  [self setUpKeyViewLoopWithInitialIndex:selectedIndex];
 
   // Start the tab thumbnailing process. We do this one tab at a time, scheduled
   // with the runloop, so that the grid view comes up immediately and the UI
@@ -130,6 +132,32 @@ const int kHorizontalPadding = 25;
   [self performSelector:@selector(loadNextThumbnailForViews:)
              withObject:thumbViewsToLoad
              afterDelay:0];
+}
+
+//
+// Wires up a key loop that cycles through all the thumbnails, starting with
+// the one at the given index.
+//
+// This assumes that there's nothing outside this view that needs to be part of
+// the loop, so if that changes in the future this will need adjusting.
+//
+- (void)setUpKeyViewLoopWithInitialIndex:(unsigned int)startIndex
+{
+  // First make a self-contained tab loop.
+  NSArray* thumbViews = [self subviews];
+  unsigned int thumbViewCount = [thumbViews count];
+  for (unsigned int i = 0; i < thumbViewCount ; i++) {
+    unsigned int nextThumbIndex = (i + 1) % thumbViewCount;
+    ThumbnailView* thumbView = [thumbViews objectAtIndex:i];
+    [thumbView setNextKeyView:[thumbViews objectAtIndex:nextThumbIndex]];
+  }
+
+  // Then, insert the grid view itself just before the selected tab, so that
+  // keyboard selection will start there.
+  [self setNextKeyView:[thumbViews objectAtIndex:startIndex]];
+  unsigned int previousThumbIndex =
+    (startIndex + thumbViewCount - 1) % thumbViewCount;
+  [[thumbViews objectAtIndex:previousThumbIndex] setNextKeyView:self];
 }
 
 - (void)loadNextThumbnailForViews:(NSMutableArray*)thumbViewsToLoad

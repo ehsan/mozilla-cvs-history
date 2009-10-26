@@ -38,11 +38,19 @@
 
 #import "ThumbnailView.h"
 
+#import <Carbon/Carbon.h>
+
 static const int kShadowX = 0;
 static const int kShadowY = -3;
 static const int kShadowRadius = 5;
 static const int kShadowPadding = 5;
 static const int kThumbnailTitleHeight = 20;
+
+@interface ThumbnailView (Private)
+// Causes the browser to select the tab corresponding to this thumbnail.
+- (void)selectTab;
+@end
+
 
 @implementation ThumbnailView
 
@@ -95,6 +103,23 @@ static const int kThumbnailTitleHeight = 20;
   return mDelegate;
 }
 
+- (BOOL)acceptsFirstResponder
+{
+  return YES;
+}
+
+- (BOOL)becomeFirstResponder
+{
+  [self setNeedsDisplay:YES];
+  return YES;
+}
+
+- (BOOL)resignFirstResponder
+{
+  [self setNeedsDisplay:YES];
+  return YES;
+}
+
 - (void)drawRect:(NSRect)rect
 {
   NSShadow* shadow = [[[NSShadow alloc] init] autorelease];
@@ -120,10 +145,18 @@ static const int kThumbnailTitleHeight = 20;
       thumbnailImageRect.origin.x = ([self bounds].size.width - thumbnailImageRect.size.width) / 2.0;
     }
 
-    [mThumbnail drawInRect:NSInsetRect(thumbnailImageRect, kShadowPadding, kShadowPadding)
+    NSRect insetRect = NSInsetRect(thumbnailImageRect, kShadowPadding, kShadowPadding);
+    [mThumbnail drawInRect:insetRect
                   fromRect:NSZeroRect
                  operation:NSCompositeSourceOver
                   fraction:1];
+    if ([[self window] firstResponder] == self) {
+      CGRect focusRect = CGRectMake(insetRect.origin.x, insetRect.origin.y,
+                                    insetRect.size.width, insetRect.size.height);
+      HIThemeDrawFocusRect(&focusRect, true,
+                           [[NSGraphicsContext currentContext] graphicsPort],
+                           kHIThemeOrientationNormal);
+    }
   }
 
   if (mTitleCell)
@@ -131,6 +164,24 @@ static const int kThumbnailTitleHeight = 20;
 }
 
 - (void)mouseUp:(NSEvent*)theEvent
+{
+  NSPoint location = [self convertPoint:[theEvent locationInWindow]
+                               fromView:nil];
+  if (NSPointInRect(location, [self bounds]))
+    [self selectTab];
+}
+
+- (void)keyDown:(NSEvent*)theEvent
+{
+  if (([theEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask) == 0 &&
+      [[theEvent charactersIgnoringModifiers] isEqualToString:@" "]) {
+    [self selectTab];
+    return;
+  }
+  [super keyDown:theEvent];
+}
+
+- (void)selectTab
 {
   if ([mDelegate respondsToSelector:@selector(thumbnailViewWasSelected:)])
     [mDelegate thumbnailViewWasSelected:self];
