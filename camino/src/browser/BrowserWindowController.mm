@@ -5261,8 +5261,12 @@ public:
     [mSearchBar setEditable:YES];
     // If we don't have focus anywhere useful when coming out of tab overview
     // mode (due to the view shuffling) set it on the content area.
-    if ([[[self window] firstResponder] isEqual:[self window]])
-      [[self window] makeFirstResponder:[mBrowserView browserView]];
+    if ([[[self window] firstResponder] isEqual:[self window]]) {
+      if ([self bookmarkManagerIsVisible])
+        [[self bookmarkViewControllerForCurrentTab] focusSearchField];
+      else
+        [[self window] makeFirstResponder:[mBrowserView browserView]];
+    }
   }
 }
 
