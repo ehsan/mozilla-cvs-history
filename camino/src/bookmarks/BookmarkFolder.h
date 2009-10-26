@@ -100,7 +100,6 @@ enum {
 
 // for reading from disk
 - (BOOL)readNativeDictionary:(NSDictionary *)aDict;
-- (BOOL)readSafariDictionary:(NSDictionary *)aDict;
 
 // ways to add a new bookmark array
 - (BookmarkFolder *)addBookmarkFolder; //adds to end

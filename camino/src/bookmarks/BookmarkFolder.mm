@@ -102,11 +102,9 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
 
 // ways to add a new bookmark
 - (BOOL)addBookmarkFromNativeDict:(NSDictionary *)aDict;
-- (BOOL)addBookmarkFromSafariDict:(NSDictionary *)aDict;
 
 // ways to add a new bookmark folder
 - (BOOL)addBookmarkFolderFromNativeDict:(NSDictionary *)aDict; //read in - adds sequentially
-- (BOOL)addBookmarkFolderFromSafariDict:(NSDictionary *)aDict;
 
 // deletes the bookmark or bookmark array
 - (BOOL)deleteBookmark:(Bookmark *)childBookmark;
@@ -704,19 +702,6 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
   return YES;
 }
 
-- (BOOL)addBookmarkFromSafariDict:(NSDictionary *)aDict
-{
-  if ([self isRoot])
-    return NO;
-
-  Bookmark* theBookmark = [Bookmark bookmarkWithSafariDictionary:aDict];
-  if (!theBookmark)
-    return NO;
-
-  [self appendChild:theBookmark];
-  return YES;
-}
-
 //
 // Adding arrays
 //
@@ -733,11 +718,6 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
 - (BOOL)addBookmarkFolderFromNativeDict:(NSDictionary *)aDict
 {
   return [[self addBookmarkFolder] readNativeDictionary:aDict];
-}
-
-- (BOOL)addBookmarkFolderFromSafariDict:(NSDictionary *)aDict
-{
-  return [[self addBookmarkFolder] readSafariDictionary:aDict];
 }
 
 // normal add while programming running
@@ -1188,27 +1168,6 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
   return success;
 }
 
-- (BOOL)readSafariDictionary:(NSDictionary *)aDict
-{
-  [self setTitle:[aDict objectForKey:BMTitleKey]];
-
-  BOOL success = YES;
-  NSEnumerator* enumerator = [[aDict objectForKey:BMChildrenKey] objectEnumerator];
-  id aKid;
-  while ((aKid = [enumerator nextObject]) && success) {
-    if ([[aKid objectForKey:SafariTypeKey] isEqualToString:SafariLeaf])
-      success = [self addBookmarkFromSafariDict:(NSDictionary *)aKid];
-    else if ([[aKid objectForKey:SafariTypeKey] isEqualToString:SafariList])
-      success = [self addBookmarkFolderFromSafariDict:(NSDictionary *)aKid];
-    // might also be a WebBookmarkTypeProxy - we'll ignore those
-  }
-
-  if ([[aDict objectForKey:SafariAutoTab] boolValue])
-    [self setIsGroup:YES];
-
-  return success;
-}
-
 //
 // -writeBookmarksMetadataToPath:
 //
@@ -1276,69 +1235,6 @@ static int BookmarkItemSort(id firstItem, id secondItem, void* context)
     [folderDict setObject:[self shortcut] forKey:BMFolderShortcutKey];
 
   return folderDict;
-}
-
-- (NSDictionary *)writeSafariDictionary
-{
-  if (![self isSmartFolder]) {
-    id item;
-    NSMutableArray* children = [NSMutableArray array];
-    NSEnumerator* enumerator = [mChildArray objectEnumerator];
-    //get chillins first
-    while ((item = [enumerator nextObject])) {
-      id aDict = [item writeSafariDictionary];
-      if (aDict)
-        [children addObject:aDict];
-    }
-    NSString *titleString;
-    if ([self isToolbar])
-      titleString = @"BookmarksBar";
-    else if ([[BookmarkManager sharedBookmarkManager] bookmarkMenuFolder] == self)
-      titleString = @"BookmarksMenu";
-    else
-      titleString = [self title];
-
-    NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithObjectsAndKeys:
-      titleString, BMTitleKey,
-      SafariList, SafariTypeKey,
-      [self UUID], SafariUUIDKey,
-      children, BMChildrenKey,
-      nil];
-
-    if ([self isGroup])
-      [dict setObject:[NSNumber numberWithBool:YES] forKey:SafariAutoTab];
-    return dict;
-    // now we handle the smart folders
-  }
-  else {
-    NSString *SafariProxyKey = @"WebBookmarkIdentifier";
-    NSString *SafariProxyType = @"WebBookmarkTypeProxy";
-    if ([[BookmarkManager sharedBookmarkManager] rendezvousFolder] == self) {
-      return [NSDictionary dictionaryWithObjectsAndKeys:
-        @"Bonjour", BMTitleKey,
-        @"Bonjour Bookmark Proxy Identifier", SafariProxyKey,
-        SafariProxyType, SafariTypeKey,
-        [self UUID], SafariUUIDKey,
-        nil];
-    }
-    else if ([[BookmarkManager sharedBookmarkManager] addressBookFolder] == self) {
-      return [NSDictionary dictionaryWithObjectsAndKeys:
-        @"Address Book", BMTitleKey,
-        @"Address Book Bookmark Proxy Identifier", SafariProxyKey,
-        SafariProxyType, SafariTypeKey,
-        [self UUID], SafariUUIDKey,
-        nil];
-    }
-    else if ([[BookmarkManager sharedBookmarkManager] historyFolder] == self) {
-      return [NSDictionary dictionaryWithObjectsAndKeys:
-        @"History", BMTitleKey,
-        @"History Bookmark Proxy Identifier", SafariProxyKey,
-        SafariProxyType, SafariTypeKey,
-        [self UUID], SafariUUIDKey,
-        nil];
-    }
-  }
-  return nil;
 }
 
 @end

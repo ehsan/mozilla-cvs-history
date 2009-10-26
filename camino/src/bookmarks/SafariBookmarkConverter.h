@@ -12,16 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Camino code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * Stuart Morgan
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   David Haas <haasd@cae.wisc.edu>
- *   Josh Aas <josh@mozilla.com>
  *   Stuart Morgan <stuart.morgan@alumni.case.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -38,54 +36,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#import "BookmarkItem.h"
+#import <Foundation/Foundation.h>
 
-@interface Bookmark : BookmarkItem
-{
-  NSString*     mURL;
-  NSDate*       mLastVisit;
-  BOOL          mIsSeparator;
-  unsigned int  mNumberOfVisits;
-  NSString*     mFaviconURL;  // only used for <link> favicons
+@class BookmarkItem;
+@class BookmarkFolder;
+
+@interface SafariBookmarkConverter : NSObject {
 }
 
-+ (Bookmark*)separator;
-+ (Bookmark*)bookmarkWithTitle:(NSString*)aTitle
-                           url:(NSString*)aURL
-                     lastVisit:(NSDate*)aLastVisit;
-+ (Bookmark*)bookmarkWithNativeDictionary:(NSDictionary*)aDict;
++ (id)safariBookmarkConverter;
 
-- (NSString *)url;
-- (NSDate *)lastVisit;  // nil if not visited
-- (unsigned)numberOfVisits;
+// Reads the bookmarks from |filePath| and returns the root bookmark folder
+// from the import (or nil if importing fails).
+- (BookmarkFolder*)bookmarksFromFile:(NSString*)filePath;
 
-// Alternate accessors for persisting to disk; never returns nil.
-- (NSString*)savedURL;
-
-- (NSString*)faviconURL;
-- (void)setFaviconURL:(NSString*)inURL;
-
-- (void)setUrl:(NSString *)aURL;
-- (void)setLastVisit:(NSDate *)aLastVisit;
-- (void)setNumberOfVisits:(unsigned)aNumber;  // if 0, clears lastVisit
-
-- (void)notePageLoadedWithSuccess:(BOOL)inSuccess;
+// Writes the bookmark hierarchy rooted at |rootBookmarkItem| to a Safari
+// bookmark plist file at |filePath|.
+- (void)writeBookmarks:(BookmarkFolder*)bookmarkRoot toFile:(NSString*)filePath;
 
 @end
-
-
-@interface RendezvousBookmark : Bookmark
-{
-  int       mServiceID;
-  BOOL      mResolved;
-}
-
-- (id)initWithServiceID:(int)inServiceID;
-- (void)setServiceID:(int)inServiceID;
-- (int)serviceID;
-
-- (BOOL)resolved;
-- (void)setResolved:(BOOL)inResolved;
-
-@end
-

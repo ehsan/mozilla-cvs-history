@@ -47,7 +47,7 @@
 
 @interface BookmarkImportDlgController (Private)
 
-- (void)tryAddImportFromBrowser:(NSString *)aBrowserName withBookmarkPath:(NSString *)aPath;
+- (BOOL)tryAddImportFromBrowser:(NSString *)aBrowserName withBookmarkPath:(NSString *)aPath;
 - (void)tryOmniWeb5Import;
 - (void)buildButtonForBrowser:(NSString *)aBrowserName withPathArray:(NSArray *)anArray;
 - (NSString *)saltedBookmarkPathForProfile:(NSString *)aPath;
@@ -83,7 +83,9 @@
 
   [self tryAddImportFromBrowser:@"iCab" withBookmarkPath:@"~/Library/Preferences/iCab Preferences/Hotlist.html"];
   [self tryAddImportFromBrowser:@"iCab 3" withBookmarkPath:@"~/Library/Preferences/iCab Preferences/Hotlist3.html"];
-  [self tryAddImportFromBrowser:@"Opera" withBookmarkPath:@"~/Library/Preferences/Opera Preferences/Bookmarks"];
+  if (![self tryAddImportFromBrowser:@"Opera" withBookmarkPath:@"~/Library/Preferences/Opera Preferences/bookmarks.adr"]) {
+    [self tryAddImportFromBrowser:@"Opera" withBookmarkPath:@"~/Library/Preferences/Opera Preferences/Bookmarks"];
+  }
   [self tryAddImportFromBrowser:@"OmniWeb 4" withBookmarkPath:@"~/Library/Application Support/Omniweb/Bookmarks.html"];
   // OmniWeb 5 has between 0 and 3 bookmark files.
   [self tryOmniWeb5Import];
@@ -115,13 +117,16 @@
 
 // Checks for the existence of the specified bookmarks file, and adds an import option for
 // the given browser if the file is found.
-- (void)tryAddImportFromBrowser:(NSString *)aBrowserName withBookmarkPath:(NSString *)aPath
+// Returns YES if an import option was added.
+- (BOOL)tryAddImportFromBrowser:(NSString *)aBrowserName withBookmarkPath:(NSString *)aPath
 {
   NSFileManager *fm = [NSFileManager defaultManager];
   NSString *fullPathString = [aPath stringByStandardizingPath];
   if ([fm fileExistsAtPath:fullPathString]) {
     [self buildButtonForBrowser:aBrowserName withPathArray:[NSArray arrayWithObject:fullPathString]];
+    return YES;
   }
+  return NO;
 }
 
 // Special treatment for OmniWeb 5

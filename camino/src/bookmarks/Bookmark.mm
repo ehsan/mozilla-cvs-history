@@ -63,7 +63,6 @@ NSString* const URLLoadSuccessKey     = @"url_bool";
 - (void)clearLastVisit;
 
 // methods used for saving to files; are guaranteed never to return nil
-- (id)savedURL;
 - (id)savedStatus;
 - (id)savedNumberOfVisits;
 - (id)savedFaviconURL;
@@ -112,14 +111,6 @@ NSString* const URLLoadSuccessKey     = @"url_bool";
   [bookmark setFaviconURL:[aDict objectForKey:BMLinkedFaviconURLKey]];
 
   return bookmark;
-}
-
-+ (Bookmark*)bookmarkWithSafariDictionary:(NSDictionary*)aDict
-{
-  NSDictionary* uriDict = [aDict objectForKey:SafariURIDictKey];
-  return [self bookmarkWithTitle:[uriDict objectForKey:SafariBookmarkTitleKey]
-                             url:[aDict objectForKey:SafariURLStringKey]
-                       lastVisit:nil];
 }
 
 - (id)copyWithZone:(NSZone *)zone
@@ -291,7 +282,7 @@ NSString* const URLLoadSuccessKey     = @"url_bool";
 
 #pragma mark -
 
-- (id)savedURL
+- (NSString*)savedURL
 {
   return mURL ? mURL : @"";
 }
@@ -385,28 +376,6 @@ NSString* const URLLoadSuccessKey     = @"url_bool";
     [itemDict setObject:[self faviconURL] forKey:BMLinkedFaviconURLKey];
 
   return itemDict;
-}
-
-- (NSDictionary *)writeSafariDictionary
-{
-  NSDictionary* dict = nil;
-  if (![self isSeparator]) {
-    NSDictionary *uriDict = [NSDictionary dictionaryWithObjectsAndKeys:
-      [self savedTitle], SafariBookmarkTitleKey,
-        [self savedURL], @"",
-                         nil];
-    if (!uriDict) {
-      return nil;   // when would this happen?
-    }
-
-    dict = [NSDictionary dictionaryWithObjectsAndKeys:
-                uriDict, SafariURIDictKey,
-        [self savedURL], SafariURLStringKey,
-             SafariLeaf, SafariTypeKey,
-            [self UUID], SafariUUIDKey,
-                         nil];
-  }
-  return dict;
 }
 
 #pragma mark -

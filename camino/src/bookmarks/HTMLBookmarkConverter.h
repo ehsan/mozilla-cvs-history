@@ -39,19 +39,20 @@
 #import <Foundation/Foundation.h>
 
 @class BookmarkItem;
+@class BookmarkFolder;
 
 @interface HTMLBookmarkConverter : NSObject {
 }
 
 + (id)htmlBookmarkConverter;
 
-// Reads the bookmarks from |filePath| and returns the root bookmark item
+// Reads the bookmarks from |filePath| and returns the root bookmark folder
 // from the import (or nil if importing fails). If the file is corrupt, this
 // will return as much as it can extract.
-- (BookmarkItem*)bookmarksFromFile:(NSString*)filePath;
+- (BookmarkFolder*)bookmarksFromFile:(NSString*)filePath;
 
 // Writes the bookmark hierarchy rooted at |rootBookmarkItem| to a Netscape form
 // HTML file at |filePath|.
-- (void)writeBookmarks:(BookmarkItem*)rootBookmarkItem toFile:(NSString*)filePath;
+- (void)writeBookmarks:(BookmarkFolder*)bookmarkRoot toFile:(NSString*)filePath;
 
 @end

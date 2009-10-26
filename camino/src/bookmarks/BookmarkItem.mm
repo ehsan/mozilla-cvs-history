@@ -46,12 +46,9 @@
 NSString* const BookmarkItemChangedNotification = @"bookmark_changed";
   NSString* const BookmarkItemChangedFlagsKey = @"change_flags";
 
-// all our saving/loading keys
-// Safari & Camino plist keys
+// Camino plist keys
 NSString* const BMTitleKey = @"Title";
 NSString* const BMChildrenKey = @"Children";
-
-// Camino plist keys
 NSString* const BMFolderDescKey = @"FolderDescription";
 NSString* const BMFolderTypeKey = @"FolderType";
 NSString* const BMFolderShortcutKey = @"FolderKeyword";
@@ -63,16 +60,6 @@ NSString* const BMShortcutKey = @"Keyword";
 NSString* const BMLastVisitKey = @"LastVisitedDate";
 NSString* const BMNumberVisitsKey = @"VisitCount";
 NSString* const BMLinkedFaviconURLKey = @"LinkedFaviconURL";
-
-// safari keys
-NSString* const SafariTypeKey = @"WebBookmarkType";
-NSString* const SafariLeaf = @"WebBookmarkTypeLeaf";
-NSString* const SafariList = @"WebBookmarkTypeList";
-NSString* const SafariAutoTab = @"WebBookmarkAutoTab";
-NSString* const SafariUUIDKey = @"WebBookmarkUUID";
-NSString* const SafariURIDictKey = @"URIDictionary";
-NSString* const SafariBookmarkTitleKey = @"title";
-NSString* const SafariURLStringKey = @"URLString";
 
 @implementation BookmarkShortcutFormatter
 
@@ -369,11 +356,6 @@ NSString* const SafariURLStringKey = @"URLString";
 }
 
 - (NSDictionary *)writeNativeDictionary
-{
-  return [NSDictionary dictionary];
-}
-
-- (NSDictionary *)writeSafariDictionary
 {
   return [NSDictionary dictionary];
 }

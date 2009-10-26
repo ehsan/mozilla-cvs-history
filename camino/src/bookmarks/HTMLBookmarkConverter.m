@@ -82,7 +82,7 @@
   return [[[self alloc] init] autorelease];
 }
 
-- (BookmarkItem*)bookmarksFromFile:(NSString*)filePath
+- (BookmarkFolder*)bookmarksFromFile:(NSString*)filePath
 {
   NSError* error = nil;
   NSXMLDocument* bookmarkDoc = nil;
@@ -98,16 +98,19 @@
     NSLog(@"Unable to read bookmark file '%@' for import", filePath);
     return nil;
   }
-  else {
-    NSError* error;
-    NSXMLElement* root = [[[bookmarkDoc rootElement] nodesForXPath:@"/html/body"
-                                                             error:&error] firstObject];
-    if (!root) {
-      NSLog(@"Unable to parse bookmark file '%@' for import", filePath);
-      return nil;
-    }
-    return [self bookmarkItemForElement:root];
+  NSXMLElement* root = [[[bookmarkDoc rootElement] nodesForXPath:@"/html/body"
+                                                           error:&error] firstObject];
+  if (!root) {
+    NSLog(@"Unable to parse bookmark file '%@' for import", filePath);
+    return nil;
   }
+  BookmarkItem* rootItem = [self bookmarkItemForElement:root];
+  if (rootItem && ![rootItem isKindOfClass:[BookmarkFolder class]]) {
+    BookmarkFolder* newFolder = [[[BookmarkFolder alloc] init] autorelease];
+    [newFolder appendChild:rootItem];
+    rootItem = newFolder;
+  }
+  return (BookmarkFolder*)rootItem;
 }
 
 - (BookmarkItem*)bookmarkItemForElement:(NSXMLElement*)element
@@ -252,7 +255,7 @@
 
 #pragma mark -
 
-- (void)writeBookmarks:(BookmarkItem*)rootBookmarkItem toFile:(NSString*)filePath
+- (void)writeBookmarks:(BookmarkFolder*)bookmarkRoot toFile:(NSString*)filePath
 {
   // Create a new, empty file to write bookmarks into
   NSFileManager* fileManager = [NSFileManager defaultManager];
@@ -285,26 +288,19 @@
                           @"<TITLE>Bookmarks</TITLE>",
                           @"<H1>Bookmarks</H1>"] dataUsingEncoding:NSUTF8StringEncoding]];
 
-  if ([rootBookmarkItem isKindOfClass:[BookmarkFolder class]]) {
-    NSEnumerator* folderEnumerator = [[(BookmarkFolder*)rootBookmarkItem children] objectEnumerator];
-    BookmarkItem* child;
-    while ((child = [folderEnumerator nextObject])) {
-      if ([child isKindOfClass:[BookmarkFolder class]]) {
-        [self writeBookmarkFolder:(BookmarkFolder*)child
-                     toFileHandle:outHandle
-                  withIndentation:1];
-      }
-      else {
-        [self writeBookmark:(Bookmark*)child
-               toFileHandle:outHandle
-            withIndentation:1];
-      }
+  NSEnumerator* folderEnumerator = [[(BookmarkFolder*)bookmarkRoot children] objectEnumerator];
+  BookmarkItem* child;
+  while ((child = [folderEnumerator nextObject])) {
+    if ([child isKindOfClass:[BookmarkFolder class]]) {
+      [self writeBookmarkFolder:(BookmarkFolder*)child
+                   toFileHandle:outHandle
+                withIndentation:1];
     }
-  }
-  else {
-    [self writeBookmark:(Bookmark*)rootBookmarkItem
-           toFileHandle:outHandle
-        withIndentation:1];
+    else {
+      [self writeBookmark:(Bookmark*)child
+             toFileHandle:outHandle
+          withIndentation:1];
+    }
   }
 
   [outHandle writeData:[@"</DL><p>\n" dataUsingEncoding:NSUTF8StringEncoding]];
