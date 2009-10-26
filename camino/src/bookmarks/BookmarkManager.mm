@@ -64,8 +64,9 @@
 #import "BrowserWindowController.h"
 #import "MainController.h"
 #import "SiteIconProvider.h"
-
 #import "HTMLBookmarkConverter.h"
+#import "OperaBookmarkConverter.h"
+#import "SafariBookmarkConverter.h"
 
 NSString* const kBookmarkManagerStartedNotification = @"BookmarkManagerStartedNotification";
 
@@ -112,18 +113,12 @@ enum {
 - (BOOL)readBookmarks;
 - (void)showCorruptBookmarksAlert;
 
-// these versions assume that we're reading all the bookmarks from the file (i.e. not an import into a subfolder)
-- (BOOL)readPListBookmarks:(NSString *)pathToFile;    // camino or safari
-- (BOOL)readCaminoPListBookmarks:(NSDictionary *)plist;
-- (BOOL)readSafariPListBookmarks:(NSDictionary *)plist;
+// Loads (not imports) the given bookmarks file.
+- (BOOL)readCaminoBookmarks:(NSString *)pathToFile;
 
-// Import methods that return a new folder, or nil on failure.
-- (BookmarkFolder*)importHTMLFile:(NSString *)pathToFile;
-// Import methods that import into a subfolder (old style; to be converted to the above).
-- (BOOL)importPropertyListFile:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder;
+- (BookmarkFolder*)importPropertyListFile:(NSString *)pathToFile;
+
 - (void)importBookmarksThreadReturn:(NSDictionary *)aDict;
-
-- (BOOL)readOperaFile:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder;
 
 + (void)addItem:(id)inBookmark toURLMap:(NSMutableDictionary*)urlMap usingURL:(NSString*)inURL;
 + (void)removeItem:(id)inBookmark fromURLMap:(NSMutableDictionary*)urlMap usingURL:(NSString*)inURL;  // url may be nil, in which case exhaustive search is used
@@ -1314,7 +1309,7 @@ static BookmarkManager* gBookmarkManager = nil;
 
   BOOL bookmarksAreCorrupt = NO;
   if ([fM isReadableFileAtPath:bookmarkPath]) {
-    if ([self readPListBookmarks:bookmarkPath]) {
+    if ([self readCaminoBookmarks:bookmarkPath]) {
       // since the bookmarks look good, save them aside as a backup in case something goes
       // wrong later (e.g., bug 337750) since users really don't like losing their bookmarks.
       if ([fM fileExistsAtPath:backupPath])
@@ -1334,7 +1329,7 @@ static BookmarkManager* gBookmarkManager = nil;
 
       // Try to recover from the backup, if there is one
       if ([fM fileExistsAtPath:backupPath]) {
-        if ([self readPListBookmarks:backupPath]) {
+        if ([self readCaminoBookmarks:backupPath]) {
           NSLog(@"Recovering from backup bookmarks file '%@'", backupPath);
 
           [fM copyPath:backupPath toPath:bookmarkPath handler:self];
@@ -1348,7 +1343,7 @@ static BookmarkManager* gBookmarkManager = nil;
   // install the default plist so the bookmarks aren't totally empty.
   NSString *defaultBookmarks = [[NSBundle mainBundle] pathForResource:@"bookmarks" ofType:@"plist"];
   if ([fM copyPath:defaultBookmarks toPath:bookmarkPath handler:nil]) {
-    if ([self readPListBookmarks:bookmarkPath] && !bookmarksAreCorrupt)
+    if ([self readCaminoBookmarks:bookmarkPath] && !bookmarksAreCorrupt)
       return YES;
   }
 
@@ -1368,22 +1363,13 @@ static BookmarkManager* gBookmarkManager = nil;
                   nil);
 }
 
-- (BOOL)readPListBookmarks:(NSString *)pathToFile
+- (BOOL)readCaminoBookmarks:(NSString *)pathToFile
 {
-  NSDictionary* dict = [NSDictionary dictionaryWithContentsOfFile:pathToFile];
-  if (!dict) return NO;
-
-  // see if it's safari
-  if ([dict objectForKey:@"WebBookmarkType"])
-    return [self readSafariPListBookmarks:dict];
-
-  return [self readCaminoPListBookmarks:dict];
-}
-
-- (BOOL)readCaminoPListBookmarks:(NSDictionary *)plist
-{
+  NSDictionary* plist = [NSDictionary dictionaryWithContentsOfFile:pathToFile];
+  if (!plist)
+    return NO;
   if (![[self bookmarkRoot] readNativeDictionary:plist])
-    return NO;    // read failed
+    return NO;
 
   // find the menu and toolbar folders
   BookmarkFolder* menuFolder = nil;
@@ -1424,53 +1410,6 @@ static BookmarkManager* gBookmarkManager = nil;
   return YES;
 }
 
-- (BOOL)readSafariPListBookmarks:(NSDictionary *)plist
-{
-  BOOL readOK = [[self bookmarkRoot] readSafariDictionary:plist];
-  if (!readOK) return NO;
-
-  // find the menu and toolbar folders
-  BookmarkFolder* menuFolder = nil;
-  BookmarkFolder* toolbarFolder = nil;
-
-  NSEnumerator* rootFoldersEnum = [[[self bookmarkRoot] children] objectEnumerator];
-  id curChild;
-  while ((curChild = [rootFoldersEnum nextObject])) {
-    if ([curChild isKindOfClass:[BookmarkFolder class]]) {
-      BookmarkFolder* bmFolder = (BookmarkFolder*)curChild;
-      if ([[bmFolder title] isEqualToString:@"BookmarksBar"]) {
-        toolbarFolder = bmFolder; // remember that we've seen it
-        [bmFolder setIsToolbar:YES];
-        [bmFolder setTitle:NSLocalizedString(@"Bookmark Toolbar", nil)];
-        [bmFolder setIdentifier:kBookmarksToolbarFolderIdentifier];
-      }
-      else if ([[bmFolder title] isEqualToString:@"BookmarksMenu"]) {
-        menuFolder = bmFolder;
-        [menuFolder setTitle:NSLocalizedString(@"Bookmark Menu", nil)];
-        [bmFolder setIdentifier:kBookmarksMenuFolderIdentifier];
-      }
-
-      if (toolbarFolder && menuFolder)
-        break;
-    }
-  }
-
-  if (!menuFolder) {
-    menuFolder = [[[BookmarkFolder alloc] initWithIdentifier:kBookmarksMenuFolderIdentifier] autorelease];
-    [menuFolder setTitle:NSLocalizedString(@"Bookmark Menu", nil)];
-    [[self bookmarkRoot] insertChild:menuFolder atIndex:kBookmarkMenuContainerIndex isMove:NO];
-  }
-
-  if (!toolbarFolder) {
-    toolbarFolder = [[[BookmarkFolder alloc] initWithIdentifier:kBookmarksToolbarFolderIdentifier] autorelease];
-    [toolbarFolder setTitle:NSLocalizedString(@"Bookmark Toolbar", nil)];
-    [toolbarFolder setIsToolbar:YES];
-    [[self bookmarkRoot] insertChild:toolbarFolder atIndex:kToolbarContainerIndex isMove:NO];
-  }
-
-  return YES;
-}
-
 - (void)startImportBookmarks
 {
   if (!mImportDlgController)
@@ -1487,8 +1426,6 @@ static BookmarkManager* gBookmarkManager = nil;
   int currentFile = 0;
   NSArray *pathArray = [aDict objectForKey:kBookmarkImportPathIndentifier];
   NSArray *titleArray = [aDict objectForKey:kBookmarkImportNewFolderNameIdentifier];
-  NSString *pathToFile;
-  NSString *aTitle;
   BookmarkFolder *topImportFolder = nil;
 
   NSEnumerator *pathEnumerator = [pathArray objectEnumerator];
@@ -1496,45 +1433,43 @@ static BookmarkManager* gBookmarkManager = nil;
 
   [self startSuppressingChangeNotifications];
 
-  while (success && (pathToFile = [pathEnumerator nextObject])) {
-    BookmarkFolder *importFolder = [[[BookmarkFolder alloc] init] autorelease];
+  NSString *pathToFile;
+  while ((pathToFile = [pathEnumerator nextObject])) {
+    BookmarkFolder *importFolder = nil;
 
-    // TODO: Once Opera and Plist importing have been moved to the new style,
-    // reorganize this loop not to pre-allocate importFolder, and to use the
-    // nil-ness of importFolder as the success indication.
     NSString *extension = [[pathToFile pathExtension] lowercaseString];
-    if ([extension isEqualToString:@""]) { // we'll go out on a limb here
-      success = [self readOperaFile:pathToFile intoFolder:importFolder];
+    // Older Opera bookmarks have no extension, so guess that for extensionless
+    // files.
+    if ([extension isEqualToString:@"adr"] || [extension isEqualToString:@""]) {
+      importFolder = [[OperaBookmarkConverter operaBookmarkConverter]
+                          bookmarksFromFile:pathToFile];
     }
     else if ([extension isEqualToString:@"html"] || [extension isEqualToString:@"htm"]) {
-      BookmarkFolder* htmlImportRoot = [self importHTMLFile:pathToFile];
-      if (htmlImportRoot) {
-        success = YES;
-        importFolder = htmlImportRoot;
-      }
+      importFolder = [[HTMLBookmarkConverter htmlBookmarkConverter]
+                          bookmarksFromFile:pathToFile];
     }
-    else if ([extension isEqualToString:@"plist"] || !success) {
-      success = [self importPropertyListFile:pathToFile intoFolder:importFolder];
+    else if ([extension isEqualToString:@"plist"] || !importFolder) {
+      importFolder = [self importPropertyListFile:pathToFile];
     }
-    // we don't know the extension, or we failed to load.  we'll take another
+    // We don't know the extension, or we failed to load. We'll take another
     // crack at it trying everything we know.
-    if (!success) {
-      success = [self readOperaFile:pathToFile intoFolder:importFolder];
-      if (!success) {
-        BookmarkFolder* htmlImportRoot = [self importHTMLFile:pathToFile];
-        if (htmlImportRoot) {
-          success = YES;
-          importFolder = htmlImportRoot;
-        }
-      }
+    if (!importFolder) {
+      importFolder = [[OperaBookmarkConverter operaBookmarkConverter]
+                          bookmarksFromFile:pathToFile];
+    }
+    if (!importFolder) {
+      importFolder = [[HTMLBookmarkConverter htmlBookmarkConverter]
+                          bookmarksFromFile:pathToFile];
+    }
+    if (!importFolder) {
+      success = NO;
+      break;
     }
 
-    aTitle = [titleEnumerator nextObject];
-
-    if (!aTitle)
-      aTitle = NSLocalizedString(@"Imported Bookmarks", nil);
-
-    [importFolder setTitle:aTitle];
+    NSString* importFolderTitle = [titleEnumerator nextObject];
+    if (!importFolderTitle)
+      importFolderTitle = NSLocalizedString(@"Imported Bookmarks", nil);
+    [importFolder setTitle:importFolderTitle];
 
     // The first folder will be top level, and the rest nested underneath it.
     // TODO: This was the existing behavior, but when we improve the feedback
@@ -1548,17 +1483,19 @@ static BookmarkManager* gBookmarkManager = nil;
   }
 
   // If somehow we imported nothing, return an empty folder.
-  if (!topImportFolder)
-    topImportFolder = [[BookmarkFolder alloc] init];
+  if (!topImportFolder) {
+    NSString* title = NSLocalizedString(@"Imported Bookmarks", nil);
+    topImportFolder = [BookmarkFolder bookmarkFolderWithTitle:title];
+  }
 
   [self stopSuppressingChangeNotifications];
 
   NSDictionary *returnDict = [NSDictionary dictionaryWithObjectsAndKeys:
-    [NSNumber numberWithBool:success], kBookmarkImportStatusIndentifier,
+       [NSNumber numberWithBool:success], kBookmarkImportStatusIndentifier,
     [NSNumber numberWithInt:currentFile], kBookmarkImportNewFolderIndexIdentifier,
-    pathArray, kBookmarkImportPathIndentifier,
-    topImportFolder, kBookmarkImportNewFolderIdentifier,
-    nil];
+                               pathArray, kBookmarkImportPathIndentifier,
+                         topImportFolder, kBookmarkImportNewFolderIdentifier,
+                                          nil];
 
   [self performSelectorOnMainThread:@selector(importBookmarksThreadReturn:)
                          withObject:returnDict
@@ -1585,172 +1522,18 @@ static BookmarkManager* gBookmarkManager = nil;
                                      fromFile:[[fileArray objectAtIndex:(--currentIndex)] lastPathComponent] ];
 }
 
-
-// spits out text file as NSString with "proper" encoding based on pretty shitty detection
-- (NSString *)decodedTextFile:(NSString *)pathToFile
+- (BookmarkFolder*)importPropertyListFile:(NSString *)pathToFile
 {
-  NSData* fileAsData = [[NSData alloc] initWithContentsOfFile:pathToFile];
-  if (!fileAsData) {
-    NSLog(@"decodedTextFile: file %@ cannot be read.", pathToFile);
-    return nil;
+  // Try Safari first.
+  BookmarkFolder* importFolder = [[SafariBookmarkConverter safariBookmarkConverter]
+                                      bookmarksFromFile:pathToFile];
+  if (!importFolder) {
+    BookmarkFolder* rootFolder = [BookmarkFolder bookmarkFolderWithTitle:nil];
+    NSDictionary* dict = [NSDictionary dictionaryWithContentsOfFile:pathToFile];
+    if ([rootFolder readNativeDictionary:dict])
+      importFolder = rootFolder;
   }
-  // we're gonna assume for now it's ascii and hope for the best.
-  // i'm doing this because I think we can always read it in as ascii,
-  // while it might fail if we assume default system encoding.  i don't
-  // know this for sure.  but we'll have to do 2 decodings.  big whoop.
-  NSString *fileString = [[NSString alloc] initWithData:fileAsData encoding:NSASCIIStringEncoding];
-  if (!fileString) {
-    NSLog(@"decodedTextFile: file %@ doesn't want to become a string. Exiting.", pathToFile);
-    [fileAsData release];
-    return nil;
-  }
-
-  // Create a dictionary with possible encodings.  As I figure out more possible encodings,
-  // I'll add them to the dictionary.
-  NSString *utfdash8Key = @"content=\"text/html; charset=utf-8" ;
-  NSString *xmacromanKey = @"content=\"text/html; charset=x-mac-roman";
-  NSString *xmacsystemKey = @"CONTENT=\"text/html; charset=X-MAC-SYSTEM";
-  NSString *shiftJisKey = @"CONTENT=\"text/html; charset=Shift_JIS";
-  NSString *operaUTF8Key = @"encoding = utf8";
-
-  NSDictionary *encodingDict = [NSDictionary dictionaryWithObjectsAndKeys:
-    [NSNumber numberWithUnsignedInt:NSUTF8StringEncoding], utfdash8Key,
-    [NSNumber numberWithUnsignedInt:NSMacOSRomanStringEncoding], xmacromanKey,
-    [NSNumber numberWithUnsignedInt:NSShiftJISStringEncoding], shiftJisKey,
-    [NSNumber numberWithUnsignedInt:[NSString defaultCStringEncoding]], xmacsystemKey,
-    [NSNumber numberWithUnsignedInt:NSUTF8StringEncoding], operaUTF8Key,
-    nil];
-
-  NSEnumerator *keyEnumerator = [encodingDict keyEnumerator];
-  id key;
-  NSRange aRange;
-  while ((key = [keyEnumerator nextObject])) {
-    aRange = [fileString rangeOfString:key options:NSCaseInsensitiveSearch];
-    if (aRange.location != NSNotFound) {
-      [fileString release];
-      fileString = [[NSString alloc] initWithData:fileAsData encoding:[[encodingDict objectForKey:key] unsignedIntValue]];
-      [fileAsData release];
-      return [fileString autorelease];
-    }
-  }
-  // if we're here, we don't have a clue as to the encoding.  we'll guess default
-  [fileString release];
-  if ((fileString = [[NSString alloc] initWithData:fileAsData encoding:[NSString defaultCStringEncoding]])) {
-    NSLog(@"decodedTextFile: file %@ encoding unknown. Assume default and proceed.", pathToFile);
-    [fileAsData release];
-    return [fileString autorelease];
-  }
-  // we suck.  this is almost certainly wrong, but oh well.
-  NSLog(@"decodedTextFile: file %@ encoding unknown, and NOT default. Use ASCII and proceed.", pathToFile);
-  fileString = [[NSString alloc] initWithData:fileAsData encoding:NSASCIIStringEncoding];
-  [fileAsData release];
-  return [fileString autorelease];
-}
-
-
-- (BookmarkFolder*)importHTMLFile:(NSString *)pathToFile
-{
-  BookmarkItem* importRoot = [[HTMLBookmarkConverter htmlBookmarkConverter] bookmarksFromFile:pathToFile];
-  if (!importRoot)
-    return nil;
-  if ([importRoot isKindOfClass:[BookmarkFolder class]]) {
-    return (BookmarkFolder*)importRoot;
-  }
-  else {
-    // TODO: once the other imports are using the new style, make them all
-    // return a BookmarkItem and push this handling up into the caller.
-    BookmarkFolder* newFolder = [[[BookmarkFolder alloc] init] autorelease];
-    [newFolder appendChild:importRoot];
-    return newFolder;
-  }
-}
-
-- (BOOL)importPropertyListFile:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder
-{
-  NSDictionary* dict = [NSDictionary dictionaryWithContentsOfFile:pathToFile];
-  // see if it's safari
-  if ([dict objectForKey:@"WebBookmarkType"])
-    return [aFolder readSafariDictionary:dict];
-
-  return [aFolder readNativeDictionary:dict];
-}
-
-- (BOOL)readOperaFile:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder
-{
-  // get file as NSString
-  NSString* fileAsString = [self decodedTextFile:pathToFile];
-  if (!fileAsString) {
-    NSLog(@"couldn't read file. bailing out");
-    return NO;
-  }
-  // Easily fooled check to see if it's an Opera Hotlist
-  NSRange aRange;
-  aRange = [fileAsString rangeOfString:@"Opera Hotlist" options:NSCaseInsensitiveSearch];
-  if (aRange.location == NSNotFound) {
-    NSLog(@"Bookmark file not recognized as Opera Hotlist.  Read fails.");
-    return NO;
-  }
-
-  // Opera hotlists seem pretty easy to parse. Everything is on a line by itself.
-  // So we'll split the string up into a giant array by newlines, and march through the array.
-  BookmarkFolder *currentArray = aFolder;
-  BookmarkItem *currentItem = nil;
-
-  NSArray *arrayOfFileLines = [fileAsString componentsSeparatedByString:@"\n"];
-  NSEnumerator *enumerator = [arrayOfFileLines objectEnumerator];
-  NSString *aLine =nil;
-
-  while ((aLine = [enumerator nextObject])) {
-    // See if we have a new folder.
-    if ([aLine hasPrefix:@"#FOLDER"]) {
-      currentItem = [currentArray addBookmarkFolder];
-      currentArray = (BookmarkFolder *)currentItem;
-    }
-    // Maybe it's a new URL!
-    else if ([aLine hasPrefix:@"#URL"]) {
-      currentItem = [Bookmark bookmarkWithTitle:nil url:nil lastVisit:nil];
-      [currentArray appendChild:currentItem];
-    }
-    // Perhaps a separator? This isn't how I'd spell it, but
-    // then again, I'm not Norwagian, so what do I know.
-    //                         ^
-    //                     That's funny
-    else if ([aLine hasPrefix:@"#SEPERATOR"]) {
-      [currentArray appendChild:[Bookmark separator]];
-      currentItem = nil;
-    }
-    // Or maybe this folder is being closed out.
-    else if ([aLine hasPrefix:@"-"] && currentArray != aFolder) {
-      currentArray = [currentArray parent];
-      currentItem = nil;
-    }
-    // Well, if we don't have a prefix, we'll look something else
-    else {
-      // We have to check for Name and Short Name at the same time...
-      aRange = [aLine rangeOfString:@"NAME="];
-      if (NSNotFound != aRange.location) {
-        NSRange sRange = [aLine rangeOfString:@"SHORT NAME="];
-        if (NSNotFound != sRange.location) {
-          [currentItem setShortcut:[aLine substringFromIndex:(sRange.location + sRange.length)]];
-        }
-        else {
-          [currentItem setTitle:[aLine substringFromIndex:(aRange.location + aRange.length)]];
-        }
-      }
-      // ... then URL ...
-      aRange = [aLine rangeOfString:@"URL="];
-      if (NSNotFound != aRange.location && [currentItem isKindOfClass:[Bookmark class]]) {
-        [(Bookmark *)currentItem setUrl:[aLine substringFromIndex:(aRange.location + aRange.length)]];
-      }
-      // ... followed by Description
-      aRange = [aLine rangeOfString:@"DESCRIPTION="];
-      if (NSNotFound != aRange.location) {
-        [currentItem setItemDescription:[aLine substringFromIndex:(aRange.location + aRange.length)]];
-      }
-    }
-  }
-
-  return YES;
+  return importFolder;
 }
 
 //
@@ -1760,14 +1543,13 @@ static BookmarkManager* gBookmarkManager = nil;
 - (void)writeHTMLFile:(NSString *)pathToFile
 {
   [[HTMLBookmarkConverter htmlBookmarkConverter] writeBookmarks:[self bookmarkRoot]
-                                                        toFile:pathToFile];
+                                                         toFile:pathToFile];
 }
 
 - (void)writeSafariFile:(NSString *)pathToFile
 {
-  NSDictionary* dict = [[self bookmarkRoot] writeSafariDictionary];
-  if (![dict writeToFile:[pathToFile stringByStandardizingPath] atomically:YES])
-    NSLog(@"writeSafariFile: Failed to write file %@", pathToFile);
+  [[SafariBookmarkConverter safariBookmarkConverter] writeBookmarks:[self bookmarkRoot]
+                                                             toFile:pathToFile];
 }
 
 //
