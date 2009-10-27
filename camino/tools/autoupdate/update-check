@@ -113,26 +113,17 @@ sub load_all_updates {
 # of %$client_info, or undef if there is no such version.
 sub latest_supported_update {
   my ($client_info, $updates) = @_;
-  # We'll only offer alpha/beta versions to users who already have
-  # some kind of non-release build (which will have an a, b, and/or pre).
-  # Someday we probably want to use a track-based system, but we don't yet.
-  my $include_betas = !version_is_release($client_info->{version});
-  # Sort the updates from newest to oldest
+  my $include_pre_release = client_wants_pre_release_builds($client_info);
+  # Sort the updates from newest to oldest.
   my @sorted_updates = sort { compare_versions($b->{Version}, $a->{Version}) } @$updates;
-  # Then return the first one that meets the requirements
+  # Then return the first one that meets the requirements.
   for my $update (@sorted_updates) {
-    if (defined($update->{MinCaminoVersionString}) &&
-        (compare_versions($client_info->{version},
-                          $update->{MinCaminoVersionString}) < 0))
+    if (client_meets_platform_requirements($client_info, $update) &&
+        client_internationalization_matches_update($client_info, $update) &&
+        client_meets_camino_version_requirement($client_info, $update) &&
+        ($include_pre_release || version_is_release($update->{VersionString})))
     {
-      next;
-    }
-    if (compare_versions($client_info->{os}, $update->{MinOSVersion}) >= 0 &&
-        array_contains($update->{Intl}, $client_info->{intl}) &&
-        array_contains($update->{Arch}, $client_info->{arch}) &&
-        ($include_betas || version_is_release($update->{VersionString})))
-    {
-      # Load the description in the approriate language
+      # Load the description in the approriate language.
       $update->{Description} = localized_description($update->{VersionString},
                                                      $client_info->{lang});
       return $update;
@@ -142,50 +133,115 @@ sub latest_supported_update {
 }
 
 # Returns true if the given version is a release version (i.e., not an alpha,
-# beta, or nightly).
+# beta, nightly, or release candidate).
+# We have release candidate as a non-release so that we can update testers to
+# RC builds before doing a full release.
 sub version_is_release {
   my ($version) = @_;
   # The localized build marker is Int, but check for Intl as well just in
   # case someone gets mixed up (since we use Intl in our update descriptions).
   $version =~ s/\s*intl?$//i;
-  return $version !~ /(?:(?:a|b)\d*|pre)$/;
+  return $version !~ /(?:(?:a|b)\d*|pre|rc)$/;
+}
+
+# Returns true if the client is capable of running the given update.
+sub client_meets_platform_requirements {
+  my ($client, $update) = @_;
+  return (compare_versions($client->{os}, $update->{MinOSVersion}) >= 0) &&
+          array_contains($update->{Arch}, $client->{arch});
+}
+
+# Returns true if the client meets the minimum Camino version requirement
+# for the given update (if any). This allows us to control whether or not
+# alpha/beta/nightly users jump across branches, for example.
+sub client_meets_camino_version_requirement {
+  my ($client, $update) = @_;
+  return 1 unless defined($update->{MinCaminoVersionString});
+  return compare_versions($client->{version},
+                          $update->{MinCaminoVersionString}) >= 0;
+}
+
+# Returns true if the update provides the same internationalization option that
+# the client currently has. It's possible for an update to provide both options
+# in case we merge en-only and intl in the future.
+sub client_internationalization_matches_update {
+  my ($client, $update) = @_;
+  return array_contains($update->{Intl}, $client->{intl});
+}
+
+# Returns true if the client wants builds other than final releases.
+# For now we only offer them to users already using non-release builds, but
+# we probably want to use a real track-based system eventually.
+sub client_wants_pre_release_builds {
+  my ($client) = @_;
+  return !version_is_release($client->{version});
 }
 
 # Performs a <=> style comparison on two OS or Camino versions
-# Versions are expected to be of the form (\d+.)+([ab]\d*)?(pre)?
 sub compare_versions {
   my ($a, $b) = @_;
-  # If it's a Camino version, split it into its component parts
-  my ($a_num, $a_stage, $a_nightly) = ($a =~ /^([\d.]+)([ab]\d*)?(pre)?/);
-  my ($b_num, $b_stage, $b_nightly) = ($b =~ /^([\d.]+)([ab]\d*)?(pre)?/);
+  # Split the version into its component parts.
+  my ($a_num, $a_stage, $a_is_nightly) = version_components($a);
+  my ($b_num, $b_stage, $b_is_nightly) = version_components($b);
   # Sanity checks
   return 0 if (!defined($a_num) && !defined($b_num));
   return -1 if !defined($a_num);
   return 1 if !defined($b_num);
-  # Trim off any trailing 0's to get a canonical form
-  $a_num =~ s/(\.0+)+$//;
-  $b_num =~ s/(\.0+)+$//;
-  my @a_parts = split(/\./, $a_num);
-  my @b_parts = split(/\./, $b_num);
-  # As soon as we get a number difference, we're done.
+
+  # Start by comparing the numeric part of the version.
+  my $comparison = compare_numeric_versions($a_num, $b_num);
+  return $comparison if $comparison != 0;
+  # If all those match, is one an earlier stage?
+  $comparison = compare_stages($a_stage, $b_stage);
+  return $comparison if $comparison != 0;
+  # Still the same, eh? Then it all hinges on whether one is a nightly.
+  $comparison = !$a_is_nightly <=> !$b_is_nightly;
+  return $comparison;
+}
+
+# Given a Camino version string, returns an array containing:
+# (numeric version, stage (e.g, 'a', 'b1', 'rc'), is-nightly-or-not).
+sub version_components {
+  my ($version) = @_;
+  my ($num, $stage, $pre) = ($version =~ /^([\d.]+)([ab]\d*|rc)?(pre)?/);
+  return ($num, $stage, defined($pre));
+}
+
+# Performs a <=> style comparison on two numeric versions (X, X.Y, X.Y.Z, etc.).
+sub compare_numeric_versions {
+  my ($a, $b) = @_;
+  my @a_parts = version_number_components($a);
+  my @b_parts = version_number_components($b);
+  # As soon as we get a bigger or smaller number, we're done.
   for (my $i = 0; $i < scalar(@a_parts) && $i < scalar (@b_parts); $i++) {
     my $comparison = $a_parts[$i] <=> $b_parts[$i];
     return $comparison if $comparison != 0;
   }
-  # If the first difference is an extra number, the one with the extra
+  # If they start the same but one has more numbers, the one with the extra
   # number is later (e.g., 10.5.1 > 10.5)
-  my $comparison = $#a_parts <=> $#b_parts;
-  return $comparison if $comparison != 0;
-  # If all the numbers match, is one an earlier stage? Convert undef
-  # to z since an alpha or beta of a number is earlier than just the number
-  # with no alpha or beta marker.
-  $a_stage = 'z' unless defined($a_stage);
-  $b_stage = 'z' unless defined($b_stage);
-  $comparison = $a_stage cmp $b_stage;
-  return $comparison if $comparison != 0;
-  # Still the same, eh? Then it all hinges on whether one is a nightly.
-  $comparison = !defined($a_nightly) <=> !defined($b_nightly);
-  return $comparison;
+  return $#a_parts <=> $#b_parts;
+}
+
+# Returns the individual components of a X, X.Y, X.Y.Z, etc. version as an
+# array, removing any final .0s to get a canonical form (10.4.0 -> (10, 4)).
+sub version_number_components {
+  my ($version) = @_;
+  $version =~ s/(\.0+)+$//;
+  return split(/\./, $version);
+}
+
+# Performs a <=> style comparison on two Camino "stages": the alpha/beta/rc
+# suffix on the version (e.g., "a1", "b", "rc").
+sub compare_stages {
+  my ($a, $b) = @_;
+  # If a or b is undefined, it's an actual release; convert that to 'z' so
+  # we can just use a straight string comparison to get the correct ordering.
+  # ('aX' < 'bX' < 'rc' < 'z') -> (alpha < beta < release candidate < release).
+  # This also handles 'b1' < 'b2', since lower digits compare lower as strings.
+  # If we are ever crazy enough to release a 'b10', we'll need to add logic.
+  $a = 'z' unless defined($a);
+  $b = 'z' unless defined($b);
+  return $a cmp $b;
 }
 
 # Returns 1 if @$array contains $object, 0 otherwise.
