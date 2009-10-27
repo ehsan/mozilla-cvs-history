@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nssinit.c,v 1.101 2009/10/27 23:04:45 rrelyea%redhat.com Exp $ */
+/* $Id: nssinit.c,v 1.102 2009/10/27 23:56:59 rrelyea%redhat.com Exp $ */
 
 #include <ctype.h>
 #include <string.h>
@@ -538,7 +538,7 @@ nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix,
 {
     SECStatus rv = SECFailure;
     PKIX_UInt32 actualMinorVersion = 0;
-    PKIX_Error *pkixError = NULL;;
+    PKIX_Error *pkixError = NULL;
     PRBool isReallyInitted;
     char *configStrings = NULL;
     char *configName = NULL;
