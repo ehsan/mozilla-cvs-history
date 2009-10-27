@@ -612,7 +612,8 @@ div[id^="right_ad_"],
 div[class$="WerberahmenOben"],
 div[class$="anzeige"],
 div[class~="sb_adsW"],
-div[class="sb_adsN"]
+div[class="sb_adsN"],
+div[id="PointrollOverlay"]
 
 { display: none !important }
 
