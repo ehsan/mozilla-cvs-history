@@ -205,7 +205,7 @@
   [openPanel setCanChooseFiles:YES];
   [openPanel setCanChooseDirectories:NO];
   [openPanel setAllowsMultipleSelection:NO];
-  [openPanel setPrompt:@"Import"];
+  [openPanel setPrompt:NSLocalizedString(@"ImportPanelButton", nil)];
   NSArray* array = [NSArray arrayWithObjects:@"htm", @"html", @"plist", nil];
   [NSMenu cancelAllTracking];
   int result = [openPanel runModalForDirectory:nil

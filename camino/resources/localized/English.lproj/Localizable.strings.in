@@ -76,14 +76,6 @@
 "QuitWithDownloadsMsg" = "Are you sure you want to quit?";
 "QuitWithDownloadsExpl" = "There are downloads in progress that will be stopped if you quit now.";
 
-/* Parser error loading bookmarks.xml file */
-"CorruptedBookmarksAlert" = "Error Reading Bookmarks";
-"CorruptedBookmarksMsg"   = "Your bookmarks file is damaged and could not be read.";
-
-/* Error importing bookmarks */
-"ImportFailureTitle" = "Import Failed";
-"ImportFailureMessage" = "The file “%@” is not a supported bookmark file type.";
-
 /* feed detection */
 "Select..." = "Select…";
 "NoDefaultReader" = "None";
@@ -344,8 +336,17 @@
 /* Used when bookmarking multiple tabs; most likely you will only need to localize the word tabs and the order of %d and tabs. */
 "defaultTabGroupTitle" = "[%d tabs] %@";
 
+/* Parser error loading bookmarks.plist file */
+"CorruptedBookmarksAlert" = "Error Reading Bookmarks";
+"CorruptedBookmarksMsg"   = "Your bookmarks file is damaged and could not be read.";
+
+/* Error importing bookmarks */
+"ImportFailureTitle" = "Import Failed";
+"ImportFailureMessage" = "The file “%@” is not a supported bookmark file type.";
+
 /*Bookmark Importing*/
 "Import Bookmarks" = "Import Bookmarks";
+"ImportPanelButton" = "Import";
 "Imported IE Favorites" = "Imported IE Favorites";
 "Imported %@ Bookmarks" = "Imported %@ Bookmarks";
 "Imported Bookmarks" = "Imported Bookmarks";
