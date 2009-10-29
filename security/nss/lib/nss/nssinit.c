@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nssinit.c,v 1.102 2009/10/27 23:56:59 rrelyea%redhat.com Exp $ */
+/* $Id: nssinit.c,v 1.103 2009/10/29 21:33:10 rrelyea%redhat.com Exp $ */
 
 #include <ctype.h>
 #include <string.h>
@@ -440,7 +440,7 @@ nss_InitModules(const char *configdir, const char *certPrefix,
      "name=\"%s\" parameters=\"configdir='%s' certPrefix='%s' keyPrefix='%s' "
      "secmod='%s' flags=%s updatedir='%s' updateCertPrefix='%s' "
      "updateKeyPrefix='%s' updateid='%s' updateTokenDescription='%s' %s\" "
-     "NSS=\"flags=internal,moduleDB,moduleDBOnly,critical%s%s\"",
+     "NSS=\"flags=internal,moduleDB,moduleDBOnly,critical%s\"",
 		configName ? configName : NSS_DEFAULT_MOD_NAME,
 		lconfigdir,lcertPrefix,lkeyPrefix,lsecmodName,flags,
 		lupdateDir, lupdCertPrefix, lupdKeyPrefix, lupdateID, 
