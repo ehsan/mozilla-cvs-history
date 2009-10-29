@@ -41,7 +41,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* TLS extension code moved here from ssl3ecc.c */
-/* $Id: ssl3ext.c,v 1.3 2008/10/06 22:04:15 nelson%bolyard.com Exp $ */
+/* $Id: ssl3ext.c,v 1.4 2009/10/29 01:44:04 wtc%google.com Exp $ */
 
 #include "nssrenam.h"
 #include "nss.h"
@@ -867,7 +867,7 @@ ssl3_ServerHandleSessionTicketXtn(sslSocket *ss, PRUint16 ex_type,
 	    if (rv != SECSuccess)
 		goto no_ticket;
 	}
-	if (PORT_Memcmp(computed_mac, enc_session_ticket.mac,
+	if (NSS_SecureMemcmp(computed_mac, enc_session_ticket.mac,
 		computed_mac_length) != 0) {
 	    SSL_DBG(("%d: SSL[%d]: Session ticket MAC mismatch.",
 			SSL_GETPID(), ss->fd));
