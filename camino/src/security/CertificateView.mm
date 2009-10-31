@@ -799,7 +799,11 @@ const float kGapUnderCheckboxLine = 3.0f;
   
   NSRect statusRect = NSMakeRect(statusLeftEdge, headerFieldYOffset, statusFieldWith, 100.0f);
   NSTextField* statusField = [self textFieldWithInitialFrame:[headerContainer subviewRectFromTopRelativeRect:statusRect] stringValue:@"" autoSizing:NO small:YES bold:NO];
-  [statusField setAttributedStringValue:[mCertItem attributedLongValidityString]];
+  NSAttributedString* validityString = [mCertItem attributedLongValidityString];
+  [statusField setAttributedStringValue:validityString];
+  NSRange zeroRange = NSMakeRange(0, 0);
+  NSColor* validityTextColor = [validityString attribute:NSForegroundColorAttributeName atIndex:0 effectiveRange:&zeroRange];
+  [statusField setTextColor:validityTextColor];
   [headerContainer addSubview:statusField];
 
   [mContentView addSubview:headerContainer];
