@@ -45,7 +45,7 @@ do
   if [ -f $pidfile ]; then
 # The pid file has been written, wait the rest of the 5 seconds than check to
 # see it's stil running
-     pid=$(cat $pidfile | sed -e 's;^ *;;')
+     pid=$(sed -e 's;^ *;;' $pidfile)
      sleep $i
      [ -d /proc/$pid ]
      exit $?
