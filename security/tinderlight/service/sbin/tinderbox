@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh 
 #
 # launch tinder.sh as a daemon.
 # 
@@ -31,9 +31,9 @@ TINDERHOME=${TINDERHOME-/home/tinderbox/mozilla/security/tinderlight}
 cd ${TINDERHOME}
 [ -n $pidfile -a -f $pidfile ] && rm -f $pidfile
 if [ -z log ]; then 
-    setsid ./tinder.sh $args
+    setsid ./tinder.sh $args &
 else
-    setsid ./tinder.sh $args > $log 2>&1 
+    setsid ./tinder.sh $args > $log 2>&1 &
 fi
 
 # if we don't have a pidfile, we can't check if tinder.sh started.
@@ -45,7 +45,7 @@ do
   if [ -f $pidfile ]; then
 # The pid file has been written, wait the rest of the 5 seconds than check to
 # see it's stil running
-     pid=$(cat pidfile)
+     pid=$(cat $pidfile | sed -e 's;^ *;;')
      sleep $i
      [ -d /proc/$pid ]
      exit $?
