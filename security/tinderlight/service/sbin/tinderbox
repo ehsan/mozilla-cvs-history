@@ -1,0 +1,56 @@
+#!/bin/sh
+#
+# launch tinder.sh as a daemon.
+# 
+# handle selecting the logfile, the home directory, and verifying the tinderbox
+# actually starts.
+#
+
+# separate the tinderbox args from the tinder.sh args
+args=
+for i in $*
+do
+   case $i in
+   --log=?*)
+	log=${i#--log=}
+	;;
+   --home=?*)
+	TINDERHOME=${i#--home=}
+	;;
+    --pidfile=?*)
+	pidfile=${i#--pidfile=}
+	args=$args" "$i  # pidfile is both a tinderbox and tinder.sh arg
+	;;
+     *)
+	args=$args" "$i
+	;;
+    esac
+done
+
+TINDERHOME=${TINDERHOME-/home/tinderbox/mozilla/security/tinderlight}
+cd ${TINDERHOME}
+[ -n $pidfile -a -f $pidfile ] && rm -f $pidfile
+if [ -z log ]; then 
+    setsid ./tinder.sh $args
+else
+    setsid ./tinder.sh $args > $log 2>&1 
+fi
+
+# if we don't have a pidfile, we can't check if tinder.sh started.
+[ -z $pidfile ] && exit 0
+
+# give tinderbox 5 seconds to verify that it starts
+for i in  5 4 3 2 1 
+do
+  if [ -f $pidfile ]; then
+# The pid file has been written, wait the rest of the 5 seconds than check to
+# see it's stil running
+     pid=$(cat pidfile)
+     sleep $i
+     [ -d /proc/$pid ]
+     exit $?
+  fi
+#pid file was never written. tinder.sh probably diddn't start.
+  sleep 1
+done
+exit 1

@@ -1,0 +1,103 @@
+#! /bin/sh
+#
+# This file is both a readme and an install script for installing tinderbox
+# on a new machine using System V initd startup (used by Solaris and Linux)
+#
+# NOTE: this is not a production level installer, and not guarrenteed to work
+# in all environments. Improvements are welcome.
+#
+#
+# this install script is controlled by some variables set below. You can
+# change the behavior of this install script by changing these variables.
+#
+TINDERUSER=tinderbox
+TINDERLOGDIR=/var/log/tinderbox
+TINDERPIDDIR=/var/run/tinderbox 
+#
+# First create a new user for tinderbox to run under. 
+#
+#
+#
+newuser ${TINDERUSER}
+#
+# You will be prompted to enter the password for the new tinderbox user.
+#
+setpassword ${TINDERUSER}
+TINDERHOME=~${TINDERUSER}
+#
+# Checkout the tinderbox sources NOTE: this requires cvs to be installed already
+#
+su ${TINDERUSER} cvs checkout -r kflajdf; /mozilla/security/tinderlight
+#
+# Create directories needed for running
+#
+mkdir -p ${TINDERLOGDIR}
+mkdir -p ${TINDERPIDDIR}
+#
+# scripts writing these directories are ran as our special user
+#
+chown ${TINDERUSER} ${TINDERLOGDIR}
+chown ${TINDERUSER} ${TINDERPIDDIR}
+#
+# install the tinderbox service scripts
+#
+cd ${TINDERUSER}
+install -m 755 sbin/tinderbox /usr/sbin/tinderbox
+install -m 755 init.d/tinderbox /usr/init.d/tinderbox
+#
+# We'll install this in our configuration step
+#install -m 644 sysconfig/tinderbox /etc/sysconfig/tinderbox
+#
+# this line will add the service
+#
+chkconfig --add tinderbox
+#
+# configure tinderbox startup.
+#
+# tinderbox startup configuration is controlled with the configuration file
+# /etc/sysconfig/tinderbox. This configuration is managed by a set of 
+# environment variables. You should hand edit this file to configure those
+# environment variables to taste. This block will configure those variables
+# which are managed by this script.
+#
+# Variables are:
+# TINDERUSER - the tinderbox special user. This script will set this value
+# TINDERLOGDIR - where the tinderbox logs go. This script will set this value
+# TINDERHOME - where the tinderbox home lives. This script will set this 
+#                 value.
+# TINDERNAMES - which tests to run and what to call the test. These are of 
+#            the form number:name where number is which TINDERARGS variable
+#            applies and name is what to call the test. Names should not only
+#            include numbers, letters, and '_'. This will be set to some
+#            default value. example:
+#                      "1:64_OPT 2:64_DBG 4:32_OPT 5:32_DBG"
+# TINDERARGS - This is an array of arguments to pass to tinder.sh for each
+#            tinderbox. Only those arguments specified in TINDERNAMES will 
+#            actually be started.
+#
+sed -e "s;^TINDERUSER=.*$;TINDERUSER=${TINDERUSER};" \
+-e "s;^TINDERLOGDIR=.*$;TINDERLOGDIR=${TINDERLOGDIR};"  \
+-e "s;^TINDERPIDDIR=.*$;TINDERPIDDIR=${TINDERPIDDIR};"  \
+-e "s;^TINDERHOME=.*$;TINDERHOME=${TINDERHOME};" \
+ sysconfig/tinderbox > /etc/sysconfig/tinderbox
+#
+#
+# To actually run tinderbox, you will need to configure ${TINDERHOME}/config.sh
+# This config can take configuration for each machine. The key things
+# to set are where IOPR servers are and where JAVA_HOME lives.
+# 
+# This script does not do any of this configuration.
+# 
+# Besides setting up the machine specific configuration, you must make sure
+# you have the build tools for your platform installed. Your tinderbox
+# machine will also need to be able to send mail to the outside world. This
+# may require some sendmail configuration, which is beyond the scope of this
+# script (or documentation).
+#
+# Once everything is started, you can start your tinderboxen with the following
+# command:
+# service tinderbox start
+#
+# and you can shutdown with:
+# service tinderbox stop
+#

@@ -1,0 +1,114 @@
+#!/bin/sh  
+# tinderbox    start some number of tinderboxen
+#
+# chkconfig:   2345 85 25
+# description: continuous NSS and JSS builds and tests
+#
+# processname: tinder.sh
+# config:      /etc/sysconfig/tinderbox
+#
+
+. /etc/init.d/functions
+
+umask 077
+
+exec=/usr/sbin/tinderbox
+prog=$(basename $exec)
+lockfile=/var/lock/subsys/$prog
+STUNNEL_OPTIONS=
+TINDERPIDDIR=/var/run/tinderbox/tinderbox
+TINDERUSER=nobody
+TINDERHOME=/tmp
+TINDERNAMES=1:default
+TINDERARGS[1]="--cycle --nojss"
+TINDERLOGDIR=/var/log/tinderbox
+
+
+# Source config
+if [ -f /etc/sysconfig/tinderbox ] ; then
+    . /etc/sysconfig/tinderbox
+fi
+
+PID_FILE=${TINDERPIDDIR}/tinderbox
+
+start() {
+    for name in ${TINDERNAMES}
+    do
+	i=$(echo ${name} | sed -e 's;:.*$;;')
+	tag=$(echo ${name} | sed -e 's;^.*:;;')
+        echo -n $"Starting Tinderbox (${prog}_${tag}): "
+        daemon --user=${TINDERUSER} --pidfile=${PID_FILE}_${tag}.pid $exec --home=${TINDERHOME} --log=${TINDERLOGDIR}/${tag}.log ${TINDERARGS[$i]} --pid=${PID_FILE}_${tag}.pid 
+        retval=$?
+	echo
+	[ $retval -eq 0 ] && touch ${lockfile}_${tag}
+        [ $retval -ne 0 ] && return $retvalue
+    done
+    return 0
+}
+
+stop() {
+    rollup=0
+    for name in ${TINDERNAMES}
+    do
+	tag=$(echo ${name} | sed -e 's;^.*:;;')
+        echo -n $"Stopping Tinderbox (${prog}_${tag}): "
+	killproc -p ${PID_FILE}_${tag}.pid ${prog}_${tag}
+	retval=$?
+	[ $retval -eq 0 ] && rm -f ${lockfile}_${tag}
+	[ $retval -ne 0 ] && rollup=$retval
+	echo
+    done
+    return $rollup
+}
+
+get_status() {
+    rollup=0
+    for name in ${TINDERNAMES}
+    do
+	tag=$(echo ${name} | sed -e 's;^.*:;;')
+	status -p ${PID_FILE}_${tag}.pid ${prog}_${tag}
+	retval=$?
+	[ $retval -ne 0 ] && rollup=$retval
+    done
+    return $rollup
+}
+
+restart() {
+    stop
+    start
+}
+
+case "$1" in
+        start)
+                start
+                ;;
+        stop)
+                stop
+                ;;
+        restart)
+                stop
+                start
+                ;;
+        reload)
+                reload
+                ;;
+        condrestart) 
+                if [ -f /var/lock/subsys/sshd ] ; then
+                        do_restart_sanity_check
+                        if [ "$RETVAL" = 0 ] ; then
+                                stop
+                                # avoid race
+                                sleep 3
+                                start
+                        fi
+                fi
+                ;;
+        status)
+		get_status
+		;;
+        *)
+                echo $"Usage: $0 {start|stop|restart|reload|condrestart|status}"
+                RETVAL=1
+esac 
+exit $RETVAL
+

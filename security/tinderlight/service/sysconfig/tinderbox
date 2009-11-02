@@ -1,0 +1,12 @@
+TINDERUSER=tinderbox
+TINDERLOGDIR=/var/log/tinderbox
+TINDERPIDDIR=/var/run/tinderbox
+TINDERHOME=/home/tinderbox/mozilla/security/tinderlight
+# TINDERNAMES="1:64_OPT 2:64_DBG 3:64_MEMTEST 4:32_OPT 5:32_DBG"
+# just enable the basic 32 bit tinderboxen
+TINDERNAMES="4:32_OPT 5:32_DBG"
+TINDERARGS[1]="--bits=64 --opt=OPT --nojsssign"
+TINDERARGS[2]="--bits=64 --opt=DBG --nojsssign"
+TINDERARGS[3]="--bits=64 --opt=DBG --memtest"
+TINDERARGS[4]="--bits=32 --opt=OPT --nojss"
+TINDERARGS[5]="--bits=32 --opt=DBG --nojss"
