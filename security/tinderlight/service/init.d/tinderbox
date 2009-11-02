@@ -37,7 +37,7 @@ start() {
 	i=$(echo ${name} | sed -e 's;:.*$;;')
 	tag=$(echo ${name} | sed -e 's;^.*:;;')
         echo -n $"Starting Tinderbox (${prog}_${tag}): "
-        daemon --user=${TINDERUSER} --pidfile=${PID_FILE}_${tag}.pid $exec --home=${TINDERHOME} --log=${TINDERLOGDIR}/${tag}.log ${TINDERARGS[$i]} --pid=${PID_FILE}_${tag}.pid 
+        daemon --user=${TINDERUSER} --pidfile=${PID_FILE}_${tag}.pid $exec --home=${TINDERHOME} --log=${TINDERLOGDIR}/${tag}.log ${TINDERARGS[$i]} --pidfile=${PID_FILE}_${tag}.pid 
         retval=$?
 	echo
 	[ $retval -eq 0 ] && touch ${lockfile}_${tag}
