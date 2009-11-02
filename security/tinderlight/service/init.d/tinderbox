@@ -52,11 +52,15 @@ stop() {
     do
 	tag=$(echo ${name} | sed -e 's;^.*:;;')
         echo -n $"Stopping Tinderbox (${prog}_${tag}): "
-	killproc -p ${PID_FILE}_${tag}.pid ${prog}_${tag}
+	# tinderbox is a shell script running lots of subshells. We need to kill the entire
+	# session.
+	[ -f ${PID_FILE}_${tag}.pid ] && sid='-'$(sed -e 's;^ ;;' ${PID_FILE}_${tag}.pid)
+	killproc -p ${PID_FILE}_${tag}.pid ${prog}_${tag} -"TERM $sid"
 	retval=$?
 	[ $retval -eq 0 ] && rm -f ${lockfile}_${tag}
 	[ $retval -ne 0 ] && rollup=$retval
 	echo
+	rm -f ${PID_FILE}_${tag}.pid 
     done
     return $rollup
 }
@@ -68,7 +72,10 @@ get_status() {
 	tag=$(echo ${name} | sed -e 's;^.*:;;')
 	status -p ${PID_FILE}_${tag}.pid ${prog}_${tag}
 	retval=$?
-	[ $retval -ne 0 ] && rollup=$retval
+	if [ $retval -ne 0 ]; then
+	    rollup=$retval
+	    [ -f ${PID_FILE}_${tag}.pid ] && ps -s $(sed -e 's;^ ;;' ${PID_FILE}_${tag}.pid) | grep -v PID
+	fi
     done
     return $rollup
 }
