@@ -38,7 +38,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3prot.h,v 1.13 2008/03/06 20:16:22 wtc%google.com Exp $ */
+/* $Id: ssl3prot.h,v 1.14 2009/11/04 17:19:24 wtc%google.com Exp $ */
 
 #ifndef __ssl3proto_h_
 #define __ssl3proto_h_
@@ -173,7 +173,10 @@ typedef struct {
     uint8 length;
 } SSL3SessionID;
      
-typedef enum { compression_null = 0 } SSL3CompressionMethod;
+typedef enum {
+    compression_null = 0,
+    compression_deflate = 1
+} SSL3CompressionMethod;
      
 typedef struct {
     SSL3ProtocolVersion   client_version;
