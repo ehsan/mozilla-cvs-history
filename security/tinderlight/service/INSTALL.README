@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 #
 # This file is both a readme and an install script for installing tinderbox
 # on a new machine using System V initd startup (used by Solaris and Linux)
@@ -18,16 +18,19 @@ TINDERPIDDIR=/var/run/tinderbox
 #
 #
 #
-newuser ${TINDERUSER}
+adduser ${TINDERUSER}
+USERHOME=$(bash -c "echo ~${TINDERUSER}")   # save the homddir
+TINDERHOME=${USERHOME}/mozilla/security/tinderlight
 #
 # You will be prompted to enter the password for the new tinderbox user.
 #
-setpassword ${TINDERUSER}
-TINDERHOME=~${TINDERUSER}
+passwd ${TINDERUSER}
+
 #
 # Checkout the tinderbox sources NOTE: this requires cvs to be installed already
 #
-su ${TINDERUSER} cvs checkout -r kflajdf; /mozilla/security/tinderlight
+cd ${USERHOME}
+su ${TINDERUSER} -c 'cvs -d :pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot checkout mozilla/security/tinderlight'
 #
 # Create directories needed for running
 #
@@ -41,16 +44,16 @@ chown ${TINDERUSER} ${TINDERPIDDIR}
 #
 # install the tinderbox service scripts
 #
-cd ${TINDERUSER}
+cd ${TINDERHOME}/service
 install -m 755 sbin/tinderbox /usr/sbin/tinderbox
-install -m 755 init.d/tinderbox /usr/init.d/tinderbox
+install -m 755 init.d/tinderbox /etc/init.d/tinderbox
 #
 # We'll install this in our configuration step
 #install -m 644 sysconfig/tinderbox /etc/sysconfig/tinderbox
 #
 # this line will add the service
 #
-chkconfig --add tinderbox
+(cd /etc/init.d ; chkconfig --add tinderbox)
 #
 # configure tinderbox startup.
 #

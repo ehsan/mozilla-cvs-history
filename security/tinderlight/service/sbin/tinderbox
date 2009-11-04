@@ -39,18 +39,18 @@ fi
 # if we don't have a pidfile, we can't check if tinder.sh started.
 [ -z $pidfile ] && exit 0
 
-# give tinderbox 5 seconds to verify that it starts
-for i in  5 4 3 2 1 
+# give tinderbox 3 seconds to verify that it starts
+for i in  3 2 1 
 do
   if [ -f $pidfile ]; then
-# The pid file has been written, wait the rest of the 5 seconds than check to
-# see it's stil running
+# The pid file has been written, wait the rest of the 3 seconds than check to
+# see it's still running
      pid=$(sed -e 's;^ *;;' $pidfile)
      sleep $i
      [ -d /proc/$pid ]
      exit $?
   fi
-#pid file was never written. tinder.sh probably diddn't start.
   sleep 1
 done
+#pid file was never written. tinder.sh probably diddn't start.
 exit 1
