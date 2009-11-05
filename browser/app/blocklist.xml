@@ -37,7 +37,7 @@
       </versionRange>
     </emItem>
     <emItem id="{B13721C7-F507-4982-B2E5-502A71474FED}">
-      <versionRange minVersion=" " maxVersion="3.3.0.3970" severity="1"/>
+      <versionRange minVersion=" " maxVersion="3.3.0.3970"/>
     </emItem>
   </emItems>
 <pluginItems>
