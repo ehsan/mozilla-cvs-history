@@ -1,0 +1,33 @@
+<html>
+<head>
+  <title>Fennecmark</title>
+</head>
+<body>
+  <script>
+    var test = "";
+    function parseParams() {
+      var s = document.location.search.substring(1);
+      var params = s.split('&');
+      for (var i = 0; i < params.length; ++i) {
+        var fields = params[i].split('=');
+        switch (fields[0]) {
+        case 'test':
+          test = fields[1];
+          break;
+        }
+      }
+    }
+    parseParams();
+    if (test == "Zoom" || test == "PanDown") {
+      var element = document.createElement("myExtensionDataElement");
+      element.setAttribute("attribute1", test);
+      document.documentElement.appendChild(element);
+
+      var evt = document.createEvent("Events");
+      evt.initEvent("myExtensionEvent", true, false);
+      element.dispatchEvent(evt);
+    }
+  </script>
+</body>
+</html>
+
