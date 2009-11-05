@@ -87,11 +87,7 @@ define('THROTTLE_LOGGING',false);
 // );
 $productThrottling = array(
      'Firefox' => array(
-         '3.0.15' => 0,
-         '3.5.3' => 0,
-         '3.5.2' => 0,
-         '3.5.1' => 0,
-         '3.5' => 0
+         '3.0.15' => 0
      )
 );
 
@@ -109,22 +105,6 @@ $productThrottling = array(
 // be throttled unless there is a global throttle enabled.
 $throttleExceptions = array(
     '3.0.15' => array (
-        'betatest',
-        'releasetest'
-    ),
-    '3.5.3' => array (
-        'betatest',
-        'releasetest'
-    ),
-    '3.5.2' => array (
-        'betatest',
-        'releasetest'
-    ),
-    '3.5.1' => array (
-        'betatest',
-        'releasetest'
-    ),
-    '3.5' => array (
         'betatest',
         'releasetest'
     )
