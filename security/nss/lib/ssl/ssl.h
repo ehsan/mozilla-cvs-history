@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl.h,v 1.29 2009/11/04 17:19:24 wtc%google.com Exp $ */
+/* $Id: ssl.h,v 1.30 2009/11/06 20:11:27 nelson%bolyard.com Exp $ */
 
 #ifndef __ssl_h_
 #define __ssl_h_
@@ -116,6 +116,11 @@ SSL_IMPORT PRFileDesc *SSL_ImportFD(PRFileDesc *model, PRFileDesc *fd);
                                           /* extension (off by default)     */
 #define SSL_ENABLE_DEFLATE             19 /* Enable TLS compression with    */
                                           /* DEFLATE (off by default)       */
+#define SSL_ENABLE_RENEGOTIATION       20 /* Values below (default: never)  */
+#define SSL_REQUIRE_SAFE_NEGOTIATION   21 /* Peer must use renegotiation    */
+                                          /* extension in ALL handshakes.   */
+                                          /* default: off                   */
+					  /* NOT YET IMPLEMENTED in 3.12.5  */
 
 #ifdef SSL_DEPRECATED_FUNCTION 
 /* Old deprecated function names */
@@ -162,6 +167,16 @@ SSL_IMPORT SECStatus SSL_CipherPolicyGet(PRInt32 cipher, PRInt32 *policy);
 #define SSL_REQUIRE_ALWAYS          ((PRBool)1)
 #define SSL_REQUIRE_FIRST_HANDSHAKE ((PRBool)2)
 #define SSL_REQUIRE_NO_ERROR        ((PRBool)3)
+
+/* Values for "on" with SSL_ENABLE_RENEGOTIATION */
+/* Never renegotiate at all.                                               */
+#define SSL_RENEGOTIATE_NEVER        ((PRBool)0)
+/* Renegotiate without restriction, whether or not the peer's client hello */
+/* bears the renegotiation info extension (like we always did in the past).*/
+#define SSL_RENEGOTIATE_UNRESTRICTED ((PRBool)1)
+/*  Only renegotiate if the peer's hello bears the TLS renegotiation_info  */
+/*  extension.  Cannot renegotiate in SSL 3.0 sessions.                    */
+#define SSL_RENEGOTIATE_REQUIRES_XTN ((PRBool)2) /*  (NOT YET IMPLEMENTED) */
 
 /*
 ** Reset the handshake state for fd. This will make the complete SSL

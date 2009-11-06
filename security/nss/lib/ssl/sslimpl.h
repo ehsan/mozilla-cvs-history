@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslimpl.h,v 1.67 2009/11/04 17:19:25 wtc%google.com Exp $ */
+/* $Id: sslimpl.h,v 1.68 2009/11/06 20:11:28 nelson%bolyard.com Exp $ */
 
 #ifndef __sslimpl_h_
 #define __sslimpl_h_
@@ -335,6 +335,8 @@ typedef struct sslOptionsStr {
     unsigned int noLocks                : 1;  /* 17 */
     unsigned int enableSessionTickets   : 1;  /* 18 */
     unsigned int enableDeflate          : 1;  /* 19 */
+    unsigned int enableRenegotiation    : 2;  /* 20-21 */
+    unsigned int requireSafeNegotiation : 1;  /* 22 */
 } sslOptions;
 
 typedef enum { sslHandshakingUndetermined = 0,

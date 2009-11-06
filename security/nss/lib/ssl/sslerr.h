@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslerr.h,v 1.7 2009/11/04 17:19:24 wtc%google.com Exp $ */
+/* $Id: sslerr.h,v 1.8 2009/11/06 20:11:28 nelson%bolyard.com Exp $ */
 #ifndef __SSL_ERR_H_
 #define __SSL_ERR_H_
 
@@ -196,6 +196,7 @@ SSL_ERROR_RX_UNEXPECTED_NEW_SESSION_TICKET = (SSL_ERROR_BASE + 109),
 SSL_ERROR_RX_MALFORMED_NEW_SESSION_TICKET  = (SSL_ERROR_BASE + 110),
 
 SSL_ERROR_DECOMPRESSION_FAILURE		= (SSL_ERROR_BASE + 111),
+SSL_ERROR_RENEGOTIATION_NOT_ALLOWED     = (SSL_ERROR_BASE + 112),
 
 SSL_ERROR_END_OF_LIST	/* let the c compiler determine the value of this. */
 } SSLErrorCodes;
