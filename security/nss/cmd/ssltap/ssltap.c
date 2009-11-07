@@ -66,7 +66,7 @@
 #include "cert.h"
 #include "sslproto.h"
 
-#define VERSIONSTRING "$Revision: 1.15 $ ($Date: 2009/10/31 22:52:20 $) $Author: wtc%google.com $"
+#define VERSIONSTRING "$Revision: 1.16 $ ($Date: 2009/11/07 20:01:49 $) $Author: wtc%google.com $"
 
 
 struct _DataBufferList;
@@ -476,8 +476,9 @@ const char * CompressionMethodString(int cm_int)
   char *cm_str;
   cm_str = NULL;
   switch (cm_int) {
-  case  0: cm_str = "null";     break;
-  case  1: cm_str = "DEFLATE";  break;
+  case  0: cm_str = "NULL";     break;
+  case  1: cm_str = "DEFLATE";  break;  /* RFC 3749 */
+  case 64: cm_str = "LZS";      break;  /* RFC 3943 */
   default: cm_str = "???";      break;
   }
 
