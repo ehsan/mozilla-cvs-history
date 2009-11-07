@@ -3,7 +3,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h 
  */
 /* This file was modified since it was taken from the zlib distribution */
-/* $Id: zconf.h,v 1.1 2009/11/07 01:13:06 relyea%netscape.com Exp $ */
+/* $Id: zconf.h,v 1.2 2009/11/07 01:13:07 relyea%netscape.com Exp $ */
 
 #ifndef _ZCONF_H
 #define _ZCONF_H
@@ -183,7 +183,7 @@ typedef uLong FAR uLongf;
 #  define EXPORT
 #endif
 
-#define PR_PUBLIC_API(type) type
+/* #define PR_PUBLIC_API(type) type */
 
 #endif /* MOZILLA_CLIENT */
 
