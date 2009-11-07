@@ -41,7 +41,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* TLS extension code moved here from ssl3ecc.c */
-/* $Id: ssl3ext.c,v 1.4 2009/10/29 01:44:04 wtc%google.com Exp $ */
+/* $Id: ssl3ext.c,v 1.5 2009/11/07 18:23:06 wtc%google.com Exp $ */
 
 #include "nssrenam.h"
 #include "nss.h"
@@ -963,7 +963,7 @@ ssl3_ServerHandleSessionTicketXtn(sslSocket *ss, PRUint16 ex_type,
 	/* Read compression_method. */
 	temp = ssl3_ConsumeHandshakeNumber(ss, 1, &buffer, &buffer_len);
 	if (temp < 0) goto no_ticket;
-	parsed_session_ticket->compression_method = (SSL3CompressionMethod)temp;
+	parsed_session_ticket->compression_method = (SSLCompressionMethod)temp;
 
 	/* Read cipher spec parameters. */
 	temp = ssl3_ConsumeHandshakeNumber(ss, 1, &buffer, &buffer_len);

@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslt.h,v 1.12 2008/12/17 06:09:19 nelson%bolyard.com Exp $ */
+/* $Id: sslt.h,v 1.13 2009/11/07 18:23:06 wtc%google.com Exp $ */
 
 #ifndef __sslt_h_
 #define __sslt_h_
@@ -125,6 +125,11 @@ typedef enum {
     ssl_hmac_sha      = 4 	/* TLS HMAC version of mac_sha */
 } SSLMACAlgorithm;
 
+typedef enum {
+    ssl_compression_null = 0,
+    ssl_compression_deflate = 1  /* RFC 3749 */
+} SSLCompressionMethod;
+
 typedef struct SSLChannelInfoStr {
     PRUint32             length;
     PRUint16             protocolVersion;
@@ -142,6 +147,12 @@ typedef struct SSLChannelInfoStr {
     PRUint32             expirationTime;	/* seconds since Jan 1, 1970 */
     PRUint32             sessionIDLength;	/* up to 32 */
     PRUint8              sessionID    [32];
+
+    /* The following fields are added in NSS 3.12.5. */
+
+    /* compression method info */
+    const char *         compressionMethodName;
+    SSLCompressionMethod compressionMethod;
 } SSLChannelInfo;
 
 typedef struct SSLCipherSuiteInfoStr {

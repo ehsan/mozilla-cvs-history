@@ -34,10 +34,25 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslinfo.c,v 1.18 2008/12/17 06:09:19 nelson%bolyard.com Exp $ */
+/* $Id: sslinfo.c,v 1.19 2009/11/07 18:23:06 wtc%google.com Exp $ */
 #include "ssl.h"
 #include "sslimpl.h"
 #include "sslproto.h"
+
+static const char *
+ssl_GetCompressionMethodName(SSLCompressionMethod compression)
+{
+    switch (compression) {
+    case ssl_compression_null:
+	return "NULL";
+#ifdef NSS_ENABLE_ZLIB
+    case ssl_compression_deflate:
+	return "DEFLATE";
+#endif
+    default:
+	return "???";
+    }
+}
 
 SECStatus 
 SSL_GetChannelInfo(PRFileDesc *fd, SSLChannelInfo *info, PRUintn len)
@@ -67,11 +82,14 @@ SSL_GetChannelInfo(PRFileDesc *fd, SSLChannelInfo *info, PRUintn len)
 	inf.authKeyBits      = ss->sec.authKeyBits;
 	inf.keaKeyBits       = ss->sec.keaKeyBits;
 	if (ss->version < SSL_LIBRARY_VERSION_3_0) { /* SSL2 */
-	    inf.cipherSuite      = ss->sec.cipherType | 0xff00;
+	    inf.cipherSuite       = ss->sec.cipherType | 0xff00;
 	} else if (ss->ssl3.initialized) { 	/* SSL3 and TLS */
-
-	    /* XXX  These should come from crSpec */
-	    inf.cipherSuite      = ss->ssl3.hs.cipher_suite;
+	    ssl_GetSpecReadLock(ss);
+	    inf.cipherSuite       = ss->ssl3.hs.cipher_suite;
+	    inf.compressionMethod = ss->ssl3.crSpec->compression_method;
+	    inf.compressionMethodName =
+		ssl_GetCompressionMethodName(inf.compressionMethod);
+	    ssl_ReleaseSpecReadLock(ss);
 	}
 	if (sid) {
 	    inf.creationTime   = sid->creationTime;
