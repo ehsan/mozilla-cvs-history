@@ -3,7 +3,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-/* @(#) $Id: zutil.c,v 1.4 2009/11/07 01:13:10 wchang0222%aol.com Exp $ */
+/* @(#) $Id: zutil.c,v 1.5 2009/11/07 01:13:11 wchang0222%aol.com Exp $ */
 
 #include "zutil.h"
 
@@ -139,11 +139,6 @@ const char * ZEXPORT zError(err)
 {
     return ERR_MSG(err);
 }
-
-#if defined(_WIN32_WCE)
-    /* does not exist on WCE */
-    int errno = 0;
-#endif
 
 #ifndef HAVE_MEMCPY
 
