@@ -8,7 +8,7 @@
    subject to change. Applications should only use zlib.h.
  */
 
-/* @(#) $Id: zutil.h,v 1.6 2009/11/07 01:13:10 wtchang%redhat.com Exp $ */
+/* @(#) $Id: zutil.h,v 1.7 2009/11/07 01:13:11 julien.pierre.boogz%sun.com Exp $ */
 
 #ifndef ZUTIL_H
 #define ZUTIL_H
@@ -175,7 +175,8 @@ extern const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
 
          /* functions */
 
-#if defined(STDC99) || (defined(__TURBOC__) && __TURBOC__ >= 0x550)
+#if defined(STDC99) || (defined(__TURBOC__) && __TURBOC__ >= 0x550) || \
+   (defined(_MSC_VER) && _MSC_VER >= 1500)
 #  ifndef HAVE_VSNPRINTF
 #    define HAVE_VSNPRINTF
 #  endif
