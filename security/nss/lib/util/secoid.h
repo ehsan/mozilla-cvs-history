@@ -42,7 +42,7 @@
 /*
  * secoid.h - public data structures and prototypes for ASN.1 OID functions
  *
- * $Id: secoid.h,v 1.12 2009/03/13 02:59:02 nelson%bolyard.com Exp $
+ * $Id: secoid.h,v 1.13 2009/11/09 23:04:29 alexei.volkov.bugs%sun.com Exp $
  */
 
 #include "plarena.h"
@@ -123,6 +123,8 @@ extern SECOidTag SECOID_AddEntry(const SECOidData * src);
 
 /*
  * initialize the oid data structures.
+ * Caller must ensure that initial call of the function is done from
+ * thread safe environment.
  */
 extern SECStatus SECOID_Init(void);
 
