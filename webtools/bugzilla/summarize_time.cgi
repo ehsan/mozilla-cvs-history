@@ -259,7 +259,7 @@ my $vars = {};
 
 Bugzilla->switch_to_shadow_db();
 
-$user->in_group(Bugzilla->params->{"timetrackinggroup"})
+$user->is_timetracker
     || ThrowUserError("auth_failure", {group  => "time-tracking",
                                        action => "access",
                                        object => "timetracking_summaries"});
