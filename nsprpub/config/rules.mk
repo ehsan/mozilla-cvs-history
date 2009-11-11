@@ -172,13 +172,13 @@ ifndef RELEASE_LIBS_DEST
 RELEASE_LIBS_DEST	= $(RELEASE_LIB_DIR)
 endif
 
-define MAKE_DIR
+define MAKE_IN_DIR
 	$(MAKE) -C $(dir) $@
 
-endef
+endef # do not remove the blank line!
 
 ifdef DIRS
-LOOP_OVER_DIRS = $(foreach dir,$(wildcard $(DIRS)),$(MAKE_DIR))
+LOOP_OVER_DIRS = $(foreach dir,$(DIRS),$(MAKE_IN_DIR))
 endif
 
 ################################################################################
