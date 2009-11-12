@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.120 2009/11/07 18:23:05 wtc%google.com Exp $ */
+/* $Id: ssl3con.c,v 1.121 2009/11/12 05:08:27 wtc%google.com Exp $ */
 
 #include "cert.h"
 #include "ssl.h"
@@ -64,6 +64,10 @@
 #include <stdio.h>
 #ifdef NSS_ENABLE_ZLIB
 #include "zlib.h"
+/* zconf.h may define compress as a macro, which interferes with our use
+ * of compress as a member of the ssl3CipherSpec structure. Undo that.
+ */
+#undef compress
 #endif
 
 #ifndef PK11_SETATTRS
