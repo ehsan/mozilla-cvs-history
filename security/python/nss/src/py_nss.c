@@ -198,7 +198,7 @@ pk11_attribute_type_name(CK_ATTRIBUTE_TYPE type);
 
 /* ==================================== */
 
-int
+static int
 _AddIntConstantWithLookup(PyObject *module, const char *name, long value, const char *prefix,
                           PyObject *name_to_value, PyObject *value_to_name)
 {
@@ -271,7 +271,8 @@ _AddIntConstantWithLookup(PyObject *module, const char *name, long value, const 
 /* FIXME: convert all equality tests to Py_None to PyNone_Check() */
 #define PyNone_Check(x) ((x) == Py_None)
 
-int SecItemOrNoneConvert(PyObject *obj, PyObject **param)
+static int
+SecItemOrNoneConvert(PyObject *obj, PyObject **param)
 {
     if (PySecItem_Check(obj)) {
         *param = obj;
@@ -288,7 +289,8 @@ int SecItemOrNoneConvert(PyObject *obj, PyObject **param)
     return 0;
 }
 
-int SymKeyOrNoneConvert(PyObject *obj, PyObject **param)
+static int
+SymKeyOrNoneConvert(PyObject *obj, PyObject **param)
 {
     if (PySymKey_Check(obj)) {
         *param = obj;
@@ -325,7 +327,7 @@ key_type_str(KeyType key_type)
 }
 
 
-const char *
+static const char *
 sec_oid_tag_str(SECOidTag tag)
 {
     static char buf[80];
@@ -7278,6 +7280,7 @@ if (_AddIntConstantWithLookup(m, #constant, constant, \
     ExportConstant(CKM_CAMELLIA_ECB_ENCRYPT_DATA);
     ExportConstant(CKM_CAMELLIA_CBC_ENCRYPT_DATA);
 
+#if defined(CKM_SEED_KEY_GEN)
     ExportConstant(CKM_SEED_KEY_GEN);
     ExportConstant(CKM_SEED_ECB);
     ExportConstant(CKM_SEED_CBC);
@@ -7286,6 +7289,7 @@ if (_AddIntConstantWithLookup(m, #constant, constant, \
     ExportConstant(CKM_SEED_CBC_PAD);
     ExportConstant(CKM_SEED_ECB_ENCRYPT_DATA);
     ExportConstant(CKM_SEED_CBC_ENCRYPT_DATA);
+#endif
 
     /* CKM_xxx_ENCRYPT_DATA mechanisms are new for v2.20 */
     ExportConstant(CKM_DES_ECB_ENCRYPT_DATA);
@@ -7837,9 +7841,13 @@ if (_AddIntConstantWithLookup(m, #constant, constant, \
 
     ExportConstant(SEC_OID_ISO_SHA1_WITH_RSA_SIGNATURE);
 
+#if defined(SEC_OID_SEED_CBC)
     ExportConstant(SEC_OID_SEED_CBC);
+#endif
 
+#if defined(SEC_OID_X509_ANY_POLICY)
     ExportConstant(SEC_OID_X509_ANY_POLICY);
+#endif
 
     ExportConstant(SEC_OID_SECG_EC_SECP192R1);
     ExportConstant(SEC_OID_SECG_EC_SECP256R1);

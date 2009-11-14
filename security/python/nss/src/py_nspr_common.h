@@ -45,10 +45,29 @@
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 #endif
 
-#if PY_VERSION_HEX < 0x02050000 && !defined(PY_SSIZE_T_MIN)
+#if (PY_VERSION_HEX < 0x02050000)
 typedef int Py_ssize_t;
 #define PY_SSIZE_T_MAX INT_MAX
 #define PY_SSIZE_T_MIN INT_MIN
+#define PyInt_FromSsize_t PyInt_FromLong
+#define PyNumber_AsSsize_t(ob, exc) PyInt_AsLong(ob)
+#define PyIndex_Check(ob) PyInt_Check(ob)
+typedef Py_ssize_t (*readbufferproc)(PyObject *, Py_ssize_t, void **);
+typedef Py_ssize_t (*writebufferproc)(PyObject *, Py_ssize_t, void **);
+typedef Py_ssize_t (*segcountproc)(PyObject *, Py_ssize_t *);
+typedef Py_ssize_t (*charbufferproc)(PyObject *, Py_ssize_t, char **);
+typedef Py_ssize_t (*lenfunc)(PyObject *);
+typedef PyObject *(*ssizeargfunc)(PyObject *, Py_ssize_t);
+typedef PyObject *(*ssizessizeargfunc)(PyObject *, Py_ssize_t, Py_ssize_t);
+#endif
+
+#if (PY_VERSION_HEX < 0x02060000)
+#define Py_TYPE(ob) (((PyObject*)(ob))->ob_type)
+#define PyVarObject_HEAD_INIT(type, size) \
+	PyObject_HEAD_INIT(type) size,
+#define PyImport_ImportModuleNoBlock PyImport_ImportModule
+#define PyLong_FromSsize_t PyInt_FromLong
+#define Py_TPFLAGS_HAVE_NEWBUFFER 0
 #endif
 
 #define AddIntConstant(c) if (PyModule_AddIntConstant(m, #c, c) < 0) return;
