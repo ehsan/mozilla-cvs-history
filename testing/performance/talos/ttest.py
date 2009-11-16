@@ -67,13 +67,13 @@ import ffsetup
 
 if platform.system() == "Linux":
     from cmanager_linux import *
-    platform_type = 'unix_'
+    platform_type = 'linux_'
 elif platform.system() in ("Windows", "Microsoft"):
     from cmanager_win32 import *
     platform_type = 'win_'
 elif platform.system() == "Darwin":
     from cmanager_mac import *
-    platform_type = 'unix_'
+    platform_type = 'mac_'
 
 
 # Regular expression for getting results from most tests

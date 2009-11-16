@@ -63,6 +63,8 @@ def shortName(name):
     return "pbytes"
   elif name == "RSS":
     return "rss"
+  elif name == "XRes":
+    return "xres"
   else: 
     return name
 
@@ -240,7 +242,7 @@ def results_from_graph(links, results_server):
   first_results = 'RETURN:<br>'
   last_results = '' 
   full_results = '\nRETURN:<p style="font-size:smaller;">Details:<br>'  
-  memory_metric = ['memset', 'rss', 'pbytes']
+  memory_metric = ['memset', 'rss', 'pbytes', 'xres']
   lines = links.split('\n')
   for line in lines:
     if line == "":
