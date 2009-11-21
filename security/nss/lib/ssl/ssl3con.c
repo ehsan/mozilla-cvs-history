@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.123 2009/11/21 03:40:49 wtc%google.com Exp $ */
+/* $Id: ssl3con.c,v 1.124 2009/11/21 05:31:16 wtc%google.com Exp $ */
 
 #include "cert.h"
 #include "ssl.h"
@@ -5997,6 +5997,8 @@ ssl3_HandleClientHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     ** This is not a loop, despite appearances.
     */
     if (sid) do {
+	ssl3CipherSuiteCfg *suite;
+
 	/* Check that the cached compression method is still enabled. */
 	if (!compressionEnabled(ss, sid->u.ssl3.compression))
 	    break;
@@ -6009,7 +6011,7 @@ ssl3_HandleClientHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 	if (i == comps.len)
 	    break;
 
-	ssl3CipherSuiteCfg *suite = ss->cipherSuites;
+	suite = ss->cipherSuites;
 	/* Find the entry for the cipher suite used in the cached session. */
 	for (j = ssl_V3_SUITES_IMPLEMENTED; j > 0; --j, ++suite) {
 	    if (suite->cipher_suite == sid->u.ssl3.cipherSuite)
