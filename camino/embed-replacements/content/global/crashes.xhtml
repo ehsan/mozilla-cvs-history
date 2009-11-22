@@ -146,7 +146,7 @@ function populateReportList() {
     row.appendChild(cell);
     var link = document.createElement("a");
     link.setAttribute("href", reportURL + reports[i].id);
-    link.appendChild(document.createTextNode(reports[i].id));
+    link.appendChild(document.createTextNode("bp-" + reports[i].id));
     cell.appendChild(link);
 
     var date = new Date(reports[i].date);
