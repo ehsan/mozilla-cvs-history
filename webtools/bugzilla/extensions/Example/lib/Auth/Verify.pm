@@ -18,7 +18,7 @@
 #
 # Contributor(s): Max Kanat-Alexander <mkanat@bugzilla.org>
 
-package extensions::Example::lib::AuthVerify;
+package Bugzilla::Extension::Example::Auth::Verify;
 use strict;
 use base qw(Bugzilla::Auth::Verify);
 use Bugzilla::Constants;

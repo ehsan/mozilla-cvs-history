@@ -13,29 +13,20 @@
 # The Original Code is the Bugzilla Example Plugin.
 #
 # The Initial Developer of the Original Code is Canonical Ltd.
-# Portions created by Canonical Ltd. are Copyright (C) 2008
-# Canonical Ltd. All Rights Reserved.
+# Portions created by Canonical are Copyright (C) 2008 Canonical Ltd.
+# All Rights Reserved.
 #
 # Contributor(s): Max Kanat-Alexander <mkanat@bugzilla.org>
-#                 Bradley Baetz <bbaetz@acm.org>
 
-package extensions::Example::lib::ConfigExample;
+package Bugzilla::Extension::Example::Auth::Login;
 use strict;
-use warnings;
+use base qw(Bugzilla::Auth::Login);
+use constant user_can_create_account => 0;
+use Bugzilla::Constants;
 
-use Bugzilla::Config::Common;
-
-sub get_param_list {
-    my ($class) = @_;
-
-    my @param_list = (
-    {
-        name => 'example_string',
-        type => 't',
-        default => 'EXAMPLE',
-    },
-    );
-    return @param_list;
+# Always returns no data.
+sub get_login_info {
+    return { failure => AUTH_NODATA };
 }
 
 1;

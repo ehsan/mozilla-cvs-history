@@ -10,23 +10,23 @@
 # implied. See the License for the specific language governing
 # rights and limitations under the License.
 #
-# The Original Code is the Bugzilla Example Plugin.
+# The Original Code is the Bugzilla Bug Tracking System.
 #
-# The Initial Developer of the Original Code is Canonical Ltd.
-# Portions created by Canonical are Copyright (C) 2008 Canonical Ltd.
-# All Rights Reserved.
+# The Initial Developer of the Original Code is Everything Solved, Inc.
+# Portions created by Everything Solved, Inc. are Copyright (C) 2007 
+# Everything Solved, Inc. All Rights Reserved.
 #
 # Contributor(s): Max Kanat-Alexander <mkanat@bugzilla.org>
 
-package extensions::Example::lib::AuthLogin;
+package Bugzilla::Extension::Example::WebService;
 use strict;
-use base qw(Bugzilla::Auth::Login);
-use constant user_can_create_account => 0;
-use Bugzilla::Constants;
+use warnings;
+use base qw(Bugzilla::WebService);
+use Bugzilla::Error;
 
-# Always returns no data.
-sub get_login_info {
-    return { failure => AUTH_NODATA };
-}
+# This can be called as Example.hello() from the WebService.
+sub hello { return 'Hello!'; }
+
+sub throw_an_error { ThrowUserError('example_my_error') }
 
 1;

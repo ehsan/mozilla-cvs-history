@@ -13,20 +13,16 @@
 # The Original Code is the Bugzilla Bug Tracking System.
 #
 # The Initial Developer of the Original Code is Everything Solved, Inc.
-# Portions created by Everything Solved, Inc. are Copyright (C) 2007 
+# Portions created by Everything Solved, Inc. are Copyright (C) 2009 
 # Everything Solved, Inc. All Rights Reserved.
 #
 # Contributor(s): Max Kanat-Alexander <mkanat@bugzilla.org>
 
-package extensions::Example::lib::WSExample;
+package Bugzilla::Extension::Example::Util;
 use strict;
 use warnings;
-use base qw(Bugzilla::WebService);
-use Bugzilla::Error;
 
-# This can be called as Example.hello() from the WebService.
-sub hello { return 'Hello!'; }
-
-sub throw_an_error { ThrowUserError('example_my_error') }
+# This file exists only to demonstrate how to use and name your
+# modules in an extension.
 
 1;
