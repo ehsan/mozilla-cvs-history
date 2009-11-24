@@ -10,18 +10,24 @@
 # implied. See the License for the specific language governing
 # rights and limitations under the License.
 #
-# The Original Code is the Bugzilla Example Plugin.
+# The Original Code is the Bugzilla Bug Tracking System.
 #
-# The Initial Developer of the Original Code is Canonical Ltd.
-# Portions created by Canonical Ltd. are Copyright (C) 2008 
-# Canonical Ltd. All Rights Reserved.
+# The Initial Developer of the Original Code is Everything Solved, Inc.
+# Portions created by the Initial Developer are Copyright (C) 2009
+# the Initial Developer. All Rights Reserved.
 #
-# Contributor(s): Max Kanat-Alexander <mkanat@bugzilla.org>
+# Contributor(s): 
+#   Max Kanat-Alexander <mkanat@bugzilla.org>
 
+package Bugzilla::Extension::BmpConvert;
 use strict;
-use warnings;
-use Bugzilla;
-my $modules = Bugzilla->hook_args->{modules};
-if (exists $modules->{Example}) {
-    $modules->{Example} = 'extensions/example/lib/AuthLogin.pm';
-}
+use constant NAME => 'BmpConvert';
+use constant REQUIRED_MODULES => [
+  {
+      package => 'PerlMagick',
+      module  => 'Image::Magick',
+      version => 0,
+  },
+];
+
+__PACKAGE__->NAME;

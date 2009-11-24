@@ -12,24 +12,20 @@
 #
 # The Original Code is the Bugzilla Example Plugin.
 #
-# The Initial Developer of the Original Code is ITA Software
-# Portions created by the Initial Developer are Copyright (C) 2009 
-# the Initial Developer. All Rights Reserved.
+# The Initial Developer of the Original Code is Canonical Ltd.
+# Portions created by Canonical are Copyright (C) 2008 Canonical Ltd.
+# All Rights Reserved.
 #
 # Contributor(s): Max Kanat-Alexander <mkanat@bugzilla.org>
-#                 Bradley Baetz <bbaetz@acm.org>
 
+package extensions::Example::lib::AuthVerify;
 use strict;
-use warnings;
-use Bugzilla;
+use base qw(Bugzilla::Auth::Verify);
+use Bugzilla::Constants;
 
-# This code doesn't actually *do* anything, it's just here to show you
-# how to use this hook.
-my $args = Bugzilla->hook_args;
-my $bug = $args->{'bug'};
-my $timestamp = $args->{'timestamp'};
+# A verifier that always fails.
+sub check_credentials {
+    return { failure => AUTH_NO_SUCH_USER };
+}
 
-my $bug_id = $bug->id;
-# Uncomment this line to see a line in your webserver's error log whenever
-# you file a bug.
-# warn "Bug $bug_id has been filed!";
+1;

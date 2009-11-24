@@ -12,17 +12,30 @@
 #
 # The Original Code is the Bugzilla Example Plugin.
 #
-# The Initial Developer of the Original Code is Everything Solved, Inc.
-# Portions created by the Initial Developer are Copyright (C) 2008 
-# the Initial Developer. All Rights Reserved.
+# The Initial Developer of the Original Code is Canonical Ltd.
+# Portions created by Canonical Ltd. are Copyright (C) 2008
+# Canonical Ltd. All Rights Reserved.
 #
 # Contributor(s): Max Kanat-Alexander <mkanat@bugzilla.org>
+#                 Bradley Baetz <bbaetz@acm.org>
 
+package extensions::Example::lib::ConfigExample;
 use strict;
 use warnings;
-use Bugzilla;
-my $email = Bugzilla->hook_args->{email};
-# If you add a header to an email, it's best to start it with
-# 'X-Bugzilla-<Extension>' so that you don't conflict with
-# other extensions.
-$email->header_set('X-Bugzilla-Example-Header', 'Example');
+
+use Bugzilla::Config::Common;
+
+sub get_param_list {
+    my ($class) = @_;
+
+    my @param_list = (
+    {
+        name => 'example_string',
+        type => 't',
+        default => 'EXAMPLE',
+    },
+    );
+    return @param_list;
+}
+
+1;

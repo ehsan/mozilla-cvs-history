@@ -13,14 +13,20 @@
 # The Original Code is the Bugzilla Example Plugin.
 #
 # The Initial Developer of the Original Code is Canonical Ltd.
-# Portions created by Canonical Ltd. are Copyright (C) 2008 
-# Canonical Ltd. All Rights Reserved.
+# Portions created by Canonical are Copyright (C) 2008 Canonical Ltd.
+# All Rights Reserved.
 #
 # Contributor(s): Max Kanat-Alexander <mkanat@bugzilla.org>
-#                 Bradley Baetz <bbaetz@acm.org>
 
+package extensions::Example::lib::AuthLogin;
 use strict;
-use warnings;
-use Bugzilla;
-my $config = Bugzilla->hook_args->{config};
-$config->{Example} = "extensions::example::lib::ConfigExample";
+use base qw(Bugzilla::Auth::Login);
+use constant user_can_create_account => 0;
+use Bugzilla::Constants;
+
+# Always returns no data.
+sub get_login_info {
+    return { failure => AUTH_NODATA };
+}
+
+1;

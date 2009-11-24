@@ -13,20 +13,30 @@
 # The Original Code is the Bugzilla Bug Tracking System.
 #
 # The Initial Developer of the Original Code is Everything Solved, Inc.
-# Portions created by Everything Solved, Inc. are Copyright (C) 2007 
-# Everything Solved, Inc. All Rights Reserved.
+# Portions created by the Initial Developers are Copyright (C) 2009 the
+# Initial Developer. All Rights Reserved.
 #
-# Contributor(s): Max Kanat-Alexander <mkanat@bugzilla.org>
+# Contributor(s):
+#   Max Kanat-Alexander <mkanat@bugzilla.org>
 
-package extensions::example::lib::WSExample;
+package Bugzilla::Extension::Example;
 use strict;
-use warnings;
-use base qw(Bugzilla::WebService);
-use Bugzilla::Error;
+use constant NAME => 'Example';
+use constant REQUIRED_MODULES => [
+    {
+        package => 'Data-Dumper',
+        module  => 'Data::Dumper',
+        version => 0,
+    },
+];
 
-# This can be called as Example.hello() from the WebService.
-sub hello { return 'Hello!'; }
+use constant OPTIONAL_MODULES => [
+    {
+        package => 'Acme',
+        module  => 'Acme',
+        version => 1.11,
+        feature => ['example_acme'],
+    },
+];
 
-sub throw_an_error { ThrowUserError('example_my_error') }
-
-1;
+__PACKAGE__->NAME;

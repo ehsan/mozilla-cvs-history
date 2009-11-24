@@ -12,16 +12,21 @@
 #
 # The Original Code is the Bugzilla Bug Tracking System.
 #
-# The Initial Developer of the Original Code is Frédéric Buclin.
-# Portions created by Frédéric Buclin are Copyright (C) 2009
-# Frédéric Buclin. All Rights Reserved.
+# The Initial Developer of the Original Code is Everything Solved, Inc.
+# Portions created by Everything Solved, Inc. are Copyright (C) 2007 
+# Everything Solved, Inc. All Rights Reserved.
 #
-# Contributor(s): Frédéric Buclin <LpSolit@gmail.com>
+# Contributor(s): Max Kanat-Alexander <mkanat@bugzilla.org>
 
+package extensions::Example::lib::WSExample;
 use strict;
+use warnings;
+use base qw(Bugzilla::WebService);
+use Bugzilla::Error;
 
-{ x_name        => 'BMP to PNG converter',
-  version       => '1.0',
-  x_description => 'Automatically converts BMP images to the PNG format',
-  x_author      => 'Greg Hendricks, Frédéric Buclin',
-};
+# This can be called as Example.hello() from the WebService.
+sub hello { return 'Hello!'; }
+
+sub throw_an_error { ThrowUserError('example_my_error') }
+
+1;

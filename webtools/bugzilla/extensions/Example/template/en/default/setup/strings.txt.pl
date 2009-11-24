@@ -1,5 +1,3 @@
-# -*- Mode: perl; indent-tabs-mode: nil -*-
-#
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
@@ -10,16 +8,17 @@
 # implied. See the License for the specific language governing
 # rights and limitations under the License.
 #
-# The Original Code is the Bugzilla Example Plugin.
+# The Initial Developer of the Original Code is Everything Solved, Inc.
+# Portions created by the Initial Developer are Copyright (C) 2009 the
+# Initial Developer. All Rights Reserved.
 #
-# The Initial Developer of the Original Code is Canonical Ltd.
-# Portions created by Canonical Ltd. are Copyright (C) 2008 
-# Canonical Ltd. All Rights Reserved.
+# The Original Code is the Bugzilla Bug Tracking System.
 #
-# Contributor(s): Bradley Baetz <bbaetz@acm.org>
+# Contributor(s): 
+#   Max Kanat-Alexander <mkanat@bugzilla.org>
 
-use strict;
-use warnings;
-use Bugzilla;
-my $modules = Bugzilla->hook_args->{panel_modules};
-$modules->{Example} = "extensions::example::lib::ConfigExample";
+%strings = (
+  feature_example_acme => 'Example Extension: Acme Feature',
+);
+
+1;
