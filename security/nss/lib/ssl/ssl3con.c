@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.124 2009/11/21 05:31:16 wtc%google.com Exp $ */
+/* $Id: ssl3con.c,v 1.125 2009/11/26 01:51:10 wtc%google.com Exp $ */
 
 #include "cert.h"
 #include "ssl.h"
@@ -1349,6 +1349,7 @@ ssl3_DeflateDecompress(void *void_context, unsigned char *out, int *out_len,
     context->next_out = out;
     context->avail_out = maxout;
     if (inflate(context, Z_SYNC_FLUSH) != Z_OK) {
+        PORT_SetError(SSL_ERROR_DECOMPRESSION_FAILURE);
         return SECFailure;
     }
 
@@ -8592,7 +8593,6 @@ const ssl3BulkCipherDef *cipher_def;
 	if (rv != SECSuccess) {
 	    int err = ssl_MapLowLevelError(SSL_ERROR_DECOMPRESSION_FAILURE);
 	    PORT_Free(plaintext->buf);
-	    ssl_ReleaseSpecReadLock(ss);
 	    SSL3_SendAlert(ss, alert_fatal,
 			   isTLS ? decompression_failure : bad_record_mac);
 	    PORT_SetError(err);
