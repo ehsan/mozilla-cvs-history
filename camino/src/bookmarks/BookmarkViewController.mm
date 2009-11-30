@@ -1636,6 +1636,22 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
     if (action == @selector(getInfo:))
       return NO;
 
+    if (action == @selector(manageHistory:))
+      return NO;
+  }
+  return YES;
+}
+
+- (BOOL)validateToolbarItem:(NSToolbarItem *)theItem
+{
+  return [self validateActionBySelector:[theItem action]];
+}
+
+- (BOOL)validateActionBySelector:(SEL)action
+{
+  if ([self activeOutlineView] == mHistoryOutlineView) {
+    if (action == @selector(manageHistory:))
+      return NO;
   }
   return YES;
 }

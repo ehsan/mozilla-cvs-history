@@ -1711,6 +1711,15 @@ public:
     return (![self bookmarkManagerIsVisible] || [self canHideBookmarks]) &&
            ![mContentView tabThumbnailGridViewIsVisible];
   }
+  else if (action == @selector(manageHistory:)) {
+    BOOL shouldEnable = YES;
+    if ([self bookmarkManagerIsVisible]) {
+      // Let the BookmarkViewController validate based on selection.
+      shouldEnable = [[self bookmarkViewControllerForCurrentTab] validateToolbarItem:theItem];
+    }
+
+    return ![mContentView tabThumbnailGridViewIsVisible] && shouldEnable;
+  }
   else if (action == @selector(toggleTabThumbnailView:)) {
     if ([mContentView tabThumbnailGridViewIsVisible])
       [theItem setToolTip:NSLocalizedString(@"HideTabOverviewToolTip", nil)];
@@ -1853,11 +1862,18 @@ public:
   if (action == @selector(getInfo:)) {
     if ([self bookmarkManagerIsVisible]) {
       [aMenuItem setTitle:NSLocalizedString(@"Bookmark Info", nil)];
-      // let the BookmarkViewController validate based on selection
+      // Let the BookmarkViewController validate based on selection.
       return [[self bookmarkViewControllerForCurrentTab] validateMenuItem:aMenuItem];
     }
     else
       [aMenuItem setTitle:NSLocalizedString(@"Page Info", nil)];
+  }
+
+  if (action == @selector(manageHistory:)) {
+    if ([self bookmarkManagerIsVisible]) {
+      // Let the BookmarkViewController validate based on selection.
+      return [[self bookmarkViewControllerForCurrentTab] validateMenuItem:aMenuItem];
+    }
   }
 
   if (action == @selector(findActions:)) {
@@ -1943,6 +1959,12 @@ public:
     return (![self bookmarkManagerIsVisible] && ![[self browserWrapper] isBlockedErrorOverlayShowing]);
   }
 
+  if (action == @selector(manageHistory:)) {
+    if ([self bookmarkManagerIsVisible]) {
+      // Let the BookmarkViewController validate based on what the manager is showing.
+      return [[self bookmarkViewControllerForCurrentTab] validateActionBySelector:action];
+    }
+  }
   return YES;
 }
 

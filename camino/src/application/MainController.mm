@@ -1900,6 +1900,14 @@ const int kZoomActionsTag = 108;
     return showingBookmarks ? [browserController canHideBookmarks] : YES;
   }
 
+  if (action == @selector(showHistory:)) {
+    // We want to allow this if there are no browser windows open or if
+    // history isn't already showing. BrowserWindowController can handle the
+    // latter logic, but we need to translate |showHistory:| to |manageHistory:|.
+    action = @selector(manageHistory:);
+    return (!browserController || [browserController validateActionBySelector:action]);
+  }
+
   // key alternates
   if (action == @selector(openMenuBookmark:) && [aMenuItem isAlternate]) {
     if ([[PreferenceManager sharedInstance] getBooleanPref:kGeckoPrefOpenTabsForMiddleClick withSuccess:NULL])
