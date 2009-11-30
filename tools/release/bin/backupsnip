@@ -41,8 +41,8 @@ let nextPreDirCount=$preDirCount+1
 backupDirName=$currentDate-$nextPreDirCount-pre-$1
 
 pushd $LIVE_SNIPPET_DIR > /dev/null
-echo Running $TAR cfvj $BACKUP_DIR/$backupDirName.tar.bz2 . 
-$TAR cfvj $BACKUP_DIR/$backupDirName.tar.bz2 . 
+echo Running time $TAR cfvj $BACKUP_DIR/$backupDirName.tar.bz2 . --exclude 'Firefox/1.5*' --exclude 'Firefox/2.0*' --exclude 'Thunderbird/1.5*'
+time $TAR cfvj $BACKUP_DIR/$backupDirName.tar.bz2 . --exclude 'Firefox/1.5*' --exclude 'Firefox/2.0*' --exclude 'Thunderbird/1.5*'
 popd > /dev/null
 
 exit 0
