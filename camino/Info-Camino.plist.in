@@ -8,6 +8,8 @@
 	<string>0</string>
 	<key>BreakpadRequestComments</key>
 	<string>YES</string>
+	<key>BreakpadRequestEmail</key>
+	<string>YES</string>
 	<key>BreakpadServerParameters</key>
 	<dict>
 		<key>BuildID</key>

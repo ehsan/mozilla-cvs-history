@@ -4,4 +4,8 @@ for more information.
 
 This is a pull of r366 from the svn repository at:
   http://google-breakpad.googlecode.com/svn/trunk/
-with the testing and non-mac platform directories stripped out.
+with the testing and non-mac platform directories stripped out, and the patches
+for:
+- http://code.google.com/p/google-breakpad/issues/detail?id=348
+- http://code.google.com/p/google-breakpad/issues/detail?id=349
+applied locally.

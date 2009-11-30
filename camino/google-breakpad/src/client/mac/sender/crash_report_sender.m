@@ -608,6 +608,8 @@ NSString *const kDefaultServerType = @"google";
   [emailLabel_ setStringValue:NSLocalizedString(@"emailLabel", @"")];
   float emailLabelWidthDelta = [emailLabel_ breakpad_adjustWidthToFit];
   [emailEntryField_ breakpad_shiftHorizontally:emailLabelWidthDelta];
+  [[emailEntryField_ cell]
+      setPlaceholderString:NSLocalizedString(@"emailPlaceholder", @"")];
 
   // Localize the privacy policy label, and keep it right-aligned to the arrow.
   [privacyLinkLabel_ setStringValue:NSLocalizedString(@"privacyLabel", @"")];
@@ -895,6 +897,8 @@ doCommandBySelector:(SEL)commandSelector {
                          forKey:@BREAKPAD_PRODUCT];
   [socorroDictionary_ setObject:@"ProductName"
                          forKey:@BREAKPAD_PRODUCT];
+  [socorroDictionary_ setObject:@"Email"
+                         forKey:@BREAKPAD_EMAIL];
 }
 
 - (NSMutableDictionary *)dictionaryForServerType:(NSString *)serverType {
