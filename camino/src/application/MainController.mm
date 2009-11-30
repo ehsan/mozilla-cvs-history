@@ -105,6 +105,13 @@ NSString* const kPreviousSessionTerminatedNormallyKey = @"PreviousSessionTermina
 
 const int kZoomActionsTag = 108;
 
+// Once we are 10.5+ this can use a constant instead of the raw OS value.
+#if MAC_OS_X_VERSION_MAX_ALLOWED <= 1050
+@interface NSApplication(SnowLeopardSDKDeclarations)
+- (void)setHelpMenu:(NSMenu *)helpMenu;
+@end
+#endif
+
 @interface MainController(Private)<NetworkServicesClient>
 
 - (void)ensureGeckoInitted;
@@ -357,6 +364,17 @@ const int kZoomActionsTag = 108;
 
 - (void)applicationDidFinishLaunching:(NSNotification*)aNotification
 {
+  // Make sure the help menu is identified correctly, since it may be localized.
+  // TODO: Add a reference to the Help menu once we aren't nib-frozen, rather
+  // than getting it by position.
+  if ([NSApp respondsToSelector:@selector(setHelpMenu:)]) {
+    NSMenu* mainMenu = [NSApp mainMenu];
+    unsigned int helpMenuIndex =
+        [mainMenu indexOfItemWithSubmenu:[NSApp windowsMenu]] + 1;
+    if (helpMenuIndex < [[mainMenu itemArray] count])
+      [NSApp setHelpMenu:[[mainMenu itemAtIndex:helpMenuIndex] submenu]];
+  }
+
   [self ensureInitializationCompleted];
 
   [self checkForProblemAddOns];
