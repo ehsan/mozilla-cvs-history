@@ -87,7 +87,7 @@ define('THROTTLE_LOGGING',false);
 // );
 $productThrottling = array(
      'Firefox' => array(
-         '3.0.15' => 0
+         '3.0.16' => 0
      )
 );
 
@@ -104,7 +104,7 @@ $productThrottling = array(
 // In this example, 3.0.11 with channel names that match these channels will not
 // be throttled unless there is a global throttle enabled.
 $throttleExceptions = array(
-    '3.0.15' => array (
+    '3.0.16' => array (
         'betatest',
         'releasetest'
     )
