@@ -88,7 +88,10 @@ define('THROTTLE_LOGGING',false);
 $productThrottling = array(
      'Firefox' => array(
          '3.0.16' => 0
-     )
+     ),
+    'Thunderbird' => array(
+         '2.0.0.23' => 0
+     ),
 );
 
 // List of exceptions for throttling.
