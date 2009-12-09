@@ -99,14 +99,14 @@ if ( (empty($_GET['force']) || $_GET['force']!=1) ) {
     // Check explicit throttling.
     if ( !$aus->isThrottleException($clean['version'], $clean['channel'])
          && isset($productThrottling[$clean['product']][$clean['version']]) 
-         && mt_rand(0,100) > $productThrottling[$clean['product']][$clean['version']]
+         && mt_rand(0,99) >= $productThrottling[$clean['product']][$clean['version']]
          ) {
         $throttleMe = true;
 
     // Check global throttling.
     } elseif ( defined('THROTTLE_GLOBAL') && THROTTLE_GLOBAL && 
       defined('THROTTLE_LEVEL') &&
-      mt_rand(0,100) > THROTTLE_LEVEL ) {
+      mt_rand(0,99) >= THROTTLE_LEVEL ) {
         $throttleMe = true;
     }
 
