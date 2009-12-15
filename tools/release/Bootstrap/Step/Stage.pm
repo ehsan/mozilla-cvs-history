@@ -293,7 +293,7 @@ sub Execute {
 
     $this->Shell(
       cmd => 'rsync',
-      cmdArgs => ['-Lav', '-e', 'ssh',
+      cmdArgs => ['-Lav', '-e', 'ssh', '--exclude=contrib',
                   $stagingUser . '@' .  $stagingServer . ':' . $ftpNightlyDir,
                   './stage-unsigned'],
       logFile => catfile($logDir, 'download_stage.log'),
