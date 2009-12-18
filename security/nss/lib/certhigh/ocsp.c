@@ -39,7 +39,7 @@
  * Implementation of OCSP services, for both client and server.
  * (XXX, really, mostly just for client right now, but intended to do both.)
  *
- * $Id: ocsp.c,v 1.59 2009/06/10 22:59:09 julien.pierre.boogz%sun.com Exp $
+ * $Id: ocsp.c,v 1.60 2009/12/18 16:47:09 wtc%google.com Exp $
  */
 
 #include "prerror.h"
@@ -4645,6 +4645,9 @@ ocsp_GetCachedOCSPResponseStatusIfFresh(CERTOCSPCertID *certID,
         /* having an arena means, we have a cached certStatus */
         if (cacheItem->certStatusArena) {
             *rvOcsp = ocsp_CertHasGoodStatus(&cacheItem->certStatus, time);
+            if (*rvOcsp != SECSuccess) {
+                *missingResponseError = PORT_GetError();
+            }
             rv = SECSuccess;
         } else {
             /*
