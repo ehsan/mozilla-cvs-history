@@ -52,7 +52,7 @@ import re
 import utils
 from utils import talosError
 import post_file
-import ttest
+from ttest import TTest
 
 def shortName(name):
   if name == "Working Set":
@@ -380,7 +380,7 @@ def test_file(filename):
     testname = test['name']
     utils.stamped_msg("Running test " + testname, "Started")
     try:
-      browser_dump, counter_dump, print_format = ttest.runTest(browser_config, test)
+      browser_dump, counter_dump, print_format = TTest().runTest(browser_config, test)
       utils.debug("Received test results: " + " ".join(browser_dump))
       results[testname] = [browser_dump, counter_dump, print_format]
       # If we're doing CSV, write this test immediately (bug 419367)
