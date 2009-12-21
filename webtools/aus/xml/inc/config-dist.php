@@ -209,6 +209,25 @@ $unsupportedPlatforms = array(
             'GTK 2.8.',
             'GTK 2.9.'
         )
+    ),
+    'Thunderbird'     =>  array(
+        '2.0*' => array(
+            'Darwin 6',
+            'Darwin 7',
+            'Windows_95',
+            'Windows_98',
+            'Windows_NT 4',
+            'GTK 2.0.',
+            'GTK 2.1.',
+            'GTK 2.2.',
+            'GTK 2.3.',
+            'GTK 2.4.',
+            'GTK 2.5.',
+            'GTK 2.6.',
+            'GTK 2.7.',
+            'GTK 2.8.',
+            'GTK 2.9.'
+        )
     )
 );
 ?>
