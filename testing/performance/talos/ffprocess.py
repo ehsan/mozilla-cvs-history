@@ -112,18 +112,18 @@ def checkBrowserAlive(process_name):
   #is the browser actually up?
   return (ProcessesWithNameExist(process_name) and not ProcessesWithNameExist("crashreporter", "talkback", "dwwin"))
 
-def checkAllProcesses(process_name):
+def checkAllProcesses(process_name, child_process):
   #is anything browser related active?
-  return ProcessesWithNameExist(process_name, "crashreporter", "talkback", "dwwin")
+  return ProcessesWithNameExist(process_name, child_process, "crashreporter", "talkback", "dwwin")
 
-def cleanupProcesses(process_name, browser_wait):
+def cleanupProcesses(process_name, child_process, browser_wait):
   #kill any remaining browser processes
-  TerminateAllProcesses(browser_wait, process_name, "crashreporter", "dwwin", "talkback")
+  TerminateAllProcesses(browser_wait, process_name, child_process, "crashreporter", "dwwin", "talkback")
   #check if anything is left behind
-  if checkAllProcesses(process_name):
+  if checkAllProcesses(process_name, child_process):
     #this is for windows machines.  when attempting to send kill messages to win processes the OS
     # always gives the process a chance to close cleanly before terminating it, this takes longer
     # and we need to give it a little extra time to complete
     time.sleep(browser_wait)
-    if checkAllProcesses(process_name):
+    if checkAllProcesses(process_name, child_process):
       raise talosError("failed to cleanup")

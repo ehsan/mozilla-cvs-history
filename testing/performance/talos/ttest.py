@@ -96,7 +96,7 @@ def initializeProfile(profile_dir, browser_config):
   if not (ffsetup.InitializeNewProfile(browser_config['browser_path'], browser_config['process'], browser_config['browser_wait'], browser_config['extra_args'], profile_dir, browser_config['init_url'], browser_config['browser_log'])):
      raise talosError("failed to initialize browser")
   time.sleep(browser_config['browser_wait'])
-  if ffprocess.checkAllProcesses(browser_config['process']):
+  if ffprocess.checkAllProcesses(browser_config['process'], browser_config['child_process']):
      raise talosError("browser failed to close after being initialized") 
 
 def cleanupProfile(dir):
@@ -162,7 +162,7 @@ def runTest(browser_config, test_config):
   profile_dir = None
 
   try:
-    if ffprocess.checkAllProcesses(browser_config['process']):
+    if ffprocess.checkAllProcesses(browser_config['process'], browser_config['child_process']):
       utils.debug(browser_config['process'] + " already running before testing started (unclean system)")
       raise talosError("system not clean")
   
@@ -188,7 +188,7 @@ def runTest(browser_config, test_config):
         os.remove(browser_config['browser_log'])
       time.sleep(browser_config['browser_wait']) #wait out the browser closing
       # check to see if the previous cycle is still hanging around 
-      if (i > 0) and ffprocess.checkAllProcesses(browser_config['process']):
+      if (i > 0) and ffprocess.checkAllProcesses(browser_config['process'], browser_config['child_process']):
         raise talosError("previous cycle still running")
 
       # Execute the test's head script if there is one
@@ -212,9 +212,9 @@ def runTest(browser_config, test_config):
       utils.debug("command line: " + command_line)
  
       if 'url_mod' in test_config:
-        process = subprocess.Popen('python bcontroller.py --command "%s" --mod "%s" --name %s --timeout %d --log %s' % (command_line, test_config['url_mod'], browser_config['process'], browser_config['browser_wait'], browser_config['browser_log']), universal_newlines=True, shell=True, bufsize=0, env=os.environ)
+        process = subprocess.Popen('python bcontroller.py --command "%s" --mod "%s" --name %s --child_process %s --timeout %d --log %s' % (command_line, test_config['url_mod'], browser_config['process'], browser_config['child_process'], browser_config['browser_wait'], browser_config['browser_log']), universal_newlines=True, shell=True, bufsize=0, env=os.environ)
       else:
-        process = subprocess.Popen('python bcontroller.py --command "%s" --name %s --timeout %d --log %s' % (command_line, browser_config['process'], browser_config['browser_wait'], browser_config['browser_log']), universal_newlines=True, shell=True, bufsize=0, env=os.environ)
+        process = subprocess.Popen('python bcontroller.py --command "%s" --name %s --child_process %s --timeout %d --log %s' % (command_line, browser_config['process'], browser_config['child_process'], browser_config['browser_wait'], browser_config['browser_log']), universal_newlines=True, shell=True, bufsize=0, env=os.environ)
   
       #give browser a chance to open
       # this could mean that we are losing the first couple of data points as the tests starts, but if we don't provide
@@ -303,7 +303,7 @@ def runTest(browser_config, test_config):
           raise talosError("error executing tail script: %s" % sys.exc_info()[0])
 
      
-    ffprocess.cleanupProcesses(browser_config['process'], browser_config['browser_wait']) 
+    ffprocess.cleanupProcesses(browser_config['process'], browser_config['child_process'], browser_config['browser_wait']) 
     cleanupProfile(temp_dir)
 
     utils.restoreEnvironmentVars()
@@ -321,7 +321,7 @@ def runTest(browser_config, test_config):
         results_file.close()
         utils.noisy(results_raw)
 
-      ffprocess.cleanupProcesses(browser_config['process'], browser_config['browser_wait'])
+      ffprocess.cleanupProcesses(browser_config['process'], browser_config['child_process'], browser_config['browser_wait'])
 
       if profile_dir:
           try:

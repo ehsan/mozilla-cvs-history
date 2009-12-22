@@ -352,6 +352,10 @@ def test_file(filename):
                     'env'          : yaml_config['env'],
                     'dirs'         : yaml_config['dirs'],
                     'init_url'     : yaml_config['init_url']}
+  if 'child_process' in yaml_config:
+      browser_config['child_process'] = yaml_config['child_process']
+  else:
+      browser_config['child_process'] = 'mozilla-runtime'
   if 'branch_name' in yaml_config:
       browser_config['branch_name'] = yaml_config['branch_name']
   if 'test_name_extension' in yaml_config:

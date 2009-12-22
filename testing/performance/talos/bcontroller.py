@@ -90,10 +90,11 @@ class BrowserWaiter(threading.Thread):
 
 class BrowserController:
 
-  def __init__(self, command, mod, name, timeout, log):
+  def __init__(self, command, mod, name, child_process, timeout, log):
     self.command = command
     self.mod = mod
     self.process_name = name
+    self.child_process = child_process
     self.browser_wait = timeout
     self.log = log
     self.timeout = 600 #no output from the browser in 10 minutes = failure
@@ -105,7 +106,7 @@ class BrowserController:
     while not self.bwaiter.hasTime():
       if noise > self.timeout: # check for frozen browser
         try:
-          ffprocess.cleanupProcesses(self.process_name, self.browser_wait)
+          ffprocess.cleanupProcesses(self.process_name, self.child_process, self.browser_wait)
         except talosError, te:
           os.abort() #kill myself off because something horrible has happened
         os.chmod(self.log, 0777)
@@ -135,13 +136,14 @@ def main(argv=None):
 
    command = ""
    name = "firefox" #default
+   child_process = "mozilla-runtime" #default
    timeout = ""
    log = ""
    mod = ""
 
    if argv is None:
         argv = sys.argv
-   opts, args = getopt.getopt(argv[1:], "c:t:n:l:m:", ["command=", "timeout=", "name=", "log=", "mod="]) 
+   opts, args = getopt.getopt(argv[1:], "c:t:n:p:l:m:", ["command=", "timeout=", "name=", "child_process=", "log=", "mod="]) 
         
    # option processing
    for option, value in opts:
@@ -151,13 +153,15 @@ def main(argv=None):
        timeout = int(value)
      if option in ("-n", "--name"):
        name = value 
+     if option in ("-p", "--child_process"):
+       child_process = value
      if option in ("-l", "--log"):
        log = value 
      if option in ("-m", "--mod"):
        mod = value
 
    if command and timeout and log:
-     bcontroller = BrowserController(command, mod, name, timeout, log)
+     bcontroller = BrowserController(command, mod, name, child_process, timeout, log)
      bcontroller.run()
    else:
      print "\nFAIL: no command\n"
