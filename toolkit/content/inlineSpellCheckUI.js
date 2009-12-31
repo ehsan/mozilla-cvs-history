@@ -201,7 +201,7 @@ var InlineSpellCheckerUI = {
 
     for (var i = 0; i < list.length; i ++) {
       // get the display name for this dictionary
-      isoStrArray = list[i].split("-");
+      isoStrArray = list[i].split(/[-_]/);
       var displayName = "";
       if (this.mLanguageBundle && isoStrArray[0]) {
         try {
