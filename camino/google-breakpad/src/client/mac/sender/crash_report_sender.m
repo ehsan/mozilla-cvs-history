@@ -608,6 +608,10 @@ NSString *const kDefaultServerType = @"google";
   [emailLabel_ setStringValue:NSLocalizedString(@"emailLabel", @"")];
   float emailLabelWidthDelta = [emailLabel_ breakpad_adjustWidthToFit];
   [emailEntryField_ breakpad_shiftHorizontally:emailLabelWidthDelta];
+
+  // Localize the placeholder text.
+  [[commentsEntryField_ cell]
+      setPlaceholderString:NSLocalizedString(@"commentsPlaceholder", @"")];
   [[emailEntryField_ cell]
       setPlaceholderString:NSLocalizedString(@"emailPlaceholder", @"")];
 
