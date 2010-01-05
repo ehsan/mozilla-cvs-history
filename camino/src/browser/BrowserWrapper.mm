@@ -1074,11 +1074,17 @@ static const NSTimeInterval kTimeIntervalToConsiderSiteBlockingStatusValid = 900
       if ([characters length] > 0) {
         unichar keyChar = [characters characterAtIndex:0];
         if (keyChar == NSLeftArrowFunctionKey) {
-          [mBrowserView goBack];
+          // If someone assigns this shortcut to a menu, we want that to win.
+          if (![[NSApp mainMenu] performKeyEquivalent:theEvent])
+            [mBrowserView goBack];
+
           return YES;
         }
         else if (keyChar == NSRightArrowFunctionKey) {
-          [mBrowserView goForward];
+          // If someone assigns this shortcut to a menu, we want that to win.
+          if (![[NSApp mainMenu] performKeyEquivalent:theEvent])
+            [mBrowserView goForward];
+
           return YES;
         }
       }
