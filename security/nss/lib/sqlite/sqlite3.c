@@ -25804,7 +25804,11 @@ static int unixCurrentTime(sqlite3_vfs *NotUsed, double *prNow){
   *prNow = 2440587.5 + sNow.tv_sec/86400.0 + sNow.tv_nsec/86400000000000.0;
 #else
   struct timeval sNow;
+#ifdef _SVID_GETTOD
+  gettimeofday(&sNow);
+#else
   gettimeofday(&sNow, 0);
+#endif
   *prNow = 2440587.5 + sNow.tv_sec/86400.0 + sNow.tv_usec/86400000000.0;
 #endif
 
@@ -110113,7 +110117,7 @@ SQLITE_API int sqlite3_extension_init(
 **    May you share freely, never taking more than you give.
 **
 *************************************************************************
-** $Id: sqlite3.c,v 1.5 2010/01/08 01:40:39 wtc%google.com Exp $
+** $Id: sqlite3.c,v 1.6 2010/01/08 05:42:38 wtc%google.com Exp $
 **
 ** This file implements an integration between the ICU library 
 ** ("International Components for Unicode", an open-source library 
@@ -110614,7 +110618,7 @@ SQLITE_API int sqlite3_extension_init(
 *************************************************************************
 ** This file implements a tokenizer for fts3 based on the ICU library.
 ** 
-** $Id: sqlite3.c,v 1.5 2010/01/08 01:40:39 wtc%google.com Exp $
+** $Id: sqlite3.c,v 1.6 2010/01/08 05:42:38 wtc%google.com Exp $
 */
 
 #if !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_FTS3)
