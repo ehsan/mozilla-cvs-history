@@ -35,12 +35,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.52 $ $Date: 2009/12/01 06:28:10 $";
+static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.53 $ $Date: 2010/01/08 02:00:58 $";
 #endif /* DEBUG */
 
-#ifndef NSSCKEPV_H
-#include "nssckepv.h"
-#endif /* NSSCKEPV_H */
+#include "pkcs11.h"
 
 #ifndef DEVM_H
 #include "devm.h"
