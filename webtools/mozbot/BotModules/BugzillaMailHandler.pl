@@ -449,6 +449,35 @@ sub generate_log ($) {
             }
         }
 
+        # Custom blocking/status fields also are special handled.
+        elsif ($field =~ /^(blocking|status)/) {
+            my $line = $prefix . 'Flag' . FIELD_SEPARATOR 
+                       . $field . '=' . $old . FIELD_SEPARATOR
+                       . $field . '=' . $new . FIELD_SEPARATOR 
+                       . $bug_info->{who};
+            my $set = 0;
+            if ($new eq "---") {
+                $line .= " cancelled";
+            }
+            elsif ($new eq '-') {
+                $line .= " denied";
+            }
+            elsif ($new eq '?') {
+                $line .= " requested";
+            }
+            else {
+                $line .= " set";
+                $set = 1;
+            }
+            $line .= " $field";
+            if ($set) {
+                $line .= " to " unless ($new =~ /^\./);
+                $line .= "$new";
+            }
+            $line .= " on bug $bug_info->{bug_id}.";
+            push(@lines, $line);
+        }
+
         # All other, non-Flag fields.
         else {
             my $line = $prefix . $field . FIELD_SEPARATOR 
