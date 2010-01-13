@@ -51,7 +51,7 @@ import getopt
 import stat
 
 if platform.system() == "Linux":
-    platform_type = 'unix_'
+    platform_type = 'linux_'
 elif platform.system() in ("Windows", "Microsoft"):
     import win32pdh
     import win32api
@@ -59,7 +59,7 @@ elif platform.system() in ("Windows", "Microsoft"):
     import win32con
     platform_type = 'win_'
 elif platform.system() == "Darwin":
-    platform_type = 'unix_'
+    platform_type = 'mac_'
 
 
 class BrowserWaiter(threading.Thread):
@@ -100,7 +100,7 @@ class BrowserController:
     self.timeout = 600 #no output from the browser in 10 minutes = failure
 
   def run(self):
-    self.bwaiter = BrowserWaiter(self.command, self.log, self.mod) 
+    self.bwaiter = BrowserWaiter(self.command, self.log, self.mod)
     noise = 0
     prev_size = 0
     while not self.bwaiter.hasTime():
@@ -143,20 +143,20 @@ def main(argv=None):
 
    if argv is None:
         argv = sys.argv
-   opts, args = getopt.getopt(argv[1:], "c:t:n:p:l:m:", ["command=", "timeout=", "name=", "child_process=", "log=", "mod="]) 
-        
+   opts, args = getopt.getopt(argv[1:], "c:t:n:p:l:m:", ["command=", "timeout=", "name=", "child_process=", "log=", "mod="])
+
    # option processing
    for option, value in opts:
      if option in ("-c", "--command"):
-       command = value 
+       command = value
      if option in ("-t", "--timeout"):
        timeout = int(value)
      if option in ("-n", "--name"):
-       name = value 
+       name = value
      if option in ("-p", "--child_process"):
        child_process = value
      if option in ("-l", "--log"):
-       log = value 
+       log = value
      if option in ("-m", "--mod"):
        mod = value
 
