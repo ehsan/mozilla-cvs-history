@@ -43,7 +43,9 @@ import time
 import subprocess
 import threading
 import platform
-import ffprocess
+from ffprocess_linux import LinuxProcess
+from ffprocess_mac import MacProcess
+from ffprocess_win32 import Win32Process
 from utils import talosError
 import sys
 import getopt
@@ -52,15 +54,17 @@ import stat
 
 if platform.system() == "Linux":
     platform_type = 'linux_'
+    ffprocess = LinuxProcess()
 elif platform.system() in ("Windows", "Microsoft"):
     import win32pdh
     import win32api
     import win32event
     import win32con
     platform_type = 'win_'
+    ffprocess = Win32Process()
 elif platform.system() == "Darwin":
     platform_type = 'mac_'
-
+    ffprocess = MacProcess()
 
 class BrowserWaiter(threading.Thread):
 
