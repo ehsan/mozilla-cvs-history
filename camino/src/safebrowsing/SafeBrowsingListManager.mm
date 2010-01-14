@@ -493,6 +493,11 @@ static const int kStringComparisonEqual = 0;
   NSString *currentLanguageCode =
     [[PreferenceManager sharedInstance] getStringPref:kGeckoPrefUserAgentLocale
                                           withSuccess:&prefFetchSuccess];
+  // Google uses "no" as the language code for Norwegian Bokmål, while Mac OS X
+  // uses "nb" or "nb-no" (depending on the .lproj name), so convert to what 
+  // Google expects in the URLs.
+  if ([currentLanguageCode isEqualToString:@"nb"] || [currentLanguageCode isEqualToString:@"nb-no"])
+    currentLanguageCode = @"no";
   if (!prefFetchSuccess)
     currentLanguageCode = @"en";
 
