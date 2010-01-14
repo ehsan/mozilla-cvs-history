@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslreveal.c,v 1.4 2004/04/27 23:04:39 gerv%gerv.net Exp $ */
+/* $Id: sslreveal.c,v 1.5 2010/01/14 22:15:25 alexei.volkov.bugs%sun.com Exp $ */
 
 #include "cert.h"
 #include "ssl.h"
@@ -82,7 +82,7 @@ SSL_RevealPinArg(PRFileDesc * fd)
 
 
 /* given PRFileDesc, returns a pointer to the URL associated with the socket
- * the caller should free url when done  
+ * the caller should free url when done
  */
 char * 
 SSL_RevealURL(PRFileDesc * fd)
