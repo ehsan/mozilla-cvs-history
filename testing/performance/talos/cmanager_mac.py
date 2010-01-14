@@ -46,8 +46,6 @@ import time
 import threading
 import subprocess
 
-import ffprocess
-
 def GetProcessData(pid):
   """Runs a ps on the process identified by pid and returns the output line
     as a list (pid, vsz, rss)
@@ -97,7 +95,7 @@ class CounterManager(threading.Thread):
   
   pollInterval = .25
 
-  def __init__(self, process, counters=None):
+  def __init__(self, ffprocess, process, counters=None):
     """Args:
          counters: A list of counters to monitor. Any counters whose name does
          not match a key in 'counterDict' will be ignored.
@@ -107,6 +105,7 @@ class CounterManager(threading.Thread):
     self.process = process
     self.runThread = False
     self.pid = -1
+    self.ffprocess = ffprocess
 
     self._loadCounters()
     self.registerCounters(counters)
@@ -171,7 +170,7 @@ class CounterManager(threading.Thread):
     # TODO: make this function less ugly
     try:
       # the last process is the useful one
-      self.pid = ffprocess.GetPidsByName(self.process)[-1]
+      self.pid = self.ffprocess.GetPidsByName(self.process)[-1]
       self.runThread = True
       self.start()
     except:

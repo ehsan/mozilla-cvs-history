@@ -248,7 +248,7 @@ class TTest(object):
                 time.sleep(browser_config['browser_wait'])
                 #set up the counters for this test
                 if counters:
-                    cm = self.cmanager.CounterManager(browser_config['process'], counters)
+                    cm = self.cmanager.CounterManager(self._ffprocess, browser_config['process'], counters)
                     cm.startMonitor()
                 counter_results = {}
                 for counter in counters:

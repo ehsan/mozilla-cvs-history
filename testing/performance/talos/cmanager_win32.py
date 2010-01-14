@@ -42,8 +42,9 @@ import win32pdhutil
 
 class CounterManager:
 
-  def __init__(self, process, counters=None, childProcess="mozilla-runtime"):
+  def __init__(self, ffprocess, process, counters=None, childProcess="mozilla-runtime"):
     self.process = process
+    self.ffprocess = ffprocess
     self.childProcess = childProcess
     self.registeredCounters = {}
     self.registerCounters(counters)

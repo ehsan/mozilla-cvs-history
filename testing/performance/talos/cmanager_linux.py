@@ -45,8 +45,6 @@ import os
 import time
 import threading
 
-import ffprocess
-
 def GetPrivateBytes(pids):
   """Calculate the amount of private, writeable memory allocated to a process.
      This code was adapted from 'pmap.c', part of the procps project.
@@ -113,7 +111,7 @@ def GetXRes(pids):
       print "Unexpected error:", sys.exc_info()
       raise
     try:
-      float(data)
+      data = float(data)
       XRes += data
     except:
       print "Invalid data, not a float"
@@ -138,7 +136,7 @@ class CounterManager(threading.Thread):
   
   pollInterval = .25
 
-  def __init__(self, process, counters=None, childProcess="mozilla-runtime"):
+  def __init__(self, ffprocess, process, counters=None, childProcess="mozilla-runtime"):
     """Args:
          counters: A list of counters to monitor. Any counters whose name does
          not match a key in 'counterDict' will be ignored.
@@ -150,6 +148,7 @@ class CounterManager(threading.Thread):
     self.runThread = False
     self.primaryPid = -1
     self.pidList = []
+    self.ffprocess = ffprocess
 
     self._loadCounters()
     self.registerCounters(counters)
@@ -211,7 +210,7 @@ class CounterManager(threading.Thread):
     """Updates the list of PIDs we're interested in"""
     try:
       self.pidList = [self.primaryPid]
-      childPids = ffprocess.GetPidsByName(self.childProcess)
+      childPids = self.ffprocess.GetPidsByName(self.childProcess)
       for pid in childPids:
         os.stat('/proc/%s' % pid)
         self.pidList.append(pid)
@@ -225,7 +224,7 @@ class CounterManager(threading.Thread):
     # TODO: make this function less ugly
     try:
       # the last process is the useful one
-      self.primaryPid = ffprocess.GetPidsByName(self.process)[-1]
+      self.primaryPid = self.ffprocess.GetPidsByName(self.process)[-1]
       os.stat('/proc/%s' % self.primaryPid)
       self.runThread = True
       self.start()
