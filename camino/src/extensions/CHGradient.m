@@ -98,7 +98,12 @@ static void GradientComputation(void* inInfo, float const* inData, float* outDat
   CGFunctionRef function = CGFunctionCreate(colors, 1, NULL, 4, NULL,
                                             &callbacks);
   
-  CGColorSpaceRef colorspace = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
+  // We require a device dependent RGB profile, to keep same set colors when a display profile
+  // is NOT using the standard Apple Gamma (1.8)
+  // In the documentation it says that this function in Mac OS X v10.4 and later is
+  // replaced by the Generic RGB colorspace (kCGColorSpaceGenericRGB) but in practice
+  // this appears NOT to be the case.
+  CGColorSpaceRef colorspace = CGColorSpaceCreateDeviceRGB();
   CGShadingRef shading = CGShadingCreateAxial(colorspace,
                                               startPoint,
                                               endPoint,
