@@ -282,7 +282,7 @@
 "Post To Insecure" = "The information you have entered will be sent over an unencrypted connection and could easily be read by a third party.\n\nAre you sure you want to continue sending this information?";
 
 /* cookie dialog */
-"CookieText" = "%s wants to set a cookie. Do you want to allow it?";
+"CookieText" = "%@ wants to set a cookie. Do you want to allow it?";
 "CookieCheckbox" = "Remember this decision?";
 "CookieTitle" = "Allow Cookie?";
 "Allow" = "Allow";
