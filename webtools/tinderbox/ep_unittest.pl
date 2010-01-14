@@ -36,6 +36,8 @@ BEGIN {
       or /\: cannot find module/  # . . . . . . . . . . cvs
       or /TEST-UNEXPECTED-(?:PASS|FAIL) / # . . . . . . new unified error output
       or /buildbot\.slave\.commands\.TimeoutError:/ # . buildbot error
+      or /PROCESS-CRASH/  # . . . . . . . . . . . . . . crash
+      or /^Thread \d+ \(crashed\)$/ # . . . . . . . . . stack-walking info
       ) and !/TEST-INFO /;  # . . . . . . . . . . . . . information line
   }
 }
