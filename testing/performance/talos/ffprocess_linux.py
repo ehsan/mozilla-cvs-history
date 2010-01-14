@@ -82,6 +82,12 @@ class LinuxProcess(FFProcess):
 
         matchingPids = []
   
+        # A list of process names which should not be in the PID list returned
+        # by this function.  This is needed so that we can reliably build a list
+        # of browser child processes without including any Talos python
+        # processes, which can pass the name of the child process as a parameter.
+        processExclusionList = ['bcontroller.py']
+  
         command = ['ps', 'ax']
         handle = subprocess.Popen(command, stdout=subprocess.PIPE)
 
@@ -94,9 +100,15 @@ class LinuxProcess(FFProcess):
             if line.find('defunct') != -1:
                 continue
             if line.find(process_name) >= 0:
-                # splits by whitespace, the first one should be the pid
-                pid = int(line.split()[0])
-                matchingPids.append(pid)
+                shouldExclude = False
+                # skip this process if it's in the processExclusionList
+                for excludedProcess in processExclusionList:
+                    if line.find(excludedProcess) >= 0:
+                        shouldExclude = True
+                if not shouldExclude:
+                    # splits by whitespace, the first one should be the pid
+                    pid = int(line.split()[0])
+                    matchingPids.append(pid)
 
         return matchingPids
 

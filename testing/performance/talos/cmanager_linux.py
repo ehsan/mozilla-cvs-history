@@ -47,64 +47,79 @@ import threading
 
 import ffprocess
 
-def GetPrivateBytes(pid):
+def GetPrivateBytes(pids):
   """Calculate the amount of private, writeable memory allocated to a process.
      This code was adapted from 'pmap.c', part of the procps project.
   """
-  mapfile = '/proc/%s/maps' % pid
-  maps = open(mapfile)
+  privateBytes = 0
+  for pid in pids:
+    mapfile = '/proc/%s/maps' % pid
+    maps = open(mapfile)
 
-  private = 0
+    private = 0
 
-  for line in maps:
-    # split up
-    (range,line) = line.split(" ", 1)
+    for line in maps:
+      # split up
+      (range,line) = line.split(" ", 1)
 
-    (start,end) = range.split("-")
-    flags = line.split(" ", 1)[0]
+      (start,end) = range.split("-")
+      flags = line.split(" ", 1)[0]
 
-    size = int(end, 16) - int(start, 16)
+      size = int(end, 16) - int(start, 16)
 
-    if flags.find("p") >= 0:
-      if flags.find("w") >= 0:
-        private += size
+      if flags.find("p") >= 0:
+        if flags.find("w") >= 0:
+          private += size
 
-  return private
+    privateBytes += private
+    maps.close()
+
+  return privateBytes
 
 
-def GetResidentSize(pid):
+def GetResidentSize(pids):
   """Retrieve the current resident memory for a given process"""
   # for some reason /proc/PID/stat doesn't give accurate information
   # so we use status instead
-  file = '/proc/%s/status' % pid
 
-  status = open(file)
+  RSS = 0  
+  for pid in pids:
+    file = '/proc/%s/status' % pid
 
-  for line in status:
-    if line.find("VmRSS") >= 0:
-      return int(line.split()[1]) * 1024
+    status = open(file)
 
+    for line in status:
+      if line.find("VmRSS") >= 0:
+        RSS += int(line.split()[1]) * 1024
+
+    status.close()
+
+  return RSS
 
 def GetCpuTime(pid, sampleTime=1):
   # return all zeros on this platform as per the 7/18/07 perf meeting
   return 0
 
-def GetXRes(pid):
+def GetXRes(pids):
   """Returns the total bytes used by X or raises an error if total bytes is not available"""
-  try: 
-    cmdline = "xrestop -m 1 -b | grep -A 15 " + str(pid) + " | tr -d \"\n\" | sed \"s/.*total bytes.*: ~//g\""
-    pipe = subprocess.Popen(cmdline, shell=True, stdout=-1).stdout
-    data = pipe.read()
-    pipe.close()
-  except:
-    print "Unexpected error:", sys.exc_info()
-    raise
-  try:
-    float(data)
-    return data
-  except:
-    print "Invalid data, not a float"
-    raise
+  XRes = 0
+  for pid in pids:
+    try: 
+      cmdline = "xrestop -m 1 -b | grep -A 15 " + str(pid) + " | tr -d \"\n\" | sed \"s/.*total bytes.*: ~//g\""
+      pipe = subprocess.Popen(cmdline, shell=True, stdout=-1).stdout
+      data = pipe.read()
+      pipe.close()
+    except:
+      print "Unexpected error:", sys.exc_info()
+      raise
+    try:
+      float(data)
+      XRes += data
+    except:
+      print "Invalid data, not a float"
+      raise
+
+  return XRes
 
 counterDict = {}
 counterDict["Private Bytes"] = GetPrivateBytes
@@ -123,7 +138,7 @@ class CounterManager(threading.Thread):
   
   pollInterval = .25
 
-  def __init__(self, process, counters=None):
+  def __init__(self, process, counters=None, childProcess="mozilla-runtime"):
     """Args:
          counters: A list of counters to monitor. Any counters whose name does
          not match a key in 'counterDict' will be ignored.
@@ -131,8 +146,10 @@ class CounterManager(threading.Thread):
     self.allCounters = {}
     self.registeredCounters = {}
     self.process = process
+    self.childProcess = childProcess
     self.runThread = False
-    self.pid = -1
+    self.primaryPid = -1
+    self.pidList = []
 
     self._loadCounters()
     self.registerCounters(counters)
@@ -190,6 +207,17 @@ class CounterManager(threading.Thread):
     """Returns the process currently associated with this CounterManager"""
     return self.process
 
+  def updatePidList(self):
+    """Updates the list of PIDs we're interested in"""
+    try:
+      self.pidList = [self.primaryPid]
+      childPids = ffprocess.GetPidsByName(self.childProcess)
+      for pid in childPids:
+        os.stat('/proc/%s' % pid)
+        self.pidList.append(pid)
+    except:
+      print "WARNING: problem updating child PID's"
+
   def startMonitor(self):
     """Starts the monitoring process.
        Throws an exception if any error occurs
@@ -197,8 +225,8 @@ class CounterManager(threading.Thread):
     # TODO: make this function less ugly
     try:
       # the last process is the useful one
-      self.pid = ffprocess.GetPidsByName(self.process)[-1]
-      os.stat('/proc/%s' % self.pid)
+      self.primaryPid = ffprocess.GetPidsByName(self.process)[-1]
+      os.stat('/proc/%s' % self.primaryPid)
       self.runThread = True
       self.start()
     except:
@@ -215,13 +243,14 @@ class CounterManager(threading.Thread):
        until stopMonitor() is called
     """
     while self.runThread:
+      self.updatePidList()
       for counter in self.registeredCounters.keys():
         # counter[0] is a function that gets the current value for
         # a counter
         # counter[1] is a list of recorded values
         try:
           self.registeredCounters[counter][1].append(
-            self.registeredCounters[counter][0](self.pid))
+            self.registeredCounters[counter][0](self.pidList))
         except:
           # if a counter throws an exception, remove it
           #self.unregisterCounters([counter])
