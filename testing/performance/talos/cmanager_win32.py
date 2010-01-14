@@ -42,8 +42,9 @@ import win32pdhutil
 
 class CounterManager:
 
-  def __init__(self, process, counters=None):
+  def __init__(self, process, counters=None, childProcess="mozilla-runtime"):
     self.process = process
+    self.childProcess = childProcess
     self.registeredCounters = {}
     self.registerCounters(counters)
     # PDH might need to be "refreshed" if it has been queried while the browser
@@ -51,6 +52,9 @@ class CounterManager:
     win32pdh.EnumObjects(None, None, 0, 1)
 
   def registerCounters(self, counters):
+    # self.registeredCounters[counter][0] is a counter query handle
+    # self.registeredCounters[counter][1] is a list of tuples, the first 
+    # member of which is a counter handle, the second a counter path
     for counter in counters:
       self.registeredCounters[counter] = []
             
@@ -62,15 +66,56 @@ class CounterManager:
   def getRegisteredCounters(self):
     return keys(self.registeredCounters)
 
+  def updateCounterPathsForChildProcesses(self, counter):
+    # Create a counter path for each instance of the child process that
+    # is running.  If any of these paths are not in our counter list,
+    # add them to our counter query and append them to the counter list, 
+    # so that we'll begin tracking their statistics.  We don't need to
+    # worry about removing invalid paths from the list, as getCounterValue()
+    # will generate a value of 0 for those.
+    hq = self.registeredCounters[counter][0]
+    win32pdh.EnumObjects(None, None, 0, 1)
+    counterListLength = len(self.registeredCounters[counter][1])
+    expandedCounterPaths = \
+        win32pdh.ExpandCounterPath('\\process(%s*)\\%s' % (self.childProcess, counter))
+    for expandedPath in expandedCounterPaths:
+      alreadyInCounterList = False
+      for singleCounter in self.registeredCounters[counter][1]:
+        if expandedPath == singleCounter[1]:
+          alreadyInCounterList = True
+      if not alreadyInCounterList:
+        counterHandle = win32pdh.AddCounter(hq, expandedPath)
+        self.registeredCounters[counter][1].append((counterHandle, expandedPath))
+    if counterListLength != len(self.registeredCounters[counter][1]):
+      try:
+        win32pdh.CollectQueryData(hq)
+      except:
+        return
+
   def getCounterValue(self, counter):
+    # Update counter paths, to catch any new child processes that might
+    # have been launched since last call.  Then iterate through all
+    # counter paths for this counter, and return a combined value.
+    aggregateValue = 0
+    self.updateCounterPathsForChildProcesses(counter)
+    hq = self.registeredCounters[counter][0]
+
+    # This call can throw an exception in the case where all counter paths
+    # are invalid (i.e., all the processes have terminated).
     try:
-      hq = self.registeredCounters[counter][0]
-      hc = self.registeredCounters[counter][1]
       win32pdh.CollectQueryData(hq)
-      type, val = win32pdh.GetFormattedCounterValue(hc, win32pdh.PDH_FMT_LONG)
-      return val
     except:
       return None
+
+    for singleCounter in self.registeredCounters[counter][1]: 
+      hc = singleCounter[0]
+      try:
+        type, val = win32pdh.GetFormattedCounterValue(hc, win32pdh.PDH_FMT_LONG)
+      except:
+        val = 0
+      aggregateValue += val
+
+    return aggregateValue
 
   def getProcess(self):
     return self.process
@@ -80,6 +125,7 @@ class CounterManager:
     # is closed
     win32pdh.EnumObjects(None, None, 0, 1)
 
+    # Add the counter path for the default process.
     for counter in self.registeredCounters:
       path = win32pdh.MakeCounterPath((None, 'process', self.process,
                                        None, -1, counter))
@@ -89,10 +135,12 @@ class CounterManager:
       except:
         win32pdh.CloseQuery(hq)
 
-      self.registeredCounters[counter] = [hq, hc]
+      self.registeredCounters[counter] = [hq, [(hc, path)]]
+      self.updateCounterPathsForChildProcesses(counter)
 
   def stopMonitor(self):
     for counter in self.registeredCounters:
-      win32pdh.RemoveCounter(self.registeredCounters[counter][1])
+      for singleCounter in self.registeredCounters[counter][1]: 
+        win32pdh.RemoveCounter(singleCounter[0])
       win32pdh.CloseQuery(self.registeredCounters[counter][0])
     self.registeredCounters.clear()
