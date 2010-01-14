@@ -129,7 +129,7 @@ class BrowserController:
 
     results_file = open(self.log, "a")
     if self.bwaiter.getReturn() != 0:  #the browser shutdown, but not cleanly
-      results_file.write("\n__FAILbrowser crash (code %d)__FAIL\n" % self.bwaiter.getReturn())
+      results_file.write("\n__FAILbrowser non-zero return code (%d)__FAIL\n" % self.bwaiter.getReturn())
       return
     results_file.write("__startSecondTimestamp%d__endSecondTimestamp\n" % self.bwaiter.getTime())
     results_file.close()
