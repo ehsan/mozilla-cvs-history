@@ -40,7 +40,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsock.c,v 1.61 2010/01/14 22:15:25 alexei.volkov.bugs%sun.com Exp $ */
+/* $Id: sslsock.c,v 1.62 2010/01/15 01:49:34 alexei.volkov.bugs%sun.com Exp $ */
 #include "seccomon.h"
 #include "cert.h"
 #include "keyhi.h"
@@ -1261,7 +1261,6 @@ SSL_ReconfigFD(PRFileDesc *model, PRFileDesc *fd)
     int i;
     sslServerCerts * mc = sm->serverCerts;
     sslServerCerts * sc = ss->serverCerts;
-    SECStatus rv;
 
     if (model == NULL) {
         PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
