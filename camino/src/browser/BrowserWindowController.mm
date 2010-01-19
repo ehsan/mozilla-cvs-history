@@ -1825,6 +1825,20 @@ public:
   [sender setNeedsDisplay:YES];
 }
 
+//
+// -splitView:shouldCollapseSubview:forDoubleClickOnDividerAtIndex:
+// NSSplitView delegate
+//
+// Allow the user to collapse and uncollapse the search bar by double clicking.
+// NB This works on 10.5+ but is harmless on 10.4.
+//
+- (BOOL)splitView:(NSSplitView *)sender shouldCollapseSubview:(NSView *)subview forDoubleClickOnDividerAtIndex:(int)dividerIndex
+{
+  if (sender == mLocationToolbarView)
+    return (subview == mSearchBar);
+  return NO;
+}
+
 #pragma mark -
 
 
