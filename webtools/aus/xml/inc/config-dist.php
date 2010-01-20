@@ -87,7 +87,8 @@ define('THROTTLE_LOGGING',false);
 // );
 $productThrottling = array(
      'Firefox' => array(
-         '3.0.18' => 0
+         '3.0.18' => 0,
+         '3.5.7' => 0
      ),
     'Thunderbird' => array(
          '2.0.0.23' => 0
@@ -108,6 +109,10 @@ $productThrottling = array(
 // be throttled unless there is a global throttle enabled.
 $throttleExceptions = array(
     '3.0.18' => array (
+        'betatest',
+        'releasetest'
+    ),
+    '3.5.7' => array (
         'betatest',
         'releasetest'
     )
