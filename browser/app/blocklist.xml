@@ -61,10 +61,5 @@
     <versionRange>
     </versionRange>
   </pluginItem>
-  <pluginItem>
-    <match name="filename" exp="NPMySrch.dll"/>
-    <versionRange>
-    </versionRange>
-  </pluginItem>
 </pluginItems>
 </blocklist>
