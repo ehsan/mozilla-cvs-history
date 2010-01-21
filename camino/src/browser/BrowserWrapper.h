@@ -46,6 +46,7 @@
 @class RolloverImageButton;
 @class FindBarController;
 @class SafeBrowsingBar;
+@class KeychainBrowserListener;
 
 class nsIMutableArray;
 class nsIArray;
@@ -193,6 +194,8 @@ extern NSString* const kBrowserInstanceClosedNotification;
   IBOutlet SafeBrowsingBar* mSafeBrowsingBar; // loaded on demand, can be nil, strong
   IBOutlet NSTextField*     mSafeBrowsingBarLabel;
   NSMutableDictionary*      mIgnoredBlockedSites; // strong
+
+  KeychainBrowserListener*  mPasswordAutofillListener;  // strong
 }
 
 - (id)initWithTab:(NSTabViewItem*)aTab inWindow:(NSWindow*)window;

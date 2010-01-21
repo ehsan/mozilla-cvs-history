@@ -182,8 +182,9 @@ static const NSTimeInterval kTimeIntervalToConsiderSiteBlockingStatusValid = 900
 
     [mBrowserView setContainer:self];
     [mBrowserView addListener:self];
-
-    [[KeychainService instance] addListenerToView:mBrowserView];
+    mPasswordAutofillListener = [[KeychainBrowserListener alloc]
+                                     initWithBrowser:mBrowserView];
+    [mBrowserView addListener:mPasswordAutofillListener];
 
     mIsBusy = NO;
     mListenersAttached = NO;
@@ -295,6 +296,9 @@ static const NSTimeInterval kTimeIntervalToConsiderSiteBlockingStatusValid = 900
   // when the CHBrowserListener goes away as a result of the
   // |destroyWebBrowser| call. (bug 174416)
   [mBrowserView removeListener:self];
+  [mBrowserView removeListener:mPasswordAutofillListener];
+  [mPasswordAutofillListener release];
+  mPasswordAutofillListener = nil;
   [mBrowserView destroyWebBrowser];
 
   // We don't want site icon notifications when the window has gone away

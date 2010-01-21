@@ -120,8 +120,6 @@ nsresult FindUsernamePasswordFields(nsIDOMHTMLFormElement* inFormElement,
 
 - (void)removeAllUsernamesAndPasswords;
 
-- (void)addListenerToView:(CHBrowserView*)view;
-
 - (BOOL)formPasswordFillIsEnabled;
 
 // Methods to interact with the list of hosts we shouldn't ask about.
