@@ -3,12 +3,9 @@
 set -e
 #set -v
 
-#LIVE_SNIPPET_DIR=/opt/aus2/incoming/3
-#BACKUP_DIR=/opt/aus2/snippets/backup
-#STAGING_DIR=/opt/aus2/snippets/staging
-LIVE_SNIPPET_DIR=/home/catlee/mozilla/mozilla-cvs/tools/release/bin/snippets
-BACKUP_DIR=/home/catlee/mozilla/mozilla-cvs/tools/release/bin/backups
-STAGING_DIR=/home/catlee/mozilla/mozilla-cvs/tools/release/bin/staging
+LIVE_SNIPPET_DIR=/opt/aus2/incoming/3
+BACKUP_DIR=/opt/aus2/snippets/backup
+STAGING_DIR=/opt/aus2/snippets/staging
 
 WC=/usr/bin/wc
 DATE=/bin/date
