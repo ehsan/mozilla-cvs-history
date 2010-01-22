@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nssinit.c,v 1.104 2010/01/09 01:01:32 rrelyea%redhat.com Exp $ */
+/* $Id: nssinit.c,v 1.105 2010/01/22 02:10:54 wtc%google.com Exp $ */
 
 #include <ctype.h>
 #include <string.h>
@@ -46,8 +46,6 @@
 #include "prmem.h"
 #include "cert.h"
 #include "key.h"
-#include "ssl.h"
-#include "sslproto.h"
 #include "secmod.h"
 #include "secoid.h"
 #include "nss.h"
