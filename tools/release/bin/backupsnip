@@ -3,9 +3,12 @@
 set -e
 #set -v
 
-LIVE_SNIPPET_DIR=/opt/aus2/incoming/3
-BACKUP_DIR=/opt/aus2/snippets/backup
-STAGING_DIR=/opt/aus2/snippets/staging
+#LIVE_SNIPPET_DIR=/opt/aus2/incoming/3
+#BACKUP_DIR=/opt/aus2/snippets/backup
+#STAGING_DIR=/opt/aus2/snippets/staging
+LIVE_SNIPPET_DIR=/home/catlee/mozilla/mozilla-cvs/tools/release/bin/snippets
+BACKUP_DIR=/home/catlee/mozilla/mozilla-cvs/tools/release/bin/backups
+STAGING_DIR=/home/catlee/mozilla/mozilla-cvs/tools/release/bin/staging
 
 WC=/usr/bin/wc
 DATE=/bin/date
@@ -40,9 +43,23 @@ let nextPreDirCount=$preDirCount+1
 #echo $nextPreDirCount
 backupDirName=$currentDate-$nextPreDirCount-pre-$1
 
+### Find list of directories that change
+absNewSnippetDir=$STAGING_DIR/$newSnippetDir
+changedDirs=$(find $absNewSnippetDir -maxdepth 3 -mindepth 3 -type d | $SED s,$absNewSnippetDir/,,g)
+args=""
+### Skip directories that don't exist in the live snippets directory
+### no need to back them up, since they don't exist yet!
+for d in $changedDirs; do
+    if [ ! -d $LIVE_SNIPPET_DIR/$d ]; then
+        echo Ignoring $d
+    else
+        args="$args $d"
+    fi
+done
+
 pushd $LIVE_SNIPPET_DIR > /dev/null
-echo Running time $TAR cfvj $BACKUP_DIR/$backupDirName.tar.bz2 . --exclude 'Firefox/1.5*' --exclude 'Firefox/2.0*' --exclude 'Thunderbird/1.5*'
-time $TAR cfvj $BACKUP_DIR/$backupDirName.tar.bz2 . --exclude 'Firefox/1.5*' --exclude 'Firefox/2.0*' --exclude 'Thunderbird/1.5*'
+echo Running time $TAR cfvz $BACKUP_DIR/$backupDirName.tar.gz $args
+time $TAR cfvz $BACKUP_DIR/$backupDirName.tar.gz $args
 popd > /dev/null
 
 exit 0

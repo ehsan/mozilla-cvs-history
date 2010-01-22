@@ -1,0 +1,34 @@
+#!/bin/bash
+
+set -e
+#set -v
+
+LIVE_SNIPPET_DIR=/opt/aus2/incoming/3
+BACKUP_DIR=/opt/aus2/snippets/backup
+
+WC=/usr/bin/wc
+DATE=/bin/date
+TAR=/bin/tar
+SED=/bin/sed
+GREP=/bin/grep
+
+currentDate=`$DATE +%Y%m%d`
+
+## We use the shell's expansion capabilites to get a list of other snippet
+## directories we may have pushed today... kinda lame, but it works.
+
+pushd $BACKUP_DIR > /dev/null
+backupDirCount=`echo $currentDate-nightly-?-* | $GREP -v \? | $WC -w`
+popd > /dev/null
+
+## Increment the count by one, for the new snippet backup directory we're
+## about to create
+let backupDirCount=$backupDirCount+1
+backupDirName=$currentDate-nightly-$backupDirCount
+
+pushd $LIVE_SNIPPET_DIR > /dev/null
+echo Running time $TAR cfvj $BACKUP_DIR/$backupDirName.tar.bz2 . --exclude 'Firefox/1.5*' --exclude 'Firefox/2.0*' --exclude 'Thunderbird/1.5*'
+time $TAR cfvj $BACKUP_DIR/$backupDirName.tar.bz2 . --exclude 'Firefox/1.5*' --exclude 'Firefox/2.0*' --exclude 'Thunderbird/1.5*'
+popd > /dev/null
+
+exit 0
