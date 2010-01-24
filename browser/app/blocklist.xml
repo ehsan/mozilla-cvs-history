@@ -32,7 +32,6 @@
         </targetApplication>
       </versionRange>
     </emItem>
-    <emItem id="{847b3a00-7ab1-11d4-8f02-006008948af5}"/>
     <emItem id="{B13721C7-F507-4982-B2E5-502A71474FED}">
       <versionRange minVersion=" " maxVersion="3.3.0.3970" severity="1"/>
     </emItem>
