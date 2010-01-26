@@ -6870,8 +6870,6 @@ nsEventReceiverSH::AddEventListenerHelper(JSContext *cx, JSObject *obj,
     return JS_FALSE;
   }
 
-  OBJ_TO_INNER_OBJECT(cx, obj);
-
   nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
   nsresult rv =
     sXPConnect->GetWrappedNativeOfJSObject(cx, obj, getter_AddRefs(wrapper));
@@ -6884,6 +6882,11 @@ nsEventReceiverSH::AddEventListenerHelper(JSContext *cx, JSObject *obj,
   // Set obj to be the object on which we'll actually register the
   // event listener.
   wrapper->GetJSObject(&obj);
+
+  OBJ_TO_INNER_OBJECT(cx, obj);
+  if (!obj) {
+    return JS_FALSE;
+  }
 
   // Check that the caller has permission to call obj's addEventListener.
   if (NS_FAILED(sSecMan->CheckPropertyAccess(cx, obj,
