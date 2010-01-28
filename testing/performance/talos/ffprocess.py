@@ -121,7 +121,7 @@ class FFProcess(object):
 
     def cleanupProcesses(self, process_name, child_process, browser_wait):
         #kill any remaining browser processes
-        self.TerminateAllProcesses(browser_wait, process_name, "crashreporter", "dwwin", "talkback")
+        self.TerminateAllProcesses(browser_wait, process_name, child_process, "crashreporter", "dwwin", "talkback")
         #check if anything is left behind
         if self.checkAllProcesses(process_name, child_process):
             #this is for windows machines.  when attempting to send kill messages to win processes the OS

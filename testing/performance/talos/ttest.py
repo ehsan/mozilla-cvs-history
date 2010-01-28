@@ -109,6 +109,7 @@ class TTest(object):
     def initializeProfile(self, profile_dir, browser_config):
         if not (self._ffsetup.InitializeNewProfile(browser_config['browser_path'], 
                                                     browser_config['process'],
+                                                    browser_config['child_process'],
                                                     browser_config['browser_wait'],
                                                     browser_config['extra_args'], 
                                                     profile_dir, 
@@ -116,7 +117,7 @@ class TTest(object):
                                                     browser_config['browser_log'])):
             raise talosError("failed to initialize browser")
         time.sleep(browser_config['browser_wait'])
-        if self._ffprocess.checkAllProcesses(browser_config['process'], browser_config['process']):
+        if self._ffprocess.checkAllProcesses(browser_config['process'], browser_config['child_process']):
             raise talosError("browser failed to close after being initialized") 
 
     def cleanupProfile(self, dir):
@@ -193,12 +194,12 @@ class TTest(object):
                                             browser_config['dirs'][dir])
   
             # make profile path work cross-platform
-                test_config['profile_path'] = os.path.normpath(test_config['profile_path'])
-                profile_dir, temp_dir = self.createProfile(test_config['profile_path'], browser_config)
-                if os.path.isfile(browser_config['browser_log']):
-                    os.chmod(browser_config['browser_log'], 0777)
-                    os.remove(browser_config['browser_log'])
-                self.initializeProfile(profile_dir, browser_config)
+            test_config['profile_path'] = os.path.normpath(test_config['profile_path'])
+            profile_dir, temp_dir = self.createProfile(test_config['profile_path'], browser_config)
+            if os.path.isfile(browser_config['browser_log']):
+                os.chmod(browser_config['browser_log'], 0777)
+                os.remove(browser_config['browser_log'])
+            self.initializeProfile(profile_dir, browser_config)
     
             utils.debug("initialized " + browser_config['process'])
             if test_config['shutdown']:

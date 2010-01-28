@@ -142,7 +142,7 @@ class FFSetup(object):
             else:
                 utils.debug("WARNING: file already installed (" + fromfile + ")")
 
-    def InitializeNewProfile(self, browser_path, process, browser_wait, extra_args, profile_dir, init_url, log):
+    def InitializeNewProfile(self, browser_path, process, child_process, browser_wait, extra_args, profile_dir, init_url, log):
         """Runs browser with the new profile directory, to negate any performance
             hit that could occur as a result of starting up with a new profile.  
             Also kills the "extra" browser that gets spawned the first time browser
@@ -154,7 +154,7 @@ class FFSetup(object):
         """
         PROFILE_REGEX = re.compile('__metrics(.*)__metrics', re.DOTALL|re.MULTILINE)
         command_line = self.ffprocess.GenerateBrowserCommandLine(browser_path, extra_args, profile_dir, init_url)
-        process = subprocess.Popen('python bcontroller.py --command "%s" --name %s --timeout %d --log %s' %  (command_line, process, browser_wait, log), universal_newlines=True, shell=True, bufsize=0, env=os.environ)
+        process = subprocess.Popen('python bcontroller.py --command "%s" --name %s --child_process %s --timeout %d --log %s' %  (command_line, process, child_process, browser_wait, log), universal_newlines=True, shell=True, bufsize=0, env=os.environ)
         res = 0
         total_time = 0
         while total_time < 600: #10 minutes
