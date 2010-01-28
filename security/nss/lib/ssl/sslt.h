@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslt.h,v 1.14 2010/01/14 22:15:25 alexei.volkov.bugs%sun.com Exp $ */
+/* $Id: sslt.h,v 1.15 2010/01/28 16:14:25 kaie%kuix.de Exp $ */
 
 #ifndef __sslt_h_
 #define __sslt_h_
@@ -193,5 +193,19 @@ typedef enum {
     SSL_sni_host_name                    = 0,
     SSL_sni_type_total
 } SSLSniNameType;
+
+/* Supported extensions. */
+/* Update SSL_MAX_EXTENSIONS whenever a new extension type is added. */
+typedef enum {
+    ssl_server_name_xtn              = 0,
+#ifdef NSS_ENABLE_ECC
+    ssl_elliptic_curves_xtn          = 10,
+    ssl_ec_point_formats_xtn         = 11,
+#endif
+    ssl_session_ticket_xtn           = 35,
+    ssl_renegotiation_info_xtn       = 0xff01	/* experimental number */
+} ExtensionType;
+
+#define SSL_MAX_EXTENSIONS             5
 
 #endif /* __sslt_h_ */
