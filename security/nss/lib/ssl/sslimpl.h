@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslimpl.h,v 1.72 2010/01/22 03:47:42 wtc%google.com Exp $ */
+/* $Id: sslimpl.h,v 1.73 2010/01/28 06:19:12 nelson%bolyard.com Exp $ */
 
 #ifndef __sslimpl_h_
 #define __sslimpl_h_
@@ -776,9 +776,16 @@ const ssl3CipherSuiteDef *suite_def;
     PRBool                rehandshake; /* immediately start another handshake 
                                         * when this one finishes */
     PRBool                usedStepDownKey;  /* we did a server key exchange. */
+    PRBool                sendingSCSV; /* instead of empty RI */
     sslBuffer             msgState;    /* current state for handshake messages*/
                                        /* protected by recvBufLock */
     sslBuffer             messages;    /* Accumulated handshake messages */
+    PRUint16              finishedBytes; /* size of single finished below */
+    union {
+	TLSFinished       tFinished[2]; /* client, then server */
+	SSL3Hashes        sFinished[2];
+	SSL3Opaque        data[72];
+    }                     finishedMsgs;
 #ifdef NSS_ENABLE_ECC
     PRUint32              negotiatedECCurves; /* bit mask */
 #endif /* NSS_ENABLE_ECC */
@@ -1017,6 +1024,7 @@ struct sslSocketStr {
     unsigned long    recvdCloseNotify;    /* received SSL EOF. */
     unsigned long    TCPconnected;       
     unsigned long    appDataBuffered;
+    unsigned long    peerRequestedProtection; /* from old renegotiation */
 
     /* version of the protocol to use */
     SSL3ProtocolVersion version;

@@ -38,7 +38,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3prot.h,v 1.15 2009/11/07 18:23:06 wtc%google.com Exp $ */
+/* $Id: ssl3prot.h,v 1.16 2010/01/28 06:19:12 nelson%bolyard.com Exp $ */
 
 #ifndef __ssl3proto_h_
 #define __ssl3proto_h_
@@ -351,10 +351,11 @@ typedef enum {
     elliptic_curves_xtn          = 10,
     ec_point_formats_xtn         = 11,
 #endif
-    session_ticket_xtn           = 35
+    session_ticket_xtn           = 35,
+    renegotiation_info_xtn       = 0xff01
 } ExtensionType;
 
-#define MAX_EXTENSIONS             4
+#define MAX_EXTENSIONS             5
 
 #define TLS_EX_SESS_TICKET_MAC_LENGTH       32
 
