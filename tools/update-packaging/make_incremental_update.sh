@@ -48,7 +48,7 @@ if [ $# = 0 ]; then
   exit 1
 fi
 
-requested_forced_updates='components/components.list Contents/MacOS/components/components.list'
+requested_forced_updates='components/components.list Contents/MacOS/components/components.list mozilla-runtime libmozsqlite3.so'
 
 while getopts "hf:" flag
 do
@@ -115,6 +115,7 @@ for ((i=0; $i<$num_oldfiles; i=$i+1)); do
       # The full workdir may not exist yet, so create it if necessary. 
       mkdir -p `dirname "$workdir/$f"`
       $BZIP2 -cz9 "$newdir/$f" > "$workdir/$f"
+      copy_perm "$newdir/$f" "$workdir/$f"
       make_add_instruction "$f" >> $manifest
       archivefiles="$archivefiles \"$f\""
       continue 1
@@ -129,6 +130,7 @@ for ((i=0; $i<$num_oldfiles; i=$i+1)); do
       $MBSDIFF "$olddir/$f" "$newdir/$f" "$workdir/$f.patch"
       $BZIP2 -z9 "$workdir/$f.patch"
       $BZIP2 -cz9 "$newdir/$f" > "$workdir/$f"
+      copy_perm "$newdir/$f" "$workdir/$f"
       patchfile="$workdir/$f.patch.bz2"
       patchsize=$(get_file_size "$patchfile")
       fullsize=$(get_file_size "$workdir/$f")
@@ -166,6 +168,7 @@ for ((i=0; $i<$num_newfiles; i=$i+1)); do
   mkdir -p "$dir"
 
   $BZIP2 -cz9 "$newdir/$f" > "$workdir/$f"
+  copy_perm "$newdir/$f" "$workdir/$f"
 
   make_add_instruction "$f" >> "$manifest"
   archivefiles="$archivefiles \"$f\""
