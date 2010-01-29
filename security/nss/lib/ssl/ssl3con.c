@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.130 2010/01/28 16:14:25 kaie%kuix.de Exp $ */
+/* $Id: ssl3con.c,v 1.131 2010/01/29 19:20:28 wtc%google.com Exp $ */
 
 #include "cert.h"
 #include "ssl.h"
@@ -4978,20 +4978,27 @@ ssl3_HandleServerHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     }
     ss->ssl3.hs.compression = (SSLCompressionMethod)temp;
 
-    /* Note that if !isTLS && length != 0, we do NOT goto alert_loser.
+    /* Note that if !isTLS and the extra stuff is not extensions, we
+     * do NOT goto alert_loser.
      * There are some old SSL 3.0 implementations that do send stuff
      * after the end of the server hello, and we deliberately ignore
      * such stuff in the interest of maximal interoperability (being
      * "generous in what you accept").
+     * Update: Starting in NSS 3.12.6, we handle the renegotiation_info
+     * extension in SSL 3.0.
      */
-    if (isTLS && length != 0) {
+    if (length != 0) {
 	SECItem extensions;
 	rv = ssl3_ConsumeHandshakeVariable(ss, &extensions, 2, &b, &length);
-	if (rv != SECSuccess || length != 0)
-	    goto alert_loser;
-	rv = ssl3_HandleHelloExtensions(ss, &extensions.data, &extensions.len);
-	if (rv != SECSuccess)
-	    goto alert_loser;
+	if (rv != SECSuccess || length != 0) {
+	    if (isTLS)
+		goto alert_loser;
+	} else {
+	    rv = ssl3_HandleHelloExtensions(ss, &extensions.data,
+					    &extensions.len);
+	    if (rv != SECSuccess)
+		goto alert_loser;
+	}
     }
     if ((ss->opt.requireSafeNegotiation || 
          (ss->firstHsDone && (ss->peerRequestedProtection ||
