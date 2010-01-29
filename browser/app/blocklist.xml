@@ -74,13 +74,5 @@
     <versionRange>
     </versionRange>
   </pluginItem>
-  <pluginItem>
-    <match name="filename" exp="npViewpoint.dll"/>
-    <versionRange>
-      <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-        <versionRange minVersion="3.0" maxVersion="*"/>
-      </targetApplication>
-    </versionRange>
-  </pluginItem>
 </pluginItems>
 </blocklist>
