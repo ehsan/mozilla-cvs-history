@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.131 2010/01/29 19:20:28 wtc%google.com Exp $ */
+/* $Id: ssl3con.c,v 1.132 2010/01/29 19:55:42 wtc%google.com Exp $ */
 
 #include "cert.h"
 #include "ssl.h"
@@ -6055,7 +6055,7 @@ ssl3_HandleClientHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 	    }
 	}
     }
-    if (ss->ssl3.hs.ws == idle_handshake  &&  ss->firstHsDone &&
+    if (ss->firstHsDone &&
         ss->opt.enableRenegotiation == SSL_RENEGOTIATE_REQUIRES_XTN && 
 	!ssl3_ExtensionNegotiated(ss, ssl_renegotiation_info_xtn)) {
 	desc    = no_renegotiation;
