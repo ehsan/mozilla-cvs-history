@@ -294,8 +294,8 @@
 "GenericHostString" = "This site";
 
 /* for toggling between page/bookmark info Edit menu item */
-"Page Info" = "Page Info";
-"Bookmark Info" = "Bookmark Info"; /* also used for the bookmark item context menu */
+"Page Info" = "Show Page Info";
+"Bookmark Info" = "Show Bookmark Info"; /* also used for the bookmark item context menu */
 
 /* Bookmark undo menu messages */
 "Add Folder" = "Add Folder";
