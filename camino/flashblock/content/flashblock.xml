@@ -55,8 +55,8 @@ function flashblockShowPlaceholder() {
 
 // Show the original animation
 function flashblockShowFlash(event) {
-    if( event.type == "keypress" && event.keyCode != KeyEvent.DOM_VK_RETURN)
-      return false;
+	if( event.type == "keypress" && event.keyCode != KeyEvent.DOM_VK_RETURN)
+		return false;
 	event.stopPropagation();
 	if(placeholder.flashblock == "frame") {
 		current.height = current.prevHeight;
@@ -79,17 +79,19 @@ function flashblockShowFlash(event) {
 			var mparam = placeholder.movieParam;
 			mparam[0].value = mparam[1];
 		}
-		if (placeholder.hasAttribute("embedsrc")) {
-			var embeds = current.getElementsByTagName("embed");
-			if (embeds && embeds.length > 0) {
-				embeds[0].setAttribute("src", placeholder.getAttribute("embedsrc"));
-			}
+		if (placeholder.srcParam) {
+			var mparam = placeholder.srcParam;
+			mparam[0].value = mparam[1];
+		}
+		if (placeholder.sourceParam) {
+			var mparam = placeholder.sourceParam;
+			mparam[0].value = mparam[1];
 		}
 	}
 	parent.removeChild(placeholder);
 }
 
-function flashblockIsWhitelisted() {
+function flashblockIsWhitelisted(type) {
 	// Check if the page that loaded the Flash site is whitelisted
 	// Thanks to Neil on #mozilla for suggesting this method, I would never have
 	// thought of it on my own. :-)
@@ -98,7 +100,8 @@ function flashblockIsWhitelisted() {
 	var flashblockEvent = document.createEvent("UIEvents");
 
 	if(flashblockEvent) {
-		flashblockEvent.initEvent("flashblockCheckLoad", true, true);
+		var evt = type == "silverlight" ? "silverblockCheckLoad" : "flashblockCheckLoad";
+		flashblockEvent.initEvent(evt, true, true);
 		document.dispatchEvent(flashblockEvent);
 		if(flashblockEvent.getPreventDefault() == true) {
 			// Whitelisted
@@ -110,7 +113,15 @@ function flashblockIsWhitelisted() {
 
 function flashblockSetImage(placeholder, type) {
 	var inactiveurl = "url(chrome://flashblock/content/" + type + ".png) no-repeat center";
-	var activeurl = "url(chrome://flashblock/content/flashplay.png) no-repeat center";
+	var playimage = "url(chrome://flashblock/content/flashplay.png)";
+	switch (type) {
+		case "silverlight":
+			playimage = "url(chrome://flashblock/content/silverplay.png)";
+			break;
+		default:
+			break;
+	}
+	var activeurl = playimage + " no-repeat center";
 	placeholder.setAttribute("bgInactive", inactiveurl);
 	placeholder.setAttribute("bgActive", activeurl);
 	placeholder.style.background = inactiveurl;
@@ -183,7 +194,7 @@ function flashblockSetTitle(current, placeholder, isStandalone) {
 		current.src = fakeURI;
 	}
 	else if (current.hasAttribute("src") ||
-			current.hasAttribute("data") ||
+			(current.hasAttribute("data") && !/application\/x-silverlight/.test(current.getAttribute("data"))) ||
 			current.hasAttribute("movie") ) {
 		var srcURI = current.getAttribute("src") ||
 			current.getAttribute("movie") ||
@@ -212,28 +223,57 @@ function flashblockSetTitle(current, placeholder, isStandalone) {
 				params[ii].value = fakeURI;
 				break;
 			}
+			if (params[ii].getAttribute("name") == "src" &&
+				params[ii].hasAttribute("value")) {
+				placeholder.title = params[ii].value;
+				placeholder.srcParam = [ params[ii], placeholder.title ];
+				params[ii].value = fakeURI;
+				break;
+			}
+			if (params[ii].getAttribute("name") == "source" &&
+				params[ii].hasAttribute("value")) {
+				placeholder.title = params[ii].value;
+				placeholder.sourceParam = [ params[ii], placeholder.title ];
+				params[ii].value = fakeURI;
+				break;
+			}
 		}
 	}
 }
 
-if(flashblockIsWhitelisted())
-	return;
+var type = this.flashblockType ? this.flashblockType : "flash"
+if (/silverlight|ag-plugin/i.test(this.getAttribute("type")) ||
+    /32C73088-76AE-40F7-AC40-81F62CB2C1DA/i.test(this.getAttribute("classid")) ) {
+  type = "silverlight";
+}
+
+if(flashblockIsWhitelisted(type))
+    return;
 
 var current = this;
 var parent = current.parentNode;
 
 // Check parent too (case of working EMBED inside broken OBJECT)
 if (current.overrideCTV || parentNode.overrideCTV) {
-	return;
+    return;
 }
 current.overrideCTV = true;
+
+// Flowplayer specific workaround.
+var flow = parent.getAttribute("href");
+if (flow) {
+    var prevDef = function (event) {
+        event.preventDefault();
+        event.currentTarget.removeEventListener("load", arguments.callee, true);
+    }
+    parent.addEventListener("click", prevDef , true)
+}
 
 // Create placeholder div
 var isStandalone = ("src" in current && current.src == current.ownerDocument.location);
 var placeholder = flashblockCreatePlaceholder(isStandalone);
 
 // Set placeholder image
-var type = this.flashblockType ? this.flashblockType : "flash"
 flashblockSetImage(placeholder, type);
 
 flashblockStylePlaceholder(current, placeholder, isStandalone);
@@ -276,6 +316,12 @@ placeholder.addEventListener("keypress", flashblockShowFlash, "false");
 <binding id="authorware" extends="#flash">
   <implementation>
     <field name="flashblockType">"authorware"</field>
+  </implementation>
+</binding>
+
+<binding id="silverlight" extends="#flash">
+  <implementation>
+    <field name="flashblockType">"silverlight"</field>
   </implementation>
 </binding>
 
@@ -332,8 +378,8 @@ function flashblockShowPlaceholder() {
 
 // Show the original animation
 function flashblockShowFlash(event) {
-    if( event.type == "keypress" && event.keyCode != KeyEvent.DOM_VK_RETURN)
-      return false;
+	if( event.type == "keypress" && event.keyCode != KeyEvent.DOM_VK_RETURN)
+		return false;
 	event.stopPropagation();
 	if(placeholder.flashblock == "frame") {
 		current.height = current.prevHeight;
@@ -356,17 +402,19 @@ function flashblockShowFlash(event) {
 			var mparam = placeholder.movieParam;
 			mparam[0].value = mparam[1];
 		}
-		if (placeholder.hasAttribute("embedsrc")) {
-			var embeds = current.getElementsByTagName("embed");
-			if (embeds && embeds.length > 0) {
-				embeds[0].setAttribute("src", placeholder.getAttribute("embedsrc"));
-			}
+		if (placeholder.srcParam) {
+			var mparam = placeholder.srcParam;
+			mparam[0].value = mparam[1];
+		}
+		if (placeholder.sourceParam) {
+			var mparam = placeholder.sourceParam;
+			mparam[0].value = mparam[1];
 		}
 	}
 	parent.removeChild(placeholder);
 }
 
-function flashblockIsWhitelisted() {
+function flashblockIsWhitelisted(type) {
 	// Check if the page that loaded the Flash site is whitelisted
 	// Thanks to Neil on #mozilla for suggesting this method, I would never have
 	// thought of it on my own. :-)
@@ -375,7 +423,8 @@ function flashblockIsWhitelisted() {
 	var flashblockEvent = document.createEvent("UIEvents");
 
 	if(flashblockEvent) {
-		flashblockEvent.initEvent("flashblockCheckLoad", true, true);
+		var evt = type == "silverlight" ? "silverblockCheckLoad" : "flashblockCheckLoad";
+		flashblockEvent.initEvent(evt, true, true);
 		document.dispatchEvent(flashblockEvent);
 		if(flashblockEvent.getPreventDefault() == true) {
 			// Whitelisted
@@ -387,7 +436,15 @@ function flashblockIsWhitelisted() {
 
 function flashblockSetImage(placeholder, type) {
 	var inactiveurl = "url(chrome://flashblock/content/" + type + ".png) no-repeat center";
-	var activeurl = "url(chrome://flashblock/content/flashplay.png) no-repeat center";
+	var playimage = "url(chrome://flashblock/content/flashplay.png)";
+	switch (type) {
+		case "silverlight":
+			playimage = "url(chrome://flashblock/content/silverplay.png)";
+			break;
+		default:
+			break;
+	}
+	var activeurl = playimage + " no-repeat center";
 	placeholder.setAttribute("bgInactive", inactiveurl);
 	placeholder.setAttribute("bgActive", activeurl);
 	placeholder.style.background = inactiveurl;
@@ -460,7 +517,7 @@ function flashblockSetTitle(current, placeholder, isStandalone) {
 		current.src = fakeURI;
 	}
 	else if (current.hasAttribute("src") ||
-			current.hasAttribute("data") ||
+			(current.hasAttribute("data") && !/application\/x-silverlight/.test(current.getAttribute("data"))) ||
 			current.hasAttribute("movie") ) {
 		var srcURI = current.getAttribute("src") ||
 			current.getAttribute("movie") ||
@@ -489,12 +546,57 @@ function flashblockSetTitle(current, placeholder, isStandalone) {
 				params[ii].value = fakeURI;
 				break;
 			}
+			if (params[ii].getAttribute("name") == "src" &&
+				params[ii].hasAttribute("value")) {
+				placeholder.title = params[ii].value;
+				placeholder.srcParam = [ params[ii], placeholder.title ];
+				params[ii].value = fakeURI;
+				break;
+			}
+			if (params[ii].getAttribute("name") == "source" &&
+				params[ii].hasAttribute("value")) {
+				placeholder.title = params[ii].value;
+				placeholder.sourceParam = [ params[ii], placeholder.title ];
+				params[ii].value = fakeURI;
+				break;
+			}
 		}
 	}
 }
 
-if(flashblockIsWhitelisted())
-	return;
+function isBrokenFlash(element) {
+	var params = element.getElementsByTagName("param");
+	var isFlash = false;
+	for (var ii = 0; ii < params.length; ii++) {
+		var pvalue = params[ii].getAttribute("value");
+		if (/\.swf/i.test(pvalue))
+			return true;
+		var pname = params[ii].getAttribute("name");
+		if (/movie/i.test(pname))
+			return true;
+	}
+	var embeds = element.getElementsByTagName("embed");
+	for (var jj = 0; jj < embeds.length; jj++) {
+		var embed = embeds[jj];
+		if (/x-shockwave-flash/i.test(embed.getAttribute("type")) ||
+			/\.swf/i.test(embed.getAttribute("src"))) {
+			return true;
+		}
+	}
+	return false;
+}
+
+var type = this.flashblockType ? this.flashblockType : "flash"
+if (/silverlight|ag-plugin/i.test(this.getAttribute("type")) ||
+    /32C73088-76AE-40F7-AC40-81F62CB2C1DA/i.test(this.getAttribute("classid")) ) {
+  type = "silverlight";
+}
+
+if(flashblockIsWhitelisted(type))
+    return;
+
+if (!isBrokenFlash(this))
+    return;
 
 var current = this;
 var parent = current.parentNode;
@@ -505,32 +607,21 @@ if (current.overrideCTV || parentNode.overrideCTV) {
 }
 current.overrideCTV = true;
 
-var params = this.getElementsByTagName("param");
-var isFlash = false;
-for (var ii = 0; ii < params.length; ii++) {
-	var pvalue = params[ii].getAttribute("value");
-	if (/\.swf/i.test(pvalue)) {
-		isFlash = true;
-		break;
+// Flowplayer specific workaround.
+var flow = parent.getAttribute("href");
+if (flow) {
+	var prevDef = function (event) {
+		event.preventDefault();
+		event.currentTarget.removeEventListener("load", arguments.callee, true);
 	}
+	parent.addEventListener("click", prevDef , true)
 }
-var embeds = this.getElementsByTagName("embed");
-for (var jj = 0; jj < embeds.length; jj++) {
-	var embed = embeds[jj];
-	if (/x-shockwave-flash/i.test(embed.getAttribute("type")) ||
-		/\.swf/i.test(embed.getAttribute("src"))) {
-		isFlash = true;
-		break;
-	}
-}
-if (!isFlash) {return;}
 
 // Create placeholder div
 var isStandalone = ("src" in current && current.src == current.ownerDocument.location);
 var placeholder = flashblockCreatePlaceholder(isStandalone);
 
 // Set placeholder image
-var type = this.flashblockType ? this.flashblockType : "flash"
 flashblockSetImage(placeholder, type);
 
 flashblockStylePlaceholder(current, placeholder, isStandalone);
@@ -568,6 +659,7 @@ placeholder.addEventListener("keypress", flashblockShowFlash, "false");
   <implementation>
     <constructor>
         <![CDATA[
+
 event = document.createEvent("UIEvents");
 
 if(event) {
@@ -593,6 +685,7 @@ this.style.overflow ="hidden";
   <implementation>
     <constructor>
         <![CDATA[
+
 var event = document.createEvent("UIEvents");
 
 if(event) {

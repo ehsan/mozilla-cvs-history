@@ -44,6 +44,7 @@ camino/flashblock/Makefile
 camino/idl/Makefile
 camino/installer/Makefile
 camino/pinstripe/Makefile
+camino/places/Makefile
 camino/striptease/Makefile
 camino/safebrowsing/Makefile
 "
