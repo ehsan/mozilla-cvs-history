@@ -49,7 +49,6 @@ DIRS = \
 	flashblock \
 	idl \
 	pinstripe \
-	places \
 	striptease \
 	safebrowsing \
 	$(NULL)
