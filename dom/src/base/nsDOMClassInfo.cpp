@@ -6888,6 +6888,13 @@ nsEventReceiverSH::AddEventListenerHelper(JSContext *cx, JSObject *obj,
     return JS_FALSE;
   }
 
+  rv = sXPConnect->GetWrappedNativeOfJSObject(cx, obj, getter_AddRefs(wrapper));
+  if (NS_FAILED(rv)) {
+    nsDOMClassInfo::ThrowJSException(cx, rv);
+
+    return JS_FALSE;
+  }
+
   // Check that the caller has permission to call obj's addEventListener.
   if (NS_FAILED(sSecMan->CheckPropertyAccess(cx, obj,
                                              JS_GET_CLASS(cx, obj)->name,

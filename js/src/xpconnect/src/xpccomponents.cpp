@@ -2803,12 +2803,16 @@ nsXPCComponents_Utils::LookupMethod()
         return NS_ERROR_XPC_BAD_CONVERT_JS;
 
     JSObject* obj = JSVAL_TO_OBJECT(argv[0]);
-    XPCWrappedNative *wn =
-        XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj);
-    if(!wn)
-        return NS_ERROR_XPC_BAD_CONVERT_JS;
 
-    obj = wn->GetFlatJSObject();
+    {
+        XPCWrappedNative *wn =
+            XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj);
+        if(!wn)
+            return NS_ERROR_XPC_BAD_CONVERT_JS;
+
+        obj = wn->GetFlatJSObject();
+    }
+
     OBJ_TO_INNER_OBJECT(cx, obj);
     if(!obj)
         return NS_ERROR_XPC_BAD_CONVERT_JS;
