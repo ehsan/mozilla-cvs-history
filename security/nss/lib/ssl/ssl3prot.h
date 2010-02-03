@@ -38,7 +38,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3prot.h,v 1.17 2010/01/28 16:14:25 kaie%kuix.de Exp $ */
+/* $Id: ssl3prot.h,v 1.18 2010/02/03 02:25:35 alexei.volkov.bugs%sun.com Exp $ */
 
 #ifndef __ssl3proto_h_
 #define __ssl3proto_h_
@@ -344,5 +344,7 @@ typedef struct {
 } EncryptedSessionTicket;
 
 #define TLS_EX_SESS_TICKET_MAC_LENGTH       32
+
+#define TLS_STE_NO_SERVER_NAME        -1
 
 #endif /* __ssl3proto_h_ */

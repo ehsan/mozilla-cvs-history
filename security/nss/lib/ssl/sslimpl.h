@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslimpl.h,v 1.74 2010/01/28 16:14:25 kaie%kuix.de Exp $ */
+/* $Id: sslimpl.h,v 1.75 2010/02/03 02:25:35 alexei.volkov.bugs%sun.com Exp $ */
 
 #ifndef __sslimpl_h_
 #define __sslimpl_h_
@@ -879,6 +879,7 @@ typedef struct SessionTicketStr {
     ClientIdentity        client_identity;
     SECItem               peer_cert;
     uint32                timestamp;
+    SECItem               srvName; /* negotiated server name */
 }  SessionTicket;
 
 /*
