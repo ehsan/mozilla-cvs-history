@@ -238,7 +238,7 @@ pref("browser.safebrowsing.provider.0.reportMalwareURL", "http://www.google.com/
 pref("browser.safebrowsing.provider.0.reportMalwareErrorURL", "http://google.com/safebrowsing/diagnostic?tpl={moz:client}&site=%REPORTED_URL%&hl=%LANGUAGE%");
 
 // URL the user is forwarded to after submitting an error report
-pref("browser.safebrowsing.sendToURLAfterReporting", "http://caminobrowser.org/security/report-submitted.php");
+pref("browser.safebrowsing.sendToURLAfterReporting", "http://caminobrowser.org/documentation/security/report-submitted/");
 
 // Location of more information about the safe browsing feature
 pref("browser.safebrowsing.warning.infoURL", "http://caminobrowser.org/documentation/security/#safebrowsing");
