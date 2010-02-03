@@ -41,7 +41,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* TLS extension code moved here from ssl3ecc.c */
-/* $Id: ssl3ext.c,v 1.10 2010/02/03 02:25:34 alexei.volkov.bugs%sun.com Exp $ */
+/* $Id: ssl3ext.c,v 1.11 2010/02/03 02:38:20 wtc%google.com Exp $ */
 
 #include "nssrenam.h"
 #include "nss.h"
@@ -266,20 +266,15 @@ ssl3HelloExtensionSender clientHelloSendersTLS[SSL_MAX_EXTENSIONS] = {
 #ifdef NSS_ENABLE_ECC
     { ssl_elliptic_curves_xtn,    &ssl3_SendSupportedCurvesXtn },
     { ssl_ec_point_formats_xtn,   &ssl3_SendSupportedPointFormatsXtn },
-#else
-    { -1, NULL },
-    { -1, NULL },
 #endif
     { ssl_session_ticket_xtn,     &ssl3_SendSessionTicketXtn }
+    /* any extra entries will appear as { 0, NULL }    */
 };
 
 static const 
 ssl3HelloExtensionSender clientHelloSendersSSL3[SSL_MAX_EXTENSIONS] = {
-    { ssl_renegotiation_info_xtn, &ssl3_SendRenegotiationInfoXtn },
-    { -1, NULL },
-    { -1, NULL },
-    { -1, NULL },
-    { -1, NULL }
+    { ssl_renegotiation_info_xtn, &ssl3_SendRenegotiationInfoXtn }
+    /* any extra entries will appear as { 0, NULL }    */
 };
 
 static PRBool
