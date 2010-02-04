@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslimpl.h,v 1.75 2010/02/03 02:25:35 alexei.volkov.bugs%sun.com Exp $ */
+/* $Id: sslimpl.h,v 1.76 2010/02/04 03:08:45 wtc%google.com Exp $ */
 
 #ifndef __sslimpl_h_
 #define __sslimpl_h_
@@ -137,7 +137,7 @@ extern int Debug;
 #endif
 #define ssl_InMonitor(m) PZ_InMonitor(m)
 
-#define LSB(x) ((unsigned char) (x & 0xff))
+#define LSB(x) ((unsigned char) ((x) & 0xff))
 #define MSB(x) ((unsigned char) (((unsigned)(x)) >> 8))
 
 /************************************************************************/
