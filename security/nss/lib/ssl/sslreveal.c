@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslreveal.c,v 1.6 2010/01/28 16:14:25 kaie%kuix.de Exp $ */
+/* $Id: sslreveal.c,v 1.7 2010/02/04 03:21:11 wtc%google.com Exp $ */
 
 #include "cert.h"
 #include "ssl.h"
@@ -105,7 +105,7 @@ SSL_RevealURL(PRFileDesc * fd)
 
 SECStatus
 SSL_HandshakeNegotiatedExtension(PRFileDesc * socket, 
-                                 ExtensionType extId,
+                                 SSLExtensionType extId,
                                  PRBool *pYes)
 {
   /* some decisions derived from SSL_GetChannelInfo */

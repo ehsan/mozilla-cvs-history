@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl.h,v 1.34 2010/01/28 16:14:25 kaie%kuix.de Exp $ */
+/* $Id: ssl.h,v 1.35 2010/02/04 03:21:11 wtc%google.com Exp $ */
 
 #ifndef __ssl_h_
 #define __ssl_h_
@@ -608,7 +608,7 @@ SSL_IMPORT SECStatus SSL_CanBypass(CERTCertificate *cert,
 ** Output parameter valid only if function returns SECSuccess
 */
 SSL_IMPORT SECStatus SSL_HandshakeNegotiatedExtension(PRFileDesc * socket,
-                                                      ExtensionType extId,
+                                                      SSLExtensionType extId,
                                                       PRBool *yes);
 
 SEC_END_PROTOS
