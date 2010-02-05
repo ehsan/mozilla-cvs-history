@@ -352,6 +352,7 @@ def test_file(filename):
                     'env'          : yaml_config['env'],
                     'dirs'         : yaml_config['dirs'],
                     'init_url'     : yaml_config['init_url']}
+
   if 'child_process' in yaml_config:
       browser_config['child_process'] = yaml_config['child_process']
   else:
@@ -362,6 +363,28 @@ def test_file(filename):
       browser_config['test_name_extension'] = yaml_config['test_name_extension']
   else:
       browser_config['test_name_extension'] = ''
+
+  if 'deviceip' in yaml_config:
+      browser_config['host'] = yaml_config['deviceip']
+  else:
+      browser_config['host'] = ''
+  if 'deviceport' in yaml_config:
+      browser_config['port'] = yaml_config['deviceport']
+  else:
+      browser_config['port'] = ''
+  if 'webserver' in yaml_config:
+      browser_config['webserver'] = yaml_config['webserver']
+  else:
+      browser_config['webserver'] = ''
+  if 'deviceroot' in yaml_config:
+      browser_config['deviceroot'] = yaml_config['deviceroot']
+  else:
+      browser_config['deviceroot'] = ''
+  if 'remote' in yaml_config:
+      browser_config['remote'] = yaml_config['remote']
+  else:
+      browser_config['remote'] = False
+
   #normalize paths to work accross platforms
   browser_config['browser_path'] = os.path.normpath(browser_config['browser_path'])
   for dir in browser_config['dirs']:

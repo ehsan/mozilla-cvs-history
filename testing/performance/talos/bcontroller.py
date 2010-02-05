@@ -51,6 +51,7 @@ import sys
 import getopt
 
 import stat
+import devicemanager
 
 if platform.system() == "Linux":
     platform_type = 'linux_'
@@ -68,19 +69,23 @@ elif platform.system() == "Darwin":
 
 class BrowserWaiter(threading.Thread):
 
-  def __init__(self, command, log, mod):
+  def __init__(self, command, log, mod, deviceManager = None):
      self.command = command
      self.log = log
      self.mod = mod
      self.endTime = -1
      self.returncode = -1
+     self.deviceManager = deviceManager
      threading.Thread.__init__(self)
      self.start()
 
   def run(self):
     if self.mod:
       self.command = self.command + eval(self.mod)
-    self.returncode = os.system(self.command + " > " + self.log) #blocking call to system
+
+    #blocking call to system
+    self.returncode = os.system(self.command + " > " + self.log) 
+
     self.endTime = int(time.time()*1000)
 
   def hasTime(self):
@@ -94,7 +99,8 @@ class BrowserWaiter(threading.Thread):
 
 class BrowserController:
 
-  def __init__(self, command, mod, name, child_process, timeout, log):
+  def __init__(self, command, mod, name, child_process, 
+               timeout, log, host='', port=27020, root=''):
     self.command = command
     self.mod = mod
     self.process_name = name
@@ -102,9 +108,14 @@ class BrowserController:
     self.browser_wait = timeout
     self.log = log
     self.timeout = 600 #no output from the browser in 10 minutes = failure
+    self.host = host
+    self.port = port
+    self.root = root
+
+    self.ffprocess = ffprocess
 
   def run(self):
-    self.bwaiter = BrowserWaiter(self.command, self.log, self.mod)
+    self.bwaiter = BrowserWaiter(self.command, self.log, self.mod, self.ffprocess)
     noise = 0
     prev_size = 0
     while not self.bwaiter.hasTime():
@@ -119,8 +130,12 @@ class BrowserController:
         results_file.close()
         return
       time.sleep(1)
-      open(self.log, "r").close() #HACK FOR WINDOWS: refresh the file information
-      size = os.path.getsize(self.log)
+      try:
+        open(self.log, "r").close() #HACK FOR WINDOWS: refresh the file information
+        size = os.path.getsize(self.log)
+      except:
+        size = 0
+
       if size > prev_size:
         prev_size = size
         noise = 0
@@ -144,10 +159,13 @@ def main(argv=None):
    timeout = ""
    log = ""
    mod = ""
+   host = ""
+   deviceRoot = ""
+   port = 27020
 
    if argv is None:
         argv = sys.argv
-   opts, args = getopt.getopt(argv[1:], "c:t:n:p:l:m:", ["command=", "timeout=", "name=", "child_process=", "log=", "mod="])
+   opts, args = getopt.getopt(argv[1:], "c:t:n:p:l:m:h:r:o", ["command=", "timeout=", "name=", "child_process=", "log=", "mod=", "host=", "deviceRoot=", "port="])
 
    # option processing
    for option, value in opts:
@@ -163,9 +181,15 @@ def main(argv=None):
        log = value
      if option in ("-m", "--mod"):
        mod = value
+     if option in ("-h", "--host"):
+       host = value
+     if option in ("-r", "--deviceRoot"):
+       deviceRoot = value
+     if option in ("-o", "--port"):
+       port = value
 
    if command and timeout and log:
-     bcontroller = BrowserController(command, mod, name, child_process, timeout, log)
+     bcontroller = BrowserController(command, mod, name, child_process, timeout, log, host, port, deviceRoot)
      bcontroller.run()
    else:
      print "\nFAIL: no command\n"

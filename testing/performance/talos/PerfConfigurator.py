@@ -19,6 +19,7 @@ import re
 import time
 from datetime import datetime
 from os import path
+import devicemanager
 
 masterIniSubpath = "application.ini"
 defaultTitle = "qm-pxp01"
@@ -26,7 +27,7 @@ defaultTitle = "qm-pxp01"
 help_message = '''
 This is the buildbot performance runner's YAML configurator.bean
 
-USAGE: python PerfConfigurator.py --title title --executablePath path --configFilePath cpath --buildid id --branch branch --testDate date --resultsServer server --resultsLink link --activeTests testlist --branchName branchFullName --fast --symbolsPath path --sampleConfig cfile --browserWait seconds
+USAGE: python PerfConfigurator.py --title title --executablePath path --configFilePath cpath --buildid id --branch branch --testDate date --resultsServer server --resultsLink link --activeTests testlist --branchName branchFullName --fast --symbolsPath path --sampleConfig cfile --browserWait seconds --remoteDevice ip_of_device --remotePort port_on_device --webServer webserver_ipaddr --deviceRoot rootdir_on_device
 
 example testlist: tp:tsspider:tdhtml:twinopen
 '''
@@ -50,6 +51,15 @@ class PerfConfigurator:
     activeTests = ''
     noChrome = False
     fast = False
+    remoteDevice = ''
+    webServer = ''
+    deviceRoot = ''
+    _remote = False
+    port = ''
+
+    def _setupRemote(self, host, port = 27020):
+        self.testAgent = devicemanager.DeviceManager(host, port)
+        self._remote = True
     
     def _dumpConfiguration(self):
         """dump class configuration for convenient pickup or perusal"""
@@ -68,6 +78,11 @@ class PerfConfigurator:
         print " - resultsServer = " + self.resultsServer
         print " - resultsLink = " + self.resultsLink
         print " - activeTests = " + self.activeTests
+        if (self._remote == True):
+            print " - deviceIP = " + self.remoteDevice
+            print " - devicePort = " + self.port
+            print " - webServer = " + self.webServer
+            print " - deviceRoot = " + self.deviceRoot
         if self.symbolsPath:
             print " - symbolsPath = " + self.symbolsPath
     
@@ -75,14 +90,26 @@ class PerfConfigurator:
         """collect a date string to be used in naming the created config file"""
         currentDateTime = datetime.now()
         return currentDateTime.strftime("%Y%m%d_%H%M")
+
+    def _getMasterIniContents(self):
+        """ Open and read the application.ini on the device under test """
+        if (self._remote == True):
+            localfilename = "remoteapp.ini"
+            parts = self.exePath.split('/')
+            remoteFile = '/'.join(parts[0:-1]) + '/' + masterIniSubpath
+            
+            self.testAgent.getFile(remoteFile, localfilename)
+            master = open(localfilename)
+        else:
+            master = open(path.join(path.dirname(self.exePath), masterIniSubpath))
+            
+        data = master.read()
+        master.close()
+        return data.split('\n')
     
     def _getCurrentBuildId(self):
-        master = open(path.join(path.dirname(self.exePath), masterIniSubpath))
-        if not master:
-            raise Configuration("Unable to open " 
-              + path.join(path.dirname(self.exePath), masterIniSubpath))
-        masterContents = master.readlines()
-        master.close()
+        masterContents = self._getMasterIniContents()
+
         reBuildid = re.compile('BuildID\s*=\s*(\d{10}|\d{12})')
         for line in masterContents:
             match = re.match(reBuildid, line)
@@ -138,10 +165,21 @@ class PerfConfigurator:
                     newline += "test_name_extension: _nochrome\n"
                 if self.symbolsPath:
                     newline += '\nsymbols_path: %s\n' % self.symbolsPath
+            if 'deviceip:' in line:
+                newline = 'deviceip: %s\n' % self.remoteDevice
+            if 'webserver:' in line:
+                newline = 'webserver: %s\n' % self.webServer
+            if 'deviceroot:' in line:
+                newline = 'deviceroot: %s\n' % self.deviceRoot
+            if 'deviceport:' in line:
+                newline = 'deviceport: %s\n' % self.port
+            if 'remote:' in line:
+                newline = 'remote: %s\n' % self._remote
             if 'buildid:' in line:
-                newline = 'buildid: ' + buildidString
+                newline = 'buildid: ' + buildidString + '\n'
             if 'testbranch' in line:
                 newline = 'branch: ' + self.branch
+
             #only change the results_server if the user has provided one
             if self.resultsServer and ('results_server' in line):
                 newline = 'results_server: ' + self.resultsServer + '\n'
@@ -215,12 +253,23 @@ class PerfConfigurator:
             self.fast = kwargs['fast']
         if 'symbolsPath' in kwargs:
             self.symbolsPath = kwargs['symbolsPath']
+        if 'remoteDevice' in kwargs:
+            self.remoteDevice = kwargs['remoteDevice']
+        if 'webServer' in kwargs:
+            self.webServer = kwargs['webServer']
+        if 'deviceRoot' in kwargs:
+            self.deviceRoot = kwargs['deviceRoot']
+        if 'remotePort' in kwargs:
+            self.port = kwargs['remotePort']
+
+        if (self.remoteDevice <> ''):
+          self._setupRemote(self.remoteDevice, self.port)
+
         self.currentDate = self._getCurrentDateString()
         if not self.buildid:
             self.buildid = self._getCurrentBuildId()
         if not self.outputName:
             self.outputName = self.currentDate + "_config.yml"
-
 
 class Configuration(Exception):
     def __init__(self, msg):
@@ -249,14 +298,22 @@ def main(argv=None):
     noChrome = False
     fast = False
     symbolsPath = None
-    
+    remoteDevice = ''
+    remotePort = ''
+    webServer = 'localhost'
+    deviceRoot = ''
+
     if argv is None:
         argv = sys.argv
     try:
         try:
-            opts, args = getopt.getopt(argv[1:], "hvue:c:t:b:o:i:d:s:l:a:n", 
-                ["help", "verbose", "useId", "executablePath=", "configFilePath=", "sampleConfig=", "title=", 
-                "branch=", "output=", "id=", "testDate=", "browserWait=", "resultsServer=", "resultsLink=", "activeTests=", "noChrome", "branchName=", "fast", "symbolsPath="])
+            opts, args = getopt.getopt(argv[1:], "hvue:c:t:b:o:i:d:s:l:a:n:r:p:w", 
+                ["help", "verbose", "useId", "executablePath=", 
+                "configFilePath=", "sampleConfig=", "title=", 
+                "branch=", "output=", "id=", "testDate=", "browserWait=",
+                "resultsServer=", "resultsLink=", "activeTests=", 
+                "noChrome", "branchName=", "fast", "symbolsPath=",
+                "remoteDevice=", "remotePort=", "webServer=", "deviceRoot="])
         except getopt.error, msg:
             raise Usage(msg)
         
@@ -296,6 +353,14 @@ def main(argv=None):
                 activeTests = value
             if option in ("-n", "--noChrome"):
                 noChrome = True
+            if option in ("-r", "--remoteDevice"):
+                remoteDevice = value
+            if option in ("-p", "--remotePort"):
+                remotePort = value
+            if option in ("-w", "--webServer"):
+                webServer = value
+            if option in ("--deviceRoot"):
+                deviceRoot = value
             if option in ("--fast"):
                 fast = True
             if option in ("--symbolsPath",):
@@ -305,7 +370,15 @@ def main(argv=None):
         print >> sys.stderr, sys.argv[0].split("/")[-1] + ": " + str(err.msg)
         print >> sys.stderr, "\t for help use --help"
         return 2
-    
+
+    #remotePort will default to 27020 and is optional.
+    #webServer can be used without remoteDevice, but is required when using remoteDevice
+    if (remoteDevice != '' or deviceRoot != ''):
+        if (webServer == 'localhost' or deviceRoot == '' or remoteDevice == ''):
+            print "\nERROR: When running Talos on a remote device, you need to provide a webServer, deviceRoot and optionally a remotePort"
+            print help_message
+            return 2
+
     configurator = PerfConfigurator(title=title,
                                     executablePath=exePath,
                                     configFilePath=configPath,
@@ -323,7 +396,11 @@ def main(argv=None):
                                     activeTests=activeTests,
                                     noChrome=noChrome,
                                     fast=fast,
-                                    symbolsPath=symbolsPath)
+                                    symbolsPath=symbolsPath,
+                                    remoteDevice=remoteDevice,
+                                    remotePort=remotePort,
+                                    webServer=webServer,
+                                    deviceRoot=deviceRoot)
     try:
         configurator.writeConfigFile()
     except Configuration, err:
