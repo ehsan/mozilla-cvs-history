@@ -19,7 +19,6 @@ import re
 import time
 from datetime import datetime
 from os import path
-import devicemanager
 
 masterIniSubpath = "application.ini"
 defaultTitle = "qm-pxp01"
@@ -58,6 +57,7 @@ class PerfConfigurator:
     port = ''
 
     def _setupRemote(self, host, port = 27020):
+        import devicemanager
         self.testAgent = devicemanager.DeviceManager(host, port)
         self._remote = True
     
