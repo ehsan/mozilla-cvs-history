@@ -51,7 +51,7 @@ import sys
 import getopt
 
 import stat
-import devicemanager
+#import devicemanager
 
 if platform.system() == "Linux":
     platform_type = 'linux_'
