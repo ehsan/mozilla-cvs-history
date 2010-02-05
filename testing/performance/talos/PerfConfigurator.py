@@ -359,9 +359,9 @@ def main(argv=None):
                 remotePort = value
             if option in ("-w", "--webServer"):
                 webServer = value
-            if option in ("--deviceRoot"):
+            if option in ("--deviceRoot",):
                 deviceRoot = value
-            if option in ("--fast"):
+            if option in ("--fast",):
                 fast = True
             if option in ("--symbolsPath",):
                 symbolsPath = value
