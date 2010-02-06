@@ -11,6 +11,9 @@
     <emItem id="langpack-vi-VN@firefox.mozilla.org">
       <versionRange minVersion="2.0" maxVersion="2.0"/>
     </emItem>
+    <emItem id="masterfiler@gmail.com">
+      <versionRange severity="3"/>
+    </emItem>
     <emItem id="mozilla_cc@internetdownloadmanager.com">
       <versionRange minVersion="2.1" maxVersion="3.3">
         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
