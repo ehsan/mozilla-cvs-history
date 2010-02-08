@@ -502,23 +502,11 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
 
   mCompleteResult = aComplete;
 
-  if ([self isOpen]) {
-    [self performSearch];
-  } else {
+  if (![self isOpen]) {
     // Reload search data.
     [mDataSource loadSearchableData];
-
-    // delay the search when the popup is not yet opened so that users 
-    // don't see a jerky flashing popup when they start typing for the first time
-    if (mOpenTimer) {
-      [mOpenTimer invalidate];
-      [mOpenTimer release];
-    }
-    
-    // note that we've created a circular reference here
-    mOpenTimer = [[NSTimer scheduledTimerWithTimeInterval:0.2 target:self selector:@selector(searchTimer:)
-                          userInfo:nil repeats:NO] retain];
   }
+  [self performSearch];
 }
 
 - (void) performSearch
@@ -537,14 +525,6 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
   } else {
     [self closePopup];
   }
-}
-
-- (void) searchTimer:(NSTimer *)aTimer
-{
-  [mOpenTimer release];
-  mOpenTimer = nil;
-
-  [self performSearch];
 }
 
 - (void) clearResults
@@ -749,11 +729,6 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
     [self setStringUndoably:[(AutoCompleteResult *)[mDataSource resultForRow:[mTableView selectedRow] columnIdentifier:@"main"] url]
                fromLocation:0];
     [self closePopup];
-  } else if (mOpenTimer) {
-    // if there was a search timer going when we hit enter, cancel it
-    [mOpenTimer invalidate];
-    [mOpenTimer release];
-    mOpenTimer = nil;
   }
 }
 

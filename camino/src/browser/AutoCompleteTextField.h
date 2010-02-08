@@ -65,7 +65,6 @@ extern NSString* const kWillShowFeedMenu;
   
   AutoCompleteDataSource*   mDataSource;
   NSString*                 mSearchString;
-  NSTimer*                  mOpenTimer;
   
   // used to remember if backspace was pressed in complete: so we can check this in controlTextDidChange
   BOOL mBackspaced;
