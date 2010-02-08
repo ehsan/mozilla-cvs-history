@@ -1013,7 +1013,7 @@ case "$target" in
     PR_MD_ASFILES=os_Darwin.s
 
     # Add Mac OS X support for loading CFM & CFBundle plugins
-    if test -f /System/Library/Frameworks/Carbon.framework/Carbon; then
+    if test -f "${MACOS_SDK_DIR}/System/Library/Frameworks/Carbon.framework/Carbon"; then
         AC_DEFINE(XP_MACOSX)
         OS_TARGET=MacOSX
 

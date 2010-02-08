@@ -3373,7 +3373,7 @@ EOF
     PR_MD_ASFILES=os_Darwin.s
 
     # Add Mac OS X support for loading CFM & CFBundle plugins
-    if test -f /System/Library/Frameworks/Carbon.framework/Carbon; then
+    if test -f "${MACOS_SDK_DIR}/System/Library/Frameworks/Carbon.framework/Carbon"; then
         cat >> confdefs.h <<\EOF
 #define XP_MACOSX 1
 EOF
