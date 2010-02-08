@@ -44,11 +44,13 @@
 /* close multiple windows */
 "CloseMultipleWindowsMsg" = "Are you sure you want to close all windows?";
 "CloseMultipleWindowsExpl" = "You have %u windows open. If you close these windows, you will lose any information that you entered in them.";
+"CloseMultipleWindowsAndTabsExpl" = "You have %1$u windows open, containing a total of %2$u tabs. If you close these windows, you will lose any information that you entered in them.";
 "CloseWindowsButtonText" = "Close Windows";
 
 /* quit multiple windows/tabs */
 "QuitWithMultipleWindowsMsg" = "Are you sure you want to quit when there are multiple open windows?";
 "QuitWithMultipleWindowsExpl" = "You have %u windows open. If you quit now, you will lose any information that you entered in those windows.";
+"QuitWithMultipleWindowsAndTabsExpl" = "You have %1$u windows open, containing a total of %2$u tabs. If you quit now, you will lose any information that you entered in those windows.";
 "QuitWithMultipleTabsMsg" = "Are you sure you want to quit when there are multiple tabs open?";
 "QuitWithMultipleTabsExpl" = "You have %u tabs open. If you quit now, you will lose any information that you entered in those tabs.";
 

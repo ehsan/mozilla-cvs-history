@@ -133,6 +133,8 @@ const int kZoomActionsTag = 108;
 - (void)openPanelDidEnd:(NSOpenPanel*)inOpenPanel returnCode:(int)inReturnCode contextInfo:(void*)inContextInfo;
 - (void)loadApplicationPage:(NSString*)pageURL;
 - (void)setUpSafeBrowsing;
+- (unsigned int)totalTabCount;
+- (ETabAndWindowCount)tabsAndWindows;
 
 @end
 
@@ -411,18 +413,26 @@ const int kZoomActionsTag = 108;
     NSString* quitAlertMsg = nil;
     NSString* quitAlertExpl = nil;
 
-    NSArray* openBrowserWins = [self browserWindows];
-    if ([openBrowserWins count] == 1) {
-      BrowserWindowController* bwc = [[openBrowserWins firstObject] windowController];
-      unsigned int numTabs = [[bwc tabBrowser] numberOfTabViewItems];
-      if (numTabs > 1) {
+    unsigned int totalWindows = [[self browserWindows] count];
+    unsigned int totalTabs = [self totalTabCount];
+    switch ([self tabsAndWindows]) {
+      case eMultipleTabsInOneWindow:
         quitAlertMsg = NSLocalizedString(@"QuitWithMultipleTabsMsg", @"");
-        quitAlertExpl = [NSString stringWithFormat:NSLocalizedString(@"QuitWithMultipleTabsExpl", @""), numTabs];
-      }
-    }
-    else if ([openBrowserWins count] > 1) {
+        quitAlertExpl = [NSString stringWithFormat:NSLocalizedString(@"QuitWithMultipleTabsExpl", @""), totalTabs];
+        break;
+
+      case eMultipleWindowsWithoutTabs:
       quitAlertMsg = NSLocalizedString(@"QuitWithMultipleWindowsMsg", @"");
-      quitAlertExpl = [NSString stringWithFormat:NSLocalizedString(@"QuitWithMultipleWindowsExpl", @""), [openBrowserWins count]];
+        quitAlertExpl = [NSString stringWithFormat:NSLocalizedString(@"QuitWithMultipleWindowsExpl", @""), totalWindows];
+        break;
+
+      case eMultipleTabsInMultipleWindows:
+        quitAlertMsg = NSLocalizedString(@"QuitWithMultipleWindowsMsg", @"");
+        quitAlertExpl = [NSString stringWithFormat:NSLocalizedString(@"QuitWithMultipleWindowsAndTabsExpl", @""), totalWindows, totalTabs];
+        break;
+
+      default:  // eOneWindowWithoutTabs or eNoWindows, so no need to do anything
+        break;
     }
 
     if (quitAlertMsg) {
@@ -1389,22 +1399,26 @@ const int kZoomActionsTag = 108;
     NSString* closeAlertMsg = nil;
     NSString* closeAlertExpl = nil;
 
-    NSArray* openBrowserWins = [self browserWindows];
-    // We need different warnings depending on whether there's only a single window with multiple tabs,
-    // or multiple windows open
-    if ([openBrowserWins count] == 1) {
-      BrowserWindowController* bwc = [[openBrowserWins firstObject] windowController];
-      unsigned int numTabs = [[bwc tabBrowser] numberOfTabViewItems];
-      if (numTabs > 1) { // only show the warning if there are multiple tabs
+    unsigned int totalWindows = [[self browserWindows] count];
+    unsigned int totalTabs = [self totalTabCount];
+    switch ([self tabsAndWindows]) {
+      case eMultipleTabsInOneWindow:
         closeAlertMsg  = NSLocalizedString(@"CloseWindowWithMultipleTabsMsg", @"");
-        closeAlertExpl = [NSString stringWithFormat:NSLocalizedString(@"CloseWindowWithMultipleTabsExplFormat", @""),
-                            numTabs];
-      }
-    }
-    else if ([openBrowserWins count] > 1) {
+        closeAlertExpl = [NSString stringWithFormat:NSLocalizedString(@"CloseWindowWithMultipleTabsExplFormat", @""), totalTabs];
+        break;
+
+      case eMultipleWindowsWithoutTabs:
+        closeAlertMsg = NSLocalizedString(@"CloseMultipleWindowsMsg", @"");
+        closeAlertExpl = [NSString stringWithFormat:NSLocalizedString(@"CloseMultipleWindowsExpl", @""), totalWindows];
+        break;
+
+      case eMultipleTabsInMultipleWindows:
       closeAlertMsg  = NSLocalizedString(@"CloseMultipleWindowsMsg", @"");
-      closeAlertExpl = [NSString stringWithFormat:NSLocalizedString(@"CloseMultipleWindowsExpl", @""),
-                            [openBrowserWins count]];
+        closeAlertExpl = [NSString stringWithFormat:NSLocalizedString(@"CloseMultipleWindowsAndTabsExpl", @""), totalWindows, totalTabs];
+        break;
+
+      default:  // eOneWindowWithoutTabs, so no need to do anything
+        break;
     }
 
     // make the warning dialog
@@ -2304,6 +2318,32 @@ static int SortByProtocolAndName(NSDictionary* item1, NSDictionary* item2, void*
     [[aSender representedObject] setRequiredFileType:@"html"];
   else
     [[aSender representedObject] setRequiredFileType:@"plist"];
+}
+
+// helper method to count total open tabs
+- (unsigned int)totalTabCount
+{
+  NSEnumerator* windowEnum = [[self browserWindows] objectEnumerator];
+  NSWindow* curWindow;
+  unsigned int numTabs = 0;
+  while ((curWindow = [windowEnum nextObject])) {
+    BrowserWindowController* bwc = [curWindow windowController];
+    numTabs += [[bwc tabBrowser] numberOfTabViewItems];
+  }
+  return numTabs;
+}
+
+// helper method to determine the breakdown of open tabs and windows
+- (ETabAndWindowCount)tabsAndWindows
+{
+  unsigned int totalWindows = [[self browserWindows] count];
+  unsigned int totalTabs = [self totalTabCount];
+  if (totalWindows == 1)
+    return (totalTabs > 1) ? eMultipleTabsInOneWindow : eOneWindowWithoutTabs;
+  else if (totalWindows > 1)
+    return (totalWindows == totalTabs) ? eMultipleWindowsWithoutTabs : eMultipleTabsInMultipleWindows;
+
+  return eNoWindows;
 }
 
 @end

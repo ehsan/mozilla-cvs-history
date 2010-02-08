@@ -59,6 +59,15 @@ typedef enum EBookmarkOpenBehavior
   eBookmarkOpenBehavior_NewTab
 };
 
+typedef enum ETabAndWindowCount
+{
+  eNoWindows,                     // so we have something to fall back on
+  eOneWindowWithoutTabs,
+  eMultipleWindowsWithoutTabs,
+  eMultipleTabsInOneWindow,
+  eMultipleTabsInMultipleWindows
+};
+
 @interface MainController : NSObject 
 {
     IBOutlet NSApplication* mApplication;
