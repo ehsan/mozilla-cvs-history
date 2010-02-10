@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nss.h,v 1.74 2009/11/20 20:15:05 christophe.ravel.bugs%sun.com Exp $ */
+/* $Id: nss.h,v 1.75 2010/02/10 00:33:49 wtc%google.com Exp $ */
 
 #ifndef __nss_h_
 #define __nss_h_
@@ -263,11 +263,7 @@ extern SECStatus NSS_InitReadWrite(const char *configdir);
         NSS_INIT_NOPK11FINALIZE | \
         NSS_INIT_RESERVED
 
-#ifdef macintosh
-#define SECMOD_DB "Security Modules"
-#else
 #define SECMOD_DB "secmod.db"
-#endif
 
 typedef struct NSSInitContextStr NSSInitContext;
 
