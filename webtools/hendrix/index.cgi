@@ -50,10 +50,15 @@ my $RECAPTCHA_PRIVATE = "6LckBgMAAAAAACSa3zXC9K3_TU2KaDsLyt9UXSW2";
 my %product_destination_map = (
 	"Firefox"                       => "mozilla.feedback.firefox",
 	"Firefox Release Candidate"     => "mozilla.feedback.firefox.prerelease",
-	"Namoroka"                      => "mozilla.feedback.firefox.prerelease",
+	"Firefox (Mobile)"              => "mozilla.feedback.firefox.mobile",	
+  "Firefox (Mobile) Release Candidate" => 
+                                  "mozilla.feedback.firefox.mobile.prerelease",
+	"Leibnitz"                      => "mozilla.feedback.firefox.prerelease",
 	"Minefield"                     => "mozilla.feedback",
+	"Fennec"                        => "mozilla.feedback",
 	"Thunderbird"                   => "mozilla.feedback.thunderbird",
 	"Thunderbird Release Candidate" => "mozilla.feedback.thunderbird.prerelease",
+	"Shredder"                      => "mozilla.feedback",
 	"SeaMonkey"                     => "mozilla.feedback",
 	"Sunbird"                       => "mozilla.feedback",
 	"Camino"                        => "caminofeedback\@mozilla.org",
@@ -64,8 +69,10 @@ my %product_destination_map = (
 
 # List of products to show on the main Hendrix page (in order)
 my @products_list = (
-	"Firefox", "Firefox Release Candidate", "Thunderbird", 
-  "Thunderbird Release Candidate", "Namoroka", "Minefield", 
+	"Firefox", "Firefox Release Candidate", 
+  "Firefox (Mobile)", "Firefox (Mobile) Release Candidate", 
+  "Thunderbird", "Thunderbird Release Candidate", 
+  "Lorentz", "Minefield", "Fennec",
   "Camino", "SeaMonkey", "Sunbird", 
 	"Developer Center", "Other"
 );
