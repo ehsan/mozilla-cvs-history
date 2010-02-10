@@ -40,10 +40,6 @@
 
 #import <AppKit/AppKit.h>
 
-class nsIAutoCompleteSession;
-class nsIAutoCompleteResults;
-class nsIAutoCompleteListener;
-
 @class MAAttachedWindow;
 @class AutoCompleteDataSource;
 @class ClickMenuImageView;
