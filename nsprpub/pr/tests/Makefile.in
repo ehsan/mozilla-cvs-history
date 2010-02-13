@@ -208,7 +208,7 @@ CSRCS =             \
 
 ifeq ($(OS_ARCH),WINCE)
 CFLAGS += -FImozce_shunt.h -Zi -UDEBUG -DNDEBUG
-LDOPTS += -link $(DIST)/lib/mozce_shunt.lib ws2.lib -DEBUG -DEBUGTYPE:CV -INCREMENTAL:NO -PDB:$(@).pdb
+LDOPTS += -link $(DIST)/lib/mozce_shunt.lib ws2.lib -DEBUG -DEBUGTYPE:CV -INCREMENTAL:NO -PDB:$(@:.exe=.pdb)
 endif
 
 ifeq ($(OS_TARGET),OS2)
