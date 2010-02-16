@@ -285,14 +285,20 @@ const char* const kHTMLMIMEType = "text/html";
                                            static_cast<nsIDOMEventListener*>(_listener), PR_FALSE);
         NS_ASSERTION(NS_SUCCEEDED(rv), "AddEventListener failed");
 
-        // Register the CHBrowserListener to listen for Flashblock whitelist checks.
-        // Need to use an nsIDOMNSEventTarget since flashblockCheckLoad is untrusted
+        // Register the CHBrowserListener to listen for Flashblock whitelist
+        // and Silverlight blocking checks. Need to use an nsIDOMNSEventTarget
+        // since flashblockCheckLoad and silverblockCheckLoad are untrusted.
         nsCOMPtr<nsIDOMNSEventTarget> nsEventTarget = do_QueryInterface(eventTarget);
         if (nsEventTarget) {
           rv = nsEventTarget->AddEventListener(NS_LITERAL_STRING("flashblockCheckLoad"),
                                                static_cast<nsIDOMEventListener*>(_listener),
                                                PR_TRUE, PR_TRUE);
           NS_ASSERTION(NS_SUCCEEDED(rv), "AddEventListener failed: flashblockCheckLoad");
+
+          rv = nsEventTarget->AddEventListener(NS_LITERAL_STRING("silverblockCheckLoad"),
+                                               static_cast<nsIDOMEventListener*>(_listener),
+                                               PR_TRUE, PR_TRUE);
+          NS_ASSERTION(NS_SUCCEEDED(rv), "AddEventListener failed: silverblockCheckLoad");
         }
 
         rv = eventTarget->AddEventListener(NS_LITERAL_STRING("command"),

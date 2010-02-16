@@ -113,6 +113,9 @@ extern const char* const kGeckoPrefBlockAds;                           // bool
 // Controls whether Flashblock is enabled
 extern const char* const kGeckoPrefBlockFlash;                         // bool
 
+// Controls whether Silverlight is blocked
+extern const char* const kGeckoPrefBlockSilverlight;                   // bool
+
 // The whitelist of allowed Flash sites
 extern const char* const kGeckoPrefFlashblockWhitelist;                // string
 

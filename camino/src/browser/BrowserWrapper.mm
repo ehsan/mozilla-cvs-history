@@ -924,6 +924,20 @@ static const NSTimeInterval kTimeIntervalToConsiderSiteBlockingStatusValid = 900
   inEvent->StopPropagation();
 }
 
+//
+// - onSilverblockCheck:
+//
+// Called when Flashblock sends a notification to check whether Silverlight
+// should be allowed for a URL. Silverlight is allowed if PreventDefault() is
+// called on the event. Due to Flashblock bug 22469, which doesn't unblock
+// Silverlight movies properly, we allow them unconditionally.
+//
+- (void)onSilverblockCheck:(nsIDOMEvent*)inEvent
+{
+  inEvent->PreventDefault();
+  inEvent->StopPropagation();  
+}
+
 // Called when a "shortcut icon" link element is noticed
 - (void)onFoundShortcutIcon:(NSString*)inIconURI
 {

@@ -107,6 +107,8 @@ typedef enum {
 - (void)onPopupBlocked:(nsIDOMPopupBlockedEvent*)data;
 // Called when Flashblock whitelist is checked
 - (void)onFlashblockCheck:(nsIDOMEvent*)inEvent;
+// Called when Silverlight block preference is checked
+- (void)onSilverblockCheck:(nsIDOMEvent*)inEvent;
 // Called when a "shortcut icon" link element is noticed
 - (void)onFoundShortcutIcon:(NSString*)inIconURI;
 // Called when a feed link element is noticed

@@ -114,6 +114,7 @@ const char* const kGeckoPrefBlockPopups = "dom.disable_open_during_load";
 const char* const kGeckoPrefBlockAds = "camino.enable_ad_blocking";
 const char* const kGeckoPrefBlockFlash = "camino.enable_flashblock";
 const char* const kGeckoPrefFlashblockWhitelist = "flashblock.whitelist";
+const char* const kGeckoPrefBlockSilverlight = "flashblock.silverlight.blocked";
 const char* const kGeckoPrefImageAnimationBehavior = "image.animation_mode";
 const char* const kGeckoPrefPreventDOMWindowResize = "dom.disable_window_move_resize";
 const char* const kGeckoPrefPreventDOMStatusChange = "dom.disable_window_status_change";

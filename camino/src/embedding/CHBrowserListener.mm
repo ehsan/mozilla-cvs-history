@@ -827,12 +827,14 @@ CHBrowserListener::HandleEvent(nsIDOMEvent* inEvent)
   if (eventType.Equals(NS_LITERAL_STRING("flashblockCheckLoad")))
     return HandleFlashblockCheckEvent(inEvent);
 
+  if (eventType.Equals(NS_LITERAL_STRING("silverblockCheckLoad")))
+    return HandleSilverblockCheckEvent(inEvent);
+
   if (eventType.Equals(NS_LITERAL_STRING("command")))
     return HandleXULCommandEvent(inEvent);
 
   return NS_OK;
 }
-
 
 nsresult
 CHBrowserListener::HandleBlockedPopupEvent(nsIDOMEvent* inEvent)
@@ -874,6 +876,14 @@ nsresult
 CHBrowserListener::HandleFlashblockCheckEvent(nsIDOMEvent* inEvent)
 {
   [mContainer onFlashblockCheck:inEvent];
+
+  return NS_OK;
+}
+
+nsresult
+CHBrowserListener::HandleSilverblockCheckEvent(nsIDOMEvent* inEvent)
+{
+  [mContainer onSilverblockCheck:inEvent];
 
   return NS_OK;
 }

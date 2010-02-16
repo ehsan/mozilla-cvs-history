@@ -197,6 +197,7 @@ pref("camino.disable_bonjour", false);
 // ad-blocking and Flashblock are off by default
 pref("camino.enable_ad_blocking", false);
 pref("camino.enable_flashblock", false);
+pref("flashblock.silverlight.blocked", false);
 
 // do not override autocomplete=off
 pref("wallet.crypto.autocompleteoverride", false);
