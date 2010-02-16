@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl.h,v 1.36 2010/02/10 18:07:21 wtc%google.com Exp $ */
+/* $Id: ssl.h,v 1.37 2010/02/16 18:56:48 wtc%google.com Exp $ */
 
 #ifndef __ssl_h_
 #define __ssl_h_
@@ -123,7 +123,7 @@ SSL_IMPORT PRFileDesc *SSL_ImportFD(PRFileDesc *model, PRFileDesc *fd);
 #define SSL_ENABLE_DEFLATE             19 /* Enable TLS compression with    */
                                           /* DEFLATE (off by default)       */
 #define SSL_ENABLE_RENEGOTIATION       20 /* Values below (default: never)  */
-#define SSL_REQUIRE_SAFE_NEGOTIATION   21 /* Peer must send Signalling      */
+#define SSL_REQUIRE_SAFE_NEGOTIATION   21 /* Peer must send Signaling       */
 					  /* Cipher Suite Value (SCSV) or   */
                                           /* Renegotiation  Info (RI)       */
 					  /* extension in ALL handshakes.   */
