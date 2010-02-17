@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl.h,v 1.37 2010/02/16 18:56:48 wtc%google.com Exp $ */
+/* $Id: ssl.h,v 1.38 2010/02/17 02:29:07 wtc%google.com Exp $ */
 
 #ifndef __ssl_h_
 #define __ssl_h_
@@ -184,9 +184,11 @@ SSL_IMPORT SECStatus SSL_CipherPolicyGet(PRInt32 cipher, PRInt32 *policy);
 /* Only renegotiate if the peer's hello bears the TLS renegotiation_info   */
 /* extension. This is safe renegotiation.                                  */
 #define SSL_RENEGOTIATE_REQUIRES_XTN ((PRBool)2) 
-/* Disallow all renegotiation in server sockets only, but allow clients    */
+/* Disallow unsafe renegotiation in server sockets only, but allow clients */
 /* to continue to renegotiate with vulnerable servers.                     */
-#define SSL_RENEGOTIATE_CLIENT_ONLY  ((PRBool)3)
+/* This value should only be used during the transition period when few    */
+/* servers have been upgraded.                                             */
+#define SSL_RENEGOTIATE_TRANSITIONAL ((PRBool)3)
 
 /*
 ** Reset the handshake state for fd. This will make the complete SSL
