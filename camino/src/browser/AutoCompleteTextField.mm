@@ -53,14 +53,14 @@
 #import "PreferenceManager.h"
 #import "CHBrowserService.h"
 
-#include "BookmarkManager.h"
-#include "Bookmark.h"
+#import "BookmarkManager.h"
+#import "Bookmark.h"
 
 #include "nsIWebProgressListener.h"
 
 static const int kFrameMargin = 1;
 
-const float kSecureIconRightOffset = 19.0;    // offset from right size of url bar
+const float kSecureIconRightOffset = 19.0;  // offset from right side of url bar
 const float kSecureIconYOrigin = 3.0;
 const float kSecureIconSize = 16.0;
 
@@ -70,38 +70,38 @@ const float kFeedIconWidth = 14.0;
 const float kFeedIconHeight = 13.0;
 
 // stole this from NSPasteboard+Utils.mm
-static NSString* kCorePasteboardFlavorType_url  = @"CorePasteboardFlavorType 0x75726C20"; // 'url '  url
+static NSString* kCorePasteboardFlavorType_url = @"CorePasteboardFlavorType 0x75726C20";  // 'url '  url
 // posted when the feed icon's menu is about to be drawn
 NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
 
 @interface AutoCompleteTextField(Private)
 
-- (NSTableView *) tableView;
+- (NSTableView*)tableView;
 
-- (void) startSearch:(NSString*)aString complete:(BOOL)aComplete;
-- (void) performSearch;
-- (void) searchTimer:(NSTimer *)aTimer;
-
-- (void) completeDefaultResult;
-- (void) completeSelectedResult;
-- (void) completeResult:(int)aRow;
-- (void) enterResult:(int)aRow;
-
-- (void) cleanup;
-- (void) setStringUndoably:(NSString*)aString fromLocation:(unsigned int)aLocation;
-
-- (void) openPopup;
-- (void) resizePopup:(BOOL)forceResize;
-- (void) closePopup;
-- (BOOL) isOpen;
-
-- (void) selectRowAt:(int)aRow;
-- (void) selectRowBy:(int)aRows;
-
-- (void) onRowClicked:(NSNotification *)aNote;
-- (void) onBlur:(NSNotification *)aNote;
-- (void) onResize:(NSNotification *)aNote;
-- (void) onUndoOrRedo:(NSNotification *)aNote;
+- (void)startSearch:(NSString*)aString complete:(BOOL)aComplete;
+- (void)performSearch;
+- (void)searchTimer:(NSTimer*)aTimer;
+        
+- (void)completeDefaultResult;
+- (void)completeSelectedResult;
+- (void)completeResult:(int)aRow;
+- (void)enterResult:(int)aRow;
+        
+- (void)cleanup;
+- (void)setStringUndoably:(NSString*)aString fromLocation:(unsigned int)aLocation;
+        
+- (void)openPopup;
+- (void)resizePopup:(BOOL)forceResize;
+- (void)closePopup;
+- (BOOL)isOpen;
+        
+- (void)selectRowAt:(int)aRow;
+- (void)selectRowBy:(int)aRows;
+        
+- (void)onRowClicked:(NSNotification*)aNote;
+- (void)onBlur:(NSNotification*)aNote;
+- (void)onResize:(NSNotification*)aNote;
+- (void)onUndoOrRedo:(NSNotification*)aNote;
 
 - (void)positionFeedIcon;
 
@@ -130,10 +130,13 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
   BOOL mDisplaySecureIcon;    // YES if currently displaying the security icon
   BOOL mDisplayFeedIcon;      // YES if currently displaying the feed icon
 }
+
 - (void)calcControlViewSizeForSecureIcon:(BOOL)inIsVisible;
 - (void)calcControlViewSizeForFeedIcon:(BOOL)inIsVisible;
+
 - (BOOL)isSecureIconDisplayed;
 - (BOOL)isFeedIconDisplayed;
+
 @end
 
 @implementation AutoCompleteTextCell
@@ -141,7 +144,8 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
 //
 // -initTextCell:
 //
-// Handles initializing our members, start out assuming we're not showing a secure icon
+// Handles initializing our members, start out assuming we're not showing a
+// secure icon.
 //
 - (id)initTextCell:(NSString*)inStr
 {
@@ -155,15 +159,15 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
 //
 // -drawingRectForBounds:
 //
-// Overridden to adjust the bounds we draw into inside the full rectangle. The proxy icon
-// takes away space on the left side (always) and the secure icon (if visible) takes away space
-// on the right side. The remainder in the middle is where we're allowed to draw the text of
-// the text field.
+// Overridden to adjust the bounds we draw into inside the full rectangle. The
+// proxy icon takes away space on the left side (always) and the secure icon
+// (if visible) takes away space on the right side. The remainder in the 
+// middle is where we're allowed to draw the text of the text field.
 //
 - (NSRect)drawingRectForBounds:(NSRect)theRect
 {
   const float kProxyIconOffset = 19.0;
-  
+
   theRect.origin.x += kProxyIconOffset;
   theRect.size.width -= kProxyIconOffset;
   if ([self isSecureIconDisplayed])
@@ -177,8 +181,8 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
 //
 // -calcControlViewSizeForSecureIcon:
 //
-// Indicates whether or not we need to take away space on the right side for the security
-// icon. Causes the cell's drawing rect to be recalculated.
+// Indicates whether or not we need to take away space on the right side for
+// the security icon. Causes the cell's drawing rect to be recalculated.
 //
 - (void)calcControlViewSizeForSecureIcon:(BOOL)inIsVisible
 {
@@ -210,9 +214,9 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
 //
 // -isFeedIconDisplayed:
 //
-// Accessor method to help the layout the feed icon to the left of the security icon. This
-// method is used when |displaySecureIcon:| is called to determine if the feed icon has been
-// displayed before the security icon.
+// Accessor method to help the layout the feed icon to the left of the
+// security icon. This method is used when |displaySecureIcon:| is called to
+// determine if the feed icon has been displayed before the security icon.
 //
 - (BOOL)isFeedIconDisplayed
 {
@@ -223,10 +227,13 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
 
 @interface ClickMenuImageView : NSImageView
 {
-  // Notifications will only be posted if this string is set in |setMenuNotificationName:|
-  NSString* mMenuNotificationName;  
+  // Notifications will only be posted if this string is set in
+  // |setMenuNotificationName:|
+  NSString* mMenuNotificationName;
 }
+
 - (void)setMenuNotificationName:(NSString*)aNotificationName;
+
 @end
 
 @implementation ClickMenuImageView
@@ -235,7 +242,7 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
 {
   if ((self = [super init]))
     mMenuNotificationName = nil;
-  
+
   return self;
 }
 
@@ -243,11 +250,12 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
 {
   if (mMenuNotificationName)
     [mMenuNotificationName release];
-  
+
   [super dealloc];
 }
 
-// Setting the notification variable in this method will enable notification postings.
+// Setting the notification variable in this method will enable notification
+// postings.
 - (void)setMenuNotificationName:(NSString*)aNotificationName
 {
   mMenuNotificationName = [aNotificationName retain];
@@ -255,15 +263,17 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
 
 + (NSMenu*)defaultMenu
 {
-  // we need to return something here to get the NSToolbar to forward context clicks to our view.
+  // We need to return something here to get the NSToolbar to forward context
+  // clicks to our view.
   return [[[NSMenu alloc] initWithTitle:@"Dummy"] autorelease];
 }
 
-- (NSMenu*)menuForEvent:(NSEvent *)theEvent
+- (NSMenu*)menuForEvent:(NSEvent*)theEvent
 {
-  // If we are the a feed icon, post this notification so the menu can get built.
+  // If we are the a feed icon, post this notification so the menu can get
+  // built.
   if (mMenuNotificationName) {
-    [[NSNotificationCenter defaultCenter] postNotificationName:mMenuNotificationName 
+    [[NSNotificationCenter defaultCenter] postNotificationName:mMenuNotificationName
                                                         object:self];
   }
   return [self menu];
@@ -271,9 +281,10 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
 
 - (void)mouseDown:(NSEvent*)theEvent
 {
-  // By default a right-click will show the context menu for our image view subclass, 
-  // but a left click will not show a context. Since we want to show the context menus
-  // on a left click, foward this mouse down event as a right mouse down event.
+  // By default a right-click will show the context menu for our image view
+  // subclass, but a left click will not show a context. Since we want to show
+  // the context menus on a left click, foward this mouse down event as a
+  // right mouse down event.
   [self rightMouseDown:theEvent];
 }
 
@@ -288,15 +299,16 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
 
 @implementation AutoCompleteTextField
 
-+ (Class) cellClass
++ (Class)cellClass
 {
   return [AutoCompleteTextCell class];
 }
 
 // This method shouldn't be necessary according to the docs. The superclass's
 // constructors should read in the cellClass and build a properly configured
-// instance on their own. Instead they ignore cellClass and build a NSTextFieldCell.
-- (id)initWithCoder:(NSCoder *)coder
+// instance on their own. Instead they ignore cellClass and build a 
+// NSTextFieldCell.
+- (id)initWithCoder:(NSCoder*)coder
 {
   [super initWithCoder:coder];
   AutoCompleteTextCell* cell = [[[AutoCompleteTextCell alloc] initTextCell:@""] autorelease];
@@ -309,7 +321,7 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
   return self;
 }
 
-- (void) awakeFromNib
+- (void)awakeFromNib
 {
   [self setFont:[NSFont controlContentFontOfSize:0]];
   [self setDelegate: self];
@@ -320,7 +332,7 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
   [mTableView setDelegate:self];
   [mTableView setTarget:self];
   [mTableView setAction:@selector(onRowClicked:)];
-  
+
   // if we have a proxy icon
   if (mProxyIcon) {
     // place the proxy icon on top of this view so we can see it
@@ -330,25 +342,27 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
     [mProxyIcon release];
     [mProxyIcon setFrameOrigin: NSMakePoint(3, 3)];
   }
-  
-  // cache the bg color for secure pages. create a secure icon view which we'll display at the far right
-  // of the url bar. We hold onto a strong ref so that it doesn't get destroyed when we remove it from
-  // the view hierarchy (for non-secure pages). Set its resize mask so that it moves as you resize the
-  // window and mark this view that it needs to resize its subviews so it will automagically move the
-  // secure icon when it's visible.
+
+  // Cache the background color for secure pages. Create a secure icon view
+  // which we'll display at the far right of the URL bar. We hold onto a
+  // strong reference so that it doesn't get destroyed when we remove it from
+  // the view hierarchy (for non-secure pages). Set its resize mask so that it
+  // moves as you resize the window and mark this view that it needs to resize
+  // its subviews so it will automagically move the secure icon when it's
+  // visible.
   mSecureBackgroundColor = [[NSColor colorWithDeviceRed:1.0 green:1.0 blue:0.777 alpha:1.0] retain];
-  mLock = [[ClickMenuImageView alloc] initWithFrame:NSMakeRect([self bounds].size.width - kSecureIconRightOffset, 
+  mLock = [[ClickMenuImageView alloc] initWithFrame:NSMakeRect([self bounds].size.width - kSecureIconRightOffset,
                                                           kSecureIconYOrigin, kSecureIconSize, kSecureIconSize)];  // we own this
   [mLock setAutoresizingMask:(NSViewNotSizable | NSViewMinXMargin)];
   [mLock setMenu:mLockIconContextMenu];
-  
-  mFeedIcon = [[ClickMenuImageView alloc] initWithFrame:NSMakeRect([self bounds].size.width - kFeedIconRightOffest, 
+
+  mFeedIcon = [[ClickMenuImageView alloc] initWithFrame:NSMakeRect([self bounds].size.width - kFeedIconRightOffest,
                                                               kFeedIconYOrigin, kFeedIconWidth, kFeedIconHeight)];  // we own this
   [mFeedIcon setMenuNotificationName:kWillShowFeedMenu];
   [mFeedIcon setAutoresizingMask:(NSViewNotSizable | NSViewMinXMargin)];
   [mFeedIcon setToolTip:NSLocalizedString(@"FeedDetected", nil)];
   [mFeedIcon setImage:[NSImage imageNamed:@"feed"]];
-  
+
   [self setAutoresizesSubviews:YES];
 
   // create the main column
@@ -360,8 +374,9 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
   // hide the table header
   [mTableView setHeaderView:nil];
 
-  // Construct and configure the popup window. It is necessary to give the view some
-  // initial dimension because of the way that MAAttachedWindow constructs itself.
+  // Construct and configure the popup window. It is necessary to give the
+  // view some initial dimension because of the way that MAAttachedWindow
+  // constructs itself.
   NSView* tableViewContainerView = [[[NSView alloc] initWithFrame:NSMakeRect(0, 0, 100, 100)] autorelease];
   [tableViewContainerView addSubview:mTableView];
   const float kPopupWindowOffsetFromLocationField = 8.0;
@@ -387,7 +402,7 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
                                                name:NSWindowDidResizeNotification
                                              object:nil];
 
-  // listen for Undo/Redo to make sure autocomplete doesn't get horked.
+  // Listen for Undo/Redo to make sure autocomplete doesn't get horked.
   [[NSNotificationCenter defaultCenter] addObserver:self
                                            selector:@selector(onUndoOrRedo:)
                                                name:NSUndoManagerDidRedoChangeNotification
@@ -398,7 +413,7 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
                                                name:NSUndoManagerDidUndoChangeNotification
                                              object:[[self fieldEditor] undoManager]];
 
-  // register for embedding shutting down, to clean up history stuff
+  // Register for embedding shutting down, to clean up history stuff.
   [[NSNotificationCenter defaultCenter] addObserver:self
                                            selector:@selector(shutdown:)
                                                name:TermEmbeddingNotificationName
@@ -408,8 +423,8 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
   // "traditional" (pick from a dropdown list) autocomplete.
   mCompleteWhileTyping = [[PreferenceManager sharedInstance] getBooleanPref:kGeckoPrefInlineLocationBarAutocomplete withSuccess:NULL];
 
-  // We need to register a Gecko pref observer
-  // and then register an NSNotificationCenter observer for the pref change notification
+  // We need to register a Gecko pref observer and then register an
+  // NSNotificationCenter observer for the pref change notification
   [[PreferenceManager sharedInstance] addObserver:self forPref:kGeckoPrefInlineLocationBarAutocomplete];
   [[NSNotificationCenter defaultCenter] addObserver:self
                                            selector:@selector(inlineLocationBarAutocompletePrefChanged:)
@@ -420,7 +435,7 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
   [self registerForDraggedTypes:[NSArray arrayWithObjects:kCorePasteboardFlavorType_url, NSURLPboardType, NSStringPboardType, nil]];
 }
 
-- (void) dealloc
+- (void)dealloc
 {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   [[PreferenceManager sharedInstanceDontCreate] removeObserver:self forPref:kGeckoPrefInlineLocationBarAutocomplete];
@@ -432,48 +447,48 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
 {
   [mSearchString release];
   mSearchString = nil;
-  
+
   [mPopupWin release];
   mPopupWin = nil;
-  
+
   [mDataSource release];
   mDataSource = nil;
-  
+
   [mSecureBackgroundColor release];
   mSecureBackgroundColor = nil;
-  
-  [mLock release]; 
+
+  [mLock release];
   mLock = nil;
   [mFeedIcon release];
   mFeedIcon = nil;
 }
 
-- (void)shutdown: (NSNotification*)aNotification
+- (void)shutdown:(NSNotification*)aNotification
 {
   [self cleanup];
 }
 
-- (NSTableView *) tableView
+- (NSTableView*)tableView
 {
   return mTableView;
 }
 
-- (PageProxyIcon*) pageProxyIcon
+- (PageProxyIcon*)pageProxyIcon
 {
   return mProxyIcon;
 }
 
-- (void) setPageProxyIcon:(NSImage *)aImage
+- (void)setPageProxyIcon:(NSImage*)aImage
 {
   [mProxyIcon setImage:aImage];
 }
 
-- (void) resetCursorRects
+- (void)resetCursorRects
 {
   [self addCursorRect:[[self cell] drawingRectForBounds:[self bounds]] cursor:[NSCursor IBeamCursor]];
 }
 
--(id) fieldEditor
+-(id)fieldEditor
 {
   return [[self window] fieldEditor:NO forObject:self];
 }
@@ -509,7 +524,7 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
   [self performSearch];
 }
 
-- (void) performSearch
+- (void)performSearch
 {
   [mDataSource performSearchWithString:mSearchString delegate:self];
 }
@@ -527,7 +542,7 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
   }
 }
 
-- (void) clearResults
+- (void)clearResults
 {
   // clear out search data
   if (mSearchString)
@@ -540,7 +555,7 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
 
 // handling the popup /////////////////////////////////
 
-- (void) openPopup
+- (void)openPopup
 {
   [self resizePopup:YES];
 
@@ -552,23 +567,23 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
   }
 }
 
-- (void) resizePopup:(BOOL)forceResize
+- (void)resizePopup:(BOOL)forceResize
 {
   if ([mDataSource rowCount] == 0) {
     [self closePopup];
     return;
   }
-  
-  // don't waste time resizing stuff that is not visible (unless we're about
-  // to show the popup)
+
+  // Don't waste time resizing stuff that is not visible (unless we're about
+  // to show the popup).
   if (![self isOpen] && !forceResize)
     return;
-  
+
   // Convert coordinates.
   NSRect locationFrame = [self bounds];
   locationFrame.origin = [self convertPoint:locationFrame.origin toView:nil];
   locationFrame.origin = [[self window] convertBaseToScreen:locationFrame.origin];
-  
+
   // Resize views.
   const float kHorizontalPadding = 5.0;
   int tableHeight = (int)([mTableView rowHeight] + [mTableView intercellSpacing].height) * [mDataSource rowCount];
@@ -581,16 +596,16 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
   [[mTableView superview] setFrame:containerViewFrame];
   [mTableView setFrame:tableViewFrame];
   [mPopupWin setPoint:NSMakePoint(NSMidX(locationFrame), locationFrame.origin.y) side:MAPositionBottom];
-  
+
 }
 
-- (void) closePopup
+- (void)closePopup
 {
   [[mPopupWin parentWindow] removeChildWindow:mPopupWin];
   [mPopupWin orderOut:nil];
 }
 
-- (BOOL) isOpen
+- (BOOL)isOpen
 {
   return [mPopupWin isVisible];
 }
@@ -598,13 +613,13 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
 //
 // -userHasTyped
 //
-// Returns whether the user has typed anything into the url bar since the last 
-// time the url was set (by loading a page). We know this is the case by looking
-// at if there is a search string.
+// Returns whether the user has typed anything into the url bar since the last
+// time the url was set (by loading a page). We know this is the case by
+// looking at if there is a search string.
 //
-- (BOOL) userHasTyped
+- (BOOL)userHasTyped
 {
-  return ( mSearchString != nil );
+  return (mSearchString != nil);
 }
 
 #pragma mark -
@@ -620,9 +635,9 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
 {
   if (inDisplay) {
     if (![mFeedIcon superview]) {
-      // showing the icon. The user may have resized the window (and thus this view) while
-      // the view was hidden (and thus not part of the view hierarchy) so we have to reposition
-      // it manually before we add it.
+      // Showing the icon. The user may have resized the window (and thus this
+      // view) while the view was hidden (and thus not part of the view
+      // hierarchy) so we have to reposition it manually before we add it.
       [[self cell] calcControlViewSizeForFeedIcon:YES];
       [self addSubview:mFeedIcon];
     }
@@ -630,7 +645,8 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
     [self setNeedsDisplay:YES];
   }
   else if ([mFeedIcon superview]) {
-    // hiding the icon. We don't have to do anything more than remove it from view.
+    // Hiding the icon. We don't have to do anything more than remove it from
+    // the view.
     [[self cell] calcControlViewSizeForFeedIcon:NO];
     [mFeedIcon removeFromSuperview];
     [self setNeedsDisplay:YES];
@@ -640,7 +656,8 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
 //
 // -positionFeedIcon
 //
-// Called when the position of the feed icon in the text field needs to be checked.
+// Called when the position of the feed icon in the text field needs to be
+// checked.
 //
 -(void)positionFeedIcon
 {
@@ -655,8 +672,8 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
 //
 // -setFeedIconContextMenu:
 //
-// Set the context menu for the feed icon with a menu that has been built for the
-// feeds found on the page.
+// Set the context menu for the feed icon with a menu that has been built for
+// the feeds found on the page.
 //
 - (void)setFeedIconContextMenu:(NSMenu*)inMenu
 {
@@ -667,7 +684,7 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
 
 // url completion ////////////////////////////
 
-- (void) completeDefaultResult
+- (void)completeDefaultResult
 {
   if (mCompleteResult && mCompleteWhileTyping) {
     PRInt32 defaultRow = 1;
@@ -678,17 +695,17 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
   }
 }
 
-- (void) completeSelectedResult
+- (void)completeSelectedResult
 {
   [self completeResult:[mTableView selectedRow]];
 }
 
-- (void) completeResult:(int)aRow
+- (void)completeResult:(int)aRow
 {
   if (aRow < 0 && mSearchString) {
-    // reset to the original search string with the insertion point at the end. Note
-    // we have to make our range before we call setStringUndoably: because it calls
-    // clearResults() which destroys |mSearchString|.
+    // Reset to the original search string with the insertion point at the
+    // end. Note we have to make our range before we call setStringUndoably:
+    // because it calls clearResults() which destroys |mSearchString|.
     NSRange selectAtEnd = NSMakeRange([mSearchString length],0);
     [self setStringUndoably:mSearchString fromLocation:0];
     [[self fieldEditor] setSelectedRange:selectAtEnd];
@@ -697,14 +714,15 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
     if ([mDataSource rowCount] == 0)
       return;
 
-    // Fill in the suggestion from the list, but change only the text 
+    // Fill in the suggestion from the list, but change only the text
     // after what is typed and select just that part. This allows the
     // user to see what they have typed and what change the autocomplete
-    // makes while allowing them to continue typing w/out having to
-    // reset the insertion point. 
+    // makes while allowing them to continue typing without having to
+    // reset the insertion point.
     NSString *result = [(AutoCompleteResult *)[mDataSource resultForRow:aRow columnIdentifier:@"main"] url];
-    
-    // figure out where to start the match, depending on whether the user typed the protocol part
+
+    // Figure out where to start the match, depending on whether the user
+    // typed the protocol part.
     int protocolLength = 0;
     NSURL* resultURL = [NSURL URLWithString:result];
     NSURL* searchURL = [NSURL URLWithString:mSearchString];
@@ -723,7 +741,7 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
   }
 }
 
-- (void) enterResult:(int)aRow
+- (void)enterResult:(int)aRow
 {
   if (aRow >= 0 && [mDataSource rowCount] > 0) {
     [self setStringUndoably:[(AutoCompleteResult *)[mDataSource resultForRow:[mTableView selectedRow] columnIdentifier:@"main"] url]
@@ -732,7 +750,7 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
   }
 }
 
-- (void) revertText
+- (void)revertText
 {
   id parentWindowController = [[self window] windowController];
   NSString* url = nil;
@@ -763,24 +781,26 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
 - (void)displaySecureIcon:(BOOL)inShouldDisplay
 {
   if (inShouldDisplay && ![mLock superview]) {
-    // showing the icon. The user may have resized the window (and thus this view) while
-    // the view was hidden (and thus not part of the view hierarchy) so we have to reposition
-    // it manually before we add it.
+    // Showing the icon. The user may have resized the window (and thus this
+    // view) while the view was hidden (and thus not part of the view
+    // hierarchy) so we have to reposition it manually before we add it.
     [[self cell] calcControlViewSizeForSecureIcon:YES];
     [mLock setFrameOrigin:NSMakePoint([self bounds].size.width - kSecureIconRightOffset, kSecureIconYOrigin)];
     [self addSubview:mLock];
-    
-    // If the feed icon needs to be displayed, and it was drawn before the secure icon, move the 
-    // feed icon to the left hand side of the secure icon.
+
+    // If the feed icon needs to be displayed, and it was drawn before the
+    // secure icon, move the feed icon to the left hand side of the secure
+    // icon.
     if ([[self cell] isFeedIconDisplayed])
       [self positionFeedIcon];
     [self setNeedsDisplay:YES];
   }
   else if (!inShouldDisplay && [mLock superview]) {
-    // hiding the icon. We don't have to do anything more than remove it from view.
+    // Hiding the icon. We don't have to do anything more than remove it from
+    // the view.
     [[self cell] calcControlViewSizeForSecureIcon:NO];
     [mLock removeFromSuperview];
-    
+
     if ([[self cell] isFeedIconDisplayed])
       [self positionFeedIcon];
     [self setNeedsDisplay:YES];
@@ -819,21 +839,21 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
 //
 // -setURI
 //
-// the public way to change the url string so that it does the right thing for handling
-// autocomplete and completions in progress
+// The public way to change the URL string so that it does the right thing for
+// handling autocomplete and completions in progress.
 //
-- (void) setURI:(NSString*)aURI
+- (void)setURI:(NSString*)aURI
 {
-  // if the urlbar has focus (actually if its field editor has focus), we
-  // need to use one of its routines to update the autocomplete status or
-  // we could find ourselves with stale results and the popup still open. If
-  // it doesn't have focus, we can bypass all that and just use normal routines.
+  // If the urlbar has focus (actually if its field editor has focus), we
+  // need to use one of its routines to update the autocomplete status or we
+  // could find ourselves with stale results and the popup still open. If it
+  // doesn't have focus, we can bypass all that and just use normal routines.
   if ([self currentEditor]) {
     [self setStringUndoably:aURI fromLocation:0];   // updates autocomplete correctly
 
-    // set insertion point to the end of the url. setStringUndoably:fromLocation:
-    // will leave it at the beginning of the text field for this case and
-    // that really looks wrong.
+    // Set insertion point to the end of the URL.
+    // setStringUndoably:fromLocation: will leave it at the beginning of the
+    // text field for this case and that really looks wrong.
     int len = [[[self fieldEditor] string] length];
     [[self fieldEditor] setSelectedRange:NSMakeRange(len, len)];
   }
@@ -867,11 +887,11 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
     // a new search string (which we just inserted) if the selection
     // is at the end of the string.  So, we "select" the first character
     // to prevent that badness from happening.
-    [fieldEditor setSelectedRange:NSMakeRange(0,0)];    
+    [fieldEditor setSelectedRange:NSMakeRange(0,0)];
     [fieldEditor didChangeText];
   }
-  
-  // sanity check and don't update the highlight if we're starting from the
+
+  // Sanity check and don't update the highlight if we're starting from the
   // beginning of the string. There's no need for that since no autocomplete
   // result would ever replace the string from location 0.
   if (aLocation > [[fieldEditor string] length] || !aLocation)
@@ -884,7 +904,7 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
 
 // selecting rows /////////////////////////////////////////
 
-- (BOOL)tableView:(NSTableView *)tableView shouldSelectRow:(int)rowIndex {
+- (BOOL)tableView:(NSTableView*)tableView shouldSelectRow:(int)rowIndex {
   return (![[mDataSource resultForRow:rowIndex columnIdentifier:@"main"] isHeader]);
 }
 
@@ -906,29 +926,29 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
 - (void) selectRowBy:(int)aRows
 {
   int row = [mTableView selectedRow];
-  
+
   if (row == -1 && aRows < 0) {
-    // if nothing is selected and you scroll up, go to last row
+    // If nothing is selected and you scroll up, go to last row.
     row = [mTableView numberOfRows]-1;
   } else if (row == [mTableView numberOfRows]-1 && aRows == 1) {
-    // if the last row is selected and you scroll down, do nothing. pins
+    // If the last row is selected and you scroll down, do nothing. Pins
     // the selection at the bottom.
   } else if (aRows+row < 0) {
-    // if you scroll up beyond first row...
+    // If you scroll up beyond first row...
     if (row == 0)
       row = -1; // ...and first row is selected, select nothing
     else
-      row = 0; // ...else, go to first row
+      row = 0; // ...else, go to first row.
   } else if (aRows+row >= [mTableView numberOfRows]) {
-    // if you scroll down beyond the last row...
+    // If you scroll down beyond the last row...
     if (row == [mTableView numberOfRows]-1)
       row = 0; // and last row is selected, select first row
     else
-      row = [mTableView numberOfRows]-1; // else, go to last row
+      row = [mTableView numberOfRows]-1; // else, go to last row.
   } else {
-    // no special case, just increment current row
+    // No special case, just increment current row.
     row += aRows;
-    // make sure we didn't just select a header
+    // Make sure we didn't just select a header.
     if ([[mDataSource resultForRow:row columnIdentifier:@"main"] isHeader])
       row += aRows / abs(aRows);
   }
@@ -940,29 +960,29 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
 
 // event handlers ////////////////////////////////////////////
 
-- (void) onRowClicked:(NSNotification *)aNote
+- (void)onRowClicked:(NSNotification*)aNote
 {
   [self enterResult:[mTableView clickedRow]];
   [[self window] endEditingFor:self];
   [[[self window] windowController] goToLocationFromToolbarURLField:self];
 }
 
-- (void) onBlur:(NSNotification *)aNote
+- (void)onBlur:(NSNotification*)aNote
 {
-  // close up the popup and make sure we clear any past selection. We cannot
-  // use |selectAt:-1| because that would show the popup, even for a brief instant
-  // and cause flashing.
+  // Close up the popup and make sure we clear any past selection. We cannot
+  // use |selectAt:-1| because that would show the popup, even for a brief
+  // instant and cause flashing.
   [mTableView deselectAll:self];
   [self closePopup];
 }
 
-- (void) onResize:(NSNotification *)aNote
+- (void)onResize:(NSNotification*)aNote
 {
   if ([aNote object] == [self window])
     [self resizePopup:NO];
 }
 
-- (void) onUndoOrRedo:(NSNotification *)aNote
+- (void)onUndoOrRedo:(NSNotification*)aNote
 {
   [mTableView deselectAll:self];
   [self clearResults];
@@ -1010,11 +1030,11 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
 #pragma mark -
 
 // NSTextField delegate //////////////////////////////////
-- (void)controlTextDidChange:(NSNotification *)aNote
+- (void)controlTextDidChange:(NSNotification*)aNote
 {
   NSTextView *fieldEditor = [[aNote userInfo] objectForKey:@"NSFieldEditor"];
 
-  // we are here either because the user is typing or they are selecting
+  // We are here either because the user is typing or they are selecting
   // an item in the autocomplete popup. When they are typing, the location of
   // the selection will be non-zero (wherever the insertion point is). When
   // they autocomplete, the length and the location will both be zero.
@@ -1023,8 +1043,8 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
   NSRange range = [fieldEditor selectedRange];
   NSString* currentText = [fieldEditor string];
   if ([currentText length] && range.location) {
-    // when we ask for a NSTextView string, Cocoa returns
-    // a pointer to the view's backing store.  So, the value
+    // When we ask for a NSTextView string, Cocoa returns
+    // a pointer to the view's backing store. So, the value
     // of the string continually changes as we edit the text view.
     // Since we'll edit the text view as we add in autocomplete results,
     // we've got to make a copy of the string as it currently stands
@@ -1034,18 +1054,18 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
   }
   else if (([mTableView selectedRow] == -1) || mBackspaced)
     [self clearResults];
-  
+
   mBackspaced = NO;
 }
 
-- (void)controlTextDidEndEditing:(NSNotification *)aNote
+- (void)controlTextDidEndEditing:(NSNotification*)aNote
 {
   [self clearResults];
   NSTextView* fieldEditor = [[aNote userInfo] objectForKey:@"NSFieldEditor"];
   [[fieldEditor undoManager] removeAllActionsWithTarget:fieldEditor];
 }
 
-- (BOOL)control:(NSControl *)control textView:(NSTextView *)textView doCommandBySelector:(SEL)command
+- (BOOL)control:(NSControl*)control textView:(NSTextView*)textView doCommandBySelector:(SEL)command
 {
   if (command == @selector(insertNewline:)) {
     [self enterResult:[mTableView selectedRow]];
@@ -1082,9 +1102,10 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
       [self completeSelectedResult];
       return YES;
     } else {
-      // use the normal key view unless we know more about our siblings and have
-      // explicitly nil'd out the next key view. In that case, select the window
-      // to break out of the toolbar and tab through the rest of the window
+      // Use the normal key view unless we know more about our siblings and
+      // have explicitly nil'd out the next key view. In that case, select the
+      // window to break out of the toolbar and tab through the rest of the
+      // window.
       if ([self nextKeyView])
         [[self window] selectKeyViewFollowingView:self];
       else {
@@ -1092,27 +1113,28 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
         [wind makeFirstResponder:wind];
       }
     }
-  } else if (command == @selector(deleteBackward:) || 
+  } else if (command == @selector(deleteBackward:) ||
              command == @selector(deleteForward:)) {
-    // if the user deletes characters, we need to know so that
-    // we can prevent autocompletion later when search results come in
+    // If the user deletes characters, we need to know so that
+    // we can prevent autocompletion later when search results come in.
     if ([[textView string] length] > 1) {
       [self selectRowAt:-1];
       mBackspaced = YES;
     }
   }
-  
+
   return NO;
 }
 
 #pragma mark -
 
-// NSWindow delegate methods. We're only the window's delegate when we're inside
-// the open location sheet.
+// NSWindow delegate methods. We're only the window's delegate when we're
+// inside the open location sheet.
 
-- (void)windowWillClose:(NSNotification *)aNotification
+- (void)windowWillClose:(NSNotification*)aNotification
 {
-  // make sure we hide the autocomplete popup when the Location sheet is dismissed
+  // Make sure we hide the autocomplete popup when the Location sheet
+  // is dismissed.
   [self clearResults];
 }
 
