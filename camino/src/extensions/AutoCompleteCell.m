@@ -38,6 +38,7 @@
 #import "AutoCompleteCell.h"
 #import "AutoCompleteResult.h"
 #import "CHGradient.h"
+#import "NSWorkspace+Utils.h"
 
 
 static NSSize kIconSize = {16, 16};
@@ -111,24 +112,34 @@ static NSSize kIconSize = {16, 16};
 
 - (void)drawHighlightInRect:(NSRect)rect
 {
-  NSColor *topColor, *startColor, *endColor, *bottomColor;
-  if ([NSColor currentControlTint] == NSGraphiteControlTint) {
-    topColor = [NSColor colorWithCalibratedRed:(96/255.0) green:(105/255.0) blue:(113/255.0) alpha:1.0];
-    startColor = [NSColor colorWithCalibratedRed:(107/255.0) green:(115/255.0) blue:(123/255.0) alpha:1.0];
-    endColor = [NSColor colorWithCalibratedRed:(85/255.0) green:(94/255.0) blue:(105/255.0) alpha:1.0];
-    bottomColor = [NSColor colorWithCalibratedRed:(68/255.0) green:(79/255.0) blue:(90/255.0) alpha:1.0];
+  if ([NSWorkspace isLeopardOrHigher]) {
+    NSColor *topColor, *startColor, *endColor, *bottomColor;
+    if ([NSColor currentControlTint] == NSGraphiteControlTint) {
+      topColor = [NSColor colorWithCalibratedRed:(96/255.0) green:(105/255.0) blue:(113/255.0) alpha:1.0];
+      startColor = [NSColor colorWithCalibratedRed:(107/255.0) green:(115/255.0) blue:(123/255.0) alpha:1.0];
+      endColor = [NSColor colorWithCalibratedRed:(85/255.0) green:(94/255.0) blue:(105/255.0) alpha:1.0];
+      bottomColor = [NSColor colorWithCalibratedRed:(68/255.0) green:(79/255.0) blue:(90/255.0) alpha:1.0];
+    } else {
+      topColor = [NSColor colorWithCalibratedRed:(73/255.0) green:(104/255.0) blue:(234/255.0) alpha:1.0];
+      startColor = [NSColor colorWithCalibratedRed:(81/255.0) green:(112/255.0) blue:(246/255.0) alpha:1.0];
+      endColor = [NSColor colorWithCalibratedRed:(26/255.0) green:(67/255.0) blue:(243/255.0) alpha:1.0];
+      bottomColor = [NSColor colorWithCalibratedRed:(14/255.0) green:(55/255.0) blue:(231/255.0) alpha:1.0];
+    }
+    CHGradient *gradient = [[[CHGradient alloc] initWithStartingColor:startColor endingColor:endColor] autorelease];
+    [gradient drawInRect:rect angle:90.0];
+    [topColor set];
+    NSRectFill(NSMakeRect(rect.origin.x, rect.origin.y - 1, rect.size.width, 1));
+    [bottomColor set];
+    NSRectFill(NSMakeRect(rect.origin.x, rect.origin.y - 1 + rect.size.height + 1, rect.size.width, 1));
   } else {
-    topColor = [NSColor colorWithCalibratedRed:(73/255.0) green:(104/255.0) blue:(234/255.0) alpha:1.0];
-    startColor = [NSColor colorWithCalibratedRed:(81/255.0) green:(112/255.0) blue:(246/255.0) alpha:1.0];
-    endColor = [NSColor colorWithCalibratedRed:(26/255.0) green:(67/255.0) blue:(243/255.0) alpha:1.0];
-    bottomColor = [NSColor colorWithCalibratedRed:(14/255.0) green:(55/255.0) blue:(231/255.0) alpha:1.0];
+    NSColor *highlightColor;
+    if ([NSColor currentControlTint] == NSGraphiteControlTint)
+      highlightColor = [NSColor colorWithDeviceRed:0.392157 green:0.474510 blue:0.568627 alpha:1.0];
+    else
+      highlightColor = [NSColor colorWithDeviceRed:0.000000 green:0.392157 blue:0.901961 alpha:1.0];
+    [highlightColor set];
+    NSRectFill(NSInsetRect(rect, 0, -1));
   }
-  CHGradient *gradient = [[[CHGradient alloc] initWithStartingColor:startColor endingColor:endColor] autorelease];
-  [gradient drawInRect:rect angle:90.0];
-  [topColor set];
-  NSRectFill(NSMakeRect(rect.origin.x, rect.origin.y - 1, rect.size.width, 1));
-  [bottomColor set];
-  NSRectFill(NSMakeRect(rect.origin.x, rect.origin.y - 1 + rect.size.height + 1, rect.size.width, 1));
 }
 
 - (void)drawInteriorWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
