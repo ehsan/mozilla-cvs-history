@@ -7,9 +7,6 @@ body {
   padding: 0 1em;
   color: -moz-FieldText;
   font: message-box;
-}
-
-#aboutPageContainer {
   position: relative;
   min-width: 330px;
   max-width: 50em;
@@ -19,6 +16,7 @@ body {
   padding: 3em;
   -moz-padding-start: 30px;
   background: -moz-Field;
+  -moz-box-shadow: -4px 4px 8px rgba(0,0,0,0.12), 4px 4px 8px rgba(0,0,0,0.12);
 }
 
 .aboutPageWideContainer {
@@ -43,21 +41,35 @@ img {
 
 h1 {
   margin: 0 0 .6em 0;
-  padding-bottom: .3em;
-  border-bottom: 1px solid ThreeDLightShadow;
   font-size: 240%;
   color: #0141b7;
   font-weight: normal;
   text-align: left !important;
 }
 
+h1:first-child {
+  border-bottom: 1px solid ThreeDLightShadow;
+  padding-bottom: .2em;
+}
+
 ul {
   margin: 0;
   -moz-margin-start: 1.5em;
   padding: 0;
-  list-style: square;
+  list-style: disc;
 }
 
 ul > li {
   margin-top: .5em;
+}
+
+/* about:buildconfig is in quirksmode */
+table {
+  font-size: inherit;
+}
+
+hr {
+  margin: 1.5em 0;
+  border: none;
+  border-top: 1px solid #333;
 }

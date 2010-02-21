@@ -11,14 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is about:memory.
  *
  * The Initial Developer of the Original Code is
- * Dão Gottwald <dao@design-noir.de>.
- * Portions created by the Initial Developer are Copyright (C) 2007
+ *   Mozilla Corporation   
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Vladimir Vukicevic <vladimir@pobox.com>
  *   Philippe Wittenbergh (phiw@l-c-n.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -35,121 +36,62 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* Replaces mozilla/toolkit/pinstripe/global/dirListing/dirListing.css to add 
-  Camino-like styles for the directory listings (see bug 392755) */
-
-:root {
-  background-color: #F2F2F2;
-  color: -moz-dialogtext;
-  font: message-box;
-  padding-left: 2em;
-  padding-right: 2em;
+html {
+  background: -moz-dialog;
 }
 
 body {
+  color: -moz-FieldText;
+  background: -moz-Field;
+  font: message-box;
+  margin: 4em auto;
+  padding: 3em;
+  min-width: 230px;
+  max-width: 40em;
   border: 2px solid #dadada;
   -moz-border-radius: 15px;
-  padding: 3em;
-  min-width: 30em;
-  max-width: 65em;
-  margin: 4em auto;
-  background-color: -moz-field;
-  color: -moz-fieldtext;
   -moz-box-shadow: -4px 4px 8px rgba(0,0,0,0.12), 4px 4px 8px rgba(0,0,0,0.12);
 }
 
 h1 {
-  font-size: 160%;
-  margin: 0 0 .6em;
-  border-bottom: 1px solid ThreeDLightShadow;
   font-weight: normal;
+  font-size: 240%;
+  color: #0141b7;
+  background: transparent;
+  text-align: left;
+  border-bottom: 1px solid ThreeDLightShadow;
+  padding-bottom: .2em;
+  margin: 0 0 .6em 0;
 }
 
-a {
-  text-decoration: none;
+label {
+  -moz-user-select: text;
 }
 
-a:hover {
-  text-decoration: underline;
-}
-
-p {
-  font-size: 110%;
-}
-
-#UI_goUp {
+h2 {
   margin-top: 0;
-  float: left;
+  font-weight: bold;
+  font-size: large;
 }
 
-#UI_showHidden {
-  margin-top: 0;
-  float: right;
-}
-
-table {
-  clear: both;
-  width: 90%;
-  margin: 0 auto;
-  border-collapse: collapse;
-}
-
-thead {
-  font-size: 130%;
-}
-
-/* last modified */
-th:last-child {
-  text-align: center;
-}
-
-th:first-child {
-  -moz-padding-start: 36px;
-}
-
-th:hover > a {
-  text-decoration: underline;
-}
-
-tbody > tr:nth-child(even) {
-  background: -moz-oddtreerow;
-}
-
-tbody > tr:hover {
-  background-color: -moz-mac-secondaryhighlight;
+.memBox {
+  max-width: 90%;
+  background: white;
   color: inherit;
-  border: none;
+  margin: 1em auto 0;
+  padding: 5px 5px 1em;
+  border-bottom: 1px solid ThreeDLightShadow;
 }
 
-td {
-  padding: 2px;
+.memBox:last-of-type {
+  border-bottom: none;
+  padding-bottom: 0;
 }
 
-td:first-child {
-  -moz-padding-start: 16px;
+.memValue {
+  text-align: right;
 }
 
-td:last-child {
-  -moz-padding-end: 16px;
-}
-
-/* let 'Size' and 'Last Modified' take only as much space as they need and 'Name' all the rest */
-td:not(:first-child) {
-  width: 0;
-}
-
-.up {
-  padding: 0 .5em;
-  -moz-margin-start: 20px;
-}
-
-.up::before {
-  -moz-margin-end: 4px;
-  -moz-margin-start: -20px;
-  vertical-align: middle;
-  content: url(chrome://global/skin/dirListing/up.png);
-}
-
-.dir::before {
-  content: url(chrome://global/skin/dirListing/folder.png);
+.memOverview table {
+  font-size: 120%;
 }
