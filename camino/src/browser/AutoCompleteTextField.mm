@@ -238,18 +238,9 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
 
 @implementation ClickMenuImageView
 
-- (id)init
-{
-  if ((self = [super init]))
-    mMenuNotificationName = nil;
-
-  return self;
-}
-
 - (void)dealloc
 {
-  if (mMenuNotificationName)
-    [mMenuNotificationName release];
+  [mMenuNotificationName release];
 
   [super dealloc];
 }
