@@ -1008,6 +1008,8 @@
 		B3128A120E5D14C8009F0595 /* pageBigger.tiff in Resources */ = {isa = PBXBuildFile; fileRef = B3757F860E5D0FE70006EDF1 /* pageBigger.tiff */; };
 		B3128A130E5D14CD009F0595 /* pageSmaller.tiff in Resources */ = {isa = PBXBuildFile; fileRef = B3757F870E5D0FE70006EDF1 /* pageSmaller.tiff */; };
 		B3128A140E5D14CE009F0595 /* pageSmaller.tiff in Resources */ = {isa = PBXBuildFile; fileRef = B3757F870E5D0FE70006EDF1 /* pageSmaller.tiff */; };
+		B386FC3110CF5AF30094DAAB /* NSMenu+Gecko.mm in Sources */ = {isa = PBXBuildFile; fileRef = B386FC3010CF5AF30094DAAB /* NSMenu+Gecko.mm */; };
+		B386FC3210CF5AF30094DAAB /* NSMenu+Gecko.mm in Sources */ = {isa = PBXBuildFile; fileRef = B386FC3010CF5AF30094DAAB /* NSMenu+Gecko.mm */; };
 		B3886D880F79D53700D8E015 /* FlashblockWhitelistManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = B3886D870F79D53700D8E015 /* FlashblockWhitelistManager.mm */; };
 		B3886D890F79D53700D8E015 /* FlashblockWhitelistManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = B3886D870F79D53700D8E015 /* FlashblockWhitelistManager.mm */; };
 		C713F0900E9AF7DB002313B3 /* CHSlidingViewAnimation.m in Sources */ = {isa = PBXBuildFile; fileRef = C713F08E0E9AF7DB002313B3 /* CHSlidingViewAnimation.m */; };
@@ -2847,6 +2849,8 @@
 		A7FD31C90466004E00A80196 /* libsuitetypeaheadfind.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsuitetypeaheadfind.a; path = ../extensions/typeaheadfind/src/libsuitetypeaheadfind.a; sourceTree = SOURCE_ROOT; };
 		B3757F860E5D0FE70006EDF1 /* pageBigger.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = pageBigger.tiff; path = resources/images/toolbar/pageBigger.tiff; sourceTree = "<group>"; };
 		B3757F870E5D0FE70006EDF1 /* pageSmaller.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = pageSmaller.tiff; path = resources/images/toolbar/pageSmaller.tiff; sourceTree = "<group>"; };
+		B386FC2F10CF5AF30094DAAB /* NSMenu+Gecko.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSMenu+Gecko.h"; path = "src/extensions/NSMenu+Gecko.h"; sourceTree = "<group>"; };
+		B386FC3010CF5AF30094DAAB /* NSMenu+Gecko.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "NSMenu+Gecko.mm"; path = "src/extensions/NSMenu+Gecko.mm"; sourceTree = "<group>"; };
 		B3886D840F79D52700D8E015 /* FlashblockWhitelistManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FlashblockWhitelistManager.h; path = src/browser/FlashblockWhitelistManager.h; sourceTree = "<group>"; };
 		B3886D870F79D53700D8E015 /* FlashblockWhitelistManager.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = FlashblockWhitelistManager.mm; path = src/browser/FlashblockWhitelistManager.mm; sourceTree = "<group>"; };
 		C713F08E0E9AF7DB002313B3 /* CHSlidingViewAnimation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CHSlidingViewAnimation.m; path = src/extensions/CHSlidingViewAnimation.m; sourceTree = "<group>"; };
@@ -4724,6 +4728,8 @@
 				0FEA7DE00926BBF500B06154 /* NSFileManager+Utils.m */,
 				F541495E02711B0001A80166 /* NSImage+Utils.h */,
 				F541495F02711B0001A80166 /* NSImage+Utils.m */,
+				B386FC2F10CF5AF30094DAAB /* NSMenu+Gecko.h */,
+				B386FC3010CF5AF30094DAAB /* NSMenu+Gecko.mm */,
 				0FBC0ED30798F96100E8E0E2 /* NSMenu+Utils.h */,
 				0FBC0ED00798F95400E8E0E2 /* NSMenu+Utils.m */,
 				F5B34B04034A50C901A80166 /* NSPasteboard+Utils.h */,
@@ -6373,6 +6379,7 @@
 				00C6890710560B110082D80F /* BreakpadWrapper.m in Sources */,
 				00F79F591075B622006688AC /* OperaBookmarkConverter.m in Sources */,
 				00F7A08C1077F255006688AC /* SafariBookmarkConverter.m in Sources */,
+				B386FC3110CF5AF30094DAAB /* NSMenu+Gecko.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6571,6 +6578,7 @@
 				00C6890810560B110082D80F /* BreakpadWrapper.m in Sources */,
 				00F79F5A1075B622006688AC /* OperaBookmarkConverter.m in Sources */,
 				00F7A08D1077F255006688AC /* SafariBookmarkConverter.m in Sources */,
+				B386FC3210CF5AF30094DAAB /* NSMenu+Gecko.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -43,6 +43,7 @@
 #import "NSString+Utils.h"
 #import "NSString+Gecko.h"
 #import "NSSplitView+Utils.h"
+#import "NSMenu+Gecko.h"
 #import "NSMenu+Utils.h"
 #import "NSPasteboard+Utils.h"
 #import "NSWorkspace+Utils.h"
@@ -4227,6 +4228,12 @@ public:
   BOOL isFlashblock = NO;
 
   if (mDataOwner->mContextMenuNode) {
+    nsAutoString nodeName;
+    if (NS_SUCCEEDED(mDataOwner->mContextMenuNode->GetNodeName(nodeName))) {
+      if (nodeName.Equals(NS_LITERAL_STRING("popup")))
+        return [NSMenu menuFromNode:mDataOwner->mContextMenuNode];
+    }
+
     nsCOMPtr<nsIDOMDocument> ownerDoc;
     mDataOwner->mContextMenuNode->GetOwnerDocument(getter_AddRefs(ownerDoc));
 

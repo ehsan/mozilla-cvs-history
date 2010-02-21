@@ -285,6 +285,10 @@ const char* const kHTMLMIMEType = "text/html";
                                            static_cast<nsIDOMEventListener*>(_listener), PR_FALSE);
         NS_ASSERTION(NS_SUCCEEDED(rv), "AddEventListener failed");
 
+        rv = eventTarget->AddEventListener(NS_LITERAL_STRING("popupshowing"),
+                                           static_cast<nsIDOMEventListener*>(_listener), PR_FALSE);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "AddEventListener failed");
+
         // Register the CHBrowserListener to listen for Flashblock whitelist
         // and Silverlight blocking checks. Need to use an nsIDOMNSEventTarget
         // since flashblockCheckLoad and silverblockCheckLoad are untrusted.
