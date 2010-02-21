@@ -76,7 +76,7 @@ typedef enum ETabAndWindowCount
     IBOutlet NSView*        mFilterView;
     IBOutlet NSView*        mExportPanelView;
 
-    // IBOutlet NSMenuItem*    mOfflineMenuItem;
+    IBOutlet NSMenuItem*    mOfflineMenuItem;
     IBOutlet NSMenuItem*    mCloseWindowMenuItem;
     IBOutlet NSMenuItem*    mCloseTabMenuItem;
 
@@ -129,6 +129,7 @@ typedef enum ETabAndWindowCount
 - (IBAction)displayPreferencesWindow:(id)sender;
 - (IBAction)resetBrowser:(id)sender;
 - (IBAction)emptyCache:(id)sender;
+- (IBAction)toggleOfflineMode:(id)aSender;
 
 // File menu actions
 - (IBAction)newWindow:(id)aSender;
@@ -144,7 +145,6 @@ typedef enum ETabAndWindowCount
 - (IBAction)exportBookmarks:(id)aSender;
 - (IBAction)pageSetup:(id)aSender;
 - (IBAction)printDocument:(id)aSender;
-- (IBAction)toggleOfflineMode:(id)aSender; // unused
 
 // Edit menu actions
 // (none)

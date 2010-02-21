@@ -1525,15 +1525,11 @@ const int kZoomActionsTag = 108;
   // Update the menu item text.
   // Set the menu item's text to "Go Online" if we're currently
   // offline.
-/*
-  if (mOffline)
-    [mOfflineMenuItem setTitle:@"Go Online"];
-  else
-    [mOfflineMenuItem setTitle:@"Work Offline"];
-*/
 
-  // Indicate that we are working offline.
-  [[NSNotificationCenter defaultCenter] postNotificationName:@"offlineModeChanged" object:nil];
+  if (mOffline)
+    [mOfflineMenuItem setTitle:NSLocalizedString(@"GoOnline", nil)];
+  else
+    [mOfflineMenuItem setTitle:NSLocalizedString(@"WorkOffline", nil)];
 }
 
 #pragma mark -

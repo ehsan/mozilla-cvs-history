@@ -64,6 +64,9 @@
 "ShowTabThumbnailView" = "Show Tab Overview";
 "HideTabThumbnailView" = "Hide Tab Overview";
 
+"GoOnline" = "Go Online";
+"WorkOffline" = "Work Offline";
+
 /* offline window title (unused) */
 "OfflineTitleFormat" = "%@ [Working Offline]";
 

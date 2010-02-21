@@ -326,7 +326,6 @@
                 closeAllWindows = id;
                 closeCurrentTab = id;
                 connectToServer = id;
-                copyPageLocation = id;
                 displayPreferencesWindow = id;
                 doSearch = id;
                 downloadsWindow = id;
@@ -394,6 +393,7 @@
                 mDockMenu = BookmarkMenu;
                 mExportPanelView = NSView;
                 mFilterView = NSView;
+                mOfflineMenuItem = NSMenuItem;
                 mServersSubmenu = NSMenu;
                 mShowAllBookmarksMenuItem = NSMenuItem;
                 mTextEncodingsMenu = NSMenu;
