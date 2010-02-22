@@ -54,6 +54,13 @@ for d in $changedDirs; do
     fi
 done
 
+if [ -z "$args" ]; then
+    echo
+    echo 'Nothing to backup. There could be something wrong, or you could'
+    echo 'be creating new directories (eg test snippets for a major update).'
+    exit 0
+fi
+
 pushd $LIVE_SNIPPET_DIR > /dev/null
 echo Running time $TAR cfvz $BACKUP_DIR/$backupDirName.tar.gz $args
 time $TAR cfvz $BACKUP_DIR/$backupDirName.tar.gz $args
