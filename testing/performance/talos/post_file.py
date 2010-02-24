@@ -15,8 +15,12 @@ def link_exists(host, selector):
     try:
       site = urllib2.urlopen("http://" + host + selector)
       meta = site.info()
+    except urllib2.HTTPError, e:
+      print "FAIL: graph server HTTPError" 
+      print "FAIL: " + str(e)
+      return 0
     except urllib2.URLError, e:
-      print "FAIL: graph server does not resolve" 
+      print "FAIL: graph server URLError" 
       print "FAIL: " + str(e)
       return 0
     return 1
