@@ -6,24 +6,33 @@
 #   This recipe is covered under the Python license: http://www.python.org/license
 
 import httplib, mimetypes, urllib2
+import socket
 from socket import error, herror, gaierror, timeout
+socket.setdefaulttimeout(None)
+import urlparse
 
 def link_exists(host, selector):
-    """
-    Check to see if the given host exists and is reachable
-    """
+    url = "http://" + host + selector
+    host, path = urlparse.urlsplit(url)[1:3]
+    found = 0
+    msg = "ping"
     try:
-      site = urllib2.urlopen("http://" + host + selector)
-      meta = site.info()
-    except urllib2.HTTPError, e:
-      print "FAIL: graph server HTTPError" 
-      print "FAIL: " + str(e)
-      return 0
-    except urllib2.URLError, e:
-      print "FAIL: graph server URLError" 
-      print "FAIL: " + str(e)
-      return 0
-    return 1
+        h = httplib.HTTP(host)  ## Make HTTPConnection Object
+        h.putrequest('HEAD', selector)
+        h.putheader('content-type', "text/plain")
+        h.putheader('content-length', str(len(msg)))
+        h.putheader('Host', host)
+        h.endheaders()
+        h.send(msg)
+        
+        errcode, errmsg, headers = h.getreply()
+        if errcode == 200:
+            found = 1
+        else:
+            print "FAIL: graph server Status %d %s : %s" % (errcode, errmsg, url)
+    except Exception, e:
+        print "FAIL: graph server ", e.__class__,  e, url
+    return found
 
 def post_multipart(host, selector, fields, files):
     """

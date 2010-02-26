@@ -45,7 +45,7 @@ import urllib
 import os
 import string
 import socket
-socket.setdefaulttimeout(480)
+#socket.setdefaulttimeout(480)
 import getopt
 import re
 
