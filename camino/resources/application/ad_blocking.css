@@ -611,6 +611,7 @@ div[class^="adSpot"],
 div[class="relatedAds"],
 div[class^="adGoogle"],
 div[class="adgoogle"],
+div[class^="googleAdBlock"],
 div[id^="p360_ad"],
 div[id^="p360-"],
 div[class^="p360_"],
@@ -644,7 +645,8 @@ div[id="rightrailads"],
 div[id="right-ads"],
 div[class="sponsorArea"],
 div[class="adblock"],
-div[class^="yab-"][class$="-ad"]
+div[class^="yab-"][class$="-ad"],
+div[class="floatedAd"]
 
 { display: none !important }
 
@@ -671,6 +673,8 @@ iframe[src*="mozilla.org"],
 div[id*="Player"] iframe[src*="/ads."]
 
 { display: inline !important }
+
+div[class="content has_ad"] { display: block !important }
 
 @-moz-document domain(wiki.caminobrowser.org) {
 img[src*="/ad/"] { display: inline !important }
@@ -708,4 +712,8 @@ div[id="ads_backsplashSkin"] { display: block !important }
 
 @-moz-document domain(lastfm.de) {
 html embed[type="application/x-shockwave-flash"][width][height] { display: inline !important }
+}
+
+@-moz-document domain(macwelt.de) {
+div[class*="advertisment"][id="spacer_58"] { display: block !important }
 }
