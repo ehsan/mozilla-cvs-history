@@ -404,22 +404,42 @@ public class SSLServerSocket extends java.net.ServerSocket {
      *      SSLSocket.SSL_RENEGOTIATE_NEVER - Never renegotiate at all.
      *
      *      SSLSocket.SSL_RENEGOTIATE_UNRESTRICTED - Renegotiate without
-     *      restriction, whether or not the peer's client hello bears the
-     *      renegotiation info extension (like we always did in the past).
+     *      restriction, whether or not the peer's hello bears the TLS
+     *      renegotiation info extension. Vulnerable, as in the past.
      *
-     *      SSLSocket.SSL_RENEGOTIATE_REQUIRES_XTN - NOT YET IMPLEMENTED
+     *      SSLSocket.SSL_RENEGOTIATE_REQUIRES_XTN -  Only renegotiate if the 
+     *      peer's hello bears the TLS renegotiation_info extension. This is 
+     *      safe renegotiation.
+     *
+     *      SSLSocket.SSL_RENEGOTIATE_TRANSITIONAL - Disallow unsafe
+     *      renegotiation in server sockets only, but allow clients
+     *      to continue to renegotiate with vulnerable servers.
+     *      This value should only be used during the transition period
+     *      when few servers have been upgraded.
      */
 
     public void enableRenegotiation(int mode)
             throws SocketException
     {
         if (mode >= SocketBase.SSL_RENEGOTIATE_NEVER &&
-            mode <= SocketBase.SSL_RENEGOTIATE_REQUIRES_XTN) {
+            mode <= SocketBase.SSL_RENEGOTIATE_TRANSITIONAL) {
             base.enableRenegotiation(mode);
         } else {
             throw new SocketException("Incorrect input value.");
         }
      }
+
+    /**
+     * For this socket require that the peer must send
+     * Signaling Cipher Suite Value (SCSV) or Renegotiation Info (RI)
+     * extension in ALL handshakes. It is disabled by default,
+     * unless the default has been changed with
+     * <code>SSLSocket.enableRequireSafeNegotiationDefault</code>.
+     */
+    public void enableRequireSafeNegotiation(boolean enable)
+            throws SocketException {
+        base.enableRequireSafeNegotiation(enable);
+    }
 
     /**
      * Enables the bypass of PKCS11 for performance on this socket. 

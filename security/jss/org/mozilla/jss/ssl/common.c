@@ -399,8 +399,8 @@ PRInt32 JSSL_enums[] = {
     SSL_RENEGOTIATE_NEVER,        /* 24 */      /* ssl.h */
     SSL_RENEGOTIATE_UNRESTRICTED, /* 25 */      /* ssl.h */
     SSL_RENEGOTIATE_REQUIRES_XTN, /* 26 */      /* ssl.h */
-    3, /* reserved */             /* 27 */      /* ssl.h */
-
+    SSL_RENEGOTIATE_TRANSITIONAL, /* 27 */      /* ssl.h */
+    SSL_REQUIRE_SAFE_NEGOTIATION, /* 28 */      /* ssl.h */
     0
 };
 

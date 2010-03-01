@@ -86,6 +86,8 @@ public class SSLSocket extends java.net.Socket {
            org.mozilla.jss.ssl.SocketBase.SSL_RENEGOTIATE_REQUIRES_XTN;
     static final public int SSL_RENEGOTIATE_UNRESTRICTED =
            org.mozilla.jss.ssl.SocketBase.SSL_RENEGOTIATE_UNRESTRICTED;
+    static final public int SSL_RENEGOTIATE_TRANSITIONAL  =
+           org.mozilla.jss.ssl.SocketBase.SSL_RENEGOTIATE_TRANSITIONAL;
 
     /**
      * For sockets that get created by accept().
@@ -585,16 +587,24 @@ public class SSLSocket extends java.net.Socket {
      *      SSLSocket.SSL_RENEGOTIATE_NEVER - Never renegotiate at all.
      *
      *      SSLSocket.SSL_RENEGOTIATE_UNRESTRICTED - Renegotiate without
-     *      restriction, whether or not the peer's client hello bears the
-     *      renegotiation info extension (like we always did in the past).
+     *      restriction, whether or not the peer's hello bears the TLS
+     *      renegotiation info extension. Vulnerable, as in the past.
      *
-     *      SSLSocket.SSL_RENEGOTIATE_REQUIRES_XTN - NOT YET IMPLEMENTED
+     *      SSLSocket.SSL_RENEGOTIATE_REQUIRES_XTN -  Only renegotiate if the
+     *      peer's hello bears the TLS renegotiation_info extension. This is
+     *      safe renegotiation.
+     *
+     *      SSLSocket.SSL_RENEGOTIATE_TRANSITIONAL - Disallow unsafe
+     *      renegotiation in server sockets only, but allow clients
+     *      to continue to renegotiate with vulnerable servers.
+     *      This value should only be used during the transition period
+     *      when few servers have been upgraded.
      */
     public void enableRenegotiation(int mode)
             throws SocketException
     {
         if (mode >= SocketBase.SSL_RENEGOTIATE_NEVER &&
-            mode <= SocketBase.SSL_RENEGOTIATE_REQUIRES_XTN) {
+            mode <= SocketBase.SSL_RENEGOTIATE_TRANSITIONAL) {
             base.enableRenegotiation(mode);
         } else {
             throw new SocketException("Incorrect input value.");
@@ -609,16 +619,24 @@ public class SSLSocket extends java.net.Socket {
      *      SSLSocket.SSL_RENEGOTIATE_NEVER - Never renegotiate at all.
      *
      *      SSLSocket.SSL_RENEGOTIATE_UNRESTRICTED - Renegotiate without
-     *      restriction, whether or not the peer's client hello bears the
-     *      renegotiation info extension (like we always did in the past).
+     *      restriction, whether or not the peer's hello bears the TLS
+     *      renegotiation info extension. Vulnerable, as in the past.
      *
-     *      SSLSocket.SSL_RENEGOTIATE_REQUIRES_XTN - NOT YET IMPLEMENTED
+     *      SSLSocket.SSL_RENEGOTIATE_REQUIRES_XTN -  Only renegotiate if the
+     *      peer's hello bears the TLS renegotiation_info extension. This is
+     *      safe renegotiation.
+     *
+     *      SSLSocket.SSL_RENEGOTIATE_TRANSITIONAL - Disallow unsafe
+     *      renegotiation in server sockets only, but allow clients
+     *      to continue to renegotiate with vulnerable servers.
+     *      This value should only be used during the transition period
+     *      when few servers have been upgraded.
      */
     static public void enableRenegotiationDefault(int mode)
             throws SocketException
     {
         if (mode >= SocketBase.SSL_RENEGOTIATE_NEVER &&
-            mode <= SocketBase.SSL_RENEGOTIATE_REQUIRES_XTN) {
+            mode <= SocketBase.SSL_RENEGOTIATE_TRANSITIONAL) {
 
             setSSLDefaultOptionMode(SocketBase.SSL_ENABLE_RENEGOTIATION,
                     mode);
@@ -626,6 +644,28 @@ public class SSLSocket extends java.net.Socket {
             throw new SocketException("Incorrect input value.");
         }
      }
+
+    /**
+     * For this socket require that the peer must send
+     * Signaling Cipher Suite Value (SCSV) or Renegotiation Info (RI)
+     * extension in ALL handshakes. It is disabled by default,
+     * unless the default has been changed with
+     * <code>SSLSocket.enableRequireSafeNegotiationDefault</code>.
+     */
+    public void enableRequireSafeNegotiation(boolean enable)
+            throws SocketException {
+        base.enableRequireSafeNegotiation(enable);
+    }
+
+    /**
+     * For this socket require that the peer must send
+     * Signaling Cipher Suite Value (SCSV) or Renegotiation Info (RI)
+     * extension in ALL handshakes. It is disabled by default.
+     */
+    static public void enableRequireSafeNegotiationDefault(boolean enable)
+            throws SocketException {
+        setSSLDefaultOption(SocketBase.SSL_REQUIRE_SAFE_NEGOTIATION, enable);
+    }
 
     /**
      * Enables bypass of PKCS11 on this socket.  
@@ -836,10 +876,17 @@ public class SSLSocket extends java.net.Socket {
                case 2:
                     buf.append("=SSL_RENEGOTIATE_REQUIRES_XTN");
                     break;
+               case 3:
+                    buf.append("=SSL_RENEGOTIATE_TRANSITIONAL");
+                    break;
               default:
                    buf.append("=Report JSS Bug this option has a status.");
                    break;
             } //end switch
+            buf.append("\nSSL_REQUIRE_SAFE_NEGOTIATION" +
+                ((getSSLDefaultOption(SocketBase.SSL_REQUIRE_SAFE_NEGOTIATION)
+                != 0) ? "=on" :  "=off"));
+
         } catch (SocketException e) {
             buf.append("\ngetSSLDefaultOptions exception " + e.getMessage());
         }

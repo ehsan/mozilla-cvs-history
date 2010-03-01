@@ -119,9 +119,8 @@ class SocketBase {
     static final int SSL_RENEGOTIATE_NEVER = 24;
     static final int SSL_RENEGOTIATE_UNRESTRICTED = 25;
     static final int SSL_RENEGOTIATE_REQUIRES_XTN = 26;
-    // Note: 27 is reserved for a potential fourth SSL_RENEGOTIATE_xxx
-    // constant.
-    // static final int SSL_RENEGOTIATE_RESERVED = 27;
+    static final int SSL_RENEGOTIATE_TRANSITIONAL = 27;
+    static final int SSL_REQUIRE_SAFE_NEGOTIATION = 28;
 
     void close() throws IOException {
         socketClose();
@@ -169,6 +168,10 @@ class SocketBase {
             throws SocketException
     {
         setSSLOptionMode(SocketBase.SSL_ENABLE_RENEGOTIATION, mode);
+    }
+
+    void enableRequireSafeNegotiation(boolean enable) throws SocketException {
+        setSSLOption(SSL_REQUIRE_SAFE_NEGOTIATION, enable);
     }
 
     void bypassPKCS11(boolean enable) throws SocketException {
@@ -282,10 +285,16 @@ class SocketBase {
                 case 2:
                     buf.append("=SSL_RENEGOTIATE_REQUIRES_XTN");
                     break;
+                case 3:
+                    buf.append("=SSL_RENEGOTIATE_TRANSITIONAL");
+                    break;
                 default:
                     buf.append("=Report JSS Bug this option has a status.");
                     break;
             } //end switch
+            buf.append("\nSSL_REQUIRE_SAFE_NEGOTIATION"  +
+                ((getSSLOption(SocketBase.SSL_REQUIRE_SAFE_NEGOTIATION) != 0)
+                ? "=on" :  "=off"));
 
         } catch (SocketException e) {
             buf.append("\ngetSSLOptions exception " + e.getMessage());
