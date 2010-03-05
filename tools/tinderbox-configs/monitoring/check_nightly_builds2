@@ -8,7 +8,19 @@
 CONFIG_DIR=/etc/nagios/tinderbox-monitoring
 CONFIG_FILE=$CONFIG_DIR/$1.txt
 
-output=`for i in $(cat $CONFIG_FILE | dos2unix); do $CONFIG_DIR/check_nightly_builds -a 100800 -f $i; done | grep CRITICAL`
+VER=
+VERSION_URL=$(grep "VERSION_URL" "$CONFIG_FILE" | tail -n 1 | sed 's/.*VERSION_URL[[:space:]]*//')
+
+if [ ! -z $VERSION_URL ]; then
+    VER=$(wget -q --timeout=7 -O- "$VERSION_URL" | grep -P '^\d\.\d.*' | tail -n 1)
+    if [ -z $VER ]; then
+        echo "Cannot parse version information"
+        exit 1
+    fi
+fi
+
+
+output=`for i in $(grep -v ^# $CONFIG_FILE | tr -d '\r' | sed "s/@VER@/$VER/g" ); do $CONFIG_DIR/check_nightly_builds -a 100800 -f $i; done | grep CRITICAL`
 
 if [ ! -z "$output" ]; then
   echo $output | sed 's/CRITICAL: //g'

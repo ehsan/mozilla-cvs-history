@@ -1,6 +1,7 @@
-/pub/mozilla.org/firefox/nightly/latest-tracemonkey/firefox-3.7a2pre.en-US.linux-i686.tar.bz2
-/pub/mozilla.org/firefox/nightly/latest-tracemonkey/firefox-3.7a2pre.en-US.linux-x86_64.tar.bz2
-/pub/mozilla.org/firefox/nightly/latest-tracemonkey/firefox-3.7a2pre.en-US.mac.dmg
-/pub/mozilla.org/firefox/nightly/latest-tracemonkey/firefox-3.7a2pre.en-US.mac-shark.dmg
-/pub/mozilla.org/firefox/nightly/latest-tracemonkey/firefox-3.7a2pre.en-US.win32.installer.exe
-/pub/mozilla.org/firefox/nightly/latest-tracemonkey/firefox-3.7a2pre.en-US.win32.zip
+# VERSION_URL http://hg.mozilla.org/tracemonkey/raw-file/default/browser/config/version.txt
+/pub/mozilla.org/firefox/nightly/latest-tracemonkey/firefox-@VER@.en-US.linux-i686.tar.bz2
+/pub/mozilla.org/firefox/nightly/latest-tracemonkey/firefox-@VER@.en-US.linux-x86_64.tar.bz2
+/pub/mozilla.org/firefox/nightly/latest-tracemonkey/firefox-@VER@.en-US.mac.dmg
+/pub/mozilla.org/firefox/nightly/latest-tracemonkey/firefox-@VER@.en-US.mac-shark.dmg
+/pub/mozilla.org/firefox/nightly/latest-tracemonkey/firefox-@VER@.en-US.win32.installer.exe
+/pub/mozilla.org/firefox/nightly/latest-tracemonkey/firefox-@VER@.en-US.win32.zip

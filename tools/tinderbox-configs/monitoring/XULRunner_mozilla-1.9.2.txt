@@ -1,9 +1,10 @@
-/pub/mozilla.org/xulrunner/nightly/latest-mozilla-1.9.2/xulrunner-1.9.2.2pre.en-US.linux-i686.tar.bz2
-/pub/mozilla.org/xulrunner/nightly/latest-mozilla-1.9.2/xulrunner-1.9.2.2pre.en-US.linux-i686.sdk.tar.bz2
-/pub/mozilla.org/xulrunner/nightly/latest-mozilla-1.9.2/xulrunner-1.9.2.2pre.en-US.linux-x86_64.tar.bz2
-/pub/mozilla.org/xulrunner/nightly/latest-mozilla-1.9.2/xulrunner-1.9.2.2pre.en-US.linux-x86_64.sdk.tar.bz2
-/pub/mozilla.org/xulrunner/nightly/latest-mozilla-1.9.2/xulrunner-1.9.2.2pre.en-US.mac-pkg.dmg
-/pub/mozilla.org/xulrunner/nightly/latest-mozilla-1.9.2/xulrunner-1.9.2.2pre.en-US.mac-i386.sdk.tar.bz2
-/pub/mozilla.org/xulrunner/nightly/latest-mozilla-1.9.2/xulrunner-1.9.2.2pre.en-US.mac-powerpc.sdk.tar.bz2	
-/pub/mozilla.org/xulrunner/nightly/latest-mozilla-1.9.2/xulrunner-1.9.2.2pre.en-US.win32.zip
-/pub/mozilla.org/xulrunner/nightly/latest-mozilla-1.9.2/xulrunner-1.9.2.2pre.en-US.win32.sdk.zip
+# VERSION_URL http://hg.mozilla.org/releases/mozilla-1.9.2/raw-file/default/config/milestone.txt
+/pub/mozilla.org/xulrunner/nightly/latest-mozilla-1.9.2/xulrunner-@VER@.en-US.linux-i686.tar.bz2
+/pub/mozilla.org/xulrunner/nightly/latest-mozilla-1.9.2/xulrunner-@VER@.en-US.linux-i686.sdk.tar.bz2
+/pub/mozilla.org/xulrunner/nightly/latest-mozilla-1.9.2/xulrunner-@VER@.en-US.linux-x86_64.tar.bz2
+/pub/mozilla.org/xulrunner/nightly/latest-mozilla-1.9.2/xulrunner-@VER@.en-US.linux-x86_64.sdk.tar.bz2
+/pub/mozilla.org/xulrunner/nightly/latest-mozilla-1.9.2/xulrunner-@VER@.en-US.mac-pkg.dmg
+/pub/mozilla.org/xulrunner/nightly/latest-mozilla-1.9.2/xulrunner-@VER@.en-US.mac-i386.sdk.tar.bz2
+/pub/mozilla.org/xulrunner/nightly/latest-mozilla-1.9.2/xulrunner-@VER@.en-US.mac-powerpc.sdk.tar.bz2	
+/pub/mozilla.org/xulrunner/nightly/latest-mozilla-1.9.2/xulrunner-@VER@.en-US.win32.zip
+/pub/mozilla.org/xulrunner/nightly/latest-mozilla-1.9.2/xulrunner-@VER@.en-US.win32.sdk.zip
