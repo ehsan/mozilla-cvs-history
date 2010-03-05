@@ -81,9 +81,12 @@ class TTest(object):
                       re.DOTALL | re.MULTILINE)
     RESULTS_REGEX_FAIL = re.compile('__FAIL(.*?)__FAIL', re.DOTALL|re.MULTILINE)
 
-    def __init__(self):
+    def __init__(self, remote = False):
+        self.remote = remote
         self.cmanager = None
-        if platform.system() == "Linux":
+        if self.remote == True:
+            self.platform_type = 'win_'
+        elif platform.system() == "Linux":
             self.cmanager = __import__('cmanager_linux')
             self.platform_type = 'linux_'
             self._ffprocess = LinuxProcess()
@@ -97,6 +100,15 @@ class TTest(object):
             self._ffprocess = MacProcess()
 
         self._ffsetup = FFSetup(self._ffprocess)
+
+    def initializeLibraries(self, browser_config):
+        if ((browser_config['remote'] == True) and (browser_config['host'] <> '')):
+            from ffprocess_winmo import WinmoProcess
+            self._ffprocess = WinmoProcess(browser_config['host'], 
+                                           browser_config['port'], 
+                                           browser_config['deviceroot'])
+            self._ffsetup = FFSetup(self._ffprocess)
+            self._ffsetup.initializeRemoteDevice(browser_config)
 
     def createProfile(self, profile_path, browser_config):
         # Create the new profile
@@ -124,8 +136,7 @@ class TTest(object):
         # Delete the temp profile directory  Make it writeable first,
         # because every once in a while browser seems to drop a read-only
         # file into it.
-        self._ffprocess.MakeDirectoryContentsWritable(dir)
-        shutil.rmtree(dir)
+        self._ffprocess.removeDirectory(dir)
 
     def checkForCrashes(self, browser_config, profile_dir):
         if platform.system() in ('Windows', 'Microsoft'):
@@ -163,6 +174,7 @@ class TTest(object):
             test_config   :  Dictionary of configuration for the given test (url, cycles, counters, etc)
 
         """
+        self.initializeLibraries(browser_config)
  
         utils.debug("operating with platform_type : " + self.platform_type)
         counters = test_config[self.platform_type + 'counters']
@@ -204,7 +216,7 @@ class TTest(object):
             utils.debug("initialized " + browser_config['process'])
             if test_config['shutdown']:
                 shutdown = []
-  
+
             for i in range(test_config['cycles']):
                 if os.path.isfile(browser_config['browser_log']):
                     os.chmod(browser_config['browser_log'], 0777)
@@ -237,10 +249,20 @@ class TTest(object):
   
                 utils.debug("command line: " + command_line)
  
+                b_cmd = 'python bcontroller.py --command "%s"' % (command_line)
+                b_cmd += ' --child_process %s ' % (browser_config['child_process'])
+                b_cmd += ' --name %s ' % (browser_config['process'])
+                b_cmd += ' --timeout %d ' % (browser_config['browser_wait'])
+                b_cmd += ' --log %s ' % (browser_config['browser_log'])
                 if 'url_mod' in test_config:
-                    process = subprocess.Popen('python bcontroller.py --command "%s" --mod "%s" --name %s --child_process %s --timeout %d --log %s' % (command_line, test_config['url_mod'], browser_config['process'], browser_config['child_process'], browser_config['browser_wait'], browser_config['browser_log']), universal_newlines=True, shell=True, bufsize=0, env=os.environ)
-                else:
-                    process = subprocess.Popen('python bcontroller.py --command "%s" --name %s --child_process %s --timeout %d --log %s' % (command_line, browser_config['process'], browser_config['child_process'], browser_config['browser_wait'], browser_config['browser_log']), universal_newlines=True, shell=True, bufsize=0, env=os.environ)
+                    b_cmd += ' --mod "%s" ' % (test_config['url_mod'])
+
+                if (self.remote == True):
+                    b_cmd += ' --host "%s" ' % (browser_config['host'])
+                    b_cmd += ' --port "%s" ' % (browser_config['port'])
+                    b_cmd += ' --deviceRoot "%s" ' % (browser_config['deviceroot'])
+
+                process = subprocess.Popen(b_cmd, universal_newlines=True, shell=True, bufsize=0, env=os.environ)
   
                 #give browser a chance to open
                 # this could mean that we are losing the first couple of data points
@@ -254,7 +276,7 @@ class TTest(object):
                 counter_results = {}
                 for counter in counters:
                     counter_results[counter] = []
-     
+
                 startTime = -1
                 dumpResult = ""
                 #the main test loop, monitors counters and checks for browser ouptut
@@ -262,51 +284,55 @@ class TTest(object):
                     # Sleep for [resolution] seconds
                     time.sleep(resolution)
                     total_time += resolution
-                    if os.path.isfile(browser_config['browser_log']):
-                        results_file = open(browser_config['browser_log'], "r")
-                        fileData = results_file.read()
-                        results_file.close()
+                    fileData = self._ffprocess.getFile(browser_config['browser_log'])
+                    if (len(fileData) > 0):
                         utils.noisy(fileData.replace(dumpResult, ''))
                         dumpResult = fileData
         
+
                     # Get the output from all the possible counters
                     for count_type in counters:
                         val = cm.getCounterValue(count_type)
                         if (val):
                             counter_results[count_type].append(val)
                     if process.poll() != None: #browser_controller completed, file now full
-                        #stop the counter manager since this test is complete
-                        if counters:
-                            cm.stopMonitor()
-                        if not os.path.isfile(browser_config['browser_log']):
-                            raise talosError("no output from browser")
-                        results_file = open(browser_config['browser_log'], "r")
-                        results_raw = results_file.read()
-                        results_file.close()
-  
-                        match = self.RESULTS_REGEX.search(results_raw)
-                        if match:
-                            browser_results += match.group(1)
-                            startTime = int(match.group(2))
-                            endTime = int(match.group(3))
-                            format = "tsformat"
-                            break
-                        #TODO: this a stop gap until all of the tests start outputting the same format
-                        match = self.RESULTS_TP_REGEX.search(results_raw)
-                        if match:
-                            browser_results += match.group(1)
-                            startTime = int(match.group(2))
-                            endTime = int(match.group(3))
-                            format = "tpformat"
-                            break
-                        match = self.RESULTS_REGEX_FAIL.search(results_raw)
-                        if match:
-                            browser_results += match.group(1)
-                            raise talosError(match.group(1))
-                        raise talosError("unrecognized output format")
-  
+                        timed_out = False
+                        break
+                        
                 if total_time >= timeout:
                     raise talosError("timeout exceeded")
+                else:
+                    #stop the counter manager since this test is complete
+                    if counters:
+                        cm.stopMonitor()
+
+                    if not os.path.isfile(browser_config['browser_log']):
+                        raise talosError("no output from browser")
+                    results_file = open(browser_config['browser_log'], "r")
+                    results_raw = results_file.read()
+                    results_file.close()
+  
+                    match = self.RESULTS_REGEX.search(results_raw)
+                    tpmatch = self.RESULTS_TP_REGEX.search(results_raw)
+                    failmatch = self.RESULTS_REGEX_FAIL.search(results_raw)
+                    if match:
+                        browser_results += match.group(1)
+                        startTime = int(match.group(2))
+                        endTime = int(match.group(3))
+                        format = "tsformat"
+                    #TODO: this a stop gap until all of the tests start outputting the same format
+                    elif tpmatch:
+                        match = tpmatch
+                        browser_results += match.group(1)
+                        startTime = int(match.group(2))
+                        endTime = int(match.group(3))
+                        format = "tpformat"
+                    elif failmatch:
+                        match = failmatch
+                        browser_results += match.group(1)
+                        raise talosError(match.group(1))
+                    else:
+                        raise talosError("unrecognized output format")
   
                 time.sleep(browser_config['browser_wait']) 
                 #clean up the process
@@ -330,7 +356,6 @@ class TTest(object):
                     except:
                         raise talosError("error executing tail script: %s" % sys.exc_info()[0])
 
-     
             self._ffprocess.cleanupProcesses(browser_config['process'], browser_config['child_process'], browser_config['browser_wait']) 
             self.cleanupProfile(temp_dir)
 

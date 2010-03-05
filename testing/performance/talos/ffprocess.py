@@ -49,6 +49,7 @@ import subprocess
 from utils import talosError
 
 class FFProcess(object):
+    testAgent = None
     
     def __init__(self):
         pass
@@ -73,12 +74,7 @@ class FFProcess(object):
         """
 
         # Start the process
-        process = subprocess.Popen(command, 
-                                stdout=subprocess.PIPE, 
-                                universal_newlines=True, 
-                                shell=True,
-                                env=os.environ)
-        handle = process.stdout
+        handle = launchProcess(command)
 
         # Wait for it to print output, terminate, or time out.
         time_elapsed = 0

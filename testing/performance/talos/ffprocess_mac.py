@@ -46,6 +46,8 @@ import os
 import time
 from select import select
 from ffprocess import FFProcess
+import shutil
+import utils
 
 class MacProcess(FFProcess):
 
@@ -201,4 +203,46 @@ class MacProcess(FFProcess):
                         print 'WARNING: failed to os.chmod(%s): %s : %s' % (os.path.join(root, filename), errno, strerror)
         except OSError, (errno, strerror):
             print 'WARNING: failed to MakeDirectoryContentsWritable: %s : %s' % (errno, strerror)
+            
+    def getFile(self, handle, localFile = ""):
+        fileData = ''
+        if os.path.isfile(handle):
+            results_file = open(handle, "r")
+            fileData = results_file.read()
+            results_file.close()
+        return fileData
+
+    def copyFile(self, fromfile, toDir):
+        if not os.path.isfile(os.path.join(toDir, os.path.basename(fromfile))):
+            shutil.copy(fromfile, toDir)
+            utils.debug("installed " + fromfile)
+        else:
+            utils.debug("WARNING: file already installed (" + fromfile + ")")
+ 
+    def removeDirectory(self, dir):
+        self.MakeDirectoryContentsWritable(dir)
+        shutil.rmtree(dir)
+
+    def launchProcess(self, cmd, outputFile = "process.txt", timeout = -1):
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True, shell=True, env=os.environ)
+        handle = process.stdout
+
+        timed_out = True
+        if (timeout > 0):
+            total_time = 0
+            while total_time < 600: #10 minutes
+              time.sleep(1)
+              if (not self.poll(process)):
+                  timed_out = False
+                  break
+              total_time += 1
+
+        if (timed_out == True):
+            return None
+
+        return handle
+
+    def poll(self, process):
+        return process.poll()
+
 

@@ -51,7 +51,7 @@ import sys
 import getopt
 
 import stat
-#import devicemanager
+
 
 if platform.system() == "Linux":
     platform_type = 'linux_'
@@ -81,10 +81,21 @@ class BrowserWaiter(threading.Thread):
 
   def run(self):
     if self.mod:
-      self.command = self.command + eval(self.mod)
+      if (self.deviceManager.__class__.__name__ == "WinmoProcess"):
+        if (self.mod == "str(int(time.time()*1000))"):
+          self.command += self.deviceManager.getCurrentTime()
+      else:
+        self.command = self.command + eval(self.mod)
 
-    #blocking call to system
-    self.returncode = os.system(self.command + " > " + self.log) 
+    if (self.deviceManager.__class__.__name__ == "WinmoProcess"):
+      retVal = self.deviceManager.launchProcess(self.command, timeout=600)
+      if retVal <> None:
+        self.deviceManager.getFile(retVal, self.log)
+        self.returncode = 0
+      else:
+        self.returncode = 1
+    else:    #blocking call to system
+      self.returncode = os.system(self.command + " > " + self.log) 
 
     self.endTime = int(time.time()*1000)
 
@@ -100,7 +111,8 @@ class BrowserWaiter(threading.Thread):
 class BrowserController:
 
   def __init__(self, command, mod, name, child_process, 
-               timeout, log, host='', port=27020, root=''):
+               timeout, log, host='', port=20701, root=''):
+    global ffprocess
     self.command = command
     self.mod = mod
     self.process_name = name
@@ -111,6 +123,10 @@ class BrowserController:
     self.host = host
     self.port = port
     self.root = root
+    if (host <> ''):
+      from ffprocess_winmo import WinmoProcess
+      platform_type = 'win_'
+      ffprocess = WinmoProcess(host, port, root)
 
     self.ffprocess = ffprocess
 
@@ -161,7 +177,7 @@ def main(argv=None):
    mod = ""
    host = ""
    deviceRoot = ""
-   port = 27020
+   port = 20701
 
    if argv is None:
         argv = sys.argv

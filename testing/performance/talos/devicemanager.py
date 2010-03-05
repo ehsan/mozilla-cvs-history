@@ -603,3 +603,30 @@ class DeviceManager:
         if (self.validateFile(remoteName, os.path.join(root, file)) <> True):
             return None
     return True
+
+  def getCurrentTime(self):
+    """
+      return the current time on the device
+    """
+    data = self.sendCMD(['clok'])
+    if (data == None):
+      return None
+    return self.stripPrompt(data).strip('\n')
+
+  def addRemoteServerPref(self, profile_dir, server):
+    """
+      edit the user.js in the profile (on the host machine) and add the xpconnect priviledges for the remote server
+    """
+    user_js_filename = os.path.join(profile_dir, 'user.js')
+    user_js_file = open(user_js_filename, 'a+')
+
+    #TODO: p2 is hardcoded, how do we determine what prefs.js has hardcoded?
+    remoteCode = """
+user_pref("capability.principal.codebase.p2.granted", "UniversalPreferencesWrite UniversalXPConnect UniversalPreferencesRead");
+user_pref("capability.principal.codebase.p2.id", "http://%(server)s");
+user_pref("capability.principal.codebase.p2.subjectName", "");
+""" % { "server": server }
+    user_js_file.write(remoteCode)
+    user_js_file.close()
+
+

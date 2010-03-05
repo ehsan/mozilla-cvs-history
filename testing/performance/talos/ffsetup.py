@@ -59,10 +59,22 @@ import subprocess
 class FFSetup(object):
 
     ffprocess = None
+    _remoteWebServer = 'localhost'
+    _deviceroot = ''
+    _host = ''
+    _port = ''
 
-    def __init__(self, procmgr):
+    def __init__(self, procmgr, options = None):
         self.ffprocess = procmgr
+        if options <> None:
+            self.intializeRemoteDevice(options)
 
+    def initializeRemoteDevice(self, options):
+        self._remoteWebServer = options['webserver']
+        self._deviceroot = options['deviceroot']
+        self._host = options['host']
+        self._port = options['port']
+        
     def PrefString(self, name, value, newline):
         """Helper function to create a pref string for profile prefs.js
             in the form 'user_pref("name", value);<newline>'
@@ -114,7 +126,11 @@ class FFSetup(object):
         user_js_file = open(user_js_filename, 'w')
         for pref in prefs:
             user_js_file.write(self.PrefString(pref, prefs[pref], '\n'))
+
         user_js_file.close()
+
+        if (self._remoteWebServer <> 'localhost'):
+             self.ffprocess.addRemoteServerPref(profile_dir, self._remoteWebServer)
 
         # Add links to all the extensions.
         extension_dir = os.path.join(profile_dir, "extensions")
@@ -125,8 +141,11 @@ class FFSetup(object):
             link_file.write(extensions[extension])
             link_file.close()
 
+        if (self._remoteWebServer <> 'localhost'):
+            remote_dir = self.ffprocess.copyDirToDevice(profile_dir)
+            profile_dir = remote_dir
         return temp_dir, profile_dir
-
+        
     def InstallInBrowser(self, browser_path, dir_path):
         """
             Take the given directory and copies it to appropriate location in the given
@@ -136,11 +155,7 @@ class FFSetup(object):
         fromfiles = glob.glob(os.path.join(dir_path, '*'))
         todir = os.path.join(os.path.dirname(browser_path), os.path.basename(os.path.normpath(dir_path)))
         for fromfile in fromfiles:
-            if not os.path.isfile(os.path.join(todir, os.path.basename(fromfile))):
-                shutil.copy(fromfile, todir)
-                utils.debug("installed " + fromfile)
-            else:
-                utils.debug("WARNING: file already installed (" + fromfile + ")")
+            self.ffprocess.copyFile(fromfile, todir)
 
     def InitializeNewProfile(self, browser_path, process, child_process, browser_wait, extra_args, profile_dir, init_url, log):
         """Runs browser with the new profile directory, to negate any performance
@@ -154,23 +169,40 @@ class FFSetup(object):
         """
         PROFILE_REGEX = re.compile('__metrics(.*)__metrics', re.DOTALL|re.MULTILINE)
         command_line = self.ffprocess.GenerateBrowserCommandLine(browser_path, extra_args, profile_dir, init_url)
-        process = subprocess.Popen('python bcontroller.py --command "%s" --name %s --child_process %s --timeout %d --log %s' %  (command_line, process, child_process, browser_wait, log), universal_newlines=True, shell=True, bufsize=0, env=os.environ)
-        res = 0
+
+        b_cmd = 'python bcontroller.py --command "%s"' % (command_line)
+        b_cmd += " --name %s" % (process)
+        b_cmd += " --child_process %s" % (child_process)
+        b_cmd += " --timeout %d" % (browser_wait)
+        b_cmd += " --log %s" % (log)
+
+        if (self._remoteWebServer <> 'localhost'):
+            b_cmd += ' --host %s' % (self._host)
+            b_cmd += ' --port %s' % (self._port)
+            b_cmd += ' --deviceRoot %s' % (self._deviceroot)
+
+        process = subprocess.Popen(b_cmd, universal_newlines=True, shell=True, bufsize=0, env=os.environ)
+
+        timeout = True
         total_time = 0
         while total_time < 600: #10 minutes
             time.sleep(1)
             if process.poll() != None: #browser_controller completed, file now full
-                if not os.path.isfile(log):
-                    raise talosError("no output from browser")
-                results_file = open(log, "r")
-                results_raw = results_file.read()
-                results_file.close()
-                match = PROFILE_REGEX.search(results_raw)
-                if match:
-                    res = 1
-                    print match.group(1)
-                    break
-                import ffprocess
+                timeout = False
+                break
             total_time += 1
 
+        res = 0
+        if (timeout == False):
+            if not os.path.isfile(log):
+                raise talosError("no output from browser")
+            results_file = open(log, "r")
+            results_raw = results_file.read()
+            results_file.close()
+            match = PROFILE_REGEX.search(results_raw)
+            if match:
+                res = 1
+                print match.group(1)
+
         return res
+

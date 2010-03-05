@@ -56,7 +56,7 @@ class PerfConfigurator:
     _remote = False
     port = ''
 
-    def _setupRemote(self, host, port = 27020):
+    def _setupRemote(self, host, port = 20701):
         import devicemanager
         self.testAgent = devicemanager.DeviceManager(host, port)
         self._remote = True
@@ -179,6 +179,9 @@ class PerfConfigurator:
                 newline = 'buildid: ' + buildidString + '\n'
             if 'testbranch' in line:
                 newline = 'branch: ' + self.branch
+            if self._remote == True and ('init_url' in line):
+                parts = line.split(' ')
+                newline = "init_url: http://" + self.webServer + "/" + parts[1].strip()
 
             #only change the results_server if the user has provided one
             if self.resultsServer and ('results_server' in line):
@@ -192,6 +195,23 @@ class PerfConfigurator:
             if testMode:
                 #only do this if the user has provided a list of tests to turn on/off
                 # otherwise, all tests are considered to be active
+ 
+                if ('url' in line) and ('url_mod' not in line) and (self._remote == True):
+                    parts = line.split(' ')
+                    newline = ''
+                    for part in parts:
+                        if ('.html' in part):
+                            newline += 'http://' + self.webServer + '/' + part
+                        elif ('.manifest' in part):
+                            newline += 'http://' + self.webServer + '/' + part
+                        elif ('.xul' in part):
+                            newline += 'http://' + self.webServer + '/' + part
+                        else:
+                            newline += part
+                        if (part <> parts[-1]):
+                            newline += ' '
+                    line = newline
+
                 if self.activeTests:
                     if line.startswith('- name'): 
                         #found the start of an individual test description
@@ -371,7 +391,7 @@ def main(argv=None):
         print >> sys.stderr, "\t for help use --help"
         return 2
 
-    #remotePort will default to 27020 and is optional.
+    #remotePort will default to 20701 and is optional.
     #webServer can be used without remoteDevice, but is required when using remoteDevice
     if (remoteDevice != '' or deviceRoot != ''):
         if (webServer == 'localhost' or deviceRoot == '' or remoteDevice == ''):

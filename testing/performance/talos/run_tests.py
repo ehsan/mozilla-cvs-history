@@ -272,13 +272,17 @@ def results_from_graph(links, results_server):
   print 'RETURN: new graph links'
   print full_results
 
-def browserInfo(browser_config):
+def browserInfo(browser_config, devicemanager = None):
   """Get the buildid and sourcestamp from the application.ini (if it exists)
   """
   appIniFileName = "application.ini"
   appIniPath = os.path.join(os.path.dirname(browser_config['browser_path']), appIniFileName)
-  if os.path.isfile(appIniPath):
-    appIni = open(appIniPath)
+  if os.path.isfile(appIniPath) or devicemanager != None:
+    if (devicemanager != None):
+      devicemanager.getFile(browser_config['deviceroot'] + '/' + appIniFileName, 'remoteapp.ini')
+      appIni = open('remoteapp.ini')
+    else:
+      appIni = open(appIniPath)
     appIniContents = appIni.readlines()
     appIni.close()
     reSourceStamp = re.compile('SourceStamp\s*=\s*(.*)$')
@@ -295,11 +299,11 @@ def browserInfo(browser_config):
       match = re.match(reSourceStamp, line)
       if match:
           browser_config['sourcestamp'] = match.group(1)
-    if ('repository' in browser_config) and ('sourcestamp' in browser_config):
-      print 'RETURN:<a href = "' + browser_config['repository'] + '/rev/' + browser_config['sourcestamp'] + '">rev:' + browser_config['sourcestamp'] + '</a>'
-    else:
-        browser_config['repository'] = 'NULL'
-        browser_config['sourcestamp'] = 'NULL'
+  if ('repository' in browser_config) and ('sourcestamp' in browser_config):
+    print 'RETURN:<a href = "' + browser_config['repository'] + '/rev/' + browser_config['sourcestamp'] + '">rev:' + browser_config['sourcestamp'] + '</a>'
+  else:
+    browser_config['repository'] = 'NULL'
+    browser_config['sourcestamp'] = 'NULL'
   return browser_config
 
 def test_file(filename):
@@ -364,6 +368,11 @@ def test_file(filename):
   else:
       browser_config['test_name_extension'] = ''
 
+  if 'sourcestamp' in yaml_config:
+      browser_config['sourcestamp'] = yaml_config['sourcestamp']
+  if 'repository' in yaml_config:
+      browser_config['repository'] = yaml_config['repository']
+
   if 'deviceip' in yaml_config:
       browser_config['host'] = yaml_config['deviceip']
   else:
@@ -386,6 +395,10 @@ def test_file(filename):
       browser_config['remote'] = False
 
   #normalize paths to work accross platforms
+  dm = None
+  if (browser_config['remote'] == True):
+    import devicemanager
+    dm = devicemanager.DeviceManager(browser_config['host'], browser_config['port'])
   browser_config['browser_path'] = os.path.normpath(browser_config['browser_path'])
   for dir in browser_config['dirs']:
     browser_config['dirs'][dir] = os.path.normpath(browser_config['dirs'][dir])
@@ -399,7 +412,7 @@ def test_file(filename):
   utils.debug("actual date: %d" % int(time.time()))
   print 'RETURN:s: %s' % title
   #pull buildid & sourcestamp from browser
-  browser_config = browserInfo(browser_config)
+  browser_config = browserInfo(browser_config, devicemanager = dm)
 
   utils.startTimer()
   utils.stamped_msg(title, "Started")
@@ -407,7 +420,8 @@ def test_file(filename):
     testname = test['name']
     utils.stamped_msg("Running test " + testname, "Started")
     try:
-      browser_dump, counter_dump, print_format = TTest().runTest(browser_config, test)
+      mytest = TTest(browser_config['remote'])
+      browser_dump, counter_dump, print_format = mytest.runTest(browser_config, test)
       utils.debug("Received test results: " + " ".join(browser_dump))
       results[testname] = [browser_dump, counter_dump, print_format]
       # If we're doing CSV, write this test immediately (bug 419367)

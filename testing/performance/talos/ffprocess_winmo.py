@@ -36,7 +36,7 @@ import time
 import tempfile
 import re
 
-DEFAULT_PORT = 27020
+DEFAULT_PORT = 20701
 
 class WinmoProcess(FFProcess):
     testAgent = None
@@ -153,14 +153,18 @@ class WinmoProcess(FFProcess):
             return (0, output)
 
     def getFile(self, handle, localFile = ""):
+        temp = False
         if (localFile == ""):
-            localFile = os.path.join(tempfile.mkdtemp(), "temp.txt")
             if (os.path.exists(handle)):
                 #TODO
                 return ""
+            localFile = os.path.join(tempfile.mkdtemp(), "temp.txt")
+            temp = True
 
         re_nofile = re.compile("error:.*")
         data = self.testAgent.getFile(handle, localFile)
+        if (temp == True):
+          os.remove(localFile)
         if (re_nofile.match(data)):
             fileData = ''
             if (os.path.isfile(handle)):
@@ -217,3 +221,8 @@ class WinmoProcess(FFProcess):
         toDir = toDir.replace("/", self.dirSlash)
         self.testAgent.pushFile(fromfile, toDir + self.dirSlash + os.path.basename(fromfile))
 
+    def getCurrentTime(self):
+        return self.testAgent.getCurrentTime()
+
+    def addRemoteServerPref(self, profile_dir, server):
+        return self.testAgent.addRemoteServerPref(profile_dir, server)
