@@ -1650,8 +1650,7 @@ tools are selected during the Xcode/Developer Tools installation.])
     AC_DEFINE(WINCE)
     AC_DEFINE(_PR_GLOBAL_THREADS_ONLY)
 
-    AR='lib -NOLOGO -OUT:"$@"'
-    AR_FLAGS=
+    AR_FLAGS='-NOLOGO -OUT:"$@"'
 
     OBJ_SUFFIX=obj
     LIB_SUFFIX=lib
