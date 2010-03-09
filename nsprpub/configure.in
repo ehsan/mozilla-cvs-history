@@ -1200,6 +1200,7 @@ tools are selected during the Xcode/Developer Tools installation.])
         DSO_CFLAGS=+Z
     else
         DSO_CFLAGS=-fPIC
+        ASFLAGS="$ASFLAGS -x assembler-with-cpp"
     fi
 
     if test -n "$MOZILLA_CLIENT"; then
