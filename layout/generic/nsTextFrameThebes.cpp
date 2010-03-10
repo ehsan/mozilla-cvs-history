@@ -1102,6 +1102,9 @@ PRBool BuildTextRunsScanner::IsTextRunValidForMappedFlows(gfxTextRun* aTextRun)
  */
 void BuildTextRunsScanner::FlushFrames(PRBool aFlushLineBreaks, PRBool aSuppressTrailingBreak)
 {
+  if (mMappedFlows.Length() == 0)
+    return;
+
   gfxTextRun* textRun;
   if (!mSkipIncompleteTextRuns && mCurrentFramesAllSameTextRun &&
       ((mCurrentFramesAllSameTextRun->GetFlags() & nsTextFrameUtils::TEXT_INCOMING_WHITESPACE) != 0) ==
@@ -2207,10 +2210,10 @@ PropertyProvider::ComputeJustifiableCharacters(PRInt32 aOffset, PRInt32 aLength)
 /**
  * Finds the offset of the first character of the cluster containing aPos
  */
-static void FindClusterStart(gfxTextRun* aTextRun, PRInt32 aOriginalStart,
+static void FindClusterStart(gfxTextRun* aTextRun,
                              gfxSkipCharsIterator* aPos)
 {
-  while (aPos->GetOriginalOffset() > aOriginalStart) {
+  while (aPos->GetOriginalOffset() > 0) {
     if (aPos->IsOriginalCharSkipped() ||
         aTextRun->IsClusterStart(aPos->GetSkippedOffset())) {
       break;
@@ -2326,7 +2329,7 @@ PropertyProvider::GetSpacingInternal(PRUint32 aStart, PRUint32 aLength,
         PRInt32 originalOffset = run.GetOriginalOffset() + i;
         if (IsJustifiableCharacter(mFrag, originalOffset, isCJK)) {
           iter.SetOriginalOffset(originalOffset);
-          FindClusterStart(mTextRun, run.GetOriginalOffset(), &iter);
+          FindClusterStart(mTextRun, &iter);
           PRUint32 clusterFirstChar = iter.GetSkippedOffset();
           FindClusterEnd(mTextRun, run.GetOriginalOffset() + run.GetRunLength(), &iter);
           PRUint32 clusterLastChar = iter.GetSkippedOffset();
@@ -4615,7 +4618,7 @@ nsTextFrame::GetPointFromOffset(PRInt32 inOffset,
       !iter.IsOriginalCharSkipped() &&
       !mTextRun->IsClusterStart(iter.GetSkippedOffset())) {
     NS_WARNING("GetPointFromOffset called for non-cluster boundary");
-    FindClusterStart(mTextRun, trimmedOffset, &iter);
+    FindClusterStart(mTextRun, &iter);
   }
 
   gfxFloat advanceWidth =
