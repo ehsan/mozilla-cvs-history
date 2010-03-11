@@ -1666,7 +1666,7 @@ tools are selected during the Xcode/Developer Tools installation.])
     LIBPLC='$(dist_libdir)/plc$(MOD_MAJOR_VERSION).$(LIB_SUFFIX)'
 
     DLLFLAGS='-OUT:"$@"'
-    if test -n "$MOZ_DEBUG_SYMBOLS"; then
+    if test -n "$MOZ_DEBUG_SYMBOLS" || test -n "$MOZ_DEBUG"; then
         OS_LDFLAGS='-DEBUG -DEBUGTYPE:CV'
         OS_DLLFLAGS='-DEBUG -DEBUGTYPE:CV'
         DSO_LDOPTS='-DEBUG -DEBUGTYPE:CV'
@@ -2726,7 +2726,7 @@ if test -n "$MOZ_OPTIMIZE"; then
     CXXFLAGS="$CXXFLAGS $_OPTIMIZE_FLAGS"
 fi
 
-if test -n "$MOZ_DEBUG"; then
+if test -n "$MOZ_DEBUG_SYMBOLS" || test -n "$MOZ_DEBUG"; then
     CFLAGS="$CFLAGS $_DEBUG_FLAGS"
     CXXFLAGS="$CXXFLAGS $_DEBUG_FLAGS"
 fi
