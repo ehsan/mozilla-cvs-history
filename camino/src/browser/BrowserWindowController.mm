@@ -2823,19 +2823,13 @@ public:
   [mSearchBar becomeFirstResponder];
   [mSearchBar setStringValue:selection];
   
-  unsigned int modifiers = [[NSApp currentEvent] modifierFlags];
-
-  EOpenDestination destination = eDestinationCurrentView;
-  BOOL loadInBackground = NO;
-  // do search in a new window/tab if Command is held down
-  if (modifiers & NSCommandKeyMask) {
-    BOOL loadInTab = [[PreferenceManager sharedInstance] getBooleanPref:kGeckoPrefOpenTabsForMiddleClick
-                                                            withSuccess:NULL];
-    destination = loadInTab ? eDestinationNewTab : eDestinationNewWindow;
-    loadInBackground = [BrowserWindowController shouldLoadInBackgroundForDestination:destination
-                                                                              sender:nil];
-  }
-
+  // Open searches in a new tab or window, depending on user preferences, and
+  // honor the user preference (and toggle) for foreground or background.
+  BOOL loadInTab = [[PreferenceManager sharedInstance] getBooleanPref:kGeckoPrefOpenTabsForMiddleClick
+                                                          withSuccess:NULL];
+  EOpenDestination destination = loadInTab ? eDestinationNewTab : eDestinationNewWindow;
+  BOOL loadInBackground = [BrowserWindowController shouldLoadInBackgroundForDestination:destination
+                                                                            sender:nil];
   [self performSearch:mSearchBar inView:destination inBackground:loadInBackground];
 }
 
