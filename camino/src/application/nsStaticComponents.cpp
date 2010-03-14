@@ -87,7 +87,6 @@
     MODULE(nsTypeAheadFind) \
     MODULE(nsPermissionsModule) \
     MODULE(nsComposerModule) \
-    MODULE(xpAutoComplete) \
     MODULE(mozSpellCheckerModule) \
     MODULE(mozStorageModule) \
     MODULE(nsAuthModule) \

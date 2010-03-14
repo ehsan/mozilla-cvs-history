@@ -423,7 +423,6 @@
 		3F44ACCC05BDFB9E00CB4B08 /* ProgressView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3FC0FB8005A0D2DC002F47DE /* ProgressView.mm */; };
 		3F44ACCD05BDFB9E00CB4B08 /* HistoryItem.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3F7C6CBA05B4819E002FFFD3 /* HistoryItem.mm */; };
 		3F44ACD605BDFB9F00CB4B08 /* libappcomps.dylib in Copy Component Libraries */ = {isa = PBXBuildFile; fileRef = F5F181C90208006F0124611D /* libappcomps.dylib */; };
-		3F44ACD605BDFB9F00CB4B09 /* libxpautocomplete.dylib in Copy Component Libraries */ = {isa = PBXBuildFile; fileRef = F5F181C90208006F0124611E /* libxpautocomplete.dylib */; };
 		3F44ACD705BDFB9F00CB4B08 /* caps.xpt in Copy Component XPTs */ = {isa = PBXBuildFile; fileRef = F6BD639401B3131201A962F7 /* caps.xpt */; };
 		3F44ACD805BDFB9F00CB4B08 /* libtxmgr.dylib in Copy Component Libraries */ = {isa = PBXBuildFile; fileRef = F5F59320020F4CD201ACA690 /* libtxmgr.dylib */; };
 		3F44ACD905BDFB9F00CB4B08 /* docshell.xpt in Copy Component XPTs */ = {isa = PBXBuildFile; fileRef = F6BD639601B3131201A962F7 /* docshell.xpt */; };
@@ -812,7 +811,6 @@
 		3F44AFAB05BDFBA000CB4B08 /* libwebbrwsr.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F56F247302AC723001A967F3 /* libwebbrwsr.a */; };
 		3F44AFAC05BDFBA000CB4B08 /* libwidget_mac.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F56F247402AC723001A967F3 /* libwidget_mac.a */; };
 		3F44AFAD05BDFBA000CB4B08 /* libappcomps.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F56F248B02AC729901A967F3 /* libappcomps.a */; };
-		3F44AFAD05BDFBA000CB4B09 /* libxpautocomplete.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F56F248B02AC729901A967F4 /* libxpautocomplete.a */; };
 		3F44AFAE05BDFBA000CB4B08 /* libcookie.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F56F248C02AC729901A967F3 /* libcookie.a */; };
 		3F44AFAF05BDFBA000CB4B08 /* libpipboot.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F56F248F02AC729901A967F3 /* libpipboot.a */; };
 		3F44AFB005BDFBA000CB4B08 /* libpipnss.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F56F249002AC729901A967F3 /* libpipnss.a */; };
@@ -1707,7 +1705,6 @@
 				0E6A98A1097E0091007962C1 /* libucvmath.dylib in Copy Component Libraries */,
 				82180ACB07368BF2002EFA6D /* libcomposer.dylib in Copy Component Libraries */,
 				3F44ACD605BDFB9F00CB4B08 /* libappcomps.dylib in Copy Component Libraries */,
-				3F44ACD605BDFB9F00CB4B09 /* libxpautocomplete.dylib in Copy Component Libraries */,
 				3F44ACD805BDFB9F00CB4B08 /* libtxmgr.dylib in Copy Component Libraries */,
 				3F44ACE705BDFB9F00CB4B08 /* libcaps.dylib in Copy Component Libraries */,
 				3F44ACE805BDFB9F00CB4B08 /* libchrome.dylib in Copy Component Libraries */,
@@ -3151,7 +3148,6 @@
 		F56F247302AC723001A967F3 /* libwebbrwsr.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libwebbrwsr.a; path = ../embedding/browser/build/libwebbrwsr.a; sourceTree = SOURCE_ROOT; };
 		F56F247402AC723001A967F3 /* libwidget_mac.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libwidget_mac.a; path = ../widget/src/cocoa/libwidget_mac.a; sourceTree = SOURCE_ROOT; };
 		F56F248B02AC729901A967F3 /* libappcomps.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libappcomps.a; path = ../xpfe/components/build/libappcomps.a; sourceTree = SOURCE_ROOT; };
-		F56F248B02AC729901A967F4 /* libxpautocomplete.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libxpautocomplete.a; path = ../staticlib/components/libxpautocomplete.a; sourceTree = SOURCE_ROOT; };
 		F56F248C02AC729901A967F3 /* libcookie.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcookie.a; path = ../extensions/cookie/libcookie.a; sourceTree = SOURCE_ROOT; };
 		F56F248F02AC729901A967F3 /* libpipboot.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpipboot.a; path = ../security/manager/boot/src/libpipboot.a; sourceTree = SOURCE_ROOT; };
 		F56F249002AC729901A967F3 /* libpipnss.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpipnss.a; path = ../security/manager/ssl/src/libpipnss.a; sourceTree = SOURCE_ROOT; };
@@ -3215,7 +3211,6 @@
 		F5F0BDC803C0A76F01202892 /* PrintPDE.plugin */ = {isa = PBXFileReference; lastKnownFileType = wrapper.cfbundle; name = PrintPDE.plugin; path = ../dist/package/PrintPDE.plugin; sourceTree = SOURCE_ROOT; };
 		F5F14E9602A5A43A01A967F3 /* libwidget.rsrc */ = {isa = PBXFileReference; lastKnownFileType = archive.rsrc; name = libwidget.rsrc; path = ../dist/Embed/libwidget.rsrc; sourceTree = SOURCE_ROOT; };
 		F5F181C90208006F0124611D /* libappcomps.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.bundle"; name = libappcomps.dylib; path = ../xpfe/components/build/libappcomps.dylib; sourceTree = SOURCE_ROOT; };
-		F5F181C90208006F0124611E /* libxpautocomplete.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.bundle"; name = libxpautocomplete.dylib; path = ../dist/bin/components/libxpautocomplete.dylib; sourceTree = SOURCE_ROOT; };
 		F5F190BB02D1F81A01026D5D /* ToolbarDefaults.plist */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.plist; name = ToolbarDefaults.plist; path = resources/application/ToolbarDefaults.plist; sourceTree = SOURCE_ROOT; };
 		F5F190BE02D217C201026D5D /* WebsiteDefaults.strings */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = WebsiteDefaults.strings; path = resources/application/WebsiteDefaults.strings; sourceTree = SOURCE_ROOT; };
 		F5F415C903B9223E01A80166 /* ProgressViewController.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ProgressViewController.h; path = src/download/ProgressViewController.h; sourceTree = "<group>"; };
@@ -3455,7 +3450,6 @@
 				3F44AFAA05BDFBA000CB4B08 /* libtxmgr.a in Frameworks */,
 				3F44AFAB05BDFBA000CB4B08 /* libwebbrwsr.a in Frameworks */,
 				3F44AFAC05BDFBA000CB4B08 /* libwidget_mac.a in Frameworks */,
-				3F44AFAD05BDFBA000CB4B09 /* libxpautocomplete.a in Frameworks */,
 				3F44AFAD05BDFBA000CB4B08 /* libappcomps.a in Frameworks */,
 				3F44AFAE05BDFBA000CB4B08 /* libcookie.a in Frameworks */,
 				3F44AFAF05BDFBA000CB4B08 /* libpipboot.a in Frameworks */,
@@ -3601,7 +3595,6 @@
 				E4C7D98B0A32108500B455AD /* libspellchecker.dylib */,
 				82180AC907368BDF002EFA6D /* libcomposer.dylib */,
 				F5F181C90208006F0124611D /* libappcomps.dylib */,
-				F5F181C90208006F0124611E /* libxpautocomplete.dylib */,
 				F507A82C030BFB7901026D5D /* libuniversalchardet.dylib */,
 				F6BD63A601B3131201A962F7 /* libcaps.dylib */,
 				DEDDE22D0ABFB21A00D415F2 /* libchardet.dylib */,
@@ -4860,7 +4853,6 @@
 				F56F247302AC723001A967F3 /* libwebbrwsr.a */,
 				F56F247402AC723001A967F3 /* libwidget_mac.a */,
 				F56F248B02AC729901A967F3 /* libappcomps.a */,
-				F56F248B02AC729901A967F4 /* libxpautocomplete.a */,
 				F56F248C02AC729901A967F3 /* libcookie.a */,
 				F56F248F02AC729901A967F3 /* libpipboot.a */,
 				F56F249002AC729901A967F3 /* libpipnss.a */,
