@@ -103,7 +103,6 @@
 #include "nsIWebNavigation.h"
 #include "nsISHistory.h"
 #include "nsIHistoryEntry.h"
-#include "nsIHistoryItems.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNSHTMLDocument.h"
 #include "nsIDOMElement.h"
@@ -872,13 +871,6 @@ public:
   // ensure that the URL auto-complete popup is closed before the mork
   // database is shut down, or we crash
   [mURLBar clearResults];
-
-  if (mDataOwner)
-  {
-    nsCOMPtr<nsIHistoryItems> history(do_QueryInterface(mDataOwner->mGlobalHistory));
-    if (history)
-      history->Flush();
-  }
 
   delete mDataOwner;
   mDataOwner = NULL;

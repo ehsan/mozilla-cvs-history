@@ -75,7 +75,7 @@
     MODULE(nsPluginModule) \
     MODULE(nsWidgetMacModule) \
     MODULE(nsLayoutModule) \
-    MODULE(nsMorkModule) \
+    MODULE(nsPlacesModule) \
     MODULE(docshell_provider) \
     MODULE(embedcomponents) \
     MODULE(Browser_Embedding_Module) \

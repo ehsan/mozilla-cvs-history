@@ -50,12 +50,6 @@
 
 #include "nsIGenericFactory.h"
 
-#include "nsSimpleGlobalHistory.h"
-
-// for some bizarre reason this is in nsDocShellCID.h
-#define NS_GLOBALHISTORY2_CONTRACTID \
-    "@mozilla.org/browser/global-history;2"
-
 // {0ffd3880-7a1a-11d6-a384-975d1d5f86fc}
 #define NS_SECURITYDIALOGS_CID \
   {0x0ffd3880, 0x7a1a, 0x11d6,{0xa3, 0x84, 0x97, 0x5d, 0x1d, 0x5f, 0x86, 0xfc}}
@@ -112,43 +106,6 @@ nsDownloadListenerConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult
   nsresult rv = inst->QueryInterface(aIID, aResult);
   NS_RELEASE(inst);
   return rv;
-}
-
-// we have to provide a custom constructor to work around a component manager
-// bug (see bug 276956) that can cause more than one instance of nsSimpleGlobalHistory
-// to be created (for each of the 2 services it implements). So we enforce its
-// singleton nature here.
-static nsresult
-nsSimpleGlobalHistoryConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-  static nsSimpleGlobalHistory*   sGlobalHistorySingleton;
-  
-  *aResult = NULL;
-  if (aOuter)
-      return NS_ERROR_NO_AGGREGATION;
-
-  nsresult rv;
-  if (!sGlobalHistorySingleton)
-  {
-    NS_NEWXPCOM(sGlobalHistorySingleton, nsSimpleGlobalHistory);
-    if (!sGlobalHistorySingleton)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    // hold a ref to it. it will never go away
-    NS_ADDREF(sGlobalHistorySingleton);
-
-    // if Init fails we'll do this over and over again. Probably not an issue
-    rv = sGlobalHistorySingleton->Init();
-    if (NS_FAILED(rv))
-    {
-      NS_RELEASE(sGlobalHistorySingleton);
-      sGlobalHistorySingleton = NULL;
-      return rv;
-    }
-  }
-
-  // the QI does the AddRef
-  return sGlobalHistorySingleton->QueryInterface(aIID, aResult);
 }
 
 // used by MainController to register the components in which we want to override
@@ -232,18 +189,6 @@ static const nsModuleComponentInfo gAppComponents[] = {
   	NS_COOKIEPROMPTSERVICE_CID,
   	NS_COOKIEPROMPTSERVICE_CONTRACTID,
   	CocoaPromptServiceConstructor
-  },
-  {
-    "Global History",
-    NS_SIMPLEGLOBALHISTORY_CID,
-    NS_GLOBALHISTORY2_CONTRACTID,
-    nsSimpleGlobalHistoryConstructor
-  },
-  {
-    "Global History",
-    NS_SIMPLEGLOBALHISTORY_CID,
-    NS_GLOBALHISTORY_AUTOCOMPLETE_CONTRACTID,
-    nsSimpleGlobalHistoryConstructor
   },
   {
     "About Bookmarks Module",

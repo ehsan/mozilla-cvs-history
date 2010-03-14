@@ -38,8 +38,8 @@
 
 #import <AppKit/AppKit.h>
 
-class nsIHistoryItem;
 @class HistoryDataSource;
+class nsINavHistoryResultNode;
 
 // HistoryItem is the base class for every object in the history outliner
 
@@ -142,12 +142,12 @@ class nsIHistoryItem;
   BOOL              mAttemptedIconLoad;
 }
 
-- (id)initWithDataSource:(HistoryDataSource*)inDataSource historyItem:(nsIHistoryItem*)inItem;
-// return YES if anything changed
-- (BOOL)updateWith_nsIHistoryItem:(nsIHistoryItem*)inItem;
+- (id)initWithDataSource:(HistoryDataSource*)inDataSource resultNode:(nsINavHistoryResultNode*)inNode;
 
 - (BOOL)matchesString:(NSString*)searchString inFieldWithTag:(int)tag;
 
 - (void)setSiteIcon:(NSImage*)inImage;
+- (void)setTitle:(NSString*)inTitle;
+- (void)setLastVisitDate:(NSDate*)inDate;
 
 @end

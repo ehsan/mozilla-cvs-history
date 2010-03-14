@@ -158,8 +158,6 @@
 		0FBC0ECF0798F94900E8E0E2 /* NSDate+Utils.m in Sources */ = {isa = PBXBuildFile; fileRef = 0FBC0ECD0798F94900E8E0E2 /* NSDate+Utils.m */; };
 		0FBC0ED10798F95400E8E0E2 /* NSMenu+Utils.m in Sources */ = {isa = PBXBuildFile; fileRef = 0FBC0ED00798F95400E8E0E2 /* NSMenu+Utils.m */; };
 		0FBC0ED20798F95400E8E0E2 /* NSMenu+Utils.m in Sources */ = {isa = PBXBuildFile; fileRef = 0FBC0ED00798F95400E8E0E2 /* NSMenu+Utils.m */; };
-		0FBC0EDA0798F9A000E8E0E2 /* nsSimpleGlobalHistory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0FBC0ED90798F9A000E8E0E2 /* nsSimpleGlobalHistory.cpp */; };
-		0FBC0EDB0798F9A000E8E0E2 /* nsSimpleGlobalHistory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0FBC0ED90798F9A000E8E0E2 /* nsSimpleGlobalHistory.cpp */; };
 		0FBC0EDD0798F9B400E8E0E2 /* HistoryOutlineViewDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0FBC0EDC0798F9B400E8E0E2 /* HistoryOutlineViewDelegate.mm */; };
 		0FBC0EDE0798F9B400E8E0E2 /* HistoryOutlineViewDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0FBC0EDC0798F9B400E8E0E2 /* HistoryOutlineViewDelegate.mm */; };
 		0FBC0EE00798FA1900E8E0E2 /* PopupMenuButton.m in Sources */ = {isa = PBXBuildFile; fileRef = 0FBC0EDF0798FA1900E8E0E2 /* PopupMenuButton.m */; };
@@ -449,7 +447,6 @@
 		3F44ACE905BDFB9F00CB4B08 /* libcookie.dylib in Copy Component Libraries */ = {isa = PBXBuildFile; fileRef = F6BD63A801B3131201A962F7 /* libcookie.dylib */; };
 		3F44ACEA05BDFB9F00CB4B08 /* libdocshell.dylib in Copy Component Libraries */ = {isa = PBXBuildFile; fileRef = F6BD63A901B3131201A962F7 /* libdocshell.dylib */; };
 		3F44ACEC05BDFB9F00CB4B08 /* libembedcomponents.dylib in Copy Component Libraries */ = {isa = PBXBuildFile; fileRef = F6BD63AB01B3131201A962F7 /* libembedcomponents.dylib */; };
-		3F44ACEE05BDFB9F00CB4B08 /* libmork.dylib in Copy Component Libraries */ = {isa = PBXBuildFile; fileRef = F5D3F1CE0209235A014E447F /* libmork.dylib */; };
 		3F44ACEF05BDFB9F00CB4B08 /* libwebbrwsr.dylib in Copy Component Libraries */ = {isa = PBXBuildFile; fileRef = F6BD63B101B3131201A962F7 /* libwebbrwsr.dylib */; };
 		3F44ACF005BDFB9F00CB4B08 /* mimetype.xpt in Copy Component XPTs */ = {isa = PBXBuildFile; fileRef = F6BD63B201B3131201A962F7 /* mimetype.xpt */; };
 		3F44ACF105BDFB9F00CB4B08 /* txtsvc.xpt in Copy Component XPTs */ = {isa = PBXBuildFile; fileRef = F6BD63B301B3131201A962F7 /* txtsvc.xpt */; };
@@ -811,7 +808,6 @@
 		3F44AFA405BDFBA000CB4B08 /* libembedcomponents.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F56F246202AC723001A967F3 /* libembedcomponents.a */; };
 		3F44AFA505BDFBA000CB4B08 /* libgklayout.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F56F246402AC723001A967F3 /* libgklayout.a */; };
 		3F44AFA605BDFBA000CB4B08 /* libgkplugin.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F56F246502AC723001A967F3 /* libgkplugin.a */; };
-		3F44AFA805BDFBA000CB4B08 /* libmork.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F56F246B02AC723001A967F3 /* libmork.a */; };
 		3F44AFAA05BDFBA000CB4B08 /* libtxmgr.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F56F247002AC723001A967F3 /* libtxmgr.a */; };
 		3F44AFAB05BDFBA000CB4B08 /* libwebbrwsr.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F56F247302AC723001A967F3 /* libwebbrwsr.a */; };
 		3F44AFAC05BDFBA000CB4B08 /* libwidget_mac.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F56F247402AC723001A967F3 /* libwidget_mac.a */; };
@@ -1008,6 +1004,14 @@
 		B3128A120E5D14C8009F0595 /* pageBigger.tiff in Resources */ = {isa = PBXBuildFile; fileRef = B3757F860E5D0FE70006EDF1 /* pageBigger.tiff */; };
 		B3128A130E5D14CD009F0595 /* pageSmaller.tiff in Resources */ = {isa = PBXBuildFile; fileRef = B3757F870E5D0FE70006EDF1 /* pageSmaller.tiff */; };
 		B3128A140E5D14CE009F0595 /* pageSmaller.tiff in Resources */ = {isa = PBXBuildFile; fileRef = B3757F870E5D0FE70006EDF1 /* pageSmaller.tiff */; };
+		B33032C910AE16D7002FA0A7 /* libmorkreader_s.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B33032C810AE16D7002FA0A7 /* libmorkreader_s.a */; };
+		B33032CA10AE16D7002FA0A7 /* libmorkreader_s.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B33032C810AE16D7002FA0A7 /* libmorkreader_s.a */; };
+		B33032CC10AE178E002FA0A7 /* places.xpt in Copy Component XPTs */ = {isa = PBXBuildFile; fileRef = B33032AE10AE166F002FA0A7 /* places.xpt */; };
+		B33032D510AE17A7002FA0A7 /* places.xpt in Copy Component XPTs */ = {isa = PBXBuildFile; fileRef = B33032AE10AE166F002FA0A7 /* places.xpt */; };
+		B33032F610AE17C9002FA0A7 /* nsLivemarkService.js in Copy Component Libraries */ = {isa = PBXBuildFile; fileRef = B33032AA10AE15EA002FA0A7 /* nsLivemarkService.js */; };
+		B33032F710AE17F1002FA0A7 /* nsLivemarkService.js in Copy Component Libraries */ = {isa = PBXBuildFile; fileRef = B33032AA10AE15EA002FA0A7 /* nsLivemarkService.js */; };
+		B330336110AE1C4C002FA0A7 /* libplaces.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B330336010AE1C4C002FA0A7 /* libplaces.dylib */; };
+		B330336310AE1C60002FA0A7 /* libplaces.dylib in Copy Component Libraries */ = {isa = PBXBuildFile; fileRef = B330336010AE1C4C002FA0A7 /* libplaces.dylib */; };
 		B386FC3110CF5AF30094DAAB /* NSMenu+Gecko.mm in Sources */ = {isa = PBXBuildFile; fileRef = B386FC3010CF5AF30094DAAB /* NSMenu+Gecko.mm */; };
 		B386FC3210CF5AF30094DAAB /* NSMenu+Gecko.mm in Sources */ = {isa = PBXBuildFile; fileRef = B386FC3010CF5AF30094DAAB /* NSMenu+Gecko.mm */; };
 		B3886D880F79D53700D8E015 /* FlashblockWhitelistManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = B3886D870F79D53700D8E015 /* FlashblockWhitelistManager.mm */; };
@@ -1053,6 +1057,7 @@
 		DE09CD7C0ACB97C5008A8D9C /* popup_close_hover.tiff in Resources */ = {isa = PBXBuildFile; fileRef = DE09CD720ACB97C5008A8D9C /* popup_close_hover.tiff */; };
 		DE18FBFC0F2435F700325C11 /* GrowlController.mm in Sources */ = {isa = PBXBuildFile; fileRef = DE18FBFA0F2435F700325C11 /* GrowlController.mm */; };
 		DE18FBFD0F2435F700325C11 /* GrowlController.mm in Sources */ = {isa = PBXBuildFile; fileRef = DE18FBFA0F2435F700325C11 /* GrowlController.mm */; };
+		DE19C72F1121F350007A57E0 /* libplaces.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DE19C72E1121F350007A57E0 /* libplaces.a */; };
 		DE1BDD240AD4E13000F0C7BD /* tab_scroll_button_left.tiff in Resources */ = {isa = PBXBuildFile; fileRef = DE1BDD220AD4E13000F0C7BD /* tab_scroll_button_left.tiff */; };
 		DE1BDD250AD4E13000F0C7BD /* tab_scroll_button_right.tiff in Resources */ = {isa = PBXBuildFile; fileRef = DE1BDD230AD4E13000F0C7BD /* tab_scroll_button_right.tiff */; };
 		DE1BDD260AD4E13000F0C7BD /* tab_scroll_button_left.tiff in Resources */ = {isa = PBXBuildFile; fileRef = DE1BDD220AD4E13000F0C7BD /* tab_scroll_button_left.tiff */; };
@@ -1694,6 +1699,7 @@
 			dstPath = components;
 			dstSubfolderSpec = 6;
 			files = (
+				B330336310AE1C60002FA0A7 /* libplaces.dylib in Copy Component Libraries */,
 				DE62E4300B72B3D200142851 /* libauth.dylib in Copy Component Libraries */,
 				E4C7D98C0A32108500B455AD /* libspellchecker.dylib in Copy Component Libraries */,
 				DEDDE2930ABFB4B400D415F2 /* libchardet.dylib in Copy Component Libraries */,
@@ -1708,7 +1714,6 @@
 				3F44ACE905BDFB9F00CB4B08 /* libcookie.dylib in Copy Component Libraries */,
 				3F44ACEA05BDFB9F00CB4B08 /* libdocshell.dylib in Copy Component Libraries */,
 				3F44ACEC05BDFB9F00CB4B08 /* libembedcomponents.dylib in Copy Component Libraries */,
-				3F44ACEE05BDFB9F00CB4B08 /* libmork.dylib in Copy Component Libraries */,
 				3F44ACEF05BDFB9F00CB4B08 /* libwebbrwsr.dylib in Copy Component Libraries */,
 				3F44ACFA05BDFB9F00CB4B08 /* libgklayout.dylib in Copy Component Libraries */,
 				3F44ACFB05BDFB9F00CB4B08 /* libhtmlpars.dylib in Copy Component Libraries */,
@@ -1732,6 +1737,7 @@
 				C7DE8E2F0F30D2AD00CD3872 /* libcaminosafebrowsing.dylib in Copy Component Libraries */,
 				3F44AD2705BDFB9F00CB4B08 /* nsProxyAutoConfig.js in Copy Component Libraries */,
 				0098B1230CAEA77500DA0F2F /* nsHandlerService.js in Copy Component Libraries */,
+				B33032F610AE17C9002FA0A7 /* nsLivemarkService.js in Copy Component Libraries */,
 				C7DE8E300F30D2C100CD3872 /* nsUrlClassifierListManager.js in Copy Component Libraries */,
 				C7DE8E310F30D2C100CD3872 /* nsUrlClassifierLib.js in Copy Component Libraries */,
 			);
@@ -1772,6 +1778,7 @@
 			files = (
 				3F44AF4405BDFBA000CB4B08 /* nsProxyAutoConfig.js in Copy Component Libraries */,
 				0098B12A0CAEA81700DA0F2F /* nsHandlerService.js in Copy Component Libraries */,
+				B33032F710AE17F1002FA0A7 /* nsLivemarkService.js in Copy Component Libraries */,
 				C7DE8E4B0F30D41500CD3872 /* nsUrlClassifierListManager.js in Copy Component Libraries */,
 				C7DE8E4C0F30D41500CD3872 /* nsUrlClassifierLib.js in Copy Component Libraries */,
 			);
@@ -1839,6 +1846,7 @@
 				3F44AD0805BDFB9F00CB4B08 /* necko_strconv.xpt in Copy Component XPTs */,
 				3F44AD0905BDFB9F00CB4B08 /* necko_viewsource.xpt in Copy Component XPTs */,
 				3F44AD0A05BDFB9F00CB4B08 /* necko.xpt in Copy Component XPTs */,
+				B33032CC10AE178E002FA0A7 /* places.xpt in Copy Component XPTs */,
 				3F44AD1305BDFB9F00CB4B08 /* pref.xpt in Copy Component XPTs */,
 				3F44AD1505BDFB9F00CB4B08 /* rdf.xpt in Copy Component XPTs */,
 				3F44AD1605BDFB9F00CB4B08 /* shistory.xpt in Copy Component XPTs */,
@@ -2126,6 +2134,7 @@
 				3F44AF3005BDFBA000CB4B08 /* necko_strconv.xpt in Copy Component XPTs */,
 				3F44AF3105BDFBA000CB4B08 /* necko_viewsource.xpt in Copy Component XPTs */,
 				3F44AF3205BDFBA000CB4B08 /* necko.xpt in Copy Component XPTs */,
+				B33032D510AE17A7002FA0A7 /* places.xpt in Copy Component XPTs */,
 				3F44AF3305BDFBA000CB4B08 /* pref.xpt in Copy Component XPTs */,
 				3F44AF3505BDFBA000CB4B08 /* rdf.xpt in Copy Component XPTs */,
 				3F44AF3605BDFBA000CB4B08 /* shistory.xpt in Copy Component XPTs */,
@@ -2575,7 +2584,6 @@
 		0FBC0ED00798F95400E8E0E2 /* NSMenu+Utils.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; name = "NSMenu+Utils.m"; path = "src/extensions/NSMenu+Utils.m"; sourceTree = "<group>"; };
 		0FBC0ED30798F96100E8E0E2 /* NSMenu+Utils.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = "NSMenu+Utils.h"; path = "src/extensions/NSMenu+Utils.h"; sourceTree = "<group>"; };
 		0FBC0ED40798F96100E8E0E2 /* NSDate+Utils.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = "NSDate+Utils.h"; path = "src/extensions/NSDate+Utils.h"; sourceTree = "<group>"; };
-		0FBC0ED90798F9A000E8E0E2 /* nsSimpleGlobalHistory.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = nsSimpleGlobalHistory.cpp; path = src/history/nsSimpleGlobalHistory.cpp; sourceTree = "<group>"; };
 		0FBC0EDC0798F9B400E8E0E2 /* HistoryOutlineViewDelegate.mm */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.objcpp; name = HistoryOutlineViewDelegate.mm; path = src/history/HistoryOutlineViewDelegate.mm; sourceTree = "<group>"; };
 		0FBC0EDF0798FA1900E8E0E2 /* PopupMenuButton.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; name = PopupMenuButton.m; path = src/extensions/PopupMenuButton.m; sourceTree = "<group>"; };
 		0FBC0EE20798FA2700E8E0E2 /* PopupMenuButton.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = PopupMenuButton.h; path = src/extensions/PopupMenuButton.h; sourceTree = "<group>"; };
@@ -2847,6 +2855,10 @@
 		A7D88E6A0465D9F800A80196 /* suitetypeaheadfind.xpt */ = {isa = PBXFileReference; lastKnownFileType = file; name = suitetypeaheadfind.xpt; path = ../extensions/typeaheadfind/public/_xpidlgen/suitetypeaheadfind.xpt; sourceTree = SOURCE_ROOT; };
 		A7E5D960041A07C900A967F8 /* libi18n.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libi18n.a; path = ../intl/build/libi18n.a; sourceTree = SOURCE_ROOT; };
 		A7FD31C90466004E00A80196 /* libsuitetypeaheadfind.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsuitetypeaheadfind.a; path = ../extensions/typeaheadfind/src/libsuitetypeaheadfind.a; sourceTree = SOURCE_ROOT; };
+		B33032AA10AE15EA002FA0A7 /* nsLivemarkService.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = nsLivemarkService.js; path = ../dist/bin/components/nsLivemarkService.js; sourceTree = SOURCE_ROOT; };
+		B33032AE10AE166F002FA0A7 /* places.xpt */ = {isa = PBXFileReference; lastKnownFileType = file; name = places.xpt; path = ../toolkit/components/places/public/_xpidlgen/places.xpt; sourceTree = SOURCE_ROOT; };
+		B33032C810AE16D7002FA0A7 /* libmorkreader_s.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmorkreader_s.a; path = ../db/morkreader/libmorkreader_s.a; sourceTree = SOURCE_ROOT; };
+		B330336010AE1C4C002FA0A7 /* libplaces.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.bundle"; name = libplaces.dylib; path = ../dist/bin/components/libplaces.dylib; sourceTree = SOURCE_ROOT; };
 		B3757F860E5D0FE70006EDF1 /* pageBigger.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = pageBigger.tiff; path = resources/images/toolbar/pageBigger.tiff; sourceTree = "<group>"; };
 		B3757F870E5D0FE70006EDF1 /* pageSmaller.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = pageSmaller.tiff; path = resources/images/toolbar/pageSmaller.tiff; sourceTree = "<group>"; };
 		B386FC2F10CF5AF30094DAAB /* NSMenu+Gecko.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSMenu+Gecko.h"; path = "src/extensions/NSMenu+Gecko.h"; sourceTree = "<group>"; };
@@ -2883,6 +2895,7 @@
 		DE09CD720ACB97C5008A8D9C /* popup_close_hover.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = popup_close_hover.tiff; path = resources/images/chrome/popup_close_hover.tiff; sourceTree = SOURCE_ROOT; };
 		DE18FBFA0F2435F700325C11 /* GrowlController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GrowlController.mm; path = src/application/GrowlController.mm; sourceTree = SOURCE_ROOT; };
 		DE18FBFB0F2435F700325C11 /* GrowlController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GrowlController.h; path = src/application/GrowlController.h; sourceTree = SOURCE_ROOT; };
+		DE19C72E1121F350007A57E0 /* libplaces.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libplaces.a; path = ../staticlib/libplaces.a; sourceTree = SOURCE_ROOT; };
 		DE1BDD220AD4E13000F0C7BD /* tab_scroll_button_left.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = tab_scroll_button_left.tiff; path = resources/images/chrome/tab_scroll_button_left.tiff; sourceTree = SOURCE_ROOT; };
 		DE1BDD230AD4E13000F0C7BD /* tab_scroll_button_right.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = tab_scroll_button_right.tiff; path = resources/images/chrome/tab_scroll_button_right.tiff; sourceTree = SOURCE_ROOT; };
 		DE1EBDBA0D066F5100BE9ECC /* mathfontUnicode.properties */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; name = mathfontUnicode.properties; path = ../dist/bin/res/fonts/mathfontUnicode.properties; sourceTree = SOURCE_ROOT; };
@@ -3134,7 +3147,6 @@
 		F56F246202AC723001A967F3 /* libembedcomponents.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libembedcomponents.a; path = ../embedding/components/build/libembedcomponents.a; sourceTree = SOURCE_ROOT; };
 		F56F246402AC723001A967F3 /* libgklayout.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgklayout.a; path = ../layout/build/libgklayout.a; sourceTree = SOURCE_ROOT; };
 		F56F246502AC723001A967F3 /* libgkplugin.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgkplugin.a; path = ../modules/plugin/base/src/libgkplugin.a; sourceTree = SOURCE_ROOT; };
-		F56F246B02AC723001A967F3 /* libmork.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmork.a; path = ../db/mork/build/libmork.a; sourceTree = SOURCE_ROOT; };
 		F56F247002AC723001A967F3 /* libtxmgr.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtxmgr.a; path = ../editor/txmgr/src/libtxmgr.a; sourceTree = SOURCE_ROOT; };
 		F56F247302AC723001A967F3 /* libwebbrwsr.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libwebbrwsr.a; path = ../embedding/browser/build/libwebbrwsr.a; sourceTree = SOURCE_ROOT; };
 		F56F247402AC723001A967F3 /* libwidget_mac.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libwidget_mac.a; path = ../widget/src/cocoa/libwidget_mac.a; sourceTree = SOURCE_ROOT; };
@@ -3189,7 +3201,6 @@
 		F5D33CBC02EF61A901A967F3 /* SecurityDialogs.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SecurityDialogs.h; path = src/browser/SecurityDialogs.h; sourceTree = "<group>"; };
 		F5D33CBD02EF61A901A967F3 /* AppComponents.mm */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.objcpp; name = AppComponents.mm; path = src/application/AppComponents.mm; sourceTree = "<group>"; };
 		F5D33CBE02EF61A901A967F3 /* SecurityDialogs.mm */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.objcpp; name = SecurityDialogs.mm; path = src/browser/SecurityDialogs.mm; sourceTree = "<group>"; };
-		F5D3F1CE0209235A014E447F /* libmork.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.bundle"; name = libmork.dylib; path = ../db/mork/build/libmork.dylib; sourceTree = SOURCE_ROOT; };
 		F5D98EB9031AC37801A96654 /* NSBezierPath+Utils.mm */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.objcpp; name = "NSBezierPath+Utils.mm"; path = "src/extensions/NSBezierPath+Utils.mm"; sourceTree = "<group>"; };
 		F5D98EBC031AC38601A96654 /* NSBezierPath+Utils.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = "NSBezierPath+Utils.h"; path = "src/extensions/NSBezierPath+Utils.h"; sourceTree = "<group>"; };
 		F5DA444A027DD5AA01A80166 /* installed-chrome.txt */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; name = "installed-chrome.txt"; path = "../dist/Embed/chrome/installed-chrome.txt"; sourceTree = SOURCE_ROOT; };
@@ -3376,6 +3387,8 @@
 				7BC5674C0D4113D8007503E1 /* libnssutil3.dylib in Frameworks */,
 				DEFAA3450F241C1600BD51C1 /* Growl.framework in Frameworks */,
 				33820E800F8AA62C00D2164A /* Breakpad.framework in Frameworks */,
+				B33032C910AE16D7002FA0A7 /* libmorkreader_s.a in Frameworks */,
+				B330336110AE1C4C002FA0A7 /* libplaces.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3439,7 +3452,6 @@
 				3F44AFA405BDFBA000CB4B08 /* libembedcomponents.a in Frameworks */,
 				3F44AFA505BDFBA000CB4B08 /* libgklayout.a in Frameworks */,
 				3F44AFA605BDFBA000CB4B08 /* libgkplugin.a in Frameworks */,
-				3F44AFA805BDFBA000CB4B08 /* libmork.a in Frameworks */,
 				3F44AFAA05BDFBA000CB4B08 /* libtxmgr.a in Frameworks */,
 				3F44AFAB05BDFBA000CB4B08 /* libwebbrwsr.a in Frameworks */,
 				3F44AFAC05BDFBA000CB4B08 /* libwidget_mac.a in Frameworks */,
@@ -3502,6 +3514,8 @@
 				DEFAA3440F241C1600BD51C1 /* Growl.framework in Frameworks */,
 				DE2AC7180F33EBAB009C0A42 /* libcaminosafebrowsing.a in Frameworks */,
 				33820E810F8AA63800D2164A /* Breakpad.framework in Frameworks */,
+				B33032CA10AE16D7002FA0A7 /* libmorkreader_s.a in Frameworks */,
+				DE19C72F1121F350007A57E0 /* libplaces.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3603,7 +3617,7 @@
 				F6BD63E401B313EE01A962F7 /* libnecko.dylib */,
 				DED015F90D84C5B00017CFE5 /* libimgicon.dylib */,
 				F6BD640E01B3156701A962F7 /* libimglib2.dylib */,
-				F5D3F1CE0209235A014E447F /* libmork.dylib */,
+				B330336010AE1C4C002FA0A7 /* libplaces.dylib */,
 				F6BD641201B3156701A962F7 /* libpref.dylib */,
 				F6BD641401B3156701A962F7 /* librdf.dylib */,
 				F5F59320020F4CD201ACA690 /* libtxmgr.dylib */,
@@ -3678,6 +3692,7 @@
 				F6BD63EE01B313EE01A962F7 /* necko_socket.xpt */,
 				F6BD63EF01B313EE01A962F7 /* necko_strconv.xpt */,
 				F6BD63F001B313EE01A962F7 /* necko_viewsource.xpt */,
+				B33032AE10AE166F002FA0A7 /* places.xpt */,
 				F6BD641D01B3156701A962F7 /* pref.xpt */,
 				F6BD641F01B3156701A962F7 /* rdf.xpt */,
 				F6BD642001B3156701A962F7 /* shistory.xpt */,
@@ -4085,7 +4100,6 @@
 		33563A520C84ED2700DC4D06 /* Backend */ = {
 			isa = PBXGroup;
 			children = (
-				0FBC0ED90798F9A000E8E0E2 /* nsSimpleGlobalHistory.cpp */,
 				F52F87CB027D75C301A80165 /* HistoryDataSource */,
 				F52F87CD027D75C301A80165 /* HistoryDataSource.mm */,
 				3F7C6CB905B4819E002FFFD3 /* HistoryItem.h */,
@@ -4595,6 +4609,7 @@
 		F51D9B1402094BB501A80166 /* Gecko Statics */ = {
 			isa = PBXGroup;
 			children = (
+				B33032C810AE16D7002FA0A7 /* libmorkreader_s.a */,
 				F51D9B2D0209573701A80166 /* libembed_base_s.a */,
 				F5C2CDA702383CE601A967DF /* libunicharutil_s.a */,
 			);
@@ -4841,7 +4856,6 @@
 				F56F246202AC723001A967F3 /* libembedcomponents.a */,
 				F56F246402AC723001A967F3 /* libgklayout.a */,
 				F56F246502AC723001A967F3 /* libgkplugin.a */,
-				F56F246B02AC723001A967F3 /* libmork.a */,
 				F56F247002AC723001A967F3 /* libtxmgr.a */,
 				F56F247302AC723001A967F3 /* libwebbrwsr.a */,
 				F56F247402AC723001A967F3 /* libwidget_mac.a */,
@@ -4875,6 +4889,7 @@
 				DEC87B140C288403002EB106 /* libstoragecomps.a */,
 				33B777E10C5588E500A6D67F /* libmozlcms.a */,
 				DE2AC6EC0F33EB8F009C0A42 /* libcaminosafebrowsing.a */,
+				DE19C72E1121F350007A57E0 /* libplaces.a */,
 			);
 			name = "Gecko Static Components";
 			sourceTree = "<group>";
@@ -5034,6 +5049,7 @@
 				33B777950C55851800A6D67F /* libmozlcms.dylib */,
 				F5461CBB03AAC25C01A96660 /* nsProxyAutoConfig.js */,
 				0098B11D0CAEA75700DA0F2F /* nsHandlerService.js */,
+				B33032AA10AE15EA002FA0A7 /* nsLivemarkService.js */,
 				C7DE8E150F30D14F00CD3872 /* nsUrlClassifierListManager.js */,
 				C7DE8E160F30D14F00CD3872 /* nsUrlClassifierLib.js */,
 				0098B17F0CAEA9CF00DA0F2F /* XPCOMUtils.jsm */,
@@ -6299,7 +6315,6 @@
 				3489ADCC0753B717005ADF6C /* ABAddressBook+Utils.mm in Sources */,
 				0FBC0ECE0798F94900E8E0E2 /* NSDate+Utils.m in Sources */,
 				0FBC0ED10798F95400E8E0E2 /* NSMenu+Utils.m in Sources */,
-				0FBC0EDA0798F9A000E8E0E2 /* nsSimpleGlobalHistory.cpp in Sources */,
 				0FBC0EDD0798F9B400E8E0E2 /* HistoryOutlineViewDelegate.mm in Sources */,
 				0FBC0EE00798FA1900E8E0E2 /* PopupMenuButton.m in Sources */,
 				0F13A31007D7F3930034B176 /* nsAboutBookmarks.mm in Sources */,
@@ -6498,7 +6513,6 @@
 				3489ADCE0753B717005ADF6C /* ABAddressBook+Utils.mm in Sources */,
 				0FBC0ECF0798F94900E8E0E2 /* NSDate+Utils.m in Sources */,
 				0FBC0ED20798F95400E8E0E2 /* NSMenu+Utils.m in Sources */,
-				0FBC0EDB0798F9A000E8E0E2 /* nsSimpleGlobalHistory.cpp in Sources */,
 				0FBC0EDE0798F9B400E8E0E2 /* HistoryOutlineViewDelegate.mm in Sources */,
 				0FBC0EE10798FA1900E8E0E2 /* PopupMenuButton.m in Sources */,
 				0F13A31207D7F3930034B176 /* nsAboutBookmarks.mm in Sources */,
@@ -7445,6 +7459,7 @@
 					../dist/include/necko,
 					../dist/include/nkcache,
 					../dist/include/nspr,
+					../dist/include/places,
 					../dist/include/xpcom,
 				);
 				INFOPLIST_FILE = "Info-HistoryPrefPane.plist";
@@ -7481,6 +7496,7 @@
 					../dist/include/nkcache,
 					../dist/include/nspr,
 					../dist/include/xpcom,
+					../dist/include/places,
 				);
 				INFOPLIST_FILE = "Info-HistoryPrefPane.plist";
 				LIBRARY_SEARCH_PATHS = ../dist/lib;
@@ -7507,6 +7523,8 @@
 					../dist/lib,
 					../dist/Embed/components,
 					../profile/dirserviceprovider/src,
+					../db/morkreader,
+					../dist/bin/components,
 				);
 				OTHER_CFLAGS = (
 					"$(OTHER_CFLAGS)",
@@ -7527,6 +7545,8 @@
 					../dist/lib,
 					../dist/Embed/components,
 					../profile/dirserviceprovider/src,
+					../db/morkreader,
+					../dist/bin/components,
 				);
 			};
 			name = Deployment;
@@ -7552,6 +7572,7 @@
 					../gfx/cairo/libpixman/src,
 					../profile/dirserviceprovider/src,
 					../dist/bin/components,
+					../db/morkreader,
 				);
 				OTHER_CFLAGS = (
 					"$(OTHER_CFLAGS)",
@@ -7583,6 +7604,7 @@
 					../gfx/cairo/libpixman/src,
 					../profile/dirserviceprovider/src,
 					../dist/bin/components,
+					../db/morkreader,
 				);
 			};
 			name = Deployment;

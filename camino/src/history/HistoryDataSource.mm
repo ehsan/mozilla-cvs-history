@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Simon Woodside <sbwoodside@yahoo.com>
  *   Simon Fraser <smfr@smfr.org>
+ *   Christopher Henderson <trendyhendy2000@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,6 +41,7 @@
 #import "NSString+Utils.h"
 #import "NSString+Gecko.h"
 #import "NSPasteboard+Utils.h"
+#import "NSDate+Utils.h"
 
 #import "BrowserWindowController.h"
 #import "HistoryDataSource.h"
@@ -55,9 +57,7 @@
 
 #include "nsIBrowserHistory.h"
 #include "nsIServiceManager.h"
-#include "nsIHistoryItems.h"
-#include "nsIHistoryObserver.h"
-#include "nsISimpleEnumerator.h"
+#include "nsINavHistoryService.h"
 
 #include "nsNetUtil.h"
 #include "nsString.h"
@@ -159,6 +159,7 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
 - (void)sortSearchResults;
 
 - (NSArray*)historyItems;
+- (void)removeAllObjects;
 - (HistorySiteItem*)itemWithIdentifier:(NSString*)identifier;
 
 - (void)siteIconLoaded:(NSNotification*)inNotification;
@@ -526,128 +527,201 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
 
 #pragma mark -
 
-class nsHistoryObserver : public nsIHistoryObserver
+class nsNavHistoryObserver : public nsINavHistoryObserver
 {
-public:
 
-  nsHistoryObserver(HistoryDataSource* inDataSource)
+public:
+  nsNavHistoryObserver(HistoryDataSource* inDataSource)
   : mDataSource(inDataSource)
   {
   }
   
-  virtual ~nsHistoryObserver()
+  virtual ~nsNavHistoryObserver()
   {
   }
 
 protected:
 
-  HistorySiteItem* HistoryItemFromItem(nsIHistoryItem* inItem)
+  HistorySiteItem* HistoryItemFromURI(nsIURI* inURI)
   {
-    nsCString identifier;
-    if (NS_SUCCEEDED(inItem->GetID(identifier)))
-      return [mDataSource itemWithIdentifier:[NSString stringWith_nsACString:identifier]];
-  
+    nsCAutoString url;
+    if (inURI && NS_SUCCEEDED(inURI->GetSpec(url))) {
+      NSString* identifierString = [NSString stringWith_nsACString:url];
+      return [mDataSource itemWithIdentifier:identifierString];
+    }
+
     return nil;
   }
-    
+
 public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD HistoryLoaded()
+  //
+  // OnVisit
+  //
+  // This is called each time a URI is visited. For the first visit, we need
+  // to create a new HistorySiteItem so we can add it to the data source.
+  // For all subsequent visits, we just need to find that item and update it
+  // with a new last visit date.
+  //
+  NS_IMETHOD OnVisit(nsIURI *aURI, PRInt64 aVisitID, PRTime aTime, PRInt64 aSessionID,
+                     PRInt64 aReferringID, PRUint32 aTransitionType, PRUint32 *aAdded)
   {
-    // we build the Obj-C data source lazily, so do nothing here
-    return NS_OK;
-  }
+    NS_ENSURE_ARG_POINTER(aURI);
+    NS_ENSURE_ARG_POINTER(aAdded);
 
-  NS_IMETHOD HistoryClosing()
-  {
-    [mDataSource cleanupHistory];
-    return NS_OK;
-  }
-
-  NS_IMETHOD ItemLoaded(nsIHistoryItem* inHistoryItem, PRBool inFirstVisit)
-  {
-    // Ignore hidden items
-    PRBool hidden;
-    if (!inHistoryItem || NS_FAILED(inHistoryItem->GetHidden(&hidden)) || hidden)
+    // Ignore embedded objects, such as images.
+    if (aTransitionType == nsINavHistoryService::TRANSITION_EMBED)
       return NS_OK;
 
     @try { // make sure we don't throw out into gecko
+      HistorySiteItem* item = HistoryItemFromURI(aURI);
 
-      // The logic here is slightly odd, because even when inFirstVisit is false,
-      // we can still get an item that we haven't seen before. This can happen
-      // when loading a URL that was typed: it was added first as a typed url,
-      // then is 'converted' when the page loads, at which point we get notified.
-      HistorySiteItem* item = nil;
-      if (!inFirstVisit)
-        item = HistoryItemFromItem(inHistoryItem);
-        
-      if (item)
-      {
-        if ([item updateWith_nsIHistoryItem:inHistoryItem])
+      if (item) {
+        NSDate* newDate = [NSDate dateWithPRTime:aTime];
+        if (![[item lastVisit] isEqual:newDate]) {
+          [item setLastVisitDate:newDate];
           [mDataSource itemChanged:item];
-      }      
-      else
-      {
-        item = [[HistorySiteItem alloc] initWithDataSource:mDataSource historyItem:inHistoryItem];
+        }
+      }
+      else {
+        nsresult rv;
+        nsCOMPtr<nsINavHistoryService> histSvc =
+          do_GetService("@mozilla.org/browser/nav-history-service;1", &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCOMPtr<nsINavHistoryQuery> query;
+        rv = histSvc->GetNewQuery(getter_AddRefs(query));
+        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_TRUE(query, NS_ERROR_UNEXPECTED);
+
+        rv = query->SetUri(aURI);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = query->SetMinVisits(1);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = query->SetMaxVisits(1);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCOMPtr<nsINavHistoryQueryOptions> options;
+        rv = histSvc->GetNewQueryOptions(getter_AddRefs(options));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCOMPtr<nsINavHistoryResult> result;
+        rv = histSvc->ExecuteQuery(query, options, getter_AddRefs(result));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCOMPtr<nsINavHistoryContainerResultNode> rootNode;
+        rv = result->GetRoot(getter_AddRefs(rootNode));
+        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_TRUE(rootNode, NS_ERROR_UNEXPECTED);
+
+        rootNode->SetContainerOpen(PR_TRUE);
+
+        // There should be 1 and only 1 result node returned from our query,
+        // since this is the first visit.
+        PRUint32 childCount = 0;
+        rv = rootNode->GetChildCount(&childCount);
+        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_TRUE(childCount == 1, NS_ERROR_UNEXPECTED);
+
+        nsCOMPtr<nsINavHistoryResultNode> resultNode;
+        rv = rootNode->GetChild(0, getter_AddRefs(resultNode));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        item = [[HistorySiteItem alloc] initWithDataSource:mDataSource resultNode:resultNode];
+
         [mDataSource itemAdded:item];
         [item release];
       }
     }
     @catch (id exception) {
-      NSLog(@"Exception caught in ItemLoaded: %@", exception);
+      NSLog(@"Exception caught in OnVisit: %@", exception);
     }
-    
+
     return NS_OK;
   }
 
-  NS_IMETHOD ItemRemoved(nsIHistoryItem* inHistoryItem)
-  {
-    @try { // make sure we don't throw out into gecko
-      HistorySiteItem* item = HistoryItemFromItem(inHistoryItem);
-      if (item)
-        [mDataSource itemRemoved:item];
-    }
-    @catch (id exception) {
-      NSLog(@"Exception caught in ItemRemoved: %@", exception);
-    }
-    return NS_OK;
-  }
-
-  NS_IMETHOD ItemTitleChanged(nsIHistoryItem* inHistoryItem)
-  {
-    HistorySiteItem* item = HistoryItemFromItem(inHistoryItem);
-    if (!item) return NS_OK;
-
-    @try { // make sure we don't throw out into gecko
-      if ([item updateWith_nsIHistoryItem:inHistoryItem])
-        [mDataSource itemChanged:item];
-    }
-    @catch (id exception) {
-      NSLog(@"Exception caught in ItemTitleChanged: %@", exception);
-    }
-    return NS_OK;
-  }
-
-  NS_IMETHOD StartBatchChanges()
+  NS_IMETHOD OnBeginUpdateBatch()
   {
     [mDataSource startBatching];
     return NS_OK;
   }
-  
-  NS_IMETHOD EndBatchChanges()
+
+  NS_IMETHOD OnEndUpdateBatch()
   {
     [mDataSource endBatching];
     return NS_OK;
   }
 
+  NS_IMETHOD OnTitleChanged(nsIURI *aURI, const nsAString & aPageTitle)
+  {
+    NS_ENSURE_ARG_POINTER(aURI);
+
+    HistorySiteItem* item = HistoryItemFromURI(aURI);
+    NS_ENSURE_TRUE(item, NS_ERROR_UNEXPECTED);
+
+    @try { // make sure we don't throw out into gecko
+      NSString* newTitle = [NSString stringWith_nsAString:aPageTitle];
+      BOOL titleChanged = ![newTitle isEqualToString:[item title]];
+      if (titleChanged) {
+        [item setTitle:newTitle];
+        [mDataSource itemChanged:item];
+      }
+    }
+    @catch (id exception) {
+      NSLog(@"Exception caught in OnTitleChanged: %@", exception);
+    }
+    return NS_OK;
+  }
+
+  NS_IMETHOD OnBeforeDeleteURI(nsIURI *aURI)
+  {
+    return NS_OK;
+  }
+
+  NS_IMETHOD OnDeleteURI(nsIURI *aURI)
+  {
+    NS_ENSURE_ARG_POINTER(aURI);
+
+    @try { // make sure we don't throw out into gecko
+      HistorySiteItem* item = HistoryItemFromURI(aURI);
+      if (item)
+        [mDataSource itemRemoved:item];
+    }
+    @catch (id exception) {
+      NSLog(@"Exception caught in OnDeleteURI: %@", exception);
+    }
+    return NS_OK;
+  }
+
+  NS_IMETHOD OnClearHistory()
+  {
+    // Rather than calling |itemRemoved| for every item, just remove
+    // all the items at once and rebuild.
+    [mDataSource removeAllObjects];
+    [mDataSource rebuildHistory];
+    return NS_OK;
+  }
+
+  NS_IMETHOD OnPageChanged(nsIURI *aURI, PRUint32 aWhat, const nsAString & aValue)
+  {
+    return NS_OK;
+  }
+
+  NS_IMETHOD OnPageExpired(nsIURI *aURI, PRTime aVisitTime, PRBool aWholeEntry)
+  {
+    return NS_OK;
+  }
+
 protected:
 
-  HistoryDataSource*    mDataSource;
+  HistoryDataSource* mDataSource;  // Weak
 };
 
-NS_IMPL_ISUPPORTS1(nsHistoryObserver, nsIHistoryObserver);
+NS_IMPL_ISUPPORTS1(nsNavHistoryObserver, nsINavHistoryObserver);
 
 #pragma mark -
 
@@ -657,23 +731,20 @@ NS_IMPL_ISUPPORTS1(nsHistoryObserver, nsIHistoryObserver);
 {
   if ((self = [super init]))
   {
-    nsCOMPtr<nsIBrowserHistory> globalHist = do_GetService("@mozilla.org/browser/global-history;2");
-    mGlobalHistory = globalHist;
-    if (!mGlobalHistory)
+    nsCOMPtr<nsINavHistoryService> histSvc = do_GetService("@mozilla.org/browser/nav-history-service;1");
+    mNavHistoryService = histSvc;
+    if (!mNavHistoryService)
     {
       NSLog(@"Failed to initialize HistoryDataSource (couldn't get global history)");
       [self autorelease];
       return nil;
     }
-    NS_IF_ADDREF(mGlobalHistory);
+    NS_IF_ADDREF(mNavHistoryService);
+
+    mNavHistoryObserver = new nsNavHistoryObserver(self);
+    NS_ADDREF(mNavHistoryObserver);
+    mNavHistoryService->AddObserver(mNavHistoryObserver, PR_FALSE);
     
-    mHistoryObserver = new nsHistoryObserver(self);
-    NS_ADDREF(mHistoryObserver);
-    
-    nsCOMPtr<nsIHistoryItems> historyItems = do_QueryInterface(mGlobalHistory);
-    if (historyItems)
-      historyItems->AddObserver(mHistoryObserver);
-      
     mCurrentViewIdentifier = [kHistoryViewByDate retain];
     
     mSortColumn = [[NSString stringWithString:@"last_visit"] retain];    // save last settings in prefs?
@@ -723,15 +794,14 @@ NS_IMPL_ISUPPORTS1(nsHistoryObserver, nsIHistoryObserver);
 {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
 
-  if (mHistoryObserver)
+  if (mNavHistoryObserver)
   {
-    nsCOMPtr<nsIHistoryItems> historyItems = do_QueryInterface(mGlobalHistory);
-    if (historyItems)
-      historyItems->RemoveObserver(mHistoryObserver);
-    NS_RELEASE(mHistoryObserver);
+    if (mNavHistoryService)
+      mNavHistoryService->RemoveObserver(mNavHistoryObserver);
+    NS_RELEASE(mNavHistoryObserver);
   }
 
-  NS_IF_RELEASE(mGlobalHistory);
+  NS_IF_RELEASE(mNavHistoryService);
   
   [mHistoryItems release];
   mHistoryItems = nil;
@@ -812,46 +882,49 @@ NS_IMPL_ISUPPORTS1(nsHistoryObserver, nsIHistoryObserver);
 
 - (void)loadLazily
 {
-  nsCOMPtr<nsIHistoryItems> historyItems = do_QueryInterface(mGlobalHistory);
-  if (!historyItems) return;
+  nsCOMPtr<nsINavHistoryQuery> query;
+  nsresult rv;
+  rv = mNavHistoryService->GetNewQuery(getter_AddRefs(query));
+  NS_ENSURE_SUCCESS(rv, /* void */);
 
-  PRUint32 maxItems;
-  if (NS_FAILED(historyItems->GetMaxItemCount(&maxItems)))
-    maxItems = 100;
+  nsCOMPtr<nsINavHistoryQueryOptions> options;
+  rv = mNavHistoryService->GetNewQueryOptions(getter_AddRefs(options));
+  NS_ENSURE_SUCCESS(rv, /* void */);
+
+  nsCOMPtr<nsINavHistoryResult> result;
+  rv = mNavHistoryService->ExecuteQuery(query, options, getter_AddRefs(result));
+  NS_ENSURE_SUCCESS(rv, /* void */);
+
+  nsCOMPtr<nsINavHistoryContainerResultNode> rootNode;
+  rv = result->GetRoot(getter_AddRefs(rootNode));
+  NS_ENSURE_SUCCESS(rv, /* void */);
+
+  rv = rootNode->SetContainerOpen(PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, /* void */);
+
+  PRUint32 childCount = 0;
+  rv = rootNode->GetChildCount(&childCount);
+  NS_ENSURE_SUCCESS(rv, /* void */);
 
   if (!mHistoryItems)
-    mHistoryItems = [[NSMutableArray alloc] initWithCapacity:maxItems];
+    mHistoryItems = [[NSMutableArray alloc] initWithCapacity:childCount];
   else
     [mHistoryItems removeAllObjects];
-  
+
   if (!mHistoryItemsDictionary)
-    mHistoryItemsDictionary = [[NSMutableDictionary alloc] initWithCapacity:maxItems];
+    mHistoryItemsDictionary = [[NSMutableDictionary alloc] initWithCapacity:childCount];
   else
     [mHistoryItemsDictionary removeAllObjects];
-    
-  nsCOMPtr<nsISimpleEnumerator> historyEnumerator;
-  historyItems->GetItemEnumerator(getter_AddRefs(historyEnumerator));
-  if (!historyEnumerator) return;
 
-  PRBool hasMore;
-  while (PR_TRUE)
-  {
-    historyEnumerator->HasMoreElements(&hasMore);
-    if (!hasMore) break;
-    
-    // addref's each entry as it enters 'array'
-    nsCOMPtr<nsISupports> thisEntry;
-    historyEnumerator->GetNext(getter_AddRefs(thisEntry));
-
-    nsCOMPtr<nsIHistoryItem> thisItem = do_QueryInterface(thisEntry);
-    PRBool hidden;
-    if (thisItem && NS_SUCCEEDED(thisItem->GetHidden(&hidden)) && !hidden)
-    {
-      HistorySiteItem* item = [[HistorySiteItem alloc] initWithDataSource:self historyItem:thisItem];
-      [mHistoryItems addObject:item];
-      [mHistoryItemsDictionary setObject:item forKey:[item identifier]];
-      [item release];
-    }
+  for (unsigned int i = 0; i < childCount; i++) {
+    nsCOMPtr<nsINavHistoryResultNode> child;
+    rootNode->GetChild(i, getter_AddRefs(child));
+    if (!child)
+      continue;
+    HistorySiteItem* item = [[HistorySiteItem alloc] initWithDataSource:self resultNode:child];
+    [mHistoryItems addObject:item];
+    [mHistoryItemsDictionary setObject:item forKey:[item identifier]];
+    [item release];
   }
 
   [self rebuildHistory];
@@ -1062,9 +1135,17 @@ NS_IMPL_ISUPPORTS1(nsHistoryObserver, nsIHistoryObserver);
   NS_NewURI(getter_AddRefs(doomedURI), [[item url] UTF8String]);
   if (doomedURI)
   {
-    mGlobalHistory->RemovePage(doomedURI);
+    nsCOMPtr<nsIBrowserHistory> hist(do_QueryInterface(mNavHistoryService));
+    if (hist)
+      hist->RemovePage(doomedURI);
     [self itemRemoved:item];
   }
+}
+
+- (void)removeAllObjects
+{
+  [mHistoryItems removeAllObjects];
+  [mHistoryItemsDictionary removeAllObjects];
 }
 
 #pragma mark -

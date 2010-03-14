@@ -1,0 +1,12 @@
+# The aim is to be able to access chrome://places/locale/places.properties
+
+embed.jar:
+  locale/en-US/places/places.properties  (/toolkit/locales/en-US/chrome/places/places.properties)
+  locale/en-US/places/contents.rdf       (locale/contents.rdf)
+# Places is bizarre, because toolkit/ Places has no content, but it has the 
+# above silly locale file.  All the content chrome lives in individal XUL 
+# applications, along with a forked copy of the silly locale file. However, 
+# locale packages don't work unless there is a corresponding content package,
+# and only Camino doesn't have app-specific content chrome package to hide this
+# bizarreness. Fake a dummy content package to get the locale package to work.
+  content/places/contents.rdf            (content/contents.rdf)

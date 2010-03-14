@@ -44,8 +44,8 @@
 @class HistoryItem;
 @class HistorySiteItem;
 
-class nsIBrowserHistory;
-class nsHistoryObserver;
+class nsNavHistoryObserver;
+class nsINavHistoryService;
 
 extern NSString* const kHistoryViewByDate;      // grouped by last visit date
 extern NSString* const kHistoryViewBySite;      // grouped by site
@@ -62,8 +62,8 @@ extern NSString* const kNotificationHistoryDataSourceChangedUserInfoChangedItemO
 
 @interface HistoryDataSource : NSObject
 {
-  nsIBrowserHistory*      mGlobalHistory;     // owned (would be an nsCOMPtr)
-  nsHistoryObserver*      mHistoryObserver;   // owned
+  nsINavHistoryService*   mNavHistoryService;         // owned (would be an nsCOMPtr)
+  nsNavHistoryObserver*   mNavHistoryObserver;        // owned
   
   BOOL                    mShowSiteIcons;
   NSString*               mCurrentViewIdentifier;
@@ -72,7 +72,7 @@ extern NSString* const kNotificationHistoryDataSourceChangedUserInfoChangedItemO
   BOOL                    mSortDescending;
 
   NSMutableArray*         mHistoryItems;              // this array owns all the history items
-  NSMutableDictionary*    mHistoryItemsDictionary;    // history items indexed by id
+  NSMutableDictionary*    mHistoryItemsDictionary;    // history items indexed by url (strong)
 
   NSMutableArray*         mSearchResultsArray;
 

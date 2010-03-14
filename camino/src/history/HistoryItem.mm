@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Simon Fraser <smfr@smfr.org>
+ *   Christopher Henderson <trendyhendy2000@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -47,7 +48,11 @@
 #import "SiteIconProvider.h"
 
 #import "nsString.h"
-#import "nsIHistoryItems.h"
+
+#import "nsINavHistoryService.h"
+#import "nsIURI.h"
+#import "nsCOMPtr.h"
+#import "nsNetUtil.h"
 
 
 // search field tags, used in search field context menu item tags
@@ -487,74 +492,40 @@ enum
 
 @implementation HistorySiteItem
 
-- (id)initWithDataSource:(HistoryDataSource*)inDataSource historyItem:(nsIHistoryItem*)inItem
+- (id)initWithDataSource:(HistoryDataSource*)inDataSource resultNode:(nsINavHistoryResultNode*)inNode
 {
   if ((self = [super initWithDataSource:inDataSource]))
   {
-    nsCString identifier;
-    if (NS_SUCCEEDED(inItem->GetID(identifier)))
-      mItemIdentifier = [[NSString alloc] initWith_nsACString:identifier];
-
-    nsCString url;
-    if (NS_SUCCEEDED(inItem->GetURL(url)))
+    nsCAutoString url;
+    if (NS_SUCCEEDED(inNode->GetUri(url))) {
       mURL = [[NSString alloc] initWith_nsACString:url];
+      // nsINavHistoryResultNodes don't have any other unique identifier.
+      mItemIdentifier = [[NSString alloc] initWith_nsACString:url];
+    }
 
-    nsString title;
-    if (NS_SUCCEEDED(inItem->GetTitle(title)))
-      mTitle = [[NSString alloc] initWith_nsAString:title];
+    nsCAutoString title;
+    if (NS_SUCCEEDED(inNode->GetTitle(title)))
+      mTitle = [[NSString alloc] initWith_nsACString:title];
 
-    nsCString hostname;
-    if (NS_SUCCEEDED(inItem->GetHostname(hostname)))
+    nsCOMPtr<nsIURI> uri;
+    if (NS_SUCCEEDED(NS_NewURI(getter_AddRefs(uri), url))) {
+      nsCAutoString hostname;
+      uri->GetHost(hostname);
       mHostname = [[NSString alloc] initWith_nsACString:hostname];
+    }
 
     if ([mHostname length] == 0 && [mURL hasPrefix:@"file://"])
       mHostname = [[NSString alloc] initWithString:@"local_file"];
 
-    PRTime firstVisit;
-    if (NS_SUCCEEDED(inItem->GetFirstVisitDate(&firstVisit)))
-      mFirstVisitDate = [[NSDate dateWithPRTime:firstVisit] retain];
-
     PRTime lastVisit;
-    if (NS_SUCCEEDED(inItem->GetLastVisitDate(&lastVisit)))
+    if (NS_SUCCEEDED(inNode->GetTime(&lastVisit)))
       mLastVisitDate = [[NSDate dateWithPRTime:lastVisit] retain];
 
-    PRInt32 visitCount;
-    if (NS_SUCCEEDED(inItem->GetVisitCount(&visitCount)))
-      mVisitCount = [[NSNumber numberWithInt:visitCount] retain];
+    PRUint32 visitCount;
+    if (NS_SUCCEEDED(inNode->GetAccessCount(&visitCount)))
+      mVisitCount = [[NSNumber numberWithUnsignedInt:visitCount] retain];
   }
   return self;
-}
-
-- (BOOL)updateWith_nsIHistoryItem:(nsIHistoryItem*)inItem
-{
-  // only the title and last visit date can change
-  BOOL somethingChanged = NO;
-
-  nsString title;
-  if (NS_SUCCEEDED(inItem->GetTitle(title)))
-  {
-    NSString* newTitle = [NSString stringWith_nsAString:title];
-    if (!mTitle || ![mTitle isEqualToString:newTitle])
-    {
-      [mTitle release];
-      mTitle = [newTitle retain];
-      somethingChanged = YES;
-    }
-  }
-  
-  PRTime lastVisit;
-  if (NS_SUCCEEDED(inItem->GetLastVisitDate(&lastVisit)))
-  {
-    NSDate* newDate = [NSDate dateWithPRTime:lastVisit];
-    if (![mLastVisitDate isEqual:newDate])
-    {
-      [mLastVisitDate release];
-      mLastVisitDate = [newDate retain];
-      somethingChanged = YES;
-    }
-  }
-  
-  return somethingChanged;
 }
 
 - (void)dealloc
@@ -581,8 +552,79 @@ enum
   return mTitle;
 }
 
+//
+// -firstVisit
+//
+// Returns the date of the first visit to this item. Finding this date involves
+// querying Places for the earliest visit to the item's URL. Getting the first
+// visit date of every item in history during initial load is slower by an order
+// of magnitude versus finding it only when needed.
+//
 - (NSDate*)firstVisit
 {
+  if (!mFirstVisitDate) {
+    // First set up a sensible default in case we can't get the true date.
+    mFirstVisitDate = [[NSDate alloc] init];
+
+    nsresult rv;
+    nsCOMPtr<nsINavHistoryService> histSvc =
+      do_GetService("@mozilla.org/browser/nav-history-service;1", &rv);
+    NS_ENSURE_SUCCESS(rv, mFirstVisitDate);
+
+    nsCOMPtr<nsINavHistoryQuery> query;
+    rv = histSvc->GetNewQuery(getter_AddRefs(query));
+    NS_ENSURE_SUCCESS(rv, mFirstVisitDate);
+
+    nsCOMPtr<nsIURI> uri;
+    rv = NS_NewURI(getter_AddRefs(uri), [mURL UTF8String]);
+    NS_ENSURE_SUCCESS(rv, mFirstVisitDate);
+
+    rv = query->SetUri(uri);
+    NS_ENSURE_SUCCESS(rv, mFirstVisitDate);
+
+    nsCOMPtr<nsINavHistoryQueryOptions> options;
+    rv = histSvc->GetNewQueryOptions(getter_AddRefs(options));
+    NS_ENSURE_SUCCESS(rv, mFirstVisitDate);
+
+    rv = options->SetResultType(nsINavHistoryQueryOptions::RESULTS_AS_VISIT);
+    NS_ENSURE_SUCCESS(rv, mFirstVisitDate);
+
+    rv = options->SetSortingMode(nsINavHistoryQueryOptions::SORT_BY_DATE_ASCENDING);
+    NS_ENSURE_SUCCESS(rv, mFirstVisitDate);
+
+    // We only want one result: the oldest.
+    rv = options->SetMaxResults(1);
+    NS_ENSURE_SUCCESS(rv, mFirstVisitDate);
+
+    nsCOMPtr<nsINavHistoryResult> result;
+    rv = histSvc->ExecuteQuery(query, options, getter_AddRefs(result));
+    NS_ENSURE_SUCCESS(rv, mFirstVisitDate);
+
+    nsCOMPtr<nsINavHistoryContainerResultNode> rootNode;
+    rv = result->GetRoot(getter_AddRefs(rootNode));
+    NS_ENSURE_SUCCESS(rv, mFirstVisitDate);
+
+    rv = rootNode->SetContainerOpen(PR_TRUE);
+    NS_ENSURE_SUCCESS(rv, mFirstVisitDate);
+
+    PRUint32 childCount = 0;
+    rv = rootNode->GetChildCount(&childCount);
+    NS_ENSURE_SUCCESS(rv, mFirstVisitDate);
+
+    nsCOMPtr<nsINavHistoryResultNode> resultNode;
+    if (childCount) {
+      rv = rootNode->GetChild(0, getter_AddRefs(resultNode));
+      NS_ENSURE_SUCCESS(rv, mFirstVisitDate);
+
+      PRTime firstVisit;
+      rv = resultNode->GetTime(&firstVisit);
+      NS_ENSURE_SUCCESS(rv, mFirstVisitDate);
+
+      [mFirstVisitDate release];
+      mFirstVisitDate = [[NSDate dateWithPRTime:firstVisit] retain];
+    }
+  }
+
   return mFirstVisitDate;
 }
 
@@ -651,6 +693,19 @@ enum
   [mSiteIcon autorelease];
   mSiteIcon = [inImage retain];
 }
+
+- (void)setTitle:(NSString*)inTitle
+{
+  [mTitle autorelease];
+  mTitle = [inTitle retain];
+}
+
+- (void)setLastVisitDate:(NSDate*)inDate
+{
+  [mLastVisitDate release];
+  mLastVisitDate = [inDate retain];
+}
+
 
 // ideally, we'd strip the protocol from the URL before comparing so that https:// doesn't
 // sort after http://
