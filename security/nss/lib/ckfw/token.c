@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.14 $ $Date: 2010/03/15 06:04:20 $";
+static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.15 $ $Date: 2010/03/15 06:05:51 $";
 #endif /* DEBUG */
 
 /*
@@ -390,9 +390,9 @@ nssCKFWToken_Destroy
   }
 
   /* free up the token objects */
-  if (fwToken->mdObjectHash) {
-    nssCKFWHash_Iterate(fwToken->mdObjectHash, nss_ckfwtoken_object_iterator, 
+  nssCKFWHash_Iterate(fwToken->mdObjectHash, nss_ckfwtoken_object_iterator, 
                                                                 (void *)NULL);
+  if (fwToken->mdObjectHash) {
     nssCKFWHash_Destroy(fwToken->mdObjectHash);
   }
   if (fwToken->mdMechanismHash) {
