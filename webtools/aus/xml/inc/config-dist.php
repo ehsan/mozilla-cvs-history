@@ -90,8 +90,8 @@ $productThrottling = array(
          '3.0.19' => 0,
          '3.5.9' => 0
      ),
-    'Thunderbird' => array(
-         '2.0.0.23' => 0
+     'Thunderbird' => array(
+         '2.0.0.24' => 0
      ),
 );
 
@@ -116,10 +116,9 @@ $throttleExceptions = array(
         'betatest',
         'releasetest'
     ),
-    '2.0.0.23' => array (
+    '2.0.0.24' => array (
         'betatest',
-        'releasetest',
-        'beta'
+        'releasetest'
     )
 );
 
