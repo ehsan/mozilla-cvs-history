@@ -91,6 +91,9 @@ my $max_hours = 168;
 # the start of the next build as the end time.
 my $display_accurate_build_end_times = 1;
 
+# Default build scrape to true
+my $::default_scrape = 1;
+
 # Format version of treedata.pl
 # Use Tie::IxHash to keep order of treedata variables
 tie %::default_treedata => 'Tie::IxHash',
