@@ -153,6 +153,10 @@ $productBranchVersions = array(
         '0.8*'    =>  'branch',
         '0.9*'    =>  'branch',
         '0.6a1'   =>  'trunk'
+    ),
+    '{a23983c0-fd0e-11dc-95ff-0800200c9a66}' =>  array(
+        '*_1.9.2*' => 'mozilla-1.9.2',
+        '*_1.9.3*' => 'mozilla-central'
     )  // Add this for tests: 'Synthetic'   => array('1.5.0.*' => '1.5.0.x')
 );
 
