@@ -203,8 +203,6 @@ sub admin_builds {
     for $i (sort keys %all_buildnames){
         if (defined($scrape_buildnames{$i}) && $scrape_buildnames{$i} == 1){
             print SCRAPE "\t\t'$i' => 1,\n";
-        } else {
-            print SCRAPE "\t\t'$i' => 0,\n";
         }
     }
     print SCRAPE "\t};\n";
