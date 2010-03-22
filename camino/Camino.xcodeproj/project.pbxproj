@@ -6056,6 +6056,7 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${SRCROOT}/scripts/strip-headers.sh\"";
+			showEnvVarsInLog = 0;
 		};
 		0080C7DE0E2E4CD9006AFD32 /* Change Sparkle Load ID */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -6070,6 +6071,7 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "echo \"Change Sparkle Load ID\"\n/usr/bin/install_name_tool -id @executable_path/../Frameworks/Sparkle.framework/Versions/A/Sparkle \"$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.$WRAPPER_EXTENSION/Contents/Frameworks/Sparkle.framework/Sparkle\"\n";
+			showEnvVarsInLog = 0;
 		};
 		0080C7F10E2E4D7A006AFD32 /* Change Sparkle Load ID */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -6084,6 +6086,7 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "echo \"Change Sparkle Load ID\"\n/usr/bin/install_name_tool -id @executable_path/../Frameworks/Sparkle.framework/Versions/A/Sparkle \"$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.$WRAPPER_EXTENSION/Contents/Frameworks/Sparkle.framework/Sparkle\"\n";
+			showEnvVarsInLog = 0;
 		};
 		0080C7F50E2E4DDF006AFD32 /* Change Sparkle Load Path */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -6113,6 +6116,7 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${SRCROOT}/scripts/strip-headers.sh\"";
+			showEnvVarsInLog = 0;
 		};
 		3365CA0F0D07197E00ACBF18 /* Scrub Sparkle Languages */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -6127,6 +6131,7 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /usr/bin/perl;
 			shellScript = "#!/usr/bin/perl\n# Removes all the Sparkle languages that aren't also part of the app bundle, since those\n# languages can't be loaded anyway.\nuse warnings;\nuse strict;\n\n# Map of language names to cannonical forms for comparison.\nmy %language_code = ( \"English\" => \"en\" );\n\nmy $app_resources = \"$ENV{BUILT_PRODUCTS_DIR}/$ENV{PRODUCT_NAME}.app/Contents/Resources\";\nmy $sparkle_resources = \"$ENV{BUILT_PRODUCTS_DIR}/$ENV{PRODUCT_NAME}.app/Contents/Frameworks/Sparkle.framework/Resources\";\ndie \"Can't find $ENV{PRODUCT_NAME} resource directory\" unless -d $app_resources;\ndie \"Can't find Sparkle resource directory\" unless -d $sparkle_resources;\n\nmy %standardized_app_languages;\nfor (&languages_for_bundle($app_resources)) {\n  $standardized_app_languages{&standardized_language($_)} = 1;\n}\nmy @sparkle_languages = &languages_for_bundle($sparkle_resources);\n\nprint \"Scrubbing Sparkle lprojs...\\n\";\nforeach my $language (@sparkle_languages) {\n  unless ($standardized_app_languages{$language}) {\n    my $lproj = \"$sparkle_resources/$language.lproj\";\n    print \"  Removing unnecessary Sparkle lproj: $lproj\\n\";\n    system(\"/bin/rm\", \"-rf\", $lproj);\n  }\n}\n\n\nsub languages_for_bundle {\n  my ($resources_dir) = @_;\n  opendir(RESDIR, $resources_dir) or die \"Can't open resource directory '$resources_dir\";\n  my @languages = map { $_ =~ s/.lproj//; $_ } grep { /\\.lproj/ } readdir(RESDIR);\n  closedir(RESDIR);\n  return @languages;\n}\n\nsub standardized_language {\n  my ($language) = @_;\n  return $language_code{$_} || $_;\n}";
+			showEnvVarsInLog = 0;
 		};
 		3365CA1F0D073ECA00ACBF18 /* Scrub Sparkle Languages */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -6141,6 +6146,7 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /usr/bin/perl;
 			shellScript = "#!/usr/bin/perl\n# Removes all the Sparkle languages that aren't also part of the app bundle, since those\n# languages can't be loaded anyway.\nuse warnings;\nuse strict;\n\n# Map of language names to cannonical forms for comparison.\nmy %language_code = ( \"English\" => \"en\" );\n\nmy $app_resources = \"$ENV{BUILT_PRODUCTS_DIR}/$ENV{PRODUCT_NAME}.app/Contents/Resources\";\nmy $sparkle_resources = \"$ENV{BUILT_PRODUCTS_DIR}/$ENV{PRODUCT_NAME}.app/Contents/Frameworks/Sparkle.framework/Resources\";\ndie \"Can't find $ENV{PRODUCT_NAME} resource directory\" unless -d $app_resources;\ndie \"Can't find Sparkle resource directory\" unless -d $sparkle_resources;\n\nmy %standardized_app_languages;\nfor (&languages_for_bundle($app_resources)) {\n  $standardized_app_languages{&standardized_language($_)} = 1;\n}\nmy @sparkle_languages = &languages_for_bundle($sparkle_resources);\n\nprint \"Scrubbing Sparkle lprojs...\\n\";\nforeach my $language (@sparkle_languages) {\n  unless ($standardized_app_languages{$language}) {\n    my $lproj = \"$sparkle_resources/$language.lproj\";\n    print \"  Removing unnecessary Sparkle lproj: $lproj\\n\";\n    system(\"/bin/rm\", \"-rf\", $lproj);\n  }\n}\n\n\nsub languages_for_bundle {\n  my ($resources_dir) = @_;\n  opendir(RESDIR, $resources_dir) or die \"Can't open resource directory '$resources_dir\";\n  my @languages = map { $_ =~ s/.lproj//; $_ } grep { /\\.lproj/ } readdir(RESDIR);\n  closedir(RESDIR);\n  return @languages;\n}\n\nsub standardized_language {\n  my ($language) = @_;\n  return $language_code{$_} || $_;\n}";
+			showEnvVarsInLog = 0;
 		};
 		33820EA50F8AB1F400D2164A /* Force Copy Before Link */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -6158,6 +6164,7 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "# This script does nothing; it is here only to force Xcode (via the input and output files)\n# into understanding that library and framework copy phases must take place before linking.\n# This is necessary to be able to set an @executable_path that works for both libthebes.dylib\n# and Breakpad.framework.\necho \"Forcing library and framework copy phase to happen before linking.\"";
+			showEnvVarsInLog = 0;
 		};
 		33A72CD40F8ADDE4003D3D78 /* Force Copy Before Link */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -6174,6 +6181,7 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "# This script does nothing; it is here only to force Xcode (via the input and output files)\n# into understanding that library and framework copy phases must take place before linking.\n# This is necessary to be able to set an @executable_path that works for both libthebes.dylib\n# and Breakpad.framework. (It's really only necessary for the non-static build, since we\n# don't have to worry about libthebes in a static build, but this minimizes divergence\n# between the two builds.)\necho \"Forcing library and framework copy phase to happen before linking.\"";
+			showEnvVarsInLog = 0;
 		};
 		DE578A7A0FA69EAF0032CFD2 /* Copy Crash Reporter InfoPlists.strings Override */ = {
 			isa = PBXShellScriptBuildPhase;
