@@ -533,6 +533,47 @@ const int kLabelCheckboxAdjustment = 2; // # pixels the label must be pushed dow
   return (result == NSAlertDefaultReturn);
 }
 
+//
+// -select:title:text:selectList:selectedIndex:
+//
+// Displays an alert sheet with a given title, explanatory text, and array of
+// string options. selectedIndex is an output parameter for the index of the
+// user-selected option and is always set on output. Returns NO if the sheet is
+// cancelled by the user.
+//
+- (BOOL)select:(NSWindow*)parent title:(NSString*)title text:(NSString*)text
+        selectList:(NSArray*)selectList selectedIndex:(unsigned int*)selectedIndex
+{
+  if (!selectList)
+    return NO;
+
+  NSPopUpButton* selectPopup = [[[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:NO] autorelease];
+  [selectPopup addItemsWithTitles:selectList];
+  [selectPopup setTarget:self];
+  [selectPopup sizeToFit];
+
+  NSView* extraView = [[[NSView alloc] initWithFrame: [selectPopup frame]] autorelease];
+  [extraView addSubview:selectPopup];
+
+  // Get the panel and display it.
+  NSPanel* panel = [self alertPanelWithTitle:title
+                                     message:text
+                               defaultButton:NSLocalizedString(@"OKButtonText", @"")
+                                   altButton:NSLocalizedString(@"CancelButtonText", @"")
+                                 otherButton:nil
+                                   extraView:extraView
+                               lastResponder:selectPopup
+                                 destructive:NO];
+  [panel setInitialFirstResponder:selectPopup];
+
+  int result = [self runModalWindow:panel relativeToWindow:parent];
+
+  [panel close];
+
+  *selectedIndex = [selectPopup indexOfSelectedItem];
+
+  return (result == NSAlertDefaultReturn);
+}
 
 - (BOOL)postToInsecureFromSecure:(NSWindow*)parent
 {

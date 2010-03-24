@@ -104,6 +104,8 @@
 - (BOOL)promptUserNameAndPassword:(NSWindow*)parent title:(NSString*)title text:(NSString*)text userNameText:(NSMutableString*)userNameText passwordText:(NSMutableString*)passwordText checkMsg:(NSString*)checkMsg checkValue:(BOOL*)checkValue doCheck:(BOOL)doCheck;
 - (BOOL)promptPassword:(NSWindow*)parent title:(NSString*)title text:(NSString*)text passwordText:(NSMutableString*)passwordText checkMsg:(NSString*)checkMsg checkValue:(BOOL*)checkValue doCheck:(BOOL)doCheck;
 
+- (BOOL)select:(NSWindow*)parent title:(NSString*)title text:(NSString*)text selectList:(NSArray*)selectList selectedIndex:(unsigned int*)selectedIndex;
+
 - (BOOL)postToInsecureFromSecure:(NSWindow*)parent;
 
 @end

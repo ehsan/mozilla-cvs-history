@@ -518,10 +518,38 @@ CocoaPromptService::Select(nsIDOMWindow *parent,
                            PRInt32 *outSelection,
                            PRBool *_retval)
 {
-#if DEBUG
-  NSLog(@"Uh-oh. Select has not been implemented.");
-#endif
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsAlertController* controller = CHBrowserService::GetAlertController();
+  if (!controller)
+    return NS_ERROR_FAILURE;
+
+  NSMutableArray* optionArray = [[[NSMutableArray alloc] initWithCapacity:count] autorelease];
+  for (PRUint32 i = 0; i < count; i++) {
+    [optionArray addObject:[NSString stringWithPRUnichars:selectList[i]]];
+  }
+
+  CHBrowserView* browserView = [CHBrowserView browserViewFromDOMWindow:parent];
+  [browserView doBeforePromptDisplay];
+
+  unsigned int selIndex = 0;
+  nsresult rv = NS_OK;
+  @try {
+    BOOL succeeded = [controller select:[browserView nativeWindow]
+                                  title:[NSString stringWithPRUnichars:dialogTitle]
+                                   text:[NSString stringWithPRUnichars:text]
+                             selectList:optionArray
+                          selectedIndex:&selIndex];
+    *_retval = succeeded ? PR_TRUE : PR_FALSE;
+  }
+  @catch (id exception) {
+    rv = NS_ERROR_FAILURE;
+  }
+
+  [browserView doAfterPromptDismissal];
+
+  if (NS_SUCCEEDED(rv) && *_retval && outSelection)
+    *outSelection = selIndex;
+
+  return rv;
 }
 
 #pragma mark -
