@@ -7,6 +7,7 @@ setup.py
 doc/ChangeLog
 doc/examples/httplib_example.py
 doc/examples/ssl_example.py
+doc/examples/verify_server.py
 lib/httplib.py
 test/cipher_test.py
 test/digest_test.py
