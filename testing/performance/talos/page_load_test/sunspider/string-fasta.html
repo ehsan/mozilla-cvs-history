@@ -34,6 +34,7 @@
 <div id="console">
 </div>
 <script>
+var start = new Date();
 
 
 // The Great Computer Language Shootout
@@ -123,6 +124,8 @@ ret = fastaRandom(5*count*1000, HomoSap);
 
 
 
+var timeDiff = (new Date()) - start;
+window.addEventListener("load", function() { tpRecordTime(timeDiff); }, false);
 
 </script>
 

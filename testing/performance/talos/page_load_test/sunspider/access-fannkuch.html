@@ -34,6 +34,7 @@
 <div id="console">
 </div>
 <script>
+var start = new Date();
 
 
 /* The Great Computer Language Shootout
@@ -103,6 +104,8 @@ var n = 8;
 var ret = fannkuch(n);
 
 
+var timeDiff = (new Date()) - start;
+window.addEventListener("load", function() { tpRecordTime(timeDiff); }, false);
 
 
 </script>

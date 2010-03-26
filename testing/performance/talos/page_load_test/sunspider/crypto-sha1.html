@@ -34,6 +34,7 @@
 <div id="console">
 </div>
 <script>
+var start = new Date();
 
 
 /*
@@ -262,6 +263,8 @@ for (var i = 0; i <4; i++) {
 var sha1Output = hex_sha1(plainText);
 
 
+var timeDiff = (new Date()) - start;
+window.addEventListener("load", function() { tpRecordTime(timeDiff); }, false);
 
 </script>
 

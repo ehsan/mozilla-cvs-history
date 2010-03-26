@@ -34,6 +34,7 @@
 <div id="console">
 </div>
 <script>
+var start = new Date();
 
 
 // 3D Cube Rotation
@@ -375,6 +376,8 @@ LoopTime = null;
 DisplArea = null;
 
 
+var timeDiff = (new Date()) - start;
+window.addEventListener("load", function() { tpRecordTime(timeDiff); }, false);
 
 </script>
 

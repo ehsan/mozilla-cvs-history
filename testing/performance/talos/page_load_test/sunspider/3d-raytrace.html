@@ -34,6 +34,7 @@
 <div id="console">
 </div>
 <script>
+var start = new Date();
 
 
 /*
@@ -479,6 +480,8 @@ for (var y = 0; y < size; y++) {\n\
 testOutput = arrayToCanvasCommands(raytraceScene());
 
 
+var timeDiff = (new Date()) - start;
+window.addEventListener("load", function() { tpRecordTime(timeDiff); }, false);
 
 </script>
 

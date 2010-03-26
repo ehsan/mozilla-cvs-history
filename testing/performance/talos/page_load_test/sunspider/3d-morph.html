@@ -34,6 +34,7 @@
 <div id="console">
 </div>
 <script>
+var start = new Date();
 
 
 /*
@@ -92,6 +93,8 @@ for (var i = 0; i < nx; i++)
 a = null;
 
 
+var timeDiff = (new Date()) - start;
+window.addEventListener("load", function() { tpRecordTime(timeDiff); }, false);
 
 </script>
 

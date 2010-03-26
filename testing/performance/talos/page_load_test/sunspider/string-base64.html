@@ -34,6 +34,7 @@
 <div id="console">
 </div>
 <script>
+var start = new Date();
 
 
 /* ***** BEGIN LICENSE BLOCK *****
@@ -173,6 +174,8 @@ for ( var i = 8192; i <= 16384; i *= 2 ) {
 toBinaryTable = null;
 
 
+var timeDiff = (new Date()) - start;
+window.addEventListener("load", function() { tpRecordTime(timeDiff); }, false);
 
 </script>
 

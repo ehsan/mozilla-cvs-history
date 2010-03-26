@@ -35,6 +35,7 @@
 </div>
 <script>
 
+var start = new Date();
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
 
@@ -460,6 +461,8 @@ var cipherText = AESEncryptCtr(plainText, password, 256);
 var decryptedText = AESDecryptCtr(cipherText, password, 256);
 
 
+var timeDiff = (new Date()) - start;
+window.addEventListener("load", function() { tpRecordTime(timeDiff); }, false);
 
 </script>
 

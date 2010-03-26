@@ -34,6 +34,7 @@
 <div id="console">
 </div>
 <script>
+var start = new Date();
 
 
 // Copyright (c) 2004 by Arthur Langereis (arthur_ext at domain xfinitegames, tld com)
@@ -57,6 +58,8 @@ for(var y=0; y<256; y++) func(y);
 }
 
 TimeFunc(bitsinbyte);
+var timeDiff = (new Date()) - start;
+window.addEventListener("load", function() { tpRecordTime(timeDiff); }, false);
 
 
 

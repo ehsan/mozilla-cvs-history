@@ -34,6 +34,7 @@
 <div id="console">
 </div>
 <script>
+var start = new Date();
 
 
 /*
@@ -66,6 +67,8 @@ for (var i = 0; i < 600000; i++)
     bitwiseAndValue = bitwiseAndValue & i;
 
 
+var timeDiff = (new Date()) - start;
+window.addEventListener("load", function() { tpRecordTime(timeDiff); }, false);
 
 </script>
 

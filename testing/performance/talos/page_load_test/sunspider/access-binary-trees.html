@@ -34,6 +34,7 @@
 <div id="console">
 </div>
 <script>
+var start = new Date();
 
 
 /* The Great Computer Language Shootout
@@ -88,6 +89,8 @@ for ( var n = 4; n <= 7; n += 1 ) {
 }
 
 
+var timeDiff = (new Date()) - start;
+window.addEventListener("load", function() { tpRecordTime(timeDiff); }, false);
 
 </script>
 

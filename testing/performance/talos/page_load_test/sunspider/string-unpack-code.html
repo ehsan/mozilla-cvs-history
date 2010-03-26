@@ -34,6 +34,7 @@
 <div id="console">
 </div>
 <script>
+var start = new Date();
 
 
 // This test case unpacks the compressed code for the MochiKit,
@@ -61,7 +62,7 @@ var decompressedMochiKit = function(p,a,c,k,e,d){e=function(c){return(c<a?"":e(p
  * Dual licensed under the MIT (MIT-LICENSE.txt)
  * and GPL (GPL-LICENSE.txt) licenses.
  *
- * $Date: 2008/01/25 22:23:47 $
+ * $Date: 2010/03/26 15:31:40 $
  * $Rev: 3353 $
  */
 
@@ -105,6 +106,8 @@ var decompressedPrototype = function(p,a,c,k,e,d){e=function(c){return(c<a?"":e(
 
 }
 
+var timeDiff = (new Date()) - start;
+window.addEventListener("load", function() { tpRecordTime(timeDiff); }, false);
 
 </script>
 
