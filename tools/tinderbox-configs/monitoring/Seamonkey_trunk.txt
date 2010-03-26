@@ -1,4 +1,4 @@
-# VERSION_URL http://hg.mozilla.org/releases/comm-1.9.1/raw-file/default/suite/config/version.txt
+# VERSION_URL http://hg.mozilla.org/releases/comm-1.9.1/raw-file/default/suite/config/version-191.txt
 /pub/mozilla.org/seamonkey/nightly/latest-comm-1.9.1/seamonkey-@VER@.en-US.linux-i686.tar.bz2
 /pub/mozilla.org/seamonkey/nightly/latest-comm-1.9.1/seamonkey-@VER@.en-US.linux-i686.complete.mar
 /pub/mozilla.org/seamonkey/nightly/latest-comm-1.9.1/seamonkey-@VER@.en-US.linux-x86_64.tar.bz2
