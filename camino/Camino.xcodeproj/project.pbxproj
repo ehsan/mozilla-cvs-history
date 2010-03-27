@@ -58,6 +58,8 @@
 		001FFD9A0C795D5400D9C2C8 /* designmode.css in Copy Gecko Resources */ = {isa = PBXBuildFile; fileRef = 001FFD940C795D3300D9C2C8 /* designmode.css */; };
 		00335B8E0C655ABC00A607F2 /* WebSearchField.mm in Sources */ = {isa = PBXBuildFile; fileRef = 00335B8C0C655ABC00A607F2 /* WebSearchField.mm */; };
 		00335B900C655ABC00A607F2 /* WebSearchField.mm in Sources */ = {isa = PBXBuildFile; fileRef = 00335B8C0C655ABC00A607F2 /* WebSearchField.mm */; };
+		003F2D37115554310093969B /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7BAEF7470CCFDE7D00384F4E /* Sparkle.framework */; };
+		003F2D38115554470093969B /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7BAEF7470CCFDE7D00384F4E /* Sparkle.framework */; };
 		00450523100A8E140096B649 /* bookmark_group_badge.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 00450522100A8E140096B649 /* bookmark_group_badge.tiff */; };
 		00450524100A8E140096B649 /* bookmark_group_badge.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 00450522100A8E140096B649 /* bookmark_group_badge.tiff */; };
 		005F387E0E50852D00D8E7A6 /* InvalidCertOverrideDialog.nib in Resources */ = {isa = PBXBuildFile; fileRef = 005F387C0E50852D00D8E7A6 /* InvalidCertOverrideDialog.nib */; };
@@ -936,8 +938,6 @@
 		7B479B7D0D0DD5EB00780567 /* libxpcom_core.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F12FC56072E8ECB00995ED9 /* libxpcom_core.dylib */; };
 		7B5073000D11E88400458384 /* KeyEquivView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7B5072FD0D11E83B00458384 /* KeyEquivView.mm */; };
 		7B5073010D11E89600458384 /* KeyEquivView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7B5072FD0D11E83B00458384 /* KeyEquivView.mm */; };
-		7B64B7E10CCFDA640098406C /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7B64B7CA0CCFD9F50098406C /* Sparkle.framework */; };
-		7B64B7E30CCFDA860098406C /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7B64B7CA0CCFD9F50098406C /* Sparkle.framework */; };
 		7B64B7EE0CCFDAAF0098406C /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7B64B7CA0CCFD9F50098406C /* Sparkle.framework */; };
 		7B9A26190D411275008CDB39 /* libnssutil3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 7B9A26180D411275008CDB39 /* libnssutil3.dylib */; };
 		7BAEF8120CCFDF3400384F4E /* Sparkle.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 7BAEF7470CCFDE7D00384F4E /* Sparkle.framework */; };
@@ -3378,7 +3378,7 @@
 				DEB968320B0D8E9F0023F8B1 /* Security.framework in Frameworks */,
 				008115430B180F35001CB3F0 /* libthebes.dylib in Frameworks */,
 				33B775AA0C4EAC1E00A6D67F /* libsqlite3.dylib in Frameworks */,
-				7B64B7E10CCFDA640098406C /* Sparkle.framework in Frameworks */,
+				003F2D37115554310093969B /* Sparkle.framework in Frameworks */,
 				7BC5674C0D4113D8007503E1 /* libnssutil3.dylib in Frameworks */,
 				DEFAA3450F241C1600BD51C1 /* Growl.framework in Frameworks */,
 				33820E800F8AA62C00D2164A /* Breakpad.framework in Frameworks */,
@@ -3502,7 +3502,7 @@
 				DE62E4320B72B50C00142851 /* libauth.a in Frameworks */,
 				DEC87B150C288403002EB106 /* libstoragecomps.a in Frameworks */,
 				33B775AB0C4EAC1E00A6D67F /* libsqlite3.dylib in Frameworks */,
-				7B64B7E30CCFDA860098406C /* Sparkle.framework in Frameworks */,
+				003F2D38115554470093969B /* Sparkle.framework in Frameworks */,
 				7B9A26190D411275008CDB39 /* libnssutil3.dylib in Frameworks */,
 				DE846DA90D84D03400009C6A /* libimgicon.a in Frameworks */,
 				DEFAA3440F241C1600BD51C1 /* Growl.framework in Frameworks */,
