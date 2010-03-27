@@ -110,6 +110,18 @@
 			<key>CFBundleTypeRole</key>
 			<string>Viewer</string>
 		</dict>
+		<dict>
+			<key>CFBundleTypeIconFile</key>
+			<string>fileBookmark.icns</string>
+			<key>CFBundleTypeName</key>
+			<string>Camino bookmark</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>org.mozilla.camino.bookmark</string>
+			</array>
+		</dict>
 	</array>
 	<key>CFBundleExecutable</key>
 	<string>Camino</string>
@@ -253,6 +265,29 @@ xz+k1ujre1mK8oq2DT2kCo29Ufgsc6U5bCc2Bs7S/fHOVBjxUf9/XIfvOyJRCbVJ
 -----END PUBLIC KEY-----</string>
 	<key>SUScheduledCheckInterval</key>
 	<integer>86400</integer>
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>com.apple.safari.bookmark</string>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>Camino bookmark</string>
+			<key>UTTypeIconFile</key>
+			<string>fileBookmark.icns</string>
+			<key>UTTypeIdentifier</key>
+			<string>org.mozilla.camino.bookmark</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>caminobookmark</string>
+				</array>
+			</dict>
+		</dict>
+	</array>
 	<key>mozProfileDirName</key>
 	<string>Camino</string>
 </dict>

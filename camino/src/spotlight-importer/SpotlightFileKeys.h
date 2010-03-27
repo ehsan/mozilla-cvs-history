@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -14,12 +15,12 @@
  * The Original Code is Camino code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * Stuart Morgan
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Nate Weaver (Wevah) - wevah@derailer.org
+ *   Stuart Morgan <stuart.morgan@alumni.case.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,20 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#import <Cocoa/Cocoa.h>
-
-
-@interface NSURL (CaminoExtensions) 
-
-// This takes an NSURL to a local file, and if that file is a file that
-// represents a URL, returns the URL it contains. Otherwise, returns the
-// passed URL. Supports .url, .webloc, .ftploc, and .caminobookmark files.
-+ (NSURL*)decodeLocalFileURL:(NSURL*)url;
-
-// Returns the URL for a plist file containing a URL key, or nil on failure.
-+(NSURL*)URLFromPlist:(NSString*)inFile;
-
-+(NSURL*)URLFromInetloc:(NSString*)inFile;
-+(NSURL*)URLFromIEURLFile:(NSString*)inFile;
-
-@end
+NSString* const kSpotlightBookmarkTitleKey = @"Name";
+NSString* const kSpotlightBookmarkURLKey = @"URL";
+NSString* const kSpotlightBookmarkDescriptionKey = @"Description";
+NSString* const kSpotlightBookmarkShortcutKey = @"Shortcut";

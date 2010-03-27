@@ -1232,9 +1232,8 @@ static BookmarkManager* gBookmarkManager = nil;
 // -writeBookmarksMetadataForSpotlight
 //
 // Write out a flat list of all bookmarks in the caches folder so that Spotlight
-// can parse them. We don't need to write our own metadata plugin, we piggyback
-// the one that Safari uses which launches the default browser when selected.
-// This blows away any previous cache and ensures that everything is up-to-date.
+// can parse them. This blows away any previous cache and ensures that
+// everything is up-to-date.
 //
 // Note that this is called on a thread, so it takes pains to ensure that the data
 // it's working with won't be changing on the UI thread

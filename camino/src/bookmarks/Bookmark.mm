@@ -46,6 +46,9 @@
 #import "BookmarksClient.h"
 #import "NSString+Utils.h"
 #import "SiteIconProvider.h"
+#import "SpotlightFileKeys.h"
+
+NSString* const kSpotlightMetadataSuffix = @"caminobookmark";
 
 // Notification of URL load
 NSString* const URLLoadNotification   = @"url_load";
@@ -315,34 +318,65 @@ NSString* const URLLoadSuccessKey     = @"url_bool";
 // -writeBookmarksMetaDatatoPath:
 //
 // Writes out the meta data for this bookmark to a file with the name of this
-// item's UUID in the given path. Using the suffix "webbookmark" allows us to
-// piggyback on Safari's bookmark Spotlight importer.
+// item's UUID in the given path.
 //
 - (void)writeBookmarksMetadataToPath:(NSString*)inPath
 {
   if ([self isSeparator]) // Writing metadata for separators doesn't make sense.
     return;
 
-  NSDictionary* dict = [NSDictionary dictionaryWithObjectsAndKeys:
-                                      [self savedTitle], @"Name",
-                                        [self savedURL], @"URL",
-                                                         nil];
-  NSString* file = [self UUID];
-  NSString* path = [NSString stringWithFormat:@"%@/%@.webbookmark", inPath, file];
-  [dict writeToFile:path atomically:YES];
+  NSMutableDictionary* dict = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+      [self savedTitle], kSpotlightBookmarkTitleKey,
+        [self savedURL], kSpotlightBookmarkURLKey,
+                         nil];
+  if ([[self itemDescription] length] > 0) {
+    [dict setObject:[self itemDescription]
+             forKey:kSpotlightBookmarkDescriptionKey];
+  }
+  if ([[self shortcut] length] > 0)
+    [dict setObject:[self shortcut] forKey:kSpotlightBookmarkShortcutKey];
+
+  // There doesn't seem to be any way for our files to get the behavior Safari's
+  // bookmarks get, where the kMDItemDisplayName is used instead of the file
+  // name in search results. To work around that, we name the file using the
+  // title, using the UUID as an enclosing directory.
+  NSString* directoryPath = [inPath stringByAppendingPathComponent:[self UUID]];
+  NSFileManager* fileManager = [NSFileManager defaultManager];
+  if (![fileManager fileExistsAtPath:directoryPath])
+    [fileManager createDirectoryAtPath:directoryPath attributes:NULL];
+
+  NSString* title = [self savedTitle];
+  if ([title length] == 0)
+    title = @"-";
+  // A : will look like a / when displayed; change them to -, since that's a bit
+  // better. Then map any / to : so they display correctly.
+  title = [[title componentsSeparatedByString:@":"] componentsJoinedByString:@"-"];
+  title = [[title componentsSeparatedByString:@"/"] componentsJoinedByString:@":"];
+  NSString* fileName = [title stringByAppendingPathExtension:kSpotlightMetadataSuffix];
+  NSString* filePath = [directoryPath stringByAppendingPathComponent:fileName];
+  [dict writeToFile:filePath atomically:YES];
+  NSDictionary* attributes =
+      [NSDictionary dictionaryWithObject:[NSNumber numberWithBool:YES]
+                                  forKey:NSFileExtensionHidden];
+  [fileManager changeFileAttributes:attributes atPath:filePath];
 }
 
 //
 // -removeBookmarksMetadataFromPath:
 //
-// Delete the meta data for this bookmark from the cache, which consists of a file with
-// this item's UUID.
+// Delete the meta data for this bookmark from the cache, which consists of a
+// file inside a folder with this item's UUID.
 //
 - (void)removeBookmarksMetadataFromPath:(NSString*)inPath
 {
-  NSString* file = [self UUID];
-  NSString* path = [NSString stringWithFormat:@"%@/%@.webbookmark", inPath, file];
-  [[NSFileManager defaultManager] removeFileAtPath:path handler:nil];
+  NSString* uuid = [self UUID];
+  // This should not be possible, but since we are about to do a recursive
+  // delete we want to be very, very careful.
+  if ([uuid length] == 0)
+    return;
+
+  NSString* directoryPath = [inPath stringByAppendingPathComponent:uuid];
+  [[NSFileManager defaultManager] removeFileAtPath:directoryPath handler:nil];
 }
 
 // for plist in native format

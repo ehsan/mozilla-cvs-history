@@ -46,16 +46,26 @@
   NSString* ext = [[urlPathString pathExtension] lowercaseString];
   OSType fileType = NSHFSTypeCodeFromFileType(NSHFSTypeOfFile(urlPathString));
 
-  if ([ext isEqualToString:@"url"] || fileType == 'LINK') {
-    url = [NSURL URLFromIEURLFile:urlPathString];
-  }
-  else if ([ext isEqualToString:@"webloc"] || [ext isEqualToString:@"ftploc"] ||
-           fileType == 'ilht' || fileType == 'ilft')
+  if ([ext isEqualToString:@"caminobookmark"])
+    return [NSURL URLFromPlist:urlPathString];
+  if ([ext isEqualToString:@"url"] || fileType == 'LINK')
+    return [NSURL URLFromIEURLFile:urlPathString];
+  if ([ext isEqualToString:@"webloc"] || [ext isEqualToString:@"ftploc"] ||
+      fileType == 'ilht' || fileType == 'ilft')
   {
-    url = [NSURL URLFromInetloc:urlPathString];
+    return [NSURL URLFromInetloc:urlPathString];
   }
 
   return url;
+}
+
++(NSURL*)URLFromPlist:(NSString*)inFile
+{
+  if (!inFile)
+    return nil;
+  NSDictionary* plist =
+      [[[NSDictionary alloc] initWithContentsOfFile:inFile] autorelease];
+  return [NSURL URLWithString:[plist objectForKey:@"URL"]];
 }
 
 //
@@ -90,11 +100,7 @@
     }
 
     if (!ret) { // Look for valid plist data.
-      NSDictionary *plist;
-      if ((plist = [[NSDictionary alloc] initWithContentsOfFile:inFile])) {
-        ret = [NSURL URLWithString:[plist objectForKey:@"URL"]];
-        [plist release];
-      }
+      ret = [NSURL URLFromPlist:inFile];
     }
   }
   

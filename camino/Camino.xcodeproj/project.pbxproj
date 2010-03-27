@@ -92,6 +92,13 @@
 		00BBBF1F0D6A149900C2D916 /* FindBarTextured.nib in Resources */ = {isa = PBXBuildFile; fileRef = 00BBBF1C0D6A149800C2D916 /* FindBarTextured.nib */; };
 		00BBBFE70D70A6E400C2D916 /* tab_loading.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 00BBBFE60D70A6E400C2D916 /* tab_loading.tiff */; };
 		00BBBFE80D70A6E400C2D916 /* tab_loading.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 00BBBFE60D70A6E400C2D916 /* tab_loading.tiff */; };
+		00BC68A6114B5F99000A0508 /* GetMetadataForFile.m in Sources */ = {isa = PBXBuildFile; fileRef = 00BC68A2114B5F99000A0508 /* GetMetadataForFile.m */; };
+		00BC68A8114B5F99000A0508 /* Importer-main.c in Sources */ = {isa = PBXBuildFile; fileRef = 00BC68A4114B5F99000A0508 /* Importer-main.c */; };
+		00BC68A9114B5F99000A0508 /* schema.xml in Resources */ = {isa = PBXBuildFile; fileRef = 00BC68A5114B5F99000A0508 /* schema.xml */; };
+		00BC6955114B6009000A0508 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 29B97325FDCFA39411CA2CEA /* Foundation.framework */; };
+		00BC696F114B68D1000A0508 /* CaminoImporter.mdimporter in Copy Spotlight Importer */ = {isa = PBXBuildFile; fileRef = 00BC6874114B5EA3000A0508 /* CaminoImporter.mdimporter */; };
+		00BC6971114B68E0000A0508 /* CaminoImporter.mdimporter in Copy Spotlight Importer */ = {isa = PBXBuildFile; fileRef = 00BC6874114B5EA3000A0508 /* CaminoImporter.mdimporter */; };
+		00BC6D6D114B6FA4000A0508 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00BC6CD8114B6F9C000A0508 /* CoreServices.framework */; };
 		00C6890710560B110082D80F /* BreakpadWrapper.m in Sources */ = {isa = PBXBuildFile; fileRef = 00C6890610560B110082D80F /* BreakpadWrapper.m */; };
 		00C6890810560B110082D80F /* BreakpadWrapper.m in Sources */ = {isa = PBXBuildFile; fileRef = 00C6890610560B110082D80F /* BreakpadWrapper.m */; };
 		00F79F591075B622006688AC /* OperaBookmarkConverter.m in Sources */ = {isa = PBXBuildFile; fileRef = 00F79F581075B622006688AC /* OperaBookmarkConverter.m */; };
@@ -1265,6 +1272,132 @@
 			remoteGlobalIDString = 612279D90DB5470200AB99EA;
 			remoteInfo = "Sparkle Unit Tests";
 		};
+		00BC6964114B67E7000A0508 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 29B97313FDCFA39411CA2CEA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 00BC6873114B5EA3000A0508;
+			remoteInfo = SpotlightImporter;
+		};
+		00BC6966114B67F0000A0508 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 29B97313FDCFA39411CA2CEA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 00BC6873114B5EA3000A0508;
+			remoteInfo = SpotlightImporter;
+		};
+		00BC6C7A114B6F45000A0508 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 8D202CF80486D31800D8A456;
+			remoteInfo = Growl;
+		};
+		00BC6C7C114B6F45000A0508 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = CB61E5180637763C00E0DDC7;
+			remoteInfo = GrowlHelperApp;
+		};
+		00BC6C7E114B6F45000A0508 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 95075AB00817F5DB00D862A5;
+			remoteInfo = GrowlMenu;
+		};
+		00BC6C80114B6F45000A0508 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 34F60EAB078E1CD500CECA86;
+			remoteInfo = Growl.framework;
+		};
+		00BC6C82114B6F45000A0508 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 34725B0F0C0678A000499F50;
+			remoteInfo = Growl.dylib;
+		};
+		00BC6C84114B6F45000A0508 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 34F60EF9078E226300CECA86;
+			remoteInfo = "Growl-WithInstaller.framework";
+		};
+		00BC6C86114B6F45000A0508 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 0AB508B10767C87B006EA5CB;
+			remoteInfo = Speech;
+		};
+		00BC6C88114B6F45000A0508 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 95FC347907E0458E00BD8674;
+			remoteInfo = Brushed;
+		};
+		00BC6C8A114B6F45000A0508 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 0AB508AE0767C87B006EA5CB;
+			remoteInfo = Bubbles;
+		};
+		00BC6C8C114B6F45000A0508 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = E14410EF0A94072E0063C4DC;
+			remoteInfo = iCal;
+		};
+		00BC6C8E114B6F45000A0508 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 0AB508B40767C87B006EA5CB;
+			remoteInfo = Bezel;
+		};
+		00BC6C90114B6F45000A0508 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 0AB508AF0767C87B006EA5CB;
+			remoteInfo = Smoke;
+		};
+		00BC6C92114B6F45000A0508 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 93BC379E095A662B0002B365;
+			remoteInfo = Nano;
+		};
+		00BC6C94114B6F45000A0508 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 0AB508B00767C87B006EA5CB;
+			remoteInfo = MailMe;
+		};
+		00BC6C96114B6F45000A0508 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 0AB508B30767C87B006EA5CB;
+			remoteInfo = MusicVideo;
+		};
+		00BC6C98114B6F45000A0508 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = DD4939CC084BACA700D1CCCB;
+			remoteInfo = SMS;
+		};
 		33820DA50F8AA24500D2164A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 33820D980F8AA24500D2164A /* Breakpad.xcodeproj */;
@@ -1503,132 +1636,6 @@
 			remoteGlobalIDString = 3F44AE0905BDFBA000CB4B08;
 			remoteInfo = CaminoStaticApp;
 		};
-		DEFAA2A60F24192200BD51C1 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 8D202CF80486D31800D8A456;
-			remoteInfo = Growl;
-		};
-		DEFAA2A80F24192200BD51C1 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = CB61E5180637763C00E0DDC7;
-			remoteInfo = GrowlHelperApp;
-		};
-		DEFAA2AA0F24192200BD51C1 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 95075AB00817F5DB00D862A5;
-			remoteInfo = GrowlMenu;
-		};
-		DEFAA2AC0F24192200BD51C1 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 34F60EAB078E1CD500CECA86;
-			remoteInfo = Growl.framework;
-		};
-		DEFAA2AE0F24192200BD51C1 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 34725B0F0C0678A000499F50;
-			remoteInfo = Growl.dylib;
-		};
-		DEFAA2B00F24192200BD51C1 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 34F60EF9078E226300CECA86;
-			remoteInfo = "Growl-WithInstaller.framework";
-		};
-		DEFAA2B20F24192200BD51C1 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 0AB508B10767C87B006EA5CB;
-			remoteInfo = Speech;
-		};
-		DEFAA2B40F24192200BD51C1 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 95FC347907E0458E00BD8674;
-			remoteInfo = Brushed;
-		};
-		DEFAA2B60F24192200BD51C1 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 0AB508AE0767C87B006EA5CB;
-			remoteInfo = Bubbles;
-		};
-		DEFAA2B80F24192200BD51C1 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = E14410EF0A94072E0063C4DC;
-			remoteInfo = iCal;
-		};
-		DEFAA2BA0F24192200BD51C1 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 0AB508B40767C87B006EA5CB;
-			remoteInfo = Bezel;
-		};
-		DEFAA2BC0F24192200BD51C1 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 0AB508AF0767C87B006EA5CB;
-			remoteInfo = Smoke;
-		};
-		DEFAA2BE0F24192200BD51C1 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 93BC379E095A662B0002B365;
-			remoteInfo = Nano;
-		};
-		DEFAA2C00F24192200BD51C1 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 0AB508B00767C87B006EA5CB;
-			remoteInfo = MailMe;
-		};
-		DEFAA2C20F24192200BD51C1 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 0AB508B30767C87B006EA5CB;
-			remoteInfo = MusicVideo;
-		};
-		DEFAA2C40F24192200BD51C1 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = DD4939CC084BACA700D1CCCB;
-			remoteInfo = SMS;
-		};
-		DEFAA2C70F24196B00BD51C1 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 34F60EAA078E1CD500CECA86;
-			remoteInfo = Growl.framework;
-		};
-		DEFAA2CA0F241A0200BD51C1 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 34F60EAA078E1CD500CECA86;
-			remoteInfo = Growl.framework;
-		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -1674,6 +1681,28 @@
 				0098B20E0CAEC6D900DA0F2F /* mimeTypes.rdf in Copy Profile Defaults */,
 			);
 			name = "Copy Profile Defaults";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		00BC696B114B6839000A0508 /* Copy Spotlight Importer */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Contents/Library/Spotlight;
+			dstSubfolderSpec = 1;
+			files = (
+				00BC696F114B68D1000A0508 /* CaminoImporter.mdimporter in Copy Spotlight Importer */,
+			);
+			name = "Copy Spotlight Importer";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		00BC696D114B6899000A0508 /* Copy Spotlight Importer */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Contents/Library/Spotlight;
+			dstSubfolderSpec = 1;
+			files = (
+				00BC6971114B68E0000A0508 /* CaminoImporter.mdimporter in Copy Spotlight Importer */,
+			);
+			name = "Copy Spotlight Importer";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		0E6A98A6097E00CD007962C1 /* Copy Gecko Fonts */ = {
@@ -2519,6 +2548,13 @@
 		00BBBC840D66C13400C2D916 /* CHGradient.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CHGradient.m; path = src/extensions/CHGradient.m; sourceTree = "<group>"; };
 		00BBBF1D0D6A149800C2D916 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = resources/localized/English.lproj/FindBarTextured.nib; sourceTree = "<group>"; };
 		00BBBFE60D70A6E400C2D916 /* tab_loading.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = tab_loading.tiff; path = chrome/tab_loading.tiff; sourceTree = "<group>"; };
+		00BC6874114B5EA3000A0508 /* CaminoImporter.mdimporter */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CaminoImporter.mdimporter; sourceTree = BUILT_PRODUCTS_DIR; };
+		00BC68A2114B5F99000A0508 /* GetMetadataForFile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = GetMetadataForFile.m; path = "src/spotlight-importer/GetMetadataForFile.m"; sourceTree = "<group>"; };
+		00BC68A3114B5F99000A0508 /* Info-Importer.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Info-Importer.plist"; sourceTree = "<group>"; };
+		00BC68A4114B5F99000A0508 /* Importer-main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "Importer-main.c"; path = "src/spotlight-importer/Importer-main.c"; sourceTree = "<group>"; };
+		00BC68A5114B5F99000A0508 /* schema.xml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; name = schema.xml; path = "resources/spotlight-importer/schema.xml"; sourceTree = "<group>"; };
+		00BC6981114B6E77000A0508 /* SpotlightFileKeys.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SpotlightFileKeys.h; path = "src/spotlight-importer/SpotlightFileKeys.h"; sourceTree = "<group>"; };
+		00BC6CD8114B6F9C000A0508 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
 		00C6890510560B110082D80F /* BreakpadWrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BreakpadWrapper.h; path = src/application/BreakpadWrapper.h; sourceTree = SOURCE_ROOT; };
 		00C6890610560B110082D80F /* BreakpadWrapper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BreakpadWrapper.m; path = src/application/BreakpadWrapper.m; sourceTree = SOURCE_ROOT; };
 		00F79F571075B622006688AC /* OperaBookmarkConverter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OperaBookmarkConverter.h; path = src/bookmarks/OperaBookmarkConverter.h; sourceTree = "<group>"; };
@@ -2972,7 +3008,7 @@
 		DEE8101D0EFB7D2E006ACC7D /* aquaSelect.css */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = aquaSelect.css; path = resources/application/aquaSelect.css; sourceTree = SOURCE_ROOT; };
 		DEE9EBA30AF5C379002BC511 /* SessionManager.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SessionManager.h; path = src/application/SessionManager.h; sourceTree = "<group>"; };
 		DEE9EBA60AF5C390002BC511 /* SessionManager.mm */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.objcpp; name = SessionManager.mm; path = src/application/SessionManager.mm; sourceTree = SOURCE_ROOT; };
-		DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Growl.xcodeproj; path = growl/Growl.xcodeproj; sourceTree = SOURCE_ROOT; };
+		DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Growl.xcodeproj; path = growl/Growl.xcodeproj; sourceTree = "<group>"; };
 		DEFAA3430F241C1600BD51C1 /* Growl.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; name = Growl.framework; path = growl/build/Release/Growl.framework; sourceTree = "<group>"; };
 		DEFD234F0D021C3A006899B9 /* dom_loadsave.xpt */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = file; name = dom_loadsave.xpt; path = ../dist/bin/components/dom_loadsave.xpt; sourceTree = SOURCE_ROOT; };
 		DEFD23520D021C48006899B9 /* dom_storage.xpt */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = file; name = dom_storage.xpt; path = ../dist/bin/components/dom_storage.xpt; sourceTree = SOURCE_ROOT; };
@@ -3329,6 +3365,15 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		00BC6872114B5EA3000A0508 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				00BC6955114B6009000A0508 /* Foundation.framework in Frameworks */,
+				00BC6D6D114B6FA4000A0508 /* CoreServices.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		035A4973079DC83D0084B05F /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -3516,6 +3561,50 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		00BC68A0114B5F55000A0508 /* Spotlight Importer */ = {
+			isa = PBXGroup;
+			children = (
+				00BC68A2114B5F99000A0508 /* GetMetadataForFile.m */,
+				00BC68A4114B5F99000A0508 /* Importer-main.c */,
+				00BC6981114B6E77000A0508 /* SpotlightFileKeys.h */,
+				00BC68A5114B5F99000A0508 /* schema.xml */,
+			);
+			name = "Spotlight Importer";
+			sourceTree = "<group>";
+		};
+		00BC6C66114B6F45000A0508 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				00BC6C7B114B6F45000A0508 /* Growl.prefPane */,
+				00BC6C7D114B6F45000A0508 /* GrowlHelperApp.app */,
+				00BC6C7F114B6F45000A0508 /* GrowlMenu.app */,
+				00BC6C81114B6F45000A0508 /* Growl.framework */,
+				00BC6C83114B6F45000A0508 /* Growl.dylib */,
+				00BC6C85114B6F45000A0508 /* Growl-WithInstaller.framework */,
+				00BC6C87114B6F45000A0508 /* Speech.growlView */,
+				00BC6C89114B6F45000A0508 /* Brushed.growlView */,
+				00BC6C8B114B6F45000A0508 /* Bubbles.growlView */,
+				00BC6C8D114B6F45000A0508 /* iCal.growlView */,
+				00BC6C8F114B6F45000A0508 /* Bezel.growlView */,
+				00BC6C91114B6F45000A0508 /* Smoke.growlView */,
+				00BC6C93114B6F45000A0508 /* Nano.growlView */,
+				00BC6C95114B6F45000A0508 /* MailMe.growlView */,
+				00BC6C97114B6F45000A0508 /* MusicVideo.growlView */,
+				00BC6C99114B6F45000A0508 /* SMS.growlView */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		00BC6CB7114B6F73000A0508 /* External Projects */ = {
+			isa = PBXGroup;
+			children = (
+				7B64B7BA0CCFD9F50098406C /* Sparkle.xcodeproj */,
+				DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */,
+				33820D980F8AA24500D2164A /* Breakpad.xcodeproj */,
+			);
+			name = "External Projects";
+			sourceTree = "<group>";
+		};
 		032FFDCC077351A800440548 /* Downloads */ = {
 			isa = PBXGroup;
 			children = (
@@ -3742,37 +3831,6 @@
 			name = Security;
 			sourceTree = "<group>";
 		};
-		1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				34884A35074F7C5D000EA76B /* AddressBook.framework */,
-				1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */,
-				F557193A022B4102010001CA /* PreferencePanes.framework */,
-				F52D5CDB027D412A01A80166 /* Carbon.framework */,
-				F52D5CDC027D412A01A80166 /* CoreFoundation.framework */,
-				DEB968300B0D8E9F0023F8B1 /* Security.framework */,
-				F52D5CDD027D412A01A80166 /* SystemConfiguration.framework */,
-				F5FEDBCB02AD8DD101A967F3 /* QuickTime.framework */,
-				3F558E950552122E006156FD /* IOKit.framework */,
-				7B64B7BA0CCFD9F50098406C /* Sparkle.xcodeproj */,
-				7BAEF7470CCFDE7D00384F4E /* Sparkle.framework */,
-				DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */,
-				DEFAA3430F241C1600BD51C1 /* Growl.framework */,
-				33820D980F8AA24500D2164A /* Breakpad.xcodeproj */,
-				33820DC00F8AA31B00D2164A /* Breakpad.framework */,
-			);
-			name = "Linked Frameworks";
-			sourceTree = "<group>";
-		};
-		1058C7A2FEA54F0111CA2CBB /* Other Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				29B97325FDCFA39411CA2CEA /* Foundation.framework */,
-				29B97324FDCFA39411CA2CEA /* AppKit.framework */,
-			);
-			name = "Other Frameworks";
-			sourceTree = "<group>";
-		};
 		19C28FACFE9D520D11CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -3786,6 +3844,7 @@
 				03E2D8530771F73F00BD2443 /* Tabs.prefPane */,
 				03C5AB1007722DFC00EAF77D /* Downloads.prefPane */,
 				035A4975079DC83D0084B05F /* History.prefPane */,
+				00BC6874114B5EA3000A0508 /* CaminoImporter.mdimporter */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -3796,10 +3855,12 @@
 				332377960C4D0FA200A34879 /* Xcode Configs */,
 				080E96DDFE201D6D7F000001 /* Classes */,
 				F53F21EB022B7C77010001CA /* PreferencePanes */,
+				00BC68A0114B5F55000A0508 /* Spotlight Importer */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
 				F6BD637A01B30E0F01A962F7 /* Gecko */,
 				F56610A40394767101A9666E /* Plugins */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
+				00BC6CB7114B6F73000A0508 /* External Projects */,
 				19C28FACFE9D520D11CA2CBB /* Products */,
 				3FECC78F05D1F68E0068E7ED /* Target Plists */,
 			);
@@ -3845,8 +3906,21 @@
 		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */,
-				1058C7A2FEA54F0111CA2CBB /* Other Frameworks */,
+				34884A35074F7C5D000EA76B /* AddressBook.framework */,
+				29B97324FDCFA39411CA2CEA /* AppKit.framework */,
+				F52D5CDB027D412A01A80166 /* Carbon.framework */,
+				1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */,
+				F52D5CDC027D412A01A80166 /* CoreFoundation.framework */,
+				00BC6CD8114B6F9C000A0508 /* CoreServices.framework */,
+				29B97325FDCFA39411CA2CEA /* Foundation.framework */,
+				3F558E950552122E006156FD /* IOKit.framework */,
+				F557193A022B4102010001CA /* PreferencePanes.framework */,
+				F5FEDBCB02AD8DD101A967F3 /* QuickTime.framework */,
+				DEB968300B0D8E9F0023F8B1 /* Security.framework */,
+				F52D5CDD027D412A01A80166 /* SystemConfiguration.framework */,
+				7BAEF7470CCFDE7D00384F4E /* Sparkle.framework */,
+				DEFAA3430F241C1600BD51C1 /* Growl.framework */,
+				33820DC00F8AA31B00D2164A /* Breakpad.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -4198,6 +4272,7 @@
 				03E2D8540771F73F00BD2443 /* Info-TabsPrefPane.plist */,
 				03C5AB1107722DFD00EAF77D /* Info-DownloadsPrefPane.plist */,
 				035A4976079DC83E0084B05F /* Info-HistoryPrefPane.plist */,
+				00BC68A3114B5F99000A0508 /* Info-Importer.plist */,
 			);
 			name = "Target Plists";
 			sourceTree = "<group>";
@@ -4339,29 +4414,6 @@
 				DE59E2F50FA54EC8001F240C /* InfoPlist.strings */,
 			);
 			name = "Crash Reporter InfoPlist.strings Override";
-			sourceTree = "<group>";
-		};
-		DEFAA2910F24192200BD51C1 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				DEFAA2A70F24192200BD51C1 /* Growl.prefPane */,
-				DEFAA2A90F24192200BD51C1 /* GrowlHelperApp.app */,
-				DEFAA2AB0F24192200BD51C1 /* GrowlMenu.app */,
-				DEFAA2AD0F24192200BD51C1 /* Growl.framework */,
-				DEFAA2AF0F24192200BD51C1 /* Growl.dylib */,
-				DEFAA2B10F24192200BD51C1 /* Growl-WithInstaller.framework */,
-				DEFAA2B30F24192200BD51C1 /* Speech.growlView */,
-				DEFAA2B50F24192200BD51C1 /* Brushed.growlView */,
-				DEFAA2B70F24192200BD51C1 /* Bubbles.growlView */,
-				DEFAA2B90F24192200BD51C1 /* iCal.growlView */,
-				DEFAA2BB0F24192200BD51C1 /* Bezel.growlView */,
-				DEFAA2BD0F24192200BD51C1 /* Smoke.growlView */,
-				DEFAA2BF0F24192200BD51C1 /* Nano.growlView */,
-				DEFAA2C10F24192200BD51C1 /* MailMe.growlView */,
-				DEFAA2C30F24192200BD51C1 /* MusicVideo.growlView */,
-				DEFAA2C50F24192200BD51C1 /* SMS.growlView */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 		E091C0D006225EA3007D9E8F /* cursors */ = {
@@ -5132,6 +5184,23 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		00BC6873114B5EA3000A0508 /* CaminoImporter */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 00BC6878114B5EA5000A0508 /* Build configuration list for PBXNativeTarget "CaminoImporter" */;
+			buildPhases = (
+				00BC6870114B5EA3000A0508 /* Resources */,
+				00BC6871114B5EA3000A0508 /* Sources */,
+				00BC6872114B5EA3000A0508 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CaminoImporter;
+			productName = SpotlightImporter;
+			productReference = 00BC6874114B5EA3000A0508 /* CaminoImporter.mdimporter */;
+			productType = "com.apple.product-type.bundle";
+		};
 		035A4974079DC83D0084B05F /* HistoryPrefPane */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 3323777F0C4D0F9600A34879 /* Build configuration list for PBXNativeTarget "HistoryPrefPane" */;
@@ -5213,6 +5282,7 @@
 				3365CA1F0D073ECA00ACBF18 /* Scrub Sparkle Languages */,
 				3F44AD7A05BDFB9F00CB4B08 /* Copy Plugins */,
 				4D5881750864B276001305B3 /* Copy Gecko Plugins */,
+				00BC696B114B6839000A0508 /* Copy Spotlight Importer */,
 				33820EA50F8AB1F400D2164A /* Force Copy Before Link */,
 				3F44AD7C05BDFB9F00CB4B08 /* Frameworks */,
 				334D108B0FAA4D7600545AFE /* Strip Framework Headers */,
@@ -5220,8 +5290,8 @@
 			buildRules = (
 			);
 			dependencies = (
+				00BC6967114B67F0000A0508 /* PBXTargetDependency */,
 				7B64B7D20CCFDA1A0098406C /* PBXTargetDependency */,
-				DEFAA2C80F24196B00BD51C1 /* PBXTargetDependency */,
 				33820DBC0F8AA26500D2164A /* PBXTargetDependency */,
 			);
 			name = CaminoApp;
@@ -5352,6 +5422,7 @@
 				3365CA0F0D07197E00ACBF18 /* Scrub Sparkle Languages */,
 				3F44AF9205BDFBA000CB4B08 /* Copy Plugins */,
 				4D5881790864B297001305B3 /* Copy Gecko Plugins */,
+				00BC696D114B6899000A0508 /* Copy Spotlight Importer */,
 				33A72CD40F8ADDE4003D3D78 /* Force Copy Before Link */,
 				3F44AF9405BDFBA000CB4B08 /* Frameworks */,
 				00118D860FA3C75D00EADCBC /* Strip Framework Headers */,
@@ -5359,8 +5430,8 @@
 			buildRules = (
 			);
 			dependencies = (
+				00BC6965114B67E7000A0508 /* PBXTargetDependency */,
 				7B64B7D60CCFDA210098406C /* PBXTargetDependency */,
-				DEFAA2CB0F241A0200BD51C1 /* PBXTargetDependency */,
 				33820DBE0F8AA27400D2164A /* PBXTargetDependency */,
 			);
 			name = CaminoStaticApp;
@@ -5394,7 +5465,7 @@
 					ProjectRef = 33820D980F8AA24500D2164A /* Breakpad.xcodeproj */;
 				},
 				{
-					ProductGroup = DEFAA2910F24192200BD51C1 /* Products */;
+					ProductGroup = 00BC6C66114B6F45000A0508 /* Products */;
 					ProjectRef = DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */;
 				},
 				{
@@ -5416,6 +5487,7 @@
 				03E2D8520771F73F00BD2443 /* TabsPrefPane */,
 				03C5AB0F07722DFC00EAF77D /* DownloadsPrefPane */,
 				3F44ADF205BDFBA000CB4B08 /* WebFeaturesPrefPane */,
+				00BC6873114B5EA3000A0508 /* CaminoImporter */,
 			);
 		};
 /* End PBXProject section */
@@ -5433,6 +5505,118 @@
 			fileType = wrapper.cfbundle;
 			path = "Sparkle Unit Tests.octest";
 			remoteRef = 0080C7C70E2E4CBE006AFD32 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		00BC6C7B114B6F45000A0508 /* Growl.prefPane */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = Growl.prefPane;
+			remoteRef = 00BC6C7A114B6F45000A0508 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		00BC6C7D114B6F45000A0508 /* GrowlHelperApp.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = GrowlHelperApp.app;
+			remoteRef = 00BC6C7C114B6F45000A0508 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		00BC6C7F114B6F45000A0508 /* GrowlMenu.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = GrowlMenu.app;
+			remoteRef = 00BC6C7E114B6F45000A0508 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		00BC6C81114B6F45000A0508 /* Growl.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = Growl.framework;
+			remoteRef = 00BC6C80114B6F45000A0508 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		00BC6C83114B6F45000A0508 /* Growl.dylib */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.dylib";
+			path = Growl.dylib;
+			remoteRef = 00BC6C82114B6F45000A0508 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		00BC6C85114B6F45000A0508 /* Growl-WithInstaller.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = "Growl-WithInstaller.framework";
+			remoteRef = 00BC6C84114B6F45000A0508 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		00BC6C87114B6F45000A0508 /* Speech.growlView */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = Speech.growlView;
+			remoteRef = 00BC6C86114B6F45000A0508 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		00BC6C89114B6F45000A0508 /* Brushed.growlView */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = Brushed.growlView;
+			remoteRef = 00BC6C88114B6F45000A0508 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		00BC6C8B114B6F45000A0508 /* Bubbles.growlView */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = Bubbles.growlView;
+			remoteRef = 00BC6C8A114B6F45000A0508 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		00BC6C8D114B6F45000A0508 /* iCal.growlView */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = iCal.growlView;
+			remoteRef = 00BC6C8C114B6F45000A0508 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		00BC6C8F114B6F45000A0508 /* Bezel.growlView */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = Bezel.growlView;
+			remoteRef = 00BC6C8E114B6F45000A0508 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		00BC6C91114B6F45000A0508 /* Smoke.growlView */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = Smoke.growlView;
+			remoteRef = 00BC6C90114B6F45000A0508 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		00BC6C93114B6F45000A0508 /* Nano.growlView */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = Nano.growlView;
+			remoteRef = 00BC6C92114B6F45000A0508 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		00BC6C95114B6F45000A0508 /* MailMe.growlView */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = MailMe.growlView;
+			remoteRef = 00BC6C94114B6F45000A0508 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		00BC6C97114B6F45000A0508 /* MusicVideo.growlView */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = MusicVideo.growlView;
+			remoteRef = 00BC6C96114B6F45000A0508 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		00BC6C99114B6F45000A0508 /* SMS.growlView */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = SMS.growlView;
+			remoteRef = 00BC6C98114B6F45000A0508 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		33820DA60F8AA24500D2164A /* Breakpad.framework */ = {
@@ -5512,121 +5696,17 @@
 			remoteRef = 7B64B7CB0CCFD9F50098406C /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		DEFAA2A70F24192200BD51C1 /* Growl.prefPane */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.cfbundle;
-			path = Growl.prefPane;
-			remoteRef = DEFAA2A60F24192200BD51C1 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		DEFAA2A90F24192200BD51C1 /* GrowlHelperApp.app */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.application;
-			path = GrowlHelperApp.app;
-			remoteRef = DEFAA2A80F24192200BD51C1 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		DEFAA2AB0F24192200BD51C1 /* GrowlMenu.app */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.application;
-			path = GrowlMenu.app;
-			remoteRef = DEFAA2AA0F24192200BD51C1 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		DEFAA2AD0F24192200BD51C1 /* Growl.framework */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.framework;
-			path = Growl.framework;
-			remoteRef = DEFAA2AC0F24192200BD51C1 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		DEFAA2AF0F24192200BD51C1 /* Growl.dylib */ = {
-			isa = PBXReferenceProxy;
-			fileType = "compiled.mach-o.dylib";
-			path = Growl.dylib;
-			remoteRef = DEFAA2AE0F24192200BD51C1 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		DEFAA2B10F24192200BD51C1 /* Growl-WithInstaller.framework */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.framework;
-			path = "Growl-WithInstaller.framework";
-			remoteRef = DEFAA2B00F24192200BD51C1 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		DEFAA2B30F24192200BD51C1 /* Speech.growlView */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.cfbundle;
-			path = Speech.growlView;
-			remoteRef = DEFAA2B20F24192200BD51C1 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		DEFAA2B50F24192200BD51C1 /* Brushed.growlView */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.cfbundle;
-			path = Brushed.growlView;
-			remoteRef = DEFAA2B40F24192200BD51C1 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		DEFAA2B70F24192200BD51C1 /* Bubbles.growlView */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.cfbundle;
-			path = Bubbles.growlView;
-			remoteRef = DEFAA2B60F24192200BD51C1 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		DEFAA2B90F24192200BD51C1 /* iCal.growlView */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.cfbundle;
-			path = iCal.growlView;
-			remoteRef = DEFAA2B80F24192200BD51C1 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		DEFAA2BB0F24192200BD51C1 /* Bezel.growlView */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.cfbundle;
-			path = Bezel.growlView;
-			remoteRef = DEFAA2BA0F24192200BD51C1 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		DEFAA2BD0F24192200BD51C1 /* Smoke.growlView */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.cfbundle;
-			path = Smoke.growlView;
-			remoteRef = DEFAA2BC0F24192200BD51C1 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		DEFAA2BF0F24192200BD51C1 /* Nano.growlView */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.cfbundle;
-			path = Nano.growlView;
-			remoteRef = DEFAA2BE0F24192200BD51C1 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		DEFAA2C10F24192200BD51C1 /* MailMe.growlView */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.cfbundle;
-			path = MailMe.growlView;
-			remoteRef = DEFAA2C00F24192200BD51C1 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		DEFAA2C30F24192200BD51C1 /* MusicVideo.growlView */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.cfbundle;
-			path = MusicVideo.growlView;
-			remoteRef = DEFAA2C20F24192200BD51C1 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		DEFAA2C50F24192200BD51C1 /* SMS.growlView */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.cfbundle;
-			path = SMS.growlView;
-			remoteRef = DEFAA2C40F24192200BD51C1 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
 /* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
+		00BC6870114B5EA3000A0508 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				00BC68A9114B5F99000A0508 /* schema.xml in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		035A4971079DC83D0084B05F /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -6216,6 +6296,15 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		00BC6871114B5EA3000A0508 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				00BC68A6114B5F99000A0508 /* GetMetadataForFile.m in Sources */,
+				00BC68A8114B5F99000A0508 /* Importer-main.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		035A4972079DC83D0084B05F /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -6599,6 +6688,16 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		00BC6965114B67E7000A0508 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 00BC6873114B5EA3000A0508 /* CaminoImporter */;
+			targetProxy = 00BC6964114B67E7000A0508 /* PBXContainerItemProxy */;
+		};
+		00BC6967114B67F0000A0508 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 00BC6873114B5EA3000A0508 /* CaminoImporter */;
+			targetProxy = 00BC6966114B67F0000A0508 /* PBXContainerItemProxy */;
+		};
 		33820DBC0F8AA26500D2164A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = Breakpad;
@@ -6713,16 +6812,6 @@
 			isa = PBXTargetDependency;
 			target = 3F44AE0905BDFBA000CB4B08 /* CaminoStaticApp */;
 			targetProxy = 7BDD26F70D0DC31C00BA05C6 /* PBXContainerItemProxy */;
-		};
-		DEFAA2C80F24196B00BD51C1 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = Growl.framework;
-			targetProxy = DEFAA2C70F24196B00BD51C1 /* PBXContainerItemProxy */;
-		};
-		DEFAA2CB0F241A0200BD51C1 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = Growl.framework;
-			targetProxy = DEFAA2CA0F241A0200BD51C1 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -7314,6 +7403,26 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		00BC6876114B5EA5000A0508 /* Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INFOPLIST_FILE = "Info-Importer.plist";
+				PRODUCT_NAME = CaminoImporter;
+				WRAPPER_EXTENSION = mdimporter;
+			};
+			name = Development;
+		};
+		00BC6877114B5EA5000A0508 /* Deployment */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INFOPLIST_FILE = "Info-Importer.plist";
+				PRODUCT_NAME = CaminoImporter;
+				WRAPPER_EXTENSION = mdimporter;
+			};
+			name = Deployment;
+		};
 		3323775D0C4D0F9600A34879 /* Development */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 332377D10C4D88D300A34879 /* PrefPane.xcconfig */;
@@ -7678,6 +7787,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		00BC6878114B5EA5000A0508 /* Build configuration list for PBXNativeTarget "CaminoImporter" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				00BC6876114B5EA5000A0508 /* Development */,
+				00BC6877114B5EA5000A0508 /* Deployment */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Development;
+		};
 		3323775C0C4D0F9600A34879 /* Build configuration list for PBXNativeTarget "AppearancePrefPane" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
