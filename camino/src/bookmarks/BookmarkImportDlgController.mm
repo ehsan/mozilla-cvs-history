@@ -48,9 +48,11 @@
 @interface BookmarkImportDlgController (Private)
 
 - (BOOL)tryAddImportFromBrowser:(NSString *)aBrowserName withBookmarkPath:(NSString *)aPath;
+- (void)tryFirefoxImport;
 - (void)tryOmniWeb5Import;
 - (void)buildButtonForBrowser:(NSString *)aBrowserName withPathArray:(NSArray *)anArray;
 - (NSString *)saltedBookmarkPathForProfile:(NSString *)aPath;
+- (NSString *)saltedPlacesPathForProfile:(NSString *)aPath;
 - (void)beginImportFrom:(NSArray *)aPath withTitles:(NSArray *)anArray;
 - (void)beginOmniWeb5ImportFrom:(NSArray *)anArray;
 - (void)finishImport:(BOOL)success fromFiles:(NSArray *)anArray;
@@ -74,14 +76,12 @@
 // choices with those found.  Must be called when showing the dialog.
 - (void)buildAvailableFileList
 {
-  NSString *mozPath;
-
   // Remove everything but the separator and "Select a file..." option, on the off-chance that someone brings
   // up the import dialog, throws away a profile, then brings up the import dialog again
   while ([mBrowserListButton numberOfItems] > 2)
     [mBrowserListButton removeItemAtIndex:0];
 
-  [self tryAddImportFromBrowser:@"iCab" withBookmarkPath:@"~/Library/Preferences/iCab Preferences/Hotlist.html"];
+  [self tryAddImportFromBrowser:@"iCab 2" withBookmarkPath:@"~/Library/Preferences/iCab Preferences/Hotlist.html"];
   [self tryAddImportFromBrowser:@"iCab 3" withBookmarkPath:@"~/Library/Preferences/iCab Preferences/Hotlist3.html"];
   if (![self tryAddImportFromBrowser:@"Opera" withBookmarkPath:@"~/Library/Preferences/Opera Preferences/bookmarks.adr"]) {
     [self tryAddImportFromBrowser:@"Opera" withBookmarkPath:@"~/Library/Preferences/Opera Preferences/Bookmarks"];
@@ -92,24 +92,22 @@
   [self tryAddImportFromBrowser:@"Internet Explorer" withBookmarkPath:@"~/Library/Preferences/Explorer/Favorites.html"];
   [self tryAddImportFromBrowser:@"Safari" withBookmarkPath:@"~/Library/Safari/Bookmarks.plist"];
 
-  mozPath = [self saltedBookmarkPathForProfile:@"~/Library/Mozilla/Profiles/default/"];
+  NSString *mozPath = [self saltedBookmarkPathForProfile:@"~/Library/Mozilla/Profiles/default/"];
   if (mozPath)
     [self tryAddImportFromBrowser:@"Netscape/Mozilla/SeaMonkey 1.x" withBookmarkPath:mozPath];
 
   // SeaMonkey 1.x used the same profile as Netscape/Mozilla; SeaMonkey 2
-  // introduced a unique profile location.
+  // introduced a unique profile location.  SeaMonkey 2.0 used Places history
+  // with traditional HTML bookmarks; SeaMonkey 2.1 might introduce Places
+  // bookmarks, which will make the "is places.sqlite there" trick fail to 
+  // find SeaMonkey 2-only profiles if the trick is incorporated into this
+  // check (checking for the "bookmarkbackups" sub-folder should work).
   mozPath = [self saltedBookmarkPathForProfile:@"~/Library/Application Support/SeaMonkey/Profiles/"];
   if (mozPath)
     [self tryAddImportFromBrowser:@"SeaMonkey 2" withBookmarkPath:mozPath];
-  
-  // Try Firefox from different locations in the reverse order of their introduction
-  mozPath = [self saltedBookmarkPathForProfile:@"~/Library/Application Support/Firefox/Profiles/"];
-  if (!mozPath)
-    mozPath = [self saltedBookmarkPathForProfile:@"~/Library/Firefox/Profiles/default/"];
-  if (!mozPath)
-    mozPath = [self saltedBookmarkPathForProfile:@"~/Library/Phoenix/Profiles/default/"];
-  if (mozPath)
-    [self tryAddImportFromBrowser:@"Mozilla Firefox" withBookmarkPath:mozPath];
+
+  // Firefox has multiple historical profile locations and needs special-casing for Firefox 3/Places.
+  [self tryFirefoxImport];
 
   [mBrowserListButton selectItemAtIndex:0];
   [mBrowserListButton synchronizeTitleAndSelectedItem];
@@ -127,6 +125,33 @@
     return YES;
   }
   return NO;
+}
+
+// Special treatment for Firefox.  Try from different locations in the reverse 
+// order of their introduction.  If the current Firefox profile path contains a
+// places.sqlite file, then the bookmarks.html file is either an outdated 
+// leftover from Firefox 2 or a default file from a new profile; either way, it
+// is not what the user wants imported, so bail (until we can import bookmarks
+// from places.sqlite).
+- (void)tryFirefoxImport
+{
+  NSString *currentFirefoxProfileRoot = @"~/Library/Application Support/Firefox/Profiles/";
+  NSString *maybePlacesBookmarkPath = [self saltedPlacesPathForProfile:currentFirefoxProfileRoot];
+  NSString *fullPathString = [maybePlacesBookmarkPath stringByStandardizingPath];
+  BOOL hasPlacesBookmarks = [[NSFileManager defaultManager] fileExistsAtPath:fullPathString];
+  if (hasPlacesBookmarks) {
+    // There's a places.sqlite file in the current profile, so any bookmarks.html in
+    // this profile, or in any older profile location, is old.
+    return;
+  }
+  NSString *foxPath = [self saltedBookmarkPathForProfile:currentFirefoxProfileRoot];
+  if (!foxPath)
+    foxPath = [self saltedBookmarkPathForProfile:@"~/Library/Firefox/Profiles/default/"];
+  if (!foxPath)
+    foxPath = [self saltedBookmarkPathForProfile:@"~/Library/Phoenix/Profiles/default/"];
+
+  if (foxPath)
+    [self tryAddImportFromBrowser:@"Mozilla Firefox 2" withBookmarkPath:foxPath];
 }
 
 // Special treatment for OmniWeb 5
@@ -157,10 +182,16 @@
 {
   // find the last modified profile
   NSString *lastModifiedSubDir = [[NSFileManager defaultManager] lastModifiedSubdirectoryAtPath:aPath];
-  if (lastModifiedSubDir) 
-    return [lastModifiedSubDir stringByAppendingPathComponent:@"bookmarks.html"];
+  return [lastModifiedSubDir stringByAppendingPathComponent:@"bookmarks.html"];
+}
 
-  return nil;
+// Given a Mozilla-like profile, returns the places.sqlite file in the salt directory
+// for the last modified profile, or nil on error
+- (NSString *)saltedPlacesPathForProfile:(NSString *)aPath
+{
+  // find the last modified profile
+  NSString *lastModifiedSubDir = [[NSFileManager defaultManager] lastModifiedSubdirectoryAtPath:aPath];
+  return [lastModifiedSubDir stringByAppendingPathComponent:@"places.sqlite"];
 }
 
 - (void)buildButtonForBrowser:(NSString *)aBrowserName withPathArray:(NSArray *)anArray
