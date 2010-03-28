@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.31 $ $Date: 2009/04/17 19:28:07 $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.32 $ $Date: 2010/03/28 18:03:43 $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -510,6 +510,11 @@ nssCertificateArray_FindBestCertificate (
 	     * */
 	}
 	bestdc = nssCertificate_GetDecoding(bestCert);
+	if (!bestdc) {
+	    nssCertificate_Destroy(bestCert);
+	    bestCert = nssCertificate_AddRef(c);
+	    continue;
+	}
 	/* time */
 	if (bestdc->isValidAtTime(bestdc, time)) {
 	    /* The current best cert is valid at time */
@@ -1247,7 +1252,9 @@ NSSTime_SetPRTime (
 {
     NSSTime *rvTime;
     rvTime = (timeOpt) ? timeOpt : nss_ZNEW(NULL, NSSTime);
-    rvTime->prTime = prTime;
+    if (rvTime) {
+        rvTime->prTime = prTime;
+    }
     return rvTime;
 }
 
