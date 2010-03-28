@@ -1636,6 +1636,20 @@
 			remoteGlobalIDString = 3F44AE0905BDFBA000CB4B08;
 			remoteInfo = CaminoStaticApp;
 		};
+		DEF57535115FD0C300813B61 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 34F60EAA078E1CD500CECA86 /* Growl.framework */;
+			remoteInfo = Growl.framework;
+		};
+		DEF57538115FD0DB00813B61 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DEFAA2850F24192200BD51C1 /* Growl.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 34F60EAA078E1CD500CECA86 /* Growl.framework */;
+			remoteInfo = Growl.framework;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -5290,9 +5304,10 @@
 			buildRules = (
 			);
 			dependencies = (
-				00BC6967114B67F0000A0508 /* PBXTargetDependency */,
 				7B64B7D20CCFDA1A0098406C /* PBXTargetDependency */,
+				DEF57536115FD0C300813B61 /* PBXTargetDependency */,
 				33820DBC0F8AA26500D2164A /* PBXTargetDependency */,
+				00BC6967114B67F0000A0508 /* PBXTargetDependency */,
 			);
 			name = CaminoApp;
 			productInstallPath = "$(HOME)/Applications";
@@ -5430,9 +5445,10 @@
 			buildRules = (
 			);
 			dependencies = (
-				00BC6965114B67E7000A0508 /* PBXTargetDependency */,
 				7B64B7D60CCFDA210098406C /* PBXTargetDependency */,
+				DEF57539115FD0DB00813B61 /* PBXTargetDependency */,
 				33820DBE0F8AA27400D2164A /* PBXTargetDependency */,
+				00BC6965114B67E7000A0508 /* PBXTargetDependency */,
 			);
 			name = CaminoStaticApp;
 			productInstallPath = "$(HOME)/Applications";
@@ -6812,6 +6828,16 @@
 			isa = PBXTargetDependency;
 			target = 3F44AE0905BDFBA000CB4B08 /* CaminoStaticApp */;
 			targetProxy = 7BDD26F70D0DC31C00BA05C6 /* PBXContainerItemProxy */;
+		};
+		DEF57536115FD0C300813B61 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = Growl.framework;
+			targetProxy = DEF57535115FD0C300813B61 /* PBXContainerItemProxy */;
+		};
+		DEF57539115FD0DB00813B61 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = Growl.framework;
+			targetProxy = DEF57538115FD0DB00813B61 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
