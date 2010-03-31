@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: wrap.c,v $ $Revision: 1.18 $ $Date: 2009/02/09 07:55:53 $";
+static const char CVS_ID[] = "@(#) $RCSfile: wrap.c,v $ $Revision: 1.19 $ $Date: 2010/03/31 16:45:22 $";
 #endif /* DEBUG */
 
 /*
@@ -1776,6 +1776,9 @@ NSSCKFWC_SetOperationState
       goto loser;
     }
   }
+
+  state.data = pOperationState;
+  state.size = ulOperationStateLen;
 
   error = nssCKFWSession_SetOperationState(fwSession, &state, eKey, aKey);
   if( CKR_OK != error ) {
