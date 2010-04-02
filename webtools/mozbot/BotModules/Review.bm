@@ -1,0 +1,70 @@
+################################
+# Patch Review Module          #
+################################
+
+package BotModules::Review;
+use vars qw(@ISA);
+use URI::Escape; # to escape stuff for urls
+@ISA = qw(BotModules);
+1;
+
+sub RegisterConfig {
+    my $self = shift;
+    $self->SUPER::RegisterConfig(@_);
+    $self->registerVariables(
+        ['reviewURI', 1, 1, 'http://beaufour.dk/jst-review/']
+    );
+            
+}
+
+sub Help {
+    my $self = shift;
+    my ($event) = @_;
+    return {
+        '' => 'This module will allow you to get a .c/.h/.idl concerning patch reviewed by the jst-review script.',
+        'review' => 'Call this command with an attachment number to get a review, for example \'review 108627\'.'
+    };
+}
+
+sub Told {
+    my $self = shift;
+    my ($event, $message) = @_;
+    my $uri;
+    my $attachment;
+    if ($message =~ m%^\s*review\s*(\d+)\b%) {
+        $attachment = $1;
+    }
+    elsif ($message =~ m%^\s*review\s+(https?\://\S+)\b%) {
+        $attachment = uri_escape($1);
+    }
+    else {
+        return $self->SUPER::Told(@_);
+    }
+    $uri = "$self->{'reviewURI'}?patch=$attachment";
+    $self->getURI($event, $uri);
+    return 0; # we've dealt with it, no need to do anything else.
+}
+
+sub GotURI {
+    my $self = shift;
+    my ($event, $uri, $contents) = @_;
+    my $message;
+    my $total = 0;
+    # XXX: This is hacky. But there's no actual message saying the file's okay...
+    if ($contents !~ /class\=\'problem\'/) {
+        $message = 'No problems found, nit-r=jst';
+    }
+    else {
+        $message = 'Your patch contains errors: ';
+        my @review_lines = split(/\n/, $contents);
+        foreach my $review_line (@review_lines) {
+            $self->debug($review_line);
+            if ($review_line =~ m%^\s*(.) \((\d+)\):%i) {
+                $message .= "$1($2), ";
+                $total += $2;
+            }
+        }
+        $message .= "Total number of errors: $total. Check the errors here: $uri.";
+    }
+    $self->say($event, $message);
+}
