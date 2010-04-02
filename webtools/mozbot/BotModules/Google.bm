@@ -26,11 +26,21 @@ sub Help {
     my $self = shift;
     my ($event) = @_;
     return {
-        '' =>    q{Queries Google for specified search terms. },
-        'google' =>  q{Searches google for the specified terms.}
-                   . q{Syntax: 'google <terms>'},
-		'fight' => q{Google fight two terms.}
-			     . q{Syntax: 'fight <term1> vs. <term2>'}
+        '' => q{Queries Google for specified search terms.},
+        'google' => q{Searches google for the specified terms.}
+                     . q{Syntax: 'google <terms>'},
+        'web' =>  q{Searches google for the specified terms.}
+                   . q{Syntax: 'web <terms>'},
+        'fight' => q{Google fight two terms.}
+                    . q{Syntax: 'fight <term1> vs. <term2>'},
+        'images' => q{Queries google images for the specified terms.}
+                     . q{ Syntax: 'images <terms>'},
+        'maps' => q{Queries google maps for the specified terms.}
+                   . q{ Syntax: 'maps <terms>'},
+        'news' => q{Queries google news for the specified terms.}
+                   . q{ Syntax: 'news <terms>'},
+        'video' => q{Queries google video for the specified terms.}
+                    . q{ Syntax: 'video <terms>'}
     };
 }
 
@@ -53,47 +63,56 @@ sub Told {
     my ($event, $message) = @_;
     # We take anything that occurs at the end of the line,
     # because Google will ignore punctuation anyway.
-    if ($message =~ /^\s*(\w+)\s+(.+)$/osi) {
+    if ($message =~ /^(\s*fight\s+)(.+)\s+vs\.\s+(.+)\s*$/osi) {
+        my $term1 = $2;
+        my $term2 = $3;
+        my $results1 = $self->getNumResults($term1);
+        my $results2 = $self->getNumResults($term2);
+
+        if ($results1 > $results2) {
+          $self->say($event, "$term1 beats $term2, $results1 to $results2!");
+        } elsif ($results2 > $results1) {
+          $self->say($event, "$term2 beats $term1, $results2 to $results1!");
+        } else {
+          $self->say($event, "It's a dead tie at $results1 results!");
+        }
+   } elsif ($message =~ /^\s*(\w+)\s+(.+)$/osi) {
         my $site = $1;
         my $terms = $2;
-        if ($site =~ /^google$/ios or grep {/^$site$/is} keys (%{$self->{'searchSites'}})){
-            $terms .= ' site:'.$self->{'searchSites'}{$site} unless $site =~ /^google$/ios;
-            my @searchResults = $self->doSearch($terms);
-            if (!@searchResults) {
-                $self->say($event, "Nothing found.");
-            }
-            # If we are in a channel, and not a /msg
-            elsif ($event->{'channel'}) {
-                splice(@searchResults, $self->{'maxInChannel'});
-            }
-            # We're in a /msg
-            else {
-                unshift(@searchResults, scalar(@searchResults) . " results found: ");
-            }
+        my @searchResults = {};
 
-            foreach my $result (@searchResults) {
-                $self->say($event, $event->{'from'} . ': ' . $result);
-            }
-        } else {
+        if ($site =~ /^video$/ios) {
+            @searchResults = $self->doSearch("VIDEO",$terms);           
+        } elsif ($site =~ /^news$/ios) {
+            @searchResults = $self->doSearch("NEWS", $terms);
+        } elsif ($site =~ /^images$/ios) {
+            @searchResults = $self->doSearch("IMAGES", $terms);
+        } elsif ($site =~ /^maps$/ios) {
+            @searchResults = $self->doSearch("LOCAL", $terms);
+        } elsif ($site =~ /^google|web$/ios or grep {/^$site$/is} keys (%{$self->{'searchSites'}})){
+            $terms .= ' site:'.$self->{'searchSites'}{$site} unless $site =~ /^google$/ios;
+            @searchResults = $self->doSearch("WEB",$terms);
+        } 
+        else {
             return $self->SUPER::Told(@_);
         }
-
-    } elsif ($message =~ /^(\s*fight\s+)(.+)\s+vs\.\s+(.+)\s*$/osi) {
-		my $term1 = $2;
-		my $term2 = $3;
-		my $results1 = $self->getNumResults($term1);
-		my $results2 = $self->getNumResults($term2);
-
-		if ($results1 > $results2) {
-			$self->say($event, "$term1 beats $term2, $results1 to $results2!");
-		} elsif ($results2 > $results1) {
-			$self->say($event, "$term2 beats $term1, $results2 to $results1!");
-		} else {
-			$self->say($event, "It's a dead tie at $results1 results!");
-		}
-	} else {
+        if (!@searchResults) {
+            $self->say($event, "Nothing found.");
+        }
+        # If we are in a channel, and not a /msg
+        elsif ($event->{'channel'}) {
+            splice(@searchResults, $self->{'maxInChannel'});
+        }
+        # We're in a /msg
+        else {
+           unshift(@searchResults, scalar(@searchResults) . " results found: ");
+        }
+        foreach my $result (@searchResults) {
+            $self->say($event, $event->{'from'} . ': ' . $result);
+        }
+    } else {
         return $self->SUPER::Told(@_);
-    }
+  }
     return 0; # we've dealt with it, no need to do anything else.
 }
 
@@ -101,38 +120,57 @@ sub getNumResults {
     my $self = shift;
     my ($terms) = @_;
 
-	REST::Google::Search->http_referer(REFERER);
-	my $res = REST::Google::Search->new(
-		q => $terms,
-		rsz => "large",
-	);
+  REST::Google::Search->http_referer(REFERER);
+  my $res = REST::Google::Search->new(
+    q => $terms,
+    rsz => "large",
+  );
 
-	if ($res->responseStatus != 200) {
-		return 0;
-	}
+  if ($res->responseStatus != 200) {
+    return 0;
+  }
 
-	my $data = $res->responseData;
-	return $data->cursor->estimatedResultCount;
+  my $data = $res->responseData;
+  return $data->cursor->estimatedResultCount;
 }
 # Performs the actual Google search and returns the
 # result as an array of lines to say.
 sub doSearch {
     my $self = shift;
-    my ($terms) = @_;
+    my ($type, $terms) = @_;
 
     my @searchLines = ();
-	REST::Google::Search->http_referer(REFERER);
-	my $res = REST::Google::Search->new(
-		q => $terms,
-		rsz => "large",
-	);
 
-	if ($res->responseStatus != 200) {
-		return @searchLines;
-	}
+    if ($type eq "IMAGES") {
+        use REST::Google::Search qw/IMAGES/;
+        REST::Google::Search->service(IMAGES);  
+    } elsif ($type eq "VIDEO") {    
+        use REST::Google::Search qw/VIDEO/;
+        REST::Google::Search->service(VIDEO);
+    } elsif ($type eq "NEWS") { 
+        use REST::Google::Search qw/NEWS/;
+        REST::Google::Search->service(NEWS);
+    } elsif ($type eq "LOCAL") {    
+        use REST::Google::Search qw/LOCAL/;
+        REST::Google::Search->service(LOCAL);
+    } else {
+        use REST::Google::Search qw/WEB/;
+        REST::Google::Search->service(WEB);
+    }
 
-	my $data = $res->responseData;
-	my @results = $data->results;
+
+  REST::Google::Search->http_referer(REFERER);
+  my $res = REST::Google::Search->new(
+    q => $terms,
+    rsz => "large",
+  );
+
+  if ($res->responseStatus != 200) {
+    return @searchLines;
+  }
+
+  my $data = $res->responseData;
+  my @results = $data->results;
 
     foreach my $result (@results) {
         my $title = $result->title;
