@@ -1,0 +1,39 @@
+#######################################
+#
+# Linkifies crash stats
+# Not elegantly written but very functional
+# -- Cww takes all the blame.
+#
+#######################################
+
+
+package BotModules::Crashstats;
+use vars qw(@ISA);
+@ISA = qw(BotModules);
+1;
+
+sub Told {
+    my $self = shift;
+    my ($event, $message) = @_;
+    my @array = (); my $output = '';
+    push @array, $1 while ($message =~ /(?<!http:\/\/crash-stats.mozilla.com\/report\/index\/)(?|(?:bp-)?([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{8}[01][0-9][0-3][0-9])|(?:bp-)?([a-f0-9]{8}-[a-f0-9]{4}-11dd-[a-f0-9]{4}-[a-f0-9]{12}))/osig);
+    if ($#array > -1) {
+        $output .= 'http://crash-stats.mozilla.com/report/index/'.$_.' ' foreach (@array);
+        $self->say($event, $event->{'from'}.': '.$output);
+    } else {
+        return $self->SUPER::Told(@_);
+    }
+    return 0; # we've dealt with it, no need to do anything else.
+}
+
+sub Heard {
+    my $self = shift;
+    my ($event, $message) = @_;
+    my @array = (); my $output = '';
+    push @array, $1 while ($message =~ /(?<!http:\/\/crash-stats.mozilla.com\/report\/index\/)(?|(?:bp-)?([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{8}[01][0-9][0-3][0-9])|(?:bp-)?([a-f0-9]{8}-[a-f0-9]{4}-11dd-[a-f0-9]{4}-[a-f0-9]{12}))/osig);
+    if ($#array > -1) {
+        $output .= 'http://crash-stats.mozilla.com/report/index/'.$_.' ' foreach (@array);
+        $self->say($event, $event->{'from'}.': '.$output);
+    }
+    return $self->SUPER::Heard(@_);
+}
