@@ -49,7 +49,6 @@ sub RegisterConfig {
         ['ignoreCommentsTo', 1, 1, ['']],
         ['ignoreCommentsFrom', 1, 1, ['|']],
         ['mailIgnore', 1, 1, []],
-        ['skipPrefixFor', 1, 1, []],
         # The keys for productReportChannels can be in the form of 'Product'
         # or 'Product::::Component'. The value is a comma-separated list of
         # channel names.
@@ -507,18 +506,8 @@ sub GotURI {
         }
     }
 
-    my $prefix;
-    if ( !$event->{'from'}
-         || grep {$_ eq $event->{'from'}} @{$self->{'skipPrefixFor'}} )
-    {
-        # they don't want to have the report prefixed with their name
-        $prefix = '';
-    } else {
-        $prefix = "$event->{'from'}: ";
-    }
-
     if ($preamble) {
-        $self->say($event, "$prefix$preamble");
+        $self->say($event, "$preamble");
     }
 
     my $bug_link = $skipURI ? "" : "$self->{'bugsURI'}show_bug.cgi?id=";
@@ -536,8 +525,7 @@ sub GotURI {
             # Maybe the list of columns to display could be a var, one day, after
             # installations from source before Dec 2001 are no longer supported,
             # or we can pass cookies
-            $self->say($event, $prefix .
-                       "Bug $bug_link$bug->{'id'} " .
+            $self->say($event, "Bug $bug_link$bug->{'id'} " .
                        substr($bug->{'severity'} || $bug->{'bug_severity'}, 0, 3) . ", " .
                        $bug->{'priority'} . ", " .
                        ($bug->{'target_milestone'} ? "$bug->{'target_milestone'}, " : "") .
@@ -547,13 +535,13 @@ sub GotURI {
                        substr($bug->{'summary'} || $bug->{'short_desc'} || $bug->{'short_short_desc'}, 0, 100));
         } elsif ($bug->{'error'} eq 'NotFound') {
             unless($skipZaroo) {
-                $self->say($event, $prefix . "Bug $bug->{'id'} was not found.");
+                $self->say($event, "Bug $bug->{'id'} was not found.");
             }
         } elsif ($bug->{'error'} eq 'NotPermitted') {
-            $self->say($event, $prefix . "Bug $bug_link$bug->{'id'} is not accessible");
+            $self->say($event, "Bug $bug_link$bug->{'id'} is not accessible");
         } else {
             unless($skipZaroo) {
-                $self->say($prefix . "Error accessing bug $bug->{'id'}: $bug->{'error'}");
+                $self->say("Error accessing bug $bug->{'id'}: $bug->{'error'}");
             }
         }
     }
