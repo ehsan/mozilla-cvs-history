@@ -42,8 +42,8 @@ sub Told {
         $self->ChangeKarma($event, $1, -1);
     } elsif ($message =~ /^\s*(?:karma\s+)?ranks?[?\s]*$/os) {
         $self->ReportKarmaRanks($event, $1);
-    } elsif ($message =~ /^\s*karma(?:\s+rank)?\s+(\S+)[?\s]*$/os or
-             $message =~ /^\s*(?:karma\s+)?rank\s+(\S+)[?\s]*$/os) {
+    } elsif ($message =~ /^\s*karma(?:\s+rank)?\s+([^\s\?]+)[?\s]*$/os or
+             $message =~ /^\s*(?:karma\s+)?rank\s+([^\s\?]+)[?\s]*$/os) {
         $self->ReportKarma($event, $1);
     } else {
         return $self->SUPER::Told(@_);
