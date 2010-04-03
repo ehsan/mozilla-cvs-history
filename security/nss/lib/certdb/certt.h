@@ -36,7 +36,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: certt.h,v 1.52 2009/05/29 18:10:38 alexei.volkov.bugs%sun.com Exp $
+ * $Id: certt.h,v 1.53 2010/04/03 18:27:29 nelson%bolyard.com Exp $
  */
 #ifndef _CERTT_H_
 #define _CERTT_H_
@@ -253,7 +253,7 @@ struct CERTCertificateStr {
     unsigned int rawKeyUsage;	/* value of the key usage extension */
     PRBool keyUsagePresent;	/* was the key usage extension present */
     PRUint32 nsCertType;	/* value of the ns cert type extension */
-				/* must be 32-bit for PR_AtomicSet */
+				/* must be 32-bit for PR_ATOMIC_SET */
 
     /* these values can be set by the application to bypass certain checks
      * or to keep the cert in memory for an entire session.

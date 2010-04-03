@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.98 $ $Date: 2009/10/01 17:14:02 $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.99 $ $Date: 2010/04/03 18:27:32 $";
 #endif /* DEBUG */
 
 /*
@@ -817,7 +817,7 @@ fill_CERTCertificateFields(NSSCertificate *c, CERTCertificate *cc, PRBool forced
 
 	/* Assert that it is safe to cast &cc->nsCertType to "PRInt32 *" */
 	PORT_Assert(sizeof(cc->nsCertType) == sizeof(PRInt32));
-	PR_AtomicSet((PRInt32 *)&cc->nsCertType, nsCertType);
+	PR_ATOMIC_SET((PRInt32 *)&cc->nsCertType, nsCertType);
     }
 }
 
