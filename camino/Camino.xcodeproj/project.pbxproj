@@ -1015,7 +1015,6 @@
 		B33032D510AE17A7002FA0A7 /* places.xpt in Copy Component XPTs */ = {isa = PBXBuildFile; fileRef = B33032AE10AE166F002FA0A7 /* places.xpt */; };
 		B33032F610AE17C9002FA0A7 /* nsLivemarkService.js in Copy Component Libraries */ = {isa = PBXBuildFile; fileRef = B33032AA10AE15EA002FA0A7 /* nsLivemarkService.js */; };
 		B33032F710AE17F1002FA0A7 /* nsLivemarkService.js in Copy Component Libraries */ = {isa = PBXBuildFile; fileRef = B33032AA10AE15EA002FA0A7 /* nsLivemarkService.js */; };
-		B330336110AE1C4C002FA0A7 /* libplaces.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = B330336010AE1C4C002FA0A7 /* libplaces.dylib */; };
 		B330336310AE1C60002FA0A7 /* libplaces.dylib in Copy Component Libraries */ = {isa = PBXBuildFile; fileRef = B330336010AE1C4C002FA0A7 /* libplaces.dylib */; };
 		B386FC3110CF5AF30094DAAB /* NSMenu+Gecko.mm in Sources */ = {isa = PBXBuildFile; fileRef = B386FC3010CF5AF30094DAAB /* NSMenu+Gecko.mm */; };
 		B386FC3210CF5AF30094DAAB /* NSMenu+Gecko.mm in Sources */ = {isa = PBXBuildFile; fileRef = B386FC3010CF5AF30094DAAB /* NSMenu+Gecko.mm */; };
@@ -3442,7 +3441,6 @@
 				DEFAA3450F241C1600BD51C1 /* Growl.framework in Frameworks */,
 				33820E800F8AA62C00D2164A /* Breakpad.framework in Frameworks */,
 				B33032C910AE16D7002FA0A7 /* libmorkreader_s.a in Frameworks */,
-				B330336110AE1C4C002FA0A7 /* libplaces.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
