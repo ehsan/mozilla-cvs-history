@@ -31,6 +31,7 @@ BEGIN {
     (/fatal error/  # . . . . . . . . . . . . . . . . . Link
       or /^g?make(?:\[\d\d?\])?: \*\*\*/ #. . . . . . . gmake
       or /^C /  # . . . . . . . . . . . . . . . . . . . cvs merge conflict
+      or /Automation Error\:/ # . . . . . . . . . . . . Release Automation
       or / error\([0-9]*\)\:/ # . . . . . . . . . . . . C
       or /\[checkout aborted\]/   # . . . . . . . . . . cvs
       or /\: cannot find module/  # . . . . . . . . . . cvs
