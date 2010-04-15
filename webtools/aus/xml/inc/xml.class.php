@@ -105,7 +105,18 @@ startUpdate;
         $hashFunction = htmlentities($patch->hashFunction);
         $hashValue = htmlentities($patch->hashValue);
         $size = htmlentities($patch->size);
-        $force = (!empty($_GET['force']) && $_GET['force']==1) ?  htmlentities('?force=1') : null;
+
+        $force = null;
+        if (!empty($_GET['force']) && $_GET['force']==1) {
+            // Determine if the outgoing URL already has GET parameters.
+            // If it does, we use &force=1
+            // If it doesn't, we use ?force=1
+            if ( strpos($url, '?') !== false ) {
+                $force = htmlentities('&force=1');
+            } else {
+                $force = htmlentities('?force=1');
+            }
+        }
 
         $this->xmlPatchLines .= <<<patchLine
 

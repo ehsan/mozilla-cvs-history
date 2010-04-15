@@ -12,15 +12,17 @@
 !define distVersion {distVersion}
 !define force {false}
 
-!1 Patches 
+!1 Patches
  1 only a complete
  2 both complete and partial
  3 a forced request must return a patch URL with force in it
+ 4 a forced request pulling a bouncer URL should return a patch URL with force in it
 |aus.Verify|${host}|${updateVersion}|${product}|${version}|${platform}|${locale}|${osVersion}|
 |build|channel|complete|partial|force|hasUpdate?|hasComplete?|hasPartial?|isValidXml?|hasForce?|
 |1000000001|channel|complete001|partial001|false|true|true|false|true|false|
 |1000000002|channel|complete002|partial002|false|true|true|true|true|false|
 |1000000002|channel|complete002|partial002|true|true|true|true|true|true|
+|1000000002|bouncerchannel|complete002|partial002|true|true|true|true|true|true|
 
 !1 Invalid Input
  1 no update is served for an invalid build id
