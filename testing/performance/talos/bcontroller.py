@@ -171,7 +171,7 @@ def main(argv=None):
 
    command = ""
    name = "firefox" #default
-   child_process = "mozilla-runtime" #default
+   child_process = "plugin-container" #default
    timeout = ""
    log = ""
    mod = ""

@@ -136,7 +136,7 @@ class CounterManager(threading.Thread):
   
   pollInterval = .25
 
-  def __init__(self, ffprocess, process, counters=None, childProcess="mozilla-runtime"):
+  def __init__(self, ffprocess, process, counters=None, childProcess="plugin-container"):
     """Args:
          counters: A list of counters to monitor. Any counters whose name does
          not match a key in 'counterDict' will be ignored.
