@@ -119,7 +119,7 @@ class BrowserController:
     self.child_process = child_process
     self.browser_wait = timeout
     self.log = log
-    self.timeout = 600 #no output from the browser in 10 minutes = failure
+    self.timeout = 1200 #no output from the browser in 20 minutes = failure
     self.host = host
     self.port = port
     self.root = root
