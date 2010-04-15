@@ -105,10 +105,11 @@ startUpdate;
         $hashFunction = htmlentities($patch->hashFunction);
         $hashValue = htmlentities($patch->hashValue);
         $size = htmlentities($patch->size);
+        $force = (!empty($_GET['force']) && $_GET['force']==1) ?  htmlentities('?force=1') : null;
 
         $this->xmlPatchLines .= <<<patchLine
 
-        <patch type="{$type}" URL="{$url}" hashFunction="{$hashFunction}" hashValue="{$hashValue}" size="{$size}"/>
+        <patch type="{$type}" URL="{$url}{$force}" hashFunction="{$hashFunction}" hashValue="{$hashValue}" size="{$size}"/>
 patchLine;
     }
 

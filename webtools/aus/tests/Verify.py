@@ -30,6 +30,7 @@ class Verify(ColumnFixture):
                "osVersion": "String",
                "dist": "String",
                "distVersion": "String",
+               "force": "String",
                "licenseUrl": "String",
                "lastURI": "String",
                "newURI": "String",
@@ -39,7 +40,8 @@ class Verify(ColumnFixture):
                "hasLicenseUrl": "Boolean",
                "isValidXml": "Boolean",
                "isMinorUpdate": "Boolean",
-               "isMajorUpdate": "Boolean"}
+               "isMajorUpdate": "Boolean",
+               "hasForce": "Boolean"}
 
     def __init__(self):
         super(Verify, self).__init__()
@@ -54,6 +56,7 @@ class Verify(ColumnFixture):
         self.osVersion = ""
         self.dist = ""
         self.distVersion = ""
+        self.force = ""
 
         # For storign the last retrieved AUS XML and its URI.
         self.lastURI = ""
@@ -82,6 +85,10 @@ class Verify(ColumnFixture):
     # Check to see if the XML has a licenseURL.
     def hasLicenseUrl(self):
         return (self.licenseUrl in self.getXml())
+
+    # Check to see if the XML has a licenseURL.
+    def hasForce (self):
+        return ('force=1' in self.getXml())
 
     # Check if the AUS XML document is well-formed.
     def isValidXml(self):
@@ -134,17 +141,21 @@ class Verify(ColumnFixture):
         if (not self.osVersion): self.osVersion = self.args[6]
 
         if (self.osVersion != "NULL"):
-            return '/'.join((self.host, 
+            url = '/'.join((self.host, 
                 pathname2url('/'.join((self.updateVersion, self.product, self.version,
                             self.build, self.platform, self.locale,
                             self.channel, self.osVersion, self.dist, 
                             self.distVersion, "update.xml")))
                 ))
         else:
-             return '/'.join((self.host,
-                pathname2url('/'.join((self.updateVersion, self.product, self.version, 
-                            self.build, self.platform, self.locale, 
+            url = '/'.join((self.host, 
+                pathname2url('/'.join((self.updateVersion, self.product, self.version,
+                            self.build, self.platform, self.locale,
                             self.channel, "update.xml")))
                 ))
+        if (self.force == 'true'):
+            url += '?force=1'
+
+        return url
            
 
