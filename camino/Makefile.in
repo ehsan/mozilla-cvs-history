@@ -75,7 +75,7 @@ APP_UPDATE_URL = https://caminobrowser.org/update-check
 APP_UPDATES_ENABLED = true
 BREAKPAD_UPLOAD_URL = https://crash-reports.mozilla.com/submit
 else
-APP_UPDATES_ENABLED = false
+APP_UPDATES_ENABLED ?= false
 endif
 
 # For Launch Services compatibility, CFBundleVersion can be at most three

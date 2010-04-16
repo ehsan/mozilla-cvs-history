@@ -1066,6 +1066,8 @@
 		DE1BDD250AD4E13000F0C7BD /* tab_scroll_button_right.tiff in Resources */ = {isa = PBXBuildFile; fileRef = DE1BDD230AD4E13000F0C7BD /* tab_scroll_button_right.tiff */; };
 		DE1BDD260AD4E13000F0C7BD /* tab_scroll_button_left.tiff in Resources */ = {isa = PBXBuildFile; fileRef = DE1BDD220AD4E13000F0C7BD /* tab_scroll_button_left.tiff */; };
 		DE1BDD270AD4E13000F0C7BD /* tab_scroll_button_right.tiff in Resources */ = {isa = PBXBuildFile; fileRef = DE1BDD230AD4E13000F0C7BD /* tab_scroll_button_right.tiff */; };
+		DE1E1E6111752B6300501E5C /* camino_dsa_pub.pem in Resources */ = {isa = PBXBuildFile; fileRef = DE1E1E6011752B6300501E5C /* camino_dsa_pub.pem */; };
+		DE1E1E6211752B6300501E5C /* camino_dsa_pub.pem in Resources */ = {isa = PBXBuildFile; fileRef = DE1E1E6011752B6300501E5C /* camino_dsa_pub.pem */; };
 		DE1EBDBE0D066F5100BE9ECC /* mathfontUnicode.properties in Copy Gecko Fonts */ = {isa = PBXBuildFile; fileRef = DE1EBDBA0D066F5100BE9ECC /* mathfontUnicode.properties */; };
 		DE1EBDBF0D066F5100BE9ECC /* mathfontSTIXSize1.properties in Copy Gecko Fonts */ = {isa = PBXBuildFile; fileRef = DE1EBDBB0D066F5100BE9ECC /* mathfontSTIXSize1.properties */; };
 		DE1EBDC00D066F5100BE9ECC /* mathfontSTIXNonUnicode.properties in Copy Gecko Fonts */ = {isa = PBXBuildFile; fileRef = DE1EBDBC0D066F5100BE9ECC /* mathfontSTIXNonUnicode.properties */; };
@@ -2944,6 +2946,7 @@
 		DE19C72E1121F350007A57E0 /* libplaces.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libplaces.a; path = ../staticlib/libplaces.a; sourceTree = SOURCE_ROOT; };
 		DE1BDD220AD4E13000F0C7BD /* tab_scroll_button_left.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = tab_scroll_button_left.tiff; path = resources/images/chrome/tab_scroll_button_left.tiff; sourceTree = SOURCE_ROOT; };
 		DE1BDD230AD4E13000F0C7BD /* tab_scroll_button_right.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = tab_scroll_button_right.tiff; path = resources/images/chrome/tab_scroll_button_right.tiff; sourceTree = SOURCE_ROOT; };
+		DE1E1E6011752B6300501E5C /* camino_dsa_pub.pem */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = camino_dsa_pub.pem; path = resources/application/camino_dsa_pub.pem; sourceTree = SOURCE_ROOT; };
 		DE1EBDBA0D066F5100BE9ECC /* mathfontUnicode.properties */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; name = mathfontUnicode.properties; path = ../dist/bin/res/fonts/mathfontUnicode.properties; sourceTree = SOURCE_ROOT; };
 		DE1EBDBB0D066F5100BE9ECC /* mathfontSTIXSize1.properties */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; name = mathfontSTIXSize1.properties; path = ../dist/bin/res/fonts/mathfontSTIXSize1.properties; sourceTree = SOURCE_ROOT; };
 		DE1EBDBC0D066F5100BE9ECC /* mathfontSTIXNonUnicode.properties */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; name = mathfontSTIXNonUnicode.properties; path = ../dist/bin/res/fonts/mathfontSTIXNonUnicode.properties; sourceTree = SOURCE_ROOT; };
@@ -3911,6 +3914,7 @@
 				DEE8101D0EFB7D2E006ACC7D /* aquaSelect.css */,
 				3D94197F0F559B2F00227277 /* blockedSite.xhtml */,
 				DE59E2F40FA54E6F001F240C /* Crash Reporter InfoPlist.strings Override */,
+				DE1E1E6011752B6300501E5C /* camino_dsa_pub.pem */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -5912,6 +5916,7 @@
 				DE4025950FF4345D00568817 /* ServicesMenu.strings in Resources */,
 				3D9A2B091001A45700CC9154 /* SafeBrowsingBar.nib in Resources */,
 				00450523100A8E140096B649 /* bookmark_group_badge.tiff in Resources */,
+				DE1E1E6211752B6300501E5C /* camino_dsa_pub.pem in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6130,6 +6135,7 @@
 				DE4025960FF4345D00568817 /* ServicesMenu.strings in Resources */,
 				3D9A2B0A1001A45700CC9154 /* SafeBrowsingBar.nib in Resources */,
 				00450524100A8E140096B649 /* bookmark_group_badge.tiff in Resources */,
+				DE1E1E6111752B6300501E5C /* camino_dsa_pub.pem in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
