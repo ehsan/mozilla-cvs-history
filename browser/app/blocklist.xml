@@ -85,5 +85,11 @@
       </targetApplication>
     </versionRange>
   </pluginItem>
+  <pluginItem>
+    <match name="name" exp="[0-6]\.0\.[01]\d{2}\.\d+"/>
+    <match name="filename" exp="npdeploytk.dll"/>
+    <versionRange severity="3">
+    </versionRange>
+  </pluginItem>
 </pluginItems>
 </blocklist>
