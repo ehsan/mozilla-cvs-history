@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslgathr.c,v 1.11 2010/03/06 21:23:34 nelson%bolyard.com Exp $ */
+/* $Id: sslgathr.c,v 1.12 2010/04/25 23:37:38 nelson%bolyard.com Exp $ */
 #include "cert.h"
 #include "ssl.h"
 #include "sslimpl.h"
@@ -272,7 +272,7 @@ ssl2_GatherData(sslSocket *ss, sslGather *gs, int flags)
 		goto spec_locked_done;
 	    }
 
-	    /* Decrypt the portion of data that we just recieved.
+	    /* Decrypt the portion of data that we just received.
 	    ** Decrypt it in place.
 	    */
 	    rv = (*ss->sec.dec)(ss->sec.readcx, pBuf, &nout, gs->offset,

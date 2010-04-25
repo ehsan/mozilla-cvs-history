@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nss.h,v 1.79 2010/03/26 22:31:18 christophe.ravel.bugs%sun.com Exp $ */
+/* $Id: nss.h,v 1.80 2010/04/25 23:37:32 nelson%bolyard.com Exp $ */
 
 #ifndef __nss_h_
 #define __nss_h_
@@ -245,7 +245,7 @@ extern SECStatus NSS_InitReadWrite(const char *configdir);
  *                      use both NSS and the Java SunPKCS11 provider.
  *
  * Also NOTE: This is not the recommended method for initializing NSS. 
- * The prefered method is NSS_init().
+ * The preferred method is NSS_init().
  */
 #define NSS_INIT_READONLY	0x1
 #define NSS_INIT_NOCERTDB	0x2
