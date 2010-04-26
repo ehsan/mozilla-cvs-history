@@ -8,3 +8,4 @@ with the following changes:
 - Commented out used of [arch=<foo>] notation in ConfigCommon.xcconfig to allow building with our toolchain
 - Commented out ARCHS in ConfigCommonRelease.xcconfig and replaced it with a version that doesn't include x86_64
 - Changed GCC_GENERATE_DEBUGGING_SYMBOLS to YES (and set GCC_ENABLE_SYMBOL_SEPARATION to NO) in ConfigCommonRelease.xcconfig so that we get a dSYM bundle.
+- Added null-checks to downloadFilename in SUAppcast.m to fix https://bugs.launchpad.net/sparkle/+bug/456514 and bug 560985.
