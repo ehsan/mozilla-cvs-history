@@ -119,8 +119,8 @@ asm(".no_dead_strip .objc_class_name_CHCookieStorage");
 
     PRBool secure = PR_FALSE;
     geckoCookie->GetIsSecure(&secure);
-    [properties setObject:(secure ? @"TRUE" : @"FALSE")
-                   forKey:NSHTTPCookieSecure];
+    if (secure)
+      [properties setObject:@"TRUE" forKey:NSHTTPCookieSecure];
 
     PRUint64 expiry = 0;
     geckoCookie->GetExpires(&expiry);
