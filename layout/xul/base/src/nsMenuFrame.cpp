@@ -1214,8 +1214,6 @@ nsMenuFrame::InsertFrames(nsIAtom*        aListName,
       PresContext()->PresShell()->
         FrameNeedsReflow(this, nsIPresShell::eTreeChange,
                          NS_FRAME_HAS_DIRTY_CHILDREN);
-
-      return NS_OK;
     }
   }
 
@@ -1247,8 +1245,6 @@ nsMenuFrame::AppendFrames(nsIAtom*        aListName,
       PresContext()->PresShell()->
         FrameNeedsReflow(this, nsIPresShell::eTreeChange,
                          NS_FRAME_HAS_DIRTY_CHILDREN);
-
-      return NS_OK;
     }
   }
 
