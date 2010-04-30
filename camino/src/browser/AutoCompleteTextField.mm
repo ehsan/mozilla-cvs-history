@@ -533,6 +533,11 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
   }
 }
 
+- (void)cancelSearch
+{
+  [mDataSource cancelSearch];
+}
+
 - (void)clearResults
 {
   // clear out search data

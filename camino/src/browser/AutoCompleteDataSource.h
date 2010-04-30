@@ -75,6 +75,10 @@
 // complete, searchResultsAvailable will be called on the delegate.
 - (void)performSearchWithString:(NSString *)searchString delegate:(id)delegate;
 
+// Stops the search, meaning that no further results for the current search
+// string will be sent to the delegate.
+- (void)cancelSearch;
+
 // Returns the number of rows matching the search string, including headers.
 - (int)rowCount;
 

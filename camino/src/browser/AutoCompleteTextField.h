@@ -78,6 +78,7 @@ extern NSString* const kWillShowFeedMenu;
 - (void)setURI:(NSString*)aURI;
 
 - (BOOL)userHasTyped;
+- (void)cancelSearch;
 - (void)clearResults;
 - (void)revertText;
 

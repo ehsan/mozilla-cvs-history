@@ -2618,6 +2618,8 @@ public:
 
     return;
   }
+  
+  [inURLField cancelSearch];
 
   // look for bookmarks shortcut match
   NSArray *resolvedURLs = [[BookmarkManager sharedBookmarkManager] resolveBookmarksShortcut:theURL];
