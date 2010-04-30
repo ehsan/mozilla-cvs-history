@@ -36,7 +36,7 @@
 /*
  * certi.h - private data structures for the certificate library
  *
- * $Id: certi.h,v 1.31 2009/07/31 18:35:30 christophe.ravel.bugs%sun.com Exp $
+ * $Id: certi.h,v 1.32 2010/04/30 07:47:47 nelson%bolyard.com Exp $
  */
 #ifndef _CERTI_H_
 #define _CERTI_H_
@@ -390,6 +390,14 @@ SECStatus cert_FindCRLByGeneralName(NamedCRLCache* ncc,
                                     NamedCRLCacheEntry** retEntry);
 
 SECStatus cert_ReleaseNamedCRLCache(NamedCRLCache* ncc);
+
+/* This is private for now.  Maybe shoule be public. */
+CERTGeneralName *
+cert_GetSubjectAltNameList(CERTCertificate *cert, PRArenaPool *arena);
+
+/* Count DNS names and IP addresses in a list of GeneralNames */
+PRUint32
+cert_CountDNSPatterns(CERTGeneralName *firstName);
 
 #endif /* _CERTI_H_ */
 
