@@ -216,6 +216,9 @@ const unsigned int kNumberOfItemsPerChunk = 100;
 
 - (BOOL)searchStringMatchesItem:(id)item
 {
+  // Never autocomplete bookmark shortcuts for searches
+  if ([[item url] rangeOfString:@"%s"].location != NSNotFound)
+    return NO;
   return [mURLRegexTest evaluateWithObject:[item url]] || [mTitleRegexTest evaluateWithObject:[item title]];
 }
 
