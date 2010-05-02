@@ -40,7 +40,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: mpi.c,v 1.46 2010/05/02 22:31:05 nelson%bolyard.com Exp $ */
+/* $Id: mpi.c,v 1.47 2010/05/02 22:36:41 nelson%bolyard.com Exp $ */
 
 #include "mpi-priv.h"
 #if defined(OSF1)
@@ -2939,6 +2939,8 @@ void     s_mp_exch(mp_int *a, mp_int *b)
    Shift mp leftward by p digits, growing if needed, and zero-filling
    the in-shifted digits at the right end.  This is a convenient
    alternative to multiplication by powers of the radix
+   The value of USED(mp) must already have been set to the value for
+   the shifted result.
  */   
 
 mp_err   s_mp_lshd(mp_int *mp, mp_size p)
