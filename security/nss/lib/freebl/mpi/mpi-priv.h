@@ -42,7 +42,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: mpi-priv.h,v 1.21 2009/03/19 02:26:48 julien.pierre.boogz%sun.com Exp $ */
+/* $Id: mpi-priv.h,v 1.22 2010/05/02 22:31:05 nelson%bolyard.com Exp $ */
 #ifndef _MPI_PRIV_H_
 #define _MPI_PRIV_H_ 1
 
@@ -294,7 +294,6 @@ mp_err   MPI_ASM_DECL s_mpv_div_2dx1d(mp_digit Nhi, mp_digit Nlo,
 typedef struct {
   mp_int       N;	/* modulus N */
   mp_digit     n0prime; /* n0' = - (n0 ** -1) mod MP_RADIX */
-  mp_size      b;	/* R == 2 ** b,  also b = # significant bits in N */
 } mp_mont_modulus;
 
 mp_err s_mp_mul_mont(const mp_int *a, const mp_int *b, mp_int *c, 
