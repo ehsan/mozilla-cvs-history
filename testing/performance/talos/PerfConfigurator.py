@@ -135,7 +135,14 @@ class PerfConfigurator:
         else:
           buildIdTime = time.strptime(self.buildid, "%Y%m%d%H")
         return time.strftime("%a, %d %b %Y %H:%M:%S GMT", buildIdTime)
-    
+
+    def convertUrlToRemote(self, line):
+        """"
+          This can be filled in (preferred in a subclass) to modify 
+          a url line to support a remote webserver
+        """
+        return line
+
     def writeConfigFile(self):
         configFile = open(path.join(self.configPath, self.sampleConfig))
         destination = open(self.outputName, "w")
@@ -180,8 +187,7 @@ class PerfConfigurator:
             if 'testbranch' in line:
                 newline = 'branch: ' + self.branch
             if self._remote == True and ('init_url' in line):
-                parts = line.split(' ')
-                newline = "init_url: http://" + self.webServer + "/" + parts[1].strip()
+                newline = self.convertUrlToRemote(line)
 
             #only change the results_server if the user has provided one
             if self.resultsServer and ('results_server' in line):
@@ -197,20 +203,7 @@ class PerfConfigurator:
                 # otherwise, all tests are considered to be active
  
                 if ('url' in line) and ('url_mod' not in line) and (self._remote == True):
-                    parts = line.split(' ')
-                    newline = ''
-                    for part in parts:
-                        if ('.html' in part):
-                            newline += 'http://' + self.webServer + '/' + part
-                        elif ('.manifest' in part):
-                            newline += 'http://' + self.webServer + '/' + part
-                        elif ('.xul' in part):
-                            newline += 'http://' + self.webServer + '/' + part
-                        else:
-                            newline += part
-                        if (part <> parts[-1]):
-                            newline += ' '
-                    line = newline
+                    line = self.convertUrlToRemote(line)
 
                 if self.activeTests:
                     if line.startswith('- name'): 
