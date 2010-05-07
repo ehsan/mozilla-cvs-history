@@ -141,7 +141,7 @@ class LinuxProcess(FFProcess):
         """
         try:
             if self.ProcessesWithNameExist(str(pid)):
-                os.kill(pid, signal.SIGSEGV)
+                os.kill(pid, signal.SIGABRT)
                 time.sleep(timeout)
                 if self.ProcessesWithNameExist(str(pid)):
                     os.kill(pid, signal.SIGTERM)
