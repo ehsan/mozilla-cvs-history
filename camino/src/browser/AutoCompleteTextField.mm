@@ -430,6 +430,7 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
 {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   [[PreferenceManager sharedInstanceDontCreate] removeObserver:self forPref:kGeckoPrefInlineLocationBarAutocomplete];
+  [self cancelSearch];
   [self cleanup];
   [super dealloc];
 }
