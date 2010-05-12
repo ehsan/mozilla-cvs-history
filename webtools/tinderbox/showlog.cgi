@@ -86,8 +86,6 @@ tb_load_treedata($tree);
 
 my $time_str = print_time($buildtime);
 
-$|=1;
-
 my @stat_logfile = stat("$::tree_dir/$tree/$logfile");
 my @stat_notes = stat("$::tree_dir/$tree/notes.txt");
 if ($stat_logfile[9] > $stat_notes[9]) {
