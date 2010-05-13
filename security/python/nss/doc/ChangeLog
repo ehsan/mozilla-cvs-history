@@ -1,3 +1,104 @@
+2010-05-12  John Dennis  <jdennis@redhat.com> 0.9
+
+  * Unicode objects now accepted as well as str objects for
+    interfaces expecting a string.
+
+  * Sockets were enhanced thusly:
+      - Threads will now yield during blocking IO.
+      - Socket.makefile() reimplemented
+	  file object methods that had been missing (readlines(), sendall(),
+	  and iteration) were implemented, makefile now just returns the same
+	  Socket object but increments an "open" ref count. Thus a Socket
+	  object behaves like a file object and must be closed once for each
+	  makefile() call before it's actually closed.
+      - Sockets now support the iter protocol
+      - Add Socket.readlines(), Socket.sendall()
+
+  * The following classes were added:
+      AuthKeyID
+      CRLDistributionPoint
+      CRLDistributionPts
+      CertificateExtension
+      GeneralName
+      SignedCRL
+      X500AVA
+      X500Name
+      X500RDN
+
+  * The following module functions were added:
+      nss.nss.cert_crl_reason_from_name()
+      nss.nss.cert_crl_reason_name()
+      nss.nss.cert_general_name_type_from_name()
+      nss.nss.cert_general_name_type_name()
+      nss.nss.decode_der_crl()
+      nss.nss.der_universal_secitem_fmt_lines()
+      nss.nss.import_crl()
+      nss.nss.make_line_pairs()
+      nss.nss.oid_dotted_decimal()
+      nss.nss.oid_str()
+      nss.nss.oid_tag()
+      nss.nss.oid_tag_name()
+      nss.nss.read_der_from_file()
+      nss.nss.x509_alt_name()
+      nss.nss.x509_ext_key_usage()
+      nss.nss.x509_key_usage()
+
+  * The following class methods and properties were added:
+    Note: it's a method if the name is suffixed with (), a propety otherwise
+      Socket.next()
+      Socket.readlines()
+      Socket.sendall()
+      SSLSocket.next()
+      SSLSocket.readlines()
+      SSLSocket.sendall()
+      AuthKeyID.key_id
+      AuthKeyID.serial_number
+      AuthKeyID.get_general_names()
+      CRLDistributionPoint.issuer
+      CRLDistributionPoint.get_general_names()
+      CRLDistributionPoint.get_reasons()
+      CertDB.find_crl_by_cert()
+      CertDB.find_crl_by_name()
+      Certificate.extensions
+      CertificateExtension.critical
+      CertificateExtension.name
+      CertificateExtension.oid
+      CertificateExtension.oid_tag
+      CertificateExtension.value
+      GeneralName.type_enum
+      GeneralName.type_name
+      GeneralName.type_string
+      SecItem.der_to_hex()
+      SecItem.get_oid_sequence()
+      SecItem.to_hex()
+      SignedCRL.delete_permanently()
+      X500AVA.oid
+      X500AVA.oid_tag
+      X500AVA.value
+      X500AVA.value_str
+      X500Name.cert_uid
+      X500Name.common_name
+      X500Name.country_name
+      X500Name.dc_name
+      X500Name.email_address
+      X500Name.locality_name
+      X500Name.org_name
+      X500Name.org_unit_name
+      X500Name.state_name
+      X500Name.add_rdn()
+      X500Name.has_key()
+      X500RDN.has_key()
+
+  * The following module functions were removed:
+    Note: use nss.nss.oid_tag() instead
+      nss.nss.sec_oid_tag_from_name()
+      nss.nss.sec_oid_tag_name()
+      nss.nss.sec_oid_tag_str()
+
+  * The following files were added:
+      doc/examples/cert_dump.py
+      test/test_cert_components.py
+
 2009-09-21  John Dennis  <jdennis@redhat.com> 0.8
   * The following methods, properties  and functions were added:
     SecItem.type SecItem.len, SecItem.data

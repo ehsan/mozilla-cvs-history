@@ -1,3 +1,6 @@
+// FIXME: change Py_DECREF(x); x = NULL; to Py_CLEAR(x)
+// FIXME: use Py_CLEAR(x) instead of Py_DECREF(x) 
+
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -35,11 +38,180 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#if 0
+
+//Template for new classes
+
+/* ========================================================================== */
+/* ============================= NewType Class ============================== */
+/* ========================================================================== */
+
+/* ============================ Attribute Access ============================ */
+
+static PyObject *
+NewType_get_classproperty(NewType *self, void *closure)
+{
+    return NULL;
+}
+
+static
+PyGetSetDef NewType_getseters[] = {
+    {"classproperty", (getter)NewType_get_classproperty,    (setter)NULL,
+     "xxx", NULL},
+    {NULL}  /* Sentinel */
+};
+
+static PyMemberDef NewType_members[] = {
+    {NULL}  /* Sentinel */
+};
+
+/* ============================== Class Methods ============================= */
+
+PyDoc_STRVAR(cert_func_name_doc,
+"func_name() -> \n\
+\n\
+:Parameters:\n\
+    arg1 : object\n\
+        xxx\n\
+\n\
+xxx\n\
+");
+
+static PyObject *
+cert_func_name(PyObject *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"arg1", NULL};
+    PyObject *arg;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|i:func_name", kwlist,
+                                     &arg))
+        return NULL;
+
+    return NULL;
+}
+
+static PyMethodDef NewType_methods[] = {
+    {"func_name", (PyCFunction)cert_func_name, METH_VARARGS|METH_KEYWORDS, cert_func_name_doc},
+    {NULL, NULL}  /* Sentinel */
+};
+
+/* =========================== Class Construction =========================== */
+
+static PyObject *
+NewType_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
+    NewType *self;
+
+    TraceObjNewEnter(type);
+
+    if ((self = (NewType *)type->tp_alloc(type, 0)) == NULL) return NULL;
+
+    TraceObjNewLeave(self);
+    return (PyObject *)self;
+}
+
+static void
+NewType_dealloc(NewType* self)
+{
+    TraceMethodEnter(self);
+
+    self->ob_type->tp_free((PyObject*)self);
+}
+
+PyDoc_STRVAR(NewType_doc,
+"An object representing xxx");
+
+static int
+NewType_init(NewType *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"arg", NULL};
+    PyObject *arg;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|i:NewType", kwlist,
+                                     &arg))
+        return -1;
+
+    return 0;
+}
+
+static PyObject *
+NewType_repr(NewType *self)
+{
+    return PyString_FromFormat("<%s object at %p>",
+                               Py_TYPE(self)->tp_name, self);
+}
+
+static PyTypeObject NewTypeType = {
+    PyObject_HEAD_INIT(NULL)
+    0,						/* ob_size */
+    "nss.nss.NewType",				/* tp_name */
+    sizeof(NewType),				/* tp_basicsize */
+    0,						/* tp_itemsize */
+    (destructor)NewType_dealloc,		/* tp_dealloc */
+    0,						/* tp_print */
+    0,						/* tp_getattr */
+    0,						/* tp_setattr */
+    0,						/* tp_compare */
+    (reprfunc)NewType_repr,			/* tp_repr */
+    0,						/* tp_as_number */
+    0,						/* tp_as_sequence */
+    0,						/* tp_as_mapping */
+    0,						/* tp_hash */
+    0,						/* tp_call */
+    0,						/* tp_str */
+    0,						/* tp_getattro */
+    0,						/* tp_setattro */
+    0,						/* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,	/* tp_flags */
+    NewType_doc,				/* tp_doc */
+    0,						/* tp_traverse */
+    0,						/* tp_clear */
+    0,						/* tp_richcompare */
+    0,						/* tp_weaklistoffset */
+    0,						/* tp_iter */
+    0,						/* tp_iternext */
+    NewType_methods,				/* tp_methods */
+    NewType_members,				/* tp_members */
+    NewType_getseters,				/* tp_getset */
+    0,						/* tp_base */
+    0,						/* tp_dict */
+    0,						/* tp_descr_get */
+    0,						/* tp_descr_set */
+    0,						/* tp_dictoffset */
+    (initproc)NewType_init,			/* tp_init */
+    0,						/* tp_alloc */
+    NewType_new,				/* tp_new */
+};
+
+PyObject *
+NewType_new_from_NSSType(NSSType *id)
+{
+    NewType *self = NULL;
+
+    TraceObjNewEnter(NULL);
+
+    if ((self = (NewType *) NewTypeType.tp_new(&NewTypeType, NULL, NULL)) == NULL)
+        return NULL;
+
+    TraceObjNewLeave(self);
+    return (PyObject *) self;
+}
+
+#endif
+
 // FIXME: should we be calling these?
 // SECKEY_DestroyEncryptedPrivateKeyInfo
 // SECKEY_DestroyPrivateKey	   SECKEY_DestroyPrivateKeyInfo
 // SECKEY_DestroyPrivateKeyList	   SECKEY_DestroyPublicKey
 // SECKEY_DestroyPublicKeyList	   SECKEY_DestroySubjectPublicKeyInfo
+
+#define CERT_DecodeDERCertificate __CERT_DecodeDERCertificate
+
+#include <stdbool.h>
 
 #define PY_SSIZE_T_CLEAN
 #include "Python.h"
@@ -54,9 +226,29 @@
 #include "sechash.h"
 #include "certdb.h"
 #include "hasht.h"
+#include "nssb64.h"
+#include "secport.h"
+#include "secerr.h"
 
+#define MAX_AVAS 10
+#define MAX_RDNS 10
 #define OCTETS_PER_LINE_DEFAULT 16
 #define HEX_SEPARATOR_DEFAULT ":"
+
+//FIXME, should be in py_nss.h
+#define PyX500AVA_Check(op)  PyObject_TypeCheck(op, &X500AVAType)
+#define PyX500RDN_Check(op)  PyObject_TypeCheck(op, &X500RDNType)
+#define PyX500Name_Check(op) PyObject_TypeCheck(op, &X500NameType)
+
+
+#define MAKE_PAIR_AND_APPEND(level, obj, lines, fail)           \
+{                                                               \
+    PyObject *pair = NULL;                                      \
+                                                                \
+    if ((pair = line_pair(level, obj)) == NULL) goto fail;      \
+    if (PyList_Append(lines, pair) != 0) goto fail;             \
+}
+
 
 #define FMT_OBJ_AND_APPEND(level, label, obj, lines, fail)              \
 {                                                                       \
@@ -78,22 +270,289 @@
 }
 
 
+/* Copied from mozilla/security/nss/lib/certdb/alg1485.c */
+typedef struct DnAvaPropsStr {
+    const char * name;
+    unsigned int maxLen; /* max bytes in UTF8 encoded string value */
+    SECOidTag    oid_tag;
+    int		 value_type;
+} DnAvaProps;
+
+static const DnAvaProps dn_ava_props[] = {
+/* IANA registered type names
+ * (See: http://www.iana.org/assignments/ldap-parameters) 
+ */
+/* RFC 3280, 4630 MUST SUPPORT */
+    { "CN",             64, SEC_OID_AVA_COMMON_NAME,    SEC_ASN1_UTF8_STRING},
+    { "ST",            128, SEC_OID_AVA_STATE_OR_PROVINCE,
+							SEC_ASN1_UTF8_STRING},
+    { "O",              64, SEC_OID_AVA_ORGANIZATION_NAME,
+							SEC_ASN1_UTF8_STRING},
+    { "OU",             64, SEC_OID_AVA_ORGANIZATIONAL_UNIT_NAME,
+                                                        SEC_ASN1_UTF8_STRING},
+    { "dnQualifier", 32767, SEC_OID_AVA_DN_QUALIFIER, SEC_ASN1_PRINTABLE_STRING},
+    { "C",               2, SEC_OID_AVA_COUNTRY_NAME, SEC_ASN1_PRINTABLE_STRING},
+    { "serialNumber",   64, SEC_OID_AVA_SERIAL_NUMBER,SEC_ASN1_PRINTABLE_STRING},
+
+/* RFC 3280, 4630 SHOULD SUPPORT */
+    { "L",             128, SEC_OID_AVA_LOCALITY,       SEC_ASN1_UTF8_STRING},
+    { "title",          64, SEC_OID_AVA_TITLE,          SEC_ASN1_UTF8_STRING},
+    { "SN",             64, SEC_OID_AVA_SURNAME,        SEC_ASN1_UTF8_STRING},
+    { "givenName",      64, SEC_OID_AVA_GIVEN_NAME,     SEC_ASN1_UTF8_STRING},
+    { "initials",       64, SEC_OID_AVA_INITIALS,       SEC_ASN1_UTF8_STRING},
+    { "generationQualifier",
+                        64, SEC_OID_AVA_GENERATION_QUALIFIER,
+                                                        SEC_ASN1_UTF8_STRING},
+/* RFC 3280, 4630 MAY SUPPORT */
+    { "DC",            128, SEC_OID_AVA_DC,             SEC_ASN1_IA5_STRING},
+    { "MAIL",          256, SEC_OID_RFC1274_MAIL,       SEC_ASN1_IA5_STRING},
+    { "UID",           256, SEC_OID_RFC1274_UID,        SEC_ASN1_UTF8_STRING},
+
+/* values from draft-ietf-ldapbis-user-schema-05 (not in RFC 3280) */
+    { "postalAddress", 128, SEC_OID_AVA_POSTAL_ADDRESS, SEC_ASN1_UTF8_STRING},
+    { "postalCode",     40, SEC_OID_AVA_POSTAL_CODE,    SEC_ASN1_UTF8_STRING},
+    { "postOfficeBox",  40, SEC_OID_AVA_POST_OFFICE_BOX,SEC_ASN1_UTF8_STRING},
+    { "houseIdentifier",64, SEC_OID_AVA_HOUSE_IDENTIFIER,SEC_ASN1_UTF8_STRING},
+/* end of IANA registered type names */
+
+/* legacy keywords */
+    { "E",             128, SEC_OID_PKCS9_EMAIL_ADDRESS,SEC_ASN1_IA5_STRING},
+
+#if 0 /* removed.  Not yet in any IETF draft or RFC. */
+    { "pseudonym",      64, SEC_OID_AVA_PSEUDONYM,      SEC_ASN1_UTF8_STRING},
+#endif
+
+    { 0,           256, SEC_OID_UNKNOWN                      , 0},
+};
+
+/* ========================================================================== */
+typedef struct {
+    unsigned short len;
+    char *encoded;
+} AsciiEscapes;
+
+AsciiEscapes ascii_encoding_table[256] = {
+    {4, "\\x00"}, /*   0      */    {4, "\\x01"}, /*   1      */
+    {4, "\\x02"}, /*   2      */    {4, "\\x03"}, /*   3      */
+    {4, "\\x04"}, /*   4      */    {4, "\\x05"}, /*   5      */
+    {4, "\\x06"}, /*   6      */    {2, "\\a"  }, /*   7 BELL */
+    {2, "\\b"  }, /*   8 BS   */    {2, "\\t"  }, /*   9 HTAB */
+    {2, "\\n"  }, /*  10 NL   */    {2, "\\v"  }, /*  11 VTAB */
+    {2, "\\f"  }, /*  12 FF   */    {2, "\\r"  }, /*  13 CR   */
+    {4, "\\x0E"}, /*  14      */    {4, "\\x0F"}, /*  15      */
+    {4, "\\x10"}, /*  16      */    {4, "\\x11"}, /*  17      */
+    {4, "\\x12"}, /*  18      */    {4, "\\x13"}, /*  19      */
+    {4, "\\x14"}, /*  20      */    {4, "\\x15"}, /*  21      */
+    {4, "\\x16"}, /*  22      */    {4, "\\x17"}, /*  23      */
+    {4, "\\x18"}, /*  24      */    {4, "\\x19"}, /*  25      */
+    {4, "\\x1A"}, /*  26      */    {4, "\\x1B"}, /*  27      */
+    {4, "\\x1C"}, /*  28      */    {4, "\\x1D"}, /*  29      */
+    {4, "\\x1E"}, /*  30      */    {4, "\\x1F"}, /*  31      */
+    {1, " "    }, /*  32      */    {1, "!"    }, /*  33 !    */
+    {2, "\\\"" }, /*  34 "    */    {1, "#"    }, /*  35 #    */
+    {1, "$"    }, /*  36 $    */    {1, "%"    }, /*  37 %    */
+    {1, "&"    }, /*  38 &    */    {2, "\\'"  }, /*  39 '    */
+    {1, "("    }, /*  40 (    */    {1, ")"    }, /*  41 )    */
+    {1, "*"    }, /*  42 *    */    {1, "+"    }, /*  43 +    */
+    {1, ","    }, /*  44 ,    */    {1, "-"    }, /*  45 -    */
+    {1, "."    }, /*  46 .    */    {1, "/"    }, /*  47 /    */
+    {1, "0"    }, /*  48 0    */    {1, "1"    }, /*  49 1    */
+    {1, "2"    }, /*  50 2    */    {1, "3"    }, /*  51 3    */
+    {1, "4"    }, /*  52 4    */    {1, "5"    }, /*  53 5    */
+    {1, "6"    }, /*  54 6    */    {1, "7"    }, /*  55 7    */
+    {1, "8"    }, /*  56 8    */    {1, "9"    }, /*  57 9    */
+    {1, ":"    }, /*  58 :    */    {1, ";"    }, /*  59 ;    */
+    {1, "<"    }, /*  60 <    */    {1, "="    }, /*  61 =    */
+    {1, ">"    }, /*  62 >    */    {2, "\\?"  }, /*  63 ?    */
+    {1, "@"    }, /*  64 @    */    {1, "A"    }, /*  65 A    */
+    {1, "B"    }, /*  66 B    */    {1, "C"    }, /*  67 C    */
+    {1, "D"    }, /*  68 D    */    {1, "E"    }, /*  69 E    */
+    {1, "F"    }, /*  70 F    */    {1, "G"    }, /*  71 G    */
+    {1, "H"    }, /*  72 H    */    {1, "I"    }, /*  73 I    */
+    {1, "J"    }, /*  74 J    */    {1, "K"    }, /*  75 K    */
+    {1, "L"    }, /*  76 L    */    {1, "M"    }, /*  77 M    */
+    {1, "N"    }, /*  78 N    */    {1, "O"    }, /*  79 O    */
+    {1, "P"    }, /*  80 P    */    {1, "Q"    }, /*  81 Q    */
+    {1, "R"    }, /*  82 R    */    {1, "S"    }, /*  83 S    */
+    {1, "T"    }, /*  84 T    */    {1, "U"    }, /*  85 U    */
+    {1, "V"    }, /*  86 V    */    {1, "W"    }, /*  87 W    */
+    {1, "X"    }, /*  88 X    */    {1, "Y"    }, /*  89 Y    */
+    {1, "Z"    }, /*  90 Z    */    {1, "["    }, /*  91 [    */
+    {2, "\\\\" }, /*  92 \    */    {1, "]"    }, /*  93 ]    */
+    {1, "^"    }, /*  94 ^    */    {1, "_"    }, /*  95 _    */
+    {1, "`"    }, /*  96 `    */    {1, "a"    }, /*  97 a    */
+    {1, "b"    }, /*  98 b    */    {1, "c"    }, /*  99 c    */
+    {1, "d"    }, /* 100 d    */    {1, "e"    }, /* 101 e    */
+    {1, "f"    }, /* 102 f    */    {1, "g"    }, /* 103 g    */
+    {1, "h"    }, /* 104 h    */    {1, "i"    }, /* 105 i    */
+    {1, "j"    }, /* 106 j    */    {1, "k"    }, /* 107 k    */
+    {1, "l"    }, /* 108 l    */    {1, "m"    }, /* 109 m    */
+    {1, "n"    }, /* 110 n    */    {1, "o"    }, /* 111 o    */
+    {1, "p"    }, /* 112 p    */    {1, "q"    }, /* 113 q    */
+    {1, "r"    }, /* 114 r    */    {1, "s"    }, /* 115 s    */
+    {1, "t"    }, /* 116 t    */    {1, "u"    }, /* 117 u    */
+    {1, "v"    }, /* 118 v    */    {1, "w"    }, /* 119 w    */
+    {1, "x"    }, /* 120 x    */    {1, "y"    }, /* 121 y    */
+    {1, "z"    }, /* 122 z    */    {1, "{"    }, /* 123 {    */
+    {1, "|"    }, /* 124 |    */    {1, "}"    }, /* 125 }    */
+    {1, "~"    }, /* 126 ~    */    {4, "\\x7F"}, /* 127      */
+    {4, "\\x80"}, /* 128      */    {4, "\\x81"}, /* 129      */
+    {4, "\\x82"}, /* 130      */    {4, "\\x83"}, /* 131      */
+    {4, "\\x84"}, /* 132      */    {4, "\\x85"}, /* 133      */
+    {4, "\\x86"}, /* 134      */    {4, "\\x87"}, /* 135      */
+    {4, "\\x88"}, /* 136      */    {4, "\\x89"}, /* 137      */
+    {4, "\\x8A"}, /* 138      */    {4, "\\x8B"}, /* 139      */
+    {4, "\\x8C"}, /* 140      */    {4, "\\x8D"}, /* 141      */
+    {4, "\\x8E"}, /* 142      */    {4, "\\x8F"}, /* 143      */
+    {4, "\\x90"}, /* 144      */    {4, "\\x91"}, /* 145      */
+    {4, "\\x92"}, /* 146      */    {4, "\\x93"}, /* 147      */
+    {4, "\\x94"}, /* 148      */    {4, "\\x95"}, /* 149      */
+    {4, "\\x96"}, /* 150      */    {4, "\\x97"}, /* 151      */
+    {4, "\\x98"}, /* 152      */    {4, "\\x99"}, /* 153      */
+    {4, "\\x9A"}, /* 154      */    {4, "\\x9B"}, /* 155      */
+    {4, "\\x9C"}, /* 156      */    {4, "\\x9D"}, /* 157      */
+    {4, "\\x9E"}, /* 158      */    {4, "\\x9F"}, /* 159      */
+    {4, "\\xA0"}, /* 160      */    {4, "\\xA1"}, /* 161      */
+    {4, "\\xA2"}, /* 162      */    {4, "\\xA3"}, /* 163      */
+    {4, "\\xA4"}, /* 164      */    {4, "\\xA5"}, /* 165      */
+    {4, "\\xA6"}, /* 166      */    {4, "\\xA7"}, /* 167      */
+    {4, "\\xA8"}, /* 168      */    {4, "\\xA9"}, /* 169      */
+    {4, "\\xAA"}, /* 170      */    {4, "\\xAB"}, /* 171      */
+    {4, "\\xAC"}, /* 172      */    {4, "\\xAD"}, /* 173      */
+    {4, "\\xAE"}, /* 174      */    {4, "\\xAF"}, /* 175      */
+    {4, "\\xB0"}, /* 176      */    {4, "\\xB1"}, /* 177      */
+    {4, "\\xB2"}, /* 178      */    {4, "\\xB3"}, /* 179      */
+    {4, "\\xB4"}, /* 180      */    {4, "\\xB5"}, /* 181      */
+    {4, "\\xB6"}, /* 182      */    {4, "\\xB7"}, /* 183      */
+    {4, "\\xB8"}, /* 184      */    {4, "\\xB9"}, /* 185      */
+    {4, "\\xBA"}, /* 186      */    {4, "\\xBB"}, /* 187      */
+    {4, "\\xBC"}, /* 188      */    {4, "\\xBD"}, /* 189      */
+    {4, "\\xBE"}, /* 190      */    {4, "\\xBF"}, /* 191      */
+    {4, "\\xC0"}, /* 192      */    {4, "\\xC1"}, /* 193      */
+    {4, "\\xC2"}, /* 194      */    {4, "\\xC3"}, /* 195      */
+    {4, "\\xC4"}, /* 196      */    {4, "\\xC5"}, /* 197      */
+    {4, "\\xC6"}, /* 198      */    {4, "\\xC7"}, /* 199      */
+    {4, "\\xC8"}, /* 200      */    {4, "\\xC9"}, /* 201      */
+    {4, "\\xCA"}, /* 202      */    {4, "\\xCB"}, /* 203      */
+    {4, "\\xCC"}, /* 204      */    {4, "\\xCD"}, /* 205      */
+    {4, "\\xCE"}, /* 206      */    {4, "\\xCF"}, /* 207      */
+    {4, "\\xD0"}, /* 208      */    {4, "\\xD1"}, /* 209      */
+    {4, "\\xD2"}, /* 210      */    {4, "\\xD3"}, /* 211      */
+    {4, "\\xD4"}, /* 212      */    {4, "\\xD5"}, /* 213      */
+    {4, "\\xD6"}, /* 214      */    {4, "\\xD7"}, /* 215      */
+    {4, "\\xD8"}, /* 216      */    {4, "\\xD9"}, /* 217      */
+    {4, "\\xDA"}, /* 218      */    {4, "\\xDB"}, /* 219      */
+    {4, "\\xDC"}, /* 220      */    {4, "\\xDD"}, /* 221      */
+    {4, "\\xDE"}, /* 222      */    {4, "\\xDF"}, /* 223      */
+    {4, "\\xE0"}, /* 224      */    {4, "\\xE1"}, /* 225      */
+    {4, "\\xE2"}, /* 226      */    {4, "\\xE3"}, /* 227      */
+    {4, "\\xE4"}, /* 228      */    {4, "\\xE5"}, /* 229      */
+    {4, "\\xE6"}, /* 230      */    {4, "\\xE7"}, /* 231      */
+    {4, "\\xE8"}, /* 232      */    {4, "\\xE9"}, /* 233      */
+    {4, "\\xEA"}, /* 234      */    {4, "\\xEB"}, /* 235      */
+    {4, "\\xEC"}, /* 236      */    {4, "\\xED"}, /* 237      */
+    {4, "\\xEE"}, /* 238      */    {4, "\\xEF"}, /* 239      */
+    {4, "\\xF0"}, /* 240      */    {4, "\\xF1"}, /* 241      */
+    {4, "\\xF2"}, /* 242      */    {4, "\\xF3"}, /* 243      */
+    {4, "\\xF4"}, /* 244      */    {4, "\\xF5"}, /* 245      */
+    {4, "\\xF6"}, /* 246      */    {4, "\\xF7"}, /* 247      */
+    {4, "\\xF8"}, /* 248      */    {4, "\\xF9"}, /* 249      */
+    {4, "\\xFA"}, /* 250      */    {4, "\\xFB"}, /* 251      */
+    {4, "\\xFC"}, /* 252      */    {4, "\\xFD"}, /* 253      */
+    {4, "\\xFE"}, /* 254      */    {4, "\\xFF"}, /* 255      */
+};
+
+/*
+ * Returns the number of bytes needed to escape an ascii string.
+ * Like strlen() does not include NULL terminator in count
+ */
+static size_t
+ascii_encoded_strlen(const char *str)
+{
+    size_t result;
+    const unsigned char *s;     /* must be unsigned for table indexing to work */
+
+    for (s = (unsigned char *)str, result = 0; *s; s++) {
+        result += ascii_encoding_table[*s].len;
+    }
+    return result;
+}
+
+static size_t
+ascii_encoded_strnlen(const char *str, size_t len)
+{
+    size_t result;
+    const unsigned char *s;     /* must be unsigned for table indexing to work */
+
+    for (s = (unsigned char *)str, result = 0; len; s++, len--) {
+        result += ascii_encoding_table[*s].len;
+    }
+    return result;
+}
+
+/*
+ * Convert input 7-bit ascii string into a printable representation
+ * by escaping all non-printable characters and any character above
+ * ordinal 127. The returned string must be freed with free().
+ * NULL may be returned in the event of a memory allocation failure.
+ */
+static char *
+escape_ascii_string(const char *str)
+{
+    size_t escaped_len;
+    const unsigned char *s; /* must be unsigned for table indexing to work */
+    char *escaped_str, *dst, *src;
+    AsciiEscapes *encode;
+
+    escaped_len = ascii_encoded_strlen(str);
+
+    if ((escaped_str = malloc(escaped_len+1)) == NULL) {
+        return NULL;
+    }
+
+    for (s = (unsigned char *)str, dst = escaped_str; *s; s++) {
+        encode = &ascii_encoding_table[*s];
+        for (src = encode->encoded; *src; src++) {
+            *dst++ = *src;
+        }
+    }
+
+    *dst = 0;
+
+    assert(escaped_len == strlen(escaped_str));
+
+    return escaped_str;
+}
+
+/* ========================================================================== */
 static char time_format[] = "%a %b %d %H:%M:%S %Y UTC";
 static char hex_chars[] = "0123456789abcdef";
 static PyObject *empty_tuple = NULL;
-static PyTypeObject PK11SymKeyType;
-static PyTypeObject PK11ContextType;
 static PyObject *sec_oid_name_to_value = NULL;
 static PyObject *sec_oid_value_to_name = NULL;
 static PyObject *ckm_name_to_value = NULL;
 static PyObject *ckm_value_to_name = NULL;
 static PyObject *cka_name_to_value = NULL;
 static PyObject *cka_value_to_name = NULL;
+static PyObject *general_name_name_to_value = NULL;
+static PyObject *general_name_value_to_name = NULL;
+static PyObject *crl_reason_name_to_value = NULL;
+static PyObject *crl_reason_value_to_name = NULL;
 
 typedef PyObject *(*format_lines_func)(PyObject *self, PyObject *args, PyObject *kwds);
 
+static PyTypeObject PK11SymKeyType;
+static PyTypeObject PK11ContextType;
 static PyTypeObject SecItemType;
 static PyTypeObject PK11SymKeyType;
+static PyTypeObject X500AVAType;
+static PyTypeObject X500RDNType;
+static PyTypeObject X500NameType;
+
+/* === Forward Declarations */
+
+static PyTypeObject CertificateType;
+
 
 /* === Prototypes === */
 
@@ -107,67 +566,115 @@ static SECStatus
 sec_strip_tag_and_length(SECItem *item);
 
 static PyObject *
-sec_context_specific_str(SECItem *item);
+der_context_specific_secitem_to_pystr(SECItem *item);
 
 static PyObject *
-sec_any_str(SECItem *item);
+secitem_to_pystr_hex(SECItem *item);
 
 static PyObject *
-sec_set_str_list(SECItem *item);
+der_any_secitem_to_pystr(SECItem *item);
 
 static PyObject *
-sec_boolean_str(SECItem *item);
+der_set_or_str_secitem_to_pylist_of_pystr(SECItem *item);
 
 static PyObject *
-sec_encoded_boolean_str(SECItem *item);
+boolean_secitem_to_pystr(SECItem *item);
 
 static PyObject *
-sec_integer_str(SECItem *item);
+der_boolean_secitem_to_pystr(SECItem *item);
 
 static PyObject *
-sec_encoded_integer_str(SECItem *item);
+integer_secitem_to_pylong(SECItem *item);
 
 static PyObject *
-sec_string_str(SECItem *item);
+der_integer_secitem_to_pylong(SECItem *item);
 
 static PyObject *
-sec_oid_str_by_secitem(SECItem *oid);
+integer_secitem_to_pystr(SECItem *item);
 
 static PyObject *
-sec_encoded_oid_str(SECItem *item);
+der_integer_secitem_to_pystr(SECItem *item);
+
+static bool
+is_oid_string(const char *oid_string);
+
+static SECOidTag
+ava_name_to_oid_tag(const char *name);
 
 static PyObject *
-sec_utc_time_str(SECItem *item);
+oid_secitem_to_pystr_desc(SECItem *oid);
 
 static PyObject *
-sec_generalized_time_str(SECItem *item);
-
-PRTime
-sec_time_choice(SECItem *item);
+oid_secitem_to_pyint_tag(SECItem *oid);
 
 static PyObject *
-sec_time_choice_str(SECItem *item);
+oid_secitem_to_pystr_dotted_decimal(SECItem *oid);
 
 static PyObject *
-sec_octet_str(SECItem *item);
+der_oid_secitem_to_pystr_desc(SECItem *item);
 
 static PyObject *
-sec_bit_str(SECItem *item);
+der_utc_time_secitem_to_pystr(SECItem *item);
 
 static PyObject *
-sec_bmp_str(SECItem *item);
+der_generalized_time_secitem_to_pystr(SECItem *item);
+
+static PRTime
+time_choice_secitem_to_prtime(SECItem *item);
 
 static PyObject *
-sec_universal_str(SECItem *item);
+time_choice_secitem_to_pystr(SECItem *item);
 
 static PyObject *
-sec_universal_item_str(SECItem *item);
+der_octet_secitem_to_pystr(SECItem *item, int octets_per_line, char *separator);
 
 static PyObject *
-get_algorithm_id_str(SECAlgorithmID *a);
+ascii_string_secitem_to_escaped_ascii_pystr(SECItem *item);
+
+static PyObject *
+der_ascii_string_secitem_to_escaped_ascii_pystr(SECItem *item);
+
+static PyObject *
+der_utf8_string_secitem_to_pyunicode(SECItem *item);
+
+static PyObject *
+der_bmp_string_secitem_to_pyunicode(SECItem *item);
+
+static PyObject *
+der_universal_string_secitem_to_pyunicode(SECItem *item);
+
+static PyObject *
+der_bit_string_secitem_to_pystr(SECItem *item);
+
+static PyObject *
+der_universal_secitem_to_pystr(SECItem *item);
+
+static PyObject *
+ip_addr_secitem_to_pystr(SECItem *item);
+
+static PyObject *
+CERTGeneralName_to_pystr_with_label(CERTGeneralName *general_name);
+
+static PyObject *
+CERTGeneralName_to_pystr(CERTGeneralName *general_name);
+
+static PyObject *
+SECAlgorithmID_to_pystr(SECAlgorithmID *a);
+
+static PyObject *
+cert_oid_tag_name(PyObject *self, PyObject *args);
 
 static PyObject *
 cert_trust_flags_str(unsigned int flags);
+
+PyObject *
+SecItem_new_from_SECItem(SECItem *item, SECItemKind kind);
+
+static PyObject *
+fmt_pair(int level, const char *label, PyObject *obj);
+
+static PyObject *
+make_line_pairs(int level, PyObject *src);
 
 static PyObject *
 nss_indented_format(PyObject *self, PyObject *args, PyObject *kwds);
@@ -190,13 +697,1006 @@ PyPK11Context_new_from_PK11Context(PK11Context *pk11_context);
 static PyObject *
 PyPK11SymKey_new_from_PK11SymKey(PK11SymKey *pk11_sym_key);
 
-static const char *
-key_mechanism_type_name(CK_MECHANISM_TYPE mechanism);
+static PyObject *
+key_mechanism_type_to_pystr(CK_MECHANISM_TYPE mechanism);
 
-static const char *
-pk11_attribute_type_name(CK_ATTRIBUTE_TYPE type);
+static PyObject *
+pk11_attribute_type_to_pystr(CK_ATTRIBUTE_TYPE type);
+
+static PyObject *
+SignedCRL_new_from_CERTSignedCRL(CERTSignedCrl *signed_crl);
+
+static PyObject *
+X500AVA_repr(X500AVA *self);
+
+static CERTAVA *
+CERTRDN_get_last_matching_tag(CERTRDN *rdn, int tag);
+
+static PyObject *
+CERTAVA_value_to_pystr(CERTAVA *ava);
+
+static Py_ssize_t
+CERTRDN_ava_count(CERTRDN *rdn);
+
+static Py_ssize_t
+X500Name_length(X500Name *self);
+
+static PyObject *
+X500Name_item(X500Name *self, register Py_ssize_t i);
+
+static PyObject *
+general_name_type_to_pystr(CERTGeneralNameType type);
+
+static PyObject *
+CERTGeneralName_type_string_to_pystr(CERTGeneralName *general_name);
+
+static PyObject *
+CRLDistributionPt_general_names_tuple(CRLDistributionPt *self, RepresentationKind repr_kind);
+
+PyObject *
+GeneralName_new_from_CERTGeneralName(CERTGeneralName *name);
+
+static Py_ssize_t
+AuthKeyID_general_names_count(AuthKeyID *self);
+
+static PyObject *
+AuthKeyID_general_names_tuple(AuthKeyID *self, RepresentationKind repr_kind);
 
 /* ==================================== */
+
+typedef struct BitStringTableStr {
+    int enum_value;
+    const char *enum_description;
+} BitStringTable;
+
+BitStringTable CRLReasonDef[] = {
+    {crlEntryReasonUnspecified,          _("Unspecified")           }, /* bit 0  */
+    {crlEntryReasonKeyCompromise,        _("Key Compromise")        }, /* bit 1  */
+    {crlEntryReasonCaCompromise,         _("CA Compromise")         }, /* bit 2  */
+    {crlEntryReasonAffiliationChanged,   _("Affiliation Changed")   }, /* bit 3  */
+    {crlEntryReasonSuperseded,           _("Superseded")            }, /* bit 4  */
+    {crlEntryReasonCessationOfOperation, _("Cessation Of Operation")}, /* bit 5  */
+    {crlEntryReasoncertificatedHold,     _("Certificate On Hold")   }, /* bit 6  */
+    {-1,                                 NULL,                      }, /* bit 7  */
+    {crlEntryReasonRemoveFromCRL,        _("Remove From CRL")       }, /* bit 8  */
+    {crlEntryReasonPrivilegeWithdrawn,   _("Privilege Withdrawn")   }, /* bit 9  */
+    {crlEntryReasonAaCompromise,         _("AA Compromise")         }, /* bit 10 */
+};
+
+BitStringTable KeyUsageDef[] = {
+    {KU_DIGITAL_SIGNATURE, _("Digital Signature")  }, /* bit 0 */
+    {KU_NON_REPUDIATION,   _("Non-Repudiation")    }, /* bit 1 */
+    {KU_KEY_ENCIPHERMENT,  _("Key Encipherment")   }, /* bit 2 */
+    {KU_DATA_ENCIPHERMENT, _("Data Encipherment")  }, /* bit 3 */
+    {KU_KEY_AGREEMENT,     _("Key Agreement")      }, /* bit 4 */
+    {KU_KEY_CERT_SIGN,     _("Certificate Signing")}, /* bit 5 */
+    {KU_CRL_SIGN,          _("CRL Signing")        }, /* bit 6 */
+    {KU_ENCIPHER_ONLY,     _("Encipher Only")      }, /* bit 7 */
+#ifdef KU_DECIPHER_ONLY
+    {KU_DECIPHER_ONLY,     _("Decipher Only")      }, /* bit 8 */
+#endif
+};
+
+/* Count how many bits are on in a NSS decoded bitstring */
+static size_t
+bit_string_count(SECItem *bitstr)
+{
+    size_t count, bitstr_len, i;
+    unsigned char *data, octet, mask;
+
+    if ((data = bitstr->data) == NULL)
+        return 0;
+    bitstr_len = bitstr->len;
+    count = 0;
+    for (i = 0; i < bitstr_len; i++) {
+        if ((i % 8) == 0) {
+            octet = *data++;
+            mask = 0x80;
+        }
+        if (octet & mask) {
+            count++;
+        }
+        mask >>= 1;
+    }
+    return count;
+}
+
+
+/*
+ * NSS HACK
+ * NSS encodes a bit string in a SECItem by setting the len field
+ * to a bit count and stripping off the leading "unused" octet.
+ */
+static int
+der_bitstring_to_nss_bitstring(SECItem *dst, SECItem *src) {
+    unsigned long data_len;
+    int src_len;
+    unsigned char *src_data, octet, unused;
+
+    if (!src || !dst) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+
+    src_len = src->len;
+    src_data = src->data;
+    
+    /* First octet is ASN1 type */
+    if (src_len <= 0) goto bad_data;
+    octet = *src_data++; src_len--;
+
+    if ((octet & SEC_ASN1_TAGNUM_MASK) != SEC_ASN1_BIT_STRING)
+        goto bad_data;
+
+    /* Next octets are ASN1 length */
+    if (src_len <= 0) goto bad_data;
+    octet = *src_data++; src_len--;
+
+    data_len = octet;
+    if (data_len & 0x80) {
+        int  len_count = data_len & 0x7f;
+
+        if (len_count > src_len)
+            goto bad_data;
+
+        for (data_len = 0, octet = *src_data++, src_len--;
+             len_count;
+             len_count--,  octet = *src_data++, src_len--) {
+            data_len = (data_len << 8) | octet;
+        }
+    }
+
+    /* After ASN1 length comes one octet containing the unused bit count */
+    if (src_len <= 0) goto bad_data;
+    unused = *src_data++; src_len--;
+
+    if (data_len <= 1) {
+        goto bad_data;
+    } else {
+        data_len--;             /* account for unused octet */
+        dst->len = (data_len << 3) - (unused & 0x07);
+        dst->data = src_len > 0 ? src_data : NULL;
+    }
+
+    return SECSuccess;
+
+ bad_data:
+    PORT_SetError(SEC_ERROR_BAD_DATA);
+    return SECFailure;
+}
+
+/*
+ * Given a decoded bit string in a SECItem (where len is a bit count and
+ * the high bit of data[0] is bit[0] of the bitstring) return a tuple of
+ * every enabled bit in the bit string. The members of the tuple come from
+ * a table of predined values for the bit string. The repr_kind
+ * enumeration specifies what type of item should be put in the tuple, for
+ * example the string name for the bit position, or the enumerated constant
+ * representing that bit postion, or the bit posisiton.
+ */
+static PyObject *
+bitstr_table_to_tuple(SECItem *bitstr, BitStringTable *table,
+                      size_t table_len, RepresentationKind repr_kind)
+{
+    PyObject *tuple = NULL;
+    size_t bitstr_len, len, count, i, j;
+    unsigned char *data, octet, mask;
+
+    bitstr_len = bitstr->len;
+    len = MIN(table_len, bitstr_len);
+
+    /*
+     * Get a count of how many bits are enabled.
+     * Skip any undefined entries in the table.
+     */
+    count = 0;
+    if (bitstr->data != NULL) {
+        for (i = 0, data = bitstr->data; i < len; i++) {
+            if ((i % 8) == 0) {
+                octet = *data++;
+                mask = 0x80;
+            }
+            if (octet & mask) {
+                if (table[i].enum_description) { /* only if defined in table */
+                    count++;
+                }
+            }
+            mask >>= 1;
+        }
+    }
+
+    if ((tuple = PyTuple_New(count)) == NULL) {
+        return NULL;
+    }
+
+    if (count == 0) {
+        return tuple;
+    }
+
+    /* Populate the tuple */
+    for (i = j = 0, data = bitstr->data; i < len; i++) {
+        if ((i % 8) == 0) {
+            octet = *data++;
+            mask = 0x80;
+        }
+        if (octet & mask) {
+            if (table[i].enum_description) { /* only if defined in table */
+                switch(repr_kind) {
+                case AsEnum:
+                    PyTuple_SET_ITEM(tuple, j++, PyInt_FromLong(table[i].enum_value));
+                    break;
+                case AsEnumDescription:
+                    PyTuple_SET_ITEM(tuple, j++, PyString_FromString(table[i].enum_description));
+                    break;
+                case AsIndex:
+                    PyTuple_SET_ITEM(tuple, j++, PyInt_FromLong(i));
+                    break;
+                default:
+                    PyErr_Format(PyExc_ValueError, "Unsupported representation kind (%d)", repr_kind);
+                    Py_DECREF(tuple);
+                    return NULL;
+                    break;
+                }
+            }
+        }
+        mask >>= 1;
+    }
+
+    return tuple;
+}
+
+/*
+ * Given a table of bit string definitions return a tuple of every defined
+ * item in the table. The repr_kind enumeration specifies what type of
+ * item should be put in the tuple, for example the string name for the bit
+ * position, or the enumerated constant representing that bit postion, or
+ * the bit posisiton. This is the equivalent of calling
+ * bitstr_table_to_tuple() with a bit string where every bit is enabled.
+ */
+
+static PyObject *
+bitstr_table_to_tuple_all(BitStringTable *table,
+                          size_t table_len, RepresentationKind repr_kind)
+{
+    size_t count, i, j;
+    PyObject *tuple;
+
+    /*
+     * Get a count of how many defined table entries there are.
+     */
+    count = 0;
+    for (i = 0; i < table_len; i++) {
+        if (table[i].enum_description) { /* only if defined in table */
+            count++;
+        }
+    }
+
+    if ((tuple = PyTuple_New(count)) == NULL) {
+        return NULL;
+    }
+
+    if (count == 0) {
+        return tuple;
+    }
+
+    /* Populate the tuple */
+    for (i = j = 0; i < table_len; i++) {
+        if (table[i].enum_description) { /* only if defined in table */
+            switch (repr_kind) {
+            case AsEnum:
+                PyTuple_SET_ITEM(tuple, j++, PyInt_FromLong(table[i].enum_value));
+                break;
+            case AsEnumDescription:
+                PyTuple_SET_ITEM(tuple, j++, PyString_FromString(table[i].enum_description));
+                break;
+            case AsIndex:
+                PyTuple_SET_ITEM(tuple, j++, PyInt_FromLong(i));
+                break;
+            default:
+                PyErr_Format(PyExc_ValueError, "Unsupported representation kind (%d)", repr_kind);
+                Py_DECREF(tuple);
+                return NULL;
+                break;
+            }
+        }
+    }
+
+    return tuple;
+}
+
+static PyObject *
+crl_reason_bitstr_to_tuple(SECItem *bitstr, RepresentationKind repr_kind)
+{
+    size_t table_len;
+
+    table_len = sizeof(CRLReasonDef) / sizeof(CRLReasonDef[0]);
+    return bitstr_table_to_tuple(bitstr, CRLReasonDef, table_len, repr_kind);
+}
+
+static PyObject *
+crl_reason_bitstr_to_tuple_all(RepresentationKind repr_kind)
+{
+    size_t table_len;
+
+    table_len = sizeof(CRLReasonDef) / sizeof(CRLReasonDef[0]);
+    return bitstr_table_to_tuple_all(CRLReasonDef, table_len, repr_kind);
+}
+
+static PyObject *
+key_usage_bitstr_to_tuple(SECItem *bitstr, RepresentationKind repr_kind)
+{
+    size_t table_len;
+
+    table_len = sizeof(KeyUsageDef) / sizeof(KeyUsageDef[0]);
+    return bitstr_table_to_tuple(bitstr, KeyUsageDef, table_len, repr_kind);
+}
+
+static PyObject *
+key_usage_bitstr_to_tuple_all(RepresentationKind repr_kind)
+{
+    size_t table_len;
+
+    table_len = sizeof(KeyUsageDef) / sizeof(KeyUsageDef[0]);
+    return bitstr_table_to_tuple_all(KeyUsageDef, table_len, repr_kind);
+}
+
+/*
+ * NSS WART: No public API to decode a bit string.
+ *
+ * NSS WART: SECItem len has to be converted to byte count otherwise the
+ * SECItem can't be copied becase a SECItem len means the number of bytes
+ * in it's data member. The conversion to a byte count is performed with
+ * DER_ConvertBitString(). Once this conversion is performed there is a
+ * loss of information. If the bitstring length was not a multiple of 8
+ * then we can't know the number unused bits at the end of the bitstring
+ * and hence the true length of the bitstring!
+ *
+ * WARNING: The len member of the returned decoded_item is a byte count,
+ * not a bit count.
+ */
+static SECStatus
+decode_bit_string(SECItem *decoded_item, SECItem *encoded_item)
+{
+    SECItem tmp_item;
+    PRArenaPool *arena = NULL;
+
+    decoded_item->len = 0;
+    decoded_item->data = NULL;
+    
+    if ((arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE)) == NULL) {
+        return SECFailure;
+    }
+
+    if (SEC_QuickDERDecodeItem(arena, &tmp_item,
+                               SEC_ASN1_GET(SEC_BitStringTemplate),
+                               encoded_item) != SECSuccess) {
+	PORT_FreeArena(arena, PR_FALSE);
+        return SECFailure;
+    }
+
+    DER_ConvertBitString(&tmp_item);
+    if (SECITEM_CopyItem(NULL, decoded_item, &tmp_item) != SECSuccess) {
+        decoded_item->len = 0;
+        decoded_item->data = NULL;
+	PORT_FreeArena(arena, PR_FALSE);
+        return SECFailure;
+    }
+
+    PORT_FreeArena(arena, PR_FALSE);
+    return SECSuccess;
+}
+
+static PyObject *
+decode_oid_sequence_to_tuple(SECItem *item, RepresentationKind repr_kind)
+{
+    int i, n_oids;
+    PyObject *tuple;
+    CERTOidSequence *os;
+    SECItem **op;
+    PyObject *py_oid;
+
+    if (!item || !item->len || !item->data) {
+        PyErr_SetString(PyExc_ValueError, "missing DER encoded OID data");
+        return NULL;
+    }
+
+    if ((os = CERT_DecodeOidSequence(item)) == NULL) {
+        return set_nspr_error("unable to decode OID sequence");
+    }
+
+    /* Get a count of how many OID's there were */
+    for(op = os->oids, n_oids = 0; *op; op++, n_oids++);
+
+    if ((tuple = PyTuple_New(n_oids)) == NULL) {
+        CERT_DestroyOidSequence(os);
+        return NULL;
+    }
+
+    /* Iterate over each OID and insert into tuple */
+    for(op = os->oids, i = 0; *op; op++, i++) {
+        switch(repr_kind) {
+        case AsObject:
+            if ((py_oid = SecItem_new_from_SECItem(*op, SECITEM_oid)) == NULL) {
+                Py_DECREF(tuple);
+                CERT_DestroyOidSequence(os);
+                return NULL;
+            }
+            break;
+        case AsString:
+            if ((py_oid = oid_secitem_to_pystr_desc(*op)) == NULL) {
+                Py_DECREF(tuple);
+                CERT_DestroyOidSequence(os);
+                return NULL;
+            }
+            break;
+        case AsDottedDecimal:
+            if ((py_oid = oid_secitem_to_pystr_dotted_decimal(*op)) == NULL) {
+                Py_DECREF(tuple);
+                CERT_DestroyOidSequence(os);
+                return NULL;
+            }
+            break;
+        case AsEnum:
+            if ((py_oid = oid_secitem_to_pyint_tag(*op)) == NULL) {
+                Py_DECREF(tuple);
+                CERT_DestroyOidSequence(os);
+                return NULL;
+            }
+            break;
+        default:
+            PyErr_Format(PyExc_ValueError, "Unsupported representation kind (%d)", repr_kind);
+            Py_DECREF(tuple);
+            CERT_DestroyOidSequence(os);
+            return NULL;
+        }
+        PyTuple_SET_ITEM(tuple, i, py_oid);
+    }
+    CERT_DestroyOidSequence(os);
+
+    return tuple;
+}
+
+static SECStatus
+CERT_CopyGeneralName(PRArenaPool *arena, CERTGeneralName **pdst, CERTGeneralName *src)
+{
+    SECStatus result = SECSuccess;
+    void *mark = NULL;
+    CERTGeneralName *dst;
+
+    /*
+     * NSS WART
+     * There is no public API to create a CERTGeneralName, copy it, or free it.
+     * You don't know what arena was used to create the general name.
+     * GeneralNames are linked in a list, this makes it difficult for a 
+     * general name to exist independently, it would have been better if there
+     * was a list container independent general names could be placed in,
+     * then you wouldn't have to worry about the link fields in each independent name.
+     * 
+     * The logic here is copied from cert_CopyOneGeneralName in certdb/genname.c
+     */
+
+    if (!arena) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+
+    if (!src) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+
+    mark = PORT_ArenaMark(arena);
+
+    if ((dst = PORT_ArenaZNew(arena, CERTGeneralName)) == NULL) {
+        result = SECFailure;
+        goto exit;
+    }
+
+    dst->l.prev = dst->l.next = &dst->l;
+    dst->type = src->type;
+
+    switch (src->type) {
+    case certDirectoryName: 
+	if ((result = SECITEM_CopyItem(arena, &dst->derDirectoryName, 
+                                       &src->derDirectoryName)) != SECSuccess) {
+            goto exit;
+        }
+        if ((result = CERT_CopyName(arena, &dst->name.directoryName, 
+                                    &src->name.directoryName)) != SECSuccess) {
+            goto exit;
+        }
+	break;
+
+    case certOtherName: 
+	if ((result = SECITEM_CopyItem(arena, &dst->name.OthName.name, 
+                                       &src->name.OthName.name)) != SECSuccess) {
+            goto exit;
+        }
+        if ((result = SECITEM_CopyItem(arena, &dst->name.OthName.oid, 
+                                       &src->name.OthName.oid)) != SECSuccess) {
+            goto exit;
+        }
+	break;
+
+    default: 
+	if ((result = SECITEM_CopyItem(arena, &dst->name.other, 
+                                       &src->name.other)) != SECSuccess) {
+            goto exit;
+        }
+	break;
+
+    }
+
+    
+ exit:
+    if (result == SECSuccess) {
+        *pdst = dst;
+        PORT_ArenaUnmark(arena, mark);
+    } else {
+        *pdst = NULL;
+        PORT_ArenaRelease(arena, mark);
+    }
+    return result;
+}
+
+static Py_ssize_t
+CERTGeneralName_list_count(CERTGeneralName *head)
+{
+    CERTGeneralName *cur;
+    Py_ssize_t count;
+
+    count = 0;
+    if (!head) {
+        return count;
+    }
+
+    cur = head;
+    do {
+        count++;
+        cur = CERT_GetNextGeneralName(cur);
+    } while (cur != head);
+
+    return count;
+}
+
+static PyObject *
+CERTGeneralName_list_to_tuple(CERTGeneralName *head, RepresentationKind repr_kind)
+{
+    CERTGeneralName *cur;
+    Py_ssize_t n_names, i;
+    PyObject *names;
+
+    n_names = CERTGeneralName_list_count(head);
+
+    if ((names = PyTuple_New(n_names)) == NULL) {
+        return NULL;
+    }
+
+    if (n_names == 0) {
+        return names;
+    }
+
+    i = 0;
+    cur = head;
+    do {
+        PyObject *name;
+
+        switch(repr_kind) {
+        case AsObject:
+            name = GeneralName_new_from_CERTGeneralName(cur);
+            break;
+        case AsString:
+            name = CERTGeneralName_to_pystr(cur);
+            break;
+        case AsTypeString:
+            name = CERTGeneralName_type_string_to_pystr(cur);
+            break;
+        case AsTypeEnum:
+            name = PyInt_FromLong(cur->type);
+            break;
+        case AsLabeledString:
+            name = CERTGeneralName_to_pystr_with_label(cur);
+            break;
+        default:
+            PyErr_Format(PyExc_ValueError, "Unsupported representation kind (%d)", repr_kind);
+            Py_DECREF(names);
+            return NULL;
+        }
+        PyTuple_SET_ITEM(names, i, name);
+        cur = CERT_GetNextGeneralName(cur);
+        i++;
+    } while (cur != head);
+
+
+    return names;
+}
+
+static SECStatus
+CERT_CopyGeneralNameList(PRArenaPool *arena, CERTGeneralName **pdst, CERTGeneralName *src)
+{
+    SECStatus result = SECSuccess;
+    void *mark = NULL;
+    CERTGeneralName *src_head, *dst_head;
+    CERTGeneralName *cur, *prev;
+
+    /*
+     * NSS WART
+     * There is no publice API to copy a list of GeneralNames.
+     *
+     * GeneralNames are an exception to all other NSS data containers.
+     * Normally homogeneous collections are stored in a array of pointers to 
+     * the items with the last array element being NULL. However GeneralNames are
+     * exception, they embed a linked list for assembling them in a list. Not only
+     * is this an awkward deviation but it means the GeneralName cannot belong to
+     * more than one collection.
+     *
+     * The logic here is copied from CERT_CopyGeneralName in certdb/genname.c
+     *
+     * The linked list is circular. The logic to stop traversal is if the link
+     * pointed to by CERT_GetNextGeneralName/CERT_GetPrevGeneralName is the same
+     * as the GeneralName the traversal started with.
+     */
+
+    if (!arena) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+
+    if (!src) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+
+    mark = PORT_ArenaMark(arena);
+
+    src_head = src;
+    dst_head = cur = NULL;
+    do {
+        prev = cur;
+        if (CERT_CopyGeneralName(arena, &cur, src) != SECSuccess) {
+            result = SECFailure;
+            goto exit;
+        }
+        if (dst_head == NULL) { /* first node */
+            dst_head = cur;
+            prev = cur;
+        }
+
+        cur->l.next = &dst_head->l; /* tail node's next points to head */
+        cur->l.prev = &prev->l;     /* tail node's prev points to prev */
+        dst_head->l.prev = &cur->l; /* head's prev points to tail node */
+        prev->l.next = &cur->l;     /* prev node's next point to tail node */
+
+        src = CERT_GetNextGeneralName(src);
+    } while (src != src_head);
+
+ exit:
+    if (result == SECSuccess) {
+        *pdst = dst_head;
+        PORT_ArenaUnmark(arena, mark);
+    } else {
+        *pdst = NULL;
+        PORT_ArenaRelease(arena, mark);
+    }
+    return result;
+}
+
+static SECStatus
+CERT_CopyCRLDistributionPoint(PRArenaPool *arena, CRLDistributionPoint **pdst, CRLDistributionPoint *src)
+{
+    SECStatus result = SECSuccess;
+    CERTRDN *rdn;
+    void *mark = NULL;
+    CRLDistributionPoint *dst;
+    SECItem tmp_item;
+
+    /*
+     * NSS WART
+     * There is no public API to create a CRLDistributionPoint or copy it.
+     */
+    mark = PORT_ArenaMark(arena);
+
+    if ((dst = PORT_ArenaZNew(arena, CRLDistributionPoint)) == NULL) {
+        result = SECFailure;
+        goto exit;
+    }        
+    
+    switch((dst->distPointType = src->distPointType)) {
+    case generalName:
+        if ((result = CERT_CopyGeneralNameList(arena,
+                                               &dst->distPoint.fullName,
+                                               src->distPoint.fullName)) != SECSuccess) {
+            goto exit;
+        }
+        break;
+    case relativeDistinguishedName:
+        if ((rdn = CERT_CreateRDN(arena, NULL)) == NULL) {
+            result = SECFailure;
+            goto exit;
+        }
+        dst->distPoint.relativeName = *rdn;
+        if ((result = CERT_CopyRDN(arena,
+                                   &dst->distPoint.relativeName,
+                                   &src->distPoint.relativeName)) != SECSuccess) {
+            goto exit;
+        }
+        break;
+    default:
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        result = SECFailure;
+        goto exit;
+    }
+
+    if ((result = SECITEM_CopyItem(arena, &dst->reasons, &src->reasons)) != SECSuccess) {
+        goto exit;
+    }
+    
+    /*
+     * WARNING: NSS HACK
+     * src->bitsmap is a SECItem whose length is a bit count and whose data
+     * omits the leading DER bitstring "unused" octet.
+     */
+    
+    tmp_item = src->bitsmap;
+    DER_ConvertBitString(&tmp_item); /* make len a byte count */
+    if ((result = SECITEM_CopyItem(arena, &dst->bitsmap, &tmp_item)) != SECSuccess) {
+        goto exit;
+    }
+    dst->bitsmap.len = src->bitsmap.len;
+    
+    if (src->crlIssuer) {
+        if ((result = CERT_CopyGeneralName(arena, &dst->crlIssuer, src->crlIssuer)) != SECSuccess) {
+            goto exit;
+        }
+    }
+    
+    /*
+     * WARNING: we don't copy these because they're only used during decoding:
+     * derDistPoint, derRelativeName, derCrlIssuer, derFullName
+     */
+
+ exit:
+    if (result == SECSuccess) {
+        *pdst = dst;
+        PORT_ArenaUnmark(arena, mark);
+    } else {
+        *pdst = NULL;
+        PORT_ArenaRelease(arena, mark);
+    }
+    return result;
+}
+
+/*
+ * NSS WART
+ * There is no public API to copy a CERTAuthKeyID
+ */
+static SECStatus
+CERT_CopyAuthKeyID(PRArenaPool *arena, CERTAuthKeyID **pdst, CERTAuthKeyID *src)
+{
+    SECStatus result = SECSuccess;
+    void *mark = NULL;
+    CERTAuthKeyID *dst;
+
+    mark = PORT_ArenaMark(arena);
+
+    if ((dst = PORT_ArenaZNew(arena, CERTAuthKeyID)) == NULL) {
+        result = SECFailure;
+        goto exit;
+    }        
+    
+    if ((result = SECITEM_CopyItem(arena, &dst->keyID, &src->keyID)) != SECSuccess) {
+        goto exit;
+    }
+
+    if ((result = CERT_CopyGeneralNameList(arena, &dst->authCertIssuer,
+                                           src->authCertIssuer)) != SECSuccess) {
+        goto exit;
+    }
+
+    if ((result = SECITEM_CopyItem(arena, &dst->authCertSerialNumber,
+                                   &src->authCertSerialNumber)) != SECSuccess) {
+        goto exit;
+    }
+
+ exit:
+    if (result == SECSuccess) {
+        *pdst = dst;
+        PORT_ArenaUnmark(arena, mark);
+    } else {
+        *pdst = NULL;
+        PORT_ArenaRelease(arena, mark);
+    }
+    return result;
+}
+
+static int
+oid_tag_from_name(const char *name)
+{
+    PyObject *py_name;
+    PyObject *py_lower_name;
+    PyObject *py_value;
+    int oid_tag;
+
+    if ((py_name = PyString_FromString(name)) == NULL) {
+        return -1;
+    }
+
+    if ((py_lower_name = PyObject_CallMethod(py_name, "lower", NULL)) == NULL) {
+        Py_DECREF(py_name);
+        return -1;
+    }
+
+    if ((py_value = PyDict_GetItem(sec_oid_name_to_value, py_lower_name)) == NULL) {
+	PyErr_Format(PyExc_KeyError, "oid tag name not found: %s", PyString_AsString(py_name));
+        Py_DECREF(py_name);
+        Py_DECREF(py_lower_name);
+        return -1;
+    }
+
+    oid_tag = PyInt_AsLong(py_value);
+
+    Py_DECREF(py_name);
+    Py_DECREF(py_lower_name);
+
+    return oid_tag;
+}
+
+static PyObject *
+oid_tag_name_from_tag(int oid_tag)
+{
+    PyObject *py_value;
+    PyObject *py_name;
+
+    if ((py_value = PyInt_FromLong(oid_tag)) == NULL) {
+        return NULL;
+    }
+
+    if ((py_name = PyDict_GetItem(sec_oid_value_to_name, py_value)) == NULL) {
+	PyErr_Format(PyExc_KeyError, "oid tag not found: %#x", oid_tag);
+        Py_DECREF(py_value);
+        return NULL;
+    }
+
+    Py_DECREF(py_value);
+    Py_INCREF(py_name);
+
+    return py_name;
+}
+
+static int
+get_oid_tag_from_object(PyObject *obj)
+{
+    int oid_tag = SEC_OID_UNKNOWN;
+
+    if (PyString_Check(obj) || PyUnicode_Check(obj)) {
+        PyObject *py_obj_string_utf8 = NULL;
+        char *type_string;
+
+        if (PyString_Check(obj)) {
+            py_obj_string_utf8 = obj;
+            Py_INCREF(py_obj_string_utf8);
+        } else {
+            py_obj_string_utf8 = PyUnicode_AsUTF8String(obj);
+        }
+
+        if ((type_string = PyString_AsString(py_obj_string_utf8)) == NULL) {
+            Py_DECREF(py_obj_string_utf8);
+            return -1;
+        }
+
+        /*
+         * First see if it's a canonical name,
+         * if not try a dotted-decimal OID,
+         * if not then try tag name.
+         */
+        if ((oid_tag = ava_name_to_oid_tag(type_string)) == SEC_OID_UNKNOWN) {
+            if (is_oid_string(type_string)) { /* is dotted-decimal OID */
+                SECItem item;
+
+                item.data = NULL;
+                item.len = 0;
+
+                /* Convert dotted-decimal OID string to SECItem */
+                if (SEC_StringToOID(NULL, &item, type_string, 0) != SECSuccess) {
+                    Py_DECREF(py_obj_string_utf8);
+                    PyErr_Format(PyExc_ValueError, "failed to convert oid string \"%s\" to SECItem",
+                                 type_string);
+                    return -1;
+                }
+                /* Get the OID tag from the SECItem */
+                if ((oid_tag = SECOID_FindOIDTag(&item)) == SEC_OID_UNKNOWN) {
+                    Py_DECREF(py_obj_string_utf8);
+                    SECITEM_FreeItem(&item, PR_FALSE);
+                    PyErr_Format(PyExc_ValueError, "could not convert \"%s\" to OID tag", type_string);
+                    return -1;
+                }
+                SECITEM_FreeItem(&item, PR_FALSE);
+            } else {
+                oid_tag = oid_tag_from_name(type_string);
+            }
+            Py_DECREF(py_obj_string_utf8);
+        }
+    } else if (PyInt_Check(obj)) {
+        oid_tag = PyInt_AsLong(obj);
+    } else if (PySecItem_Check(obj)) {
+        oid_tag = SECOID_FindOIDTag(&((SecItem *)obj)->item);
+    } else {
+        PyErr_Format(PyExc_TypeError, "oid must be a string, an integer, or a SecItem, not %.200s",
+                     Py_TYPE(obj)->tp_name);
+        return -1;
+    }
+
+    return oid_tag;
+}
+
+static bool
+is_oid_string(const char *oid_string)
+{
+    const char *p;
+    int n_integers, n_dots;
+
+    n_integers = n_dots = 0;
+    p = oid_string;
+    if (strncasecmp("OID.", p, 4) == 0) p += 4;    /* skip optional OID. prefix */
+    while (*p) {
+        if (isdigit(*p)) {
+            n_integers++;
+            for (p++; *p && isdigit(*p); p++); /* consume rest of digits in integer */
+        } else if (*p == '.') {                /* found a dot */
+            n_dots++;
+            p++;
+        } else {                               /* not a dot or digit */
+            if (isspace(*p)) {                 /* permit trailing white space */
+                for (p++; *p && isspace(*p); p++);
+                if (!*p) break;
+            }
+            return false;
+        }
+    }
+
+    return (n_integers > 0) && (n_integers == n_dots+1);
+}
+
+static const char *
+ava_oid_tag_to_name(SECOidTag tag)
+{
+    const DnAvaProps *ava = dn_ava_props;
+
+    for (ava = dn_ava_props;
+         ava->oid_tag != tag && ava->oid_tag != SEC_OID_UNKNOWN;
+         ava++);
+
+    return (ava->oid_tag != SEC_OID_UNKNOWN) ? ava->name : NULL;
+}
+
+static int
+ava_oid_tag_to_value_type(SECOidTag tag)
+{
+    const DnAvaProps *ava = dn_ava_props;
+
+    for (ava = dn_ava_props;
+         ava->oid_tag != tag && ava->oid_tag != SEC_OID_UNKNOWN;
+         ava++);
+
+    return (ava->oid_tag != SEC_OID_UNKNOWN) ? ava->value_type : SEC_ASN1_UTF8_STRING;
+}
+
+/*
+ * Given a canonical ava name (e.g. "CN") return the oid tag for it. Case
+ * is not significant. If not found SEC_OID_UNKNOWN is returned.
+ */
+static SECOidTag
+ava_name_to_oid_tag(const char *name)
+{
+    const DnAvaProps *ava = dn_ava_props;
+
+    for (ava = dn_ava_props;
+         ava->oid_tag != SEC_OID_UNKNOWN && strcasecmp(ava->name, name);
+         ava++);
+
+    return ava->oid_tag;
+}
+
 
 static int
 _AddIntConstantWithLookup(PyObject *module, const char *name, long value, const char *prefix,
@@ -204,6 +1704,8 @@ _AddIntConstantWithLookup(PyObject *module, const char *name, long value, const 
 {
     PyObject *module_dict;
     PyObject *py_name;
+    PyObject *py_name_sans_prefix = NULL;
+    PyObject *py_lower_name;
     PyObject *py_value;
 
     if (!PyModule_Check(module)) {
@@ -221,24 +1723,31 @@ _AddIntConstantWithLookup(PyObject *module, const char *name, long value, const 
         return -1;
     }
 
+    if ((py_lower_name = PyObject_CallMethod(py_name, "lower", NULL)) == NULL) {
+        return -1;
+    }
+
     if ((py_value = PyInt_FromLong(value)) == NULL) {
         return -1;
     }
 
     if (PyDict_SetItem(module_dict, py_name, py_value) != 0) {
         Py_DECREF(py_name);
+        Py_DECREF(py_lower_name);
         Py_DECREF(py_value);
         return -1;
     }
 
     if (PyDict_SetItem(value_to_name, py_value, py_name) != 0) {
         Py_DECREF(py_name);
+        Py_DECREF(py_lower_name);
         Py_DECREF(py_value);
         return -1;
     }
 
-    if (PyDict_SetItem(name_to_value, py_name, py_value) != 0) {
+    if (PyDict_SetItem(name_to_value, py_lower_name, py_value) != 0) {
         Py_DECREF(py_name);
+        Py_DECREF(py_lower_name);
         Py_DECREF(py_value);
         return -1;
     }
@@ -247,16 +1756,19 @@ _AddIntConstantWithLookup(PyObject *module, const char *name, long value, const 
         size_t prefix_len = strlen(prefix);
 
         if (strlen(name) > prefix_len &&
-            strncmp(prefix, name, prefix_len) == 0) {
+            strncasecmp(prefix, name, prefix_len) == 0) {
 
-            if ((py_name = PyString_FromString(name + prefix_len)) == NULL) {
+            if ((py_name_sans_prefix = PyString_FromString(PyString_AS_STRING(py_lower_name) + prefix_len)) == NULL) {
                 Py_DECREF(py_name);
+                Py_DECREF(py_lower_name);
                 Py_DECREF(py_value);
                 return -1;
             }
 
-            if (PyDict_SetItem(name_to_value, py_name, py_value) != 0) {
+            if (PyDict_SetItem(name_to_value, py_name_sans_prefix, py_value) != 0) {
                 Py_DECREF(py_name);
+                Py_DECREF(py_name_sans_prefix);
+                Py_DECREF(py_lower_name);
                 Py_DECREF(py_value);
                 return -1;
             }
@@ -264,6 +1776,8 @@ _AddIntConstantWithLookup(PyObject *module, const char *name, long value, const 
     }
 
     Py_DECREF(py_name);
+    Py_XDECREF(py_name_sans_prefix);
+    Py_DECREF(py_lower_name);
     Py_DECREF(py_value);
     return 0;
 }
@@ -328,7 +1842,7 @@ key_type_str(KeyType key_type)
 
 
 static const char *
-sec_oid_tag_str(SECOidTag tag)
+oid_tag_str(SECOidTag tag)
 {
     static char buf[80];
 
@@ -339,6 +1853,52 @@ sec_oid_tag_str(SECOidTag tag)
     }
     snprintf(buf, sizeof(buf), "unknown(%#x)", tag);
     return buf;
+}
+
+static PyObject *
+obj_sprintf(const char *fmt, ...)
+{
+    va_list va;
+    Py_ssize_t n_fmts, i;
+    PyObject *args = NULL;
+    PyObject *obj = NULL;
+    PyObject *py_fmt = NULL;
+    PyObject *result = NULL;
+    const char *s;
+    
+    for (s = fmt, n_fmts = 0; *s; s++) {
+        if (*s == '%') {
+            if (s > fmt) {
+                if (s[-1] != '%') {
+                    n_fmts++;
+                }
+            } else {
+                n_fmts++;
+            }
+        }
+    }
+
+    if ((args = PyTuple_New(n_fmts)) == NULL) {
+        return NULL;
+    }
+
+    va_start(va, fmt);
+    for (i = 0; i < n_fmts; i++) {
+        obj = va_arg(va, PyObject *);
+        PyTuple_SetItem(args, i, obj);
+    }
+    va_end(va);
+
+    if ((py_fmt = PyString_FromString(fmt)) == NULL) {
+        Py_DECREF(args);
+        return NULL;
+    }
+
+    result = PyString_Format(py_fmt, args);
+    Py_DECREF(py_fmt);
+    Py_DECREF(args);
+
+    return result;
 }
 
 PyDoc_STRVAR(generic_format_doc,
@@ -376,12 +1936,108 @@ support other text formatting systems with indentation controls.\n\
 ");
 
 static PyObject *
-fmt_pair(int level, char *label, PyObject *obj)
-{
+line_pair(int level, PyObject *obj_str) {
     PyObject *pair = NULL;
+
+    if ((pair = PyTuple_New(2)) == NULL) {
+        return NULL;
+    }
+
+    PyTuple_SET_ITEM(pair, 0, PyInt_FromLong(level));
+    PyTuple_SET_ITEM(pair, 1, obj_str);
+
+    return pair;
+}
+
+static PyObject *
+make_line_pairs(int level, PyObject *src)
+{
+    PyObject *lines = NULL;
+    PyObject *obj = NULL;
+    PyObject *pair = NULL;
+    PyObject *seq = NULL;
+    Py_ssize_t n_objs, i;
+
+    if (PyList_Check(src) || PyTuple_Check(src)) {
+        seq = src;
+        n_objs = PySequence_Size(seq);
+        Py_INCREF(seq);
+    } else {
+        obj = src;
+        n_objs = 1;
+    }
+
+    if ((lines = PyList_New(n_objs)) == NULL) {
+        goto exit;
+    }
+
+    if (seq) {
+        for (i = 0; i < n_objs; i++) {
+            if ((obj = PySequence_GetItem(seq, i)) == NULL) {
+                Py_DECREF(lines);
+                goto exit;
+            }
+            if ((pair = fmt_pair(level, NULL, obj)) == NULL) {
+                Py_DECREF(lines);
+                goto exit;
+            }
+            PyList_SET_ITEM(lines, i, pair);
+        }
+    } else {
+        if ((pair = fmt_pair(level, NULL, obj)) == NULL) {
+            Py_DECREF(lines);
+            goto exit;
+        }
+        PyList_SET_ITEM(lines, 0, pair);
+    }
+
+ exit:
+    Py_XDECREF(seq);
+    return lines;
+}
+
+PyDoc_STRVAR(nss_make_line_pairs_doc,
+"make_line_pairs(obj, level=0) -> [(level, str), ...]\n\
+\n\
+:Parameters:\n\
+    obj : object\n\
+        If obj is a tuple or list then each member will be wrapped\n\
+        in a 2-tuple of (level, str). If obj is a scalar object\n\
+        then obj will be wrapped in a 2-tuple of (level, obj)\n\
+    level : integer\n\
+        Initial indentation level, all subsequent indents are relative\n\
+        to this starting level.\n\
+\n\
+Return a list of 2-tuple line pairs sutible to passing to\n\
+indented_format(). Each tuple pair consists of a integer\n\
+level value and a string object. This is equivalent to:\n\
+[(level, str(x)) for x in obj].\n\
+As a special case convenience if obj is a scalar object (i.e.\n\
+not a list or tuple) then [(level, str(obj))] will be returned.\n\
+");
+
+static PyObject *
+nss_make_line_pairs(PyObject *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"level", "obj", NULL};
+    int level = 0;
+    PyObject *obj;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "iO:make_line_pairs", kwlist,
+                                     &level, &obj))
+        return NULL;
+
+    return make_line_pairs(level, obj);
+}
+
+static PyObject *
+fmt_pair(int level, const char *label, PyObject *obj)
+{
     PyObject *obj_str = NULL;
 
-    if (PyString_Check(obj)) {
+    if (PyString_Check(obj) || PyUnicode_Check(obj)) {
         Py_INCREF(obj);
         obj_str = obj;
     } else {
@@ -412,14 +2068,7 @@ fmt_pair(int level, char *label, PyObject *obj)
         }
     }
 
-    if ((pair = PyTuple_New(2)) == NULL) {
-        return NULL;
-    }
-
-    PyTuple_SET_ITEM(pair, 0, PyInt_FromLong(level));
-    PyTuple_SET_ITEM(pair, 1, obj_str);
-
-    return pair;
+    return line_pair(level, obj_str);
 }
 
 static PyObject *
@@ -511,7 +2160,6 @@ raw_data_to_hex(unsigned char *data, int data_len, int octets_per_line, char *se
     int line_number, i, j;
     int num_octets = 0;
 
-
     if (octets_per_line < 0)
         octets_per_line = 0;
 
@@ -575,7 +2223,7 @@ raw_data_to_hex(unsigned char *data, int data_len, int octets_per_line, char *se
 }
 
 PyDoc_STRVAR(cert_data_to_hex_doc,
-"data_to_hex(data, octets_per_line=0, separator=None) -> string or list of strings\n\
+"data_to_hex(data, octets_per_line=0, separator=':') -> string or list of strings\n\
 \n\
 :Parameters:\n\
     data : buffer\n\
@@ -606,7 +2254,7 @@ If octets_per_line is zero then a single string is returned,\n\
 \n\
 The separator string is used to separate each octet. If None\n\
 it will be as if the empty string had been passed and no\n\
-separator will be used. This is the default.\n\
+separator will be used.\n\
 ");
 
 static PyObject *
@@ -615,7 +2263,7 @@ cert_data_to_hex(PyObject *self, PyObject *args, PyObject *kwds)
     static char *kwlist[] = {"data", "octets_per_line", "separator", NULL};
     PyObject *obj = NULL;
     int octets_per_line = 0;
-    char *separator = "";
+    char *separator = HEX_SEPARATOR_DEFAULT;
 
     TraceMethodEnter(self);
 
@@ -637,7 +2285,6 @@ PyDoc_STRVAR(read_hex_doc,
         Any character encountered during parsing which is in\n\
         this string will be skipped and considered a separator\n\
         between pairs of hexadecimal characters.\n\
-\n\
 \n\
 Parse a string containing hexadecimal data and return a buffer\n\
 object containing the binary octets. Each octet in the string is\n\
@@ -782,8 +2429,30 @@ sec_strip_tag_and_length(SECItem *item)
     return SECSuccess;
 }
 
+/* ================== Convert NSS Object to Python String =================== */
+
 static PyObject *
-sec_context_specific_str(SECItem *item)
+CERTName_to_pystr(CERTName *cert_name)
+{
+    char *name;
+    PyObject *py_name = NULL;
+
+    if (!cert_name) {
+        return PyString_FromString("");
+    }
+
+    if ((name = CERT_NameToAscii(cert_name)) == NULL) {
+        return PyString_FromString("");
+    }
+
+    py_name = PyString_FromString(name);
+    PORT_Free(name);
+    return py_name;
+}
+
+
+static PyObject *
+der_context_specific_secitem_to_pystr(SECItem *item)
 {
     PyObject *str = NULL;
     PyObject *hex_str = NULL;
@@ -810,15 +2479,21 @@ sec_context_specific_str(SECItem *item)
 }
 
 static PyObject *
-sec_any_str(SECItem *item)
+secitem_to_pystr_hex(SECItem *item)
+{
+    return raw_data_to_hex(item->data, item->len, 0, HEX_SEPARATOR_DEFAULT);
+}
+
+static PyObject *
+der_any_secitem_to_pystr(SECItem *item)
 {
     if (item && item->len && item->data) {
 	switch (item->data[0] & SEC_ASN1_CLASS_MASK) {
 	case SEC_ASN1_CONTEXT_SPECIFIC:
-	    return sec_context_specific_str(item);
+	    return der_context_specific_secitem_to_pystr(item);
 	    break;
 	case SEC_ASN1_UNIVERSAL:
-	    return sec_universal_item_str(item);
+	    return der_universal_secitem_to_pystr(item);
 	    break;
 	default:
 	    return raw_data_to_hex(item->data, item->len, 0, HEX_SEPARATOR_DEFAULT);
@@ -830,12 +2505,12 @@ sec_any_str(SECItem *item)
 
 /* return a ASN1 SET or SEQUENCE as a list of strings */
 static PyObject *
-sec_set_str_list(SECItem *item)
+der_set_or_str_secitem_to_pylist_of_pystr(SECItem *item)
 {
     int type        = item->data[0] & SEC_ASN1_TAGNUM_MASK;
     int constructed = item->data[0] & SEC_ASN1_CONSTRUCTED;
     char *label = NULL;
-    SECItem stripped_item = *item;
+    SECItem tmp_item = *item;
     PyObject *py_items = NULL;
     PyObject *py_item = NULL;
 
@@ -843,7 +2518,7 @@ sec_set_str_list(SECItem *item)
         return raw_data_to_hex(item->data, item->len, 0, HEX_SEPARATOR_DEFAULT);
     }
 
-    if (sec_strip_tag_and_length(&stripped_item) != SECSuccess)
+    if (sec_strip_tag_and_length(&tmp_item) != SECSuccess)
         Py_RETURN_NONE;
 
     if ((py_items = PyList_New(0)) == NULL)
@@ -856,8 +2531,8 @@ sec_set_str_list(SECItem *item)
     else
     	label = "";
 
-    while (stripped_item.len >= 2) {
-	SECItem  tmp_item = stripped_item;
+    while (tmp_item.len >= 2) {
+	SECItem  tmp_item = tmp_item;
 
         if (tmp_item.data[1] & 0x80) {
 	    unsigned int i;
@@ -872,13 +2547,13 @@ sec_set_str_list(SECItem *item)
 	} else {
 	    tmp_item.len = tmp_item.data[1] + 2;
 	}
-	if (tmp_item.len > stripped_item.len) {
-	    tmp_item.len = stripped_item.len;
+	if (tmp_item.len > tmp_item.len) {
+	    tmp_item.len = tmp_item.len;
 	}
-	stripped_item.data += tmp_item.len;
-	stripped_item.len  -= tmp_item.len;
+	tmp_item.data += tmp_item.len;
+	tmp_item.len  -= tmp_item.len;
 
-        py_item = sec_any_str(&tmp_item);
+        py_item = der_any_secitem_to_pystr(&tmp_item);
         PyList_Append(py_items, py_item);
     }
 
@@ -886,7 +2561,7 @@ sec_set_str_list(SECItem *item)
 }
 
 static PyObject *
-sec_boolean_str(SECItem *item)
+boolean_secitem_to_pystr(SECItem *item)
 {
     int val = 0;
 
@@ -901,91 +2576,192 @@ sec_boolean_str(SECItem *item)
 }
 
 static PyObject *
-sec_encoded_boolean_str(SECItem *item)
+der_boolean_secitem_to_pystr(SECItem *item)
 {
     PyObject *str = NULL;
-    SECItem stripped_item = *item;
+    SECItem tmp_item = *item;
 
-    if (sec_strip_tag_and_length(&stripped_item) == SECSuccess)
-	str = sec_boolean_str(&stripped_item);
+    if (sec_strip_tag_and_length(&tmp_item) == SECSuccess)
+	str = boolean_secitem_to_pystr(&tmp_item);
 
     return str;
 }
 
+/*
+ * Decodes ASN1 integer. Properly handles large magnitude.
+ * PyInt object returned if value fits, PyLong object otherwise.
+ * 
+ * item is a decoded ASN1 integer, if the integer is a DER encoded
+ * integer with a tag and length then call encoded_integer_secitem_to_pylong
+ */
 static PyObject *
-sec_integer_str(SECItem *item)
+integer_secitem_to_pylong(SECItem *item)
 {
-    PyObject *str = NULL;
-    int ival;
+    int len;
+    unsigned char *data, octet;
+    PyObject *l = NULL;
+    PyObject *eight = NULL;
+    PyObject *new_bits = NULL;
+    PyObject *tmp = NULL;
+    bool negative;
 
     if (!item || !item->len || !item->data) {
-        str = PyString_FromFormat("(null)");
-    } else if (item->len > 4) {
-        str = raw_data_to_hex(item->data, item->len, 0, HEX_SEPARATOR_DEFAULT);
-    } else {
-	ival = DER_GetInteger(item);
-        str = PyString_FromFormat("%d (0x%x)", ival, ival);
+        return PyInt_FromLong(0);
     }
-    return str;
+
+    len = item->len;
+    data = item->data;
+    octet = *data++;
+    negative = octet & 0x80;
+
+    if (negative) {
+        if ((l = PyInt_FromLong(-1)) == NULL) {
+            goto error;
+        }
+    } else {
+        if ((l = PyInt_FromLong(0)) == NULL) {
+            goto error;
+        }      
+    }
+
+    if ((eight = PyInt_FromLong(8)) == NULL) {
+        return NULL;
+    }
+
+    do {
+        if ((new_bits = PyInt_FromLong(octet)) == NULL) {
+            goto error;
+        }
+
+        if ((tmp = PyNumber_Lshift(l, eight)) == NULL) {
+            goto error;
+        }
+        Py_DECREF(l);
+        
+        if ((l = PyNumber_Or(tmp, new_bits)) == NULL) {
+            goto error;
+        }
+        
+        Py_DECREF(tmp);
+        tmp = NULL;
+
+        Py_DECREF(new_bits);
+        new_bits = NULL;
+        
+        octet = *data++;
+        len--;
+    } while (len);
+    
+    goto exit;
+
+ error:
+    Py_XDECREF(l);
+    l = NULL;
+ exit:
+    Py_XDECREF(eight);
+    Py_XDECREF(new_bits);
+    Py_XDECREF(tmp);
+    return l;
 }
 
 static PyObject *
-sec_encoded_integer_str(SECItem *item)
+der_integer_secitem_to_pylong(SECItem *item)
 {
-    PyObject *str = NULL;
-    SECItem stripped_item = *item;
+    SECItem tmp_item;
 
-    if (sec_strip_tag_and_length(&stripped_item) == SECSuccess)
-	str = sec_integer_str(&stripped_item);
-
-    return str;
+    tmp_item = *item;
+    if (sec_strip_tag_and_length(&tmp_item) != SECSuccess) {
+        return NULL;
+    }
+    return integer_secitem_to_pylong(&tmp_item);
 }
 
 static PyObject *
-sec_string_str(SECItem *item)
+integer_secitem_to_pystr(SECItem *item)
 {
-    PyObject *str = NULL;
-    SECItem stripped_item = *item;
+    PyObject *py_int = NULL;
+    PyObject *py_str = NULL;
 
-    if (sec_strip_tag_and_length(&stripped_item) == SECSuccess)
-	str = PyString_FromStringAndSize((char *)item->data, item->len);
+    if ((py_int = integer_secitem_to_pylong(item)) == NULL) {
+        return NULL;
+    }
 
-    return str;
+    py_str = PyObject_Str(py_int);
+
+    Py_DECREF(py_int);
+    return py_str;
 }
 
-/* This function does NOT expect a DER type and length. */
 static PyObject *
-sec_oid_str_by_secitem(SECItem *oid)
+der_integer_secitem_to_pystr(SECItem *item)
+{
+    PyObject *py_str = NULL;
+    SECItem tmp_item = *item;
+
+    if (sec_strip_tag_and_length(&tmp_item) == SECSuccess)
+	py_str = integer_secitem_to_pystr(&tmp_item);
+
+    return py_str;
+}
+
+static PyObject *
+oid_secitem_to_pystr_desc(SECItem *oid)
 {
     SECOidData *oiddata;
-    char *oidString = NULL;
+    char *oid_string = NULL;
     PyObject *py_oid_str = NULL;
 
     if ((oiddata = SECOID_FindOID(oid)) != NULL) {
 	return PyString_FromString(oiddata->desc);
     }
-    if ((oidString = CERT_GetOidString(oid)) != NULL) {
-        py_oid_str = PyString_FromString(oidString);
-	PR_smprintf_free(oidString);
+    if ((oid_string = CERT_GetOidString(oid)) != NULL) {
+        py_oid_str = PyString_FromString(oid_string);
+	PR_smprintf_free(oid_string);
 	return py_oid_str;
     }
-    Py_RETURN_NONE;
+    return obj_to_hex((PyObject *)oid, 0, HEX_SEPARATOR_DEFAULT);
 }
 
 static PyObject *
-sec_encoded_oid_str(SECItem *item)
+oid_secitem_to_pyint_tag(SECItem *oid)
+{
+    SECOidTag oid_tag;
+
+    oid_tag = SECOID_FindOIDTag(oid);
+    return PyInt_FromLong(oid_tag);
+}
+
+static PyObject *
+oid_secitem_to_pystr_dotted_decimal(SECItem *oid)
+{
+    char *oid_string = NULL;
+    PyObject *py_oid_string;
+
+    if ((oid_string = CERT_GetOidString(oid)) == NULL) {
+        return PyString_FromString("");
+    }
+    if ((py_oid_string = PyString_FromString(oid_string)) == NULL) {
+        PR_smprintf_free(oid_string);
+        return NULL;
+    }
+    PR_smprintf_free(oid_string);
+    return py_oid_string;
+}
+
+static PyObject *
+der_oid_secitem_to_pystr_desc(SECItem *item)
 {
     PyObject *str = NULL;
-    SECItem stripped_item = *item;
+    SECItem tmp_item = *item;
 
-    if (sec_strip_tag_and_length(&stripped_item) == SECSuccess)
-	str = sec_oid_str_by_secitem(&stripped_item);
+    if (sec_strip_tag_and_length(&tmp_item) == SECSuccess)
+	str = oid_secitem_to_pystr_desc(&tmp_item);
 
     return str;
 }
 
 static PyObject *
-sec_utc_time_str(SECItem *item)
+der_utc_time_secitem_to_pystr(SECItem *item)
 {
     PRTime pr_time = 0;
     PRExplodedTime exploded_time;
@@ -1001,7 +2777,7 @@ sec_utc_time_str(SECItem *item)
 
 
 static PyObject *
-sec_generalized_time_str(SECItem *item)
+der_generalized_time_secitem_to_pystr(SECItem *item)
 {
     PRTime pr_time = 0;
     PRExplodedTime exploded_time;
@@ -1016,8 +2792,8 @@ sec_generalized_time_str(SECItem *item)
 }
 
 
-PRTime
-sec_time_choice(SECItem *item)
+static PRTime
+time_choice_secitem_to_prtime(SECItem *item)
 {
     PRTime pr_time = 0;
 
@@ -1035,13 +2811,13 @@ sec_time_choice(SECItem *item)
 }
 
 static PyObject *
-sec_time_choice_str(SECItem *item)
+time_choice_secitem_to_pystr(SECItem *item)
 {
     PRTime pr_time = 0;
     PRExplodedTime exploded_time;
     char time_str[100];
 
-    pr_time = sec_time_choice(item);
+    pr_time = time_choice_secitem_to_prtime(item);
     PR_ExplodeTime(pr_time, PR_GMTParameters, &exploded_time);
     PR_FormatTime(time_str, sizeof(time_str), time_format, &exploded_time);
 
@@ -1049,31 +2825,31 @@ sec_time_choice_str(SECItem *item)
 }
 
 static PyObject *
-sec_octet_str(SECItem *item)
+der_octet_secitem_to_pystr(SECItem *item, int octets_per_line, char *separator)
 {
     PyObject *str = NULL;
-    SECItem stripped_item = *item;
+    SECItem tmp_item = *item;
 
-    if (sec_strip_tag_and_length(&stripped_item) == SECSuccess)
-        str = raw_data_to_hex(item->data, item->len, 0, HEX_SEPARATOR_DEFAULT);
+    if (sec_strip_tag_and_length(&tmp_item) == SECSuccess)
+        str = raw_data_to_hex(tmp_item.data, tmp_item.len, octets_per_line, separator);
 
     return str;
 }
 
 static PyObject *
-sec_bit_str(SECItem *item)
+der_bit_string_secitem_to_pystr(SECItem *item)
 {
     PyObject *str = NULL;
-    SECItem stripped_item = *item;
+    SECItem tmp_item = *item;
     int unused_bits;
 
-    if (sec_strip_tag_and_length(&stripped_item) != SECSuccess || stripped_item.len < 2)
+    if (sec_strip_tag_and_length(&tmp_item) != SECSuccess || tmp_item.len < 2)
         Py_RETURN_NONE;
 
-    unused_bits = *stripped_item.data++;
-    stripped_item.len--;
+    unused_bits = *tmp_item.data++;
+    tmp_item.len--;
 
-    str = raw_data_to_hex(stripped_item.data, stripped_item.len, 0, HEX_SEPARATOR_DEFAULT);
+    str = raw_data_to_hex(tmp_item.data, tmp_item.len, 0, HEX_SEPARATOR_DEFAULT);
 
     if (unused_bits) {
 	PyString_ConcatAndDel(&str, PyString_FromFormat("(%d least significant bits unused)", unused_bits));
@@ -1083,135 +2859,354 @@ sec_bit_str(SECItem *item)
 }
 
 static PyObject *
-sec_bmp_str(SECItem *item)
+ascii_string_secitem_to_escaped_ascii_pystr(SECItem *item)
 {
-    PyObject *str = NULL;
-    SECItem stripped_item = *item;
-    unsigned char * s;
-    unsigned char * d;
-    int      len;
-    SECItem  tmp_item = {0, 0, 0};
+    PyObject *py_str = NULL;
+    size_t escaped_len;
+    const unsigned char *s; /* must be unsigned for table indexing to work */
+    char *escaped_str, *dst, *src;
+    AsciiEscapes *encode;
+    unsigned int len;
 
-    if (sec_strip_tag_and_length(&stripped_item) != SECSuccess)
-	goto loser;
+    escaped_len = ascii_encoded_strnlen((const char *)item->data, item->len);
 
-    if (stripped_item.len % 2)
-    	goto loser;
-
-    len = (int)(stripped_item.len / 2);
-    tmp_item.data = (unsigned char *)PORT_Alloc(len);
-
-    if (!tmp_item.data)
-    	goto loser;
-
-    tmp_item.len = len;
-
-    for (s = stripped_item.data, d = tmp_item.data ; len > 0; len--) {
-    	PRUint32 tmp_char = (s[0] << 8) | s[1]; s += 2;
-	if (!isprint(tmp_char))
-	    goto loser;
-	*d++ = (unsigned char)tmp_char;
+    if ((py_str = PyString_FromStringAndSize(NULL, escaped_len)) == NULL) {
+        return NULL;
     }
-    str = PyString_FromString((char *)tmp_item.data);
-    PORT_Free(tmp_item.data);
-    return str;
 
-loser:
-    str = raw_data_to_hex(stripped_item.data, stripped_item.len, 0, HEX_SEPARATOR_DEFAULT);
-    if (tmp_item.data)
-	PORT_Free(tmp_item.data);
-    return str;
+    escaped_str = PyString_AS_STRING(py_str);
+
+    for (s = (unsigned char *)item->data, len = item->len, dst = escaped_str;
+         len;
+         s++, len--) {
+        encode = &ascii_encoding_table[*s];
+        for (src = encode->encoded; *src; src++) {
+            *dst++ = *src;
+        }
+    }
+
+    *dst = 0;                   /* shouldn't be necessary, PyString's are always NULL terminated */
+
+    return py_str;
 }
 
 static PyObject *
-sec_universal_str(SECItem *item)
+der_ascii_string_secitem_to_escaped_ascii_pystr(SECItem *item)
 {
-    PyObject *str = NULL;
-    SECItem stripped_item = *item;
-    unsigned char * s;
-    unsigned char * d;
-    int      len;
-    SECItem  tmp_item = {0, 0, 0};
+    SECItem tmp_item = *item;
 
-    if (sec_strip_tag_and_length(&stripped_item) != SECSuccess)
-	goto loser;
-
-    if (stripped_item.len % 4)
-    	goto loser;
-
-    len = (int)(stripped_item.len / 4);
-    tmp_item.data = (unsigned char *)PORT_Alloc(len);
-
-    if (!tmp_item.data)
-    	goto loser;
-
-    tmp_item.len = len;
-
-    for (s = stripped_item.data, d = tmp_item.data ; len > 0; len--) {
-    	PRUint32 tmp_char = (s[0] << 24) | (s[1] << 16) | (s[2] << 8) | s[3];
-	if (!isprint(tmp_char))
-	    goto loser;
-	*d++ = (unsigned char)tmp_char;
+    if (sec_strip_tag_and_length(&tmp_item) != SECSuccess) {
+        PyErr_SetString(PyExc_ValueError, "malformed raw ascii string buffer");
+        return NULL;
     }
-    str = PyString_FromString((char *)tmp_item.data);
-    PORT_Free(tmp_item.data);
-    return str;
 
-loser:
-    str = raw_data_to_hex(stripped_item.data, stripped_item.len, 0, HEX_SEPARATOR_DEFAULT);
-    if (tmp_item.data)
-	PORT_Free(tmp_item.data);
-    return str;
+    return ascii_string_secitem_to_escaped_ascii_pystr(&tmp_item);
 }
 
 static PyObject *
-sec_universal_item_str(SECItem *item)
+der_utf8_string_secitem_to_pyunicode(SECItem *item)
+{
+    SECItem tmp_item = *item;
+
+    if (sec_strip_tag_and_length(&tmp_item) != SECSuccess) {
+        PyErr_SetString(PyExc_ValueError, "malformed raw ASN.1 BMP string buffer");
+        return NULL;
+    }
+
+    return PyUnicode_DecodeUTF8((const char *)tmp_item.data, tmp_item.len, NULL);
+}
+
+
+static PyObject *
+der_bmp_string_secitem_to_pyunicode(SECItem *item)
+{
+    SECItem tmp_item = *item;
+    int byte_order = 1;         /* 1 = big endian, asn.1 DER is always big endian */
+
+    if (sec_strip_tag_and_length(&tmp_item) != SECSuccess) {
+        PyErr_SetString(PyExc_ValueError, "malformed raw ASN.1 BMP string buffer");
+        return NULL;
+    }
+
+    if (tmp_item.len % 2) {
+        PyErr_SetString(PyExc_ValueError, "raw ASN.1 BMP string length must be multiple of 2");
+        return NULL;
+    }
+
+    return PyUnicode_DecodeUTF16((const char *)tmp_item.data, tmp_item.len,
+                                 NULL, &byte_order);
+}
+
+
+static PyObject *
+der_universal_string_secitem_to_pyunicode(SECItem *item)
+{
+    SECItem tmp_item = *item;
+    int byte_order = 1;         /* 1 = big endian, asn.1 DER is always big endian */
+
+    if (sec_strip_tag_and_length(&tmp_item) != SECSuccess) {
+        PyErr_SetString(PyExc_ValueError, "malformed raw ASN.1 Universal string buffer");
+        return NULL;
+    }
+
+    if (tmp_item.len % 4) {
+        PyErr_SetString(PyExc_ValueError, "raw ASN.1 Universal string length must be multiple of 4");
+        return NULL;
+    }
+
+    return PyUnicode_DecodeUTF32((const char *)tmp_item.data, tmp_item.len,
+                                 NULL, &byte_order);
+}
+
+static PyObject *
+der_universal_secitem_to_pystr(SECItem *item)
 {
     switch (item->data[0] & SEC_ASN1_TAGNUM_MASK) {
     case SEC_ASN1_ENUMERATED:
     case SEC_ASN1_INTEGER:
-        return sec_encoded_integer_str(item);
+        return der_integer_secitem_to_pystr(item);
     case SEC_ASN1_OBJECT_ID:
-        return sec_encoded_oid_str(item);
+        return der_oid_secitem_to_pystr_desc(item);
     case SEC_ASN1_BOOLEAN:
-        return sec_encoded_boolean_str(item);
+        return der_boolean_secitem_to_pystr(item);
     case SEC_ASN1_UTF8_STRING:
+        return der_utf8_string_secitem_to_pyunicode(item);
     case SEC_ASN1_PRINTABLE_STRING:
     case SEC_ASN1_VISIBLE_STRING:
     case SEC_ASN1_IA5_STRING:
     case SEC_ASN1_T61_STRING:
-        return sec_string_str(item);
+        return der_ascii_string_secitem_to_escaped_ascii_pystr(item);
     case SEC_ASN1_GENERALIZED_TIME:
-        return sec_generalized_time_str(item);
+        return der_generalized_time_secitem_to_pystr(item);
     case SEC_ASN1_UTC_TIME:
-        return sec_utc_time_str(item);
+        return der_utc_time_secitem_to_pystr(item);
     case SEC_ASN1_NULL:
         return PyString_FromString("(null)");
     case SEC_ASN1_SET:
     case SEC_ASN1_SEQUENCE:
-        return sec_set_str_list(item);
+        return der_set_or_str_secitem_to_pylist_of_pystr(item);
     case SEC_ASN1_OCTET_STRING:
-        return sec_octet_str(item);
+        return der_octet_secitem_to_pystr(item, 0, HEX_SEPARATOR_DEFAULT);
     case SEC_ASN1_BIT_STRING:
-        sec_bit_str(item);
+        der_bit_string_secitem_to_pystr(item);
         break;
     case SEC_ASN1_BMP_STRING:
-        return sec_bmp_str(item);
+        return der_bmp_string_secitem_to_pyunicode(item);
     case SEC_ASN1_UNIVERSAL_STRING:
-        return sec_universal_str(item);
+        return der_universal_string_secitem_to_pyunicode(item);
     default:
         return raw_data_to_hex(item->data, item->len, 0, HEX_SEPARATOR_DEFAULT);
     }
     Py_RETURN_NONE;
 }
 
+PyDoc_STRVAR(cert_der_universal_secitem_fmt_lines_doc,
+"der_universal_secitem_fmt_lines(sec_item, level=0, octets_per_line=0, separator=':') -> list of (indent, string) tuples\n\
+\n\
+:Parameters:\n\
+    sec_item : SecItem object\n\
+        A SecItem containing a DER encoded ASN1 universal type\n\
+    level : integer\n\
+        Initial indentation level, all subsequent indents are relative\n\
+        to this starting level.\n\
+    octets_per_line : integer\n\
+        Number of octets formatted on one line, if 0 then\n\
+        return a single string instead of an array of lines\n\
+    separator : string\n\
+        String used to seperate each octet\n\
+        If None it will be as if the empty string had been\n\
+        passed and no separator will be used.\n\
+\n\
+Given a SecItem in DER format which encodes a ASN.1 universal\n\
+type convert the item to a string and return a list of\n\
+(indent, string) tuples.\n\
+");
 static PyObject *
-get_algorithm_id_str(SECAlgorithmID *a)
+cert_der_universal_secitem_fmt_lines(PyObject *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"level", "octets_per_line", "separator", NULL};
+    SecItem *py_sec_item = NULL;
+    int level = 0;
+    int octets_per_line = OCTETS_PER_LINE_DEFAULT;
+    char *hex_separator = HEX_SEPARATOR_DEFAULT;
+    PyObject *lines = NULL;
+    PyObject *obj = NULL;
+    PyObject *obj_lines = NULL;
+    int i;
+    Py_ssize_t len;
+    SECItem *item = NULL;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!|iiz:der_universal_secitem_fmt_lines", kwlist,
+                                     &SecItemType, &py_sec_item,
+                                     &level, &octets_per_line, &hex_separator))
+        return NULL;
+
+    item = &py_sec_item->item;
+
+    if ((lines = PyList_New(0)) == NULL) {
+        return NULL;
+    }
+
+    switch (item->data[0] & SEC_ASN1_TAGNUM_MASK) {
+    case SEC_ASN1_ENUMERATED:
+    case SEC_ASN1_INTEGER:
+        obj = der_integer_secitem_to_pystr(item);
+    case SEC_ASN1_OBJECT_ID:
+        obj = der_oid_secitem_to_pystr_desc(item);
+    case SEC_ASN1_BOOLEAN:
+        obj = der_boolean_secitem_to_pystr(item);
+    case SEC_ASN1_UTF8_STRING:
+        obj = der_utf8_string_secitem_to_pyunicode(item);
+    case SEC_ASN1_PRINTABLE_STRING:
+    case SEC_ASN1_VISIBLE_STRING:
+    case SEC_ASN1_IA5_STRING:
+    case SEC_ASN1_T61_STRING:
+        obj = der_ascii_string_secitem_to_escaped_ascii_pystr(item);
+    case SEC_ASN1_GENERALIZED_TIME:
+        obj = der_generalized_time_secitem_to_pystr(item);
+    case SEC_ASN1_UTC_TIME:
+        obj = der_utc_time_secitem_to_pystr(item);
+    case SEC_ASN1_NULL:
+        obj = PyString_FromString("(null)");
+    case SEC_ASN1_SET:
+    case SEC_ASN1_SEQUENCE:
+        obj = der_set_or_str_secitem_to_pylist_of_pystr(item);
+    case SEC_ASN1_OCTET_STRING:
+        obj = der_octet_secitem_to_pystr(item, octets_per_line, hex_separator);
+    case SEC_ASN1_BIT_STRING:
+        der_bit_string_secitem_to_pystr(item);
+        break;
+    case SEC_ASN1_BMP_STRING:
+        obj = der_bmp_string_secitem_to_pyunicode(item);
+    case SEC_ASN1_UNIVERSAL_STRING:
+        obj = der_universal_string_secitem_to_pyunicode(item);
+    default:
+        obj = raw_data_to_hex(item->data, item->len, octets_per_line, hex_separator);
+    }
+
+    if (PyList_Check(obj) || PyTuple_Check(obj)) {
+        obj_lines = obj;
+        len = PySequence_Size(obj_lines);
+        for (i = 0; i < len; i++) {
+            obj = PySequence_GetItem(obj_lines, i);
+            Py_INCREF(obj);
+            MAKE_PAIR_AND_APPEND(level, obj, lines, fail);
+        }
+        Py_CLEAR(obj_lines);
+    } else {
+        MAKE_PAIR_AND_APPEND(level, obj, lines, fail);
+    }
+
+    return lines;
+
+ fail:
+    Py_XDECREF(lines);
+    return NULL;
+}
+
+static PyObject *
+CERTGeneralName_type_string_to_pystr(CERTGeneralName *general_name)
+{
+    
+    switch(general_name->type) {
+    case certOtherName: {
+        PyObject *py_oid = oid_secitem_to_pystr_desc(&general_name->name.OthName.oid);
+        if (py_oid) {
+            PyObject *result = PyString_FromFormat(_("Other Name (%s)"), PyString_AS_STRING(py_oid));
+            Py_DECREF(py_oid);
+            return result;
+        } else {
+            return PyString_FromString(_("Other Name"));
+        }
+    }
+    case certRFC822Name:
+        return PyString_FromString(_("RFC822 Name"));
+    case certDNSName:
+        return PyString_FromString(_("DNS name"));
+    case certX400Address:
+        return PyString_FromString(_("X400 Address"));
+    case certDirectoryName:
+        return PyString_FromString(_("Directory Name"));
+    case certEDIPartyName:
+        return PyString_FromString(_("EDI Party"));
+    case certURI:
+        return PyString_FromString(_("URI"));
+    case certIPAddress:
+        return PyString_FromString(_("IP Address"));
+    case certRegisterID:
+        return PyString_FromString(_("Registered ID"));
+    default:
+	return PyString_FromFormat(_("unknown type [%d]"), (int)general_name->type - 1);
+    }
+}
+
+static PyObject *
+CERTGeneralName_to_pystr(CERTGeneralName *general_name)
+{
+    switch(general_name->type) {
+    case certOtherName:
+        return der_any_secitem_to_pystr(&general_name->name.OthName.name);
+    case certRFC822Name:
+        return ascii_string_secitem_to_escaped_ascii_pystr(&general_name->name.other);
+    case certDNSName:
+        return ascii_string_secitem_to_escaped_ascii_pystr(&general_name->name.other);
+    case certX400Address:
+        return der_any_secitem_to_pystr(&general_name->name.other);
+    case certDirectoryName:
+        return CERTName_to_pystr(&general_name->name.directoryName);
+    case certEDIPartyName:
+        return der_any_secitem_to_pystr(&general_name->name.other);
+    case certURI:
+        return ascii_string_secitem_to_escaped_ascii_pystr(&general_name->name.other);
+    case certIPAddress:
+        return ip_addr_secitem_to_pystr(&general_name->name.other);
+    case certRegisterID:
+        return oid_secitem_to_pystr_desc(&general_name->name.other);
+    default:
+        PyErr_Format(PyExc_ValueError, _("unknown type [%d]"), (int)general_name->type - 1);
+        return NULL;
+        
+    }
+}
+
+static PyObject *
+CERTGeneralName_to_pystr_with_label(CERTGeneralName *general_name)
+{
+    PyObject *py_label = NULL;
+    PyObject *py_value = NULL;
+    PyObject *result = NULL;
+
+    if (!general_name) {
+        return NULL;
+    }
+
+    py_label = CERTGeneralName_type_string_to_pystr(general_name);
+    py_value = CERTGeneralName_to_pystr(general_name);
+
+    if (py_label && py_value) {
+        result = PyString_FromFormat("%s: %s", 
+                                     PyString_AS_STRING(py_label),
+                                     PyString_AS_STRING(py_value));
+    } else if (py_value) {
+        Py_INCREF(py_value);
+        result = py_value;
+    }
+
+    Py_XDECREF(py_label);
+    Py_XDECREF(py_value);
+
+    return result;
+}
+
+static PyObject *
+SECAlgorithmID_to_pystr(SECAlgorithmID *a)
 {
     PyObject *str = NULL;
 
-    if ((str = sec_oid_str_by_secitem(&a->algorithm)) == NULL)
-        Py_RETURN_NONE;
+    if ((str = oid_secitem_to_pystr_desc(&a->algorithm)) == NULL)
+        return NULL;
 
     if ((a->parameters.len == 0) ||
 	(a->parameters.len == 2 && memcmp(a->parameters.data, "\005\000", 2) == 0)) {
@@ -1229,6 +3224,113 @@ get_algorithm_id_str(SECAlgorithmID *a)
 
 
 static PyObject *
+CERTAVA_value_to_pystr(CERTAVA *ava)
+{
+    char value_buf[1024];
+    SECItem *decoded = NULL;
+
+    if (!ava)
+        return NULL;
+
+    if ((decoded = CERT_DecodeAVAValue(&ava->value)) == NULL)
+        return NULL;
+
+    if (CERT_RFC1485_EscapeAndQuote(value_buf, sizeof(value_buf),
+                                    (char *)decoded->data, decoded->len) != SECSuccess) {
+        SECITEM_FreeItem(decoded, PR_TRUE);
+        return NULL;
+    }
+
+    SECITEM_FreeItem(decoded, PR_TRUE);
+
+    return PyString_FromString(value_buf);
+}
+
+static PyObject *
+CERTRDN_to_pystr(CERTRDN *rdn)
+{
+    PyObject *result = NULL;
+    CERTAVA **avas, *ava;
+    SECOidTag oid_tag;
+    const char *attr_name;
+    char *oid_name;
+    bool first;
+    char value_buf[1024];
+    SECItem *value_item;
+
+    if (!rdn || !(avas = rdn->avas) || *avas == NULL) {
+        return PyString_FromString("");
+    }
+
+    first = true;
+    while ((ava = *avas++) != NULL) {
+        value_buf[0] = 0;
+        attr_name = NULL;
+        oid_name = NULL;
+
+        /*
+         * Get the AVA's attribute name (e.g. type) as a string.  If we
+         * can't get the canonical name use a dotted-decimal OID
+         * representation instead.
+         */
+        if ((oid_tag = CERT_GetAVATag(ava)) != -1) {
+            attr_name = ava_oid_tag_to_name(oid_tag);
+        }
+
+        if (attr_name == NULL) {
+            if ((oid_name = CERT_GetOidString(&ava->type)) == NULL) {
+                return set_nspr_error("cannot convert AVA type to OID string");
+            }
+        }
+
+        /* Get the AVA's attribute value as a string */
+        if ((value_item = CERT_DecodeAVAValue(&ava->value)) == NULL) {
+            if (oid_name) PR_smprintf_free(oid_name);
+            return set_nspr_error("unable to decode AVA value");
+        }
+        if (CERT_RFC1485_EscapeAndQuote(value_buf, sizeof(value_buf),
+                                        (char *)value_item->data,
+                                        value_item->len) != SECSuccess) {
+            if (oid_name) PR_smprintf_free(oid_name);
+            SECITEM_FreeItem(value_item, PR_TRUE);
+            return set_nspr_error("unable to escape AVA value string");
+        }
+        SECITEM_FreeItem(value_item, PR_TRUE);
+
+        /*
+         * Format "name=value", if there is more than one AVA join them
+         * together with a "+". Typically there is only one AVA.
+         */
+        if (first) {
+            if ((result = PyString_FromFormat("%s=%s",
+                                              attr_name ? attr_name : oid_name,
+                                              value_buf)) == NULL) {
+                if (oid_name) PR_smprintf_free(oid_name);
+                return NULL;
+            }
+        } else {
+            PyObject *temp;
+
+            if ((temp = PyString_FromFormat("+%s=%s",
+                                            attr_name ? attr_name : oid_name,
+                                            value_buf)) == NULL) {
+                if (oid_name) PR_smprintf_free(oid_name);
+                return NULL;
+            }
+            PyString_ConcatAndDel(&result, temp);
+            if (result == NULL) {
+                if (oid_name) PR_smprintf_free(oid_name);
+                return NULL;
+            }
+        }
+
+        if (oid_name) PR_smprintf_free(oid_name);
+        first = false;
+    }
+    return result;
+}
+
+static PyObject *
 cert_trust_flags_str(unsigned int flags)
 {
     PyObject *py_flags = NULL;
@@ -1238,63 +3340,63 @@ cert_trust_flags_str(unsigned int flags)
         return NULL;
 
     if (flags & CERTDB_VALID_PEER) {
-	if ((py_flag = PyString_FromString("Valid Peer")) == NULL) {
+	if ((py_flag = PyString_FromString(_("Valid Peer"))) == NULL) {
             Py_DECREF(py_flags);
             return NULL;
         }
         PyList_Append(py_flags, py_flag);
     }
     if (flags & CERTDB_TRUSTED) {
-	if ((py_flag = PyString_FromString("Trusted")) == NULL) {
+	if ((py_flag = PyString_FromString(_("Trusted"))) == NULL) {
             Py_DECREF(py_flags);
             return NULL;
         }
         PyList_Append(py_flags, py_flag);
     }
     if (flags & CERTDB_SEND_WARN) {
-	if ((py_flag = PyString_FromString("Warn When Sending")) == NULL) {
+	if ((py_flag = PyString_FromString(_("Warn When Sending"))) == NULL) {
             Py_DECREF(py_flags);
             return NULL;
         }
         PyList_Append(py_flags, py_flag);
     }
     if (flags & CERTDB_VALID_CA) {
-	if ((py_flag = PyString_FromString("Valid CA")) == NULL) {
+	if ((py_flag = PyString_FromString(_("Valid CA"))) == NULL) {
             Py_DECREF(py_flags);
             return NULL;
         }
         PyList_Append(py_flags, py_flag);
     }
     if (flags & CERTDB_TRUSTED_CA) {
-	if ((py_flag = PyString_FromString("Trusted CA")) == NULL) {
+	if ((py_flag = PyString_FromString(_("Trusted CA"))) == NULL) {
             Py_DECREF(py_flags);
             return NULL;
         }
         PyList_Append(py_flags, py_flag);
     }
     if (flags & CERTDB_NS_TRUSTED_CA) {
-	if ((py_flag = PyString_FromString("Netscape Trusted CA")) == NULL) {
+	if ((py_flag = PyString_FromString(_("Netscape Trusted CA"))) == NULL) {
             Py_DECREF(py_flags);
             return NULL;
         }
         PyList_Append(py_flags, py_flag);
     }
     if (flags & CERTDB_USER) {
-	if ((py_flag = PyString_FromString("User")) == NULL) {
+	if ((py_flag = PyString_FromString(_("User"))) == NULL) {
             Py_DECREF(py_flags);
             return NULL;
         }
         PyList_Append(py_flags, py_flag);
     }
     if (flags & CERTDB_TRUSTED_CLIENT_CA) {
-	if ((py_flag = PyString_FromString("Trusted Client CA")) == NULL) {
+	if ((py_flag = PyString_FromString(_("Trusted Client CA"))) == NULL) {
             Py_DECREF(py_flags);
             return NULL;
         }
         PyList_Append(py_flags, py_flag);
     }
     if (flags & CERTDB_GOVT_APPROVED_CA) {
-	if ((py_flag = PyString_FromString("Step-up")) == NULL) {
+	if ((py_flag = PyString_FromString(_("Step-up"))) == NULL) {
             Py_DECREF(py_flags);
             return NULL;
         }
@@ -1303,6 +3405,36 @@ cert_trust_flags_str(unsigned int flags)
     return py_flags;
 }
 
+
+static PyObject *
+ip_addr_secitem_to_pystr(SECItem *item)
+{
+    PRNetAddr  addr;
+    char buf[1024];
+
+    memset(&addr, 0, sizeof(addr));
+    if (item->len == 4) {
+	addr.inet.family = PR_AF_INET;
+	memcpy(&addr.inet.ip, item->data, item->len);
+    } else if (item->len == 16) {
+	addr.ipv6.family = PR_AF_INET6;
+	memcpy(addr.ipv6.ip.pr_s6_addr, item->data, item->len);
+	if (PR_IsNetAddrType(&addr, PR_IpAddrV4Mapped)) {
+	    /* convert to IPv4.  */
+	    addr.inet.family = PR_AF_INET;
+	    memcpy(&addr.inet.ip, &addr.ipv6.ip.pr_s6_addr[12], 4);
+	    memset(&addr.inet.pad[0], 0, sizeof addr.inet.pad);
+	}
+    } else {
+        return secitem_to_pystr_hex(item);
+    }
+
+    if (PR_NetAddrToString(&addr, buf, sizeof(buf)) != PR_SUCCESS) {
+        return secitem_to_pystr_hex(item);
+    }
+
+    return PyString_FromString(buf);
+}
 
 /* ========================================================================== */
 /* =============================== SecItem Class ============================ */
@@ -1330,9 +3462,12 @@ SecItem_get_data(SecItem *self, void *closure)
 
 static
 PyGetSetDef SecItem_getseters[] = {
-    {"type", (getter)SecItem_get_type, (setter)NULL, "the SecItem type (si* constant)", NULL},
-    {"len",  (getter)SecItem_get_len,  (setter)NULL, "number of octets in SecItem buffer", NULL},
-    {"data", (getter)SecItem_get_data, (setter)NULL, "contents of SecItem buffer", NULL},
+    {"type",       (getter)SecItem_get_type,    (setter)NULL,
+     "the SecItem type (si* constant)", NULL},
+    {"len",        (getter)SecItem_get_len,     (setter)NULL,
+     "number of octets in SecItem buffer", NULL},
+    {"data",       (getter)SecItem_get_data,    (setter)NULL,
+     "contents of SecItem buffer", NULL},
     {NULL}  /* Sentinel */
 };
 
@@ -1342,7 +3477,123 @@ static PyMemberDef SecItem_members[] = {
 
 /* ============================== Class Methods ============================= */
 
+PyDoc_STRVAR(SecItem_get_oid_sequence_doc,
+"get_oid_sequence(sec_item, repr_kind=AsString) -> (obj, ...)\n\
+\n\
+:Parameters:\n\
+    sec_item : SecItem object\n\
+        A SecItem containing a DER encoded sequence of OID's\n\
+    repr_kind : RepresentationKind constant\n\
+        Specifies what the contents of the returned tuple will be.\n\
+        May be one of:\n\
+\n\
+        AsObject\n\
+            Each extended key usage will be a SecItem object embedding\n\
+            the OID in DER format.\n\
+        AsString\n\
+            Each extended key usage will be a descriptive string.\n\
+            (e.g. \"TLS Web Server Authentication Certificate\")\n\
+        AsDottedDecimal\n\
+            Each extended key usage will be OID rendered as a dotted decimal string.\n\
+            (e.g. \"OID.1.3.6.1.5.5.7.3.1\")\n\
+        AsEnum\n\
+            Each extended key usage will be OID tag enumeration constant (int).\n\
+            (e.g. nss.SEC_OID_EXT_KEY_USAGE_SERVER_AUTH)\n\
+\n\
+Return a tuple of OID's according the representation kind.\n\
+");
+static PyObject *
+SecItem_get_oid_sequence(SecItem *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"repr_kind", NULL};
+    int repr_kind = AsString;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i:get_oid_sequence", kwlist,
+                                     &repr_kind))
+        return NULL;
+
+    return decode_oid_sequence_to_tuple(&self->item, repr_kind);
+}
+
+PyDoc_STRVAR(SecItem_to_hex_doc,
+"to_hex(octets_per_line=0, separator=':') -> string or list of strings\n\
+\n\
+:Parameters:\n\
+    octets_per_line : integer\n\
+        Number of octets formatted on one line, if 0 then\n\
+        return a single string instead of an array of lines\n\
+    separator : string\n\
+        String used to seperate each octet\n\
+        If None it will be as if the empty string had been\n\
+        passed and no separator will be used.\n\
+\n\
+Equivalent to calling data_to_hex(sec_item)\n\
+");
+
+static PyObject *
+SecItem_to_hex(SecItem *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"octets_per_line", "separator", NULL};
+    int octets_per_line = 0;
+    char *separator = HEX_SEPARATOR_DEFAULT;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|iz:to_hex", kwlist,
+                                     &octets_per_line, &separator))
+        return NULL;
+
+    return raw_data_to_hex(self->item.data, self->item.len, octets_per_line, separator);
+}
+
+PyDoc_STRVAR(SecItem_der_to_hex_doc,
+"der_to_hex(octets_per_line=0, separator=':') -> string or list of strings\n\
+\n\
+:Parameters:\n\
+    octets_per_line : integer\n\
+        Number of octets formatted on one line, if 0 then\n\
+        return a single string instead of an array of lines\n\
+    separator : string\n\
+        String used to seperate each octet\n\
+        If None it will be as if the empty string had been\n\
+        passed and no separator will be used.\n\
+\n\
+Interpret the SecItem as containing DER encoded data consisting\n\
+of a <type,length,value> triplet (e.g. TLV). This function skips\n\
+the type and length components and returns the value component as\n\
+a hexadecimal string or a list of hexidecimal strings with a\n\
+maximum of octets_per_line in each list element. See data_to_hex()\n\
+for a more detailed explanation.\n\
+");
+
+static PyObject *
+SecItem_der_to_hex(SecItem *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"octets_per_line", "separator", NULL};
+    int octets_per_line = 0;
+    char *separator = HEX_SEPARATOR_DEFAULT;
+    SECItem tmp_item = self->item;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|iz:der_to_hex", kwlist,
+                                     &octets_per_line, &separator))
+        return NULL;
+
+
+    tmp_item = self->item;
+    if (sec_strip_tag_and_length(&tmp_item) != SECSuccess) {
+        PyErr_SetString(PyExc_ValueError, "malformed ASN.1 DER data");
+        return NULL;
+    }
+
+    return raw_data_to_hex(tmp_item.data, tmp_item.len, octets_per_line, separator);
+}
+
 static PyMethodDef SecItem_methods[] = {
+    {"get_oid_sequence", (PyCFunction)SecItem_get_oid_sequence, METH_NOARGS,                SecItem_get_oid_sequence_doc},
+    {"to_hex",           (PyCFunction)SecItem_to_hex,           METH_VARARGS|METH_KEYWORDS, SecItem_to_hex_doc},
+    {"der_to_hex",       (PyCFunction)SecItem_der_to_hex,       METH_VARARGS|METH_KEYWORDS, SecItem_der_to_hex_doc},
     {NULL, NULL}  /* Sentinel */
 };
 
@@ -1447,13 +3698,33 @@ SecItem_str(SecItem *self)
         }
         break;
     case SECITEM_algorithm:
-        return sec_oid_str_by_secitem(&self->item);
+        return oid_secitem_to_pystr_desc(&self->item);
     default:
         return_value =  obj_to_hex((PyObject *)self, 0, HEX_SEPARATOR_DEFAULT);
 
         break;
     }
     return return_value;
+}
+
+static int
+SecItem_compare(SecItem *self, SecItem *other)
+{
+    if (!PySecItem_Check(other)) {
+        PyErr_SetString(PyExc_TypeError, "Bad type, must be SecItem");
+        return -1;
+    }
+
+    if (self->item.data == NULL && other->item.data == NULL)
+        return 0;
+
+    if (self->item.len > other->item.len)
+        return 1;
+
+    if (self->item.len < other->item.len)
+        return -1;
+
+    return memcmp(self->item.data, other->item.data, self->item.len);
 }
 
 /* =========================== Buffer Protocol ========================== */
@@ -1592,7 +3863,7 @@ static PyTypeObject SecItemType = {
     0,						/* tp_print */
     0,						/* tp_getattr */
     0,						/* tp_setattr */
-    0,						/* tp_compare */
+    (cmpfunc)SecItem_compare,			/* tp_compare */
     (reprfunc)SecItem_repr,			/* tp_repr */
     0,						/* tp_as_number */
     &SecItem_as_sequence,			/* tp_as_sequence */
@@ -1716,7 +3987,7 @@ SignatureAlgorithm_repr(SignatureAlgorithm *self)
 static PyObject *
 SignatureAlgorithm_str(SignatureAlgorithm *self)
 {
-    return get_algorithm_id_str(&self->id);
+    return SECAlgorithmID_to_pystr(&self->id);
 }
 
 static PyTypeObject SignatureAlgorithmType = {
@@ -1903,7 +4174,7 @@ KEYPQGParams_str(KEYPQGParams *self)
 static PyTypeObject KEYPQGParamsType = {
     PyObject_HEAD_INIT(NULL)
     0,						/* ob_size */
-    "nss.nss.KEYPQGParams",				/* tp_name */
+    "nss.nss.KEYPQGParams",			/* tp_name */
     sizeof(KEYPQGParams),			/* tp_basicsize */
     0,						/* tp_itemsize */
     (destructor)KEYPQGParams_dealloc,		/* tp_dealloc */
@@ -2005,6 +4276,7 @@ RSAPublicKey_format_lines(RSAPublicKey *self, PyObject *args, PyObject *kwds)
     int level = 0;
     PyObject *lines = NULL;
     PyObject *obj = NULL;
+    PyObject *exponent = NULL;
     PyObject *obj_lines = NULL;
     int i;
     Py_ssize_t len;
@@ -2018,12 +4290,12 @@ RSAPublicKey_format_lines(RSAPublicKey *self, PyObject *args, PyObject *kwds)
         return NULL;
     }
 
-    FMT_LABEL_AND_APPEND(level, "Modulus", lines, fail);
+    FMT_LABEL_AND_APPEND(level, _("Modulus"), lines, fail);
 
     if ((obj = RSAPublicKey_get_modulus(self, NULL)) == NULL)
         goto fail;
     obj_lines = obj_to_hex(obj, OCTETS_PER_LINE_DEFAULT, HEX_SEPARATOR_DEFAULT);
-    Py_DECREF(obj);
+    Py_CLEAR(obj);
 
     level += 1;
     len = PyList_Size(obj_lines);
@@ -2031,11 +4303,21 @@ RSAPublicKey_format_lines(RSAPublicKey *self, PyObject *args, PyObject *kwds)
         obj = PyList_GET_ITEM(obj_lines, i);
         FMT_OBJ_AND_APPEND(level, NULL, obj, lines, fail);
     }
+    Py_CLEAR(obj_lines);
 
-    Py_DECREF(obj_lines);
+    level -= 1;
+    if ((exponent = RSAPublicKey_get_exponent(self, NULL)) == NULL)
+        goto fail;
+    if ((obj = obj_sprintf("%d (%#x)", exponent, exponent)) == NULL)
+        goto fail;
+    FMT_OBJ_AND_APPEND(level, _("Exponent"), obj, lines, fail);
+    Py_CLEAR(exponent);
+    Py_CLEAR(obj);
+
     return lines;
  fail:
     Py_XDECREF(obj);
+    Py_XDECREF(exponent);
     Py_XDECREF(lines);
     Py_XDECREF(obj_lines);
     return NULL;
@@ -2117,7 +4399,7 @@ RSAPublicKey_repr(RSAPublicKey *self)
 static PyTypeObject RSAPublicKeyType = {
     PyObject_HEAD_INIT(NULL)
     0,						/* ob_size */
-    "nss.nss.RSAPublicKey",				/* tp_name */
+    "nss.nss.RSAPublicKey",			/* tp_name */
     sizeof(RSAPublicKey),			/* tp_basicsize */
     0,						/* tp_itemsize */
     (destructor)RSAPublicKey_dealloc,		/* tp_dealloc */
@@ -2169,7 +4451,7 @@ RSAPublicKey_new_from_SECKEYRSAPublicKey(SECKEYRSAPublicKey *rsa)
     if ((self->py_modulus = SecItem_new_from_SECItem(&rsa->modulus, SECITEM_unknown)) == NULL)
         return NULL;
 
-    if ((self->py_exponent = SecItem_new_from_SECItem(&rsa->publicExponent, SECITEM_unknown)) == NULL)
+    if ((self->py_exponent = integer_secitem_to_pylong(&rsa->publicExponent)) == NULL)
         return NULL;
 
     TraceObjNewLeave(self);
@@ -2287,7 +4569,7 @@ DSAPublicKey_str(DSAPublicKey *self)
 static PyTypeObject DSAPublicKeyType = {
     PyObject_HEAD_INIT(NULL)
     0,						/* ob_size */
-    "nss.nss.DSAPublicKey",				/* tp_name */
+    "nss.nss.DSAPublicKey",			/* tp_name */
     sizeof(DSAPublicKey),			/* tp_basicsize */
     0,						/* tp_itemsize */
     (destructor)DSAPublicKey_dealloc,		/* tp_dealloc */
@@ -2401,10 +4683,10 @@ SignedData_format_lines(SignedData *self, PyObject *args, PyObject *kwds)
 
     if ((obj = SignedData_get_algorithm(self, NULL)) == NULL)
         goto fail;
-    FMT_OBJ_AND_APPEND(level, "Signature Algorithm", obj, lines, fail);
+    FMT_OBJ_AND_APPEND(level, _("Signature Algorithm"), obj, lines, fail);
     Py_DECREF(obj);
 
-    FMT_LABEL_AND_APPEND(level, "Signature Data", lines, fail);
+    FMT_LABEL_AND_APPEND(level, _("Signature Data"), lines, fail);
 
     if ((obj = SignedData_get_signature(self, NULL)) == NULL)
         goto fail;
@@ -2511,7 +4793,7 @@ SignedData_repr(SignedData *self)
 static PyTypeObject SignedDataType = {
     PyObject_HEAD_INIT(NULL)
     0,						/* ob_size */
-    "nss.nss.SignedData",				/* tp_name */
+    "nss.nss.SignedData",			/* tp_name */
     sizeof(SignedData),				/* tp_basicsize */
     0,						/* tp_itemsize */
     (destructor)SignedData_dealloc,		/* tp_dealloc */
@@ -2774,7 +5056,7 @@ PublicKey_repr(PublicKey *self)
 static PyTypeObject PublicKeyType = {
     PyObject_HEAD_INIT(NULL)
     0,						/* ob_size */
-    "nss.nss.PublicKey",				/* tp_name */
+    "nss.nss.PublicKey",			/* tp_name */
     sizeof(PublicKey),				/* tp_basicsize */
     0,						/* tp_itemsize */
     (destructor)PublicKey_dealloc,		/* tp_dealloc */
@@ -2902,7 +5184,7 @@ SubjectPublicKeyInfo_format_lines(SubjectPublicKeyInfo *self, PyObject *args, Py
 
     if ((obj = SubjectPublicKeyInfo_get_algorithm(self, NULL)) == NULL)
         goto fail;
-    FMT_OBJ_AND_APPEND(level, "Public Key Algorithm", obj, lines, fail);
+    FMT_OBJ_AND_APPEND(level, _("Public Key Algorithm"), obj, lines, fail);
 
     if ((py_public_key = (PublicKey *)SubjectPublicKeyInfo_get_public_key(self, NULL)) == NULL)
         goto fail;
@@ -3005,7 +5287,7 @@ SubjectPublicKeyInfo_repr(SubjectPublicKeyInfo *self)
 static PyTypeObject SubjectPublicKeyInfoType = {
     PyObject_HEAD_INIT(NULL)
     0,						/* ob_size */
-    "nss.nss.SubjectPublicKeyInfo",			/* tp_name */
+    "nss.nss.SubjectPublicKeyInfo",		/* tp_name */
     sizeof(SubjectPublicKeyInfo),		/* tp_basicsize */
     0,						/* tp_itemsize */
     (destructor)SubjectPublicKeyInfo_dealloc,	/* tp_dealloc */
@@ -3082,8 +5364,8 @@ cert_distnames_as_CERTDistNames(PyObject *py_distnames)
     int i;
     SecItem *py_sec_item;
 
-    if (!PySequence_Check(py_distnames)) {
-        PyErr_SetString(PyExc_TypeError, "cert distnames must be a sequence");
+    if (!(PyList_Check(py_distnames) || PyTuple_Check(py_distnames))) {
+        PyErr_SetString(PyExc_TypeError, "cert distnames must be a list or tuple");
         return NULL;
     }
 
@@ -3146,7 +5428,101 @@ static PyMemberDef CertDB_members[] = {
 
 /* ============================== Class Methods ============================= */
 
+PyDoc_STRVAR(CertDB_find_crl_by_name_doc,
+"find_crl_by_name(name, type=SEC_CRL_TYPE) -> SignedCRL object\n\
+\n\
+:Parameters:\n\
+    name : string\n\
+        name to lookup\n\
+    type : int\n\
+        revocation list type\n\
+        \n\
+        may be one of:\n\
+          - SEC_CRL_TYPE\n\
+          - SEC_KRL_TYPE\n\
+\n\
+Returns a SignedCRL object found in the database given a name and revocation list type.\n\
+"
+);
+static PyObject *
+CertDB_find_crl_by_name(CertDB *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"name", "type", NULL};
+    char *name;
+    int type = SEC_CRL_TYPE;
+    CERTName *cert_name;
+    SECItem *der_name;
+    CERTSignedCrl *signed_crl;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "s|i:find_crl_by_name", kwlist,
+                                     &name, &type))
+        return NULL;
+
+    if ((cert_name = CERT_AsciiToName(name)) == NULL) {
+        return set_nspr_error(NULL);
+    }
+
+    if ((der_name = SEC_ASN1EncodeItem (NULL, NULL, (void *)cert_name,
+                                        SEC_ASN1_GET(CERT_NameTemplate))) == NULL) {
+        CERT_DestroyName(cert_name);
+        return set_nspr_error(NULL);
+    }
+    CERT_DestroyName(cert_name);
+
+    if ((signed_crl = SEC_FindCrlByName(self->handle, der_name, type)) == NULL) {
+        SECITEM_FreeItem(der_name, PR_TRUE);
+        return set_nspr_error(NULL);
+    }
+    SECITEM_FreeItem(der_name, PR_TRUE);
+
+    return SignedCRL_new_from_CERTSignedCRL(signed_crl);
+}
+
+PyDoc_STRVAR(CertDB_find_crl_by_cert_doc,
+"find_crl_by_cert(cert, type=SEC_CRL_TYPE) -> SignedCRL object\n\
+\n\
+:Parameters:\n\
+    cert : Certificate object\n\
+        certificate used to lookup the CRL.\n\
+    type : int\n\
+        revocation list type\n\
+        \n\
+        may be one of:\n\
+          - SEC_CRL_TYPE\n\
+          - SEC_KRL_TYPE\n\
+\n\
+Returns a SignedCRL object found in the database given a certificate and revocation list type.\n\
+"
+);
+static PyObject *
+CertDB_find_crl_by_cert(CertDB *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"cert", "type", NULL};
+    int type = SEC_CRL_TYPE;
+    Certificate *py_cert = NULL;
+    SECItem *der_cert;
+    CERTSignedCrl *signed_crl;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!|i:find_crl_by_cert", kwlist,
+                                     &CertificateType, &py_cert, &type))
+        return NULL;
+
+    der_cert = &py_cert->cert->derCert;
+    if ((signed_crl = SEC_FindCrlByDERCert(self->handle, der_cert, type)) == NULL) {
+        return set_nspr_error(NULL);
+    }
+
+    return SignedCRL_new_from_CERTSignedCRL(signed_crl);
+}
+
+
 static PyMethodDef CertDB_methods[] = {
+    {"find_crl_by_name", (PyCFunction)CertDB_find_crl_by_name, METH_VARARGS|METH_KEYWORDS, CertDB_find_crl_by_name_doc},
+    {"find_crl_by_cert", (PyCFunction)CertDB_find_crl_by_cert, METH_VARARGS|METH_KEYWORDS, CertDB_find_crl_by_cert_doc},
     {NULL, NULL}  /* Sentinel */
 };
 
@@ -3263,6 +5639,182 @@ cert_distnames_new_from_CERTDistNames(CERTDistNames *names)
 }
 
 /* ========================================================================== */
+/* ======================== CertificateExtension Class ====================== */
+/* ========================================================================== */
+
+/* ============================ Attribute Access ============================ */
+
+static PyObject *
+CertificateExtension_get_name(CertificateExtension *self, void *closure)
+{
+    return oid_secitem_to_pystr_desc(&self->oid->item);
+}
+
+static PyObject *
+CertificateExtension_get_critical(CertificateExtension *self, void *closure)
+{
+    return PyBool_FromLong(self->critical);
+}
+
+static PyObject *
+CertificateExtension_get_oid(CertificateExtension *self, void *closure)
+{
+    Py_INCREF(self->oid);
+    return (PyObject *)self->oid;
+}
+
+static PyObject *
+CertificateExtension_get_oid_tag(CertificateExtension *self, void *closure)
+{
+    return oid_secitem_to_pyint_tag(&self->oid->item);
+}
+
+static PyObject *
+CertificateExtension_get_value(CertificateExtension *self, void *closure)
+{
+    Py_INCREF(self->value);
+    return (PyObject *)self->value;
+}
+
+static
+PyGetSetDef CertificateExtension_getseters[] = {
+    {"name",     (getter)CertificateExtension_get_name,     (setter)NULL, "name of extension", NULL},
+    {"critical", (getter)CertificateExtension_get_critical, (setter)NULL, "extension is critical flag (boolean)", NULL},
+    {"oid",      (getter)CertificateExtension_get_oid,      (setter)NULL, "oid of extension as SecItem", NULL},
+    {"oid_tag",  (getter)CertificateExtension_get_oid_tag,  (setter)NULL, "oid of extension as a enumerated constant (e.g. tag)", NULL},
+    {"value",    (getter)CertificateExtension_get_value,    (setter)NULL, "extension data as SecItem", NULL},
+    {NULL}  /* Sentinel */
+};
+
+static PyMemberDef CertificateExtension_members[] = {
+    {NULL}  /* Sentinel */
+};
+
+/* ============================== Class Methods ============================= */
+
+static PyObject *
+CertificateExtension_str(CertificateExtension *self)
+{
+    return oid_secitem_to_pystr_desc(&self->oid->item);
+}
+
+static PyObject *
+CertificateExtension_repr(CertificateExtension *self)
+{
+    return CertificateExtension_str(self);
+}
+
+static PyMethodDef CertificateExtension_methods[] = {
+    {NULL, NULL}  /* Sentinel */
+};
+
+/* =========================== Class Construction =========================== */
+
+static PyObject *
+CertificateExtension_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
+    CertificateExtension *self;
+
+    TraceObjNewEnter(type);
+
+    if ((self = (CertificateExtension *)type->tp_alloc(type, 0)) == NULL) return NULL;
+
+    self->oid = NULL;
+    self->value = NULL;
+    self->critical = 0;
+
+    TraceObjNewLeave(self);
+    return (PyObject *)self;
+}
+
+static void
+CertificateExtension_dealloc(CertificateExtension* self)
+{
+    TraceMethodEnter(self);
+
+    self->ob_type->tp_free((PyObject*)self);
+}
+
+PyDoc_STRVAR(CertificateExtension_doc,
+"An object representing a certificate extension");
+
+static int
+CertificateExtension_init(CertificateExtension *self, PyObject *args, PyObject *kwds)
+{
+    TraceMethodEnter(self);
+    return 0;
+}
+
+static PyTypeObject CertificateExtensionType = {
+    PyObject_HEAD_INIT(NULL)
+    0,						/* ob_size */
+    "nss.nss.CertificateExtension",		/* tp_name */
+    sizeof(CertificateExtension),		/* tp_basicsize */
+    0,						/* tp_itemsize */
+    (destructor)CertificateExtension_dealloc,	/* tp_dealloc */
+    0,						/* tp_print */
+    0,						/* tp_getattr */
+    0,						/* tp_setattr */
+    0,						/* tp_compare */
+    (reprfunc)CertificateExtension_repr,	/* tp_repr */
+    0,						/* tp_as_number */
+    0,						/* tp_as_sequence */
+    0,						/* tp_as_mapping */
+    0,						/* tp_hash */
+    0,						/* tp_call */
+    (reprfunc)CertificateExtension_str,		/* tp_str */
+    0,						/* tp_getattro */
+    0,						/* tp_setattro */
+    0,						/* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,	/* tp_flags */
+    CertificateExtension_doc,			/* tp_doc */
+    0,						/* tp_traverse */
+    0,						/* tp_clear */
+    0,						/* tp_richcompare */
+    0,						/* tp_weaklistoffset */
+    0,						/* tp_iter */
+    0,						/* tp_iternext */
+    CertificateExtension_methods,		/* tp_methods */
+    CertificateExtension_members,		/* tp_members */
+    CertificateExtension_getseters,		/* tp_getset */
+    0,						/* tp_base */
+    0,						/* tp_dict */
+    0,						/* tp_descr_get */
+    0,						/* tp_descr_set */
+    0,						/* tp_dictoffset */
+    (initproc)CertificateExtension_init,	/* tp_init */
+    0,						/* tp_alloc */
+    CertificateExtension_new,			/* tp_new */
+};
+
+PyObject *
+CertificateExtension_new_from_CERTCertExtension(CERTCertExtension *extension)
+{
+    CertificateExtension *self = NULL;
+
+    TraceObjNewEnter(NULL);
+    if ((self = (CertificateExtension *) CertificateExtensionType.tp_new(&CertificateExtensionType, NULL, NULL)) == NULL)
+        return NULL;
+
+    if ((self->oid = (SecItem *)
+         SecItem_new_from_SECItem(&extension->id, SECITEM_cert_extension_oid)) == NULL) {
+        return NULL;
+    }
+
+    if ((self->value = (SecItem *)
+         SecItem_new_from_SECItem(&extension->value, SECITEM_cert_extension_value)) == NULL) {
+        return NULL;
+    }
+
+    if (extension->critical.data && extension->critical.len) {
+	self->critical = extension->critical.data[0];
+    }
+
+    TraceObjNewLeave(self);
+    return (PyObject *) self;
+}
+
+/* ========================================================================== */
 /* ============================ Certificate Class =========================== */
 /* ========================================================================== */
 
@@ -3274,7 +5826,7 @@ Certificate_get_valid_not_before(Certificate *self, void *closure)
     PRTime pr_time = 0;
     double d_time;
 
-    pr_time = sec_time_choice(&self->cert->validity.notBefore);
+    pr_time = time_choice_secitem_to_prtime(&self->cert->validity.notBefore);
     LL_L2D(d_time, pr_time);
 
     return PyFloat_FromDouble(d_time);
@@ -3283,7 +5835,7 @@ Certificate_get_valid_not_before(Certificate *self, void *closure)
 static PyObject *
 Certificate_get_valid_not_before_str(Certificate *self, void *closure)
 {
-    return sec_time_choice_str(&self->cert->validity.notBefore);
+    return time_choice_secitem_to_pystr(&self->cert->validity.notBefore);
 }
 
 static PyObject *
@@ -3292,7 +5844,7 @@ Certificate_get_valid_not_after(Certificate *self, void *closure)
     PRTime pr_time = 0;
     double d_time;
 
-    pr_time = sec_time_choice(&self->cert->validity.notAfter);
+    pr_time = time_choice_secitem_to_prtime(&self->cert->validity.notAfter);
     LL_L2D(d_time, pr_time);
 
     return PyFloat_FromDouble(d_time);
@@ -3301,20 +5853,13 @@ Certificate_get_valid_not_after(Certificate *self, void *closure)
 static PyObject *
 Certificate_get_valid_not_after_str(Certificate *self, void *closure)
 {
-    return sec_time_choice_str(&self->cert->validity.notAfter);
+    return time_choice_secitem_to_pystr(&self->cert->validity.notAfter);
 }
 
 static PyObject *
 Certificate_get_subject(Certificate *self, void *closure)
 {
-    char *subject;
-    PyObject *py_subject = NULL;
-
-    subject = CERT_NameToAscii(&self->cert->subject);
-    py_subject = PyString_FromString(subject);
-    PORT_Free(subject);
-
-    return py_subject;
+    return CERTName_to_pystr(&self->cert->subject);
 }
 
 static PyObject *
@@ -3337,38 +5882,19 @@ Certificate_get_subject_common_name(Certificate *self, void *closure)
 static PyObject *
 Certificate_get_issuer(Certificate *self, void *closure)
 {
-    char *issuer;
-    PyObject *py_issuer = NULL;
-
-    issuer = CERT_NameToAscii(&self->cert->issuer);
-    py_issuer = PyString_FromString(issuer);
-    PORT_Free(issuer);
-
-    return py_issuer;
+    return CERTName_to_pystr(&self->cert->issuer);
 }
 
 static PyObject *
 Certificate_get_version(Certificate *self, void *closure)
 {
-    int version = 0;
-
-    if (self->cert->version.len) {
-        version = DER_GetInteger(&self->cert->version);
-    }
-
-    return PyInt_FromLong(version);
+    return integer_secitem_to_pylong(&self->cert->version);
 }
 
 static PyObject *
 Certificate_get_serial_number(Certificate *self, void *closure)
 {
-    int serial_number = 0;
-
-    if (self->cert->serialNumber.len) {
-        serial_number = DER_GetInteger(&self->cert->serialNumber);
-    }
-
-    return PyInt_FromLong(serial_number);
+    return integer_secitem_to_pylong(&self->cert->serialNumber);
 }
 
 // FIXME: should this come from SignedData?
@@ -3425,8 +5951,42 @@ Certificate_get_signing_trust_str(Certificate *self, void *closure)
 static PyObject *
 Certificate_get_subject_public_key_info(Certificate *self, void *closure)
 {
-    Py_INCREF(self->py_subject_public_key_info);
-    return self->py_subject_public_key_info;
+    return SubjectPublicKeyInfo_new_from_CERTSubjectPublicKeyInfo(
+               &self->cert->subjectPublicKeyInfo);
+}
+
+static PyObject *
+Certificate_get_extensions(Certificate *self, void *closure)
+{
+    CERTCertExtension **extensions;
+    int num_extensions, i;
+    PyObject *extensions_tuple;
+
+
+    /* First count how many extensions the cert has */
+    for (extensions = self->cert->extensions, num_extensions = 0;
+         *extensions;
+         extensions++, num_extensions++);
+
+    /* Allocate a tuple */
+    if ((extensions_tuple = PyTuple_New(num_extensions)) == NULL) {
+        return NULL;
+    }
+
+    /* Copy the extensions into the tuple */
+    for (extensions = self->cert->extensions, i = 0; *extensions; extensions++, i++) {
+        CERTCertExtension *extension = *extensions;
+        PyObject *py_extension;
+        
+        if ((py_extension = CertificateExtension_new_from_CERTCertExtension(extension)) == NULL) {
+            Py_DECREF(extensions_tuple);
+            return NULL;
+        }
+
+        PyTuple_SET_ITEM(extensions_tuple, i, py_extension);
+    }
+
+    return extensions_tuple;
 }
 
 static
@@ -3476,7 +6036,11 @@ PyGetSetDef Certificate_getseters[] = {
     {"signing_trust_str",       (getter)Certificate_get_signing_trust_str,       NULL,
      "certificate object signing trust flags as array of strings, or None if trust is not defined",  NULL},
 
-    {"subject_public_key_info", (getter)Certificate_get_subject_public_key_info, NULL, "certificate public info as SubjectPublicKeyInfo object",  NULL},
+    {"subject_public_key_info", (getter)Certificate_get_subject_public_key_info, NULL,
+     "certificate public info as SubjectPublicKeyInfo object",  NULL},
+
+    {"extensions", (getter)Certificate_get_extensions, NULL,
+     "certificate extensions as a tuple of CertificateExtension objects",  NULL},
     {NULL}  /* Sentinel */
 };
 
@@ -3650,7 +6214,7 @@ Certificate_check_valid_times(Certificate *self, PyObject *args, PyObject *kwds)
 }
 
 PyDoc_STRVAR(Certificate_verify_now_doc,
-"verify_now(certdb, check_sig, required_usages) -> valid_usages\n\
+"verify_now(certdb, check_sig, required_usages, [user_data1, ...]) -> valid_usages\n\
 \n\
 :Parameters:\n\
     certdb : CertDB object\n\
@@ -3660,6 +6224,9 @@ PyDoc_STRVAR(Certificate_verify_now_doc,
     required_usages : integer\n\
         A bitfield of all cert usages that are required for verification\n\
         to succeed. If zero return all possible valid usages.\n\
+    user_dataN : object\n\
+        zero or more caller supplied parameters which will\n\
+        be passed to the password callback function\n\
 \n\
 Verify a certificate by checking if it's valid and that we\n\
 trust the issuer.\n\
@@ -3740,6 +6307,9 @@ Certificate_format_lines(Certificate *self, PyObject *args, PyObject *kwds)
     int level = 0;
     PyObject *lines = NULL;
     PyObject *obj = NULL;
+    PyObject *obj1 = NULL;
+    PyObject *obj2 = NULL;
+    PyObject *obj3 = NULL;
     PyObject *obj_lines = NULL;
     PyObject *ssl_trust_lines = NULL, *email_trust_lines = NULL, *signing_trust_lines = NULL;
     int i;
@@ -3759,42 +6329,54 @@ Certificate_format_lines(Certificate *self, PyObject *args, PyObject *kwds)
 
     if ((obj = Certificate_get_version(self, NULL)) == NULL)
         goto fail;
-    FMT_OBJ_AND_APPEND(level+2, "Version", obj, lines, fail);
+    if ((obj1 = PyInt_FromLong(1)) == NULL)
+        goto fail;
+    if ((obj2 = PyNumber_Add(obj, obj1)) == NULL)
+        goto fail;
+    if ((obj3 = obj_sprintf("%d (%#x)", obj2, obj)) == NULL)
+        goto fail;
+    FMT_OBJ_AND_APPEND(level+2, _("Version"), obj3, lines, fail);
     Py_DECREF(obj);
+    Py_DECREF(obj1); obj1 = NULL;
+    Py_DECREF(obj2); obj2 = NULL;
+    Py_DECREF(obj3); obj3 = NULL;
 
     if ((obj = Certificate_get_serial_number(self, NULL)) == NULL)
         goto fail;
-    FMT_OBJ_AND_APPEND(level+2, "Serial Number", obj, lines, fail);
+    if ((obj1 = obj_sprintf("%d (%#x)", obj, obj)) == NULL)
+        goto fail;
+    FMT_OBJ_AND_APPEND(level+2, _("Serial Number"), obj1, lines, fail);
     Py_DECREF(obj);
+    Py_DECREF(obj1); obj1 = NULL;
 
     if ((obj = Certificate_get_signature_algorithm(self, NULL)) == NULL)
         goto fail;
-    FMT_OBJ_AND_APPEND(level+2, "Signature Algorithm", obj, lines, fail);
+    FMT_OBJ_AND_APPEND(level+2, _("Signature Algorithm"), obj, lines, fail);
     Py_DECREF(obj);
 
     if ((obj = Certificate_get_issuer(self, NULL)) == NULL)
         goto fail;
-    FMT_OBJ_AND_APPEND(level+2, "Issuer", obj, lines, fail);
+    FMT_OBJ_AND_APPEND(level+2, _("Issuer"), obj, lines, fail);
     Py_DECREF(obj);
 
-    FMT_LABEL_AND_APPEND(level+2, "Validity", lines, fail);
+    FMT_LABEL_AND_APPEND(level+2, _("Validity"), lines, fail);
 
     if ((obj = Certificate_get_valid_not_before_str(self, NULL)) == NULL)
         goto fail;
-    FMT_OBJ_AND_APPEND(level+3, "Not Before", obj, lines, fail);
+    FMT_OBJ_AND_APPEND(level+3, _("Not Before"), obj, lines, fail);
     Py_DECREF(obj);
 
     if ((obj = Certificate_get_valid_not_after_str(self, NULL)) == NULL)
         goto fail;
-    FMT_OBJ_AND_APPEND(level+3, "Not After ", obj, lines, fail);
+    FMT_OBJ_AND_APPEND(level+3, _("Not After "), obj, lines, fail);
     Py_DECREF(obj);
 
     if ((obj = Certificate_get_subject(self, NULL)) == NULL)
         goto fail;
-    FMT_OBJ_AND_APPEND(level+2, "Subject", obj, lines, fail);
+    FMT_OBJ_AND_APPEND(level+2, _("Subject"), obj, lines, fail);
     Py_DECREF(obj);
 
-    FMT_LABEL_AND_APPEND(level+2, "Subject Public Key Info", lines, fail);
+    FMT_LABEL_AND_APPEND(level+2, _("Subject Public Key Info"), lines, fail);
 
     if ((obj = Certificate_get_subject_public_key_info(self, NULL)) == NULL)
         goto fail;
@@ -3804,9 +6386,9 @@ Certificate_format_lines(Certificate *self, PyObject *args, PyObject *kwds)
         goto fail;
     Py_DECREF(obj);
     Py_DECREF(tmp_args);
-    len = PyList_Size(obj_lines);
+    len = PySequence_Size(obj_lines);
     for (i = 0; i < len; i++) {
-        obj = PyList_GET_ITEM(obj_lines, i);
+        obj = PySequence_GetItem(obj_lines, i);
         PyList_Append(lines, obj);
     }
     Py_DECREF(obj_lines);
@@ -3821,29 +6403,29 @@ Certificate_format_lines(Certificate *self, PyObject *args, PyObject *kwds)
     if ((ssl_trust_lines != Py_None) || (email_trust_lines != Py_None) || (signing_trust_lines != Py_None)) {
         FMT_LABEL_AND_APPEND(level+2, "Certificate Trust Flags", lines, fail);
 
-        if (PyList_Check(ssl_trust_lines)) {
+        if (PyList_Check(ssl_trust_lines) || PyTuple_Check(ssl_trust_lines)) {
             FMT_LABEL_AND_APPEND(level+3, "SSL Flags", lines, fail);
-            len = PyList_Size(ssl_trust_lines);
+            len = PySequence_Size(ssl_trust_lines);
             for (i = 0; i < len; i++) {
-                obj = PyList_GET_ITEM(ssl_trust_lines, i);
+                obj = PySequence_GetItem(ssl_trust_lines, i);
                 FMT_OBJ_AND_APPEND(level+4, NULL, obj, lines, fail);
             }
         }
 
-        if (PyList_Check(email_trust_lines)) {
+        if (PyList_Check(email_trust_lines) || PyTuple_Check(email_trust_lines)) {
             FMT_LABEL_AND_APPEND(level+3, "Email Flags", lines, fail);
-            len = PyList_Size(email_trust_lines);
+            len = PySequence_Size(email_trust_lines);
             for (i = 0; i < len; i++) {
-                obj = PyList_GET_ITEM(email_trust_lines, i);
+                obj = PySequence_GetItem(email_trust_lines, i);
                 FMT_OBJ_AND_APPEND(level+4, NULL, obj, lines, fail);
             }
         }
 
-        if (PyList_Check(signing_trust_lines)) {
+        if (PyList_Check(signing_trust_lines) || PyTuple_Check(signing_trust_lines)) {
             FMT_LABEL_AND_APPEND(level+3, "Object Signing Flags", lines, fail);
-            len = PyList_Size(signing_trust_lines);
+            len = PySequence_Size(signing_trust_lines);
             for (i = 0; i < len; i++) {
-                obj = PyList_GET_ITEM(signing_trust_lines, i);
+                obj = PySequence_GetItem(signing_trust_lines, i);
                 FMT_OBJ_AND_APPEND(level+4, NULL, obj, lines, fail);
             }
         }
@@ -3864,21 +6446,17 @@ Certificate_format_lines(Certificate *self, PyObject *args, PyObject *kwds)
         goto fail;
     Py_DECREF(tmp_args);
 
-    if ((tmp_args = Py_BuildValue("(O)", obj)) == NULL)
+    if ((obj_lines = obj_to_hex(obj, OCTETS_PER_LINE_DEFAULT, HEX_SEPARATOR_DEFAULT)) == NULL)
         goto fail;
-    Py_DECREF(obj);
-    if ((obj_lines = cert_data_to_hex(NULL, tmp_args, NULL)) == NULL)
-        goto fail;
-    Py_DECREF(tmp_args);
 
-    len = PyList_Size(obj_lines);
+    len = PySequence_Size(obj_lines);
     for (i = 0; i < len; i++) {
-        obj = PyList_GET_ITEM(obj_lines, i);
+        obj = PySequence_GetItem(obj_lines, i);
         FMT_OBJ_AND_APPEND(level+3, NULL, obj, lines, fail);
     }
     Py_DECREF(obj_lines);
 
-    FMT_LABEL_AND_APPEND(level+2, "Fingerprint (SHA1)", lines, fail);
+    FMT_LABEL_AND_APPEND(level+2, _("Fingerprint (SHA1)"), lines, fail);
 
     if ((obj = Certificate_get_der_data(self, NULL)) == NULL)
         goto fail;
@@ -3890,21 +6468,17 @@ Certificate_format_lines(Certificate *self, PyObject *args, PyObject *kwds)
         goto fail;
     Py_DECREF(tmp_args);
 
-    if ((tmp_args = Py_BuildValue("(O)", obj)) == NULL)
+    if ((obj_lines = obj_to_hex(obj, OCTETS_PER_LINE_DEFAULT, HEX_SEPARATOR_DEFAULT)) == NULL)
         goto fail;
-    Py_DECREF(obj);
-    if ((obj_lines = cert_data_to_hex(NULL, tmp_args, NULL)) == NULL)
-        goto fail;
-    Py_DECREF(tmp_args);
 
-    len = PyList_Size(obj_lines);
+    len = PySequence_Size(obj_lines);
     for (i = 0; i < len; i++) {
-        obj = PyList_GET_ITEM(obj_lines, i);
+        obj = PySequence_GetItem(obj_lines, i);
         FMT_OBJ_AND_APPEND(level+3, NULL, obj, lines, fail);
     }
     Py_DECREF(obj_lines);
 
-    FMT_LABEL_AND_APPEND(level+1, "Signature", lines, fail);
+    FMT_LABEL_AND_APPEND(level+1, _("Signature"), lines, fail);
 
     if ((obj = Certificate_get_signed_data(self, NULL)) == NULL)
         goto fail;
@@ -3915,9 +6489,9 @@ Certificate_format_lines(Certificate *self, PyObject *args, PyObject *kwds)
         goto fail;
     Py_DECREF(obj);
     Py_DECREF(tmp_args);
-    len = PyList_Size(obj_lines);
+    len = PySequence_Size(obj_lines);
     for (i = 0; i < len; i++) {
-        obj = PyList_GET_ITEM(obj_lines, i);
+        obj = PySequence_GetItem(obj_lines, i);
         PyList_Append(lines, obj);
     }
     Py_DECREF(obj_lines);
@@ -3925,6 +6499,9 @@ Certificate_format_lines(Certificate *self, PyObject *args, PyObject *kwds)
     return lines;
  fail:
     Py_XDECREF(obj);
+    Py_XDECREF(obj1);
+    Py_XDECREF(obj2);
+    Py_XDECREF(obj3);
     Py_XDECREF(lines);
     Py_XDECREF(obj_lines);
     Py_XDECREF(tmp_args);
@@ -3975,7 +6552,6 @@ Certificate_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
     if ((self = (Certificate *)type->tp_alloc(type, 0)) == NULL) return NULL;
     self->cert = NULL;
-    self->py_subject_public_key_info = NULL;
 
     TraceObjNewLeave(self);
     return (PyObject *)self;
@@ -3989,18 +6565,55 @@ Certificate_dealloc(Certificate* self)
     if (self->cert)
         CERT_DestroyCertificate(self->cert);
 
-    Py_XDECREF(self->py_subject_public_key_info);
-
     self->ob_type->tp_free((PyObject*)self);
 }
 
 PyDoc_STRVAR(Certificate_doc,
-"An object representing a Certificate");
+"Certificate(data=None)\n\
+\n\
+:Parameters:\n\
+    data : SecItem or str or any buffer compatible object\n\
+        Data to initialize the certificate from, must be in DER format\n\
+\n\
+An object representing a Certificate");
 
 static int
 Certificate_init(Certificate *self, PyObject *args, PyObject *kwds)
 {
+    static char *kwlist[] = {"data", NULL};
+    PyObject *py_data = NULL;
+    SECItem tmp_item;
+    SECItem *der_item = NULL;
+
     TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O:SecItem", kwlist,
+                                     &py_data))
+        return -1;
+
+    if (py_data) {
+        if (PySecItem_Check(py_data)) {
+            der_item = &((SecItem *)py_data)->item;
+        } else if (PyBuffer_Check(py_data)) {
+            unsigned char *data = NULL;
+            Py_ssize_t data_len;
+
+            if (PyObject_AsReadBuffer(py_data, (void *)&data, &data_len))
+                return -1;
+
+            tmp_item.data = data;
+            tmp_item.len = data_len;
+            der_item = &tmp_item;
+        } else {
+            PyErr_SetString(PyExc_TypeError, "data must be SecItem or buffer compatible");
+            return -1;
+        }
+
+        if ((self->cert = CERT_DecodeDERCertificate(der_item, PR_TRUE, NULL)) == NULL) {
+            set_nspr_error("bad certificate initialization data");
+            return -1;
+        }
+    }
 
     return 0;
 }
@@ -4015,7 +6628,7 @@ Certificate_repr(Certificate *self)
 static PyTypeObject CertificateType = {
     PyObject_HEAD_INIT(NULL)
     0,						/* ob_size */
-    "nss.nss.Certificate",				/* tp_name */
+    "nss.nss.Certificate",			/* tp_name */
     sizeof(Certificate),			/* tp_basicsize */
     0,						/* tp_itemsize */
     (destructor)Certificate_dealloc,		/* tp_dealloc */
@@ -4065,7 +6678,6 @@ Certificate_new_from_CERTCertificate(CERTCertificate *cert)
         return NULL;
 
     self->cert = cert;
-    self->py_subject_public_key_info = SubjectPublicKeyInfo_new_from_CERTSubjectPublicKeyInfo(&cert->subjectPublicKeyInfo);
 
     TraceObjNewLeave(self);
     return (PyObject *) self;
@@ -4133,7 +6745,7 @@ PrivateKey_init(PrivateKey *self, PyObject *args, PyObject *kwds)
 static PyTypeObject PrivateKeyType = {
     PyObject_HEAD_INIT(NULL)
     0,						/* ob_size */
-    "nss.nss.PrivateKey",				/* tp_name */
+    "nss.nss.PrivateKey",			/* tp_name */
     sizeof(PrivateKey),				/* tp_basicsize */
     0,						/* tp_itemsize */
     (destructor)PrivateKey_dealloc,		/* tp_dealloc */
@@ -4188,7 +6800,1991 @@ PrivateKey_new_from_SECKEYPrivateKey(SECKEYPrivateKey *private_key)
 }
 
 
-/* ============================== Module Methods ============================= */
+/* ========================================================================== */
+/* ============================== SignedCRL Class =========================== */
+/* ========================================================================== */
+
+/* ============================ Attribute Access ============================ */
+
+static
+PyGetSetDef SignedCRL_getseters[] = {
+    {NULL}  /* Sentinel */
+};
+
+static PyMemberDef SignedCRL_members[] = {
+    {NULL}  /* Sentinel */
+};
+
+/* ============================== Class Methods ============================= */
+
+PyDoc_STRVAR(SignedCRL_delete_permanently_doc,
+"delete_permanently()\n\
+\n\
+Permanently remove the CRL from the database.\n\
+");
+
+static PyObject *
+SignedCRL_delete_permanently(SignedCRL *self, PyObject *args)
+{
+    TraceMethodEnter(self);
+
+    if (SEC_DeletePermCRL(self->signed_crl) != SECSuccess)
+        return set_nspr_error(NULL);
+
+    Py_RETURN_NONE;
+}
+
+static PyMethodDef SignedCRL_methods[] = {
+    {"delete_permanently", (PyCFunction)SignedCRL_delete_permanently, METH_NOARGS,  SignedCRL_delete_permanently_doc},
+    {NULL, NULL}  /* Sentinel */
+};
+
+/* =========================== Class Construction =========================== */
+
+static PyObject *
+SignedCRL_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
+    SignedCRL *self;
+
+    TraceObjNewEnter(type);
+
+    if ((self = (SignedCRL *)type->tp_alloc(type, 0)) == NULL) return NULL;
+    self->signed_crl = NULL;
+
+    TraceObjNewLeave(self);
+    return (PyObject *)self;
+}
+
+static void
+SignedCRL_dealloc(SignedCRL* self)
+{
+    TraceMethodEnter(self);
+
+    if (self->signed_crl)
+        SEC_DestroyCrl(self->signed_crl);
+
+    self->ob_type->tp_free((PyObject*)self);
+}
+
+PyDoc_STRVAR(SignedCRL_doc,
+"An object representing a signed certificate revocation list");
+
+static int
+SignedCRL_init(SignedCRL *self, PyObject *args, PyObject *kwds)
+{
+    TraceMethodEnter(self);
+    return 0;
+}
+
+static PyTypeObject SignedCRLType = {
+    PyObject_HEAD_INIT(NULL)
+    0,						/* ob_size */
+    "nss.nss.SignedCRL",			/* tp_name */
+    sizeof(SignedCRL),				/* tp_basicsize */
+    0,						/* tp_itemsize */
+    (destructor)SignedCRL_dealloc,		/* tp_dealloc */
+    0,						/* tp_print */
+    0,						/* tp_getattr */
+    0,						/* tp_setattr */
+    0,						/* tp_compare */
+    0,						/* tp_repr */
+    0,						/* tp_as_number */
+    0,						/* tp_as_sequence */
+    0,						/* tp_as_mapping */
+    0,						/* tp_hash */
+    0,						/* tp_call */
+    0,						/* tp_str */
+    0,						/* tp_getattro */
+    0,						/* tp_setattro */
+    0,						/* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,	/* tp_flags */
+    SignedCRL_doc,				/* tp_doc */
+    0,						/* tp_traverse */
+    0,						/* tp_clear */
+    0,						/* tp_richcompare */
+    0,						/* tp_weaklistoffset */
+    0,						/* tp_iter */
+    0,						/* tp_iternext */
+    SignedCRL_methods,				/* tp_methods */
+    SignedCRL_members,				/* tp_members */
+    SignedCRL_getseters,			/* tp_getset */
+    0,						/* tp_base */
+    0,						/* tp_dict */
+    0,						/* tp_descr_get */
+    0,						/* tp_descr_set */
+    0,						/* tp_dictoffset */
+    (initproc)SignedCRL_init,			/* tp_init */
+    0,						/* tp_alloc */
+    SignedCRL_new,				/* tp_new */
+};
+
+static PyObject *
+SignedCRL_new_from_CERTSignedCRL(CERTSignedCrl *signed_crl)
+{
+    SignedCRL *self = NULL;
+
+    TraceObjNewEnter(NULL);
+    if ((self = (SignedCRL *) SignedCRLType.tp_new(&SignedCRLType, NULL, NULL)) == NULL)
+        return NULL;
+
+    self->signed_crl = signed_crl;
+
+    TraceObjNewLeave(self);
+    return (PyObject *) self;
+}
+
+/* ========================================================================== */
+/* ============================= X500AVA Class ============================== */
+/* ========================================================================== */
+
+/*
+ * Note: CERT_CopyAVA, CERT_GetAVATag, CERT_CompareAVA, CERT_CreateAVA,
+ * and CERT_DecodeAVAValue are defined in cert.h
+ *
+ * But only CERT_GetAVATag, CERT_CreateAVA, CERT_DecodeAVAValue are exported
+ * by nss.def
+ *
+ * That means CERT_CopyAVA and CERT_CompareAVA are defined as public but aren't.
+ */
+
+/* ============================ Attribute Access ============================ */
+
+static PyObject *
+X500AVA_get_oid(X500AVA *self, void *closure)
+{
+    return SecItem_new_from_SECItem(&self->ava->type, SECITEM_oid);
+}
+
+static PyObject *
+X500AVA_get_oid_tag(X500AVA *self, void *closure)
+{
+    return PyInt_FromLong(CERT_GetAVATag(self->ava));
+}
+
+static PyObject *
+X500AVA_get_value(X500AVA *self, void *closure)
+{
+    return SecItem_new_from_SECItem(&self->ava->value, SECITEM_utf8_string);
+}
+
+static PyObject *
+X500AVA_get_value_str(X500AVA *self, void *closure)
+{
+    return X500AVA_repr(self);
+}
+
+static
+PyGetSetDef X500AVA_getseters[] = {
+    {"oid",       (getter)X500AVA_get_oid, (setter)NULL,
+     "The OID (e.g. type) of the AVA as a SecItem", NULL},
+    {"oid_tag",   (getter)X500AVA_get_oid_tag, (setter)NULL,
+     "The OID tag enumerated constant (i.e. SEC_OID_AVA_*) of the AVA's type", NULL},
+    {"value",     (getter)X500AVA_get_value, (setter)NULL,
+     "The value of the AVA as a SecItem", NULL},
+    {"value_str", (getter)X500AVA_get_value_str, (setter)NULL,
+     "The value of the AVA as a UTF-8 encoded string", NULL},
+    {NULL}  /* Sentinel */
+};
+
+static PyMemberDef X500AVA_members[] = {
+    {NULL}  /* Sentinel */
+};
+
+/* ============================== Class Methods ============================= */
+
+
+/*
+ * Compares two CERTAVA's, returns -1 if a < b, 0 if a == b, 1 if a > b
+ * If error, returns -2
+ */
+static int
+CERTAVA_compare(CERTAVA *a, CERTAVA *b)
+{
+    SECComparison cmp_result;
+    PyObject *a_val_str, *b_val_str;
+
+    if (a == NULL && b == NULL) return 0;
+    if (a == NULL && b != NULL) return -1;
+    if (a != NULL && b == NULL) return 1;
+
+    if ((cmp_result = SECITEM_CompareItem(&a->type, &b->type)) != SECEqual) {
+        return cmp_result == SECLessThan ? -1 : 1;
+    }
+
+    /* Attribute types matched, are values equal? */
+    if ((cmp_result = SECITEM_CompareItem(&a->value,
+                                          &b->value)) == SECEqual) {
+        return 0;
+    }
+
+    /* No values not equal, compare as case insenstive strings */
+    a_val_str = CERTAVA_value_to_pystr(a);
+    b_val_str = CERTAVA_value_to_pystr(b);
+    if (a_val_str == NULL || b_val_str == NULL) {
+        Py_XDECREF(a_val_str);
+        Py_XDECREF(b_val_str);
+        PyErr_SetString(PyExc_ValueError, "Failed to convert AVA value to string");
+        return -2;
+    }
+
+    cmp_result = strcasecmp(PyString_AS_STRING(a_val_str),
+                            PyString_AS_STRING(b_val_str));
+    Py_DECREF(a_val_str);
+    Py_DECREF(b_val_str);
+    return (cmp_result == 0) ? 0 : ((cmp_result < 0) ? -1 : 1);
+}
+
+static int
+X500AVA_compare(X500AVA *self, X500AVA *other)
+{
+    int cmp_result;
+
+    if (!PyX500AVA_Check(other)) {
+        PyErr_SetString(PyExc_TypeError, "Bad type, must be X500AVA");
+        return -1;
+    }
+
+    cmp_result = CERTAVA_compare(self->ava, other->ava);
+    if (cmp_result == -2) {
+        return -1;
+    }
+    return cmp_result;
+}
+
+static PyMethodDef X500AVA_methods[] = {
+    {NULL, NULL}  /* Sentinel */
+};
+
+/* =========================== Class Construction =========================== */
+
+static PyObject *
+X500AVA_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
+    X500AVA *self;
+
+    TraceObjNewEnter(type);
+
+    if ((self = (X500AVA *)type->tp_alloc(type, 0)) == NULL) return NULL;
+
+    if ((self->arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE)) == NULL) {
+        type->tp_free(self);
+        return set_nspr_error(NULL);
+    }
+
+    self->ava = NULL;
+    
+    TraceObjNewLeave(self);
+    return (PyObject *)self;
+}
+
+static void
+X500AVA_dealloc(X500AVA* self)
+{
+    TraceMethodEnter(self);
+
+    if (self->arena) {
+        PORT_FreeArena(self->arena, PR_FALSE);
+    }
+
+    self->ob_type->tp_free((PyObject*)self);
+}
+
+PyDoc_STRVAR(X500AVA_doc,
+"An object representing an AVA (attribute value assertion).\n\
+\n\
+X500AVA(type, value)\n\
+\n\
+:Parameters:\n\
+     type : may be one of integer, string, SecItem\n\
+         What kind of attribute is being created. May be\n\
+         one of:\n\
+\n\
+         * integer: A SEC OID enumeration constant (i.e. SEC_OID_*)\n\
+           for example SEC_OID_AVA_COMMON_NAME.\n\
+         * string: A string either as the ava name, for example 'cn'\n\
+           or as the dotted decimal representation, for example\n\
+           'OID.2.5.4.3'. Case is not significant for either form.\n\
+         * SecItem: A SecItem object encapsulating the OID in \n\
+           DER format.\n\
+     value : string\n\
+         The value of the AVA, must be a string.\n\
+\n\
+RDN's (Relative Distinguished Name) are composed from AVA's.\n\
+An RDN is a sequence of AVA's.\n\
+\n\
+An example of an AVA is \"CN=www.redhat.com\" where CN is the X500\n\
+directory abbrevation for \"Common Name\".\n\
+\n\
+An AVA is composed of two items:\n\
+\n\
+type\n\
+    Specifies the attribute (e.g. CN). AVA types are specified by\n\
+    predefined OID's (Object Identifiers). For example the OID of CN\n\
+    is 2.5.4.3 ({joint-iso-itu-t(2) ds(5) attributeType(4) commonName(3)})\n\
+    OID's in NSS are encapsulated in a SecItem as a DER encoded OID.\n\
+    Because DER encoded OID's are less than ideal mechanisms by which\n\
+    to specify an item NSS has mapped each OID to a integral enumerated\n\
+    constant called an OID tag (i.e. SEC_OID_*). Many of the NSS API's\n\
+    will accept an OID tag number instead of DER encoded OID in a SecItem.\n\
+    One can easily convert between DER encoded OID's, tags, and their\n\
+    string representation in dotted-decimal format. The enumerated OID\n\
+    constants are the most efficient in most cases.\n\
+value\n\
+    The value of the attribute (e.g. 'www.redhat.com').\n\
+\n\
+Examples:\n\
+\n\
+The AVA cn=www.redhat.com can be created in any of the follow ways:\n\
+\n\
+    ava = nss.X500AVA('cn', 'www.redhat.com')\n\
+    ava = nss.X500AVA(nss.SEC_OID_AVA_COMMON_NAME, 'www.redhat.com')\n\
+    ava = nss.X500AVA('2.5.4.3', 'www.redhat.com')\n\
+    ava = nss.X500AVA('OID.2.5.4.3', 'www.redhat.com')\n\
+");
+
+static int
+X500AVA_init(X500AVA *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"type", "value", NULL};
+    PyObject *py_type = NULL;
+    PyObject *py_value = NULL;
+    PyObject *py_value_utf8 = NULL;
+    int oid_tag = SEC_OID_UNKNOWN;
+    int value_type;
+    char *value_string;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO:X500AVA", kwlist,
+                                     &py_type, &py_value))
+        return -1;
+
+    if ((oid_tag = get_oid_tag_from_object(py_type)) == -1) {
+        return -1;
+    }
+
+    if (oid_tag == SEC_OID_UNKNOWN) {
+        PyObject *type_str = PyObject_Str(py_type);
+        PyErr_Format(PyExc_ValueError, "unable to convert \"%s\" to known OID",
+                     PyString_AsString(type_str));
+        Py_DECREF(type_str);
+        return -1;
+    }
+
+    if (PyString_Check(py_value) || PyUnicode_Check(py_value)) {
+        if (PyString_Check(py_value)) {
+            py_value_utf8 = py_value;
+            Py_INCREF(py_value_utf8);
+        } else {
+            py_value_utf8 =  PyUnicode_AsUTF8String(py_value);
+        }
+
+        if ((value_string = PyString_AsString(py_value_utf8)) == NULL) {
+            Py_DECREF(py_value_utf8);
+            return -1;
+        }
+    } else {
+        PyErr_Format(PyExc_TypeError, "X500AVA value must be a string, not %.200s",
+                     Py_TYPE(py_type)->tp_name);
+        return -1;
+    }
+
+    value_type = ava_oid_tag_to_value_type(oid_tag);
+    if ((self->ava = CERT_CreateAVA(self->arena, oid_tag, value_type, value_string)) == NULL) {
+        set_nspr_error("could not create AVA, oid tag = %d, value = \"%s\"",
+                       oid_tag, value_string);
+        return -1;
+    }
+
+    return 0;
+}
+
+static PyObject *
+X500AVA_repr(X500AVA *self)
+{
+    PyObject *py_value_str;
+
+    if ((py_value_str = CERTAVA_value_to_pystr(self->ava)) == NULL) {
+        return PyString_FromFormat("<%s object at %p>",
+                                   Py_TYPE(self)->tp_name, self);
+    }
+    return py_value_str;
+}
+
+static PyTypeObject X500AVAType = {
+    PyObject_HEAD_INIT(NULL)
+    0,						/* ob_size */
+    "nss.nss.X500AVA",				/* tp_name */
+    sizeof(X500AVA),				/* tp_basicsize */
+    0,						/* tp_itemsize */
+    (destructor)X500AVA_dealloc,		/* tp_dealloc */
+    0,						/* tp_print */
+    0,						/* tp_getattr */
+    0,						/* tp_setattr */
+    (cmpfunc)X500AVA_compare,			/* tp_compare */
+    (reprfunc)X500AVA_repr,			/* tp_repr */
+    0,						/* tp_as_number */
+    0,						/* tp_as_sequence */
+    0,						/* tp_as_mapping */
+    0,						/* tp_hash */
+    0,						/* tp_call */
+    0,						/* tp_str */
+    0,						/* tp_getattro */
+    0,						/* tp_setattro */
+    0,						/* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,	/* tp_flags */
+    X500AVA_doc,				/* tp_doc */
+    0,						/* tp_traverse */
+    0,						/* tp_clear */
+    0,						/* tp_richcompare */
+    0,						/* tp_weaklistoffset */
+    0,						/* tp_iter */
+    0,						/* tp_iternext */
+    X500AVA_methods,				/* tp_methods */
+    X500AVA_members,				/* tp_members */
+    X500AVA_getseters,				/* tp_getset */
+    0,						/* tp_base */
+    0,						/* tp_dict */
+    0,						/* tp_descr_get */
+    0,						/* tp_descr_set */
+    0,						/* tp_dictoffset */
+    (initproc)X500AVA_init,			/* tp_init */
+    0,						/* tp_alloc */
+    X500AVA_new,				/* tp_new */
+};
+
+PyObject *
+X500AVA_new_from_CERTAVA(CERTAVA *ava)
+{
+    X500AVA *self = NULL;
+
+    TraceObjNewEnter(NULL);
+
+    if ((self = (X500AVA *) X500AVAType.tp_new(&X500AVAType, NULL, NULL)) == NULL)
+        return NULL;
+
+    if ((self->ava = (CERTAVA*) PORT_ArenaZNew(self->arena, CERTAVA)) == NULL) {
+        return set_nspr_error(NULL);
+    }
+
+    if (SECITEM_CopyItem(NULL, &self->ava->type, &ava->type) != SECSuccess) {
+        return set_nspr_error(NULL);
+    }
+    self->ava->type.type = siDEROID; /* NSS often fails to set this so force it */
+
+    if (SECITEM_CopyItem(NULL, &self->ava->value, &ava->value) != SECSuccess) {
+        return set_nspr_error(NULL);
+    }
+
+    TraceObjNewLeave(self);
+    return (PyObject *) self;
+}
+
+/* ========================================================================== */
+/* ============================= X500RDN Class ============================== */
+/* ========================================================================== */
+
+/*
+ * Note: CERT_AddAVA, CERT_AddRDN, CERT_CompareRDN, CERT_CopyRDN, CERT_CreateName
+ * CERT_CreateRDN, CERT_DestroyRDN are defined in cert.h
+ *
+ * But only CERT_AddRDN, CERT_CopyRDN, CERT_CreateName, CERT_CreateRDN
+ * are exported by nss.def
+ *
+ * That means CERT_AddAVA, CERT_CompareRDN, CERT_DestroyRDN
+ * are defined as public but aren't. Note CERT_DestroyRDN has no implementation.
+ */
+
+/* ============================ Attribute Access ============================ */
+
+static
+PyGetSetDef X500RDN_getseters[] = {
+    {NULL}  /* Sentinel */
+};
+
+static PyMemberDef X500RDN_members[] = {
+    {NULL}  /* Sentinel */
+};
+
+/* ============================== Class Methods ============================= */
+
+/*
+ * Compares two CERTRDN's, returns -1 if a < b, 0 if a == b, 1 if a > b
+ * If error, returns -2
+ */
+static int
+CERTRDN_compare(CERTRDN *a, CERTRDN *b)
+{
+    SECComparison cmp_result;
+    int a_len, b_len;
+    CERTAVA **a_avas, *a_ava;
+    CERTAVA **b_avas, *b_ava;
+
+    if (a == NULL && b == NULL) return 0;
+    if (a == NULL && b != NULL) return -1;
+    if (a != NULL && b == NULL) return 1;
+
+    a_len = CERTRDN_ava_count(a);
+    b_len = CERTRDN_ava_count(b);
+
+    if (a_len < b_len) return -1;
+    if (a_len > b_len) return  1;
+
+    for (a_avas = a->avas, b_avas = b->avas;
+         a_avas && (a_ava = *a_avas) && b_avas && (b_ava = *b_avas);
+         a_avas++, b_avas++) {
+        if ((cmp_result = CERTAVA_compare(a_ava, b_ava)) != 0) {
+            return cmp_result;
+        }
+    }
+    return 0;
+}
+
+static int
+X500RDN_compare(X500RDN *self, X500RDN *other)
+{
+    int cmp_result;
+
+    if (!PyX500RDN_Check(other)) {
+        PyErr_SetString(PyExc_TypeError, "Bad type, must be X500RDN");
+        return -1;
+    }
+
+    cmp_result = CERTRDN_compare(self->rdn, other->rdn);
+    if (cmp_result == -2) {
+        return -1;
+    }
+    return cmp_result;
+}
+
+PyDoc_STRVAR(X500RDN_has_key_doc,
+"has_key(arg) -> bool\n\
+\n\
+:Parameters:\n\
+    arg : string or integer\n\
+        canonical name (e.g. 'cn') or oid dotted-decimal or\n\
+        SEC_OID_* enumeration constant\n\
+\n\
+return True if RDN has an AVA whose oid can be identified by arg.\n\
+");
+
+static PyObject *
+X500RDN_has_key(X500RDN *self, PyObject *args)
+{
+    PyObject *arg;
+    int oid_tag;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTuple(args, "O:has_key",
+                          &arg))
+        return NULL;
+
+    oid_tag = get_oid_tag_from_object(arg);
+    if (oid_tag == SEC_OID_UNKNOWN || oid_tag == -1) {
+        Py_RETURN_FALSE;
+    }
+
+    if (CERTRDN_get_last_matching_tag(self->rdn, oid_tag) == NULL) {
+        Py_RETURN_FALSE;
+    } else {
+        Py_RETURN_TRUE;
+    }
+}
+
+/* =========================== Sequence Protocol ============================ */
+
+static Py_ssize_t
+CERTRDN_ava_count(CERTRDN *rdn)
+{
+    Py_ssize_t count;
+    CERTAVA **avas;
+
+    if (!rdn) return 0;
+    for (avas = rdn->avas, count = 0; *avas; avas++, count++);
+
+    return count;
+}
+
+static Py_ssize_t
+X500RDN_length(X500RDN *self)
+{
+    return CERTRDN_ava_count(self->rdn);
+}
+
+static PyObject *
+X500RDN_item(X500RDN *self, register Py_ssize_t i)
+{
+    Py_ssize_t count = 0;
+    CERTAVA **avas;
+
+    if (i < 0 || !self->rdn || self->rdn->avas == NULL) {
+        PyErr_SetString(PyExc_IndexError, "X500RDN index out of range");
+        return NULL;
+    }
+
+    for (avas = self->rdn->avas, count = 0; *avas && count < i; avas++, count++);
+
+    if (!*avas) {
+        PyErr_SetString(PyExc_IndexError, "X500RDN index out of range");
+        return NULL;
+    }
+
+    return X500AVA_new_from_CERTAVA(*avas);
+}
+
+
+/*
+ * RDNs are sorted from most general to most specific.  This code
+ * returns the LAST one found, the most specific one found.  This is
+ * particularly appropriate for Common Name.  See RFC 2818.
+ */
+static CERTAVA *
+CERTRDN_get_last_matching_tag(CERTRDN *rdn, int tag)
+{
+    CERTAVA **avas;
+    CERTAVA *ava, *last = NULL;
+    
+    if (!rdn) return NULL;
+    for (avas = rdn->avas; avas && (ava = *avas); avas++) {
+        int ava_tag = CERT_GetAVATag(ava);
+        if (tag == ava_tag) {
+            last = ava;
+        }
+    }
+    return last;
+}
+
+static PyObject*
+X500RDN_subscript(X500RDN *self, PyObject* item)
+{
+    if (PyIndex_Check(item)) {
+        Py_ssize_t i = PyNumber_AsSsize_t(item, PyExc_IndexError);
+	
+        if (i == -1 && PyErr_Occurred())
+            return NULL;
+        if (i < 0)
+            i += X500RDN_length(self);
+        return X500RDN_item(self, i);
+    } else if (PySlice_Check(item)) {
+        Py_ssize_t start, stop, step, slicelength, cur, i;
+        PyObject* result;
+        PyObject* py_ava;
+
+        if (PySlice_GetIndicesEx((PySliceObject*)item, X500RDN_length(self),
+				 &start, &stop, &step, &slicelength) < 0) {
+            return NULL;
+        }
+
+        if (slicelength <= 0) {
+            return PyList_New(0);
+        } else {
+            result = PyList_New(slicelength);
+            if (!result) return NULL;
+            
+            for (cur = start, i = 0; i < slicelength; cur += step, i++) {
+                /* We don't need to bump the ref count because X500RDN_item
+                 * returns a new object */
+                py_ava = X500RDN_item(self, cur);
+                if (PyList_SetItem(result, i, py_ava) == -1) {
+                    Py_DECREF(result);
+                    return NULL;
+                }
+            }
+            return result;
+	}
+    } else if (PyString_Check(item) || PyUnicode_Check(item) || PySecItem_Check(item)) {
+        int oid_tag;
+        CERTAVA *ava;
+
+        if ((oid_tag = get_oid_tag_from_object(item)) == -1) {
+            return NULL;
+        }
+
+        if (oid_tag == SEC_OID_UNKNOWN) {
+            if (PyString_Check(item) || PyUnicode_Check(item)) {
+                char *name = PyString_AsString(item);
+                PyErr_Format(PyExc_KeyError, "oid name unknown: \"%s\"", name);
+                return NULL;
+            } else {
+                PyErr_SetString(PyExc_KeyError, "oid unknown");
+                return NULL;
+            }
+        }
+
+        if ((ava = CERTRDN_get_last_matching_tag(self->rdn, oid_tag)) == NULL) {
+            if (PyString_Check(item) || PyUnicode_Check(item)) {
+                char *name = PyString_AsString(item);
+                PyErr_Format(PyExc_KeyError, "oid name not found: \"%s\"", name);
+                return NULL;
+            } else {
+                PyErr_SetString(PyExc_KeyError, "oid not found");
+                return NULL;
+            }
+        } else {
+            return X500AVA_new_from_CERTAVA(ava);
+        }
+    } else {
+        PyErr_Format(PyExc_TypeError,
+                     "indices must be integers or strings, not %.200s",
+                     item->ob_type->tp_name);
+        return NULL;
+    }
+    return NULL;
+}
+
+static PyObject *
+X500RDN_repr(X500RDN *self)
+{
+    return CERTRDN_to_pystr(self->rdn);
+}
+
+static PyMethodDef X500RDN_methods[] = {
+    {"has_key", (PyCFunction)X500RDN_has_key, METH_VARARGS, X500RDN_has_key_doc},
+    {NULL, NULL}  /* Sentinel */
+};
+
+/* =========================== Class Construction =========================== */
+
+static PyObject *
+X500RDN_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
+    X500RDN *self;
+
+    TraceObjNewEnter(type);
+
+    if ((self = (X500RDN *)type->tp_alloc(type, 0)) == NULL) return NULL;
+
+    if ((self->arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE)) == NULL) {
+        type->tp_free(self);
+        return set_nspr_error(NULL);
+    }
+
+    self->rdn = NULL;
+
+    TraceObjNewLeave(self);
+
+    return (PyObject *)self;
+}
+
+static void
+X500RDN_dealloc(X500RDN* self)
+{
+    TraceMethodEnter(self);
+
+    if (self->arena) {
+        PORT_FreeArena(self->arena, PR_FALSE);
+    }
+
+    self->ob_type->tp_free((PyObject*)self);
+}
+
+PyDoc_STRVAR(X500RDN_doc,
+"An object representing an X500 Relative Distinguished Name (RDN)\n\
+\n\
+X500RDN()\n\
+X500RDN(ava0, ...)\n\
+X500RDN([ava0, ava1])\n\
+\n\
+The X500RDN object constructor may be invoked with zero or more\n\
+X500AVA objects, or you may optionally pass a list or tuple of X500AVA\n\
+objects.\n\
+\n\
+X500RDN objects contain an ordered list of X500AVA objects. The\n\
+X500RDN object has both sequence and mapping behaviors with respect to\n\
+the ava's they contain. Thus you can index an ava by position, by\n\
+name, or by SecItem (if it's an OID). You can iterate over the list,\n\
+get it's length or take a slice.  If you index by string the string\n\
+may be either a canonical name for the ava type (e.g. 'cn') or the\n\
+dotted-decimal notation for the oid (e.g. 2.5.4.3). Note it is not\n\
+possible to index by oid tag (e.g. nss.SEC_OID_AVA_COMMON_NAME)\n\
+because oid tags are integers and it's impossible to distinguish\n\
+between an integer representing the n'th member of the sequence and\n\
+the integer representing the oid tag. In this case positional indexing\n\
+wins (e.g. rdn[0] means the first element).\n\
+\n\
+Examples:\n\
+\n\
+    >>> rdn = nss.X500RDN()\n\
+    >>> len(rdn)\n\
+    0\n\
+    >>> str(rdn)\n\
+    ''\n\
+    >>> cn_name = 'www.redhat.com'\n\
+    >>> cn_ava = nss.X500AVA('cn', cn_name)\n\
+    >>> rdn = nss.X500RDN(cn_ava)\n\
+    >>> len(rdn)\n\
+    1\n\
+    >>> str(rdn)\n\
+    'CN=www.redhat.com'\n\
+    >>> ava = rdn[0]\n\
+    >>> ava\n\
+    www.redhat.com\n\
+    >>> ou_name = 'Web Operations'\n\
+    >>> ou_ava = nss.X500AVA('ou', ou_name)\n\
+    >>> rdn = nss.X500RDN(cn_ava, ou_ava)\n\
+    >>> len(rdn)\n\
+    2\n\
+    >>> str(rdn)\n\
+    'CN=www.redhat.com+OU=Web Operations'\n\
+    >>> ava = rdn[0]\n\
+    >>> ava\n\
+    www.redhat.com\n\
+    >>> ava = rdn[1]\n\
+    >>> ava\n\
+    Web Operations\n\
+    >>> ava = rdn[2]\n\
+    IndexError: X500RDN index out of range\n\
+    >>> ava = rdn['2.5.4.3']\n\
+    >>> ava\n\
+    www.redhat.com\n\
+    >>> rdn.has_key('cn')\n\
+    True\n\
+    >>> for ava in rdn:\n\
+    ...    print \"%s %s\" % (nss.oid_tag_name(ava.oid_tag), ava)\n\
+    SEC_OID_AVA_COMMON_NAME www.redhat.com\n\
+    SEC_OID_AVA_ORGANIZATIONAL_UNIT_NAME Web Operations\n\
+    >>> ava = rdn['st']\n\
+    KeyError: 'oid name not found: \"st\"'\n\
+    >>> ava = rdn['junk']\n\
+    KeyError: 'oid name unknown: \"junk\"'\n\
+\n\
+");
+
+static int
+X500RDN_init(X500RDN *self, PyObject *args, PyObject *kwds)
+{
+    PyObject *sequence, *item;
+    Py_ssize_t sequence_len, i;
+    X500AVA *py_ava;
+    CERTAVA *ava_arg[MAX_AVAS+1];  /* +1 for NULL terminator */
+
+    TraceMethodEnter(self);
+
+    if (PyTuple_GET_SIZE(args) > 0) {
+        sequence = PyTuple_GET_ITEM(args, 0);
+        if (!(PyTuple_Check(sequence) || PyList_Check(sequence))) {
+            sequence = args;
+        }
+        sequence_len = PySequence_Length(sequence);
+        if (sequence_len > MAX_AVAS) {
+            PyErr_Format(PyExc_ValueError, "to many X500AVA items, maximum is %d, received %d",
+                         MAX_AVAS-1, sequence_len);
+            return -1;
+        }
+        for (i = 0; i < sequence_len && i < MAX_AVAS; i++) {
+            item = PySequence_ITEM(sequence, i);
+            if (PyX500AVA_Check(item)) {
+                py_ava = (X500AVA *)item;
+                ava_arg[i] = py_ava->ava;
+            } else {
+                PyErr_Format(PyExc_TypeError, "item %d must be an X500AVA object, not %.200s",
+                             i, Py_TYPE(item)->tp_name);
+                return -1;
+                }
+            }
+
+        for (; i < MAX_AVAS+1; i++) ava_arg[i] = NULL;
+
+        if ((self->rdn = CERT_CreateRDN(self->arena,
+                                        ava_arg[0], ava_arg[1], ava_arg[2], ava_arg[3],
+                                        ava_arg[4], ava_arg[5], ava_arg[6], ava_arg[7],
+                                        ava_arg[8], ava_arg[9], ava_arg[10])) == NULL) {
+            set_nspr_error(NULL);
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+static PySequenceMethods X500RDN_as_sequence = {
+    (lenfunc)X500RDN_length,			/* sq_length */
+    0,						/* sq_concat */
+    0,						/* sq_repeat */
+    (ssizeargfunc)X500RDN_item,			/* sq_item */
+    0,						/* sq_slice */
+    0,						/* sq_ass_item */
+    0,						/* sq_ass_slice */
+    0,						/* sq_contains */
+    0,						/* sq_inplace_concat */
+    0,						/* sq_inplace_repeat */
+};
+
+static PyMappingMethods X500RDN_as_mapping = {
+    (lenfunc)X500RDN_length,			/* mp_length */
+    (binaryfunc)X500RDN_subscript,		/* mp_subscript */
+    0,						/* mp_ass_subscript */
+};
+
+static PyTypeObject X500RDNType = {
+    PyObject_HEAD_INIT(NULL)
+    0,						/* ob_size */
+    "nss.nss.X500RDN",				/* tp_name */
+    sizeof(X500RDN),				/* tp_basicsize */
+    0,						/* tp_itemsize */
+    (destructor)X500RDN_dealloc,		/* tp_dealloc */
+    0,						/* tp_print */
+    0,						/* tp_getattr */
+    0,						/* tp_setattr */
+    (cmpfunc)X500RDN_compare,			/* tp_compare */
+    (reprfunc)X500RDN_repr,			/* tp_repr */
+    0,						/* tp_as_number */
+    &X500RDN_as_sequence,			/* tp_as_sequence */
+    &X500RDN_as_mapping,			/* tp_as_mapping */
+    0,						/* tp_hash */
+    0,						/* tp_call */
+    0,						/* tp_str */
+    0,						/* tp_getattro */
+    0,						/* tp_setattro */
+    0,						/* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,	/* tp_flags */
+    X500RDN_doc,				/* tp_doc */
+    0,						/* tp_traverse */
+    0,						/* tp_clear */
+    0,						/* tp_richcompare */
+    0,						/* tp_weaklistoffset */
+    0,						/* tp_iter */
+    0,						/* tp_iternext */
+    X500RDN_methods,				/* tp_methods */
+    X500RDN_members,				/* tp_members */
+    X500RDN_getseters,				/* tp_getset */
+    0,						/* tp_base */
+    0,						/* tp_dict */
+    0,						/* tp_descr_get */
+    0,						/* tp_descr_set */
+    0,						/* tp_dictoffset */
+    (initproc)X500RDN_init,			/* tp_init */
+    0,						/* tp_alloc */
+    X500RDN_new,				/* tp_new */
+};
+
+PyObject *
+X500RDN_new_from_CERTRDN(CERTRDN *rdn)
+{
+    X500RDN *self = NULL;
+    int i;
+    CERTAVA *ava_arg[MAX_AVAS+1];  /* +1 for NULL terminator */
+    CERTAVA **avas, *ava;
+
+    TraceObjNewEnter(NULL);
+
+    if ((self = (X500RDN *) X500RDNType.tp_new(&X500RDNType, NULL, NULL)) == NULL)
+        return NULL;
+    
+    i = 0;
+    if (rdn) {
+        for (avas = rdn->avas; i < MAX_AVAS && avas && (ava = *avas); avas++, i++) {
+            ava_arg[i] = ava;
+        }
+    }
+
+    for (; i < MAX_AVAS+1; i++) ava_arg[i] = NULL;
+
+    if ((self->rdn = CERT_CreateRDN(self->arena,
+                                    ava_arg[0], ava_arg[1], ava_arg[2], ava_arg[3],
+                                    ava_arg[4], ava_arg[5], ava_arg[6], ava_arg[7],
+                                    ava_arg[8], ava_arg[9], ava_arg[10])) == NULL) {
+        set_nspr_error(NULL);
+        return NULL;
+    }
+
+    TraceObjNewLeave(self);
+    return (PyObject *) self;
+}
+
+/* ========================================================================== */
+/* ============================ X500Name Class ============================== */
+/* ========================================================================== */
+
+/*
+ * All these are defined in cert.h and all are exported in nss.def
+ *
+ * CERT_AsciiToName
+ * CERT_NameToAscii
+ * CERT_NameToAsciiInvertible
+ * CERT_CreateName
+ * CERT_CopyName
+ * CERT_DestroyName
+ * CERT_AddRDN
+ * CERT_CompareName
+ * CERT_FormatName
+ * CERT_GetCertEmailAddress
+ * CERT_GetCommonName
+ * CERT_GetCountryName
+ * CERT_GetLocalityName
+ * CERT_GetStateName
+ * CERT_GetOrgName
+ * CERT_GetOrgUnitName
+ * CERT_GetDomainComponentName
+ * CERT_GetCertUid
+ */
+
+/*
+ * RDNs are sorted from most general to most specific. This code
+ * returns the FIRST one found, the most general one found.
+ */
+static CERTRDN *
+CERTName_get_first_matching_tag(CERTName *name, int tag)
+{
+    CERTRDN **rdns, *rdn;
+    CERTAVA **avas, *ava;
+
+    if (!name) return NULL;
+    for (rdns = name->rdns; rdns && (rdn = *rdns); rdns++) {
+	for (avas = rdn->avas; avas && (ava = *avas); avas++) {
+	    int ava_tag = CERT_GetAVATag(ava);
+	    if (tag == ava_tag) {
+                return rdn;
+	    }
+	}
+    }
+    return NULL;
+}
+
+/*
+ * RDNs are sorted from most general to most specific.  This code
+ * returns the LAST one found, the most specific one found.  This is
+ * particularly appropriate for Common Name. See RFC 2818.
+ */
+static CERTRDN *
+CERTName_get_last_matching_tag(CERTName *name, int tag)
+{
+    CERTRDN **rdns, *rdn, *last_rdn;
+    CERTAVA **avas, *ava;
+
+    if (!name) return NULL;
+    last_rdn = NULL;
+    for (rdns = name->rdns; rdns && (rdn = *rdns); rdns++) {
+	for (avas = rdn->avas; avas && (ava = *avas); avas++) {
+	    int ava_tag = CERT_GetAVATag(ava);
+	    if (tag == ava_tag) {
+                last_rdn = rdn;
+	    }
+	}
+    }
+    return last_rdn;
+}
+
+static CERTRDN *
+CERTName_get_matching_tag(CERTName *name, int tag)
+{
+    if (tag == SEC_OID_AVA_COMMON_NAME) {
+        return CERTName_get_last_matching_tag(name, tag);
+    } else {
+        return CERTName_get_first_matching_tag(name, tag);
+    }
+}
+
+static PyObject*
+X500Name_subscript(X500Name *self, PyObject* item)
+{
+    if (PyIndex_Check(item)) {
+        Py_ssize_t i = PyNumber_AsSsize_t(item, PyExc_IndexError);
+	
+        if (i == -1 && PyErr_Occurred())
+            return NULL;
+        if (i < 0)
+            i += X500Name_length(self);
+        return X500Name_item(self, i);
+    } else if (PySlice_Check(item)) {
+        Py_ssize_t start, stop, step, slicelength, cur, i;
+        PyObject* result;
+        PyObject* py_ava;
+
+        if (PySlice_GetIndicesEx((PySliceObject*)item, X500Name_length(self),
+				 &start, &stop, &step, &slicelength) < 0) {
+            return NULL;
+        }
+
+        if (slicelength <= 0) {
+            return PyList_New(0);
+        } else {
+            result = PyList_New(slicelength);
+            if (!result) return NULL;
+            
+            for (cur = start, i = 0; i < slicelength; cur += step, i++) {
+                /* We don't need to bump the ref count because X500RDN_item
+                 * returns a new object */
+                py_ava = X500Name_item(self, cur);
+                if (PyList_SetItem(result, i, py_ava) == -1) {
+                    Py_DECREF(result);
+                    return NULL;
+                }
+            }
+            return result;
+	}
+    } else if (PyString_Check(item) || PyUnicode_Check(item) || PySecItem_Check(item)) {
+        int oid_tag;
+        CERTRDN *rdn;
+
+        if ((oid_tag = get_oid_tag_from_object(item)) == -1) {
+            return NULL;
+        }
+
+        if (oid_tag == SEC_OID_UNKNOWN) {
+            if (PyString_Check(item) || PyUnicode_Check(item)) {
+                char *name = PyString_AsString(item);
+                PyErr_Format(PyExc_KeyError, "oid name unknown: \"%s\"", name);
+                return NULL;
+            } else {
+                PyErr_SetString(PyExc_KeyError, "oid unknown");
+                return NULL;
+            }
+        }
+
+        if ((rdn = CERTName_get_matching_tag(&self->name, oid_tag)) == NULL) {
+            if (PyString_Check(item) || PyUnicode_Check(item)) {
+                char *name = PyString_AsString(item);
+                PyErr_Format(PyExc_KeyError, "oid name not found: \"%s\"", name);
+                return NULL;
+            } else {
+                PyErr_SetString(PyExc_KeyError, "oid not found");
+                return NULL;
+            }
+        } else {
+            return X500RDN_new_from_CERTRDN(rdn);
+        }
+    } else {
+        PyErr_Format(PyExc_TypeError,
+                     "indices must be integers or strings, not %.200s",
+                     item->ob_type->tp_name);
+        return NULL;
+    }
+    return NULL;
+}
+
+PyDoc_STRVAR(X500Name_has_key_doc,
+"has_key(arg) -> bool\n\
+\n\
+:Parameters:\n\
+    arg : string or integer\n\
+        canonical name (e.g. 'cn') or oid dotted-decimal or\n\
+        SEC_OID_* enumeration constant\n\
+\n\
+return True if Name has an AVA whose oid can be identified by arg.\n\
+");
+
+static PyObject *
+X500Name_has_key(X500Name *self, PyObject *args)
+{
+    PyObject *arg;
+    int oid_tag;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTuple(args, "O:has_key",
+                          &arg))
+        return NULL;
+
+    oid_tag = get_oid_tag_from_object(arg);
+    if (oid_tag == SEC_OID_UNKNOWN || oid_tag == -1) {
+        Py_RETURN_FALSE;
+    }
+
+    if (CERTName_get_matching_tag(&self->name, oid_tag) == NULL) {
+        Py_RETURN_FALSE;
+    } else {
+        Py_RETURN_TRUE;
+    }
+}
+
+/* =========================== Sequence Protocol ============================ */
+
+static Py_ssize_t
+CERTName_rdn_count(CERTName *name)
+{
+    Py_ssize_t count = 0;
+    CERTRDN **rdns;
+
+    for (rdns = name->rdns, count = 0; *rdns; rdns++, count++);
+
+    return count;
+}
+
+static Py_ssize_t
+X500Name_length(X500Name *self)
+{
+    return CERTName_rdn_count(&self->name);
+}
+
+static PyObject *
+X500Name_item(X500Name *self, register Py_ssize_t i)
+{
+    Py_ssize_t count = 0;
+    CERTRDN **rdns;
+
+    if (i < 0 || self->name.rdns == NULL) {
+        PyErr_SetString(PyExc_IndexError, "X500Name index out of range");
+        return NULL;
+    }
+
+    for (rdns = self->name.rdns, count = 0; *rdns && count < i; rdns++, count++);
+
+    if (!*rdns) {
+        PyErr_SetString(PyExc_IndexError, "X500Name index out of range");
+        return NULL;
+    }
+
+    return X500RDN_new_from_CERTRDN(*rdns);
+}
+
+/* ============================ Attribute Access ============================ */
+
+static PyObject *
+X500Name_get_email_address(X500Name *self, void *closure)
+{
+    char *value;
+
+    if ((value = CERT_GetCertEmailAddress(&self->name)) == NULL) {
+        Py_RETURN_NONE;
+    }
+    return PyString_FromString(value);
+}
+
+static PyObject *
+X500Name_get_common_name(X500Name *self, void *closure)
+{
+    char *value;
+
+    if ((value = CERT_GetCommonName(&self->name)) == NULL) {
+        Py_RETURN_NONE;
+    }
+    return PyString_FromString(value);
+}
+
+static PyObject *
+X500Name_get_country_name(X500Name *self, void *closure)
+{
+    char *value;
+
+    if ((value = CERT_GetCountryName(&self->name)) == NULL) {
+        Py_RETURN_NONE;
+    }
+    return PyString_FromString(value);
+}
+
+static PyObject *
+X500Name_get_locality_name(X500Name *self, void *closure)
+{
+    char *value;
+
+    if ((value = CERT_GetLocalityName(&self->name)) == NULL) {
+        Py_RETURN_NONE;
+    }
+    return PyString_FromString(value);
+}
+
+static PyObject *
+X500Name_get_state_name(X500Name *self, void *closure)
+{
+    char *value;
+
+    if ((value = CERT_GetStateName(&self->name)) == NULL) {
+        Py_RETURN_NONE;
+    }
+    return PyString_FromString(value);
+}
+
+static PyObject *
+X500Name_get_org_name(X500Name *self, void *closure)
+{
+    char *value;
+
+    if ((value = CERT_GetOrgName(&self->name)) == NULL) {
+        Py_RETURN_NONE;
+    }
+    return PyString_FromString(value);
+}
+
+static PyObject *
+X500Name_get_org_unit_name(X500Name *self, void *closure)
+{
+    char *value;
+
+    if ((value = CERT_GetOrgUnitName(&self->name)) == NULL) {
+        Py_RETURN_NONE;
+    }
+    return PyString_FromString(value);
+}
+
+static PyObject *
+X500Name_get_domain_component_name(X500Name *self, void *closure)
+{
+    char *value;
+
+    if ((value = CERT_GetDomainComponentName(&self->name)) == NULL) {
+        Py_RETURN_NONE;
+    }
+    return PyString_FromString(value);
+}
+
+static PyObject *
+X500Name_get_cert_uid(X500Name *self, void *closure)
+{
+    char *value;
+
+    if ((value = CERT_GetCertUid(&self->name)) == NULL) {
+        Py_RETURN_NONE;
+    }
+    return PyString_FromString(value);
+}
+
+static
+PyGetSetDef X500Name_getseters[] = {
+    {"email_address", (getter)X500Name_get_email_address, (setter)NULL,
+     "Returns the email address member as a string. Returns None if not found.", NULL},
+    {"common_name", (getter)X500Name_get_common_name, (setter)NULL,
+     "Returns the common name member (i.e. CN) as a string. Returns None if not found.", NULL},
+    {"country_name", (getter)X500Name_get_country_name, (setter)NULL,
+     "Returns the country name member (i.e. C) as a string. Returns None if not found.", NULL},
+    {"locality_name", (getter)X500Name_get_locality_name, (setter)NULL,
+     "Returns the locality name member (i.e. L) as a string. Returns None if not found.", NULL},
+    {"state_name", (getter)X500Name_get_state_name, (setter)NULL,
+     "Returns the state name member (i.e. ST) as a string. Returns None if not found.", NULL},
+    {"org_name", (getter)X500Name_get_org_name, (setter)NULL,
+     "Returns the organization name member (i.e. O) as a string. Returns None if not found.", NULL},
+    {"org_unit_name", (getter)X500Name_get_org_unit_name, (setter)NULL,
+     "Returns the organizational unit name member (i.e. OU) as a string. Returns None if not found.", NULL},
+    {"dc_name", (getter)X500Name_get_domain_component_name, (setter)NULL,
+     "Returns the domain component name member (i.e. DC) as a string. Returns None if not found.", NULL},
+    {"cert_uid", (getter)X500Name_get_cert_uid, (setter)NULL,
+     "Returns the certificate uid member (i.e. UID) as a string. Returns None if not found.", NULL},
+    {NULL}  /* Sentinel */
+};
+
+static PyMemberDef X500Name_members[] = {
+    {NULL}  /* Sentinel */
+};
+
+/* ============================== Class Methods ============================= */
+
+static int
+X500Name_compare(X500Name *self, X500Name *other)
+{
+    if (!PyX500Name_Check(other)) {
+        PyErr_SetString(PyExc_TypeError, "Bad type, must be X500Name");
+        return -1;
+    }
+
+    return CERT_CompareName(&self->name, &other->name);
+}
+
+PyDoc_STRVAR(X500Name_add_rdn_doc,
+"add_rdn(rdn) \n\
+\n\
+:Parameters:\n\
+    rdn : X500RDN object\n\
+        The rnd to add to the name\n\
+\n\
+Adds a RDN to the name.\n\
+");
+
+static PyObject *
+X500Name_add_rdn(X500Name *self, PyObject *args)
+{
+    X500RDN *py_rdn;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTuple(args, "O!:add_rdn",
+                          &X500RDNType, &py_rdn))
+        return NULL;
+
+    if (CERT_AddRDN(&self->name, py_rdn->rdn) != SECSuccess) {
+        return set_nspr_error(NULL);
+    }
+
+    Py_RETURN_NONE;
+}
+
+static PyMethodDef X500Name_methods[] = {
+    {"has_key", (PyCFunction)X500Name_has_key, METH_VARARGS, X500Name_has_key_doc},
+    {"add_rdn", (PyCFunction)X500Name_add_rdn, METH_VARARGS, X500Name_add_rdn_doc},
+    {NULL, NULL}  /* Sentinel */
+};
+
+/* =========================== Class Construction =========================== */
+
+static PyObject *
+X500Name_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
+    X500Name *self;
+
+    TraceObjNewEnter(type);
+
+    if ((self = (X500Name *)type->tp_alloc(type, 0)) == NULL) return NULL;
+
+    memset(&self->name, 0, sizeof(self->name));
+
+    TraceObjNewLeave(self);
+    return (PyObject *)self;
+}
+
+static void
+X500Name_dealloc(X500Name* self)
+{
+    TraceMethodEnter(self);
+
+    CERT_DestroyName(&self->name);
+
+    self->ob_type->tp_free((PyObject*)self);
+}
+
+PyDoc_STRVAR(X500Name_doc,
+"An object representing an X500 Name\n\
+\n\
+X500Name()\n\
+X500Name('CN=www.redhat.com')\n\
+X500Name(rdn0, ...)\n\
+X500Name([rdn0, rdn1])\n\
+\n\
+The X500Name object constructor may be invoked with a string\n\
+representing an X500 name. Zero or more X500RDN objects, or you may\n\
+optionally pass a list or tuple of X500RDN objects.\n\
+\n\
+X500Name objects contain an ordered list of X500RDN objects. The\n\
+X500Name object has both sequence and mapping behaviors with respect to\n\
+the rdn's they contain. Thus you can index an rdn by position, by\n\
+name, or by SecItem (if it's an OID). You can iterate over the list,\n\
+get it's length or take a slice.  If you index by string the string\n\
+may be either a canonical name for the rdn type (e.g. 'cn') or the\n\
+dotted-decimal notation for the oid (e.g. 2.5.4.3). Note it is not\n\
+possible to index by oid tag (e.g. nss.SEC_OID_AVA_COMMON_NAME)\n\
+because oid tags are integers and it's impossible to distinguish\n\
+between an integer representing the n'th member of the sequence and\n\
+the integer representing the oid tag. In this case positional indexing\n\
+wins (e.g. rdn[0] means the first element).\n\
+\n\
+Examples:\n\
+    >>> import nss.nss as nss\n\
+    >>> nss.nss_init_nodb()\n\
+    >>> subject_name = 'CN=www.redhat.com,OU=Web Operations,O=Red Hat Inc,L=Raleigh,ST=North Carolina,C=US'\n\
+    >>> name = nss.X500Name(subject_name)\n\
+    >>> str(name)\n\
+    CN=www.redhat.com,OU=Web Operations,O=Red Hat Inc,L=Raleigh,ST=North Carolina,C=US\n\
+    >>> name[0]\n\
+    C=US\n\
+    >>> name['cn']\n\
+    CN=www.redhat.com\n\
+    >>> name['2.5.4.3']\n\
+    CN=www.redhat.com\n\
+    >>> name.common_name\n\
+    www.redhat.com\n\
+    >>> cn_rdn = nss.X500RDN(nss.X500AVA('cn', 'www.redhat.com'))\n\
+    >>> ou_rdn = nss.X500RDN(nss.X500AVA('ou', 'Web Operations'))\n\
+    >>> name = nss.X500Name(cn_rdn)\n\
+    >>> name\n\
+    CN=www.redhat.com\n\
+    >>> len(name)\n\
+    1\n\
+    >>> name.add_rdn(ou_rdn)\n\
+    >>> name\n\
+    OU=Web Operations,CN=www.redhat.com\n\
+    >>> len(name)\n\
+    2\n\
+    >>> name = nss.X500Name(cn_rdn, ou_rdn)\n\
+    >>> name\n\
+    OU=Web Operations,CN=www.redhat.com\n\
+    >>> name.has_key('cn')\n\
+    True\n\
+    >>> name.has_key('2.5.4.3')\n\
+    True\n\
+");
+
+static int
+X500Name_init(X500Name *self, PyObject *args, PyObject *kwds)
+{
+    PyObject *sequence, *item;
+    Py_ssize_t sequence_len, i;
+    X500RDN *py_rdn;
+    CERTName *cert_name;
+    CERTRDN *rdn_arg[MAX_RDNS+1];  /* +1 for NULL terminator */
+
+    TraceMethodEnter(self);
+
+    CERT_DestroyName(&self->name);
+
+    if (PyTuple_GET_SIZE(args) > 0) {
+        item = PyTuple_GET_ITEM(args, 0);
+        if (PyString_Check(item) || PyUnicode_Check(item)) {
+            char *ascii_name;
+
+            if ((ascii_name = PyString_AsString(item)) == NULL) {
+                return -1;
+            }
+
+            if (strlen(ascii_name) == 0) goto empty_name;
+
+            if ((cert_name = CERT_AsciiToName(ascii_name)) == NULL) {
+                set_nspr_error("cannot parse X500 name \"%s\"", ascii_name);
+                return -1;
+            }
+
+            self->name = *cert_name;
+            return 0;
+        }
+
+        if (PyX500RDN_Check(item)) {
+            sequence = args;
+        } else if (PyList_Check(item) || PyTuple_Check(item)) {
+            sequence = item;
+        } else {
+            PyErr_Format(PyExc_TypeError, "must be an X500RDN object or list or tuple of X500RDN objects, not %.200s",
+                         Py_TYPE(item)->tp_name);
+            return -1;
+        }
+
+        sequence_len = PySequence_Length(sequence);
+
+        if (sequence_len > MAX_RDNS) {
+            PyErr_Format(PyExc_ValueError, "to many X500RDN items, maximum is %d, received %d",
+                         MAX_RDNS-1, sequence_len);
+            return -1;
+        }
+
+        for (i = 0; i < sequence_len && i < MAX_RDNS; i++) {
+            item = PySequence_ITEM(sequence, i);
+            if (PyX500RDN_Check(item)) {
+                py_rdn = (X500RDN *)item;
+                rdn_arg[i] = py_rdn->rdn;
+            } else {
+                PyErr_Format(PyExc_TypeError, "item %d must be an X500RDN object, not %.200s",
+                             i, Py_TYPE(item)->tp_name);
+                return -1;
+            }
+        }
+
+        for (; i < MAX_RDNS+1; i++) rdn_arg[i] = NULL;
+
+        if ((cert_name = CERT_CreateName(rdn_arg[0], rdn_arg[1], rdn_arg[2], rdn_arg[3],
+                                         rdn_arg[4], rdn_arg[5], rdn_arg[6], rdn_arg[7],
+                                         rdn_arg[8], rdn_arg[9], rdn_arg[10])) == NULL) {
+            set_nspr_error(NULL);
+            return -1;
+        }
+        self->name = *cert_name;
+    } else {
+    empty_name:
+        if ((cert_name = CERT_CreateName(NULL)) == NULL) {
+            set_nspr_error(NULL);
+            return -1;
+        }
+        self->name = *cert_name;
+    }
+    return 0;
+}
+
+static PyObject *
+X500Name_repr(X500Name *self)
+{
+    return CERTName_to_pystr(&self->name);    
+}
+
+static PySequenceMethods X500Name_as_sequence = {
+    (lenfunc)X500Name_length,			/* sq_length */
+    0,						/* sq_concat */
+    0,						/* sq_repeat */
+    (ssizeargfunc)X500Name_item,		/* sq_item */
+    0,						/* sq_slice */
+    0,						/* sq_ass_item */
+    0,						/* sq_ass_slice */
+    0,						/* sq_contains */
+    0,						/* sq_inplace_concat */
+    0,						/* sq_inplace_repeat */
+};
+
+static PyMappingMethods X500Name_as_mapping = {
+    (lenfunc)X500Name_length,			/* mp_length */
+    (binaryfunc)X500Name_subscript,		/* mp_subscript */
+    0,						/* mp_ass_subscript */
+};
+
+static PyTypeObject X500NameType = {
+    PyObject_HEAD_INIT(NULL)
+    0,						/* ob_size */
+    "nss.nss.X500Name",				/* tp_name */
+    sizeof(X500Name),				/* tp_basicsize */
+    0,						/* tp_itemsize */
+    (destructor)X500Name_dealloc,		/* tp_dealloc */
+    0,						/* tp_print */
+    0,						/* tp_getattr */
+    0,						/* tp_setattr */
+    (cmpfunc)X500Name_compare,			/* tp_compare */
+    (reprfunc)X500Name_repr,			/* tp_repr */
+    0,						/* tp_as_number */
+    &X500Name_as_sequence,			/* tp_as_sequence */
+    &X500Name_as_mapping,			/* tp_as_mapping */
+    0,						/* tp_hash */
+    0,						/* tp_call */
+    (reprfunc)X500Name_repr,			/* tp_str */
+    0,						/* tp_getattro */
+    0,						/* tp_setattro */
+    0,						/* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,	/* tp_flags */
+    X500Name_doc,				/* tp_doc */
+    0,						/* tp_traverse */
+    0,						/* tp_clear */
+    0,						/* tp_richcompare */
+    0,						/* tp_weaklistoffset */
+    0,						/* tp_iter */
+    0,						/* tp_iternext */
+    X500Name_methods,				/* tp_methods */
+    X500Name_members,				/* tp_members */
+    X500Name_getseters,				/* tp_getset */
+    0,						/* tp_base */
+    0,						/* tp_dict */
+    0,						/* tp_descr_get */
+    0,						/* tp_descr_set */
+    0,						/* tp_dictoffset */
+    (initproc)X500Name_init,			/* tp_init */
+    0,						/* tp_alloc */
+    X500Name_new,				/* tp_new */
+};
+
+PyObject *
+X500Name_new_from_CERTName(CERTName *name)
+{
+    X500Name *self = NULL;
+    PRArenaPool *arena;
+
+    TraceObjNewEnter(NULL);
+
+    if ((self = (X500Name *) X500NameType.tp_new(&X500NameType, NULL, NULL)) == NULL)
+        return NULL;
+
+    if ((arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE)) == NULL) {
+        X500NameType.tp_free(self);
+        return set_nspr_error(NULL);
+    }
+
+    if (CERT_CopyName(arena, &self->name, name) != SECSuccess) {
+        return set_nspr_error(NULL);
+    }
+
+    TraceObjNewLeave(self);
+    return (PyObject *) self;
+}
+
+/* ========================================================================== */
+/* =========================== GeneralName Class ============================ */
+/* ========================================================================== */
+
+/* ============================ Attribute Access ============================ */
+
+static PyObject *
+GeneralName_get_type_enum(GeneralName *self, void *closure)
+{
+    if (!self->name) {
+        return PyErr_Format(PyExc_ValueError, "%s is uninitialized", Py_TYPE(self)->tp_name);
+    }
+    return PyInt_FromLong(self->name->type);
+}
+
+static PyObject *
+GeneralName_get_type_name(GeneralName *self, void *closure)
+{
+    if (!self->name) {
+        return PyErr_Format(PyExc_ValueError, "%s is uninitialized", Py_TYPE(self)->tp_name);
+    }
+    return general_name_type_to_pystr(self->name->type);
+}
+
+static PyObject *
+GeneralName_get_type_string(GeneralName *self, void *closure)
+{
+    if (!self->name) {
+        return PyErr_Format(PyExc_ValueError, "%s is uninitialized", Py_TYPE(self)->tp_name);
+    }
+    return CERTGeneralName_type_string_to_pystr(self->name);
+}
+
+static
+PyGetSetDef GeneralName_getseters[] = {
+    {"type_enum", (getter)GeneralName_get_type_enum, (setter)NULL,
+     "Returns the general name type enumerated constant", NULL},
+    {"type_name", (getter)GeneralName_get_type_name, (setter)NULL,
+     "Returns the general name type enumerated constant as a string", NULL},
+    {"type_string", (getter)GeneralName_get_type_string, (setter)NULL,
+     "Returns the type of the general name as a string (e.g. \"URI\")", NULL},
+    {NULL}  /* Sentinel */
+};
+
+static PyMemberDef GeneralName_members[] = {
+    {NULL}  /* Sentinel */
+};
+
+/* ============================== Class Methods ============================= */
+
+PyDoc_STRVAR(GeneralName_get_name_doc,
+"get_name(repr_kind=AsString) -> \n\
+\n\
+:Parameters:\n\
+    repr_kind : RepresentationKind constant\n\
+        Specifies what the contents of the returned tuple will be.\n\
+        May be one of:\n\
+\n\
+        AsObject\n\
+            The general name as a nss.GeneralName object\n\
+        AsString\n\
+            The general name as a string.\n\
+            (e.g. \"http://crl.geotrust.com/crls/secureca.crl\")\n\
+        AsTypeString\n\
+            The general name type as a string.\n\
+             (e.g. \"URI\")\n\
+        AsTypeEnum\n\
+            The general name type as a general name type enumerated constant.\n\
+             (e.g. nss.certURI )\n\
+        AsLabeledString\n\
+            The general name as a string with it's type prepended.\n\
+            (e.g. \"URI: http://crl.geotrust.com/crls/secureca.crl\"\n\
+\n\
+Returns the value of the GeneralName according to the representation type parameter.\n\
+");
+
+static PyObject *
+GeneralName_get_name(GeneralName *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"arg1", NULL};
+    PyObject *name;
+    int repr_kind = AsString;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|i:get_name", kwlist,
+                                     &repr_kind))
+        return NULL;
+
+
+    if (!self->name) {
+        return PyErr_Format(PyExc_ValueError, "%s is uninitialized", Py_TYPE(self)->tp_name);
+    }
+
+    switch(repr_kind) {
+    case AsObject:
+        Py_INCREF(self);
+        name = (PyObject *)self;
+        break;
+    case AsString:
+        name = CERTGeneralName_to_pystr(self->name);
+        break;
+    case AsTypeString:
+        name = CERTGeneralName_type_string_to_pystr(self->name);
+        break;
+    case AsTypeEnum:
+        name = PyInt_FromLong(self->name->type);
+        break;
+    case AsLabeledString:
+        name = CERTGeneralName_to_pystr_with_label(self->name);
+        break;
+    default:
+        PyErr_Format(PyExc_ValueError, "Unsupported representation kind (%d)", repr_kind);
+        return NULL;
+    }
+
+    return name;
+}
+
+static PyMethodDef GeneralName_methods[] = {
+    {NULL, NULL}  /* Sentinel */
+};
+
+/* =========================== Class Construction =========================== */
+
+static PyObject *
+GeneralName_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
+    GeneralName *self;
+
+    TraceObjNewEnter(type);
+
+    if ((self = (GeneralName *)type->tp_alloc(type, 0)) == NULL) return NULL;
+
+    if ((self->arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE)) == NULL) {
+        type->tp_free(self);
+        return set_nspr_error(NULL);
+    }
+
+    self->name = NULL;
+
+    TraceObjNewLeave(self);
+    return (PyObject *)self;
+}
+
+static void
+GeneralName_dealloc(GeneralName* self)
+{
+    TraceMethodEnter(self);
+
+    if (self->arena) {
+        PORT_FreeArena(self->arena, PR_FALSE);
+    }
+
+    self->ob_type->tp_free((PyObject*)self);
+}
+
+PyDoc_STRVAR(GeneralName_doc,
+"An object representing a GeneralName or list of GeneralNames.\n\
+\n\
+");
+
+PyDoc_STRVAR(NewType_doc,
+"An object representing xxx");
+
+static int
+GeneralName_init(GeneralName *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"sec_item", NULL};
+    SecItem *py_sec_item;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|i:GeneralName", kwlist,
+                                     &SecItemType, &py_sec_item))
+        return -1;
+
+    if ((self->name = CERT_DecodeGeneralName(self->arena, &py_sec_item->item, NULL)) == NULL) {
+        set_nspr_error(NULL);
+        return -1;
+    }
+
+    return 0;
+}
+
+static PyObject *
+GeneralName_repr(GeneralName *self)
+{
+    PyObject *result = NULL;
+
+    if (!self->name) {
+        return PyErr_Format(PyExc_ValueError, "%s is uninitialized", Py_TYPE(self)->tp_name);
+    }
+
+    if ((result = CERTGeneralName_to_pystr_with_label(self->name)) == NULL) {
+        result = PyString_FromFormat("<%s object at %p>",
+                                     Py_TYPE(self)->tp_name, self);
+    }
+
+    return result;
+}
+
+static Py_ssize_t
+GeneralName_length(GeneralName *self)
+{
+    if (!self->name) {
+        PyErr_Format(PyExc_ValueError, "%s is uninitialized", Py_TYPE(self)->tp_name);
+        return -1;
+    }
+
+    return CERTGeneralName_list_count(self->name);
+}
+
+static PyObject *
+GeneralName_item(GeneralName *self, register Py_ssize_t i)
+{
+    CERTGeneralName *head, *cur;
+    Py_ssize_t index;
+
+    if (!self->name) {
+        return PyErr_Format(PyExc_ValueError, "%s is uninitialized", Py_TYPE(self)->tp_name);
+    }
+
+    index = 0;
+    cur = head = self->name;
+    do {
+        cur = CERT_GetNextGeneralName(cur);
+        if (i == index) {
+            return GeneralName_new_from_CERTGeneralName(cur);
+        }
+        index++;
+    } while (cur != head);
+
+    PyErr_SetString(PyExc_IndexError, "GeneralName index out of range");
+    return NULL;
+}
+
+static PySequenceMethods GeneralName_as_sequence = {
+    (lenfunc)GeneralName_length,		/* sq_length */
+    0,						/* sq_concat */
+    0,						/* sq_repeat */
+    (ssizeargfunc)GeneralName_item,		/* sq_item */
+    0,						/* sq_slice */
+    0,						/* sq_ass_item */
+    0,						/* sq_ass_slice */
+    0,						/* sq_contains */
+    0,						/* sq_inplace_concat */
+    0,						/* sq_inplace_repeat */
+};
+
+static PyTypeObject GeneralNameType = {
+    PyObject_HEAD_INIT(NULL)
+    0,						/* ob_size */
+    "nss.nss.GeneralName",			/* tp_name */
+    sizeof(GeneralName),			/* tp_basicsize */
+    0,						/* tp_itemsize */
+    (destructor)GeneralName_dealloc,		/* tp_dealloc */
+    0,						/* tp_print */
+    0,						/* tp_getattr */
+    0,						/* tp_setattr */
+    0,						/* tp_compare */
+    (reprfunc)GeneralName_repr,			/* tp_repr */
+    0,						/* tp_as_number */
+    &GeneralName_as_sequence,			/* tp_as_sequence */
+    0,						/* tp_as_mapping */
+    0,						/* tp_hash */
+    0,						/* tp_call */
+    0,						/* tp_str */
+    0,						/* tp_getattro */
+    0,						/* tp_setattro */
+    0,						/* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,	/* tp_flags */
+    GeneralName_doc,				/* tp_doc */
+    0,						/* tp_traverse */
+    0,						/* tp_clear */
+    0,						/* tp_richcompare */
+    0,						/* tp_weaklistoffset */
+    0,						/* tp_iter */
+    0,						/* tp_iternext */
+    GeneralName_methods,			/* tp_methods */
+    GeneralName_members,			/* tp_members */
+    GeneralName_getseters,			/* tp_getset */
+    0,						/* tp_base */
+    0,						/* tp_dict */
+    0,						/* tp_descr_get */
+    0,						/* tp_descr_set */
+    0,						/* tp_dictoffset */
+    (initproc)GeneralName_init,			/* tp_init */
+    0,						/* tp_alloc */
+    0,						/* tp_new */
+};
+
+PyObject *
+GeneralName_new_from_CERTGeneralName(CERTGeneralName *name)
+{
+    GeneralName *self = NULL;
+
+    TraceObjNewEnter(NULL);
+
+    if ((self = (GeneralName *) GeneralName_new(&GeneralNameType, NULL, NULL)) == NULL)
+        return NULL;
+
+    /*
+     * NSS WART
+     * There is no public API to create a CERTGeneralName, copy it, or free it.
+     * You don't know what arena was used to create the general name.
+     * GeneralNames are linked in a list, this makes it difficult for a 
+     * general name to exist independently, it would have been better if there
+     * was a list container independent general names could be placed in,
+     * then you wouldn't have to worry about the link fields in each independent name.
+     */
+
+    if (CERT_CopyGeneralName(self->arena, &self->name, name) != SECSuccess) {
+            return set_nspr_error(NULL);
+    }
+
+    TraceObjNewLeave(self);
+    return (PyObject *) self;
+}
 
 PyDoc_STRVAR(cert_get_default_certdb_doc,
 "get_default_certdb()\n\
@@ -4326,7 +8922,7 @@ pk11_hash_buf(PyObject *self, PyObject *args)
 
     if ((hash_len = HASH_ResultLenByOidTag(hash_alg)) == 0) {
         return set_nspr_error("unable to determine resulting hash length for hash_alg = %s",
-                              sec_oid_tag_str(hash_alg));
+                              oid_tag_str(hash_alg));
     }
 
     out_buf_len = hash_len;
@@ -5509,7 +10105,882 @@ PyPK11Context_new_from_PK11Context(PK11Context *pk11_context)
     return (PyObject *) self;
 }
 
-/* ========================== PK11 Module Methods =========================== */
+/* ========================================================================== */
+/* ======================== CRLDistributionPt Class ========================= */
+/* ========================================================================== */
+
+/* ============================ Attribute Access ============================ */
+
+static PyObject *
+CRLDistributionPt_get_crl_issuer(CRLDistributionPt *self, void *closure)
+{
+    if (!self->pt || !self->pt->crlIssuer) {
+        Py_RETURN_NONE;
+    }
+    return GeneralName_new_from_CERTGeneralName(self->pt->crlIssuer);
+}
+
+static
+PyGetSetDef CRLDistributionPt_getseters[] = {
+    {"issuer", (getter)CRLDistributionPt_get_crl_issuer, (setter)NULL,
+     "returns the CRL Issuer as a GeneralName object if defined, returns None if not defined", NULL},
+    {NULL}  /* Sentinel */
+};
+
+static PyMemberDef CRLDistributionPt_members[] = {
+    {NULL}  /* Sentinel */
+};
+
+/* ============================== Class Methods ============================= */
+
+PyDoc_STRVAR(CRLDistributionPt_get_general_names_doc,
+"get_general_names(repr_kind=AsString) -> (general_name, ...)\n\
+\n\
+:Parameters:\n\
+    repr_kind : RepresentationKind constant\n\
+        Specifies what the contents of the returned tuple will be.\n\
+        May be one of:\n\
+\n\
+        AsObject\n\
+            The general name as a nss.GeneralName object\n\
+        AsString\n\
+            The general name as a string.\n\
+            (e.g. \"http://crl.geotrust.com/crls/secureca.crl\")\n\
+        AsTypeString\n\
+            The general name type as a string.\n\
+             (e.g. \"URI\")\n\
+        AsTypeEnum\n\
+            The general name type as a general name type enumerated constant.\n\
+             (e.g. nss.certURI )\n\
+        AsLabeledString\n\
+            The general name as a string with it's type prepended.\n\
+            (e.g. \"URI: http://crl.geotrust.com/crls/secureca.crl\"\n\
+\n\
+Returns a tuple of general names in the CRL Distribution Point. If the\n\
+distribution point type is not nss.generalName or the list was empty then\n\
+the returned tuple will be empty.\n\
+\n\
+You may specify how the each member of the tuple is represented, by default\n\
+it will be as a string.\n\
+");
+
+static PyObject *
+CRLDistributionPt_get_general_names(CRLDistributionPt *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"repr_kind", NULL};
+    int repr_kind = AsString;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i:get_general_names", kwlist,
+                                     &repr_kind))
+        return NULL;
+
+    return CRLDistributionPt_general_names_tuple(self, repr_kind);
+}
+
+PyDoc_STRVAR(CRLDistributionPt_get_reasons_doc,
+"get_reasons(repr_kind=AsEnumDescription) -> (reason, ...)\n\
+\n\
+:Parameters:\n\
+    repr_kind : RepresentationKind constant\n\
+        Specifies what the contents of the returned tuple will be.\n\
+        May be one of:\n\
+\n\
+        AsEnum\n\
+            The enumerated constant.\n\
+            (e.g. nss.crlEntryReasonCaCompromise)\n\
+        AsEnumDescription\n\
+            A friendly human readable description of the enumerated constant as a string.\n\
+             (e.g. \"CA Compromise\")\n\
+        AsIndex\n\
+            The bit position within the bit string.\n\
+\n\
+Returns a tuple of reasons in the CRL Distribution Point. If no\n\
+reasons were defined the returned tuple will be empty.\n\
+\n\
+You may specify how the each member of the tuple is represented, by default\n\
+it will be as a string.\n\
+");
+
+static PyObject *
+CRLDistributionPt_get_reasons(CRLDistributionPt *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"repr_kind", NULL};
+    int repr_kind = AsEnumDescription;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i:get_reasons", kwlist,
+                                     &repr_kind))
+        return NULL;
+
+    return crl_reason_bitstr_to_tuple(&self->pt->bitsmap, repr_kind);
+}
+
+static PyMethodDef CRLDistributionPt_methods[] = {
+    {"get_general_names", (PyCFunction)CRLDistributionPt_get_general_names, METH_VARARGS|METH_KEYWORDS, CRLDistributionPt_get_general_names_doc},
+    {"get_reasons",       (PyCFunction)CRLDistributionPt_get_reasons,       METH_VARARGS|METH_KEYWORDS, CRLDistributionPt_get_reasons_doc},
+    {NULL, NULL}  /* Sentinel */
+};
+
+/* =========================== Class Construction =========================== */
+
+static PyObject *
+CRLDistributionPt_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
+    CRLDistributionPt *self;
+
+    TraceObjNewEnter(type);
+
+    if ((self = (CRLDistributionPt *)type->tp_alloc(type, 0)) == NULL) return NULL;
+
+    if ((self->arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE)) == NULL) {
+        type->tp_free(self);
+        return set_nspr_error(NULL);
+    }
+
+    self->pt = NULL;
+
+    TraceObjNewLeave(self);
+    return (PyObject *)self;
+}
+
+static void
+CRLDistributionPt_dealloc(CRLDistributionPt* self)
+{
+    TraceMethodEnter(self);
+
+    if (self->arena) {
+        PORT_FreeArena(self->arena, PR_FALSE);
+    }
+
+    self->ob_type->tp_free((PyObject*)self);
+}
+
+PyDoc_STRVAR(CRLDistributionPt_doc,
+"An object representing a CRL Distribution Point");
+
+static int
+CRLDistributionPt_init(CRLDistributionPt *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"arg1", NULL};
+    PyObject *arg;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|i:CRLDistributionPt", kwlist,
+                                     &arg))
+        return -1;
+
+    return 0;
+}
+
+static Py_ssize_t
+CRLDistributionPt_general_names_count(CRLDistributionPt *self)
+{
+    if (!self->pt || self->pt->distPointType != generalName) {
+        return 0;
+    }
+
+    return CERTGeneralName_list_count(self->pt->distPoint.fullName);
+}
+
+static PyObject *
+CRLDistributionPt_general_names_tuple(CRLDistributionPt *self, RepresentationKind repr_kind)
+{
+    Py_ssize_t n_names;
+
+    n_names = CRLDistributionPt_general_names_count(self);
+
+    if (n_names == 0) {
+        Py_INCREF(empty_tuple);
+        return empty_tuple;
+    }
+
+    return CERTGeneralName_list_to_tuple(self->pt->distPoint.fullName, repr_kind);
+}
+
+static PyObject *
+CRLDistributionPt_repr(CRLDistributionPt *self)
+{
+    PyObject *result = NULL;
+    PyObject *rdn = NULL;
+    PyObject *names = NULL;
+    PyObject *name_str = NULL;
+    PyObject *name_desc = NULL;
+    PyObject *crl_issuer = NULL;
+    PyObject *crl_issuer_str = NULL;
+    PyObject *reasons = NULL;
+    PyObject *reasons_str = NULL;
+    PyObject *sep = NULL;
+
+    if (!self->pt) {
+        return PyString_FromFormat("<%s object at %p>",
+                                   Py_TYPE(self)->tp_name, self);
+    }
+
+    if ((sep = PyString_FromString(", ")) == NULL) {
+        goto exit;
+    }
+
+    if (self->pt->distPointType == generalName) {
+        Py_ssize_t n_names = 0;
+
+        if ((names = CRLDistributionPt_general_names_tuple(self, AsString)) == NULL) {
+            goto exit;
+        }
+        n_names = PyTuple_GET_SIZE(names);
+
+        /* Paste them all together with ", " between. */
+        if ((name_str = _PyString_Join(sep, names)) == NULL) {
+            goto exit;
+        }
+
+        name_desc = PyString_FromFormat("General Name List: [%s]",
+                                        PyString_AsString(name_str));
+
+    } else if (self->pt->distPointType == relativeDistinguishedName) {
+
+        if ((rdn = X500RDN_new_from_CERTRDN(&self->pt->distPoint.relativeName)) == NULL) {
+            goto exit;
+        }
+
+        if ((name_str = PyObject_Str(rdn)) == NULL) {
+            goto exit;
+        }
+
+        name_desc = PyString_FromFormat("Relative Distinguished Name: %s",
+                                        PyString_AsString(name_str));
+
+    } else {
+        PyErr_Format(PyExc_ValueError, "unknown distribution point type (%d), "
+                     "expected generalName or relativeDistinguishedName",
+                     self->pt->distPointType);
+        goto exit;
+    }
+
+    if ((crl_issuer = CRLDistributionPt_get_crl_issuer(self, NULL)) == NULL) {
+        goto exit;
+    }
+
+    if ((crl_issuer_str = PyObject_Str(crl_issuer)) == NULL) {
+        goto exit;
+    }
+        
+    if ((reasons = crl_reason_bitstr_to_tuple(&self->pt->bitsmap, AsEnumDescription)) == NULL) {
+        goto exit;
+    }
+
+    if ((reasons_str = _PyString_Join(sep, reasons)) == NULL) {
+        goto exit;
+    }
+
+    result = PyString_FromFormat("%s, Issuer: %s, Reasons: [%s]",
+                                 PyString_AsString(name_desc),
+                                 PyString_AsString(crl_issuer_str),
+                                 PyString_AsString(reasons_str));
+
+ exit:
+    Py_XDECREF(rdn);
+    Py_XDECREF(names);
+    Py_XDECREF(name_str);
+    Py_XDECREF(name_desc);
+    Py_XDECREF(crl_issuer);
+    Py_XDECREF(crl_issuer_str);
+    Py_XDECREF(reasons);
+    Py_XDECREF(reasons_str);
+    Py_XDECREF(sep);
+
+    return result;
+}
+
+static PyTypeObject CRLDistributionPtType = {
+    PyObject_HEAD_INIT(NULL)
+    0,						/* ob_size */
+    "nss.nss.CRLDistributionPoint",		/* tp_name */
+    sizeof(CRLDistributionPt),			/* tp_basicsize */
+    0,						/* tp_itemsize */
+    (destructor)CRLDistributionPt_dealloc,	/* tp_dealloc */
+    0,						/* tp_print */
+    0,						/* tp_getattr */
+    0,						/* tp_setattr */
+    0,						/* tp_compare */
+    (reprfunc)CRLDistributionPt_repr,		/* tp_repr */
+    0,						/* tp_as_number */
+    0,						/* tp_as_sequence */
+    0,						/* tp_as_mapping */
+    0,						/* tp_hash */
+    0,						/* tp_call */
+    0,						/* tp_str */
+    0,						/* tp_getattro */
+    0,						/* tp_setattro */
+    0,						/* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,	/* tp_flags */
+    CRLDistributionPt_doc,			/* tp_doc */
+    0,						/* tp_traverse */
+    0,						/* tp_clear */
+    0,						/* tp_richcompare */
+    0,						/* tp_weaklistoffset */
+    0,						/* tp_iter */
+    0,						/* tp_iternext */
+    CRLDistributionPt_methods,			/* tp_methods */
+    CRLDistributionPt_members,			/* tp_members */
+    CRLDistributionPt_getseters,		/* tp_getset */
+    0,						/* tp_base */
+    0,						/* tp_dict */
+    0,						/* tp_descr_get */
+    0,						/* tp_descr_set */
+    0,						/* tp_dictoffset */
+    (initproc)CRLDistributionPt_init,		/* tp_init */
+    0,						/* tp_alloc */
+    CRLDistributionPt_new,			/* tp_new */
+};
+
+PyObject *
+CRLDistributionPt_new_from_CRLDistributionPoint(CRLDistributionPoint *pt)
+{
+    CRLDistributionPt *self = NULL;
+
+    TraceObjNewEnter(NULL);
+
+    if ((self = (CRLDistributionPt *) CRLDistributionPtType.tp_new(&CRLDistributionPtType, NULL, NULL)) == NULL)
+        return NULL;
+
+    if (CERT_CopyCRLDistributionPoint(self->arena, &self->pt,
+                                      pt) != SECSuccess) {
+        return set_nspr_error(NULL);
+    }
+
+    TraceObjNewLeave(self);
+    return (PyObject *) self;
+}
+
+/* ========================================================================== */
+/* ======================== CRLDistributionPts Class ======================== */
+/* ========================================================================== */
+
+/* ============================ Attribute Access ============================ */
+
+static
+PyGetSetDef CRLDistributionPts_getseters[] = {
+    {NULL}  /* Sentinel */
+};
+
+static PyMemberDef CRLDistributionPts_members[] = {
+    {NULL}  /* Sentinel */
+};
+
+/* ============================== Class Methods ============================= */
+
+/* =========================== Sequence Protocol ============================ */
+
+static Py_ssize_t
+CERTCrlDistributionPoints_count(CERTCrlDistributionPoints *dist_pts)
+{
+    Py_ssize_t count;
+    CRLDistributionPoint **pts;
+
+    if (!dist_pts) return 0;
+    for (pts = dist_pts->distPoints, count = 0; *pts; pts++, count++);
+
+    return count;
+}
+
+static Py_ssize_t
+CRLDistributionPts_length(CRLDistributionPts *self)
+{
+    if (!self->pts_tuple) return 0;
+    return PyTuple_Size(self->pts_tuple);
+}
+
+static PyObject *
+CRLDistributionPts_item(CRLDistributionPts *self, register Py_ssize_t i)
+{
+    if (!self->pts_tuple) {
+        return PyErr_Format(PyExc_ValueError, "%s is uninitialized", Py_TYPE(self)->tp_name);
+    }
+    return PyTuple_GetItem(self->pts_tuple, i);
+}
+
+static PyMethodDef CRLDistributionPts_methods[] = {
+    {NULL, NULL}  /* Sentinel */
+};
+
+/* =========================== Class Construction =========================== */
+
+static int
+CRLDistributionPts_init_from_SECItem(CRLDistributionPts *self, SECItem *item)
+{
+    CERTCrlDistributionPoints *dist_pts;
+    CRLDistributionPoint **pts, *pt;
+    PLArenaPool *arena;
+    Py_ssize_t count, i;
+
+    if ((arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE)) == NULL) {
+        return -1;
+    }
+
+    if ((dist_pts = CERT_DecodeCRLDistributionPoints(arena, item)) == NULL) {
+        PyErr_SetString(PyExc_ValueError, "Failed to parse CRL Distribution Point Extension");
+        PORT_FreeArena(arena, PR_FALSE);
+        return -1;
+    }
+
+    for (pts = dist_pts->distPoints, count = 0; (pt = *pts); pts++, count++);
+    
+    Py_XDECREF(self->pts_tuple);
+
+    if ((self->pts_tuple = PyTuple_New(count)) == NULL) {
+        PORT_FreeArena(arena, PR_FALSE);
+    }
+
+    for (pts = dist_pts->distPoints, i = 0; (pt = *pts); pts++, i++) {
+        PyObject *py_crl_dist_pt;
+
+        if ((py_crl_dist_pt = CRLDistributionPt_new_from_CRLDistributionPoint(pt)) == NULL) {
+            Py_DECREF(self->pts_tuple);
+            PORT_FreeArena(arena, PR_FALSE);
+            return -1;
+        }
+        PyTuple_SET_ITEM(self->pts_tuple, i, py_crl_dist_pt);
+    }
+
+    PORT_FreeArena(arena, PR_FALSE);
+
+    return 0;
+}
+
+static PyObject *
+CRLDistributionPts_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
+    CRLDistributionPts *self;
+
+    TraceObjNewEnter(type);
+
+    if ((self = (CRLDistributionPts *)type->tp_alloc(type, 0)) == NULL) return NULL;
+
+    self->pts_tuple = NULL;
+
+    TraceObjNewLeave(self);
+    return (PyObject *)self;
+}
+
+static void
+CRLDistributionPts_dealloc(CRLDistributionPts* self)
+{
+    TraceMethodEnter(self);
+
+    Py_XDECREF(self->pts_tuple);
+
+    self->ob_type->tp_free((PyObject*)self);
+}
+
+PyDoc_STRVAR(CRLDistributionPts_doc,
+"An object representing CRL Distribution Points list");
+
+static int
+CRLDistributionPts_init(CRLDistributionPts *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"crl_dist_pt_extension", NULL};
+    SecItem *py_sec_item;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!:CRLDistributionPts", kwlist,
+                                     &SecItemType, &py_sec_item))
+        return -1;
+
+    return CRLDistributionPts_init_from_SECItem(self, &py_sec_item->item);
+}
+
+static PyObject *
+CRLDistributionPts_repr(CRLDistributionPts *self)
+{
+    return PyString_FromFormat("<%s object at %p>",
+                               Py_TYPE(self)->tp_name, self);
+}
+
+static PySequenceMethods CRLDistributionPts_as_sequence = {
+    (lenfunc)CRLDistributionPts_length,		/* sq_length */
+    0,						/* sq_concat */
+    0,						/* sq_repeat */
+    (ssizeargfunc)CRLDistributionPts_item,	/* sq_item */
+    0,						/* sq_slice */
+    0,						/* sq_ass_item */
+    0,						/* sq_ass_slice */
+    0,						/* sq_contains */
+    0,						/* sq_inplace_concat */
+    0,						/* sq_inplace_repeat */
+};
+
+static PyTypeObject CRLDistributionPtsType = {
+    PyObject_HEAD_INIT(NULL)
+    0,						/* ob_size */
+    "nss.nss.CRLDistributionPts",		/* tp_name */
+    sizeof(CRLDistributionPts),			/* tp_basicsize */
+    0,						/* tp_itemsize */
+    (destructor)CRLDistributionPts_dealloc,	/* tp_dealloc */
+    0,						/* tp_print */
+    0,						/* tp_getattr */
+    0,						/* tp_setattr */
+    0,						/* tp_compare */
+    (reprfunc)CRLDistributionPts_repr,		/* tp_repr */
+    0,						/* tp_as_number */
+    &CRLDistributionPts_as_sequence,		/* tp_as_sequence */
+    0,						/* tp_as_mapping */
+    0,						/* tp_hash */
+    0,						/* tp_call */
+    0,						/* tp_str */
+    0,						/* tp_getattro */
+    0,						/* tp_setattro */
+    0,						/* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,	/* tp_flags */
+    CRLDistributionPts_doc,			/* tp_doc */
+    0,						/* tp_traverse */
+    0,						/* tp_clear */
+    0,						/* tp_richcompare */
+    0,						/* tp_weaklistoffset */
+    0,						/* tp_iter */
+    0,						/* tp_iternext */
+    CRLDistributionPts_methods,			/* tp_methods */
+    CRLDistributionPts_members,			/* tp_members */
+    CRLDistributionPts_getseters,		/* tp_getset */
+    0,						/* tp_base */
+    0,						/* tp_dict */
+    0,						/* tp_descr_get */
+    0,						/* tp_descr_set */
+    0,						/* tp_dictoffset */
+    (initproc)CRLDistributionPts_init,		/* tp_init */
+    0,						/* tp_alloc */
+    CRLDistributionPts_new,			/* tp_new */
+};
+
+PyObject *
+CRLDistributionPts_new_from_CERTCrlDistributionPoints(CERTCrlDistributionPoints *pts)
+{
+    CRLDistributionPts *self = NULL;
+
+    TraceObjNewEnter(NULL);
+
+    if ((self = (CRLDistributionPts *) CRLDistributionPtsType.tp_new(&CRLDistributionPtsType, NULL, NULL)) == NULL)
+        return NULL;
+
+    TraceObjNewLeave(self);
+    return (PyObject *) self;
+}
+
+/* ========================================================================== */
+/* ============================ AuthKeyID Class ============================= */
+/* ========================================================================== */
+
+/* ============================ Attribute Access ============================ */
+
+static PyObject *
+AuthKeyID_get_key_id(AuthKeyID *self, void *closure)
+{
+    if (!self->auth_key_id) {
+        return PyErr_Format(PyExc_ValueError, "%s is uninitialized", Py_TYPE(self)->tp_name);
+    }
+
+    if (!self->auth_key_id->keyID.len || !self->auth_key_id->keyID.data) {
+        Py_RETURN_NONE;
+    }
+
+    return SecItem_new_from_SECItem(&self->auth_key_id->keyID, SECITEM_unknown);
+}
+
+static PyObject *
+AuthKeyID_get_serial_number(AuthKeyID *self, void *closure)
+{
+    if (!self->auth_key_id) {
+        return PyErr_Format(PyExc_ValueError, "%s is uninitialized", Py_TYPE(self)->tp_name);
+    }
+
+    if (!self->auth_key_id->authCertSerialNumber.len || !self->auth_key_id->authCertSerialNumber.data) {
+        Py_RETURN_NONE;
+    }
+
+    return integer_secitem_to_pylong(&self->auth_key_id->authCertSerialNumber);
+}
+
+static
+PyGetSetDef AuthKeyID_getseters[] = {
+    {"key_id", (getter)AuthKeyID_get_key_id,    (setter)NULL,
+     "Returns the key id as a SecItem", NULL},
+    {"serial_number", (getter)AuthKeyID_get_serial_number,    (setter)NULL,
+     "Returns the key id as a SecItem", NULL},
+    {NULL}  /* Sentinel */
+};
+
+static PyMemberDef AuthKeyID_members[] = {
+    {NULL}  /* Sentinel */
+};
+
+/* ============================== Class Methods ============================= */
+
+PyDoc_STRVAR(AuthKeyID_get_general_names_doc,
+"get_general_names(repr_kind=AsString) -> (general_name, ...)\n\
+\n\
+:Parameters:\n\
+    repr_kind : RepresentationKind constant\n\
+        Specifies what the contents of the returned tuple will be.\n\
+        May be one of:\n\
+\n\
+        AsObject\n\
+            The general name as a nss.GeneralName object\n\
+        AsString\n\
+            The general name as a string.\n\
+            (e.g. \"http://crl.geotrust.com/crls/secureca.crl\")\n\
+        AsTypeString\n\
+            The general name type as a string.\n\
+             (e.g. \"URI\")\n\
+        AsTypeEnum\n\
+            The general name type as a general name type enumerated constant.\n\
+             (e.g. nss.certURI )\n\
+        AsLabeledString\n\
+            The general name as a string with it's type prepended.\n\
+            (e.g. \"URI: http://crl.geotrust.com/crls/secureca.crl\"\n\
+\n\
+Returns a tuple of general names in the authentication key id extension\n\
+for the issuer. If the issuer was not defined then the returned tuple\n\
+will be empty.\n\
+\n\
+You may specify how the each member of the tuple is represented, by default\n\
+it will be as a string.\n\
+");
+
+static PyObject *
+AuthKeyID_get_general_names(AuthKeyID *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"repr_kind", NULL};
+    int repr_kind = AsString;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i:get_general_names", kwlist,
+                                     &repr_kind))
+        return NULL;
+
+    if (!self->auth_key_id) {
+        return PyErr_Format(PyExc_ValueError, "%s is uninitialized", Py_TYPE(self)->tp_name);
+    }
+
+    return AuthKeyID_general_names_tuple(self, repr_kind);
+}
+
+static PyMethodDef AuthKeyID_methods[] = {
+    {"get_general_names", (PyCFunction)AuthKeyID_get_general_names, METH_VARARGS|METH_KEYWORDS, AuthKeyID_get_general_names_doc},
+    {NULL, NULL}  /* Sentinel */
+};
+
+/* =========================== Class Construction =========================== */
+
+static PyObject *
+AuthKeyID_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
+    AuthKeyID *self;
+
+    TraceObjNewEnter(type);
+
+    if ((self = (AuthKeyID *)type->tp_alloc(type, 0)) == NULL) return NULL;
+
+    if ((self->arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE)) == NULL) {
+        type->tp_free(self);
+        return set_nspr_error(NULL);
+    }
+
+    self->auth_key_id = NULL;
+
+    TraceObjNewLeave(self);
+    return (PyObject *)self;
+}
+
+static void
+AuthKeyID_dealloc(AuthKeyID* self)
+{
+    TraceMethodEnter(self);
+
+    if (self->arena) {
+        PORT_FreeArena(self->arena, PR_FALSE);
+    }
+
+    self->ob_type->tp_free((PyObject*)self);
+}
+
+PyDoc_STRVAR(AuthKeyID_doc,
+"An object representing Authentication Key ID extension");
+
+static int
+AuthKeyID_init(AuthKeyID *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"auth_key_id", NULL};
+    SecItem *py_sec_item;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!:AuthKeyID", kwlist,
+                                     &SecItemType, &py_sec_item))
+        return -1;
+
+    if ((self->auth_key_id = CERT_DecodeAuthKeyID(self->arena, &py_sec_item->item)) == NULL) {
+        set_nspr_error("cannot decode AuthKeyID");
+        return -1;
+    }
+
+    return 0;
+}
+
+static Py_ssize_t
+AuthKeyID_general_names_count(AuthKeyID *self)
+{
+    if (!self->auth_key_id || !self->auth_key_id->authCertIssuer) {
+        return 0;
+    }
+
+    return CERTGeneralName_list_count(self->auth_key_id->authCertIssuer);
+}
+
+static PyObject *
+AuthKeyID_general_names_tuple(AuthKeyID *self, RepresentationKind repr_kind)
+{
+    Py_ssize_t n_names;
+
+    n_names = AuthKeyID_general_names_count(self);
+
+    if (n_names == 0) {
+        Py_INCREF(empty_tuple);
+        return empty_tuple;
+    }
+
+    return CERTGeneralName_list_to_tuple(self->auth_key_id->authCertIssuer, repr_kind);
+}
+
+static PyObject *
+AuthKeyID_repr(AuthKeyID *self)
+{
+    Py_ssize_t n_names;
+    PyObject *result = NULL;
+    PyObject *sep = NULL;
+    PyObject *names = NULL;
+    PyObject *name_str = NULL;
+    PyObject *key_id = NULL;
+    PyObject *key_id_str = NULL;
+    PyObject *serial_number = NULL;
+    PyObject *serial_number_str = NULL;
+
+    if (!self->auth_key_id) {
+        return PyString_FromFormat("<%s object at %p>",
+                                   Py_TYPE(self)->tp_name, self);
+    }
+
+    if ((sep = PyString_FromString(", ")) == NULL) {
+        goto exit;
+    }
+
+    if ((names = AuthKeyID_general_names_tuple(self, AsString)) == NULL) {
+        goto exit;
+    }
+    n_names = PyTuple_GET_SIZE(names);
+
+    /* Paste them all together with ", " between. */
+    if ((name_str = _PyString_Join(sep, names)) == NULL) {
+        goto exit;
+    }
+
+    if ((key_id = AuthKeyID_get_key_id(self, NULL)) == NULL) {
+        goto exit;
+    }
+
+    if ((key_id_str = PyObject_Str(key_id)) == NULL) {
+        goto exit;
+    }
+
+    if ((serial_number = AuthKeyID_get_serial_number(self, NULL)) == NULL) {
+        goto exit;
+    }
+
+    if ((serial_number_str = PyObject_Str(serial_number)) == NULL) {
+        goto exit;
+    }
+
+    result = PyString_FromFormat("ID: %s, Serial Number: %s, Issuer: [%s]",
+                                 PyString_AsString(key_id_str),
+                                 PyString_AsString(serial_number_str),
+                                 PyString_AsString(name_str));
+
+
+    exit:
+    Py_XDECREF(sep);
+    Py_XDECREF(names);
+    Py_XDECREF(name_str);
+    Py_XDECREF(key_id);
+    Py_XDECREF(key_id_str);
+    Py_XDECREF(serial_number);
+    Py_XDECREF(serial_number_str);
+    return result;
+}
+
+static PyTypeObject AuthKeyIDType = {
+    PyObject_HEAD_INIT(NULL)
+    0,						/* ob_size */
+    "nss.nss.AuthKeyID",			/* tp_name */
+    sizeof(AuthKeyID),				/* tp_basicsize */
+    0,						/* tp_itemsize */
+    (destructor)AuthKeyID_dealloc,		/* tp_dealloc */
+    0,						/* tp_print */
+    0,						/* tp_getattr */
+    0,						/* tp_setattr */
+    0,						/* tp_compare */
+    (reprfunc)AuthKeyID_repr,			/* tp_repr */
+    0,						/* tp_as_number */
+    0,						/* tp_as_sequence */
+    0,						/* tp_as_mapping */
+    0,						/* tp_hash */
+    0,						/* tp_call */
+    0,						/* tp_str */
+    0,						/* tp_getattro */
+    0,						/* tp_setattro */
+    0,						/* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,	/* tp_flags */
+    AuthKeyID_doc,				/* tp_doc */
+    0,						/* tp_traverse */
+    0,						/* tp_clear */
+    0,						/* tp_richcompare */
+    0,						/* tp_weaklistoffset */
+    0,						/* tp_iter */
+    0,						/* tp_iternext */
+    AuthKeyID_methods,				/* tp_methods */
+    AuthKeyID_members,				/* tp_members */
+    AuthKeyID_getseters,			/* tp_getset */
+    0,						/* tp_base */
+    0,						/* tp_dict */
+    0,						/* tp_descr_get */
+    0,						/* tp_descr_set */
+    0,						/* tp_dictoffset */
+    (initproc)AuthKeyID_init,			/* tp_init */
+    0,						/* tp_alloc */
+    AuthKeyID_new,				/* tp_new */
+};
+
+PyObject *
+AuthKeyID_new_from_CERTAuthKeyID(CERTAuthKeyID *auth_key_id)
+{
+    AuthKeyID *self = NULL;
+
+    TraceObjNewEnter(NULL);
+
+    if ((self = (AuthKeyID *) AuthKeyIDType.tp_new(&AuthKeyIDType, NULL, NULL)) == NULL)
+        return NULL;
+
+    if (CERT_CopyAuthKeyID(self->arena, &self->auth_key_id, auth_key_id) != SECSuccess) {
+        return NULL;
+    }
+
+    TraceObjNewLeave(self);
+    return (PyObject *) self;
+}
+/* ========================== PK11 Methods =========================== */
 
 static PyObject *password_callback = NULL;
 
@@ -5573,7 +11044,7 @@ PK11_password_callback(PK11SlotInfo *slot, PRBool retry, void *arg)
         goto exit;
     }
 
-    if (!PyString_Check(result)) {
+    if (!(PyString_Check(result) || PyUnicode_Check(result))) {
         PySys_WriteStderr("Error, PK11 password callback expected string result.\n");
         goto exit;
     }
@@ -5836,7 +11307,7 @@ Example::\n\
 static PyObject *
 nss_indented_format(PyObject *self, PyObject *args, PyObject *kwds)
 {
-    static char *kwlist[] = {"lines", "indent", NULL};
+    static char *kwlist[] = {"lines_pairs", "indent", NULL};
     PyObject *py_lines = NULL;
     PyObject *py_indent = NULL;
     long line_level = 0;
@@ -5900,7 +11371,7 @@ nss_indented_format(PyObject *self, PyObject *args, PyObject *kwds)
             goto fail;
         }
 
-        if (!PyString_Check(py_line)) {
+        if (!(PyString_Check(py_line) || PyUnicode_Check(py_line))) {
             PyErr_Format(PyExc_TypeError, "the second item in the pair at lines[%ld] list must be a string", i);
             goto fail;
         }
@@ -5982,9 +11453,13 @@ nss_init(PyObject *self, PyObject *args)
         return NULL;
     }
 
+    Py_BEGIN_ALLOW_THREADS
     if (NSS_Init(cert_dir) != SECSuccess) {
+        Py_BLOCK_THREADS
         return set_nspr_error(NULL);
     }
+    Py_END_ALLOW_THREADS
+
     Py_RETURN_NONE;
 }
 
@@ -6010,9 +11485,13 @@ nss_init_nodb(PyObject *self, PyObject *args)
 {
     TraceMethodEnter(self);
 
+    Py_BEGIN_ALLOW_THREADS
     if (NSS_NoDB_Init(NULL) != SECSuccess) {
+        Py_BLOCK_THREADS
         return set_nspr_error(NULL);
     }
+    Py_END_ALLOW_THREADS
+
     Py_RETURN_NONE;
 }
 
@@ -6031,138 +11510,205 @@ nss_shutdown(PyObject *self, PyObject *args)
 {
     TraceMethodEnter(self);
 
+    Py_BEGIN_ALLOW_THREADS
     if (NSS_Shutdown() != SECSuccess) {
+        Py_BLOCK_THREADS
         return set_nspr_error(NULL);
     }
+    Py_END_ALLOW_THREADS
+
     Py_RETURN_NONE;
 }
 
-PyDoc_STRVAR(cert_sec_oid_tag_str_doc,
-"sec_oid_tag_str(oid_tag) -> string\n\
+PyDoc_STRVAR(cert_oid_str_doc,
+"oid_str(oid) -> string\n\
 \n\
 :Parameters:\n\
-    oid_tag : int\n\
-        sec_oid constant\n\
+     oid : may be one of integer, string, SecItem\n\
+         May be one of:\n\
+         \n\
+         * integer:: A SEC OID enumeration constant, also known as a tag\n\
+           (i.e. SEC_OID_*) for example SEC_OID_AVA_COMMON_NAME.\n\
+         * string:: A string in dotted decimal representation, for example\n\
+           'OID.2.5.4.3'. The 'OID.' prefix is optional.\n\
+           Or a string for the tag name (e.g. 'SEC_OID_AVA_COMMON_NAME')\n\
+           The 'SEC_OID\\_' prefix is optional. Or one of the canonical\n\
+           abbreviations (e.g. 'cn'). Case is not significant.\n\
+         * SecItem:: A SecItem object encapsulating the OID in \n\
+           DER format.\n\
 \n\
-Given a sec_oid constant return it's name as a string\n\
+Given an oid return it's description as a string.\n\
 ");
 static PyObject *
-cert_sec_oid_tag_str(PyObject *self, PyObject *args)
+cert_oid_str(PyObject *self, PyObject *args)
 {
-    unsigned long tag;
+    PyObject *arg;
+    int oid_tag;
+    SECOidData *oiddata;
 
     TraceMethodEnter(self);
 
-    if (!PyArg_ParseTuple(args, "k:sec_oid_tag_str", &tag))
+   if (!PyArg_ParseTuple(args, "O:oid_str", &arg))
         return NULL;
 
-    return PyString_FromString(sec_oid_tag_str(tag));
+   oid_tag = get_oid_tag_from_object(arg);
+   if (oid_tag == SEC_OID_UNKNOWN || oid_tag == -1) {
+       return NULL;
+   }
+
+   if ((oiddata = SECOID_FindOIDByTag(oid_tag)) == NULL) {
+       return set_nspr_error(NULL);
+   }
+
+   return PyString_FromString(oiddata->desc);
 }
 
-PyDoc_STRVAR(cert_sec_oid_tag_from_name_doc,
-"sec_oid_tag_from_name(name) -> int\n\
+
+PyDoc_STRVAR(cert_oid_tag_name_doc,
+"oid_tag_name(oid) -> string\n\
 \n\
 :Parameters:\n\
-    name : string\n\
-        name of a sec oid constant (SEC_OID_*)\n\
+     oid : may be one of integer, string, SecItem\n\
+         May be one of:\n\
+         \n\
+         * integer:: A SEC OID enumeration constant, also known as a tag\n\
+           (i.e. SEC_OID_*) for example SEC_OID_AVA_COMMON_NAME.\n\
+         * string:: A string in dotted decimal representation, for example\n\
+           'OID.2.5.4.3'. The 'OID.' prefix is optional.\n\
+           Or a string for the tag name (e.g. 'SEC_OID_AVA_COMMON_NAME')\n\
+           The 'SEC_OID\\_' prefix is optional. Or one of the canonical\n\
+           abbreviations (e.g. 'cn'). Case is not significant.\n\
+         * SecItem:: A SecItem object encapsulating the OID in \n\
+           DER format.\n\
 \n\
-Given the name of a sec_oid constant return it's integer constant\n\
-The string comparison is case insensitive and will match with\n\
-or without the SEC_OID\\_ prefix\n\
+Given an oid return it's tag constant as a string.\n\
 ");
 static PyObject *
-cert_sec_oid_tag_from_name(PyObject *self, PyObject *args)
+cert_oid_tag_name(PyObject *self, PyObject *args)
 {
-    PyObject *py_name;
-    PyObject *py_upper_name;
-    PyObject *py_value;
-
-    TraceMethodEnter(self);
-
-    if (!PyArg_ParseTuple(args, "S:sec_oid_tag_from_name", &py_name))
-        return NULL;
-
-    if ((py_upper_name = PyObject_CallMethod(py_name, "upper", NULL)) == NULL) {
-        return NULL;
-    }
-
-    if ((py_value = PyDict_GetItem(sec_oid_name_to_value, py_upper_name)) == NULL) {
-	PyErr_Format(PyExc_KeyError, "oid tag name not found: %s", PyString_AsString(py_name));
-        Py_DECREF(py_upper_name);
-        return NULL;
-    }
-
-    Py_DECREF(py_upper_name);
-    Py_INCREF(py_value);
-
-    return py_value;
-}
-
-PyDoc_STRVAR(cert_sec_oid_tag_name_doc,
-"sec_oid_tag_name(tag) -> string\n\
-\n\
-:Parameters:\n\
-    tag : integer\n\
-        sec oid constant (SEC_OID_*)\n\
-\n\
-Given an integer constant (SEC_OID_*) return the string name\n\
-of the constant.  Note, this is different from\n\
-sec_oid_tag_str() which returns a more verbose description\n\
-of the tag constant. This returns the actual constant name.\n\
-");
-static PyObject *
-cert_sec_oid_tag_name(PyObject *self, PyObject *args)
-{
-    unsigned long tag;
-    PyObject *py_value;
+    PyObject *arg;
+    int oid_tag;
     PyObject *py_name;
 
     TraceMethodEnter(self);
 
-    if (!PyArg_ParseTuple(args, "k:sec_oid_tag_name", &tag))
+    if (!PyArg_ParseTuple(args, "O:oid_tag_name", &arg))
         return NULL;
-
-    if ((py_value = PyInt_FromLong(tag)) == NULL) {
+    
+    oid_tag = get_oid_tag_from_object(arg);
+    if (oid_tag == SEC_OID_UNKNOWN || oid_tag == -1) {
         return NULL;
     }
 
-    if ((py_name = PyDict_GetItem(sec_oid_value_to_name, py_value)) == NULL) {
-	PyErr_Format(PyExc_KeyError, "oid tag not found: %#lx", tag);
+    py_name = oid_tag_name_from_tag(oid_tag);
+    return py_name;
+}
+
+PyDoc_STRVAR(cert_oid_tag_doc,
+"oid_tag(oid) -> int\n\
+\n\
+:Parameters:\n\
+     oid : may be one of integer, string, SecItem\n\
+         May be one of:\n\
+         \n\
+         * integer:: A SEC OID enumeration constant, also known as a tag\n\
+           (i.e. SEC_OID_*) for example SEC_OID_AVA_COMMON_NAME.\n\
+         * string:: A string in dotted decimal representation, for example\n\
+           'OID.2.5.4.3'. The 'OID.' prefix is optional.\n\
+           Or a string for the tag name (e.g. 'SEC_OID_AVA_COMMON_NAME')\n\
+           The 'SEC_OID\\_' prefix is optional. Or one of the canonical\n\
+           abbreviations (e.g. 'cn'). Case is not significant.\n\
+         * SecItem:: A SecItem object encapsulating the OID in \n\
+           DER format.\n\
+\n\
+Given an oid return it's tag constant.\n\
+");
+static PyObject *
+cert_oid_tag(PyObject *self, PyObject *args)
+{
+    PyObject *result;
+    PyObject *arg;
+    int oid_tag;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTuple(args, "O:oid_tag", &arg))
+        return NULL;
+    
+    oid_tag = get_oid_tag_from_object(arg);
+    if (oid_tag == SEC_OID_UNKNOWN || oid_tag == -1) {
+        return NULL;
+    }
+
+    result = PyInt_FromLong(oid_tag);
+    return result;
+}
+
+PyDoc_STRVAR(cert_oid_dotted_decimal_doc,
+"oid_dotted_decimal(oid) -> string\n\
+\n\
+:Parameters:\n\
+     oid : may be one of integer, string, SecItem\n\
+         May be one of:\n\
+         \n\
+         * integer:: A SEC OID enumeration constant, also known as a tag\n\
+           (i.e. SEC_OID_*) for example SEC_OID_AVA_COMMON_NAME.\n\
+         * string:: A string in dotted decimal representation, for example\n\
+           'OID.2.5.4.3'. The 'OID.' prefix is optional.\n\
+           Or a string for the tag name (e.g. 'SEC_OID_AVA_COMMON_NAME')\n\
+           The 'SEC_OID\\_' prefix is optional. Or one of the canonical\n\
+           abbreviations (e.g. 'cn'). Case is not significant.\n\
+         * SecItem:: A SecItem object encapsulating the OID in \n\
+           DER format.\n\
+\n\
+Given an oid return it's tag constant as a string.\n\
+");
+static PyObject *
+cert_oid_dotted_decimal(PyObject *self, PyObject *args)
+{
+    PyObject *arg;
+    int oid_tag;
+    SECOidData *oiddata;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTuple(args, "O:oid_dotted_decimal", &arg))
+        return NULL;
+    
+    oid_tag = get_oid_tag_from_object(arg);
+    if (oid_tag == SEC_OID_UNKNOWN || oid_tag == -1) {
+        return NULL;
+    }
+
+    if ((oiddata = SECOID_FindOIDByTag(oid_tag)) == NULL) {
+        return set_nspr_error(NULL);
+    }
+
+    return oid_secitem_to_pystr_dotted_decimal(&oiddata->oid);
+}
+
+
+static PyObject *
+key_mechanism_type_to_pystr(CK_MECHANISM_TYPE mechanism)
+{
+    PyObject *py_value;
+    PyObject *py_name;
+
+    if ((py_value = PyInt_FromLong(mechanism)) == NULL) {
+        PyErr_SetString(PyExc_MemoryError, "unable to create object");
+        return NULL;
+    }
+
+    if ((py_name = PyDict_GetItem(ckm_value_to_name, py_value)) == NULL) {
         Py_DECREF(py_value);
+	PyErr_Format(PyExc_KeyError, "mechanism name not found: %lu", mechanism);
         return NULL;
     }
 
     Py_DECREF(py_value);
     Py_INCREF(py_name);
+
     return py_name;
-}
-
-static const char *
-key_mechanism_type_name(CK_MECHANISM_TYPE mechanism)
-{
-    PyObject *py_value;
-    PyObject *py_name;
-    const char *name;
-    static char buf[80];
-
-    if ((py_value = PyInt_FromLong(mechanism)) == NULL) {
-        goto fail;
-    }
-
-    if ((py_name = PyDict_GetItem(ckm_value_to_name, py_value)) == NULL) {
-        goto fail;
-    }
-
-    name = PyString_AsString(py_name);
-    strncpy(buf, name, sizeof(buf));
-    buf[sizeof(buf) - 1] = 0;
-    Py_DECREF(py_value);
-    return buf;
-
- fail:
-    Py_XDECREF(py_value);
-    snprintf(buf, sizeof(buf), "unknown(%#lx)", mechanism);
-    return buf;
 }
 
 PyDoc_STRVAR(pk11_key_mechanism_type_name_doc,
@@ -6185,7 +11731,7 @@ pk11_key_mechanism_type_name(PyObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "k:key_mechanism_type_name", &mechanism))
         return NULL;
 
-    return PyString_FromString(key_mechanism_type_name(mechanism));
+    return key_mechanism_type_to_pystr(mechanism);
 }
 
 PyDoc_STRVAR(pk11_key_mechanism_type_from_name_doc,
@@ -6204,7 +11750,7 @@ static PyObject *
 pk11_key_mechanism_type_from_name(PyObject *self, PyObject *args)
 {
     PyObject *py_name;
-    PyObject *py_upper_name;
+    PyObject *py_lower_name;
     PyObject *py_value;
 
     TraceMethodEnter(self);
@@ -6212,49 +11758,43 @@ pk11_key_mechanism_type_from_name(PyObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "S:key_mechanism_type_from_name", &py_name))
         return NULL;
 
-    if ((py_upper_name = PyObject_CallMethod(py_name, "upper", NULL)) == NULL) {
+    if ((py_lower_name = PyObject_CallMethod(py_name, "lower", NULL)) == NULL) {
         return NULL;
     }
 
-    if ((py_value = PyDict_GetItem(ckm_name_to_value, py_upper_name)) == NULL) {
+    if ((py_value = PyDict_GetItem(ckm_name_to_value, py_lower_name)) == NULL) {
 	PyErr_Format(PyExc_KeyError, "mechanism name not found: %s", PyString_AsString(py_name));
-        Py_DECREF(py_upper_name);
+        Py_DECREF(py_lower_name);
         return NULL;
     }
 
-    Py_DECREF(py_upper_name);
+    Py_DECREF(py_lower_name);
     Py_INCREF(py_value);
 
     return py_value;
 }
 
-static const char *
-pk11_attribute_type_name(CK_ATTRIBUTE_TYPE type)
+static PyObject *
+pk11_attribute_type_to_pystr(CK_ATTRIBUTE_TYPE type)
 {
     PyObject *py_value;
     PyObject *py_name;
-    const char *name;
-    static char buf[80];
 
     if ((py_value = PyInt_FromLong(type)) == NULL) {
-        goto fail;
+        PyErr_SetString(PyExc_MemoryError, "unable to create object");
+        return NULL;
     }
 
     if ((py_name = PyDict_GetItem(cka_value_to_name, py_value)) == NULL) {
-        goto fail;
+        Py_DECREF(py_value);
+	PyErr_Format(PyExc_KeyError, "attribute type name not found: %lu", type);
+        return NULL;
     }
 
-    name = PyString_AsString(py_name);
-    strncpy(buf, name, sizeof(buf));
-    buf[sizeof(buf) - 1] = 0;
     Py_DECREF(py_value);
-    return buf;
+    Py_INCREF(py_name);
 
- fail:
-    Py_XDECREF(py_value);
-    snprintf(buf, sizeof(buf), "unknown(%#lx)", type);
-    return buf;
-
+    return py_name;
 }
 
 PyDoc_STRVAR(pk11_attribute_type_name_doc,
@@ -6277,7 +11817,7 @@ pk11_pk11_attribute_type_name(PyObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "k:pk11_attribute_type_name", &type))
         return NULL;
 
-    return PyString_FromString(pk11_attribute_type_name(type));
+    return pk11_attribute_type_to_pystr(type);
 }
 
 PyDoc_STRVAR(pk11_pk11_attribute_type_from_name_doc,
@@ -6296,7 +11836,7 @@ static PyObject *
 pk11_pk11_attribute_type_from_name(PyObject *self, PyObject *args)
 {
     PyObject *py_name;
-    PyObject *py_upper_name;
+    PyObject *py_lower_name;
     PyObject *py_value;
 
     TraceMethodEnter(self);
@@ -6304,17 +11844,17 @@ pk11_pk11_attribute_type_from_name(PyObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "S:pk11_attribute_type_from_name", &py_name))
         return NULL;
 
-    if ((py_upper_name = PyObject_CallMethod(py_name, "upper", NULL)) == NULL) {
+    if ((py_lower_name = PyObject_CallMethod(py_name, "lower", NULL)) == NULL) {
         return NULL;
     }
 
-    if ((py_value = PyDict_GetItem(cka_name_to_value, py_upper_name)) == NULL) {
+    if ((py_value = PyDict_GetItem(cka_name_to_value, py_lower_name)) == NULL) {
 	PyErr_Format(PyExc_KeyError, "attribute name not found: %s", PyString_AsString(py_name));
-        Py_DECREF(py_upper_name);
+        Py_DECREF(py_lower_name);
         return NULL;
     }
 
-    Py_DECREF(py_upper_name);
+    Py_DECREF(py_lower_name);
     Py_INCREF(py_value);
 
     return py_value;
@@ -6795,46 +12335,618 @@ pk11_get_pad_mechanism(PyObject *self, PyObject *args)
     return PyInt_FromLong(pad_mechanism);
 }
 
+PyDoc_STRVAR(pk11_import_crl_doc,
+"import_crl(slot, der_crl, url, type, import_options, decode_options, [user_data1, ...]) -> SignedCRL\n\
+\n\
+:Parameters:\n\
+    slot : PK11Slot object\n\
+        designated PK11 slot\n\
+    der_crl : SecItem object\n\
+        signed DER CRL data encapsulated in a SecItem object.\n\
+    url : string\n\
+        URL of the CRL\n\
+    type : int\n\
+        revocation list type\n\
+        \n\
+        may be one of:\n\
+          - SEC_CRL_TYPE\n\
+          - SEC_KRL_TYPE\n\
+        \n\
+    import_options : int\n\
+        bit-wise OR of the following flags:\n\
+          - CRL_IMPORT_BYPASS_CHECKS\n\
+        \n\
+        or use CRL_IMPORT_DEFAULT_OPTIONS\n\
+    decode_options : int\n\
+        bit-wise OR of the following flags:\n\
+          - CRL_DECODE_DONT_COPY_DER\n\
+          - CRL_DECODE_SKIP_ENTRIES\n\
+          - CRL_DECODE_KEEP_BAD_CRL\n\
+          - CRL_DECODE_ADOPT_HEAP_DER\n\
+        \n\
+        or use CRL_DECODE_DEFAULT_OPTIONS\n\
+    user_dataN : object\n\
+        zero or more caller supplied parameters which will\n\
+        be passed to the password callback function\n\
+\n\
+\n\
+");
+static PyObject *
+pk11_import_crl(PyObject *self, PyObject *args)
+{
+    Py_ssize_t n_base_args = 6;
+    Py_ssize_t argc;
+    PyObject *parse_args = NULL;
+    PyObject *pin_args = NULL;
+    PK11Slot *py_slot;
+    char *url;
+    int type;
+    int import_options;
+    int decode_options;
+    SecItem *py_der_signed_crl;
+    CERTSignedCrl *signed_crl;
+
+    TraceMethodEnter(self);
+
+    argc = PyTuple_Size(args);
+    if (argc == n_base_args) {
+        parse_args = args;
+    } else {
+        parse_args = PyTuple_GetSlice(args, 0, n_base_args);
+    }
+
+    if (!PyArg_ParseTuple(parse_args, "O!O!siii:import_crl",
+                          &PK11SlotType, &py_slot,
+                          &SecItemType, &py_der_signed_crl,
+                          &url, &type, &import_options, &decode_options)) {
+        if (parse_args != args) {
+            Py_DECREF(parse_args);
+        }
+        return NULL;
+    }
+    if (parse_args != args) {
+        Py_DECREF(parse_args);
+    }
+
+    pin_args = PyTuple_GetSlice(args, n_base_args, argc);
+    Py_INCREF(pin_args);
+
+    if ((signed_crl = PK11_ImportCRL(py_slot->slot, &py_der_signed_crl->item, url,
+                                     type, pin_args, import_options, NULL, decode_options)) == NULL) {
+        Py_DECREF(pin_args);
+        return set_nspr_error(NULL);
+    }
+
+    Py_DECREF(pin_args);
+
+    return SignedCRL_new_from_CERTSignedCRL(signed_crl);
+}
+
+PyDoc_STRVAR(cert_decode_der_crl_doc,
+"decode_der_crl(der_crl, type=SEC_CRL_TYPE, decode_options=CRL_DECODE_DEFAULT_OPTIONS) -> SignedCRL\n\
+\n\
+:Parameters:\n\
+    der_crl : SecItem object\n\
+        DER encoded CRL data encapsulated in a SECItem.\n\
+    type : int\n\
+        revocation list type\n\
+        \n\
+        may be one of:\n\
+          - SEC_CRL_TYPE\n\
+          - SEC_KRL_TYPE\n\
+    decode_options : int\n\
+        bit-wise OR of the following flags:\n\
+          - CRL_DECODE_DONT_COPY_DER\n\
+          - CRL_DECODE_SKIP_ENTRIES\n\
+          - CRL_DECODE_KEEP_BAD_CRL\n\
+          - CRL_DECODE_ADOPT_HEAP_DER\n\
+        \n\
+        or use CRL_DECODE_DEFAULT_OPTIONS\n\
+\n\
+");
+
+static PyObject *
+cert_decode_der_crl(PyObject *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"der_crl", "type", "decode_options", NULL};
+    SecItem *py_der_crl;
+    int type = SEC_CRL_TYPE;
+    int decode_options = CRL_DECODE_DEFAULT_OPTIONS;
+    CERTSignedCrl *signed_crl;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!|ii:decode_der_crl", kwlist,
+                                     &SecItemType, &py_der_crl,
+                                     &py_der_crl, &type, &decode_options))
+        return NULL;
+
+    if ((signed_crl = CERT_DecodeDERCrlWithFlags(NULL, &py_der_crl->item, type,  decode_options)) == NULL) {
+        return set_nspr_error(NULL);
+    }
+
+    return SignedCRL_new_from_CERTSignedCRL(signed_crl);
+}
+
+PyDoc_STRVAR(cert_read_der_from_file_doc,
+"read_der_from_file(file, ascii=False) -> SecItem\n\
+\n\
+:Parameters:\n\
+    file : file name or file object\n\
+        If string treat as file path to open and read,\n\
+        if file object read from file object.\n\
+    ascii : boolean\n\
+        If True treat file contents as ascii data.\n\
+        If PEM delimiters are found strip them.\n\
+        Then base64 decode the contents.\n\
+\n\
+Read the contents of a file and return as a SecItem object.\n\
+If file is a string then treat it as a file pathname and open\n\
+and read the contents of that file. If file is a file object\n\
+then read the contents from the file object\n\
+\n\
+If the file contents begin with a PEM header then treat the\n\
+the file as PEM encoded and decode the payload into DER form.\n\
+Otherwise the file contents is assumed to already be in DER form.\n\
+The returned SecItem contains the DER contents of the file.\n\
+");
+
+static PyObject *
+cert_read_der_from_file(PyObject *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"file", "ascii", NULL};
+    PyObject *file_arg;
+    int ascii = 0;
+    PyObject *py_sec_item;
+    PyObject *py_file, *py_file_contents;
+    SECItem der;
+
+    TraceMethodEnter(self);
+
+    der.data = NULL;
+    der.len = 0;
+    der.type = siBuffer;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|i:read_der_from_file", kwlist,
+                                     &file_arg, &ascii))
+        return NULL;
+
+    if (PyString_Check(file_arg) || PyUnicode_Check(file_arg)) {
+        if ((py_file = PyFile_FromString(PyString_AsString(file_arg), "r")) == NULL) {
+            return NULL;
+        }
+    } else if (PyFile_Check(file_arg)) {
+        py_file = file_arg;
+    } else {
+        PyErr_SetString(PyExc_TypeError, "Bad file, must be pathname or file object");
+        return NULL;
+    }
+
+    if ((py_file_contents = PyObject_CallMethod(py_file, "read", "")) == NULL) {
+        Py_DECREF(py_file);
+        return NULL;
+    }
+    Py_DECREF(py_file);
+    
+    if (ascii) {
+        char *p, *tmp, *der_begin, *der_end;
+
+        p = PyString_AsString(py_file_contents);
+	/* check for headers and trailers and remove them */
+	if ((tmp = strstr(p, "-----BEGIN")) != NULL) {
+	    p = tmp;
+	    tmp = PORT_Strchr(p, '\n');
+	    if (!tmp) {
+		tmp = strchr(p, '\r'); /* maybe this is a MAC file */
+            }
+	    if (!tmp) {
+                PyErr_SetString(PyExc_ValueError, "no line ending after PEM BEGIN");
+                Py_DECREF(py_file_contents);
+                return NULL;              
+            }
+            p = der_begin = tmp + 1;
+            tmp = strstr(p, "-----END");
+	    if (tmp != NULL) {
+                der_end = tmp;
+		*der_end = '\0';
+	    } else {
+                PyErr_SetString(PyExc_ValueError, "no PEM END found");
+                Py_DECREF(py_file_contents);
+                return NULL;
+	    }
+	} else {
+	    der_begin = p;
+            der_end = p + PyString_GET_SIZE(py_file_contents);
+	}
+     
+	/* Convert to binary */
+        if (NSSBase64_DecodeBuffer(NULL, &der, der_begin, der_end - der_begin) == NULL) {
+            Py_DECREF(py_file_contents);
+            return set_nspr_error("Could not base64 decode contents of file");
+	}
+        py_sec_item = SecItem_new_from_SECItem(&der, SECITEM_unknown);
+        Py_DECREF(py_file_contents);
+        SECITEM_FreeItem(&der, PR_FALSE);
+        return py_sec_item;
+    }
+    
+    der.data = (unsigned char *)PyString_AS_STRING(py_file_contents);
+    der.len = PyString_GET_SIZE(py_file_contents);
+    py_sec_item = SecItem_new_from_SECItem(&der, SECITEM_unknown);
+    Py_DECREF(py_file_contents);
+    return (PyObject *)py_sec_item;
+}
+
+PyDoc_STRVAR(cert_x509_key_usage_doc,
+"x509_key_usage(bitstr, repr_kind=AsEnumDescription) -> (str, ...)\n\
+\n\
+:Parameters:\n\
+    bitstr : SecItem object\n\
+        A SecItem containing a DER encoded bit string.\n\
+    repr_kind : RepresentationKind constant\n\
+        Specifies what the contents of the returned tuple will be.\n\
+        May be one of:\n\
+\n\
+        AsEnum\n\
+            The enumerated constant.\n\
+            (e.g. nss.KU_DIGITAL_SIGNATURE)\n\
+        AsEnumDescription\n\
+            A friendly human readable description of the enumerated constant as a string.\n\
+             (e.g. \"Digital Signature\")\n\
+        AsIndex\n\
+            The bit position within the bit string.\n\
+\n\
+Return a tuple of string name for each enabled bit in the key\n\
+usage bit string.\n\
+");
+
+static PyObject *
+cert_x509_key_usage(PyObject *self, PyObject *args)
+{
+    PyObject *result;
+    SecItem *py_sec_item;
+    SECItem bitstr_item;
+    int repr_kind = AsEnumDescription;
+
+    if (!PyArg_ParseTuple(args, "O!|i:x509_key_usage", 
+                          &SecItemType, &py_sec_item, &repr_kind))
+        return NULL;
+
+    if (der_bitstring_to_nss_bitstring(&bitstr_item, &py_sec_item->item) != SECSuccess) {
+        return set_nspr_error(NULL);
+    }
+
+    result = key_usage_bitstr_to_tuple(&bitstr_item, repr_kind);
+
+    return result;
+}
+
+PyDoc_STRVAR(cert_x509_ext_key_usage_doc,
+"x509_ext_key_usage(sec_item, repr_kind=AsString) -> (obj, ...)\n\
+\n\
+:Parameters:\n\
+    sec_item : SecItem object\n\
+        A SecItem containing a DER encoded sequence of OID's\n\
+    repr_kind : RepresentationKind constant\n\
+        Specifies what the contents of the returned tuple will be.\n\
+        May be one of:\n\
+\n\
+        AsObject\n\
+            Each extended key usage will be a SecItem object embedding\n\
+            the OID in DER format.\n\
+        AsString\n\
+            Each extended key usage will be a descriptive string.\n\
+            (e.g. \"TLS Web Server Authentication Certificate\")\n\
+        AsDottedDecimal\n\
+            Each extended key usage will be OID rendered as a dotted decimal string.\n\
+            (e.g. \"OID.1.3.6.1.5.5.7.3.1\")\n\
+        AsEnum\n\
+            Each extended key usage will be OID tag enumeration constant (int).\n\
+            (e.g. nss.SEC_OID_EXT_KEY_USAGE_SERVER_AUTH)\n\
+\n\
+Return a tuple of OID's according the representation kind.\n\
+");
+
+static PyObject *
+cert_x509_ext_key_usage(PyObject *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"sec_item", "repr_kind", NULL};
+    SecItem *py_sec_item;
+    int repr_kind = AsString;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds,"O!|i:x509_ext_key_usage", kwlist,
+                          &SecItemType, &py_sec_item, &repr_kind))
+        return NULL;
+
+    return decode_oid_sequence_to_tuple(&py_sec_item->item, repr_kind);
+}
+
+
+PyDoc_STRVAR(cert_x509_alt_name_doc,
+"x509_alt_name(sec_item, repr_kind=AsString) -> (SecItem, ...)\n\
+\n\
+:Parameters:\n\
+    sec_item : SecItem object\n\
+        A SecItem containing a DER encoded alternative name extension.\n\
+    repr_kind : RepresentationKind constant\n\
+        Specifies what the contents of the returned tuple will be.\n\
+        May be one of:\n\
+\n\
+        AsObject\n\
+            The general name as a nss.GeneralName object\n\
+        AsString\n\
+            The general name as a string.\n\
+            (e.g. \"http://crl.geotrust.com/crls/secureca.crl\")\n\
+        AsTypeString\n\
+            The general name type as a string.\n\
+             (e.g. \"URI\")\n\
+        AsTypeEnum\n\
+            The general name type as a general name type enumerated constant.\n\
+             (e.g. nss.certURI )\n\
+        AsLabeledString\n\
+            The general name as a string with it's type prepended.\n\
+            (e.g. \"URI: http://crl.geotrust.com/crls/secureca.crl\"\n\
+\n\
+Return a tuple of GeneralNames according the representation kind.\n\
+");
+
+static PyObject *
+cert_x509_alt_name(PyObject *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"sec_item", "repr_kind", NULL};
+    SecItem *py_sec_item;
+    int repr_kind = AsString;
+    CERTGeneralName *names;
+    PLArenaPool *arena;
+    PyObject *result;
+
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds,"O!|i:x509_alt_name", kwlist,
+                          &SecItemType, &py_sec_item, &repr_kind))
+        return NULL;
+
+    if ((arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE)) == NULL ) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+
+    if ((names = CERT_DecodeAltNameExtension(arena, &py_sec_item->item)) == NULL) {
+        set_nspr_error(NULL);
+        PORT_FreeArena(arena, PR_FALSE);
+        return NULL;
+    }
+
+    result = CERTGeneralName_list_to_tuple(names, repr_kind);
+    PORT_FreeArena(arena, PR_FALSE);
+    return result;
+}
+
+
+static PyObject *
+crl_reason_to_pystr(CERTCRLEntryReasonCode reason)
+{
+    PyObject *py_value;
+    PyObject *py_name;
+
+    if ((py_value = PyInt_FromLong(reason)) == NULL) {
+        PyErr_SetString(PyExc_MemoryError, "unable to create object");
+        return NULL;
+    }
+
+    if ((py_name = PyDict_GetItem(crl_reason_value_to_name, py_value)) == NULL) {
+        Py_DECREF(py_value);
+	PyErr_Format(PyExc_KeyError, "GeneralName reason name not found: %u", reason);
+        return NULL;
+    }
+
+    Py_DECREF(py_value);
+    Py_INCREF(py_name);
+
+    return py_name;
+}
+
+PyDoc_STRVAR(cert_crl_reason_name_doc,
+"crl_reason_name(reason) -> string\n\
+\n\
+:Parameters:\n\
+    reason : int\n\
+        CERTCRLEntryReasonCode constant\n\
+\n\
+Given a CERTCRLEntryReasonCode constant\n\
+return it's name as a string\n\
+");
+static PyObject *
+cert_crl_reason_name(PyObject *self, PyObject *args)
+{
+    unsigned long reason;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTuple(args, "k:crl_reason_name", &reason))
+        return NULL;
+
+    return crl_reason_to_pystr(reason);
+}
+
+PyDoc_STRVAR(cert_crl_reason_from_name_doc,
+"crl_reason_from_name(name) -> int\n\
+\n\
+:Parameters:\n\
+    name : string\n\
+        name of CERTCRLEntryReasonCode constant\n\
+\n\
+Given the name of a CERTCRLEntryReasonCode constant\n\
+return it's integer constant\n\
+The string comparison is case insensitive.\n\
+");
+static PyObject *
+cert_crl_reason_from_name(PyObject *self, PyObject *args)
+{
+    PyObject *py_name;
+    PyObject *py_lower_name;
+    PyObject *py_value;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTuple(args, "S:crl_reason_from_name", &py_name))
+        return NULL;
+
+    if ((py_lower_name = PyObject_CallMethod(py_name, "lower", NULL)) == NULL) {
+        return NULL;
+    }
+
+    if ((py_value = PyDict_GetItem(crl_reason_name_to_value, py_lower_name)) == NULL) {
+	PyErr_Format(PyExc_KeyError, "GeneralName reason name not found: %s", PyString_AsString(py_name));
+        Py_DECREF(py_lower_name);
+        return NULL;
+    }
+
+    Py_DECREF(py_lower_name);
+    Py_INCREF(py_value);
+
+    return py_value;
+}
+
+static PyObject *
+general_name_type_to_pystr(CERTGeneralNameType type)
+{
+    PyObject *py_value;
+    PyObject *py_name;
+
+    if ((py_value = PyInt_FromLong(type)) == NULL) {
+        PyErr_SetString(PyExc_MemoryError, "unable to create object");
+        return NULL;
+    }
+
+    if ((py_name = PyDict_GetItem(general_name_value_to_name, py_value)) == NULL) {
+        Py_DECREF(py_value);
+	PyErr_Format(PyExc_KeyError, "GeneralName type name not found: %u", type);
+        return NULL;
+    }
+
+    Py_DECREF(py_value);
+    Py_INCREF(py_name);
+
+    return py_name;
+}
+
+PyDoc_STRVAR(cert_general_name_type_name_doc,
+"general_name_type_name(type) -> string\n\
+\n\
+:Parameters:\n\
+    type : int\n\
+        CERTGeneralNameType constant\n\
+\n\
+Given a CERTGeneralNameType constant\n\
+return it's name as a string\n\
+");
+static PyObject *
+cert_general_name_type_name(PyObject *self, PyObject *args)
+{
+    unsigned long type;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTuple(args, "k:general_name_type_name", &type))
+        return NULL;
+
+    return general_name_type_to_pystr(type);
+}
+
+PyDoc_STRVAR(cert_general_name_type_from_name_doc,
+"general_name_type_from_name(name) -> int\n\
+\n\
+:Parameters:\n\
+    name : string\n\
+        name of CERTGeneralNameType constant\n\
+\n\
+Given the name of a CERTGeneralNameType constant\n\
+return it's integer constant\n\
+The string comparison is case insensitive.\n\
+");
+static PyObject *
+cert_general_name_type_from_name(PyObject *self, PyObject *args)
+{
+    PyObject *py_name;
+    PyObject *py_lower_name;
+    PyObject *py_value;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTuple(args, "S:general_name_type_from_name", &py_name))
+        return NULL;
+
+    if ((py_lower_name = PyObject_CallMethod(py_name, "lower", NULL)) == NULL) {
+        return NULL;
+    }
+
+    if ((py_value = PyDict_GetItem(general_name_name_to_value, py_lower_name)) == NULL) {
+	PyErr_Format(PyExc_KeyError, "GeneralName type name not found: %s", PyString_AsString(py_name));
+        Py_DECREF(py_lower_name);
+        return NULL;
+    }
+
+    Py_DECREF(py_lower_name);
+    Py_INCREF(py_value);
+
+    return py_value;
+}
+
+// FIXME: remove this testing routine
+
 /* List of functions exported by this module. */
 static PyMethodDef
 module_methods[] = {
-    {"nss_init",                      (PyCFunction)nss_init,                           METH_VARARGS,               nss_init_doc},
-    {"nss_init_nodb",                 (PyCFunction)nss_init_nodb,                      METH_NOARGS,                nss_init_nodb_doc},
-    {"nss_shutdown",                  (PyCFunction)nss_shutdown,                       METH_NOARGS,                nss_shutdown_doc},
-    {"set_password_callback",         (PyCFunction)pk11_set_password_callback,         METH_VARARGS,               pk11_set_password_callback_doc},
-    {"find_cert_from_nickname",       (PyCFunction)pk11_find_cert_from_nickname,       METH_VARARGS,               pk11_find_cert_from_nickname_doc},
-    {"find_key_by_any_cert",          (PyCFunction)pk11_find_key_by_any_cert,          METH_VARARGS,               pk11_find_key_by_any_cert_doc},
-    {"generate_random",               (PyCFunction)pk11_generate_random,               METH_VARARGS,               pk11_generate_random_doc},
-    {"get_default_certdb",            (PyCFunction)cert_get_default_certdb,            METH_NOARGS,                cert_get_default_certdb_doc},
-    {"get_cert_nicknames",            (PyCFunction)cert_get_cert_nicknames,            METH_VARARGS,               cert_get_cert_nicknames_doc},
-    {"data_to_hex",                   (PyCFunction)cert_data_to_hex,                   METH_VARARGS|METH_KEYWORDS, cert_data_to_hex_doc},
-    {"read_hex",                      (PyCFunction)read_hex,                           METH_VARARGS|METH_KEYWORDS, read_hex_doc},
-    {"hash_buf",                      (PyCFunction)pk11_hash_buf,                      METH_VARARGS,               pk11_hash_buf_doc},
-    {"md5_digest",                    (PyCFunction)pk11_md5_digest,                    METH_VARARGS,               pk11_md5_digest_doc},
-    {"sha1_digest",                   (PyCFunction)pk11_sha1_digest,                   METH_VARARGS,               pk11_sha1_digest_doc},
-    {"sha256_digest",                 (PyCFunction)pk11_sha256_digest,                 METH_VARARGS,               pk11_sha256_digest_doc},
-    {"sha512_digest",                 (PyCFunction)pk11_sha512_digest,                 METH_VARARGS,               pk11_sha512_digest_doc},
-    {"indented_format",               (PyCFunction)nss_indented_format,                METH_VARARGS|METH_KEYWORDS, nss_indented_format_doc},
-    {"sec_oid_tag_str",               (PyCFunction)cert_sec_oid_tag_str,               METH_VARARGS,               cert_sec_oid_tag_str_doc},
-    {"sec_oid_tag_name",              (PyCFunction)cert_sec_oid_tag_name,              METH_VARARGS,               cert_sec_oid_tag_name_doc},
-    {"sec_oid_tag_from_name",         (PyCFunction)cert_sec_oid_tag_from_name,         METH_VARARGS,               cert_sec_oid_tag_from_name_doc},
-    {"key_mechanism_type_name",       (PyCFunction)pk11_key_mechanism_type_name,       METH_VARARGS,               pk11_key_mechanism_type_name_doc},
-    {"key_mechanism_type_from_name",  (PyCFunction)pk11_key_mechanism_type_from_name,  METH_VARARGS,               pk11_key_mechanism_type_from_name_doc},
-    {"pk11_attribute_type_name",      (PyCFunction)pk11_pk11_attribute_type_name,      METH_VARARGS,               pk11_attribute_type_name_doc},
-    {"pk11_attribute_type_from_name", (PyCFunction)pk11_pk11_attribute_type_from_name, METH_VARARGS,               pk11_pk11_attribute_type_from_name_doc},
-    {"get_best_slot",                 (PyCFunction)pk11_get_best_slot,                 METH_VARARGS,               pk11_get_best_slot_doc},
-    {"get_internal_key_slot",         (PyCFunction)pk11_get_internal_key_slot,         METH_NOARGS,                pk11_get_internal_key_slot_doc},
-    {"create_context_by_sym_key",     (PyCFunction)pk11_create_context_by_sym_key,     METH_VARARGS|METH_KEYWORDS, pk11_create_context_by_sym_key_doc},
-    {"import_sym_key",                (PyCFunction)pk11_import_sym_key,                METH_VARARGS,               pk11_import_sym_key_doc},
-    {"create_digest_context",         (PyCFunction)pk11_create_digest_context,         METH_VARARGS,               pk11_create_digest_context_doc},
-    {"param_from_iv",                 (PyCFunction)pk11_param_from_iv,                 METH_VARARGS|METH_KEYWORDS, pk11_param_from_iv_doc},
-    {"param_from_algid",              (PyCFunction)pk11_param_from_algid,              METH_VARARGS,               pk11_param_from_algid_doc},
-    {"generate_new_param",            (PyCFunction)pk11_generate_new_param,            METH_VARARGS|METH_KEYWORDS, pk11_generate_new_param_doc},
-    {"algtag_to_mechanism",           (PyCFunction)pk11_algtag_to_mechanism,           METH_VARARGS,               pk11_algtag_to_mechanism_doc},
-    {"mechanism_to_algtag",           (PyCFunction)pk11_mechanism_to_algtag,           METH_VARARGS,               pk11_mechanism_to_algtag_doc},
-    {"get_iv_length",                 (PyCFunction)pk11_get_iv_length,                 METH_VARARGS,               pk11_get_iv_length_doc},
-    {"get_block_size",                (PyCFunction)pk11_get_block_size,                METH_VARARGS|METH_KEYWORDS, pk11_get_block_size_doc},
-    {"get_pad_mechanism",             (PyCFunction)pk11_get_pad_mechanism,             METH_VARARGS,               pk11_get_pad_mechanism_doc},
+    {"nss_init",                         (PyCFunction)nss_init,                            METH_VARARGS,               nss_init_doc},
+    {"nss_init_nodb",                    (PyCFunction)nss_init_nodb,                       METH_NOARGS,                nss_init_nodb_doc},
+    {"nss_shutdown",                     (PyCFunction)nss_shutdown,                        METH_NOARGS,                nss_shutdown_doc},
+    {"set_password_callback",            (PyCFunction)pk11_set_password_callback,          METH_VARARGS,               pk11_set_password_callback_doc},
+    {"find_cert_from_nickname",          (PyCFunction)pk11_find_cert_from_nickname,        METH_VARARGS,               pk11_find_cert_from_nickname_doc},
+    {"find_key_by_any_cert",             (PyCFunction)pk11_find_key_by_any_cert,           METH_VARARGS,               pk11_find_key_by_any_cert_doc},
+    {"generate_random",                  (PyCFunction)pk11_generate_random,                METH_VARARGS,               pk11_generate_random_doc},
+    {"get_default_certdb",               (PyCFunction)cert_get_default_certdb,             METH_NOARGS,                cert_get_default_certdb_doc},
+    {"get_cert_nicknames",               (PyCFunction)cert_get_cert_nicknames,             METH_VARARGS,               cert_get_cert_nicknames_doc},
+    {"data_to_hex",                      (PyCFunction)cert_data_to_hex,                    METH_VARARGS|METH_KEYWORDS, cert_data_to_hex_doc},
+    {"read_hex",                         (PyCFunction)read_hex,                            METH_VARARGS|METH_KEYWORDS, read_hex_doc},
+    {"hash_buf",                         (PyCFunction)pk11_hash_buf,                       METH_VARARGS,               pk11_hash_buf_doc},
+    {"md5_digest",                       (PyCFunction)pk11_md5_digest,                     METH_VARARGS,               pk11_md5_digest_doc},
+    {"sha1_digest",                      (PyCFunction)pk11_sha1_digest,                    METH_VARARGS,               pk11_sha1_digest_doc},
+    {"sha256_digest",                    (PyCFunction)pk11_sha256_digest,                  METH_VARARGS,               pk11_sha256_digest_doc},
+    {"sha512_digest",                    (PyCFunction)pk11_sha512_digest,                  METH_VARARGS,               pk11_sha512_digest_doc},
+    {"indented_format",                  (PyCFunction)nss_indented_format,                 METH_VARARGS|METH_KEYWORDS, nss_indented_format_doc},
+    {"make_line_pairs",                  (PyCFunction)nss_make_line_pairs,                 METH_VARARGS|METH_KEYWORDS, nss_make_line_pairs_doc},
+    {"der_universal_secitem_fmt_lines",  (PyCFunction)cert_der_universal_secitem_fmt_lines, METH_VARARGS|METH_KEYWORDS, cert_der_universal_secitem_fmt_lines_doc},
+    {"oid_str",                          (PyCFunction)cert_oid_str,                        METH_VARARGS,               cert_oid_str_doc},
+    {"oid_tag_name",                     (PyCFunction)cert_oid_tag_name,                   METH_VARARGS,               cert_oid_tag_name_doc},
+    {"oid_tag",                          (PyCFunction)cert_oid_tag,                        METH_VARARGS,               cert_oid_tag_doc},
+    {"oid_dotted_decimal",               (PyCFunction)cert_oid_dotted_decimal,             METH_VARARGS,               cert_oid_dotted_decimal_doc},
+    {"key_mechanism_type_name",          (PyCFunction)pk11_key_mechanism_type_name,        METH_VARARGS,               pk11_key_mechanism_type_name_doc},
+    {"key_mechanism_type_from_name",     (PyCFunction)pk11_key_mechanism_type_from_name,   METH_VARARGS,               pk11_key_mechanism_type_from_name_doc},
+    {"pk11_attribute_type_name",         (PyCFunction)pk11_pk11_attribute_type_name,       METH_VARARGS,               pk11_attribute_type_name_doc},
+    {"pk11_attribute_type_from_name",    (PyCFunction)pk11_pk11_attribute_type_from_name,  METH_VARARGS,               pk11_pk11_attribute_type_from_name_doc},
+    {"cert_crl_reason_name",             (PyCFunction)cert_crl_reason_name,                METH_VARARGS,               cert_crl_reason_name_doc},
+    {"cert_crl_reason_from_name",        (PyCFunction)cert_crl_reason_from_name,           METH_VARARGS,               cert_crl_reason_from_name_doc},
+    {"cert_general_name_type_name",      (PyCFunction)cert_general_name_type_name,         METH_VARARGS,               cert_general_name_type_name_doc},
+    {"cert_general_name_type_from_name", (PyCFunction)cert_general_name_type_from_name,    METH_VARARGS,               cert_general_name_type_from_name_doc},
+    {"get_best_slot",                    (PyCFunction)pk11_get_best_slot,                  METH_VARARGS,               pk11_get_best_slot_doc},
+    {"get_internal_key_slot",            (PyCFunction)pk11_get_internal_key_slot,          METH_NOARGS,                pk11_get_internal_key_slot_doc},
+    {"create_context_by_sym_key",        (PyCFunction)pk11_create_context_by_sym_key,      METH_VARARGS|METH_KEYWORDS, pk11_create_context_by_sym_key_doc},
+    {"import_sym_key",                   (PyCFunction)pk11_import_sym_key,                 METH_VARARGS,               pk11_import_sym_key_doc},
+    {"create_digest_context",            (PyCFunction)pk11_create_digest_context,          METH_VARARGS,               pk11_create_digest_context_doc},
+    {"param_from_iv",                    (PyCFunction)pk11_param_from_iv,                  METH_VARARGS|METH_KEYWORDS, pk11_param_from_iv_doc},
+    {"param_from_algid",                 (PyCFunction)pk11_param_from_algid,               METH_VARARGS,               pk11_param_from_algid_doc},
+    {"generate_new_param",               (PyCFunction)pk11_generate_new_param,             METH_VARARGS|METH_KEYWORDS, pk11_generate_new_param_doc},
+    {"algtag_to_mechanism",              (PyCFunction)pk11_algtag_to_mechanism,            METH_VARARGS,               pk11_algtag_to_mechanism_doc},
+    {"mechanism_to_algtag",              (PyCFunction)pk11_mechanism_to_algtag,            METH_VARARGS,               pk11_mechanism_to_algtag_doc},
+    {"get_iv_length",                    (PyCFunction)pk11_get_iv_length,                  METH_VARARGS,               pk11_get_iv_length_doc},
+    {"get_block_size",                   (PyCFunction)pk11_get_block_size,                 METH_VARARGS|METH_KEYWORDS, pk11_get_block_size_doc},
+    {"get_pad_mechanism",                (PyCFunction)pk11_get_pad_mechanism,              METH_VARARGS,               pk11_get_pad_mechanism_doc},
+    {"import_crl",                       (PyCFunction)pk11_import_crl,                     METH_VARARGS,               pk11_import_crl_doc},
+    {"decode_der_crl",                   (PyCFunction)cert_decode_der_crl,                 METH_VARARGS|METH_KEYWORDS, cert_decode_der_crl_doc},
+    {"read_der_from_file",               (PyCFunction)cert_read_der_from_file,             METH_VARARGS|METH_KEYWORDS, cert_read_der_from_file_doc},
+    {"x509_key_usage",                   (PyCFunction)cert_x509_key_usage,                 METH_VARARGS,               cert_x509_key_usage_doc},
+    {"x509_ext_key_usage",               (PyCFunction)cert_x509_ext_key_usage,             METH_VARARGS|METH_KEYWORDS, cert_x509_ext_key_usage_doc},
+    {"x509_alt_name",                    (PyCFunction)cert_x509_alt_name,                  METH_VARARGS|METH_KEYWORDS, cert_x509_alt_name_doc},
     {NULL, NULL} /* Sentinel */
 };
 
@@ -6897,16 +13009,43 @@ initnss(void)
     TYPE_READY(PublicKeyType);
     TYPE_READY(SubjectPublicKeyInfoType);
     TYPE_READY(CertDBType);
+    TYPE_READY(CertificateExtensionType);
     TYPE_READY(CertificateType);
     TYPE_READY(PrivateKeyType);
+    TYPE_READY(SignedCRLType);
     TYPE_READY(PK11SlotType);
     TYPE_READY(PK11SymKeyType);
     TYPE_READY(PK11ContextType);
+    TYPE_READY(CRLDistributionPtType);
+    TYPE_READY(CRLDistributionPtsType);
+    TYPE_READY(X500AVAType);
+    TYPE_READY(X500RDNType);
+    TYPE_READY(X500NameType);
+    TYPE_READY(GeneralNameType);
+    TYPE_READY(AuthKeyIDType);
 
     /* Export C API */
     if (PyModule_AddObject(m, "_C_API", PyCObject_FromVoidPtr((void *)&nspr_nss_c_api, NULL)) != 0) {
         return;
     }
+
+    AddIntConstant(OCTETS_PER_LINE_DEFAULT);
+    PyModule_AddStringMacro(m, HEX_SEPARATOR_DEFAULT);
+
+    AddIntConstant(AsObject);
+    AddIntConstant(AsString);
+    AddIntConstant(AsTypeString);
+    AddIntConstant(AsTypeEnum);
+    AddIntConstant(AsLabeledString);
+    AddIntConstant(AsEnum);
+    AddIntConstant(AsEnumName);
+    AddIntConstant(AsEnumDescription);
+    AddIntConstant(AsIndex);
+    AddIntConstant(AsDottedDecimal);
+
+    AddIntConstant(generalName);
+    AddIntConstant(relativeDistinguishedName);
+
 
     AddIntConstant(certificateUsageCheckAllUsages);
     AddIntConstant(certificateUsageSSLClient);
@@ -6941,10 +13080,78 @@ initnss(void)
     AddIntConstant(SEC_CERT_NICKNAMES_SERVER);
     AddIntConstant(SEC_CERT_NICKNAMES_CA);
 
+    AddIntConstant(SEC_CRL_TYPE);
+    AddIntConstant(SEC_KRL_TYPE);
+
+    AddIntConstant(CRL_DECODE_DEFAULT_OPTIONS);
+    AddIntConstant(CRL_DECODE_DONT_COPY_DER);
+    AddIntConstant(CRL_DECODE_SKIP_ENTRIES);
+    AddIntConstant(CRL_DECODE_KEEP_BAD_CRL);
+    AddIntConstant(CRL_DECODE_ADOPT_HEAP_DER);
+
+    AddIntConstant(CRL_IMPORT_DEFAULT_OPTIONS);
+    AddIntConstant(CRL_IMPORT_BYPASS_CHECKS);
+
+
     AddIntConstant(secCertTimeValid);
     AddIntConstant(secCertTimeExpired);
     AddIntConstant(secCertTimeNotValidYet);
 
+
+    /***************************************************************************
+     * CRL Reason
+     ***************************************************************************/
+
+    if ((crl_reason_name_to_value = PyDict_New()) == NULL) {
+        return;
+    }
+    if ((crl_reason_value_to_name = PyDict_New()) == NULL) {
+        return;
+    }
+
+#define ExportConstant(constant)                      \
+if (_AddIntConstantWithLookup(m, #constant, constant, \
+    "crlEntry", crl_reason_name_to_value, crl_reason_value_to_name) < 0) return;
+
+    ExportConstant(crlEntryReasonUnspecified);
+    ExportConstant(crlEntryReasonKeyCompromise);
+    ExportConstant(crlEntryReasonCaCompromise);
+    ExportConstant(crlEntryReasonAffiliationChanged);
+    ExportConstant(crlEntryReasonSuperseded);
+    ExportConstant(crlEntryReasonCessationOfOperation);
+    ExportConstant(crlEntryReasoncertificatedHold);
+    ExportConstant(crlEntryReasonRemoveFromCRL);
+    ExportConstant(crlEntryReasonPrivilegeWithdrawn);
+    ExportConstant(crlEntryReasonAaCompromise);
+
+#undef ExportConstant
+
+    /***************************************************************************
+     * General Name Types
+     ***************************************************************************/
+
+    if ((general_name_name_to_value = PyDict_New()) == NULL) {
+        return;
+    }
+    if ((general_name_value_to_name = PyDict_New()) == NULL) {
+        return;
+    }
+
+#define ExportConstant(constant)                      \
+if (_AddIntConstantWithLookup(m, #constant, constant, \
+    "cert", general_name_name_to_value, general_name_value_to_name) < 0) return;
+
+    ExportConstant(certOtherName);
+    ExportConstant(certRFC822Name);
+    ExportConstant(certDNSName);
+    ExportConstant(certX400Address);
+    ExportConstant(certDirectoryName);
+    ExportConstant(certEDIPartyName);
+    ExportConstant(certURI);
+    ExportConstant(certIPAddress);
+    ExportConstant(certRegisterID);
+
+#undef ExportConstant
 
     /***************************************************************************
      * Mechanism Types

@@ -228,7 +228,6 @@ def client():
     # Get the IP Address of our server
     net_addr = io.NetworkAddress(hostname, port)
     sock = ssl.SSLSocket()
-
     # Set client SSL socket options
     sock.set_ssl_option(ssl.SSL_SECURITY, True)
     sock.set_ssl_option(ssl.SSL_HANDSHAKE_AS_CLIENT, True)

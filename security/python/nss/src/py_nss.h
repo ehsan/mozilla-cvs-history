@@ -51,6 +51,51 @@
 #include "pk11pub.h"
 
 /* ========================================================================== */
+
+typedef enum RepresentationKindEnum {
+    AsObject,
+    AsString,
+    AsTypeString,
+    AsTypeEnum,
+    AsLabeledString,
+    AsEnum,
+    AsEnumName,
+    AsEnumDescription,
+    AsIndex,
+    AsDottedDecimal,
+} RepresentationKind;
+
+
+/* ========================================================================== */
+/* =============================== SecItem Class ============================ */
+/* ========================================================================== */
+
+typedef enum SECItemKindEnum {
+    SECITEM_unknown,
+    SECITEM_buffer,
+    SECITEM_dist_name,
+    SECITEM_session_id,
+    SECITEM_signed_data,
+    SECITEM_signature,
+    SECITEM_algorithm,
+    SECITEM_iv_param,
+    SECITEM_wrapped_key,
+    SECITEM_cert_extension_oid,
+    SECITEM_cert_extension_value,
+    SECITEM_oid,
+    SECITEM_utf8_string,
+    SECITEM_bit_string,
+} SECItemKind;
+
+typedef struct {
+    PyObject_HEAD
+    SECItem item;
+    SECItemKind kind;
+} SecItem;
+
+#define SecItem_GET_SIZE(op)  (Py_ssize_t)(op->item.len)
+
+/* ========================================================================== */
 /* =============================== PK11Slot Class =========================== */
 /* ========================================================================== */
 
@@ -70,13 +115,23 @@ typedef struct {
 
 
 /* ========================================================================== */
+/* ======================== CertificateExtension Class ====================== */
+/* ========================================================================== */
+
+typedef struct {
+    PyObject_HEAD
+    SecItem *oid;
+    SecItem *value;
+    int critical;
+} CertificateExtension;
+
+/* ========================================================================== */
 /* ============================ Certificate Class =========================== */
 /* ========================================================================== */
 
 typedef struct {
     PyObject_HEAD
     CERTCertificate *cert;
-    PyObject *py_subject_public_key_info;
 } Certificate;
 
 
@@ -90,28 +145,13 @@ typedef struct {
 } PrivateKey;
 
 /* ========================================================================== */
-/* =============================== SecItem Class ============================ */
+/* ============================== SignedCRL Class =========================== */
 /* ========================================================================== */
-
-typedef enum SECItemKindEnum {
-    SECITEM_unknown,
-    SECITEM_buffer,
-    SECITEM_dist_name,
-    SECITEM_session_id,
-    SECITEM_signed_data,
-    SECITEM_signature,
-    SECITEM_algorithm,
-    SECITEM_iv_param,
-    SECITEM_wrapped_key,
-} SECItemKind;
 
 typedef struct {
     PyObject_HEAD
-    SECItem item;
-    SECItemKind kind;
-} SecItem;
-
-#define SecItem_GET_SIZE(op)  (Py_ssize_t)(op->item.len)
+    CERTSignedCrl *signed_crl;
+} SignedCRL;
 
 /* ========================================================================== */
 /* ============================ RSAPublicKey Class ========================== */
@@ -208,6 +248,74 @@ typedef struct {
     PyObject_HEAD
     PK11Context *pk11_context;
 } PyPK11Context;
+
+/* ========================================================================== */
+/* =============================== X500AVA Class ============================ */
+/* ========================================================================== */
+
+typedef struct {
+    PyObject_HEAD
+    PRArenaPool *arena;
+    CERTAVA *ava;
+} X500AVA;
+
+/* ========================================================================== */
+/* =============================== X500RDN Class ============================ */
+/* ========================================================================== */
+
+typedef struct {
+    PyObject_HEAD
+    PRArenaPool *arena;
+    CERTRDN *rdn;
+} X500RDN;
+
+/* ========================================================================== */
+/* =============================== X500Name Class ============================ */
+/* ========================================================================== */
+
+typedef struct {
+    PyObject_HEAD
+    CERTName name;
+} X500Name;
+
+/* ========================================================================== */
+/* ============================= GeneralName Class ========================== */
+/* ========================================================================== */
+
+typedef struct {
+    PyObject_HEAD
+    PRArenaPool *arena;
+    CERTGeneralName *name;
+} GeneralName;
+
+/* ========================================================================== */
+/* =========================== CRLDistributionPt Class ====================== */
+/* ========================================================================== */
+
+typedef struct {
+    PyObject_HEAD
+    PRArenaPool *arena;
+    CRLDistributionPoint *pt;
+} CRLDistributionPt;
+
+/* ========================================================================== */
+/* ========================== CRLDistributionPts Class ====================== */
+/* ========================================================================== */
+
+typedef struct {
+    PyObject_HEAD
+    PyObject *pts_tuple;
+} CRLDistributionPts;
+
+/* ========================================================================== */
+/* ============================== AuthKeyID Class =========================== */
+/* ========================================================================== */
+
+typedef struct {
+    PyObject_HEAD
+    PRArenaPool *arena;
+    CERTAuthKeyID *auth_key_id;
+} AuthKeyID;
 
 /* ========================================================================== */
 

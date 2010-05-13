@@ -327,7 +327,7 @@ nss_nss_extension = \
     Extension('nss.nss',
               sources            = ['src/py_nss.c'],
               include_dirs       = ['src', '/usr/include/nss3', '/usr/include/nspr4'],
-              libraries          = ['nspr4', 'ssl3'],
+              libraries          = ['nspr4', 'ssl3', 'nss3'],
               extra_compile_args = extra_compile_args,
               )
 

@@ -377,17 +377,24 @@ SSLSocket_accept(SSLSocket *self, PyObject *args, PyObject *kwds)
                                      &timeout))
         return NULL;
 
-    if ((pr_socket = PR_Accept(self->pr_socket, &pr_netaddr, timeout)) == NULL)
+    Py_BEGIN_ALLOW_THREADS
+    if ((pr_socket = PR_Accept(self->pr_socket, &pr_netaddr, timeout)) == NULL) {
+        Py_BLOCK_THREADS
         return set_nspr_error(NULL);
+    }
+    Py_END_ALLOW_THREADS
 
-    if ((py_netaddr = NetworkAddress_new_from_PRNetAddr(&pr_netaddr)) == NULL)
+    if ((py_netaddr = NetworkAddress_new_from_PRNetAddr(&pr_netaddr)) == NULL) {
         goto error;
+    }
 
-    if ((py_ssl_socket = SSLSocket_new_from_PRFileDesc(pr_socket, self->family)) == NULL)
+    if ((py_ssl_socket = SSLSocket_new_from_PRFileDesc(pr_socket, self->family)) == NULL) {
         goto error;
+    }
 
-    if ((return_value = Py_BuildValue("OO", py_ssl_socket, py_netaddr)) == NULL)
+    if ((return_value = Py_BuildValue("OO", py_ssl_socket, py_netaddr)) == NULL) {
         goto error;
+    }
 
     return return_value;
 
@@ -505,41 +512,54 @@ the certificate authentication callback function.\n\
 Example::\n\
     \n\
     def auth_certificate_callback(sock, check_sig, is_server, certdb):\n\
-        validity = False\n\
-        \n\
+        cert_is_valid = False\n\
+\n\
         cert = sock.get_peer_certificate()\n\
         pin_args = sock.get_pkcs11_pin_arg()\n\
-        \n\
-        # Define how the cert is being used based upon the is_server flag.\n\
-        # This may seem backwards, but isn't.\n\
+        if pin_args is None:\n\
+            pin_args = ()\n\
+\n\
+        # Define how the cert is being used based upon the is_server flag.  This may\n\
+        # seem backwards, but isn't. If we're a server we're trying to validate a\n\
+        # client cert. If we're a client we're trying to validate a server cert.\n\
         if is_server:\n\
-            cert_usage = nss.certificateUsageSSLClient\n\
+            intended_usage = nss.certificateUsageSSLClient\n\
         else:\n\
-            cert_usage = nss.certificateUsageSSLServer\n\
-        \n\
-        valid_usage = cert.verify_now(certdb, check_sig, cert_usage, *pin_args)\n\
-        \n\
-        if valid_usage & cert_usage:\n\
-            validity = True\n\
+            intended_usage = nss.certificateUsageSSLServer\n\
+\n\
+        try:\n\
+            # If the cert fails validation it will raise an exception, the errno attribute\n\
+            # will be set to the error code matching the reason why the validation failed\n\
+            # and the strerror attribute will contain a string describing the reason.\n\
+            approved_usage = cert.verify_now(certdb, check_sig, intended_usage, *pin_args)\n\
+        except Exception, e:\n\
+            cert_is_valid = False\n\
+            return cert_is_valid\n\
+\n\
+        # Is the intended usage a proper subset of the approved usage\n\
+        if approved_usage & intended_usage:\n\
+            cert_is_valid = True\n\
         else:\n\
-            validity = False\n\
-        \n\
+            cert_is_valid = False\n\
+\n\
         # If this is a server, we're finished\n\
-        if is_server or not validity:\n\
-            return validity\n\
-        \n\
+        if is_server or not cert_is_valid:\n\
+            return cert_is_valid\n\
+\n\
         # Certificate is OK.  Since this is the client side of an SSL\n\
         # connection, we need to verify that the name field in the cert\n\
         # matches the desired hostname.  This is our defense against\n\
         # man-in-the-middle attacks.\n\
-        \n\
+\n\
         hostname = sock.get_hostname()\n\
-        validity = cert.verify_hostname(hostname)\n\
-        \n\
-        return validity\n\
-        \n\
-    sock = ssl.SSLSocket()\n\
-    sock.set_auth_certificate_callback(auth_certificate_callback, nss.get_default_certdb())\n\
+        try:\n\
+            # If the cert fails validation it will raise an exception\n\
+            cert_is_valid = cert.verify_hostname(hostname)\n\
+        except Exception, e:\n\
+            cert_is_valid = False\n\
+            return cert_is_valid\n\
+\n\
+        return cert_is_valid\n\
 \n\
 ");
 
@@ -1447,8 +1467,12 @@ SSLSocket_reset_handshake(SSLSocket *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "i:reset_handshake", &as_server))
         return NULL;
 
-    if (SSL_ResetHandshake(self->pr_socket, as_server) != SECSuccess)
+    Py_BEGIN_ALLOW_THREADS
+    if (SSL_ResetHandshake(self->pr_socket, as_server) != SECSuccess) {
+        Py_BLOCK_THREADS
         return set_nspr_error(NULL);
+    }
+    Py_END_ALLOW_THREADS
 
     Py_RETURN_NONE;
 
@@ -1495,8 +1519,13 @@ initial handshake, it returns immediately without forcing a handshake.\n\
 static PyObject *
 SSLSocket_force_handshake(SSLSocket *self, PyObject *args)
 {
-    if (SSL_ForceHandshake(self->pr_socket) != SECSuccess)
+
+    Py_BEGIN_ALLOW_THREADS
+    if (SSL_ForceHandshake(self->pr_socket) != SECSuccess) {
+        Py_BLOCK_THREADS
         return set_nspr_error(NULL);
+    }
+    Py_END_ALLOW_THREADS
 
     Py_RETURN_NONE;
 }
@@ -1520,8 +1549,12 @@ SSLSocket_force_handshake_timeout(SSLSocket *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "I:force_handshake_timeout", &timeout))
         return NULL;
 
-    if (SSL_ForceHandshakeWithTimeout(self->pr_socket, timeout) != SECSuccess)
+    Py_BEGIN_ALLOW_THREADS
+    if (SSL_ForceHandshakeWithTimeout(self->pr_socket, timeout) != SECSuccess) {
+        Py_BLOCK_THREADS
         return set_nspr_error(NULL);
+    }
+    Py_END_ALLOW_THREADS
 
     Py_RETURN_NONE;
 }
@@ -1568,8 +1601,12 @@ SSLSocket_rehandshake(SSLSocket *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "i:rehandshake", &flush_cache))
         return NULL;
 
-    if (SSL_ReHandshake(self->pr_socket, flush_cache) != SECSuccess)
+    Py_BEGIN_ALLOW_THREADS
+    if (SSL_ReHandshake(self->pr_socket, flush_cache) != SECSuccess) {
+        Py_BLOCK_THREADS
         return set_nspr_error(NULL);
+    }
+    Py_END_ALLOW_THREADS
 
     Py_RETURN_NONE;
 }
@@ -1596,8 +1633,12 @@ SSLSocket_rehandshake_timeout(SSLSocket *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "iI:rehandshake_timeout", &flush_cache, &timeout))
         return NULL;
 
-    if (SSL_ReHandshakeWithTimeout(self->pr_socket, flush_cache, timeout) != SECSuccess)
+    Py_BEGIN_ALLOW_THREADS
+    if (SSL_ReHandshakeWithTimeout(self->pr_socket, flush_cache, timeout) != SECSuccess) {
+        Py_BLOCK_THREADS
         return set_nspr_error(NULL);
+    }
+    Py_END_ALLOW_THREADS
 
     Py_RETURN_NONE;
 }
@@ -1633,10 +1674,14 @@ SSLSocket_import_tcp_socket(Socket *unused_class, PyObject *args)
 	return NULL;
     }
 
+    Py_BEGIN_ALLOW_THREADS
     if (PR_GetSockName(sock, &addr) != PR_SUCCESS) {
+        Py_BLOCK_THREADS
 	set_nspr_error(NULL);
 	goto error;
     }
+    Py_END_ALLOW_THREADS
+
     if ((return_value = SSLSocket_new_from_PRFileDesc(sock,
 						      PR_NetAddrFamily(&addr)))
 	== NULL)
@@ -1875,6 +1920,7 @@ NSS_init(PyObject *self, PyObject *args)
     if (NSS_Init(cert_dir) != SECSuccess) {
         return set_nspr_error(NULL);
     }
+
     Py_RETURN_NONE;
 }
 
@@ -1895,9 +1941,13 @@ NSS_shutdown(PyObject *self, PyObject *args)
     if (PyErr_Warn(PyExc_DeprecationWarning, "nss_shutdown() has been moved to the nss module, use nss.nss_shutdown() instead of ssl.nss_shutdown()") < 0)
         return NULL;
 
+    Py_BEGIN_ALLOW_THREADS
     if (NSS_Shutdown() != SECSuccess) {
+        Py_BLOCK_THREADS
         return set_nspr_error(NULL);
     }
+    Py_END_ALLOW_THREADS
+
     Py_RETURN_NONE;
 }
 
