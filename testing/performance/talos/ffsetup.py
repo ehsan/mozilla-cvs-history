@@ -185,7 +185,7 @@ class FFSetup(object):
 
         timeout = True
         total_time = 0
-        while total_time < 600: #10 minutes
+        while total_time < 1200: #20 minutes
             time.sleep(1)
             if process.poll() != None: #browser_controller completed, file now full
                 timeout = False
@@ -195,7 +195,7 @@ class FFSetup(object):
         res = 0
         if (timeout == False):
             if not os.path.isfile(log):
-                raise talosError("no output from browser")
+                raise talosError("initalization has no output from browser")
             results_file = open(log, "r")
             results_raw = results_file.read()
             results_file.close()
@@ -203,6 +203,8 @@ class FFSetup(object):
             if match:
                 res = 1
                 print match.group(1)
+        else:
+            raise talosError("initialization timed out")
 
         return res
 
