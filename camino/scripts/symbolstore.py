@@ -508,7 +508,7 @@ class Dumper:
         vcs_root = os.environ.get("SRCSRV_ROOT")
         for arch in self.archs:
             try:
-                cmd = os.popen("%s %s \"%s\"" % (self.dump_syms, arch, file), "r")
+                cmd = os.popen("\"%s\" %s \"%s\"" % (self.dump_syms, arch, file), "r")
                 module_line = cmd.next()
                 if module_line.startswith("MODULE"):
                     # MODULE os cpu guid debug_file
