@@ -107,7 +107,16 @@ enum {
 - (void)noteBookmarksChanged;
 - (void)writeBookmarks:(NSNotification *)note;
 - (BookmarkFolder *)findDockMenuFolderInFolder:(BookmarkFolder *)aFolder;
+
+// Writes Spotlight metadata for all bookmarks to disk.
 - (void)writeBookmarksMetadataForSpotlight;
+// Sets mMetadataPath, and creates it on disk if it doesn't already exist.
+- (void)initializeMetadataDirectory;
+// Updates the last time of a known complete metadata sync. This should be
+// called every time the bookmark file is written.
+- (void)updateMetadataSyncTime;
+// Returns the path to the file used to timestamp metadata syncs.
+- (NSString*)metadataSyncTimestampFile;
 
 // Reading bookmark files
 - (BOOL)readBookmarks;
@@ -344,12 +353,13 @@ static BookmarkManager* gBookmarkManager = nil;
   // don't do this until after we've read in the bookmarks
   mUndoManager = [[NSUndoManager alloc] init];
 
+  // Make sure the spotlight metadata folder exists on disk.
+  [self initializeMetadataDirectory];
+
   // do the other startup stuff over on the main thread
   [self performSelectorOnMainThread:@selector(delayedStartupItems) withObject:nil waitUntilDone:NO];
 
-  // pitch everything in the metadata cache and start over. Changes made from here will be incremental. It's
-  // easier this way in case someone changed the bm plist directly, we know at startup we always have
-  // the most up-to-date cache.
+  // Make sure the bookmark metadata is up to date and complete.
   [self writeBookmarksMetadataForSpotlight];
 }
 
@@ -1228,46 +1238,52 @@ static BookmarkManager* gBookmarkManager = nil;
   [self writePropertyListFile:mPathToBookmarkFile];
 }
 
+#pragma mark -
+
 //
 // -writeBookmarksMetadataForSpotlight
 //
 // Write out a flat list of all bookmarks in the caches folder so that Spotlight
-// can parse them. This blows away any previous cache and ensures that
-// everything is up-to-date.
+// can parse them, unless bookmark file hasn't been modified since the last
+// complete sync. Since metadata is maintained incrementally, this should only
+// do significant work on the first launch after the cache is manually deleted
+// or the bookmarks file is changed manually.
 //
-// Note that this is called on a thread, so it takes pains to ensure that the data
-// it's working with won't be changing on the UI thread
+// Note that this is called on a thread, so it takes pains to ensure that the
+// data it's working with won't be changing on the UI thread
 //
 - (void)writeBookmarksMetadataForSpotlight
 {
-  // XXX if we quit while this thread is still running, we'll end up with incomplete metadata
-  // on disk, but it will get rebuilt on the next launch.
+  // Check whether a full refresh is necessary.
+  NSFileManager* fileManager = [NSFileManager defaultManager];
+  NSString* metadataMarkerPath = [self metadataSyncTimestampFile];
+  NSDate* metadataDate = [[fileManager fileAttributesAtPath:metadataMarkerPath
+                            traverseLink:YES]
+                          objectForKey:NSFileModificationDate];
+  NSDate* bookmarkDate = [[fileManager fileAttributesAtPath:mPathToBookmarkFile
+                            traverseLink:YES]
+                          objectForKey:NSFileModificationDate];
+  if (metadataDate && bookmarkDate && [bookmarkDate isEqualToDate:metadataDate])
+    return;
+
+  // If we quit while this thread is still running, we'll end up with incomplete
+  // metadata on disk, but it will get rebuilt on the next launch.
+  mWritingSpotlightMetadata = YES;
 
   NSArray* allBookmarkItems = [mBookmarkRoot allChildBookmarks];
 
-  // build up the path and ensure the folders are present along the way. Removes the
-  // previous version entirely.
-  NSString* metadataPath = [@"~/Library/Caches/Metadata" stringByExpandingTildeInPath];
-  [[NSFileManager defaultManager] createDirectoryAtPath:metadataPath attributes:nil];
-
-  metadataPath = [metadataPath stringByAppendingPathComponent:@"Camino"];
-  [[NSFileManager defaultManager] createDirectoryAtPath:metadataPath attributes:nil];
-
   // delete any existing contents
-  NSEnumerator* dirContentsEnum = [[[NSFileManager defaultManager] directoryContentsAtPath:metadataPath] objectEnumerator];
+  NSEnumerator* dirContentsEnum =
+      [[fileManager directoryContentsAtPath:mMetadataPath] objectEnumerator];
   NSString* curFile;
   while ((curFile = [dirContentsEnum nextObject])) {
     NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
 
-    NSString* curFilePath = [metadataPath stringByAppendingPathComponent:curFile];
-    [[NSFileManager defaultManager] removeFileAtPath:curFilePath handler:nil];
+    NSString* curFilePath = [mMetadataPath stringByAppendingPathComponent:curFile];
+    [fileManager removeFileAtPath:curFilePath handler:nil];
 
     [pool release];
   }
-
-  // save the path for later
-  [mMetadataPath autorelease];
-  mMetadataPath = [metadataPath retain];
 
   unsigned int itemCount = 0;
   NSEnumerator* bmEnumerator = [allBookmarkItems objectEnumerator];
@@ -1282,6 +1298,51 @@ static BookmarkManager* gBookmarkManager = nil;
 
     [pool release];
   }
+  mWritingSpotlightMetadata = NO;
+}
+
+- (void)initializeMetadataDirectory
+{
+  if (mMetadataPath)
+    return;
+
+  NSFileManager* fileManager = [NSFileManager defaultManager];
+  NSString* metadataRoot =
+      [@"~/Library/Caches/Metadata" stringByExpandingTildeInPath];
+  [fileManager createDirectoryAtPath:metadataRoot attributes:nil];
+  mMetadataPath =
+      [[metadataRoot stringByAppendingPathComponent:@"Camino"] retain];
+  [fileManager createDirectoryAtPath:mMetadataPath attributes:nil];
+}
+
+- (void)updateMetadataSyncTime
+{
+  // If the initial write hasn't finished, don't update the timestamp file.
+  if (mWritingSpotlightMetadata)
+    return;
+
+  NSFileManager* fileManager = [NSFileManager defaultManager];
+  NSString* filePath = [self metadataSyncTimestampFile];
+  [fileManager createFileAtPath:filePath
+                       contents:[NSData data]
+                     attributes:nil];
+
+  // Sync the timestamp to the bookmark file timestamp. Having them match
+  // exactly makes it possible to correctly handle edge cases like switching
+  // profiles or restoring a bookmark file from backup.
+  NSDate* metadataDate = [[fileManager fileAttributesAtPath:mPathToBookmarkFile
+                                               traverseLink:YES]
+                          objectForKey:NSFileModificationDate];
+  if (metadataDate) {
+    NSDictionary* modificationAttribute =
+        [NSDictionary dictionaryWithObject:metadataDate
+                                    forKey:NSFileModificationDate];
+    [fileManager changeFileAttributes:modificationAttribute atPath:filePath];
+  }
+}
+
+- (NSString*)metadataSyncTimestampFile {
+  return [mMetadataPath stringByAppendingPathComponent:@".LastSyncTimestamp"];
 }
 
 #pragma mark -
@@ -1599,6 +1660,8 @@ static BookmarkManager* gBookmarkManager = nil;
 
   if (!success)
     NSLog(@"writePropertyList: Failed to write file %@", pathToFile);
+
+  [self updateMetadataSyncTime];
 }
 
 - (BOOL)fileManager:(NSFileManager *)manager shouldProceedAfterError:(NSDictionary *)errorInfo

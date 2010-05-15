@@ -78,6 +78,7 @@ const int kBookmarksContextMenuArrangeSeparatorTag = 100;
   BOOL                            mBookmarksLoaded;
   BOOL                            mShowSiteIcons;
   BOOL                            mSearchActive;
+  BOOL                            mWritingSpotlightMetadata;
 
   int                             mNotificationsSuppressedCount;
   NSRecursiveLock*                mNotificationsSuppressedLock;    // make mNotificationsSuppressedCount threadsafe
