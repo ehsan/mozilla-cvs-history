@@ -58,6 +58,9 @@ extern NSString* const kNotificationHistoryDataSourceChangedUserInfoChangedItem;
 // if true, this indicates that just the item changed, not its children (it's an NSNumber with bool)
 extern NSString* const kNotificationHistoryDataSourceChangedUserInfoChangedItemOnly;
 
+// Sent when history is cleared. Notification object is the data source.
+extern NSString* const kNotificationNameHistoryDataSourceCleared;
+
 @class HistoryTreeBuilder;
 
 @interface HistoryDataSource : NSObject

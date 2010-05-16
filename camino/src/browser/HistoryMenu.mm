@@ -418,6 +418,12 @@ static const unsigned int kMaxTitleLength = 50;
                                            selector:@selector(browserClosed:)
                                                name:kBrowserInstanceClosedNotification
                                              object:nil];
+
+  // Listen for history being cleared.
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(historyCleared:)
+                                               name:kNotificationNameHistoryDataSourceCleared
+                                             object:[HistoryMenuDataSourceOwner sharedHistoryDataSource]];
 }
 
 - (void)appLaunchFinished:(NSNotification*)inNotification
@@ -581,15 +587,6 @@ static const unsigned int kMaxTitleLength = 50;
   if (!rootChangedItem) {
     [mTodayItem release];
     mTodayItem = nil;
-    // We can get here either when the history is being cleared (in which case
-    // we will already have an mRootItem) or when we are doing the lazy
-    // construction of the root item as the menu is shown (in which case
-    // mRootItem is still |nil|). If it's the former, clear the recently closed
-    // pages as well.
-    if (mRootItem) {
-      [mRecentlyClosedMenu release];
-      mRecentlyClosedMenu = [[NSMenu alloc] initWithTitle:NSLocalizedString(@"RecentlyClosed", nil)];
-    }
   }
   else if (mTodayItem == rootChangedItem ||
            mTodayItem == [rootChangedItem parentItem])
@@ -598,6 +595,11 @@ static const unsigned int kMaxTitleLength = 50;
   }
 
   [super historyChanged:inNotification];
+}
+
+- (void)historyCleared:(NSNotification*)inNotification {
+  [mRecentlyClosedMenu release];
+  mRecentlyClosedMenu = [[NSMenu alloc] initWithTitle:NSLocalizedString(@"RecentlyClosed", nil)];
 }
 
 @end
