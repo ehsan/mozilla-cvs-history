@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.99 $ $Date: 2010/04/03 18:27:32 $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.100 $ $Date: 2010/05/18 19:38:40 $";
 #endif /* DEBUG */
 
 /*
@@ -109,7 +109,7 @@ STAN_InitTokenForSlotInfo(NSSTrustDomain *td, PK11SlotInfo *slot)
     }
     token = nssToken_CreateFromPK11SlotInfo(td, slot);
     PK11Slot_SetNSSToken(slot, token);
-    /* Don't add non-existent token to TD's token list */
+    /* Don't add nonexistent token to TD's token list */
     if (token) {
 	NSSRWLock_LockWrite(td->tokensLock);
 	nssList_Add(td->tokenList, token);
