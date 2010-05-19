@@ -144,7 +144,7 @@ static const unsigned int kMaxTitleLength = 50;
 
 - (NSString*)menuItemTitleForHistoryItem:(HistoryItem*)inItem;
 
-- (void)setupHistoryMenu;
+- (void)setUpHistoryMenu;
 - (void)menuWillBeDisplayed;
 - (void)clearHistoryItems;
 - (void)rebuildHistoryItems;
@@ -172,13 +172,13 @@ static const unsigned int kMaxTitleLength = 50;
 {
   if ((self = [super initWithTitle:inTitle])) {
     mHistoryItemsDirty = YES;
-    [self setupHistoryMenu];
+    [self setUpHistoryMenu];
   }
   return self;
 }
 
 // this should only be called after app launch, when the data source is available
-- (void)setupHistoryMenu
+- (void)setUpHistoryMenu
 {
   // set ourselves up to listen for history changes
   [[NSNotificationCenter defaultCenter] addObserver:self
@@ -418,20 +418,26 @@ static const unsigned int kMaxTitleLength = 50;
                                            selector:@selector(browserClosed:)
                                                name:kBrowserInstanceClosedNotification
                                              object:nil];
-
-  // Listen for history being cleared.
-  [[NSNotificationCenter defaultCenter] addObserver:self
-                                           selector:@selector(historyCleared:)
-                                               name:kNotificationNameHistoryDataSourceCleared
-                                             object:[HistoryMenuDataSourceOwner sharedHistoryDataSource]];
 }
 
 - (void)appLaunchFinished:(NSNotification*)inNotification
 {
   mAppLaunchDone = YES;
-  // setup the history menu after a delay, so that other app launch stuff
+  // set up the history menu after a delay, so that other app launch stuff
   // finishes first
-  [self performSelector:@selector(setupHistoryMenu) withObject:nil afterDelay:0];
+  [self performSelector:@selector(setUpHistoryMenu) withObject:nil afterDelay:0];
+}
+
+- (void)setUpHistoryMenu
+{
+  // Listen for history being cleared.
+  [[NSNotificationCenter defaultCenter]
+      addObserver:self
+         selector:@selector(historyCleared:)
+             name:kNotificationNameHistoryDataSourceCleared
+           object:[HistoryMenuDataSourceOwner sharedHistoryDataSource]];
+
+  [super setUpHistoryMenu];
 }
 
 - (void)browserClosed:(NSNotification*)inNotification
