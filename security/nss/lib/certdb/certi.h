@@ -36,7 +36,7 @@
 /*
  * certi.h - private data structures for the certificate library
  *
- * $Id: certi.h,v 1.32 2010/04/30 07:47:47 nelson%bolyard.com Exp $
+ * $Id: certi.h,v 1.33 2010/05/20 22:29:10 wtc%google.com Exp $
  */
 #ifndef _CERTI_H_
 #define _CERTI_H_
@@ -178,9 +178,9 @@ struct CRLDPCacheStr {
     /* cache invalidity bitflag */
     PRUint16 invalid;       /* this state will be set if either
              CRL_CACHE_INVALID_CRLS or CRL_CACHE_LAST_FETCH_FAILED is set.
-             In those cases, all certs are considered revoked as a
-             security precaution. The invalid state can only be cleared
-             during an update if all error states are cleared */
+             In those cases, all certs are considered to have unknown status.
+             The invalid state can only be cleared during an update if all
+             error states are cleared */
     PRBool refresh;        /* manual refresh from tokens has been forced */
     PRBool mustchoose;     /* trigger reselection algorithm, for case when
                               RAM CRL objects are dropped from the cache */
