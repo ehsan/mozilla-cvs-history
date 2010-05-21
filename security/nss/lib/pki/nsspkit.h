@@ -38,7 +38,7 @@
 #define NSSPKIT_H
 
 #ifdef DEBUG
-static const char NSSPKIT_CVS_ID[] = "@(#) $RCSfile: nsspkit.h,v $ $Revision: 1.7 $ $Date: 2010/04/25 23:37:32 $";
+static const char NSSPKIT_CVS_ID[] = "@(#) $RCSfile: nsspkit.h,v $ $Revision: 1.8 $ $Date: 2010/05/21 00:02:48 $";
 #endif /* DEBUG */
 
 /*
@@ -168,6 +168,15 @@ typedef struct NSSCryptoContextStr NSSCryptoContext;
 /*
  * fgmr others
  */
+
+/*
+ * OBJECT IDENTIFIER
+ *
+ * This is the basic OID that crops up everywhere.
+ */
+
+struct NSSOIDStr;  /* unused opaque structure */
+typedef struct NSSOIDStr NSSOID;
 
 /* 
  * NSSTime
