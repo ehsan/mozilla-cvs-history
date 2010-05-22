@@ -10,7 +10,7 @@
 	pid_t parentProcessId;
 }
 
-- (void)relaunch __dead2;
+- (void)relaunch;
 
 @end
 
