@@ -3,9 +3,9 @@ functionality. See http://sparkle.andymatuschak.org/ for more information about
 Sparkle. The Sparkle framework is shipped inside Camino's bundle, and some glue
 code is included in Camino itself.
 
-This is a pull of af37928283042f985e6c7c6ce67869de74e39b52 from git://github.com/andymatuschak/Sparkle.git
+This is a pull of fe1372c9621a38978f03bc5773342e8716dcc1e3 from git://github.com/andymatuschak/Sparkle.git
 with the following changes:
+- Skipped the delta-updates changes (803676d56a5f9de18e1b and 19ae8506ab1d54287c87), since that code doesn't yet build on 10.4
 - Commented out used of [arch=<foo>] notation in ConfigCommon.xcconfig to allow building with our toolchain
-- Commented out ARCHS in ConfigCommonRelease.xcconfig and replaced it with a version that doesn't include x86_64
+- Commented out ARCHS in ConfigCommon.xcconfig and replaced it with a version that doesn't include x86_64
 - Changed GCC_GENERATE_DEBUGGING_SYMBOLS to YES (and set GCC_ENABLE_SYMBOL_SEPARATION to NO) in ConfigCommonRelease.xcconfig so that we get a dSYM bundle.
-- Added null-checks to downloadFilename in SUAppcast.m to fix https://bugs.launchpad.net/sparkle/+bug/456514 and bug 560985.
