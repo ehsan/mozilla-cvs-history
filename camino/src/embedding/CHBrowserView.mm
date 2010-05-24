@@ -887,22 +887,20 @@ const char* const kHTMLMIMEType = "text/html";
 
 - (void)ensurePrintSettings
 {
-  if (mPrintSettings)
-    return;
-  
+  NS_IF_RELEASE(mPrintSettings);
   nsCOMPtr<nsIPrintSettingsService> psService =
       do_GetService("@mozilla.org/gfx/printsettings-service;1");
   if (!psService)
     return;
-    
-  if (mUseGlobalPrintSettings) {
+
+  if (mUseGlobalPrintSettings)
     psService->GetGlobalPrintSettings(&mPrintSettings);
-    if (mPrintSettings)
-      psService->InitPrintSettingsFromPrefs(mPrintSettings, PR_FALSE,
-                                            nsIPrintSettings::kInitSaveNativeData);
-  }
   else
     psService->GetNewPrintSettings(&mPrintSettings);
+
+  if (mPrintSettings && mUseGlobalPrintSettings)
+    psService->InitPrintSettingsFromPrefs(mPrintSettings, PR_FALSE,
+                                          nsIPrintSettings::kInitSaveAll);
 }
 
 - (void)savePrintSettings
@@ -912,7 +910,7 @@ const char* const kHTMLMIMEType = "text/html";
         do_GetService("@mozilla.org/gfx/printsettings-service;1");
     if (psService)
       psService->SavePrintSettingsToPrefs(mPrintSettings, PR_FALSE,
-                                          nsIPrintSettings::kInitSaveNativeData);
+                                          nsIPrintSettings::kInitSaveAll);
   }
 }
 
