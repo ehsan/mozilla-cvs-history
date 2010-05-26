@@ -10,3 +10,7 @@ with the following changes:
 - Commented out ARCHS in ConfigCommon.xcconfig and replaced it with a version that doesn't include x86_64
 - Changed GCC_GENERATE_DEBUGGING_SYMBOLS to YES (and set GCC_ENABLE_SYMBOL_SEPARATION to NO) in ConfigCommonRelease.xcconfig so that we get a dSYM bundle.
 - Removed a __dead2 annotation in relaunch.m (along with -Wmissing-noreturn in ConfigCommon.xcconfig) to fix 10.4 compilation.
+- Removed the confusing, GPL-incompatible, and unnecessary OpenSSL and SSLeay licences from License.txt.
+  Per bug 495620, Sparkle source contains no code from these projects; it merely uses headers from
+  these projects that are included as part of Mac OS X system libraries.  Consequently, these
+  licenses are superfluous.
