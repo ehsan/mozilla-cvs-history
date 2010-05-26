@@ -97,14 +97,18 @@ $productThrottling = array(
 // These are channels that have access to nightly updates.
 // All other channels only have access to the OVERRIDE_DIR for update info.
 $nightlyChannels = array(
-    'nightly'
+    'nightly',
+    'nightly-branch'
 );
 
 // This hash defines the product->version->patch relationships for nightlies
 // It determines which patches are associated to which incoming client versions.
 // @todo replace this with a better datasource that can be easily managed via a GUI.
 $productBranchVersions = array(
-    'Synthetic'   => array('1.5.0.*' => '1.5.0.x')
+    'Synthetic'   => array('1.5.0.*' => '1.5.0.x',
+                           '2.0.0.*' => array ('nightly'         => '2.0.0.x',
+                                               'nightly-branch'  => '2.0.0.x-branch'),
+    )
 );
 
 // Config for memcache.

@@ -131,15 +131,31 @@
 
 
 !1 Nightly Updates 
- 1 outdated (>1 off) update serving only a complete (1.5.0.5->1.5.0.x)
- 2 one-off update serving both complete and partial (1.5.0.5->1.5.0.x)
- 3 client already at the latest build requests an update (no update should be offered)
- 4 version with no branchVersion in AUS config (6.0->?)
+ 1 one channel/branch: outdated (>1 off) update serving only a complete (1.5.0.5->1.5.0.x)
+ 2 one channel/branch: one-off update serving both complete and partial (1.5.0.5->1.5.0.x)
+ 3 one channel/branch: client already at the latest build requests an update (no update should be offered)
+ 4 project branches - main branch: outdated (>1 off) update serving only a complete (2.0.0.2->2.0.0.x)
+ 5 project branches - main branch: one-off update serving both complete and partial (2.0.0.2->2.0.0.x)
+ 6 project branches - main branch: client already at the latest build requests an update (no update should be offered)
+ 7 project branches - project branch: outdated (>1 off) update serving only a complete (2.0.0.2->2.0.0.x)
+ 8 project branches - project branch: one-off update serving both complete and partial (2.0.0.2->2.0.0.x)
+ 9 project branches - project branch: client already at the latest build requests an update (no update should be offered)
+ 0 project branches - no project update on main branch: outdated (>1 off) build (1.5.0.x->?)
+ 1 project branches - no project update on main branch: one-off update (1.5.0.5->?)
+ 2 version with no branchVersion in AUS config (6.0->?)
 |aus.Verify|${host}|1|${product}|${version}|${platform}|${locale}|NULL|
 |version|build|channel|complete|partial|hasUpdate?|hasComplete?|hasPartial?|isValidXml?|
 |1.5.0.5|1100000001|nightly|complete|partial|true|true|false|true|
 |1.5.0.5|1100000002|nightly|complete|partial|true|true|true|true|
 |1.5.0.5|1100000003|nightly|complete|partial|false|false|false|true|
+|2.0.0.2|1100000001|nightly|complete001|partial001|true|true|false|true|
+|2.0.0.2|1100000002|nightly|complete001|partial001|true|true|true|true|
+|2.0.0.2|1100000003|nightly|complete001|partial001|false|false|false|true|
+|2.0.0.2|1100000001|nightly-branch|complete002|partial002|true|true|false|true|
+|2.0.0.2|1100000002|nightly-branch|complete002|partial002|true|true|true|true|
+|2.0.0.2|1100000003|nightly-branch|complete002|partial002|false|false|false|true|
+|1.5.0.5|1100000001|nightly-branch|complete|partial|false|false|false|true|
+|1.5.0.5|1100000002|nightly-branch|complete|partial|false|false|false|true|
 |6.0|1100000001|nightly|complete|partial|false|false|false|true|
 
 !1 Dist URLs 

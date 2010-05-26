@@ -255,7 +255,7 @@ class Patch extends AUS_Object {
         } 
 
         // Determine the branch of the client's version.
-        $branchVersion = $this->getBranch($product,$version);
+        $branchVersion = $this->getBranch($product,$version,$channel);
 
         // Otherwise, if it is a complete patch and a nightly channel, force the complete update to take the user to the latest build.
         if ($this->isComplete() && $this->isNightlyChannel($channel)) {
@@ -325,26 +325,44 @@ class Patch extends AUS_Object {
         return in_array($channel,$this->nightlyChannels);
     }
 
+    /**
+     * Determine whether or not the incoming version matches a (wildcard) version pattern
+     *
+     * @param string $version
+     * @param string $versionPattern
+     * @return boolean
+     */
+    function isMatchingVersion($version,$versionPattern) {
+        // No need to create a regular expression if there's no wildcard
+        if (strpos ($versionPattern, '*') === false) {
+            if ($versionPattern == $version) {
+                return true;
+            }
+        } elseif (preg_match('/^'. str_replace('\\*', '.*', preg_quote($versionPattern, '/')) .'$/', $version)) {
+             return true;
+        } 
+        return false;
+    }
 
     /**
      * Determine whether or not the incoming version is a product BRANCH.
      *
      * @param string $product
      * @param string $version
+     * @param string $channel
      * @return string|false
      */
-    function getBranch($product,$version) {
+    function getBranch($product,$version,$channel) {
         if (!isset ($this->productBranchVersions[$product])) {
             return false;
         }
-        foreach ($this->productBranchVersions[$product] as $versionPattern => $branch) {
-            // No need to create a regular expression if there's no wildcard
-            if (strpos ($versionPattern, '*') === false) {
-                if ($versionPattern == $version) {
-                    return $branch;
+        foreach ($this->productBranchVersions[$product] as $versionPattern => $branches) {
+            if ($this->isMatchingVersion($version,$versionPattern)) {
+                if (is_string($branches) && ($channel == 'nightly')) {
+                    return $branches;
+                } elseif (is_array($branches) && isset($branches[$channel])) {
+                    return $branches[$channel];
                 }
-            } elseif (preg_match('/^'. str_replace('\\*', '.*', preg_quote($versionPattern, '/')) .'$/', $version)) {
-                return $branch;
             }
         }
         return false;
