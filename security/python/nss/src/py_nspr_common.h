@@ -45,6 +45,28 @@
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 #endif
 
+#define NSS_THREAD_LOCAL_KEY "nss"
+
+#define ASSIGN_REF(dst, obj)                    \
+do {                                            \
+    PyObject *tmp;                              \
+                                                \
+    tmp = (PyObject *)dst;                      \
+    Py_INCREF(obj);                             \
+    dst = obj;                                  \
+    Py_CLEAR(tmp);                              \
+} while (0)
+
+#define ASSIGN_NEW_REF(dst, obj)                \
+do {                                            \
+    PyObject *tmp;                              \
+                                                \
+    tmp = (PyObject *)dst;                      \
+    dst = obj;                                  \
+    Py_CLEAR(tmp);                              \
+} while (0)
+
+
 // Gettext
 #ifndef _
 #define _(s) s
@@ -79,58 +101,62 @@ typedef PyObject *(*ssizessizeargfunc)(PyObject *, Py_ssize_t, Py_ssize_t);
 
 #ifdef DEBUG
 
+#define DumpRefCount(_obj)                                              \
+{                                                                       \
+    printf("<%s object at %p refcnt=%d>\n", Py_TYPE(_obj)->tp_name, _obj, _obj->ob_refcnt); \
+}
+
+
 #define TraceMessage(_msg)                      \
 {                                               \
     printf("%s\n", _msg);                       \
 }
 
-#define TraceMethodEnter(_obj)                                  \
-{                                                               \
-    PyObject *repr = NULL;                                      \
-    char *repr_str = NULL;                                      \
-                                                                \
-    if (_obj) {                                                 \
-        repr = _obj->ob_type->tp_repr((PyObject *)_obj);        \
-        repr_str = PyString_AsString(repr);                     \
-    }                                                           \
-    printf("%s: %s\n", __FUNCTION__, repr_str);                 \
-    Py_XDECREF(repr);                                           \
+#define TraceMethodEnter(_obj)                                          \
+{                                                                       \
+    const char *name = NULL;                                            \
+                                                                        \
+    if (_obj) {                                                         \
+        name = Py_TYPE(_obj)->tp_name;                                  \
+    }                                                                   \
+    printf("%s (Enter): <%s object at %p refcnt=%d>\n",                 \
+           __FUNCTION__, name, _obj, _obj ? _obj->ob_refcnt : -9999);   \
 }
 
-#define TraceMethodLeave(_obj)                                  \
-{                                                               \
-    PyObject *repr = NULL;                                      \
-    char *repr_str = NULL;                                      \
-                                                                \
-    if (_obj) {                                                 \
-        repr = _obj->ob_type->tp_repr((PyObject *)_obj);        \
-        repr_str = PyString_AsString(repr);                     \
-    }                                                           \
-    printf("%s: %s\n", __FUNCTION__, repr_str);                 \
-    Py_XDECREF(repr);                                           \
+#define TraceMethodLeave(_obj)                                          \
+{                                                                       \
+    const char *name = NULL;                                            \
+                                                                        \
+    if (_obj) {                                                         \
+        name = Py_TYPE(_obj)->tp_name;                                  \
+    }                                                                   \
+    printf("%s (Leave): <%s object at %p refcnt=%d>\n",                 \
+           __FUNCTION__, name, _obj, _obj ? _obj->ob_refcnt : -9999);   \
 }
 
-#define TraceObjNewEnter(_tp)                           \
-{                                                       \
-    PyTypeObject *tp = _tp;                             \
-    if (tp != NULL)                                     \
-        printf("%s %s\n", __FUNCTION__, tp->tp_name);   \
-    else                                                \
-        printf("%s\n", __FUNCTION__);                   \
+#define TraceObjNewEnter(_tp)                                   \
+{                                                               \
+    PyTypeObject *tp = _tp;                                     \
+    if (tp != NULL)                                             \
+        printf("%s (Enter) %s\n", __FUNCTION__, tp->tp_name);   \
+    else                                                        \
+        printf("%s (Enter)\n", __FUNCTION__);                   \
 }
 
 
 #define TraceObjNewLeave(_obj)                                          \
 {                                                                       \
-    PyObject *repr = NULL;                                              \
+    const char *name = NULL;                                            \
                                                                         \
-    if ((repr = _obj->ob_type->tp_repr((PyObject *)_obj))) {            \
-        printf("%s: returns %s\n", __FUNCTION__, PyString_AsString(repr)); \
-        Py_DECREF(repr);                                                \
+    if (_obj) {                                                         \
+        name = Py_TYPE(_obj)->tp_name;                                  \
     }                                                                   \
+    printf("%s: returns <%s object at %p refcnt=%d>\n",                 \
+           __FUNCTION__, name, _obj, _obj ? _obj->ob_refcnt : -9999);   \
 }
 
 #else
+#define DumpRefCount(_obj)
 #define TraceMessage(_msg)
 #define TraceMethodEnter(_obj)
 #define TraceMethodLeave(_obj)

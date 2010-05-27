@@ -120,8 +120,8 @@ typedef struct {
 
 typedef struct {
     PyObject_HEAD
-    SecItem *oid;
-    SecItem *value;
+    SecItem *py_oid;
+    SecItem *py_value;
     int critical;
 } CertificateExtension;
 
@@ -226,7 +226,6 @@ typedef struct {
 typedef struct {
     PyObject_HEAD
     PRArenaPool *arena;
-    CERTSubjectPublicKeyInfo spki;
     PyObject *py_algorithm;
     PyObject *py_public_key;
 } SubjectPublicKeyInfo;
@@ -275,6 +274,7 @@ typedef struct {
 
 typedef struct {
     PyObject_HEAD
+    PRArenaPool *arena;
     CERTName name;
 } X500Name;
 
@@ -304,7 +304,7 @@ typedef struct {
 
 typedef struct {
     PyObject_HEAD
-    PyObject *pts_tuple;
+    PyObject *py_pts;
 } CRLDistributionPts;
 
 /* ========================================================================== */

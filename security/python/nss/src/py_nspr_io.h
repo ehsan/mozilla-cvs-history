@@ -96,9 +96,9 @@ typedef struct {
     PyObject_HEAD;                              \
     PRFileDesc *pr_socket;                      \
     int family;                                 \
-    NetworkAddress *py_netaddr;                 \
     int makefile_refs;                          \
     int open_for_read;                          \
+    NetworkAddress *py_netaddr;                 \
     ReadAhead readahead;
 
 
