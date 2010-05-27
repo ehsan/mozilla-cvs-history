@@ -89,7 +89,8 @@ $productThrottling = array(
      'Firefox' => array(
          '3.0.19' => 0,
          '3.5.9' => 0,
-         '3.5.10' => 0
+         '3.5.10' => 0,
+         '3.6.4' => 50
      ),
      'Thunderbird' => array(
          '2.0.0.24' => 0
@@ -119,6 +120,10 @@ $throttleExceptions = array(
         'beta'
     ),
     '3.5.10' => array (
+        'betatest',
+        'releasetest'
+    ),
+    '3.6.4' => array (
         'betatest',
         'releasetest'
     ),
