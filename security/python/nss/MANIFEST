@@ -5,6 +5,7 @@ README
 setup.cfg
 setup.py
 doc/ChangeLog
+doc/examples/cert_dump.py
 doc/examples/httplib_example.py
 doc/examples/ssl_example.py
 doc/examples/verify_server.py

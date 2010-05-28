@@ -1,4 +1,4 @@
-2010-05-12  John Dennis  <jdennis@redhat.com> 0.9
+2010-05-28  John Dennis  <jdennis@redhat.com> 0.9
 
   * Unicode objects now accepted as well as str objects for
     interfaces expecting a string.
@@ -99,6 +99,13 @@
       doc/examples/cert_dump.py
       test/test_cert_components.py
 
+  * Review all ref counting, numerous ref counting fixes
+
+  * Implement cyclic garbage collection support by
+    adding object traversal and clear methods
+
+  * Identify static variables, move to thread local storage
+	
 2009-09-21  John Dennis  <jdennis@redhat.com> 0.8
   * The following methods, properties  and functions were added:
     SecItem.type SecItem.len, SecItem.data
