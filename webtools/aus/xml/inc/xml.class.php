@@ -108,13 +108,10 @@ startUpdate;
 
         $force = null;
         if (!empty($_GET['force']) && $_GET['force']==1) {
-            // Determine if the outgoing URL already has GET parameters.
-            // If it does, we use &force=1
-            // If it doesn't, we use ?force=1
-            if ( strpos($url, '?') !== false ) {
+            // Determine if the outgoing URL is bouncer
+            // we're looking for download.m.o/?product=foo....
+            if ( strpos($url, '/?') !== false ) {
                 $force = htmlentities('&force=1');
-            } else {
-                $force = htmlentities('?force=1');
             }
         }
 
