@@ -244,8 +244,10 @@ const int kAnnoyancePrefSome = 3;
 
   // ensure a row is selected (cocoa doesn't do this for us, but will keep
   // us from unselecting a row once one is set; go figure).
-  if ([mWhitelistTable numberOfRows] > 0)
-    [mWhitelistTable selectRow:0 byExtendingSelection:NO];
+  if ([mWhitelistTable numberOfRows] > 0) {
+    [mWhitelistTable selectRowIndexes:[NSIndexSet indexSetWithIndex:0]
+                 byExtendingSelection:NO];
+  }
 
   [mWhitelistTable setDeleteAction:@selector(removeWhitelistSite:)];
   [mWhitelistTable setTarget:self];
@@ -292,7 +294,8 @@ const int kAnnoyancePrefSome = 3;
     int rowToSelect = [selectedIndexes lastIndex] - ([selectedIndexes count] - 1);
     if ((rowToSelect < 0) || (rowToSelect >= [mWhitelistTable numberOfRows]))
       rowToSelect = [mWhitelistTable numberOfRows] - 1;
-    [mWhitelistTable selectRow:rowToSelect byExtendingSelection:NO];
+    [mWhitelistTable selectRowIndexes:[NSIndexSet indexSetWithIndex:rowToSelect]
+                 byExtendingSelection:NO];
   }
 }
 

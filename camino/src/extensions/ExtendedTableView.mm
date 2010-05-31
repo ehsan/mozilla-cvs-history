@@ -128,7 +128,8 @@
       }
 
       // it is selectable, so select it
-      [self selectRow:rowIndex byExtendingSelection:NO];
+      [self selectRowIndexes:[NSIndexSet indexSetWithIndex:rowIndex]
+        byExtendingSelection:NO];
     }
     
     // now (we're on a selected row) get the contet menu

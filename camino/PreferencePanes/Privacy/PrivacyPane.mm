@@ -295,7 +295,8 @@ const int kSortReverse = 1;
     int rowToSelect = [selectedIndexes lastIndex] - ([selectedIndexes count] - 1);
     if ((rowToSelect < 0) || (rowToSelect >= [mCookiesTable numberOfRows]))
       rowToSelect = [mCookiesTable numberOfRows] - 1;
-    [mCookiesTable selectRow:rowToSelect byExtendingSelection:NO];
+    [mCookiesTable selectRowIndexes:[NSIndexSet indexSetWithIndex:rowToSelect]
+                                             byExtendingSelection:NO];
   }
 }
 
@@ -471,7 +472,8 @@ const int kSortReverse = 1;
   if ([mPermissionsTable numberOfRows] > 0) {
     int rowToSelect = [self rowForPermissionWithHost:superdomain];
     if ((rowToSelect >= 0) && (rowToSelect < [mPermissionsTable numberOfRows])) {
-      [mPermissionsTable selectRow:rowToSelect byExtendingSelection:NO];
+      [mPermissionsTable selectRowIndexes:[NSIndexSet indexSetWithIndex:rowToSelect]
+                                                   byExtendingSelection:NO];
       [mPermissionsTable scrollRowToVisible:rowToSelect];
     }
   }
@@ -499,7 +501,8 @@ const int kSortReverse = 1;
     int rowToSelect = [selectedIndexes lastIndex] - ([selectedIndexes count] - 1);
     if ((rowToSelect < 0) || (rowToSelect >= [mPermissionsTable numberOfRows]))
       rowToSelect = [mPermissionsTable numberOfRows] - 1;
-    [mPermissionsTable selectRow:rowToSelect byExtendingSelection:NO];
+    [mPermissionsTable selectRowIndexes:[NSIndexSet indexSetWithIndex:rowToSelect]
+                   byExtendingSelection:NO];
   }
 }
 
@@ -634,7 +637,8 @@ const int kSortReverse = 1;
     {
       rowToSelect = [mKeychainExclusionsTable numberOfRows] - 1;
     }
-    [mKeychainExclusionsTable selectRow:rowToSelect byExtendingSelection:NO];
+    [mKeychainExclusionsTable selectRowIndexes:[NSIndexSet indexSetWithIndex:rowToSelect]
+                          byExtendingSelection:NO];
   }
 }
 
@@ -732,7 +736,8 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
       [self sortByColumn:mPermissionColumn];
       int newRowIndex = [mPermissions indexOfObject:permission];
       if (newRowIndex != NSNotFound) {
-        [aTableView selectRow:newRowIndex byExtendingSelection:NO];
+        [aTableView selectRowIndexes:[NSIndexSet indexSetWithIndex:newRowIndex]
+                byExtendingSelection:NO];
         [aTableView scrollRowToVisible:newRowIndex];
       }
     }
@@ -756,7 +761,7 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
   // Ensure a row is selected. Cocoa doesn't do this for us, but will keep
   // us from unselecting a row once one is set; go figure.
   if ([table numberOfRows] > 0)
-    [table selectRow:0 byExtendingSelection:NO];
+    [table selectRowIndexes:[NSIndexSet indexSetWithIndex:0] byExtendingSelection:NO];
 }
 
 - (void)sortByColumn:(NSTableColumn*)tableColumn
@@ -890,7 +895,8 @@ objectValueForTableColumn:(NSTableColumn *)aTableColumn
       // scroll to the first item (arbitrary, but at least one should show)
       if (i == 0)
         [aTableView scrollRowToVisible:newRowIndex];
-      [aTableView selectRow:newRowIndex byExtendingSelection:YES];
+      [aTableView selectRowIndexes:[NSIndexSet indexSetWithIndex:newRowIndex]
+              byExtendingSelection:YES];
     }
   }
 }

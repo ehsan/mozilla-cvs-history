@@ -304,7 +304,8 @@ static NSString* const kAutosaveSortDirectionKey        = @"sort_descending";
       if (!shouldSelect)
         return nil;   // can't select it, so bail
 
-      [self selectRow:rowIndex byExtendingSelection:NO];
+      [self selectRowIndexes:[NSIndexSet indexSetWithIndex:rowIndex]
+        byExtendingSelection:NO];
     }
         
     if ([delegate respondsToSelector:@selector(outlineView:contextMenuForItems:)])

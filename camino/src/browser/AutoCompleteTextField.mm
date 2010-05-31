@@ -914,8 +914,9 @@ NSString* const kWillShowFeedMenu = @"WillShowFeedMenu";
     if ( aRow == -1 )
       [mTableView deselectAll:self];
     else {
-      [mTableView selectRow:aRow byExtendingSelection:NO];
-      [mTableView scrollRowToVisible: aRow];
+      [mTableView selectRowIndexes:[NSIndexSet indexSetWithIndex:aRow]
+              byExtendingSelection:NO];
+      [mTableView scrollRowToVisible:aRow];
     }
   }
 }

@@ -494,7 +494,8 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
   int total = [mBookmarksOutlineView numberOfRows];
   if (index >= total)
     index = total - 1;
-  [mBookmarksOutlineView selectRow:index byExtendingSelection:NO];
+  [mBookmarksOutlineView selectRowIndexes:[NSIndexSet indexSetWithIndex:index]
+                     byExtendingSelection:NO];
 }
 
 - (IBAction)openBookmark:(id)aSender
@@ -882,7 +883,8 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
   int itemRow = [mBookmarksOutlineView rowForItem:item];
   if (itemRow == -1) return;
 
-  [mBookmarksOutlineView selectRow:itemRow byExtendingSelection:inExtendSelection];
+  [mBookmarksOutlineView selectRowIndexes:[NSIndexSet indexSetWithIndex:itemRow]
+                     byExtendingSelection:inExtendSelection];
 
   [mBookmarksOutlineView scrollRowToVisible:itemRow];
 }
@@ -1151,7 +1153,8 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
   if (folderIndex == NSNotFound)
     return;
 
-  [mContainersTableView selectRow:folderIndex byExtendingSelection:NO];
+  [mContainersTableView selectRowIndexes:[NSIndexSet indexSetWithIndex:folderIndex]
+                    byExtendingSelection:NO];
 
   // reset the search
   [self resetSearchField];

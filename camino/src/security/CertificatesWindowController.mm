@@ -564,7 +564,8 @@ static CertificatesWindowController* gCertificatesWindowController;
   [self setupCertsData];
   [mCategoriesTable reloadData];
 
-  [mCategoriesTable selectRow:curSelectedRow byExtendingSelection:NO];
+  [mCategoriesTable selectRowIndexes:[NSIndexSet indexSetWithIndex:curSelectedRow]
+                byExtendingSelection:NO];
   [self categorySelectionChanged];  
 }
 
