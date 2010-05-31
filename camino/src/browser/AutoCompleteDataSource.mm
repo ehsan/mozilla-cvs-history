@@ -172,16 +172,17 @@ const unsigned int kNumberOfItemsPerChunk = 100;
   // 1. If the user has not typed '://', match any protocol followed by
   //    '://' followed by an optional 'www.' followed by the search string.
   // 2. If the user has typed '://', then match the entire search string.
-  NSString *regex;
+  NSString *regex = nil;
+  NSString *escapedString = [searchString stringbyEscapingForRegex];
   if ([searchString rangeOfString:@"://"].location == NSNotFound)
-    regex = [NSString stringWithFormat:@".*://(www\\.)?%@.*", searchString];
+    regex = [NSString stringWithFormat:@".*://(www\\.)?%@.*", escapedString];
   else
-    regex = [NSString stringWithFormat:@".*%@.*", searchString];
+    regex = [NSString stringWithFormat:@".*%@.*", escapedString];
   mURLRegexTest = [[NSPredicate predicateWithFormat:@"SELF MATCHES[cd] %@", regex] retain];
 
   // Construct the regular expression for title matching. The title will
   // only match if the search string appears at the beginning of a word.
-  regex = [NSString stringWithFormat:@".*\\b%@.*", searchString];
+  regex = [NSString stringWithFormat:@".*\\b%@.*", escapedString];
   mTitleRegexTest = [[NSPredicate predicateWithFormat:@"SELF MATCHES[cd] %@", regex] retain];
 
   [self performSelector:@selector(processNextSearchChunk) withObject:nil afterDelay:0.0];

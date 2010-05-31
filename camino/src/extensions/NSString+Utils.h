@@ -75,6 +75,9 @@ typedef enum
 - (NSString *)stringByRemovingAmpEscapes;
 - (NSString *)stringByAddingAmpEscapes;
 
+// Returns a version of the string with all regex special characters escaped.
+- (NSString*)stringbyEscapingForRegex;
+
 @end
 
 @interface NSMutableString (ChimeraMutableStringUtils)

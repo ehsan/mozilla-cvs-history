@@ -226,6 +226,22 @@
   return [NSString stringWithString:dirtyStringMutant];
 }
 
+- (NSString*)stringbyEscapingForRegex
+{
+  NSMutableString* escapedString = [NSMutableString stringWithString:self];
+  NSArray* specialCharacters = [NSArray arrayWithObjects:
+      @"\\", @"*", @"?", @"+", @"[", @"(", @")", @"{", @"}", @"^", @"$", @"|",
+      @".", @"/", nil];
+  for (unsigned int i = 0; i < [specialCharacters count]; ++i) {
+    NSString* specialCharacter = [specialCharacters objectAtIndex:i];
+    [escapedString replaceOccurrencesOfString:specialCharacter
+                                   withString:[@"\\" stringByAppendingString:specialCharacter]
+                                      options:NSLiteralSearch
+                                        range:NSMakeRange(0, [escapedString length])];
+  }
+  return escapedString;
+}
+
 @end
 
 
