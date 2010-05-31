@@ -1092,11 +1092,11 @@ KeychainFormSubmitObserver::Notify(nsIDOMHTMLFormElement* formNode, nsIDOMWindow
       return NS_OK;
     nsCAutoString uriCAString;
     rv = docURL->GetSpec(uriCAString);
-    NSString* uri = [NSString stringWithCString:uriCAString.get()];
+    NSString* uri = [NSString stringWithUTF8String:uriCAString.get()];
 
     nsCAutoString hostCAString;
     docURL->GetHost(hostCAString);
-    NSString* host = [NSString stringWithCString:hostCAString.get()];
+    NSString* host = [NSString stringWithUTF8String:hostCAString.get()];
 
     // is the host in the deny list? if yes, bail. otherwise check the keychain.
     if ([keychain isHostInDenyList:host])
@@ -1105,12 +1105,12 @@ KeychainFormSubmitObserver::Notify(nsIDOMHTMLFormElement* formNode, nsIDOMWindow
     // Get the host in punycode for keychain use.
     nsCAutoString asciiHostCAString;
     rv = docURL->GetAsciiHost(asciiHostCAString);
-    NSString* asciiHost = NS_SUCCEEDED(rv) ? [NSString stringWithCString:asciiHostCAString.get()]
-                                           : host;
+    NSString* asciiHost = NS_SUCCEEDED(rv) ?
+        [NSString stringWithUTF8String:asciiHostCAString.get()] : host;
 
     nsCAutoString schemeCAString;
     docURL->GetScheme(schemeCAString);
-    NSString* scheme = [NSString stringWithCString:schemeCAString.get()];
+    NSString* scheme = [NSString stringWithUTF8String:schemeCAString.get()];
 
     PRInt32 signedPort;
     docURL->GetPort(&signedPort);
@@ -1276,14 +1276,14 @@ KeychainFormSubmitObserver::Notify(nsIDOMHTMLFormElement* formNode, nsIDOMWindow
     if (!keychainEntry) {
       nsCAutoString hostCAString;
       docURL->GetHost(hostCAString);
-      host = [NSString stringWithCString:hostCAString.get()];
+      host = [NSString stringWithUTF8String:hostCAString.get()];
       nsCAutoString asciiHostCAString;
       docURL->GetAsciiHost(asciiHostCAString);
-      NSString* asciiHost = NS_SUCCEEDED(rv) ? [NSString stringWithCString:asciiHostCAString.get()]
-                                             : host;
+      NSString* asciiHost = NS_SUCCEEDED(rv) ?
+          [NSString stringWithUTF8String:asciiHostCAString.get()] : host;
       nsCAutoString schemeCAString;
       docURL->GetScheme(schemeCAString);
-      NSString* scheme = [NSString stringWithCString:schemeCAString.get()];
+      NSString* scheme = [NSString stringWithUTF8String:schemeCAString.get()];
 
       PRInt32 signedPort;
       docURL->GetPort(&signedPort);
@@ -1352,7 +1352,7 @@ KeychainFormSubmitObserver::Notify(nsIDOMHTMLFormElement* formNode, nsIDOMWindow
     if (!uri) {
       nsCAutoString uriCAString;
       rv = docURL->GetSpec(uriCAString);
-      uri = [NSString stringWithCString:uriCAString.get()];
+      uri = [NSString stringWithUTF8String:uriCAString.get()];
     }
     [keychain cacheKeychainEntry:keychainEntry forKey:uri];
   } // for each form on page

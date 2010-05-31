@@ -1803,7 +1803,7 @@ const char* const kHTMLMIMEType = "text/html";
       if ( doc ) {
         nsCAutoString charset;
         doc->GetDocumentCharacterSet(charset);
-        return [NSString stringWithCString:charset.get()];
+        return [NSString stringWithUTF8String:charset.get()];
       }
     }
   }
@@ -1817,7 +1817,7 @@ const char* const kHTMLMIMEType = "text/html";
     nsCOMPtr<nsIDocument> doc ( do_QueryInterface(domDoc) );
     if ( doc ) {
       const nsACString & charset = doc->GetDocumentCharacterSet();
-      return [NSString stringWithCString:PromiseFlatCString(charset).get()];
+      return [NSString stringWith_nsACString:charset];
     }
   }
   return nil;

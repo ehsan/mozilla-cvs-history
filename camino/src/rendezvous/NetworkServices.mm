@@ -338,7 +338,8 @@ static inline u_int ns_get16(u_char* buffer)
             @try {
               confirmed = [controller prompt:[NSApp mainWindow]
                                        title:NSLocalizedString(@"UserNameRequestTitle", @"")
-                                        text:[NSString stringWithFormat:NSLocalizedString(@"UsernameRequestFormat", @""), [NSString stringWithCString:escapedTarget]]
+                                        text:[NSString stringWithFormat:NSLocalizedString(@"UsernameRequestFormat", @""),
+                                                 [NSString stringWithUTF8String:escapedTarget]]
                                   promptText:userName
                                     checkMsg:@""
                                   checkValue:nsnull

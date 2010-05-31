@@ -148,7 +148,7 @@ void KeychainAutoCompleteDOMListener::FillPassword()
   if (NS_FAILED(rv))
     return;
 
-  NSString* uri = [NSString stringWithCString:uriCAString.get()];
+  NSString* uri = [NSString stringWithUTF8String:uriCAString.get()];
   if (uri)
     [keychain cacheKeychainEntry:keychainEntry forKey:uri];
 }
@@ -360,13 +360,13 @@ static void GetFormInfoForInput(nsIDOMHTMLInputElement* aElement,
   if (NS_FAILED(rv))
     return;
 
-  *host = [NSString stringWithCString:hostCAString.get()];
+  *host = [NSString stringWithUTF8String:hostCAString.get()];
 
   // Get the host in punycode for keychain use.
   nsCAutoString asciiHostCAString;
   rv = docURL->GetAsciiHost(asciiHostCAString);
-  *asciiHost = NS_SUCCEEDED(rv) ? [NSString stringWithCString:asciiHostCAString.get()]
-                                : *host;
+  *asciiHost = NS_SUCCEEDED(rv) ?
+      [NSString stringWithUTF8String:asciiHostCAString.get()] : *host;
 
   PRInt32 signedPort;
   docURL->GetPort(&signedPort);
@@ -377,5 +377,5 @@ static void GetFormInfoForInput(nsIDOMHTMLInputElement* aElement,
   if (NS_FAILED(rv))
     return;
 
-  *scheme = [NSString stringWithCString:schemeCAString.get()];
+  *scheme = [NSString stringWithUTF8String:schemeCAString.get()];
 }
