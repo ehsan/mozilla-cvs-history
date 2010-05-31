@@ -145,21 +145,6 @@ const int kZoomActionsTag = 108;
 - (id)init
 {
   if ((self = [super init])) {
-//XXX An updated version of this will be needed again once we're 10.4+ (See Bug 336217)
-#if 0
-    // ensure that we're at least on 10.2 as lower OS versions are not supported any more
-    long version = 0;
-    ::Gestalt(gestaltSystemVersion, &version);
-    if (version < 0x00001020) {
-      NSString* appName = NSLocalizedStringFromTable(@"CFBundleName", @"InfoPlist", nil);
-      NSString* alert = [NSString stringWithFormat:NSLocalizedString(@"RequiredVersionNotMetTitle", @""), appName];
-      NSString* message = [NSString stringWithFormat:NSLocalizedString(@"RequiredVersionNotMet", @""), appName];
-      NSString* quit = NSLocalizedString(@"QuitButtonText",@"");
-      NSRunAlertPanel(alert, message, quit, nil, nil);
-      [NSApp terminate:self];
-    }
-#endif
-
     NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
 
     NSString* url = [defaults stringForKey:USER_DEFAULTS_URL_KEY];
