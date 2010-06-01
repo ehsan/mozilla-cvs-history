@@ -525,20 +525,7 @@ static AsciiEscapes ascii_encoding_table[256] = {
 
 /*
  * Returns the number of bytes needed to escape an ascii string.
- * Like strlen() does not include NULL terminator in count
  */
-static size_t
-ascii_encoded_strlen(const char *str)
-{
-    size_t result;
-    const unsigned char *s;     /* must be unsigned for table indexing to work */
-
-    for (s = (unsigned char *)str, result = 0; *s; s++) {
-        result += ascii_encoding_table[*s].len;
-    }
-    return result;
-}
-
 static size_t
 ascii_encoded_strnlen(const char *str, size_t len)
 {
@@ -549,40 +536,6 @@ ascii_encoded_strnlen(const char *str, size_t len)
         result += ascii_encoding_table[*s].len;
     }
     return result;
-}
-
-/*
- * Convert input 7-bit ascii string into a printable representation
- * by escaping all non-printable characters and any character above
- * ordinal 127. The returned string must be freed with free().
- * NULL may be returned in the event of a memory allocation failure.
- */
-static char *
-escape_ascii_string(const char *str)
-{
-    size_t escaped_len;
-    const unsigned char *s; /* must be unsigned for table indexing to work */
-    char *escaped_str, *dst, *src;
-    AsciiEscapes *encode;
-
-    escaped_len = ascii_encoded_strlen(str);
-
-    if ((escaped_str = malloc(escaped_len+1)) == NULL) {
-        return NULL;
-    }
-
-    for (s = (unsigned char *)str, dst = escaped_str; *s; s++) {
-        encode = &ascii_encoding_table[*s];
-        for (src = encode->encoded; *src; src++) {
-            *dst++ = *src;
-        }
-    }
-
-    *dst = 0;
-
-    assert(escaped_len == strlen(escaped_str));
-
-    return escaped_str;
 }
 
 /* ========================================================================== */
@@ -646,9 +599,6 @@ der_boolean_secitem_to_pystr(SECItem *item);
 
 static PyObject *
 integer_secitem_to_pylong(SECItem *item);
-
-static PyObject *
-der_integer_secitem_to_pylong(SECItem *item);
 
 static PyObject *
 integer_secitem_to_pystr(SECItem *item);
@@ -844,32 +794,6 @@ static BitStringTable KeyUsageDef[] = {
 #endif
 };
 
-/* Count how many bits are on in a NSS decoded bitstring */
-static size_t
-bit_string_count(SECItem *bitstr)
-{
-    size_t count, bitstr_len, i;
-    unsigned char *data, octet, mask;
-
-    if ((data = bitstr->data) == NULL) {
-        return 0;
-    }
-    bitstr_len = bitstr->len;
-    count = 0;
-    for (i = 0; i < bitstr_len; i++) {
-        if ((i % 8) == 0) {
-            octet = *data++;
-            mask = 0x80;
-        }
-        if (octet & mask) {
-            count++;
-        }
-        mask >>= 1;
-    }
-    return count;
-}
-
-
 /*
  * NSS WART
  * NSS encodes a bit string in a SECItem by setting the len field
@@ -1013,65 +937,6 @@ bitstr_table_to_tuple(SECItem *bitstr, BitStringTable *table,
     return tuple;
 }
 
-/*
- * Given a table of bit string definitions return a tuple of every defined
- * item in the table. The repr_kind enumeration specifies what type of
- * item should be put in the tuple, for example the string name for the bit
- * position, or the enumerated constant representing that bit postion, or
- * the bit posisiton. This is the equivalent of calling
- * bitstr_table_to_tuple() with a bit string where every bit is enabled.
- */
-
-static PyObject *
-bitstr_table_to_tuple_all(BitStringTable *table,
-                          size_t table_len, RepresentationKind repr_kind)
-{
-    size_t count, i, j;
-    PyObject *tuple;
-
-    /*
-     * Get a count of how many defined table entries there are.
-     */
-    count = 0;
-    for (i = 0; i < table_len; i++) {
-        if (table[i].enum_description) { /* only if defined in table */
-            count++;
-        }
-    }
-
-    if ((tuple = PyTuple_New(count)) == NULL) {
-        return NULL;
-    }
-
-    if (count == 0) {
-        return tuple;
-    }
-
-    /* Populate the tuple */
-    for (i = j = 0; i < table_len; i++) {
-        if (table[i].enum_description) { /* only if defined in table */
-            switch (repr_kind) {
-            case AsEnum:
-                PyTuple_SetItem(tuple, j++, PyInt_FromLong(table[i].enum_value));
-                break;
-            case AsEnumDescription:
-                PyTuple_SetItem(tuple, j++, PyString_FromString(table[i].enum_description));
-                break;
-            case AsIndex:
-                PyTuple_SetItem(tuple, j++, PyInt_FromLong(i));
-                break;
-            default:
-                PyErr_Format(PyExc_ValueError, "Unsupported representation kind (%d)", repr_kind);
-                Py_DECREF(tuple);
-                return NULL;
-                break;
-            }
-        }
-    }
-
-    return tuple;
-}
-
 static PyObject *
 crl_reason_bitstr_to_tuple(SECItem *bitstr, RepresentationKind repr_kind)
 {
@@ -1082,76 +947,12 @@ crl_reason_bitstr_to_tuple(SECItem *bitstr, RepresentationKind repr_kind)
 }
 
 static PyObject *
-crl_reason_bitstr_to_tuple_all(RepresentationKind repr_kind)
-{
-    size_t table_len;
-
-    table_len = sizeof(CRLReasonDef) / sizeof(CRLReasonDef[0]);
-    return bitstr_table_to_tuple_all(CRLReasonDef, table_len, repr_kind);
-}
-
-static PyObject *
 key_usage_bitstr_to_tuple(SECItem *bitstr, RepresentationKind repr_kind)
 {
     size_t table_len;
 
     table_len = sizeof(KeyUsageDef) / sizeof(KeyUsageDef[0]);
     return bitstr_table_to_tuple(bitstr, KeyUsageDef, table_len, repr_kind);
-}
-
-static PyObject *
-key_usage_bitstr_to_tuple_all(RepresentationKind repr_kind)
-{
-    size_t table_len;
-
-    table_len = sizeof(KeyUsageDef) / sizeof(KeyUsageDef[0]);
-    return bitstr_table_to_tuple_all(KeyUsageDef, table_len, repr_kind);
-}
-
-/*
- * NSS WART: No public API to decode a bit string.
- *
- * NSS WART: SECItem len has to be converted to byte count otherwise the
- * SECItem can't be copied becase a SECItem len means the number of bytes
- * in it's data member. The conversion to a byte count is performed with
- * DER_ConvertBitString(). Once this conversion is performed there is a
- * loss of information. If the bitstring length was not a multiple of 8
- * then we can't know the number unused bits at the end of the bitstring
- * and hence the true length of the bitstring!
- *
- * WARNING: The len member of the returned decoded_item is a byte count,
- * not a bit count.
- */
-static SECStatus
-decode_bit_string(SECItem *decoded_item, SECItem *encoded_item)
-{
-    SECItem tmp_item;
-    PRArenaPool *arena = NULL;
-
-    decoded_item->len = 0;
-    decoded_item->data = NULL;
-    
-    if ((arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE)) == NULL) {
-        return SECFailure;
-    }
-
-    if (SEC_QuickDERDecodeItem(arena, &tmp_item,
-                               SEC_ASN1_GET(SEC_BitStringTemplate),
-                               encoded_item) != SECSuccess) {
-	PORT_FreeArena(arena, PR_FALSE);
-        return SECFailure;
-    }
-
-    DER_ConvertBitString(&tmp_item);
-    if (SECITEM_CopyItem(NULL, decoded_item, &tmp_item) != SECSuccess) {
-        decoded_item->len = 0;
-        decoded_item->data = NULL;
-	PORT_FreeArena(arena, PR_FALSE);
-        return SECFailure;
-    }
-
-    PORT_FreeArena(arena, PR_FALSE);
-    return SECSuccess;
 }
 
 static PyObject *
@@ -1702,8 +1503,8 @@ get_oid_tag_from_object(PyObject *obj)
             } else {
                 oid_tag = oid_tag_from_name(type_string);
             }
-            Py_DECREF(py_obj_string_utf8);
         }
+	Py_DECREF(py_obj_string_utf8);
     } else if (PyInt_Check(obj)) {
         oid_tag = PyInt_AsLong(obj);
     } else if (PySecItem_Check(obj)) {
@@ -1812,10 +1613,13 @@ _AddIntConstantWithLookup(PyObject *module, const char *name, long value, const 
     }
 
     if ((py_lower_name = PyObject_CallMethod(py_name, "lower", NULL)) == NULL) {
+        Py_DECREF(py_name);
         return -1;
     }
 
     if ((py_value = PyInt_FromLong(value)) == NULL) {
+        Py_DECREF(py_name);
+        Py_DECREF(py_lower_name);
         return -1;
     }
 
@@ -2826,18 +2630,6 @@ integer_secitem_to_pylong(SECItem *item)
 }
 
 static PyObject *
-der_integer_secitem_to_pylong(SECItem *item)
-{
-    SECItem tmp_item;
-
-    tmp_item = *item;
-    if (sec_strip_tag_and_length(&tmp_item) != SECSuccess) {
-        return NULL;
-    }
-    return integer_secitem_to_pylong(&tmp_item);
-}
-
-static PyObject *
 integer_secitem_to_pystr(SECItem *item)
 {
     PyObject *py_int = NULL;
@@ -3501,6 +3293,7 @@ cert_trust_flags_str(unsigned int flags)
             return NULL;
         }
         PyList_Append(py_flags, py_flag);
+	Py_DECREF(py_flag);
     }
     if (flags & CERTDB_TRUSTED) {
 	if ((py_flag = PyString_FromString(_("Trusted"))) == NULL) {
@@ -3508,6 +3301,7 @@ cert_trust_flags_str(unsigned int flags)
             return NULL;
         }
         PyList_Append(py_flags, py_flag);
+	Py_DECREF(py_flag);
     }
     if (flags & CERTDB_SEND_WARN) {
 	if ((py_flag = PyString_FromString(_("Warn When Sending"))) == NULL) {
@@ -3515,6 +3309,7 @@ cert_trust_flags_str(unsigned int flags)
             return NULL;
         }
         PyList_Append(py_flags, py_flag);
+	Py_DECREF(py_flag);
     }
     if (flags & CERTDB_VALID_CA) {
 	if ((py_flag = PyString_FromString(_("Valid CA"))) == NULL) {
@@ -3522,6 +3317,7 @@ cert_trust_flags_str(unsigned int flags)
             return NULL;
         }
         PyList_Append(py_flags, py_flag);
+	Py_DECREF(py_flag);
     }
     if (flags & CERTDB_TRUSTED_CA) {
 	if ((py_flag = PyString_FromString(_("Trusted CA"))) == NULL) {
@@ -3529,6 +3325,7 @@ cert_trust_flags_str(unsigned int flags)
             return NULL;
         }
         PyList_Append(py_flags, py_flag);
+	Py_DECREF(py_flag);
     }
     if (flags & CERTDB_NS_TRUSTED_CA) {
 	if ((py_flag = PyString_FromString(_("Netscape Trusted CA"))) == NULL) {
@@ -3536,6 +3333,7 @@ cert_trust_flags_str(unsigned int flags)
             return NULL;
         }
         PyList_Append(py_flags, py_flag);
+	Py_DECREF(py_flag);
     }
     if (flags & CERTDB_USER) {
 	if ((py_flag = PyString_FromString(_("User"))) == NULL) {
@@ -3543,6 +3341,7 @@ cert_trust_flags_str(unsigned int flags)
             return NULL;
         }
         PyList_Append(py_flags, py_flag);
+	Py_DECREF(py_flag);
     }
     if (flags & CERTDB_TRUSTED_CLIENT_CA) {
 	if ((py_flag = PyString_FromString(_("Trusted Client CA"))) == NULL) {
@@ -3550,6 +3349,7 @@ cert_trust_flags_str(unsigned int flags)
             return NULL;
         }
         PyList_Append(py_flags, py_flag);
+	Py_DECREF(py_flag);
     }
     if (flags & CERTDB_GOVT_APPROVED_CA) {
 	if ((py_flag = PyString_FromString(_("Step-up"))) == NULL) {
@@ -3557,6 +3357,7 @@ cert_trust_flags_str(unsigned int flags)
             return NULL;
         }
         PyList_Append(py_flags, py_flag);
+	Py_DECREF(py_flag);
     }
     return py_flags;
 }
@@ -6158,10 +5959,10 @@ static PyTypeObject CertificateExtensionType = {
     0,						/* tp_getattro */
     0,						/* tp_setattro */
     0,						/* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,	/* tp_flags */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_GC,	/* tp_flags */
     CertificateExtension_doc,			/* tp_doc */
-    0,						/* tp_traverse */
-    0,						/* tp_clear */
+    (traverseproc)CertificateExtension_traverse,/* tp_traverse */
+    (inquiry)CertificateExtension_clear,	/* tp_clear */
     0,						/* tp_richcompare */
     0,						/* tp_weaklistoffset */
     0,						/* tp_iter */
@@ -6713,7 +6514,6 @@ Certificate_verify_now(Certificate *self, PyObject *args)
 
     check_sig = PyInt_AsLong(py_check_sig);
     pin_args = PyTuple_GetSlice(args, n_base_args, argc);
-    Py_INCREF(pin_args);
 
     Py_BEGIN_ALLOW_THREADS
     if (CERT_VerifyCertificateNow(py_certdb->handle, self->cert, check_sig,
@@ -7629,9 +7429,11 @@ X500AVA_init(X500AVA *self, PyObject *args, PyObject *kwds)
     if ((self->ava = CERT_CreateAVA(self->arena, oid_tag, value_type, value_string)) == NULL) {
         set_nspr_error("could not create AVA, oid tag = %d, value = \"%s\"",
                        oid_tag, value_string);
+	Py_XDECREF(py_value_utf8);
         return -1;
     }
 
+    Py_XDECREF(py_value_utf8);
     return 0;
 }
 
@@ -8118,7 +7920,6 @@ X500RDN_init(X500RDN *self, PyObject *args, PyObject *kwds)
         }
         for (i = 0; i < sequence_len && i < MAX_AVAS; i++) {
             item = PySequence_ITEM(sequence, i);
-            printf(">>> item refcnt = %d\n", item->ob_refcnt);
             if (PyX500AVA_Check(item)) {
                 py_ava = (X500AVA *)item;
                 if ((ava_arg[i] = CERT_CopyAVA(self->arena, py_ava->ava)) == NULL) {
@@ -9113,6 +8914,7 @@ GeneralName_get_name(GeneralName *self, PyObject *args, PyObject *kwds)
 }
 
 static PyMethodDef GeneralName_methods[] = {
+    {"get_name", (PyCFunction)GeneralName_get_name, METH_VARARGS|METH_KEYWORDS, GeneralName_get_name_doc},
     {NULL, NULL}  /* Sentinel */
 };
 
@@ -9385,7 +9187,6 @@ cert_get_cert_nicknames(PyObject *self, PyObject *args)
     Py_DECREF(parse_args);
 
     pin_args = PyTuple_GetSlice(args, n_base_args, argc);
-    Py_INCREF(pin_args);
 
     Py_BEGIN_ALLOW_THREADS
     if ((cert_nicknames = CERT_GetCertNicknames(py_certdb->handle, what, pin_args)) == NULL) {
@@ -9825,7 +9626,6 @@ PK11Slot_key_gen(PK11Slot *self, PyObject *args)
     Py_DECREF(parse_args);
 
     pin_args = PyTuple_GetSlice(args, n_base_args, argc);
-    Py_INCREF(pin_args);
 
     Py_BEGIN_ALLOW_THREADS
     if ((sym_key = PK11_KeyGen(self->slot, mechanism, py_sec_param ? &py_sec_param->item : NULL,
@@ -11091,10 +10891,11 @@ CRLDistributionPts_init_from_SECItem(CRLDistributionPts *self, SECItem *item)
         return -1;
     }
 
-    for (pts = dist_pts->distPoints, count = 0; (pt = *pts); pts++, count++);
+    count = CERTCrlDistributionPoints_count(dist_pts);
     
     if ((py_pts = PyTuple_New(count)) == NULL) {
         PORT_FreeArena(arena, PR_FALSE);
+	return -1;
     }
 
     for (pts = dist_pts->distPoints, i = 0; (pt = *pts); pts++, i++) {
@@ -11579,7 +11380,6 @@ PK11_password_callback(PK11SlotInfo *slot, PRBool retry, void *arg)
     PyGILState_STATE gstate;
     PyObject *password_callback = NULL;
     PyObject *pin_args = arg; /* borrowed reference, don't decrement */
-    PyObject *py_retry = NULL;
     PyObject *py_slot = NULL;
     PyObject *item;
     PyObject *result = NULL;
@@ -11617,9 +11417,6 @@ PK11_password_callback(PK11SlotInfo *slot, PRBool retry, void *arg)
         goto exit;
     }
 
-    py_retry = PyBool_FromLong(retry);
-    Py_INCREF(py_retry);
-
     if ((py_slot = PK11Slot_new_from_PK11SlotInfo(slot)) == NULL) {
         PySys_WriteStderr("exception in PK11 password callback\n");
         PyErr_Print();
@@ -11627,7 +11424,7 @@ PK11_password_callback(PK11SlotInfo *slot, PRBool retry, void *arg)
     }
 
     PyTuple_SetItem(new_args, 0, py_slot);
-    PyTuple_SetItem(new_args, 1, py_retry);
+    PyTuple_SetItem(new_args, 1, PyBool_FromLong(retry));
 
     for (i = 2, j = 0; i < argc; i++, j++) {
         item = PyTuple_GetItem(pin_args, j);
@@ -11750,7 +11547,6 @@ pk11_find_cert_from_nickname(PyObject *self, PyObject *args)
     Py_DECREF(parse_args);
 
     pin_args = PyTuple_GetSlice(args, n_base_args, argc);
-    Py_INCREF(pin_args);
 
     Py_BEGIN_ALLOW_THREADS
     if ((cert = PK11_FindCertFromNickname(nickname, pin_args)) == NULL) {
@@ -11811,7 +11607,6 @@ pk11_find_key_by_any_cert(PyObject *self, PyObject *args)
     Py_DECREF(parse_args);
 
     pin_args = PyTuple_GetSlice(args, n_base_args, argc);
-    Py_INCREF(pin_args);
 
     Py_BEGIN_ALLOW_THREADS
     if ((private_key = PK11_FindKeyByAnyCert(py_cert->cert, pin_args)) == NULL) {
@@ -12004,6 +11799,7 @@ nss_indented_format(PyObject *self, PyObject *args, PyObject *kwds)
 
         if (line_level != cur_level) {
             cur_level = line_level;
+	    Py_CLEAR(py_cur_level_indent);
             if ((py_cur_level_indent = PySequence_Repeat(py_indent, cur_level)) == NULL) {
                 goto fail;
             }
@@ -12502,7 +12298,6 @@ pk11_get_best_slot(PyObject *self, PyObject *args)
     Py_DECREF(parse_args);
 
     pin_args = PyTuple_GetSlice(args, n_base_args, argc);
-    Py_INCREF(pin_args);
 
     Py_BEGIN_ALLOW_THREADS
     if ((slot = PK11_GetBestSlot(mechanism, pin_args)) == NULL) {
@@ -12654,7 +12449,6 @@ pk11_import_sym_key(PyObject *self, PyObject *args)
     Py_DECREF(parse_args);
 
     pin_args = PyTuple_GetSlice(args, n_base_args, argc);
-    Py_INCREF(pin_args);
 
     Py_BEGIN_ALLOW_THREADS
     if ((sym_key = PK11_ImportSymKey(py_slot->slot, mechanism, origin, operation,
@@ -13008,7 +12802,6 @@ pk11_import_crl(PyObject *self, PyObject *args)
     Py_DECREF(parse_args);
 
     pin_args = PyTuple_GetSlice(args, n_base_args, argc);
-    Py_INCREF(pin_args);
 
     Py_BEGIN_ALLOW_THREADS
     if ((signed_crl = PK11_ImportCRL(py_slot->slot, &py_der_signed_crl->item, url,
@@ -13119,6 +12912,7 @@ cert_read_der_from_file(PyObject *self, PyObject *args, PyObject *kwds)
         }
     } else if (PyFile_Check(file_arg)) {
         py_file = file_arg;
+	Py_INCREF(py_file);
     } else {
         PyErr_SetString(PyExc_TypeError, "Bad file, must be pathname or file object");
         return NULL;

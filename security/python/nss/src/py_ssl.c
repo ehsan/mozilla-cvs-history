@@ -54,22 +54,6 @@
 
 static PyObject *py_ssl_implemented_ciphers = NULL;
 
-static void dump_tuple(const char *msg, PyObject *tuple)
-{
-    PyObject *obj;
-    Py_ssize_t i, len;
-
-    len = PyTuple_Size(tuple);
-    printf("%s len=%d ", msg, len);
-
-    for (i = 0; i < len; i++) {
-        obj = PyTuple_GET_ITEM(tuple, i);
-        printf("[%d]<%s object at %p refcnt=%d> ",
-               i, Py_TYPE(obj)->tp_name, obj, obj->ob_refcnt);
-    }
-    printf("\n");
-}
-
 // FIXME: this should be imported from socket module
 static PyObject *
 NetworkAddress_new_from_PRNetAddr(PRNetAddr *pr_netaddr)
@@ -716,7 +700,6 @@ get_client_auth_data(void *arg, PRFileDesc *fd, CERTDistNames *caNames, CERTCert
     }
 
     Py_DECREF(args);
-    Py_DECREF(py_cert_dist_names);
     /*
      * NSS WART
      * There is no way to track the lifetime of the two returned objects.
@@ -744,9 +727,6 @@ get_client_auth_data(void *arg, PRFileDesc *fd, CERTDistNames *caNames, CERTCert
 
  fail:
     Py_XDECREF(args);
-    Py_XDECREF(py_cert_dist_names);
-    Py_XDECREF(py_cert);
-    Py_XDECREF(py_priv_key);
     Py_XDECREF(return_args);
 
     PyGILState_Release(gstate);
@@ -832,8 +812,6 @@ SSLSocket_set_client_auth_data_callback(SSLSocket *self, PyObject *args)
 
     argc = PyTuple_Size(args);
 
-    dump_tuple("set_client_auth_data_callback args:", args);
-
     if ((callback = PyTuple_GetItem(args, 0)) == NULL) {
         PyErr_SetString(PyExc_TypeError, "set_client_auth_data_callback: missing callback argument");
         return NULL;
@@ -845,10 +823,7 @@ SSLSocket_set_client_auth_data_callback(SSLSocket *self, PyObject *args)
     }
 
     callback_args = PyTuple_GetSlice(args, n_base_args, argc);
-    dump_tuple("set_client_auth_data_callback callback_args:", callback_args);
-
     
-    printf("callback refcnt=%d\n", callback->ob_refcnt);
     ASSIGN_REF(self->py_client_auth_data_callback, callback);
     ASSIGN_NEW_REF(self->py_client_auth_data_callback_data, callback_args);
 
@@ -899,6 +874,7 @@ ssl_handshake_callback(PRFileDesc *fd, void *arg)
     }
 
     Py_DECREF(args);
+    Py_DECREF(result);
 
  exit:
     PyGILState_Release(gstate);
@@ -1827,14 +1803,6 @@ static int
 SSLSocket_clear(SSLSocket* self)
 {
     TraceMethodEnter(self);
-
-    if (self->py_client_auth_data_callback_data) {
-        dump_tuple("SSLSocket_clear", self->py_client_auth_data_callback_data);
-    }
-    if (self->py_client_auth_data_callback) {
-        printf("callback refcnt=%d\n", self->py_client_auth_data_callback->ob_refcnt);
-    }
-
 
     Py_CLEAR(self->py_auth_certificate_callback);
     Py_CLEAR(self->py_auth_certificate_callback_data);

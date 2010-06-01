@@ -278,7 +278,6 @@ initerror(void)
         return;
 
     PyString_ConcatAndDel(&py_module_doc, py_error_doc);
-    Py_INCREF(py_module_doc);
     PyModule_AddObject(m, "__doc__", py_module_doc);
 
     /* exceptions */

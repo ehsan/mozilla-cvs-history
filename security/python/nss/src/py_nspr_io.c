@@ -836,6 +836,7 @@ HostEntry_str(HostEntry *self)
     PyObject *aliases = NULL;
     PyObject *args = NULL;
     PyObject *text = NULL;
+    PyObject *format;
     int i;
 
     addrs = PyObject_CallMethod((PyObject *)self, "get_network_addresses", NULL);
@@ -865,8 +866,9 @@ HostEntry_str(HostEntry *self)
 
     args = Py_BuildValue("(sNN)", self->entry.h_name ? self->entry.h_name : "None",
                          aliases, addr_list);
-    text = PyString_Format(PyString_FromString("name=%s aliases=%s addresses=%s"), args);
-
+    format = PyString_FromString("name=%s aliases=%s addresses=%s");
+    text = PyString_Format(format, args);
+    Py_DECREF(format);
 
  exit:
     Py_XDECREF(addrs);
