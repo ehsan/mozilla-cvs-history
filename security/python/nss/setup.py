@@ -340,9 +340,13 @@ nss_ssl_extension = \
               )
 
 doc_manifest = [
-    [['include README LICENSE*',
+    [['include README LICENSE* doc/ChangeLog',
       'recursive-include doc *.py *.txt',],
      [('^doc/', '')], None],
+    [['recursive-include test *.py *.txt',],
+     None , None],
+    [['recursive-include lib *.py *.txt',],
+     [('^lib/', '')] , 'examples'],
     [['recursive-include build/doc/html *'],
      [('^build/doc/', 'api/')], None],
 ]
