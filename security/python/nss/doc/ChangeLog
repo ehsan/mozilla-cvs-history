@@ -99,6 +99,9 @@
       doc/examples/cert_dump.py
       test/test_cert_components.py
 
+  * Apply patches from  Miloslav Trmač <mitr@redhat.com>
+    for ref counting and threading support. Thanks Miloslav!
+
   * Review all ref counting, numerous ref counting fixes
 
   * Implement cyclic garbage collection support by
