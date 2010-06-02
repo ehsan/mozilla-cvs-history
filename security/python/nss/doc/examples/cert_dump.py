@@ -55,11 +55,13 @@ def print_extension(level, extension):
 
     if   oid_tag == nss.SEC_OID_PKCS12_KEY_USAGE:
         print nss.indented_format([(level, 'Usages:')])
-        print nss.indented_format([(level+1, x) for x in nss.x509_key_usage(extension.value)])
+        print nss.indented_format(nss.make_line_pairs(level+1, nss.x509_key_usage(extension.value)))
+
     elif oid_tag == nss.SEC_OID_X509_SUBJECT_KEY_ID:
         print nss.indented_format([(level, 'Data:')])
         print nss.indented_format(nss.make_line_pairs(level+1,
               extension.value.der_to_hex(nss.OCTETS_PER_LINE_DEFAULT)))
+
     elif oid_tag == nss.SEC_OID_X509_CRL_DIST_POINTS:
         pts = nss.CRLDistributionPts(extension.value)
         i = 1
@@ -72,6 +74,7 @@ def print_extension(level, extension):
                 print nss.indented_format([(level+3, '%s:' % name)])
             print nss.indented_format([(level+2, 'Reasons: %s' % (pt.get_reasons(),))])
             print nss.indented_format([(level+2, 'Issuer: %s' % pt.issuer)])
+
     elif oid_tag == nss.SEC_OID_X509_AUTH_KEY_ID:
         auth_key_id = nss.AuthKeyID(extension.value)
         print nss.indented_format([(level+1, 'Key ID:')])
@@ -79,9 +82,15 @@ def print_extension(level, extension):
               auth_key_id.key_id.to_hex(nss.OCTETS_PER_LINE_DEFAULT)))
         print nss.indented_format([(level+1, 'Serial Number: %s' % (auth_key_id.serial_number))])
         print nss.indented_format([(level+1, 'Issuer:' % auth_key_id.get_general_names())])
+
+    elif oid_tag == nss.SEC_OID_X509_BASIC_CONSTRAINTS:
+        bc = nss.BasicConstraints(extension.value)
+        print nss.indented_format([(level, '%s' % str(bc))])
+
     elif oid_tag == nss.SEC_OID_X509_EXT_KEY_USAGE:
         print nss.indented_format([(level, 'Usages:')])
-        print nss.indented_format([(level+1, x) for x in nss.x509_ext_key_usage(extension.value)])
+        print nss.indented_format(nss.make_line_pairs(level+1, nss.x509_ext_key_usage(extension.value)))
+
     elif oid_tag in (nss.SEC_OID_X509_SUBJECT_ALT_NAME, nss.SEC_OID_X509_ISSUER_ALT_NAME):
         names = nss.x509_alt_name(extension.value)
         print nss.indented_format([(level+2, 'Alternate Names: [%d total]' % len(names))])

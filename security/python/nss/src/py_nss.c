@@ -1954,7 +1954,7 @@ make_line_pairs(int level, PyObject *src)
 }
 
 PyDoc_STRVAR(nss_make_line_pairs_doc,
-"make_line_pairs(obj, level=0) -> [(level, str), ...]\n\
+"make_line_pairs(level, obj) -> [(level, str), ...]\n\
 \n\
 :Parameters:\n\
     obj : object\n\
@@ -11372,6 +11372,177 @@ AuthKeyID_new_from_CERTAuthKeyID(CERTAuthKeyID *auth_key_id)
     TraceObjNewLeave(self);
     return (PyObject *) self;
 }
+
+/* ========================================================================== */
+/* ======================== BasicConstraints Class ========================== */
+/* ========================================================================== */
+
+/* ============================ Attribute Access ============================ */
+
+static PyObject *
+BasicConstraints_get_is_ca(BasicConstraints *self, void *closure)
+{
+    TraceMethodEnter(self);
+
+    return PyBool_FromLong(self->bc.isCA);
+
+    return NULL;
+}
+
+static PyObject *
+BasicConstraints_get_path_len(BasicConstraints *self, void *closure)
+{
+    TraceMethodEnter(self);
+
+    return PyInt_FromLong(self->bc.pathLenConstraint);
+
+    return NULL;
+}
+
+static
+PyGetSetDef BasicConstraints_getseters[] = {
+    {"is_ca", (getter)BasicConstraints_get_is_ca,    (setter)NULL,
+     "returns boolean, True if certificate is a certificate authority (i.e. CA)", NULL},
+    {"path_len", (getter)BasicConstraints_get_path_len,    (setter)NULL,
+     "returns max path length constraint as an integer", NULL},
+    {NULL}  /* Sentinel */
+};
+
+static PyMemberDef BasicConstraints_members[] = {
+    {NULL}  /* Sentinel */
+};
+
+/* ============================== Class Methods ============================= */
+
+static PyMethodDef BasicConstraints_methods[] = {
+    {NULL, NULL}  /* Sentinel */
+};
+
+/* =========================== Class Construction =========================== */
+
+static PyObject *
+BasicConstraints_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
+    BasicConstraints *self;
+
+    TraceObjNewEnter(type);
+
+    if ((self = (BasicConstraints *)type->tp_alloc(type, 0)) == NULL) {
+        return NULL;
+    }
+
+    memset(&self->bc, 0, sizeof(self->bc));
+
+
+    TraceObjNewLeave(self);
+    return (PyObject *)self;
+}
+
+static void
+BasicConstraints_dealloc(BasicConstraints* self)
+{
+    TraceMethodEnter(self);
+
+    self->ob_type->tp_free((PyObject*)self);
+}
+
+PyDoc_STRVAR(BasicConstraints_doc,
+"An object representing X509 Basic Constraints Extension");
+
+static int
+BasicConstraints_init(BasicConstraints *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"basic_constraints", NULL};
+    SecItem *py_sec_item;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|i:BasicConstraints", kwlist,
+                                     &SecItemType, &py_sec_item))
+
+        return -1;
+
+    if (CERT_DecodeBasicConstraintValue(&self->bc, &py_sec_item->item) != SECSuccess) {
+        set_nspr_error("cannot decode Basic Constraints");
+        return -1;
+    }
+
+    return 0;
+}
+
+static PyObject *
+BasicConstraints_repr(BasicConstraints *self)
+{
+    return PyString_FromFormat("<%s object at %p>",
+                               Py_TYPE(self)->tp_name, self);
+}
+
+static PyObject *
+BasicConstraints_str(BasicConstraints *self)
+{
+    return PyString_FromFormat("is_ca=%s path_len=%d",
+                               self->bc.isCA ? "True" : "False", self->bc.pathLenConstraint);
+}
+
+static PyTypeObject BasicConstraintsType = {
+    PyObject_HEAD_INIT(NULL)
+    0,						/* ob_size */
+    "nss.nss.BasicConstraints",			/* tp_name */
+    sizeof(BasicConstraints),			/* tp_basicsize */
+    0,						/* tp_itemsize */
+    (destructor)BasicConstraints_dealloc,	/* tp_dealloc */
+    0,						/* tp_print */
+    0,						/* tp_getattr */
+    0,						/* tp_setattr */
+    0,						/* tp_compare */
+    (reprfunc)BasicConstraints_repr,		/* tp_repr */
+    0,						/* tp_as_number */
+    0,						/* tp_as_sequence */
+    0,						/* tp_as_mapping */
+    0,						/* tp_hash */
+    0,						/* tp_call */
+    (reprfunc)BasicConstraints_str,		/* tp_str */
+    0,						/* tp_getattro */
+    0,						/* tp_setattro */
+    0,						/* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,	/* tp_flags */
+    BasicConstraints_doc,			/* tp_doc */
+    (traverseproc)0,				/* tp_traverse */
+    (inquiry)0,					/* tp_clear */
+    0,						/* tp_richcompare */
+    0,						/* tp_weaklistoffset */
+    0,						/* tp_iter */
+    0,						/* tp_iternext */
+    BasicConstraints_methods,			/* tp_methods */
+    BasicConstraints_members,			/* tp_members */
+    BasicConstraints_getseters,			/* tp_getset */
+    0,						/* tp_base */
+    0,						/* tp_dict */
+    0,						/* tp_descr_get */
+    0,						/* tp_descr_set */
+    0,						/* tp_dictoffset */
+    (initproc)BasicConstraints_init,		/* tp_init */
+    0,						/* tp_alloc */
+    BasicConstraints_new,			/* tp_new */
+};
+
+PyObject *
+BasicConstraints_new_from_CERTBasicConstraints(CERTBasicConstraints *bc)
+{
+    BasicConstraints *self = NULL;
+
+    TraceObjNewEnter(NULL);
+
+    if ((self = (BasicConstraints *) BasicConstraintsType.tp_new(&BasicConstraintsType, NULL, NULL)) == NULL) {
+        return NULL;
+    }
+
+    self->bc = *bc;
+
+    TraceObjNewLeave(self);
+    return (PyObject *) self;
+}
+
 /* ========================== PK11 Methods =========================== */
 
 static char *
@@ -13416,6 +13587,7 @@ initnss(void)
     TYPE_READY(X500NameType);
     TYPE_READY(GeneralNameType);
     TYPE_READY(AuthKeyIDType);
+    TYPE_READY(BasicConstraintsType);
 
     /* Export C API */
     if (PyModule_AddObject(m, "_C_API", PyCObject_FromVoidPtr((void *)&nspr_nss_c_api, NULL)) != 0) {
