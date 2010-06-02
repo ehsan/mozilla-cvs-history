@@ -206,7 +206,7 @@ static PyTypeObject NewTypeType = {
     NewType_new,				/* tp_new */
 };
 
-PyObject *
+static PyObject *
 NewType_new_from_NSSType(NSSType *id)
 {
     NewType *self = NULL;
@@ -11525,23 +11525,6 @@ static PyTypeObject BasicConstraintsType = {
     0,						/* tp_alloc */
     BasicConstraints_new,			/* tp_new */
 };
-
-PyObject *
-BasicConstraints_new_from_CERTBasicConstraints(CERTBasicConstraints *bc)
-{
-    BasicConstraints *self = NULL;
-
-    TraceObjNewEnter(NULL);
-
-    if ((self = (BasicConstraints *) BasicConstraintsType.tp_new(&BasicConstraintsType, NULL, NULL)) == NULL) {
-        return NULL;
-    }
-
-    self->bc = *bc;
-
-    TraceObjNewLeave(self);
-    return (PyObject *) self;
-}
 
 /* ========================== PK11 Methods =========================== */
 
