@@ -1266,20 +1266,18 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
   }
 }
 
-- (BOOL)tableView:(NSTableView *)tv writeRows:(NSArray*)rows toPasteboard:(NSPasteboard*)pboard
+- (BOOL)tableView:(NSTableView *)tv writeRowsWithIndexes:(NSIndexSet*)rowIndexes toPasteboard:(NSPasteboard*)pboard
 {
-  int count = [rows count];
+  int count = [rowIndexes count];
   if (count == 0)
     return NO;
 
   NSMutableArray* itemArray = [[NSMutableArray alloc] initWithCapacity:count];
   BookmarkManager* manager = [BookmarkManager sharedBookmarkManager];
 
-  NSEnumerator* enumerator = [rows objectEnumerator];
-  id curRow;
-  while ((curRow = [enumerator nextObject])) {
-    int rowVal = [curRow intValue];
-    BookmarkFolder* collectionFolder = [mBookmarkRoot objectAtIndex:rowVal];
+  for (unsigned int i = [rowIndexes firstIndex]; i != NSNotFound;
+       i = [rowIndexes indexGreaterThanIndex:i]) {
+    BookmarkFolder* collectionFolder = [mBookmarkRoot objectAtIndex:i];
     if ([manager isUserCollection:collectionFolder])
       [itemArray addObject:collectionFolder];
   }

@@ -219,20 +219,12 @@ static NSString *const kSearchEngineEditorDraggedEngineType = @"SearchEngineEdit
   }
 }
 
-- (BOOL)tableView:(NSTableView *)aTableView writeRows:(NSArray *)rows toPasteboard:(NSPasteboard *)pboard
+- (BOOL)tableView:(NSTableView *)aTableView writeRowsWithIndexes:(NSIndexSet *)rowIndexes toPasteboard:(NSPasteboard *)pboard
 {
   // Store which rows are being dragged onto the pasteboard.
   [pboard declareTypes:[NSArray arrayWithObject:kSearchEngineEditorDraggedEngineType] owner:self];
 
-  // 10.4+ Note: Using the new NSTableDataSource dragging method |tableView:writeRowWithIndexes:toPasteboard:|
-  // can eliminate this manual index set population.
-  NSMutableIndexSet *draggedRowIndexSet = [NSMutableIndexSet indexSet];
-  NSEnumerator *draggedRowEnumerator = [rows objectEnumerator];
-  NSNumber *currentRow = nil;
-  while ((currentRow = [draggedRowEnumerator nextObject]))
-    [draggedRowIndexSet addIndex:[currentRow unsignedIntValue]];
-
-  NSData *draggedRowData = [NSKeyedArchiver archivedDataWithRootObject:draggedRowIndexSet];
+  NSData *draggedRowData = [NSKeyedArchiver archivedDataWithRootObject:rowIndexes];
   return [pboard setData:draggedRowData forType:kSearchEngineEditorDraggedEngineType];
 }
 
