@@ -153,6 +153,7 @@ $productBranchVersions = array(
            'nightly-tracemonkey'     => 'tracemonkey',
            'nightly-electrolysis'    => 'electrolysis'
         ),
+        '4.0*'    => 'mozilla-central'
     ),
     'Thunderbird' =>  array(
         '1.5.0.*' =>  '1.5.0.x',
