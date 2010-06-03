@@ -160,6 +160,9 @@ extern const char* const kGeckoPrefDefaultCertificateBehavior;         // string
 extern NSString* const kPersonalCertificateSelectAutomatically;
 extern NSString* const kPersonalCertificateAlwaysAsk;
 
+// Controls whether passwords are autofilled from the Keychain.
+extern const char* const kGeckoPrefUseKeychain;
+
 // Controls whether autocomplete="off" is ignored for password managment
 extern const char* const kGeckoPrefIgnoreAutocompleteOff;              // bool
 

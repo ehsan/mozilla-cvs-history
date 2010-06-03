@@ -114,7 +114,6 @@
 #include "nsIWebProgressListener.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsNetUtil.h"
-#include "nsIPref.h"
 
 #include "nsIDOMViewCSS.h"
 #include "nsIDOMDocumentView.h"
@@ -175,8 +174,6 @@ static NSString* const DLManagerToolbarItemIdentifier   = @"Download Manager Too
 static NSString* const FormFillToolbarItemIdentifier    = @"Form Fill Toolbar Item";
 static NSString* const HistoryToolbarItemIdentifier     = @"History Toolbar Item";
 static NSString* const TabOverviewToolbarItemIdentifier = @"Tab Overview Toolbar Item";
-
-int TabBarVisiblePrefChangedCallback(const char* pref, void* data);
 
 const float kMinimumLocationBarWidth = 250.0;
 const float kMinimumURLAndSearchBarWidth = 128.0;
@@ -623,6 +620,9 @@ public:
 - (void)setLastKnownPreferredSearchEngine:(NSString*)inPreferredEngine;
 - (BOOL)isFlashblockElement:(nsIDOMNode*)aNode;
 
+// Called when the preference to always show the tab bar is changed.
+- (void)tabBarVisiblePrefChanged:(NSNotification*)notification;
+
 @end
 
 #pragma mark -
@@ -874,10 +874,9 @@ public:
 
   delete mDataOwner;
   mDataOwner = NULL;
-
-  nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID));
-  if (pref)
-    pref->UnregisterCallback(kGeckoPrefAlwaysShowTabBar, TabBarVisiblePrefChangedCallback, self);
+  
+  [[PreferenceManager sharedInstance] removeObserver:self
+                                             forPref:kGeckoPrefAlwaysShowTabBar];
       
   // Tell the BrowserTabView the window is closed
   [mTabBrowser windowClosed];
@@ -1051,9 +1050,13 @@ public:
       BOOL tabBarAlwaysVisible = [[PreferenceManager sharedInstance] getBooleanPref:kGeckoPrefAlwaysShowTabBar
                                                                         withSuccess:NULL];
       [mTabBrowser setBarAlwaysVisible:tabBarAlwaysVisible];
-      nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID));
-      if (pref)
-        pref->RegisterCallback(kGeckoPrefAlwaysShowTabBar, TabBarVisiblePrefChangedCallback, self);
+
+      [[PreferenceManager sharedInstance] addObserver:self
+                                              forPref:kGeckoPrefAlwaysShowTabBar];
+      [[NSNotificationCenter defaultCenter] addObserver:self 
+                                               selector:@selector(tabBarVisiblePrefChanged:) 
+                                                   name:kPrefChangedNotificationName 
+                                                 object:self];
     }
 
     // remove the dummy tab view
@@ -5367,6 +5370,14 @@ public:
   return YES;
 }
 
+- (void)tabBarVisiblePrefChanged:(NSNotification*)notification
+{
+  BOOL newValue = [[PreferenceManager sharedInstance]
+                       getBooleanPref:kGeckoPrefAlwaysShowTabBar
+                          withSuccess:NULL];
+  [[self tabBrowser] setBarAlwaysVisible:newValue];
+}
+
 @end
 
 #pragma mark -
@@ -5486,24 +5497,3 @@ static Boolean movieControllerFilter(MovieController mc, short action, void *par
 }
 
 @end
-
-#pragma mark -
-
-//
-// TabBarVisiblePrefChangedCallback
-//
-// Pref callback to tell us when the pref values for the visibility of the tab
-// view with just one tab open.
-//
-int TabBarVisiblePrefChangedCallback(const char* inPref, void* inBWC)
-{
-  if (strcmp(inPref, kGeckoPrefAlwaysShowTabBar) == 0) {
-    BOOL newValue = [[PreferenceManager sharedInstance] getBooleanPref:kGeckoPrefAlwaysShowTabBar
-                                                           withSuccess:NULL];
-    BrowserWindowController* bwc = (BrowserWindowController*)inBWC;
-    [[bwc tabBrowser] setBarAlwaysVisible:newValue];
-  }
-  return NS_OK;
-}
-
-

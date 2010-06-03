@@ -57,6 +57,7 @@ asm(".no_dead_strip _kGeckoPrefPreventDOMStatusChange");
 asm(".no_dead_strip _kGeckoPrefPreventDOMWindowFocus");
 asm(".no_dead_strip _kGeckoPrefPreventDOMWindowResize");
 asm(".no_dead_strip _kGeckoPrefTabFocusBehavior");
+asm(".no_dead_strip _kGeckoPrefUseKeychain");
 asm(".no_dead_strip _kStartPageBlank");
 asm(".no_dead_strip _kStartPageHome");
 asm(".no_dead_strip _kPersonalCertificateAlwaysAsk");
@@ -130,6 +131,7 @@ const char* const kGeckoPrefNewVersionHomepageOverrideVersion = "browser.startup
 #pragma mark Security
 
 const char* const kGeckoPrefDefaultCertificateBehavior = "security.default_personal_cert";
+const char* const kGeckoPrefUseKeychain = "chimera.store_passwords_with_keychain";
 const char* const kGeckoPrefIgnoreAutocompleteOff = "wallet.crypto.autocompleteoverride";
 
 #pragma mark Miscellaneous UI Controls

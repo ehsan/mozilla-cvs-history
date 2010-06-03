@@ -56,7 +56,8 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsIExternalHelperAppService.h"
 #include "nsIMIMEInfo.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "GeckoUtils.h"
@@ -280,7 +281,7 @@ CHBrowserService::Show(nsIHelperAppLauncher* inLauncher, nsISupports* inContext,
   PRBool downloadWithoutDialog = PR_FALSE;
 
   // Check for pref to download to defined downloads directory
-  nsCOMPtr<nsIPref> prefService (do_GetService(NS_PREF_CONTRACTID));
+  nsCOMPtr<nsIPrefBranch> prefService (do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (prefService)
     prefService->GetBoolPref(kGeckoPrefDownloadToDefaultLocation, &downloadWithoutDialog);
 

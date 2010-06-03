@@ -42,7 +42,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
 #include "CHBrowserService.h"
 
 
@@ -333,9 +333,9 @@ static NSString* const CacheInfoPaneSeenKey   = @"MVPreferencePaneSeen";    // N
   [userDefaults synchronize];
 
   // write out prefs
-  nsCOMPtr<nsIPref> prefService ( do_GetService(NS_PREF_CONTRACTID) );
+  nsCOMPtr<nsIPrefService> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
   NS_ASSERTION(prefService, "Could not get pref service, prefs unsaved");
-  if ( prefService )
+  if (prefService)
     prefService->SavePrefFile(nsnull);      // nsnull means write to prefs.js
 
   // tell gecko that this window no longer needs it around.

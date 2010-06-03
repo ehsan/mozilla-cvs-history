@@ -42,7 +42,7 @@
 #import "GeckoPrefConstants.h"
 
 class nsProfileDirServiceProvider;
-class nsIPref;
+class nsIPrefBranch;
 
 extern NSString* const kPrefChangedNotificationName;
 // userInfo entries:
@@ -53,7 +53,7 @@ extern NSString* const kPrefChangedPrefNameUserInfoKey;   // NSString
 @private
   NSUserDefaults*       mDefaults;
   nsProfileDirServiceProvider* mProfileProvider;
-  nsIPref*              mPrefs;
+  nsIPrefBranch*        mPrefs;
 
   NSMutableDictionary*  mPrefChangeObservers; // dict of NSMutableArray of PrefChangeObserverOwner, keyed by pref name.
 

@@ -42,6 +42,7 @@
 
 #import "NSString+Gecko.h"
 
+#import "GeckoPrefConstants.h"
 #import "KeychainItem.h"
 #import "KeychainService.h"
 #import "KeychainDenyList.h"
@@ -51,7 +52,6 @@
 #import "KeyEquivView.h"
 #import "nsAlertController.h"
 
-#include "nsIPref.h"
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
 #include "nsCRT.h"
@@ -112,30 +112,12 @@ static NSWindow* GetNSWindow(nsIDOMWindow* inWindow);
                         withScheme:(NSString*)scheme
                             isForm:(BOOL)isFrom;
 - (NSString*)allowedActionHostsFile;
+- (void)autofillPrefChanged:(NSNotification*)notification;
 @end
 
 @implementation KeychainService
 
 static KeychainService *sInstance = nil;
-static const char* const gUseKeychainPref = "chimera.store_passwords_with_keychain";
-
-int KeychainPrefChangedCallback(const char* pref, void* data);
-
-//
-// KeychainPrefChangedCallback
-//
-// Pref callback to tell us when the pref values for using the keychain
-// have changed. We need to re-cache them at that time.
-//
-int KeychainPrefChangedCallback(const char* inPref, void* unused)
-{
-  BOOL success = NO;
-  if (strcmp(inPref, gUseKeychainPref) == 0)
-    [KeychainService instance]->mFormPasswordFillIsEnabled = [[PreferenceManager sharedInstance] getBooleanPref:gUseKeychainPref withSuccess:&success];
-  
-  return NS_OK;
-}
-
 
 + (KeychainService*)instance
 {
@@ -155,20 +137,23 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
       svc->AddObserver(mFormSubmitObserver, NS_FORMSUBMIT_SUBJECT, PR_FALSE);
     }
   
-    // register for the cocoa notification posted when XPCOM shutdown so we
-    // can unregister the pref callbacks we register below
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(shutdown:) name:XPCOMShutDownNotificationName
-      object:nil];
+    // Register for the cocoa notification posted when XPCOM shuts down so we
+    // can deallocate the shared instance.
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(shutdown:)
+                                                 name:XPCOMShutDownNotificationName
+                                               object:nil];
     
-    // cache the values of the prefs and register pref-changed callbacks. Yeah, I know
-    // nsIPref is obsolete, but i'm not about to create an nsIObserver just for this.
-    mFormPasswordFillIsEnabled = NO;
-    nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID));
-    if (pref) {
-      BOOL success = NO;
-      mFormPasswordFillIsEnabled = [[PreferenceManager sharedInstance] getBooleanPref:gUseKeychainPref withSuccess:&success];
-      pref->RegisterCallback(gUseKeychainPref, KeychainPrefChangedCallback, nsnull);
-    }
+    // Cache the values of the autofill pref and register for notification if
+    // it changes.
+    PreferenceManager* prefManager = [PreferenceManager sharedInstance];
+    mFormPasswordFillIsEnabled =
+        [prefManager getBooleanPref:kGeckoPrefUseKeychain withSuccess:NULL];
+    [prefManager addObserver:self forPref:kGeckoPrefUseKeychain];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(autofillPrefChanged:)
+                                                 name:kPrefChangedNotificationName
+                                               object:self];
     
     // load the mapping of hosts to allowed action hosts
     mAllowedActionHosts = [[NSMutableDictionary alloc] initWithContentsOfFile:[self allowedActionHostsFile]];
@@ -191,6 +176,7 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
   // unregister for shutdown notification. It may have already happened, but just in case.
   NS_IF_RELEASE(mFormSubmitObserver);
   [[NSNotificationCenter defaultCenter] removeObserver:self];
+  [[PreferenceManager sharedInstanceDontCreate] removeObserver:self];
   
   [mAllowedActionHosts release];
   [mCachedKeychainItems release];
@@ -208,18 +194,19 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
 //
 - (void)shutdown:(id)unused
 {
-  // unregister ourselves as listeners of prefs before prefs go away
-  nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID));
-  if (pref)
-    pref->UnregisterCallback(gUseKeychainPref, KeychainPrefChangedCallback, nsnull);
-  
   [sInstance release];
 }
-
 
 - (BOOL)formPasswordFillIsEnabled
 {
   return mFormPasswordFillIsEnabled;
+}
+
+- (void)autofillPrefChanged:(NSNotification*)notification
+{
+  mFormPasswordFillIsEnabled =
+      [[PreferenceManager sharedInstance] getBooleanPref:kGeckoPrefUseKeychain
+                                             withSuccess:NULL];
 }
 
 - (KeychainItem*)findWebFormKeychainEntryForUsername:(NSString*)username

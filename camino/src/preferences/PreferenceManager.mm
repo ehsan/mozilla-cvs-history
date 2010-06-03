@@ -60,7 +60,6 @@
 #include "nsIServiceManager.h"
 #include "nsIObserver.h"
 #include "nsProfileDirServiceProvider.h"
-#include "nsIPref.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch2.h"
 #include "nsEmbedAPI.h"
@@ -452,7 +451,7 @@ static BOOL gMadePrefManager;
 
 - (void)savePrefsFile
 {
-  nsCOMPtr<nsIPrefService> prefsService = do_GetService(NS_PREF_CONTRACTID);
+  nsCOMPtr<nsIPrefService> prefsService = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefsService)
       prefsService->SavePrefFile(nsnull);
 }
@@ -642,7 +641,7 @@ static BOOL gMadePrefManager;
       return NO;
     }
 
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
+    nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
     if (!prefs) {
       [self showLaunchFailureAndQuitWithErrorTitle:NSLocalizedString(@"StartupFailureAlert", @"")
                                       errorMessage:NSLocalizedString(@"StartupFailureNoPrefsMsg", @"")];
@@ -844,15 +843,14 @@ static BOOL gMadePrefManager;
                                              object:self];
 
   // Make sure the homepage has been set up.
-  nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(mPrefs);
-  if (prefBranch) {
-    PRInt32 homepagePrefExists;
-    if (NS_FAILED(prefBranch->PrefHasUserValue(kGeckoPrefHomepageURL, &homepagePrefExists)) || !homepagePrefExists) {
-      NSString* defaultHomepage = NSLocalizedStringFromTable(@"HomePageDefault", @"WebsiteDefaults", nil);
-      // Check that we actually got a sane value back before storing it.
-      if (![defaultHomepage isEqualToString:@"HomePageDefault"])
-        [self setPref:kGeckoPrefHomepageURL toString:defaultHomepage];
-    }
+  PRInt32 homepagePrefExists;
+  if (NS_FAILED(mPrefs->PrefHasUserValue(kGeckoPrefHomepageURL, &homepagePrefExists)) ||
+      !homepagePrefExists)
+  {
+    NSString* defaultHomepage = NSLocalizedStringFromTable(@"HomePageDefault", @"WebsiteDefaults", nil);
+    // Check that we actually got a sane value back before storing it.
+    if (![defaultHomepage isEqualToString:@"HomePageDefault"])
+      [self setPref:kGeckoPrefHomepageURL toString:defaultHomepage];
   }
 }
 

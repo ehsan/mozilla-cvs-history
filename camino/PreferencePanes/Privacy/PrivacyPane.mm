@@ -48,9 +48,6 @@
 @interface CookieDateFormatter : NSDateFormatter
 @end
 
-// prefs for keychain password autofill
-static const char* const kUseKeychainPref = "chimera.store_passwords_with_keychain";
-
 // sort order indicators
 const int kSortReverse = 1;
 
@@ -168,7 +165,8 @@ const int kSortReverse = 1;
     [mAskAboutCookies setState:NSMixedState];
 
   // Keychain checkbox
-  BOOL storePasswords = [self getBooleanPref:kUseKeychainPref withSuccess:NULL];
+  BOOL storePasswords = [self getBooleanPref:kGeckoPrefUseKeychain
+                                 withSuccess:NULL];
   [mStorePasswords setState:(storePasswords ? NSOnState : NSOffState)];
 }
 
@@ -189,7 +187,8 @@ const int kSortReverse = 1;
 
 - (IBAction)clickStorePasswords:(id)sender
 {
-  [self setPref:kUseKeychainPref toBoolean:([mStorePasswords state] == NSOnState)];
+  [self setPref:kGeckoPrefUseKeychain
+      toBoolean:([mStorePasswords state] == NSOnState)];
 }
 
 - (IBAction)launchKeychainAccess:(id)sender

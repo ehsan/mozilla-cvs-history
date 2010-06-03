@@ -63,7 +63,7 @@
 #include "nsUnicharUtils.h"
 #include "nsILocalFile.h"
 
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
 #include "nsIServiceManager.h"
 #include "nsIDocument.h"
 #include "nsIDOMHTMLDocument.h"
@@ -129,8 +129,8 @@ static PRBool wallet_captureForms = PR_FALSE;
 PRBool
 SI_GetBoolPref(const char * prefname, PRBool defaultvalue) {
   nsresult ret;
+  nsCOMPtr<nsIPrefBranch> pPrefService(do_GetService(NS_PREFSERVICE_CONTRACTID, &ret));
   PRBool prefvalue = defaultvalue;
-  nsCOMPtr<nsIPref> pPrefService = do_GetService(NS_PREF_CONTRACTID, &ret);
   if (NS_SUCCEEDED(ret)) {
     ret = pPrefService->GetBoolPref(prefname, &prefvalue);
   }
