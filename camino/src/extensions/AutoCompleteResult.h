@@ -45,8 +45,8 @@
 @interface AutoCompleteResult : NSObject
 {
   NSImage*           mSiteIcon;
-  NSMutableString*   mSiteURL;
-  NSMutableString*   mSiteTitle;
+  NSString*          mSiteURL;
+  NSString*          mSiteTitle;
   BOOL               mIsHeader;
 }
 
