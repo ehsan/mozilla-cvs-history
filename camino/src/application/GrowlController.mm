@@ -84,7 +84,8 @@ static NSTimeInterval const kShortDownloadInterval = 15.0;
 {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   if (mGrowlIsInitialized) {
-    [GrowlApplicationBridge setGrowlDelegate:@""];
+    // Note this is never acutally called, since Growl retains its delegate.
+    [GrowlApplicationBridge setGrowlDelegate:nil];
   }
   [super dealloc];
 }
