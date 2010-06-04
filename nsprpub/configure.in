@@ -79,6 +79,10 @@ NEXT_ROOT=
 MT=
 MOZ_OS2_HIGH_MEMORY=1
 MOZ_THUMB2=
+PROFILE_GEN_CFLAGS=
+PROFILE_GEN_LDFLAGS=
+PROFILE_USE_CFLAGS=
+PROFILE_USE_LDFLAGS=
 
 dnl Link in libraries necessary to resolve all symbols for shared libs
 RESOLVE_LINK_SYMBOLS=
@@ -637,6 +641,29 @@ if test -n "$GNU_CC" && test -n "$GNU_CXX" && test -n "$GNU_AS"; then
 else
     AC_MSG_RESULT([no])
 fi
+
+dnl ========================================================
+dnl Profile guided optimization
+dnl ========================================================
+dnl Test for profiling options
+dnl Under gcc 3.4+, use -fprofile-generate/-fprofile-use
+
+_SAVE_CFLAGS="$CFLAGS"
+CFLAGS="$CFLAGS -fprofile-generate -fprofile-correction"
+
+AC_MSG_CHECKING([whether C compiler supports -fprofile-generate])
+AC_TRY_COMPILE([], [return 0;],
+               [ PROFILE_GEN_CFLAGS="-fprofile-generate"
+                 result="yes" ], result="no")
+AC_MSG_RESULT([$result])
+
+if test $result = "yes"; then
+   PROFILE_GEN_LDFLAGS="-fprofile-generate"
+   PROFILE_USE_CFLAGS="-fprofile-use -fprofile-correction -Wcoverage-mismatch -freoder-blocks-and-partition"
+   PROFILE_USE_LDFLAGS="-fprofile-use"
+fi
+
+CFLAGS="$_SAVE_CFLAGS"
 
 dnl ===============================================================
 dnl Check for .hidden assembler directive and visibility attribute.
@@ -1702,6 +1729,12 @@ arm-android-eabi)
         DLLFLAGS="$DLLFLAGS -OUT:\"\$@\""
         _DEBUG_FLAGS=-Zi
         _OPTIMIZE_FLAGS=-O2
+
+        PROFILE_GEN_CFLAGS="-GL"
+        PROFILE_GEN_LDFLAGS="-LTCG:PGINSTRUMENT"
+        PROFILE_USE_CFLAGS="-GL -wd4624 -wd4952"
+        PROFILE_USE_LDFLAGS="-LTCG:PGUPDATE"
+
         if test -z "$MOZ_OPTIMIZE"; then
             CFLAGS="$CFLAGS -Od"
         fi
@@ -2985,6 +3018,11 @@ AC_SUBST(PERL)
 AC_SUBST(STRIP)
 AC_SUBST(FILTER)
 AC_SUBST(IMPLIB)
+
+AC_SUBST(PROFILE_GEN_CFLAGS)
+AC_SUBST(PROFILE_GEN_LDFLAGS)
+AC_SUBST(PROFILE_USE_CFLAGS)
+AC_SUBST(PROFILE_USE_LDFLAGS)
 
 AC_SUBST(OS_LIBS)
 AC_SUBST(RESOLVE_LINK_SYMBOLS)
