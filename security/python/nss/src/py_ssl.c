@@ -404,7 +404,6 @@ SSLSocket_accept(SSLSocket *self, PyObject *args, PyObject *kwds)
  error:
     Py_XDECREF(py_ssl_socket);
     Py_XDECREF(py_netaddr);
-    Py_XDECREF(return_value);
     return NULL;
 }
 

@@ -309,10 +309,11 @@ NewType_new_from_NSSType(NSSType *id)
     PyObject *src_obj;                                                  \
     Py_ssize_t len, i;                                                  \
     if (src_lines) {                                                    \
-        len = PyList_Size(src_lines);                                   \
+        len = PySequence_Size(src_lines);                               \
         for (i = 0; i < len; i++) {                                     \
-            src_obj = PyList_GetItem(src_lines, i);                     \
+            src_obj = PySequence_GetItem(src_lines, i);                 \
             FMT_OBJ_AND_APPEND(dst_pairs, NULL, src_obj, level, fail);  \
+            Py_DECREF(src_obj);                                         \
         }                                                               \
         Py_CLEAR(src_lines);                                            \
     }                                                                   \
@@ -329,6 +330,19 @@ NewType_new_from_NSSType(NSSType *id)
     }                                                                   \
                                                                         \
     APPEND_LINE_PAIRS_AND_CLEAR(dst_pairs, obj_line_pairs, fail);       \
+}
+
+
+#define APPEND_OBJ_TO_HEX_LINES_AND_CLEAR(dst_pairs, obj, level, fail)  \
+{                                                                       \
+    PyObject *obj_lines;                                                \
+                                                                        \
+    if ((obj_lines = obj_to_hex(obj, OCTETS_PER_LINE_DEFAULT,           \
+                                HEX_SEPARATOR_DEFAULT)) == NULL) {      \
+        goto fail;                                                      \
+    }                                                                   \
+    Py_CLEAR(obj);                                                      \
+    APPEND_LINES_AND_CLEAR(dst_pairs, obj_lines, level, fail);          \
 }
 
 /* Copied from mozilla/security/nss/lib/certdb/alg1485.c */
@@ -758,6 +772,27 @@ set_thread_local(const char *name, PyObject *obj);
 
 static PyObject *
 get_thread_local(const char *name);
+
+static PyObject *
+SECItem_der_to_hex(SECItem *item, int octets_per_line, char *separator);
+
+static PyObject *
+cert_x509_key_usage(PyObject *self, PyObject *args);
+
+PyObject *
+CRLDistributionPts_new_from_SECItem(SECItem *item);
+
+PyObject *
+AuthKeyID_new_from_SECItem(SECItem *item);
+
+static PyObject *
+cert_x509_ext_key_usage(PyObject *self, PyObject *args, PyObject *kwds);
+
+PyObject *
+BasicConstraints_new_from_SECItem(SECItem *item);
+
+static PyObject *
+cert_x509_alt_name(PyObject *self, PyObject *args, PyObject *kwds);
 
 /* ==================================== */
 
@@ -2035,8 +2070,14 @@ fmt_label(int level, char *label)
     PyObject *pair = NULL;
     PyObject *label_str = NULL;
 
-    if ((label_str = PyString_FromFormat("%s:", label)) == NULL) {
-        return NULL;
+    if (label) {
+        if ((label_str = PyString_FromFormat("%s:", label)) == NULL) {
+            return NULL;
+        }
+    } else {
+        if ((label_str = PyString_FromString("")) == NULL) {
+            return NULL;
+        }
     }
 
     if ((pair = PyTuple_New(2)) == NULL) {
@@ -2079,7 +2120,7 @@ format_from_lines(format_lines_func formatter, PyObject *self, PyObject *args, P
     }
     Py_CLEAR(tmp_args);
 
-    if ((tmp_args = Py_BuildValue("NN", py_lines, py_indent)) == NULL) {
+    if ((tmp_args = Py_BuildValue("OO", py_lines, py_indent)) == NULL) {
         goto fail;
     }
     if ((py_formatted_result = nss_indented_format(NULL, tmp_args, NULL)) == NULL) {
@@ -3393,6 +3434,19 @@ ip_addr_secitem_to_pystr(SECItem *item)
     return PyString_FromString(buf);
 }
 
+static PyObject *
+SECItem_der_to_hex(SECItem *item, int octets_per_line, char *separator)
+{
+    SECItem tmp_item = *item;
+
+    if (sec_strip_tag_and_length(&tmp_item) != SECSuccess) {
+        PyErr_SetString(PyExc_ValueError, "malformed ASN.1 DER data");
+        return NULL;
+    }
+
+    return raw_data_to_hex(tmp_item.data, tmp_item.len, octets_per_line, separator);
+}
+
 /* ========================================================================== */
 /* =============================== SecItem Class ============================ */
 /* ========================================================================== */
@@ -4325,7 +4379,6 @@ RSAPublicKey_format_lines(RSAPublicKey *self, PyObject *args, PyObject *kwds)
     PyObject *lines = NULL;
     PyObject *obj = NULL;
     PyObject *exponent = NULL;
-    PyObject *obj_lines = NULL;
 
     TraceMethodEnter(self);
 
@@ -4341,10 +4394,7 @@ RSAPublicKey_format_lines(RSAPublicKey *self, PyObject *args, PyObject *kwds)
     if ((obj = RSAPublicKey_get_modulus(self, NULL)) == NULL) {
         goto fail;
     }
-    obj_lines = obj_to_hex(obj, OCTETS_PER_LINE_DEFAULT, HEX_SEPARATOR_DEFAULT);
-    Py_CLEAR(obj);
-
-    APPEND_LINES_AND_CLEAR(lines, obj_lines, level+1, fail);
+    APPEND_OBJ_TO_HEX_LINES_AND_CLEAR(lines, obj, level+1, fail);
 
     if ((exponent = RSAPublicKey_get_exponent(self, NULL)) == NULL) {
         goto fail;
@@ -4361,7 +4411,6 @@ RSAPublicKey_format_lines(RSAPublicKey *self, PyObject *args, PyObject *kwds)
     Py_XDECREF(obj);
     Py_XDECREF(exponent);
     Py_XDECREF(lines);
-    Py_XDECREF(obj_lines);
     return NULL;
 }
 
@@ -4767,7 +4816,6 @@ SignedData_format_lines(SignedData *self, PyObject *args, PyObject *kwds)
     int level = 0;
     PyObject *lines = NULL;
     PyObject *obj = NULL;
-    PyObject *obj_lines = NULL;
 
     TraceMethodEnter(self);
 
@@ -4789,17 +4837,13 @@ SignedData_format_lines(SignedData *self, PyObject *args, PyObject *kwds)
     if ((obj = SignedData_get_signature(self, NULL)) == NULL) {
         goto fail;
     }
-    obj_lines = obj_to_hex(obj, OCTETS_PER_LINE_DEFAULT, HEX_SEPARATOR_DEFAULT);
-    Py_CLEAR(obj);
-
-    APPEND_LINES_AND_CLEAR(lines, obj_lines, level+1, fail);
+    APPEND_OBJ_TO_HEX_LINES_AND_CLEAR(lines, obj, level+1, fail);
 
     return lines;
 
  fail:
     Py_XDECREF(obj);
     Py_XDECREF(lines);
-    Py_XDECREF(obj_lines);
     return NULL;
 }
 
@@ -5876,7 +5920,168 @@ CertificateExtension_repr(CertificateExtension *self)
     return CertificateExtension_str(self);
 }
 
+static PyObject *
+CertificateExtension_format_lines(CertificateExtension *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"level", NULL};
+    int level = 0;
+    Py_ssize_t len, i;
+    PyObject *lines = NULL;
+    PyObject *obj = NULL;
+    PyObject *obj1 = NULL;
+    SECOidTag oid_tag;
+    PyObject *obj_lines = NULL;
+    PyObject *tmp_args = NULL;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i:format_lines", kwlist, &level))
+        return NULL;
+
+    if ((lines = PyList_New(0)) == NULL) {
+        goto fail;
+    }
+
+    if ((obj = CertificateExtension_get_name(self, NULL)) == NULL) {
+        goto fail;
+    }
+    FMT_OBJ_AND_APPEND(lines, _("Name"), obj, level, fail);
+    Py_CLEAR(obj);
+
+    if ((obj = CertificateExtension_get_critical(self, NULL)) == NULL) {
+        goto fail;
+    }
+    FMT_OBJ_AND_APPEND(lines, _("Critical"), obj, level, fail);
+    Py_CLEAR(obj);
+
+    oid_tag = SECOID_FindOIDTag(&self->py_oid->item);
+
+    switch(oid_tag) {
+    case SEC_OID_PKCS12_KEY_USAGE:
+        FMT_LABEL_AND_APPEND(lines, _("Usages"), level, fail);
+        if ((tmp_args = Py_BuildValue("(O)", self->py_value)) == NULL) {
+            goto fail;
+        }
+        if ((obj = cert_x509_key_usage(NULL, tmp_args)) == NULL) {
+            goto fail;
+        }
+        Py_CLEAR(tmp_args);
+        if ((obj_lines = make_line_pairs(level+1, obj)) == NULL) {
+            goto fail;
+        }
+        APPEND_LINE_PAIRS_AND_CLEAR(lines, obj_lines, fail);
+        break;
+
+    case SEC_OID_X509_SUBJECT_KEY_ID:
+        FMT_LABEL_AND_APPEND(lines, _("Data"), level, fail);
+        if ((obj_lines = SECItem_der_to_hex(&self->py_value->item,
+                                            OCTETS_PER_LINE_DEFAULT, HEX_SEPARATOR_DEFAULT)) == NULL) {
+            goto fail;
+        }
+        APPEND_LINES_AND_CLEAR(lines, obj_lines, level+1, fail);
+        break;
+
+    case SEC_OID_X509_CRL_DIST_POINTS:
+        if ((obj = CRLDistributionPts_new_from_SECItem(&self->py_value->item)) == NULL) {
+            goto fail;
+        }
+        len = PyObject_Size(obj);
+        if ((obj1 = PyString_FromFormat("CRL Distribution Points: [%d total]", len)) == NULL) {
+            goto fail;
+        }
+        FMT_OBJ_AND_APPEND(lines, NULL, obj1, level, fail);
+        Py_CLEAR(obj1);
+
+        for (i = 0; i < len; i++) {
+            if ((obj1 = PyString_FromFormat("Point [%d]:", i+1)) == NULL) {
+                goto fail;
+            }
+            FMT_OBJ_AND_APPEND(lines, NULL, obj1, level+1, fail);
+            Py_CLEAR(obj1);
+            if ((obj1 = PySequence_GetItem(obj, i)) == NULL) {
+                goto fail;
+            }
+            CALL_FORMAT_LINES_AND_APPEND(lines, obj1, level+2, fail);
+            Py_CLEAR(obj1);
+        }
+
+        break;
+
+    case SEC_OID_X509_AUTH_KEY_ID:
+        if ((obj = AuthKeyID_new_from_SECItem(&self->py_value->item)) == NULL) {
+            goto fail;
+        }
+        CALL_FORMAT_LINES_AND_APPEND(lines, obj, level, fail);
+        Py_CLEAR(obj);
+
+        break;
+
+    case SEC_OID_X509_EXT_KEY_USAGE:
+        FMT_LABEL_AND_APPEND(lines, _("Usages"), level, fail);
+        if ((tmp_args = Py_BuildValue("(O)", self->py_value)) == NULL) {
+            goto fail;
+        }
+        if ((obj = cert_x509_ext_key_usage(NULL, tmp_args, NULL)) == NULL) {
+            goto fail;
+        }
+        Py_CLEAR(tmp_args);
+        if ((obj_lines = make_line_pairs(level+1, obj)) == NULL) {
+            goto fail;
+        }
+        APPEND_LINE_PAIRS_AND_CLEAR(lines, obj_lines, fail);
+        break;
+
+    case SEC_OID_X509_BASIC_CONSTRAINTS:
+        if ((obj = BasicConstraints_new_from_SECItem(&self->py_value->item)) == NULL) {
+            goto fail;
+        }
+        CALL_FORMAT_LINES_AND_APPEND(lines, obj, level, fail);
+        Py_CLEAR(obj);
+
+        break;
+
+    case SEC_OID_X509_SUBJECT_ALT_NAME:
+    case SEC_OID_X509_ISSUER_ALT_NAME:
+        FMT_LABEL_AND_APPEND(lines, _("Names"), level, fail);
+        if ((tmp_args = Py_BuildValue("(O)", self->py_value)) == NULL) {
+            goto fail;
+        }
+        if ((obj = cert_x509_alt_name(NULL, tmp_args, NULL)) == NULL) {
+            goto fail;
+        }
+        Py_CLEAR(tmp_args);
+        if ((obj_lines = make_line_pairs(level+1, obj)) == NULL) {
+            goto fail;
+        }
+        APPEND_LINE_PAIRS_AND_CLEAR(lines, obj_lines, fail);
+        break;
+
+    default:
+        break;
+    }
+
+    return lines;
+
+ fail:
+    Py_XDECREF(lines);
+    Py_XDECREF(obj);
+    Py_XDECREF(obj1);
+    Py_XDECREF(obj_lines);
+    Py_XDECREF(tmp_args);
+    return NULL;
+}
+
+static PyObject *
+CertificateExtension_format(RSAPublicKey *self, PyObject *args, PyObject *kwds)
+{
+    TraceMethodEnter(self);
+
+    return format_from_lines((format_lines_func)CertificateExtension_format_lines, (PyObject *)self, args, kwds);
+}
+
 static PyMethodDef CertificateExtension_methods[] = {
+    {"format_lines", (PyCFunction)CertificateExtension_format_lines,   METH_VARARGS|METH_KEYWORDS, generic_format_lines_doc},
+    {"format",       (PyCFunction)CertificateExtension_format,         METH_VARARGS|METH_KEYWORDS, generic_format_doc},
     {NULL, NULL}  /* Sentinel */
 };
 
@@ -6193,7 +6398,7 @@ Certificate_get_extensions(Certificate *self, void *closure)
 
     /* First count how many extensions the cert has */
     for (extensions = self->cert->extensions, num_extensions = 0;
-         *extensions;
+         extensions && *extensions;
          extensions++, num_extensions++);
 
     /* Allocate a tuple */
@@ -6202,7 +6407,7 @@ Certificate_get_extensions(Certificate *self, void *closure)
     }
 
     /* Copy the extensions into the tuple */
-    for (extensions = self->cert->extensions, i = 0; *extensions; extensions++, i++) {
+    for (extensions = self->cert->extensions, i = 0; extensions && *extensions; extensions++, i++) {
         CERTCertExtension *extension = *extensions;
         PyObject *py_extension;
         
@@ -6528,12 +6733,12 @@ Certificate_verify_now(Certificate *self, PyObject *args)
     return PyInt_FromLong(returned_usages);
 }
 
-
 static PyObject *
 Certificate_format_lines(Certificate *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"level", NULL};
     int level = 0;
+    Py_ssize_t len, i;
     PyObject *lines = NULL;
     PyObject *obj = NULL;
     PyObject *obj1 = NULL;
@@ -6543,6 +6748,7 @@ Certificate_format_lines(Certificate *self, PyObject *args, PyObject *kwds)
     PyObject *obj_lines = NULL;
     PyObject *ssl_trust_lines = NULL, *email_trust_lines = NULL, *signing_trust_lines = NULL;
     PyObject *tmp_args = NULL;
+    PyObject *extensions = NULL;
 
     TraceMethodEnter(self);
 
@@ -6553,7 +6759,6 @@ Certificate_format_lines(Certificate *self, PyObject *args, PyObject *kwds)
         goto fail;
     }
 
-    //FMT_LABEL_AND_APPEND(lines, _("Certificate"), level, fail);
     FMT_LABEL_AND_APPEND(lines, _("Data"), level+1, fail);
 
     if ((obj = Certificate_get_version(self, NULL)) == NULL) {
@@ -6625,6 +6830,24 @@ Certificate_format_lines(Certificate *self, PyObject *args, PyObject *kwds)
     CALL_FORMAT_LINES_AND_APPEND(lines, obj, level+3, fail);
     Py_CLEAR(obj);
 
+    if ((extensions = Certificate_get_extensions(self, NULL)) == NULL) {
+        goto fail;
+    }
+
+    len = PyTuple_Size(extensions);
+    if ((obj = PyString_FromFormat("Signed Extensions: (%d)", len)) == NULL) {
+        goto fail;
+    }
+    FMT_OBJ_AND_APPEND(lines, NULL, obj, level+1, fail);
+    Py_CLEAR(obj);
+
+    for (i = 0; i < len; i++) {
+        obj = PyTuple_GetItem(extensions, i);
+        CALL_FORMAT_LINES_AND_APPEND(lines, obj, level+2, fail);
+        FMT_LABEL_AND_APPEND(lines, NULL, 0, fail);
+    }
+    Py_CLEAR(extensions);
+
     if ((ssl_trust_lines = Certificate_get_ssl_trust_str(self, NULL)) == NULL) {
         goto fail;
     }
@@ -6658,49 +6881,41 @@ Certificate_format_lines(Certificate *self, PyObject *args, PyObject *kwds)
     Py_CLEAR(email_trust_lines);
     Py_CLEAR(signing_trust_lines);
 
-    FMT_LABEL_AND_APPEND(lines, _("Fingerprint (MD5)"), level+2, fail);
+    FMT_LABEL_AND_APPEND(lines, _("Fingerprint (MD5)"), level+1, fail);
 
     if ((obj = Certificate_get_der_data(self, NULL)) == NULL) {
         goto fail;
     }
 
-    if ((tmp_args = Py_BuildValue("(N)", obj)) == NULL) {
+    if ((tmp_args = Py_BuildValue("(O)", obj)) == NULL) {
         goto fail;
     }
+    Py_CLEAR(obj);
 
     if ((obj = pk11_md5_digest(NULL, tmp_args)) == NULL) {
         goto fail;
     }
     Py_CLEAR(tmp_args);
 
-    if ((obj_lines = obj_to_hex(obj, OCTETS_PER_LINE_DEFAULT, HEX_SEPARATOR_DEFAULT)) == NULL) {
-        goto fail;
-    }
-    Py_CLEAR(obj);
+    APPEND_OBJ_TO_HEX_LINES_AND_CLEAR(lines, obj, level+2, fail);
 
-    APPEND_LINES_AND_CLEAR(lines, obj_lines, level+3, fail);
-
-    FMT_LABEL_AND_APPEND(lines, _("Fingerprint (SHA1)"), level+2, fail);
+    FMT_LABEL_AND_APPEND(lines, _("Fingerprint (SHA1)"), level+1, fail);
 
     if ((obj = Certificate_get_der_data(self, NULL)) == NULL) {
         goto fail;
     }
 
-    if ((tmp_args = Py_BuildValue("(N)", obj)) == NULL) {
+    if ((tmp_args = Py_BuildValue("(O)", obj)) == NULL) {
         goto fail;
     }
+    Py_CLEAR(obj);
 
     if ((obj = pk11_sha1_digest(NULL, tmp_args)) == NULL) {
         goto fail;
     }
     Py_CLEAR(tmp_args);
 
-    if ((obj_lines = obj_to_hex(obj, OCTETS_PER_LINE_DEFAULT, HEX_SEPARATOR_DEFAULT)) == NULL) {
-        goto fail;
-    }
-    Py_CLEAR(obj);
-
-    APPEND_LINES_AND_CLEAR(lines, obj_lines, level+3, fail);
+    APPEND_OBJ_TO_HEX_LINES_AND_CLEAR(lines, obj, level+2, fail);
 
     FMT_LABEL_AND_APPEND(lines, _("Signature"), level+1, fail);
 
@@ -6724,6 +6939,7 @@ Certificate_format_lines(Certificate *self, PyObject *args, PyObject *kwds)
     Py_XDECREF(ssl_trust_lines);
     Py_XDECREF(email_trust_lines);
     Py_XDECREF(signing_trust_lines);
+    Py_XDECREF(extensions);
     return NULL;
 }
 
@@ -10574,7 +10790,198 @@ CRLDistributionPt_get_reasons(CRLDistributionPt *self, PyObject *args, PyObject 
     return crl_reason_bitstr_to_tuple(&self->pt->bitsmap, repr_kind);
 }
 
+PyObject *
+CRLDistributionPt_format_lines(CRLDistributionPt *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"level", NULL};
+    int level = 0;
+    Py_ssize_t len;
+    PyObject *lines = NULL;
+    PyObject *obj = NULL;
+    PyObject *obj1 = NULL;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i:format_lines", kwlist, &level))
+        return NULL;
+
+    if ((lines = PyList_New(0)) == NULL) {
+        return NULL;
+    }
+
+    if (!self->pt) {
+        return lines;
+    }
+
+    if (self->pt->distPointType == generalName) {
+        if ((obj = CRLDistributionPt_general_names_tuple(self, AsString)) == NULL) {
+            goto fail;
+        }
+        len = PyTuple_GET_SIZE(obj);
+
+        if ((obj1 = PyString_FromFormat("General Names: [%d total]", len)) == NULL) {
+            goto fail;
+        }
+        FMT_OBJ_AND_APPEND(lines, NULL, obj1, level, fail);
+        Py_CLEAR(obj1);
+
+        APPEND_LINES_AND_CLEAR(lines, obj, level+1, fail);
+
+    } else if (self->pt->distPointType == relativeDistinguishedName) {
+
+        if ((obj = X500RDN_new_from_CERTRDN(&self->pt->distPoint.relativeName)) == NULL) {
+            goto fail;
+        }
+
+        FMT_OBJ_AND_APPEND(lines, _("Relative Distinguished Name"), obj, level, fail);
+        Py_CLEAR(obj);
+    } else {
+        PyErr_Format(PyExc_ValueError, "unknown distribution point type (%d), "
+                     "expected generalName or relativeDistinguishedName",
+                     self->pt->distPointType);
+        goto fail;
+    }
+
+    if ((obj = CRLDistributionPt_get_crl_issuer(self, NULL)) == NULL) {
+        goto fail;
+    }
+
+    FMT_OBJ_AND_APPEND(lines, _("Issuer"), obj, level, fail);
+    Py_CLEAR(obj);
+
+    if ((obj = crl_reason_bitstr_to_tuple(&self->pt->bitsmap, AsEnumDescription)) == NULL) {
+        goto fail;
+    }
+
+    FMT_OBJ_AND_APPEND(lines, _("Reasons"), obj, level, fail);
+    Py_CLEAR(obj);
+
+    return lines;
+
+ fail:
+    Py_XDECREF(lines);
+    Py_XDECREF(obj);
+    Py_XDECREF(obj1);
+    return NULL;
+}
+
+static PyObject *
+CRLDistributionPt_format(CRLDistributionPt *self, PyObject *args, PyObject *kwds)
+{
+    TraceMethodEnter(self);
+
+    return format_from_lines((format_lines_func)CRLDistributionPt_format_lines, (PyObject *)self, args, kwds);
+}
+
+static PyObject *
+CRLDistributionPt_str(CRLDistributionPt *self)
+{
+    PyObject *py_formatted_result = NULL;
+
+    TraceMethodEnter(self);
+
+    py_formatted_result =  CRLDistributionPt_format(self, empty_tuple, NULL);
+    return py_formatted_result;
+
+}
+
+static PyObject *
+CRLDistributionPt_repr(CRLDistributionPt *self)
+{
+    PyObject *result = NULL;
+    PyObject *rdn = NULL;
+    PyObject *names = NULL;
+    PyObject *name_str = NULL;
+    PyObject *name_desc = NULL;
+    PyObject *crl_issuer = NULL;
+    PyObject *crl_issuer_str = NULL;
+    PyObject *reasons = NULL;
+    PyObject *reasons_str = NULL;
+    PyObject *sep = NULL;
+
+    if (!self->pt) {
+        return PyString_FromFormat("<%s object at %p>",
+                                   Py_TYPE(self)->tp_name, self);
+    }
+
+    if ((sep = PyString_FromString(", ")) == NULL) {
+        goto exit;
+    }
+
+    if (self->pt->distPointType == generalName) {
+        Py_ssize_t n_names = 0;
+
+        if ((names = CRLDistributionPt_general_names_tuple(self, AsString)) == NULL) {
+            goto exit;
+        }
+        n_names = PyTuple_GET_SIZE(names);
+
+        /* Paste them all together with ", " between. */
+        if ((name_str = _PyString_Join(sep, names)) == NULL) {
+            goto exit;
+        }
+
+        name_desc = PyString_FromFormat(_("General Name List: [%s]"),
+                                        PyString_AsString(name_str));
+
+    } else if (self->pt->distPointType == relativeDistinguishedName) {
+
+        if ((rdn = X500RDN_new_from_CERTRDN(&self->pt->distPoint.relativeName)) == NULL) {
+            goto exit;
+        }
+
+        if ((name_str = PyObject_Str(rdn)) == NULL) {
+            goto exit;
+        }
+
+        name_desc = PyString_FromFormat(_("Relative Distinguished Name: %s"),
+                                        PyString_AsString(name_str));
+        
+    } else {
+        PyErr_Format(PyExc_ValueError, "unknown distribution point type (%d), "
+                     "expected generalName or relativeDistinguishedName",
+                     self->pt->distPointType);
+        goto exit;
+    }
+
+    if ((crl_issuer = CRLDistributionPt_get_crl_issuer(self, NULL)) == NULL) {
+        goto exit;
+    }
+
+    if ((crl_issuer_str = PyObject_Str(crl_issuer)) == NULL) {
+        goto exit;
+    }
+        
+    if ((reasons = crl_reason_bitstr_to_tuple(&self->pt->bitsmap, AsEnumDescription)) == NULL) {
+        goto exit;
+    }
+
+    if ((reasons_str = _PyString_Join(sep, reasons)) == NULL) {
+        goto exit;
+    }
+
+    result = PyString_FromFormat("%s, Issuer: %s, Reasons: [%s]",
+                                 PyString_AsString(name_desc),
+                                 PyString_AsString(crl_issuer_str),
+                                 PyString_AsString(reasons_str));
+
+ exit:
+    Py_XDECREF(rdn);
+    Py_XDECREF(names);
+    Py_XDECREF(name_str);
+    Py_XDECREF(name_desc);
+    Py_XDECREF(crl_issuer);
+    Py_XDECREF(crl_issuer_str);
+    Py_XDECREF(reasons);
+    Py_XDECREF(reasons_str);
+    Py_XDECREF(sep);
+
+    return result;
+}
+
 static PyMethodDef CRLDistributionPt_methods[] = {
+    {"format_lines",      (PyCFunction)CRLDistributionPt_format_lines,      METH_VARARGS|METH_KEYWORDS, generic_format_lines_doc},
+    {"format",            (PyCFunction)CRLDistributionPt_format,            METH_VARARGS|METH_KEYWORDS, generic_format_doc},
     {"get_general_names", (PyCFunction)CRLDistributionPt_get_general_names, METH_VARARGS|METH_KEYWORDS, CRLDistributionPt_get_general_names_doc},
     {"get_reasons",       (PyCFunction)CRLDistributionPt_get_reasons,       METH_VARARGS|METH_KEYWORDS, CRLDistributionPt_get_reasons_doc},
     {NULL, NULL}  /* Sentinel */
@@ -10659,99 +11066,6 @@ CRLDistributionPt_general_names_tuple(CRLDistributionPt *self, RepresentationKin
     return CERTGeneralName_list_to_tuple(self->pt->distPoint.fullName, repr_kind);
 }
 
-static PyObject *
-CRLDistributionPt_repr(CRLDistributionPt *self)
-{
-    PyObject *result = NULL;
-    PyObject *rdn = NULL;
-    PyObject *names = NULL;
-    PyObject *name_str = NULL;
-    PyObject *name_desc = NULL;
-    PyObject *crl_issuer = NULL;
-    PyObject *crl_issuer_str = NULL;
-    PyObject *reasons = NULL;
-    PyObject *reasons_str = NULL;
-    PyObject *sep = NULL;
-
-    if (!self->pt) {
-        return PyString_FromFormat("<%s object at %p>",
-                                   Py_TYPE(self)->tp_name, self);
-    }
-
-    if ((sep = PyString_FromString(", ")) == NULL) {
-        goto exit;
-    }
-
-    if (self->pt->distPointType == generalName) {
-        Py_ssize_t n_names = 0;
-
-        if ((names = CRLDistributionPt_general_names_tuple(self, AsString)) == NULL) {
-            goto exit;
-        }
-        n_names = PyTuple_GET_SIZE(names);
-
-        /* Paste them all together with ", " between. */
-        if ((name_str = _PyString_Join(sep, names)) == NULL) {
-            goto exit;
-        }
-
-        name_desc = PyString_FromFormat("General Name List: [%s]",
-                                        PyString_AsString(name_str));
-
-    } else if (self->pt->distPointType == relativeDistinguishedName) {
-
-        if ((rdn = X500RDN_new_from_CERTRDN(&self->pt->distPoint.relativeName)) == NULL) {
-            goto exit;
-        }
-
-        if ((name_str = PyObject_Str(rdn)) == NULL) {
-            goto exit;
-        }
-
-        name_desc = PyString_FromFormat("Relative Distinguished Name: %s",
-                                        PyString_AsString(name_str));
-
-    } else {
-        PyErr_Format(PyExc_ValueError, "unknown distribution point type (%d), "
-                     "expected generalName or relativeDistinguishedName",
-                     self->pt->distPointType);
-        goto exit;
-    }
-
-    if ((crl_issuer = CRLDistributionPt_get_crl_issuer(self, NULL)) == NULL) {
-        goto exit;
-    }
-
-    if ((crl_issuer_str = PyObject_Str(crl_issuer)) == NULL) {
-        goto exit;
-    }
-        
-    if ((reasons = crl_reason_bitstr_to_tuple(&self->pt->bitsmap, AsEnumDescription)) == NULL) {
-        goto exit;
-    }
-
-    if ((reasons_str = _PyString_Join(sep, reasons)) == NULL) {
-        goto exit;
-    }
-
-    result = PyString_FromFormat("%s, Issuer: %s, Reasons: [%s]",
-                                 PyString_AsString(name_desc),
-                                 PyString_AsString(crl_issuer_str),
-                                 PyString_AsString(reasons_str));
-
- exit:
-    Py_XDECREF(rdn);
-    Py_XDECREF(names);
-    Py_XDECREF(name_str);
-    Py_XDECREF(name_desc);
-    Py_XDECREF(crl_issuer);
-    Py_XDECREF(crl_issuer_str);
-    Py_XDECREF(reasons);
-    Py_XDECREF(reasons_str);
-    Py_XDECREF(sep);
-
-    return result;
-}
 
 static PyTypeObject CRLDistributionPtType = {
     PyObject_HEAD_INIT(NULL)
@@ -10770,7 +11084,7 @@ static PyTypeObject CRLDistributionPtType = {
     0,						/* tp_as_mapping */
     0,						/* tp_hash */
     0,						/* tp_call */
-    0,						/* tp_str */
+    (reprfunc)CRLDistributionPt_str,		/* tp_str */
     0,						/* tp_getattro */
     0,						/* tp_setattro */
     0,						/* tp_as_buffer */
@@ -10806,8 +11120,7 @@ CRLDistributionPt_new_from_CRLDistributionPoint(CRLDistributionPoint *pt)
         return NULL;
     }
 
-    if (CERT_CopyCRLDistributionPoint(self->arena, &self->pt,
-                                      pt) != SECSuccess) {
+    if (CERT_CopyCRLDistributionPoint(self->arena, &self->pt, pt) != SECSuccess) {
         set_nspr_error(NULL);
         Py_CLEAR(self);
         return NULL;
@@ -10858,10 +11171,14 @@ CRLDistributionPts_length(CRLDistributionPts *self)
 static PyObject *
 CRLDistributionPts_item(CRLDistributionPts *self, register Py_ssize_t i)
 {
+    PyObject *py_pt = NULL;
+
     if (!self->py_pts) {
         return PyErr_Format(PyExc_ValueError, "%s is uninitialized", Py_TYPE(self)->tp_name);
     }
-    return PyTuple_GetItem(self->py_pts, i);
+    py_pt = PyTuple_GetItem(self->py_pts, i);
+    Py_XINCREF(py_pt);
+    return py_pt;
 }
 
 static PyMethodDef CRLDistributionPts_methods[] = {
@@ -10906,10 +11223,11 @@ CRLDistributionPts_init_from_SECItem(CRLDistributionPts *self, SECItem *item)
             Py_CLEAR(py_pts);
             return -1;
         }
+
         PyTuple_SetItem(py_pts, i, py_crl_dist_pt);
     }
 
-    ASSIGN_REF(self->py_pts, py_pts);
+    ASSIGN_NEW_REF(self->py_pts, py_pts);
 
     PORT_FreeArena(arena, PR_FALSE);
 
@@ -11039,13 +11357,18 @@ static PyTypeObject CRLDistributionPtsType = {
 };
 
 PyObject *
-CRLDistributionPts_new_from_CERTCrlDistributionPoints(CERTCrlDistributionPoints *pts)
+CRLDistributionPts_new_from_SECItem(SECItem *item)
 {
     CRLDistributionPts *self = NULL;
 
     TraceObjNewEnter(NULL);
 
     if ((self = (CRLDistributionPts *) CRLDistributionPtsType.tp_new(&CRLDistributionPtsType, NULL, NULL)) == NULL) {
+        return NULL;
+    }
+
+    if (CRLDistributionPts_init_from_SECItem(self, item) < 0) {
+        Py_CLEAR(self);
         return NULL;
     }
 
@@ -11156,7 +11479,93 @@ AuthKeyID_get_general_names(AuthKeyID *self, PyObject *args, PyObject *kwds)
     return AuthKeyID_general_names_tuple(self, repr_kind);
 }
 
+static PyObject *
+AuthKeyID_format_lines(AuthKeyID *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"level", NULL};
+    int level = 0;
+    Py_ssize_t len;
+    PyObject *lines = NULL;
+    PyObject *obj = NULL;
+    PyObject *obj1 = NULL;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i:format_lines", kwlist, &level))
+        return NULL;
+
+    if ((lines = PyList_New(0)) == NULL) {
+        return NULL;
+    }
+
+    if (!self->auth_key_id) {
+        return lines;
+    }
+
+    FMT_LABEL_AND_APPEND(lines, _("Key ID"), level, fail);
+    
+    if ((obj = AuthKeyID_get_key_id(self, NULL)) == NULL) {
+        goto fail;
+    }
+    APPEND_OBJ_TO_HEX_LINES_AND_CLEAR(lines, obj, level+1, fail);
+
+    if ((obj = AuthKeyID_get_serial_number(self, NULL)) == NULL) {
+        goto fail;
+    }
+
+    if ((obj1 = PyObject_Str(obj)) == NULL) {
+        goto fail;
+    }
+    Py_CLEAR(obj);
+
+    FMT_OBJ_AND_APPEND(lines, _("Serial Number"), obj1, level, fail);
+    Py_CLEAR(obj1);
+
+    if ((obj = AuthKeyID_general_names_tuple(self, AsString)) == NULL) {
+        goto fail;
+    }
+    len = PyObject_Size(obj);
+    if ((obj1 = PyString_FromFormat("General Names: [%d total]", len)) == NULL) {
+        goto fail;
+    }
+    FMT_OBJ_AND_APPEND(lines, NULL, obj1, level, fail);
+    Py_CLEAR(obj1);
+
+    APPEND_LINES_AND_CLEAR(lines, obj, level+1, fail);
+
+    return lines;
+
+ fail:
+    Py_XDECREF(obj);
+    Py_XDECREF(obj1);
+    Py_XDECREF(lines);
+    return NULL;
+}
+
+static PyObject *
+AuthKeyID_format(AuthKeyID *self, PyObject *args, PyObject *kwds)
+{
+    TraceMethodEnter(self);
+
+    return format_from_lines((format_lines_func)AuthKeyID_format_lines, (PyObject *)self, args, kwds);
+}
+
+static PyObject *
+AuthKeyID_str(AuthKeyID *self)
+{
+    PyObject *py_formatted_result = NULL;
+
+    TraceMethodEnter(self);
+
+    py_formatted_result =  AuthKeyID_format(self, empty_tuple, NULL);
+    return py_formatted_result;
+
+}
+
+
 static PyMethodDef AuthKeyID_methods[] = {
+    {"format_lines",      (PyCFunction)AuthKeyID_format_lines,      METH_VARARGS|METH_KEYWORDS, generic_format_lines_doc},
+    {"format",            (PyCFunction)AuthKeyID_format,            METH_VARARGS|METH_KEYWORDS, generic_format_doc},
     {"get_general_names", (PyCFunction)AuthKeyID_get_general_names, METH_VARARGS|METH_KEYWORDS, AuthKeyID_get_general_names_doc},
     {NULL, NULL}  /* Sentinel */
 };
@@ -11327,7 +11736,7 @@ static PyTypeObject AuthKeyIDType = {
     0,						/* tp_as_mapping */
     0,						/* tp_hash */
     0,						/* tp_call */
-    0,						/* tp_str */
+    (reprfunc)AuthKeyID_str,			/* tp_str */
     0,						/* tp_getattro */
     0,						/* tp_setattro */
     0,						/* tp_as_buffer */
@@ -11373,6 +11782,29 @@ AuthKeyID_new_from_CERTAuthKeyID(CERTAuthKeyID *auth_key_id)
     return (PyObject *) self;
 }
 
+PyObject *
+AuthKeyID_new_from_SECItem(SECItem *item)
+{
+    AuthKeyID *self = NULL;
+
+    TraceObjNewEnter(NULL);
+
+    if ((self = (AuthKeyID *) AuthKeyIDType.tp_new(&AuthKeyIDType, NULL, NULL)) == NULL) {
+        return NULL;
+    }
+
+    if ((self->auth_key_id = CERT_DecodeAuthKeyID(self->arena, item)) == NULL) {
+        set_nspr_error("cannot decode AuthKeyID");
+        Py_CLEAR(self);
+        return NULL;
+    }
+
+    TraceObjNewLeave(self);
+    return (PyObject *) self;
+}
+
+
+
 /* ========================================================================== */
 /* ======================== BasicConstraints Class ========================== */
 /* ========================================================================== */
@@ -11414,7 +11846,53 @@ static PyMemberDef BasicConstraints_members[] = {
 
 /* ============================== Class Methods ============================= */
 
+static PyObject *
+BasicConstraints_format_lines(BasicConstraints *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"level", NULL};
+    int level = 0;
+    PyObject *lines = NULL;
+    PyObject *obj = NULL;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i:format_lines", kwlist, &level))
+        return NULL;
+
+    if ((lines = PyList_New(0)) == NULL) {
+        return NULL;
+    }
+
+    obj = self->bc.isCA ? Py_True : Py_False;
+    Py_INCREF(obj);
+    FMT_OBJ_AND_APPEND(lines, _("Is CA"), obj, level, fail);
+    Py_CLEAR(obj);
+    
+    if ((obj = PyString_FromFormat("%d", self->bc.pathLenConstraint)) == NULL) {
+        goto fail;
+    }
+    FMT_OBJ_AND_APPEND(lines, _("Path Length"), obj, level, fail);
+    Py_CLEAR(obj);
+
+    return lines;
+
+ fail:
+    Py_XDECREF(obj);
+    Py_XDECREF(lines);
+    return NULL;
+}
+
+static PyObject *
+BasicConstraints_format(BasicConstraints *self, PyObject *args, PyObject *kwds)
+{
+    TraceMethodEnter(self);
+
+    return format_from_lines((format_lines_func)BasicConstraints_format_lines, (PyObject *)self, args, kwds);
+}
+
 static PyMethodDef BasicConstraints_methods[] = {
+    {"format_lines", (PyCFunction)BasicConstraints_format_lines,   METH_VARARGS|METH_KEYWORDS, generic_format_lines_doc},
+    {"format",       (PyCFunction)BasicConstraints_format,         METH_VARARGS|METH_KEYWORDS, generic_format_doc},
     {NULL, NULL}  /* Sentinel */
 };
 
@@ -11526,6 +12004,27 @@ static PyTypeObject BasicConstraintsType = {
     BasicConstraints_new,			/* tp_new */
 };
 
+PyObject *
+BasicConstraints_new_from_SECItem(SECItem *item)
+{
+    BasicConstraints *self = NULL;
+
+    TraceObjNewEnter(NULL);
+
+    if ((self = (BasicConstraints *) BasicConstraintsType.tp_new(&BasicConstraintsType, NULL, NULL)) == NULL) {
+        return NULL;
+    }
+
+    if (CERT_DecodeBasicConstraintValue(&self->bc, item) != SECSuccess) {
+        set_nspr_error("cannot decode Basic Constraints");
+        Py_CLEAR(self);
+        return NULL;
+    }
+
+    TraceObjNewLeave(self);
+    return (PyObject *) self;
+}
+
 /* ========================== PK11 Methods =========================== */
 
 static char *
@@ -11597,7 +12096,7 @@ PK11_password_callback(PK11SlotInfo *slot, PRBool retry, void *arg)
         goto exit;
     }
 
-    password = PyString_AsString(result);
+    password = PORT_Strdup(PyString_AsString(result));
 
  exit:
     TraceMessage("PK11_password_callback: exiting");
@@ -11607,10 +12106,7 @@ PK11_password_callback(PK11SlotInfo *slot, PRBool retry, void *arg)
 
     PyGILState_Release(gstate);
 
-    if (password)
-        return PORT_Strdup(password);
-    else
-        return NULL;
+    return password;
 }
 
 PyDoc_STRVAR(pk11_set_password_callback_doc,

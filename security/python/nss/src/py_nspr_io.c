@@ -864,7 +864,7 @@ HostEntry_str(HostEntry *self)
         goto exit;
     }
 
-    args = Py_BuildValue("(sNN)", self->entry.h_name ? self->entry.h_name : "None",
+    args = Py_BuildValue("(sOO)", self->entry.h_name ? self->entry.h_name : "None",
                          aliases, addr_list);
     format = PyString_FromString("name=%s aliases=%s addresses=%s");
     text = PyString_Format(format, args);
@@ -1526,7 +1526,6 @@ Socket_accept(Socket *self, PyObject *args, PyObject *kwds)
  error:
     Py_XDECREF(py_socket);
     Py_XDECREF(py_netaddr);
-    Py_XDECREF(return_values);
     return NULL;
 }
 
@@ -1612,7 +1611,6 @@ Socket_accept_read(Socket *self, PyObject *args, PyObject *kwds)
     Py_XDECREF(py_buf);
     Py_XDECREF(py_socket);
     Py_XDECREF(py_netaddr);
-    Py_XDECREF(return_values);
     return NULL;
 }
 
@@ -2441,35 +2439,39 @@ Socket_new_tcp_pair(Socket *self, PyObject *args)
 
     if (PR_GetSockName(socks[0], &addr0) != PR_SUCCESS ||
         PR_GetSockName(socks[1], &addr1) != PR_SUCCESS) {
+        PR_Close(socks[0]);
+        PR_Close(socks[1]);
         Py_BLOCK_THREADS
-	return_value = set_nspr_error(NULL);
-	goto error_socks;
+	return set_nspr_error(NULL);
     }
     Py_END_ALLOW_THREADS
 
     if ((py_sock0 = Socket_new_from_PRFileDesc(socks[0],
 					       PR_NetAddrFamily(&addr0))) == NULL) {
-	goto error_socks;
+        Py_BEGIN_ALLOW_THREADS
+        PR_Close(socks[0]);
+        PR_Close(socks[1]);
+        Py_END_ALLOW_THREADS
+        return NULL;
     }
 
     if ((py_sock1 = Socket_new_from_PRFileDesc(socks[1],
 					       PR_NetAddrFamily(&addr1))) == NULL) {
-	goto error_socks1;
+        Py_DECREF(py_sock0);
+        Py_BEGIN_ALLOW_THREADS
+        PR_Close(socks[1]);
+        Py_END_ALLOW_THREADS
+        return NULL;
     }
+
     if ((return_value = Py_BuildValue("NN", py_sock0, py_sock1)) == NULL) {
-        goto error;
+        Py_DECREF(py_sock0);
+        Py_DECREF(py_sock1);
+        return NULL;
     }
 
     return return_value;
 
- error_socks:
-    PR_Close(socks[0]);
- error_socks1:
-    PR_Close(socks[1]);
- error:
-    Py_XDECREF(py_sock0);
-    Py_XDECREF(py_sock1);
-    return return_value;
 }
 
 PyDoc_STRVAR(Socket_poll_doc,
@@ -2963,6 +2965,7 @@ io_get_proto_by_number(PyObject *self, PyObject *args)
     }
 
     if ((return_values = Py_BuildValue("sN", proto_ent.p_name, alias_tuple)) == NULL) {
+        Py_DECREF(alias_tuple);
         return NULL;
     }
 
