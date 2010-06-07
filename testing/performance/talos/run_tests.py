@@ -99,23 +99,42 @@ def process_Request(post):
 
 def send_to_csv(csv_dir, results):
   import csv
+  def avg_excluding_max(val_list):
+    """return float rounded to two decimal places, converted to string
+       calculates the average value in the list exluding the max value"""
+    i = len(val_list)
+    total = sum(float(v) for v in val_list)
+    maxval = max(float(v) for v in val_list)
+    if total > maxval:
+      avg = str(round((total - maxval)/(i-1), 2))
+    else:
+      avg = str(round(total, 2))
+    return avg
+
   for res in results:
     browser_dump, counter_dump, print_format = results[res]
-    writer = csv.writer(open(os.path.join(csv_dir, res + '.csv'), "wb"))
+    if csv_dir:
+      writer = csv.writer(open(os.path.join(csv_dir, res + '.csv'), "wb"))
+    else: #working with stdout
+      writer = csv.writer(sys.stdout)
     if print_format == 'tsformat':
       i = 0
+      res_list = []
       writer.writerow(['i', 'val'])
       for val in browser_dump:
         val_list = val.split('|')
         for v in val_list:
           writer.writerow([i, v])
           i += 1
+          res_list.append(v)
+      writer.writerow(['RETURN: ' + res + ': ' + avg_excluding_max(res_list),])
     elif print_format == 'tpformat':
       writer.writerow(['i', 'page', 'median', 'mean', 'min' , 'max', 'runs'])
       for bd in browser_dump:
         bd.rstrip('\n')
         page_results = bd.splitlines()
         i = 0
+        res_list = []
         for mypage in page_results:
           r = mypage.split(';')
           #skip this line if it isn't the correct format
@@ -126,18 +145,24 @@ def send_to_csv(csv_dir, results):
              page = r[1].split('/')[1]
           else:
              page = r[1]
+          res_list.append(r[2])
           writer.writerow([i, page, r[2], r[3], r[4], r[5], '|'.join(r[6:])])
           i += 1
+        writer.writerow(['RETURN: ' + res + ': ' + avg_excluding_max(res_list), ])
     else:
       raise talosError("Unknown print format in send_to_csv")
     for cd in counter_dump:
       for count_type in cd:
-        writer = csv.writer(open(os.path.join(csv_dir, res + '_' + count_type + '.csv'), "wb"))
+        if csv_dir:
+          writer = csv.writer(open(os.path.join(csv_dir, res + '_' + count_type + '.csv'), "wb"))
+        else:
+          writer = csv.writer(sys.stdout)
         writer.writerow(['i', 'value'])
         i = 0
         for val in cd[count_type]:
           writer.writerow([i, val])
           i += 1
+        writer.writerow(['RETURN: ' + res + '_' + count_type + ': ' + avg_excluding_max(cd[count_type]),])
 
 def filesizeformat(bytes):
     """
@@ -306,11 +331,12 @@ def browserInfo(browser_config, devicemanager = None):
     browser_config['sourcestamp'] = 'NULL'
   return browser_config
 
-def test_file(filename):
+def test_file(filename, to_screen):
   """Runs the talos tests on the given config file and generates a report.
   
   Args:
     filename: the name of the file to run the tests on
+    to_screen: boolean, determine if all results should be outputed directly to stdout
   """
   
   browser_config = []
@@ -427,6 +453,8 @@ def test_file(filename):
       # If we're doing CSV, write this test immediately (bug 419367)
       if csv_dir != '':
         send_to_csv(csv_dir, {testname : results[testname]})
+      if to_screen:
+        send_to_csv(None, {testname : results[testname]})
     except talosError, e:
       utils.stamped_msg("Failed " + testname, "Stopped")
       print 'FAIL: Busted: ' + testname
@@ -447,17 +475,21 @@ def test_file(filename):
     except talosError, e:
       utils.stamped_msg("Failed sending results", "Stopped")
       print 'FAIL: ' + e.msg.replace('\n', '\nRETURN:')
+
   
 if __name__=='__main__':
-  optlist, args = getopt.getopt(sys.argv[1:], 'dn', ['debug', 'noisy'])
+  screen = False
+  optlist, args = getopt.getopt(sys.argv[1:], 'dns', ['debug', 'noisy', 'screen'])
   for o, a in optlist:
     if o in ('-d', "--debug"):
       print 'setting debug'
       utils.setdebug(1)
     if o in ('-n', "--noisy"):
       utils.setnoisy(1)
+    if o in ('-s', "--screen"):
+      screen = True
   # Read in each config file and run the tests on it.
   for arg in args:
     utils.debug("running test file " + arg)
-    test_file(arg)
+    test_file(arg, screen)
 
