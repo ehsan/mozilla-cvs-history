@@ -659,7 +659,7 @@ AC_MSG_RESULT([$result])
 
 if test $result = "yes"; then
    PROFILE_GEN_LDFLAGS="-fprofile-generate"
-   PROFILE_USE_CFLAGS="-fprofile-use -fprofile-correction -Wcoverage-mismatch -freoder-blocks-and-partition"
+   PROFILE_USE_CFLAGS="-fprofile-use -fprofile-correction -Wcoverage-mismatch -freorder-blocks-and-partition"
    PROFILE_USE_LDFLAGS="-fprofile-use"
 fi
 
