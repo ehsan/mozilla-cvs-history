@@ -26,7 +26,7 @@ defaultTitle = "qm-pxp01"
 help_message = '''
 This is the buildbot performance runner's YAML configurator.bean
 
-USAGE: python PerfConfigurator.py --title title --executablePath path --configFilePath cpath --buildid id --branch branch --testDate date --resultsServer server --resultsLink link --activeTests testlist --branchName branchFullName --fast --symbolsPath path --sampleConfig cfile --browserWait seconds --remoteDevice ip_of_device --remotePort port_on_device --webServer webserver_ipaddr --deviceRoot rootdir_on_device
+USAGE: python PerfConfigurator.py --title title --executablePath path --configFilePath cpath --buildid id --branch branch --testDate date --resultsServer server --resultsLink link --activeTests testlist --branchName branchFullName --fast --symbolsPath path --sampleConfig cfile --browserWait seconds --remoteDevice ip_of_device --remotePort port_on_device --webServer webserver_ipaddr --deviceRoot rootdir_on_device --testPrefix prefix --extension addon
 
 example testlist: tp:tsspider:tdhtml:twinopen
 '''
@@ -50,11 +50,13 @@ class PerfConfigurator:
     activeTests = ''
     noChrome = False
     fast = False
+    testPrefix = ''
     remoteDevice = ''
     webServer = ''
     deviceRoot = ''
     _remote = False
     port = ''
+    extension = ''
 
     def _setupRemote(self, host, port = 20701):
         import devicemanager
@@ -78,6 +80,8 @@ class PerfConfigurator:
         print " - resultsServer = " + self.resultsServer
         print " - resultsLink = " + self.resultsLink
         print " - activeTests = " + self.activeTests
+        print " - extension = " + self.extension
+        print " - testPrefix = " + self.testPrefix
         if (self._remote == True):
             print " - deviceIP = " + self.remoteDevice
             print " - devicePort = " + self.port
@@ -180,6 +184,8 @@ class PerfConfigurator:
                 newline = 'deviceroot: %s\n' % self.deviceRoot
             if 'deviceport:' in line:
                 newline = 'deviceport: %s\n' % self.port
+            if self.extension and ('extensions : {}' in line):
+                newline = 'extensions: ' + '\n- ' + self.extension
             if 'remote:' in line:
                 newline = 'remote: %s\n' % self._remote
             if 'buildid:' in line:
@@ -217,6 +223,8 @@ class PerfConfigurator:
                             printMe = True
                             if (test == 'tp') and self.fast: #only affects the tp test name
                                 newline = newline.replace('tp', 'tp_fast')
+                            if self.testPrefix:
+                                newline = newline.replace(test, self.testPrefix + '_' + test)
                 if self.noChrome: 
                     #if noChrome is True remove --tpchrome option 
                     newline = line.replace('-tpchrome ','')
@@ -272,6 +280,10 @@ class PerfConfigurator:
             self.webServer = kwargs['webServer']
         if 'deviceRoot' in kwargs:
             self.deviceRoot = kwargs['deviceRoot']
+        if 'testPrefix' in kwargs:
+            self.testPrefix = kwargs['testPrefix']
+        if 'extension' in kwargs:
+            self.extension = kwargs['extension']
         if 'remotePort' in kwargs:
             self.port = kwargs['remotePort']
 
@@ -315,6 +327,8 @@ def main(argv=None):
     remotePort = ''
     webServer = 'localhost'
     deviceRoot = ''
+    testPrefix = ''
+    extension = ''
 
     if argv is None:
         argv = sys.argv
@@ -325,7 +339,7 @@ def main(argv=None):
                 "configFilePath=", "sampleConfig=", "title=", 
                 "branch=", "output=", "id=", "testDate=", "browserWait=",
                 "resultsServer=", "resultsLink=", "activeTests=", 
-                "noChrome", "branchName=", "fast", "symbolsPath=",
+                "noChrome", "testPrefix=", "extension=", "branchName=", "fast", "symbolsPath=",
                 "remoteDevice=", "remotePort=", "webServer=", "deviceRoot="])
         except getopt.error, msg:
             raise Usage(msg)
@@ -366,6 +380,10 @@ def main(argv=None):
                 activeTests = value
             if option in ("-n", "--noChrome"):
                 noChrome = True
+            if option in ("--testPrefix",):
+                testPrefix = value
+            if option in ("--extension",):
+                extension = value
             if option in ("-r", "--remoteDevice"):
                 remoteDevice = value
             if option in ("-p", "--remotePort"):
@@ -409,6 +427,8 @@ def main(argv=None):
                                     activeTests=activeTests,
                                     noChrome=noChrome,
                                     fast=fast,
+                                    testPrefix=testPrefix,
+                                    extension=extension,
                                     symbolsPath=symbolsPath,
                                     remoteDevice=remoteDevice,
                                     remotePort=remotePort,

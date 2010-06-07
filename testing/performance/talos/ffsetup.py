@@ -51,6 +51,9 @@ import shutil
 import tempfile
 import time
 import glob
+import zipfile
+from xml.dom import minidom
+import shutil
 
 import utils
 from utils import talosError
@@ -97,6 +100,51 @@ class FFSetup(object):
             out_value = '"%s"' % value
         return 'user_pref("%s", %s);%s' % (name, out_value, newline)
 
+    def install_addon(self, profile_path, addon):
+        """Installs the given addon in the profile.
+           most of this borrowed from mozrunner, except downgraded to work on python 2.4
+           # Contributor(s) for mozrunner:
+           # Mikeal Rogers <mikeal.rogers@gmail.com>
+           # Clint Talbert <ctalbert@mozilla.com>
+           # Henrik Skupin <hskupin@mozilla.com>
+        """
+        tmpdir = None
+        addon_id = ''
+        tmpdir = tempfile.mkdtemp(suffix = "." + os.path.split(addon)[-1])
+        compressed_file = zipfile.ZipFile(addon, "r")
+        #in python2.6 can use extractall, currently limited to python2.4
+        for name in compressed_file.namelist():
+            if name.endswith('/'):
+                os.makedirs(os.path.join(tmpdir, name))
+            else:
+                if not os.path.isdir(os.path.dirname(os.path.join(tmpdir, name))):
+                    os.makedirs(os.path.dirname(os.path.join(tmpdir, name)))
+                data = compressed_file.read(name)
+                f = open(os.path.join(tmpdir, name), 'w')
+                f.write(data) ; f.close()
+        addon = tmpdir
+
+        doc = minidom.parse(os.path.join(addon, 'install.rdf')) 
+        # description_element =
+        # tree.find('.//{http://www.w3.org/1999/02/22-rdf-syntax-ns#}Description/')
+ 
+        desc = doc.getElementsByTagName('Description')
+        for elem in desc:
+            apps = elem.getElementsByTagName('em:targetApplication')
+            if apps:
+                for app in apps:
+                    #remove targetApplication nodes, they contain id's we aren't interested in
+                    elem.removeChild(app)
+                addon_id = str(elem.getElementsByTagName('em:id')[0].firstChild.data)
+        
+        if not addon_id: #bail out, we don't have an addon id
+            raise talosError("no addon_id found for extension")
+                 
+        addon_path = os.path.join(profile_path, 'extensions', addon_id)
+        #if an old copy is already installed, remove it 
+        if os.path.isdir(addon_path): 
+            shutil.rmtree(addon_path, ignore_errors=True) 
+        shutil.move(addon, addon_path) 
 
     def CreateTempProfileDir(self, source_profile, prefs, extensions):
         """Creates a temporary profile directory from the source profile directory
@@ -107,8 +155,7 @@ class FFSetup(object):
                             directory to copy from.
             prefs: Preferences to set in the prefs.js file of the new profile.  Format:
                     {"PrefName1" : "PrefValue1", "PrefName2" : "PrefValue2"}
-            extensions: Guids and paths of extensions to link to.  Format:
-                    {"{GUID1}" : "c:\\Path\\to\\ext1", "{GUID2}", "c:\\Path\\to\\ext2"}
+            extensions: list of paths to .xpi files to be installed
 
         Returns:
             String containing the absolute path of the profile directory.
@@ -136,10 +183,8 @@ class FFSetup(object):
         extension_dir = os.path.join(profile_dir, "extensions")
         if not os.path.exists(extension_dir):
             os.makedirs(extension_dir)
-        for extension in extensions:
-            link_file = open(os.path.join(extension_dir, extension), 'w')
-            link_file.write(extensions[extension])
-            link_file.close()
+        for addon in extensions:
+            self.install_addon(profile_dir, addon)
 
         if (self._remoteWebServer <> 'localhost'):
             remote_dir = self.ffprocess.copyDirToDevice(profile_dir)
