@@ -91,8 +91,13 @@ class TTest(object):
             self.platform_type = 'linux_'
             self._ffprocess = LinuxProcess()
         elif platform.system() in ("Windows", "Microsoft"):
+            if '5.1' in platform.version(): #winxp
+              self.platform_type = 'win_'
+            elif '6.1' in platform.version(): #w7
+              self.platform_type = 'w7_'
+            else:
+              raise talosError('unsupported windows version')
             self.cmanager = __import__('cmanager_win32')
-            self.platform_type = 'win_'
             self._ffprocess = Win32Process()
         elif platform.system() == "Darwin":
             self.cmanager = __import__('cmanager_mac')

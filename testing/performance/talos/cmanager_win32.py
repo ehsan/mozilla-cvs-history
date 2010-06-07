@@ -77,16 +77,22 @@ class CounterManager:
     hq = self.registeredCounters[counter][0]
     win32pdh.EnumObjects(None, None, 0, 1)
     counterListLength = len(self.registeredCounters[counter][1])
-    expandedCounterPaths = \
+    try:
+      expandedCounterPaths = \
         win32pdh.ExpandCounterPath('\\process(%s*)\\%s' % (self.childProcess, counter))
+    except:
+      return
     for expandedPath in expandedCounterPaths:
       alreadyInCounterList = False
       for singleCounter in self.registeredCounters[counter][1]:
         if expandedPath == singleCounter[1]:
           alreadyInCounterList = True
       if not alreadyInCounterList:
-        counterHandle = win32pdh.AddCounter(hq, expandedPath)
-        self.registeredCounters[counter][1].append((counterHandle, expandedPath))
+        try:
+          counterHandle = win32pdh.AddCounter(hq, expandedPath)
+          self.registeredCounters[counter][1].append((counterHandle, expandedPath))
+        except:
+          continue
     if counterListLength != len(self.registeredCounters[counter][1]):
       try:
         win32pdh.CollectQueryData(hq)
@@ -135,13 +141,23 @@ class CounterManager:
         hc = win32pdh.AddCounter(hq, path)
       except:
         win32pdh.CloseQuery(hq)
+        #assume that this is a memory counter for the system, not a process counter
+        path = win32pdh.MakeCounterPath((None, 'Memory', None, None, -1 , counter))
+        hq = win32pdh.OpenQuery()  
+        try:                                                                       
+          hc = win32pdh.AddCounter(hq, path)                                       
+        except:                                                                    
+          win32pdh.CloseQuery(hq)    
 
       self.registeredCounters[counter] = [hq, [(hc, path)]]
       self.updateCounterPathsForChildProcesses(counter)
 
   def stopMonitor(self):
-    for counter in self.registeredCounters:
-      for singleCounter in self.registeredCounters[counter][1]: 
-        win32pdh.RemoveCounter(singleCounter[0])
-      win32pdh.CloseQuery(self.registeredCounters[counter][0])
-    self.registeredCounters.clear()
+    try:
+      for counter in self.registeredCounters:
+        for singleCounter in self.registeredCounters[counter][1]: 
+          win32pdh.RemoveCounter(singleCounter[0])
+        win32pdh.CloseQuery(self.registeredCounters[counter][0])
+      self.registeredCounters.clear()
+    except:
+      print 'failed to stopMonitor'
