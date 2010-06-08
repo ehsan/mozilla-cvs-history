@@ -56,8 +56,6 @@ my %product_destination_map = (
 	"Leibnitz"                      => "mozilla.feedback.firefox.prerelease",
 	"Minefield"                     => "mozilla.feedback",
 	"Fennec"                        => "mozilla.feedback",
-	"Thunderbird"                   => "mozilla.feedback.thunderbird",
-	"Thunderbird Release Candidate" => "mozilla.feedback.thunderbird.prerelease",
 	"Shredder"                      => "mozilla.feedback",
 	"SeaMonkey"                     => "mozilla.feedback",
 	"Sunbird"                       => "mozilla.feedback",
@@ -71,8 +69,7 @@ my %product_destination_map = (
 my @products_list = (
 	"Firefox", "Firefox Release Candidate", 
   "Firefox (Mobile)", "Firefox (Mobile) Release Candidate", 
-  "Thunderbird", "Thunderbird Release Candidate", 
-  "Lorentz", "Minefield", "Fennec",
+  "Minefield", "Fennec",
   "Camino", "SeaMonkey", "Sunbird", 
 	"Developer Center", "Other"
 );
