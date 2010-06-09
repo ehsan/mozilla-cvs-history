@@ -91,13 +91,17 @@ $TMPDIR_PREFIX = '/dev/shm/tmp/MozAUSLib';
 %BOUNCER_PLATFORMS = ( 'win32' => 'win',
                        'wince-arm' => 'wince',
                        'linux-i686' => 'linux',
+                       'linux-x86_64' => 'linux64',
                        'mac' => 'osx',
+                       'mac64' => 'osx64',
                        'unimac' => 'osx',
                      );
 
 %AUS2_PLATFORMS = ( 'macppc' => 'Darwin_ppc-gcc3',
                     'mac' => 'Darwin_Universal-gcc3',
+                    'mac64' => 'Darwin_x86_64-gcc3',
                     'linux-i686' => 'Linux_x86-gcc3',
+                    'linux-x86_64' => 'Linux_x86_64-gcc3',
                     'win32' => 'WINNT_x86-msvc',
                     'wince-arm' => 'WINCE_arm-msvc',
                   );
