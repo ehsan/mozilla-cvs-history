@@ -3329,6 +3329,7 @@ cert_trust_flags_str(unsigned int flags)
         return NULL;
 
     if (flags & CERTDB_VALID_PEER) {
+        flags &= ~CERTDB_VALID_PEER;
 	if ((py_flag = PyString_FromString(_("Valid Peer"))) == NULL) {
             Py_DECREF(py_flags);
             return NULL;
@@ -3337,6 +3338,7 @@ cert_trust_flags_str(unsigned int flags)
 	Py_DECREF(py_flag);
     }
     if (flags & CERTDB_TRUSTED) {
+        flags &= ~CERTDB_TRUSTED;
 	if ((py_flag = PyString_FromString(_("Trusted"))) == NULL) {
             Py_DECREF(py_flags);
             return NULL;
@@ -3345,6 +3347,7 @@ cert_trust_flags_str(unsigned int flags)
 	Py_DECREF(py_flag);
     }
     if (flags & CERTDB_SEND_WARN) {
+        flags &= ~CERTDB_SEND_WARN;
 	if ((py_flag = PyString_FromString(_("Warn When Sending"))) == NULL) {
             Py_DECREF(py_flags);
             return NULL;
@@ -3353,6 +3356,7 @@ cert_trust_flags_str(unsigned int flags)
 	Py_DECREF(py_flag);
     }
     if (flags & CERTDB_VALID_CA) {
+        flags &= ~CERTDB_VALID_CA;
 	if ((py_flag = PyString_FromString(_("Valid CA"))) == NULL) {
             Py_DECREF(py_flags);
             return NULL;
@@ -3361,6 +3365,7 @@ cert_trust_flags_str(unsigned int flags)
 	Py_DECREF(py_flag);
     }
     if (flags & CERTDB_TRUSTED_CA) {
+        flags &= ~CERTDB_TRUSTED_CA;
 	if ((py_flag = PyString_FromString(_("Trusted CA"))) == NULL) {
             Py_DECREF(py_flags);
             return NULL;
@@ -3369,6 +3374,7 @@ cert_trust_flags_str(unsigned int flags)
 	Py_DECREF(py_flag);
     }
     if (flags & CERTDB_NS_TRUSTED_CA) {
+        flags &= ~CERTDB_NS_TRUSTED_CA;
 	if ((py_flag = PyString_FromString(_("Netscape Trusted CA"))) == NULL) {
             Py_DECREF(py_flags);
             return NULL;
@@ -3377,6 +3383,7 @@ cert_trust_flags_str(unsigned int flags)
 	Py_DECREF(py_flag);
     }
     if (flags & CERTDB_USER) {
+        flags &= ~CERTDB_USER;
 	if ((py_flag = PyString_FromString(_("User"))) == NULL) {
             Py_DECREF(py_flags);
             return NULL;
@@ -3385,6 +3392,7 @@ cert_trust_flags_str(unsigned int flags)
 	Py_DECREF(py_flag);
     }
     if (flags & CERTDB_TRUSTED_CLIENT_CA) {
+        flags &= ~CERTDB_TRUSTED_CLIENT_CA;
 	if ((py_flag = PyString_FromString(_("Trusted Client CA"))) == NULL) {
             Py_DECREF(py_flags);
             return NULL;
@@ -3393,6 +3401,7 @@ cert_trust_flags_str(unsigned int flags)
 	Py_DECREF(py_flag);
     }
     if (flags & CERTDB_GOVT_APPROVED_CA) {
+        flags &= ~CERTDB_GOVT_APPROVED_CA;
 	if ((py_flag = PyString_FromString(_("Step-up"))) == NULL) {
             Py_DECREF(py_flags);
             return NULL;
@@ -3400,6 +3409,156 @@ cert_trust_flags_str(unsigned int flags)
         PyList_Append(py_flags, py_flag);
 	Py_DECREF(py_flag);
     }
+
+    if (flags) {
+        if ((py_flag = PyString_FromFormat("unknown bit flags %#x", flags)) == NULL) {
+            Py_DECREF(py_flags);
+            return NULL;
+        }
+        PyList_Append(py_flags, py_flag);
+	Py_DECREF(py_flag);
+    }
+
+    if (PyList_Sort(py_flags) == -1) {
+            Py_DECREF(py_flags);
+            return NULL;
+    }
+
+    return py_flags;
+}
+
+static PyObject *
+cert_usage_flags(unsigned int flags)
+{
+    PyObject *py_flags = NULL;
+    PyObject *py_flag = NULL;
+
+    if ((py_flags = PyList_New(0)) == NULL)
+        return NULL;
+
+    if (flags & certificateUsageSSLClient) {
+        flags &= ~certificateUsageSSLClient;
+	if ((py_flag = PyString_FromString(_("SSLClient"))) == NULL) {
+            Py_DECREF(py_flags);
+            return NULL;
+        }
+        PyList_Append(py_flags, py_flag);
+	Py_DECREF(py_flag);
+    }
+    if (flags & certificateUsageSSLServer) {
+        flags &= ~certificateUsageSSLServer;
+	if ((py_flag = PyString_FromString(_("SSLServer"))) == NULL) {
+            Py_DECREF(py_flags);
+            return NULL;
+        }
+        PyList_Append(py_flags, py_flag);
+	Py_DECREF(py_flag);
+    }
+    if (flags & certificateUsageSSLServerWithStepUp) {
+        flags &= ~certificateUsageSSLServerWithStepUp;
+	if ((py_flag = PyString_FromString(_("SSLServerWithStepUp"))) == NULL) {
+            Py_DECREF(py_flags);
+            return NULL;
+        }
+        PyList_Append(py_flags, py_flag);
+	Py_DECREF(py_flag);
+    }
+    if (flags & certificateUsageSSLCA) {
+        flags &= ~certificateUsageSSLCA;
+	if ((py_flag = PyString_FromString(_("SSLCA"))) == NULL) {
+            Py_DECREF(py_flags);
+            return NULL;
+        }
+        PyList_Append(py_flags, py_flag);
+	Py_DECREF(py_flag);
+    }
+    if (flags & certificateUsageEmailSigner) {
+        flags &= ~certificateUsageEmailSigner;
+	if ((py_flag = PyString_FromString(_("EmailSigner"))) == NULL) {
+            Py_DECREF(py_flags);
+            return NULL;
+        }
+        PyList_Append(py_flags, py_flag);
+	Py_DECREF(py_flag);
+    }
+    if (flags & certificateUsageEmailRecipient) {
+        flags &= ~certificateUsageEmailRecipient;
+	if ((py_flag = PyString_FromString(_("EmailRecipient"))) == NULL) {
+            Py_DECREF(py_flags);
+            return NULL;
+        }
+        PyList_Append(py_flags, py_flag);
+	Py_DECREF(py_flag);
+    }
+    if (flags & certificateUsageObjectSigner) {
+        flags &= ~certificateUsageObjectSigner;
+	if ((py_flag = PyString_FromString(_("ObjectSigner"))) == NULL) {
+            Py_DECREF(py_flags);
+            return NULL;
+        }
+        PyList_Append(py_flags, py_flag);
+	Py_DECREF(py_flag);
+    }
+    if (flags & certificateUsageUserCertImport) {
+        flags &= ~certificateUsageUserCertImport;
+	if ((py_flag = PyString_FromString(_("UserCertImport"))) == NULL) {
+            Py_DECREF(py_flags);
+            return NULL;
+        }
+        PyList_Append(py_flags, py_flag);
+	Py_DECREF(py_flag);
+    }
+    if (flags & certificateUsageVerifyCA) {
+        flags &= ~certificateUsageVerifyCA;
+	if ((py_flag = PyString_FromString(_("VerifyCA"))) == NULL) {
+            Py_DECREF(py_flags);
+            return NULL;
+        }
+        PyList_Append(py_flags, py_flag);
+	Py_DECREF(py_flag);
+    }
+    if (flags & certificateUsageProtectedObjectSigner) {
+        flags &= ~certificateUsageProtectedObjectSigner;
+	if ((py_flag = PyString_FromString(_("ProtectedObjectSigner"))) == NULL) {
+            Py_DECREF(py_flags);
+            return NULL;
+        }
+        PyList_Append(py_flags, py_flag);
+	Py_DECREF(py_flag);
+    }
+    if (flags & certificateUsageStatusResponder) {
+        flags &= ~certificateUsageStatusResponder;
+	if ((py_flag = PyString_FromString(_("StatusResponder"))) == NULL) {
+            Py_DECREF(py_flags);
+            return NULL;
+        }
+        PyList_Append(py_flags, py_flag);
+	Py_DECREF(py_flag);
+    }
+    if (flags & certificateUsageAnyCA) {
+        flags &= ~certificateUsageAnyCA;
+	if ((py_flag = PyString_FromString(_("AnyCA"))) == NULL) {
+            Py_DECREF(py_flags);
+            return NULL;
+        }
+        PyList_Append(py_flags, py_flag);
+	Py_DECREF(py_flag);
+    }
+
+    if (flags) {
+        if ((py_flag = PyString_FromFormat("unknown bit flags %#x", flags)) == NULL) {
+            Py_DECREF(py_flags);
+            return NULL;
+        }
+        PyList_Append(py_flags, py_flag);
+	Py_DECREF(py_flag);
+    }
+
+    if (PyList_Sort(py_flags) == -1) {
+            Py_DECREF(py_flags);
+            return NULL;
+    }
+
     return py_flags;
 }
 
@@ -13937,6 +14096,33 @@ cert_general_name_type_from_name(PyObject *self, PyObject *args)
     return py_value;
 }
 
+PyDoc_STRVAR(cert_cert_usage_flags_doc,
+"cert_usage_str() -> ['flag_name', ...]\n\
+\n\
+:Parameters:\n\
+    flags : int\n\
+        certificateUsage* bit flags\n\
+\n\
+Given an integer with certificateUsage*\n\
+(e.g. nss.certificateUsageSSLServer) bit flags return a sorted\n\
+list of their string names.\n\
+");
+
+static PyObject *
+cert_cert_usage_flags(PyObject *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"flags", NULL};
+    int flags = 0;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "i:cert_usage_flags", kwlist,
+                                     &flags))
+        return NULL;
+
+    return cert_usage_flags(flags);
+}
+
 /* List of functions exported by this module. */
 static PyMethodDef
 module_methods[] = {
@@ -13990,6 +14176,7 @@ module_methods[] = {
     {"x509_key_usage",                   (PyCFunction)cert_x509_key_usage,                 METH_VARARGS,               cert_x509_key_usage_doc},
     {"x509_ext_key_usage",               (PyCFunction)cert_x509_ext_key_usage,             METH_VARARGS|METH_KEYWORDS, cert_x509_ext_key_usage_doc},
     {"x509_alt_name",                    (PyCFunction)cert_x509_alt_name,                  METH_VARARGS|METH_KEYWORDS, cert_x509_alt_name_doc},
+    {"cert_usage_flags",                 (PyCFunction)cert_cert_usage_flags,               METH_VARARGS|METH_KEYWORDS, cert_cert_usage_flags_doc},
     {NULL, NULL} /* Sentinel */
 };
 

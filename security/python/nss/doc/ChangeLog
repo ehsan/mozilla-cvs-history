@@ -16,6 +16,7 @@
 
   * The following classes were added:
       AuthKeyID
+      BasicConstraints	
       CRLDistributionPoint
       CRLDistributionPts
       CertificateExtension
@@ -24,12 +25,13 @@
       X500AVA
       X500Name
       X500RDN
-
+	
   * The following module functions were added:
       nss.nss.cert_crl_reason_from_name()
       nss.nss.cert_crl_reason_name()
       nss.nss.cert_general_name_type_from_name()
       nss.nss.cert_general_name_type_name()
+      nss.nss.cert_usage_flags()
       nss.nss.decode_der_crl()
       nss.nss.der_universal_secitem_fmt_lines()
       nss.nss.import_crl()

@@ -70,65 +70,6 @@ port = 1234
 # Utility Functions
 # -----------------------------------------------------------------------------
 
-def cert_usage_str(cert_usage):
-    usages = []
-
-    if cert_usage & nss.certificateUsageSSLClient:
-        cert_usage &= ~nss.certificateUsageSSLClient
-        usages.append('SSLClient')
-
-    if cert_usage & nss.certificateUsageSSLServer:
-        cert_usage &= ~nss.certificateUsageSSLServer
-        usages.append('SSLServer')
-
-    if cert_usage & nss.certificateUsageSSLServerWithStepUp:
-        cert_usage &= ~nss.certificateUsageSSLServerWithStepUp
-        usages.append('SSLServerWithStepUp')
-
-    if cert_usage & nss.certificateUsageSSLCA:
-        cert_usage &= ~nss.certificateUsageSSLCA
-        usages.append('SSLCA')
-
-    if cert_usage & nss.certificateUsageEmailSigner:
-        cert_usage &= ~nss.certificateUsageEmailSigner
-        usages.append('EmailSigner')
-
-    if cert_usage & nss.certificateUsageEmailRecipient:
-        cert_usage &= ~nss.certificateUsageEmailRecipient
-        usages.append('EmailRecipient')
-
-    if cert_usage & nss.certificateUsageObjectSigner:
-        cert_usage &= ~nss.certificateUsageObjectSigner
-        usages.append('ObjectSigner')
-
-    if cert_usage & nss.certificateUsageUserCertImport:
-        cert_usage &= ~nss.certificateUsageUserCertImport
-        usages.append('UserCertImport')
-
-    if cert_usage & nss.certificateUsageVerifyCA:
-        cert_usage &= ~nss.certificateUsageVerifyCA
-        usages.append('VerifyCA')
-
-    if cert_usage & nss.certificateUsageProtectedObjectSigner:
-        cert_usage &= ~nss.certificateUsageProtectedObjectSigner
-        usages.append('ProtectedObjectSigner')
-
-    if cert_usage & nss.certificateUsageStatusResponder:
-        cert_usage &= ~nss.certificateUsageStatusResponder
-        usages.append('StatusResponder')
-
-    if cert_usage & nss.certificateUsageAnyCA:
-        cert_usage &= ~nss.certificateUsageAnyCA
-        usages.append('AnyCA')
-
-
-    usages.sort()
-    usage_str = ','.join(usages)
-
-    if cert_usage:
-        usage_str += ' (plus unknown flags %#x)' % cert_usage
-
-    return usage_str
 
 # -----------------------------------------------------------------------------
 # Callback Functions
@@ -171,7 +112,7 @@ def auth_certificate_callback(sock, check_sig, is_server, certdb):
         print "Returning cert_is_valid = %s" % cert_is_valid
         return cert_is_valid
 
-    print "approved_usage = %s" % cert_usage_str(approved_usage)
+    print "approved_usage = %s" % ', '.join(nss.cert_usage_flags(approved_usage))
 
     # Is the intended usage a proper subset of the approved usage
     if approved_usage & intended_usage:

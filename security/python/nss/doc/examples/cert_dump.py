@@ -37,6 +37,20 @@
 #
 # ***** END LICENSE BLOCK *****
 
+'''
+This example will pretty print the contents of a certificate loaded from a
+file. This is not the easiest or best way to print a certificate, the nss
+module has internal code to do that, all you need to invoke the str()
+method of the certificate, or it's format, or format_lines()
+method. Something as simple as the following will work:
+
+print cert
+print "Certificate is %s" % cert
+
+What this example really aims to do is illustrate how to access the various
+components of a cert.
+'''
+
 import os
 import sys
 import getopt
@@ -78,7 +92,7 @@ def print_extension(level, extension):
     elif oid_tag == nss.SEC_OID_X509_AUTH_KEY_ID:
         auth_key_id = nss.AuthKeyID(extension.value)
         print nss.indented_format([(level+1, 'Key ID:')])
-        print nss.indented_format(nss.make_line_pairs(level+1,
+        print nss.indented_format(nss.make_line_pairs(level+2,
               auth_key_id.key_id.to_hex(nss.OCTETS_PER_LINE_DEFAULT)))
         print nss.indented_format([(level+1, 'Serial Number: %s' % (auth_key_id.serial_number))])
         print nss.indented_format([(level+1, 'Issuer:' % auth_key_id.get_general_names())])
@@ -102,14 +116,16 @@ def print_extension(level, extension):
 # -----------------------------------------------------------------------------
 
 usage_str = '''
+-p --pem read the certifcate in PEM ascii format (default)
+-d --der read the certifcate in DER binary format
 '''
 
 def usage():
     print usage_str
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "h",
-                               ["help", ])
+    opts, args = getopt.getopt(sys.argv[1:], "hpd",
+                               ["help", "pem", "der"])
 except getopt.GetoptError:
     # print help information and exit:
     usage()
@@ -117,11 +133,17 @@ except getopt.GetoptError:
 
 
 filename = 'cert.der'
+is_pem_format = True
 
 for o, a in opts:
     if o in ("-H", "--help"):
         usage()
         sys.exit()
+    elif o in ("-p", "--pem"):
+        is_pem_format = True
+    elif o in ("-d", "--der"):
+        is_pem_format = False
+
 
 filename = sys.argv[1]
 
@@ -140,7 +162,7 @@ if len(args):
 print "certificate filename=%s" % (filename)
 
 # Read the certificate as DER encoded data
-si = nss.read_der_from_file(filename)
+si = nss.read_der_from_file(filename, is_pem_format)
 # Parse the DER encoded data returning a Certificate object
 cert = nss.Certificate(si)
 
