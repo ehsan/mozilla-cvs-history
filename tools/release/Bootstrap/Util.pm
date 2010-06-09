@@ -16,7 +16,8 @@ our @EXPORT_OK = qw(CvsCatfile CvsTag
                     LoadLocaleManifest
                     GetLocaleManifest
                     GetBouncerPlatforms GetPatcherPlatforms
-                    GetBouncerToPatcherPlatformMap);
+                    GetBouncerToPatcherPlatformMap
+                    GetBuildbotToFTPPlatformMap);
 
 our($DEFAULT_SHELL_TIMEOUT);
 
@@ -37,8 +38,18 @@ use strict;
 my %PLATFORM_MAP = (# bouncer/shipped-locales platform => patcher2 platform
                     'win32' => 'win32',
                     'linux' => 'linux-i686',
+                    'linux64' => 'linux-x86_64',
                     'osx' => 'mac',
+                    'osx64' => 'mac64',
                     'osxppc' => 'macppc');
+
+my %PLATFORM_FTP_MAP = (# buildbot platform => ftp directory
+                        'linux' => 'linux-i686',
+                        'linux64' => 'linux-x86_64',
+                        'macosx' => 'mac',
+                        'macosx64' => 'mac64',
+                        'win32' => 'win32');
+
 
 my $DEFAULT_CVSROOT = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
 
@@ -57,6 +68,9 @@ sub CvsCatfile {
 
 sub GetBouncerToPatcherPlatformMap {
    return %PLATFORM_MAP;
+}
+sub GetBuildbotToFTPPlatformMap {
+   return %PLATFORM_FTP_MAP;
 }
 
 sub GetBouncerPlatforms {
