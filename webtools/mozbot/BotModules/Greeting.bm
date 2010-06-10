@@ -133,6 +133,8 @@ sub Told {
         $self->PerformOnOther($event, 'hug', $1);
     } elsif ($message =~ /^\s*(?:useless|die|get\s+a\s+life|kiss\s+my\s+ass|you\s+stupid\s+piece\s+o[f']?\s+code)[!1.\s]*$/osi) {
         $self->Perform($event, 'unhappy');
+    } elsif ($message =~ /^\s*Sorry,\sI've\sno\sidea\swh(?:o|at).+$/osi) {
+        return 0;
     } elsif ($message =~ /^\s*sorry\b/osi) { # note that any trailing text is ignored
         $self->Perform($event, 'apology');
     } elsif ($message =~ /^\s*(?:how\s+are\s+you|how\s+do\s+you\s+do|how\'?s\s+things|are\s+you\s+ok)(?:[?!1.,\s]+$expandedme)?\s*[?!1.\s]*$/osi) {

@@ -170,7 +170,9 @@ sub DoFactoidCheck {
     $self->debug("message: '$message'");
     $self->debug("shortMessage: '$shortMessage'");
 
-    if ($message =~ /^\s*tell\s+(\S+)\s+about\s+me(?:[,\s]+please)?[\s!?.]*$/osi) {
+    if ($message =~ /^\s*Sorry,\sI've\sno\sidea\swh(?:o|at).+$/osi) {
+        return 0;
+    } elsif ($message =~ /^\s*tell\s+(\S+)\s+about\s+me(?:[,\s]+please)?[\s!?.]*$/osi) {
         $self->GiveFactoid($event,
                                 undef, # database
                      $event->{'from'}, # what
