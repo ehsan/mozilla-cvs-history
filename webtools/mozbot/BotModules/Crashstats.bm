@@ -16,7 +16,7 @@ sub Told {
     my $self = shift;
     my ($event, $message) = @_;
     my @array = (); my $output = '';
-    push @array, $1 while ($message =~ /(?<!http:\/\/crash-stats.mozilla.com\/report\/index\/)(?|(?:bp-)?([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{8}[01][0-9][0-3][0-9])|(?:bp-)?([a-f0-9]{8}-[a-f0-9]{4}-11dd-[a-f0-9]{4}-[a-f0-9]{12}))/osig);
+    push @array, $1 while ($message =~ /(?<!:\/\/crash-stats.mozilla.com\/report\/index\/)(?|(?:bp-)?([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{8}[01][0-9][0-3][0-9])|(?:bp-)?([a-f0-9]{8}-[a-f0-9]{4}-11dd-[a-f0-9]{4}-[a-f0-9]{12}))/osig);
     if ($#array > -1) {
         $output .= 'http://crash-stats.mozilla.com/report/index/'.$_.' ' foreach (@array);
         $self->say($event, $event->{'from'}.': '.$output);
@@ -30,7 +30,7 @@ sub Heard {
     my $self = shift;
     my ($event, $message) = @_;
     my @array = (); my $output = '';
-    push @array, $1 while ($message =~ /(?<!http:\/\/crash-stats.mozilla.com\/report\/index\/)(?|(?:bp-)?([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{8}[01][0-9][0-3][0-9])|(?:bp-)?([a-f0-9]{8}-[a-f0-9]{4}-11dd-[a-f0-9]{4}-[a-f0-9]{12}))/osig);
+    push @array, $1 while ($message =~ /(?<!:\/\/crash-stats.mozilla.com\/report\/index\/)(?|(?:bp-)?([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{8}[01][0-9][0-3][0-9])|(?:bp-)?([a-f0-9]{8}-[a-f0-9]{4}-11dd-[a-f0-9]{4}-[a-f0-9]{12}))/osig);
     if ($#array > -1) {
         $output .= 'http://crash-stats.mozilla.com/report/index/'.$_.' ' foreach (@array);
         $self->say($event, $event->{'from'}.': '.$output);
