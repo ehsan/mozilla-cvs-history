@@ -1473,7 +1473,7 @@ const int kOutlineViewLeftMargin = 19; // determined empirically, since it doesn
 {
   // The only time this wouldn't work is the url column for folders, but that
   // cell isn't editable, so if we are here it's always safe.
-  [item takeValue:object forKey:[tableColumn identifier]];
+  [item setValue:object forKey:[tableColumn identifier]];
 }
 
 - (BOOL)outlineView:(NSOutlineView *)outlineView writeItems:(NSArray*)items toPasteboard:(NSPasteboard*)pboard
