@@ -729,7 +729,10 @@ nsScrollPortView::IncrementalScroll()
                  0);
     if (!thisView.IsAlive())
       return;
-    mSmoothScroll->mFrameIndex++;
+    // A nested ScrollTo() taking the synchronous path may have deleted
+    // |mSmoothScroll| so we need to null-check again.  Bug 490461.
+    if (mSmoothScroll)
+      mSmoothScroll->mFrameIndex++;
   } else {
     delete mSmoothScroll;
     mSmoothScroll = nsnull;
