@@ -70,7 +70,7 @@ typedef struct {
 /* ============================== Socket Class ============================== */
 /* ========================================================================== */
 
-#define ALLOC_INCREMENT 128
+#define ALLOC_INCREMENT 1024
 typedef struct {
     char *buf;
     long len;

@@ -14097,7 +14097,7 @@ cert_general_name_type_from_name(PyObject *self, PyObject *args)
 }
 
 PyDoc_STRVAR(cert_cert_usage_flags_doc,
-"cert_usage_str() -> ['flag_name', ...]\n\
+"cert_usage_str(flags) -> ['flag_name', ...]\n\
 \n\
 :Parameters:\n\
     flags : int\n\

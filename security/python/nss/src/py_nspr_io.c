@@ -1808,11 +1808,11 @@ static PyObject *
 _readline(Socket *self, long size)
 {
     unsigned int timeout = PR_INTERVAL_NO_TIMEOUT;
-    long read_len, space_available, amount_read, line_len;
+    long read_len, space_available, amount_read, line_len, tail_len;
     PyObject *line = NULL;
 
     while (1) {
-        /* Is there a complete line already buffered */
+        /* Is there a complete line already buffered? */
         if (self->readahead.len) {
             char *p, *beg, *end;
             /* Set the beginning and ending pointers which defines the
@@ -1829,7 +1829,7 @@ _readline(Socket *self, long size)
             /* Where did we stop?
              * At the size limit? Then return size bytes.
              * At the end of the readahead buffer? No newline found, get more data.
-             * At a newline? Then return from the buffer begininning up to and including the newline */
+             * At a newline? Then return from the beginning of the buffer up to and including the newline */
             if ((size > 0) && (line_len == size)) goto return_line;
             if (line_len == self->readahead.len)  goto more_data;
             assert(*p == '\n');			/* 1st two conditions don't apply, must have found newline */
@@ -1840,9 +1840,10 @@ _readline(Socket *self, long size)
         /* Need more data, try to read at least an ALLOC_INCREMENT chunk */
         space_available = self->readahead.alloc_len - self->readahead.len;
         if (space_available < ALLOC_INCREMENT) {
-            self->readahead.alloc_len = self->readahead.alloc_len + ALLOC_INCREMENT;
+            self->readahead.alloc_len += ALLOC_INCREMENT;
             if ((self->readahead.buf = realloc(self->readahead.buf, self->readahead.alloc_len)) == NULL) {
                 /* ERROR */
+                FREE_READAHEAD(&self->readahead);
                 return PyErr_NoMemory();
             }
         }
@@ -1855,6 +1856,7 @@ _readline(Socket *self, long size)
         Py_END_ALLOW_THREADS
 
         if (amount_read < 0) {
+            FREE_READAHEAD(&self->readahead);
             return set_nspr_error(NULL);
         } else if (amount_read == 0) {				/* EOF, return what we've got */
             line_len = self->readahead.len;
@@ -1870,8 +1872,9 @@ _readline(Socket *self, long size)
     }
     memmove(PyString_AsString(line), self->readahead.buf, line_len);
     /* Subtract the data being returned from the cached readahead buffer */
-    memmove(self->readahead.buf, self->readahead.buf + line_len, self->readahead.len - line_len);
-    self->readahead.len -= line_len;
+    tail_len = self->readahead.len - line_len;
+    memmove(self->readahead.buf, self->readahead.buf + line_len, tail_len);
+    self->readahead.len = tail_len;
     return line;
 }
 
@@ -1992,7 +1995,7 @@ static PyObject *
 _recv(Socket *self, long requested_amount, unsigned int timeout)
 {
     PyObject *py_buf = NULL;
-    long read_len, amount_read, result_len;
+    long read_len, amount_read, result_len, tail_len;
     char *dst = NULL;
 
     result_len = 0;
@@ -2006,13 +2009,15 @@ _recv(Socket *self, long requested_amount, unsigned int timeout)
     /* Is the read request already buffered? */
     if (self->readahead.len) {
         if (self->readahead.len >= requested_amount) {
+            /* Yes, the readahead buffer satisfies the request */
             result_len = requested_amount;
             memmove(dst, self->readahead.buf, result_len);
-            if (self->readahead.len > result_len) {
+            if (self->readahead.len == result_len) {
                 FREE_READAHEAD(&self->readahead);
             } else {
-                memmove(self->readahead.buf, self->readahead.buf + result_len, self->readahead.len - result_len);
-                self->readahead.len -= result_len;
+                tail_len = self->readahead.len - result_len;
+                memmove(self->readahead.buf, self->readahead.buf + result_len, tail_len);
+                self->readahead.len = tail_len;
             }
             return py_buf;
         }
@@ -2024,6 +2029,7 @@ _recv(Socket *self, long requested_amount, unsigned int timeout)
 
         memmove(dst, self->readahead.buf, self->readahead.len);
         dst += self->readahead.len;
+        result_len += self->readahead.len;
         read_len = requested_amount - self->readahead.len;
         FREE_READAHEAD(&self->readahead);
     }
@@ -2035,6 +2041,7 @@ _recv(Socket *self, long requested_amount, unsigned int timeout)
 
     if (amount_read < 0) {
         Py_DECREF(py_buf);
+        FREE_READAHEAD(&self->readahead);
         return set_nspr_error(NULL);
     }
     if (amount_read == 0) {
@@ -2088,8 +2095,9 @@ Socket_read(Socket *self, PyObject *args, PyObject *kwds)
         read_len = ALLOC_INCREMENT;
         space_available = self->readahead.alloc_len - self->readahead.len;
         if (space_available < read_len) {
-            self->readahead.alloc_len = self->readahead.alloc_len + ALLOC_INCREMENT;
+            self->readahead.alloc_len += ALLOC_INCREMENT;
             if ((self->readahead.buf = PyMem_REALLOC(self->readahead.buf, self->readahead.alloc_len)) == NULL) {
+                FREE_READAHEAD(&self->readahead);
                 return PyErr_NoMemory();
             }
         }
@@ -2102,12 +2110,14 @@ Socket_read(Socket *self, PyObject *args, PyObject *kwds)
         Py_END_ALLOW_THREADS
 
         if (amount_read  < 0) {
+            FREE_READAHEAD(&self->readahead);
             return set_nspr_error(NULL);
         }
         self->readahead.len += amount_read;
 
 	if (self->readahead.len > PY_SSIZE_T_MAX) {
             PyErr_Format(PyExc_OverflowError, "have read %ld bytes, this is more than a Python string can hold", self->readahead.len);
+            FREE_READAHEAD(&self->readahead);
             return NULL;
         }
 
