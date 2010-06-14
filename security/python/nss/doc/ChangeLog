@@ -111,6 +111,12 @@
 
   * Identify static variables, move to thread local storage
 	
+  * Remove python-nss specific httplib.py, no longer needed
+    python-nss now compatible with standard library
+
+  * Rewrite httplib_example.py to use standard library and illustrate
+    ssl, non-ssl, connection class, http class usage
+
 2009-09-21  John Dennis  <jdennis@redhat.com> 0.8
   * The following methods, properties  and functions were added:
     SecItem.type SecItem.len, SecItem.data
