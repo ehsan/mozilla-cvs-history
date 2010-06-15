@@ -256,12 +256,12 @@
 		</class>
 		<class name="tab" code="BTab" plural="tabs">
 			<cocoa class="BrowserWrapper"/>
-			<property name="title" code="pTtl" description="The displayed title of the tab." type="text" access="r">
+			<property name="name" code="pnam" description="The displayed title of the tab." type="text" access="r">
 				<cocoa key="title"/>
 			</property>
-			<!-- Replace this separate hidden property with <synonym name="name" code="pnam"/> on "title" once we drop support for 10.4.
+			<!-- Replace this separate hidden property with <synonym name="title" code="pTtl"/> on "title" once we drop support for 10.4.
 			     Synonym should work on 10.4 but apparently does not. -->
-			<property name="name" code="pnam" description="The displayed title of the tab." type="text" access="r" hidden="yes">
+			<property name="title" code="pTtl" description="The displayed title of the tab." type="text" access="r" hidden="yes">
 				<cocoa key="title"/>
 			</property>
 			<property name="URL" code="pURL" description="The current URL of the tab." type="text">
