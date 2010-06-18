@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.139 2010/06/06 22:30:02 nelson%bolyard.com Exp $ */
+/* $Id: ssl3con.c,v 1.140 2010/06/18 06:25:42 nelson%bolyard.com Exp $ */
 
 #include "cert.h"
 #include "ssl.h"
@@ -8888,17 +8888,21 @@ const ssl3BulkCipherDef *cipher_def;
 
     /* If it's a block cipher, check and strip the padding. */
     if (cipher_def->type == type_block) {
-	padding_length = *(plaintext->buf + plaintext->len - 1);
+        PRUint8 * pPaddingLen = plaintext->buf + plaintext->len - 1;
+	padding_length = *pPaddingLen;
 	/* TLS permits padding to exceed the block size, up to 255 bytes. */
 	if (padding_length + 1 + crSpec->mac_size > plaintext->len)
 	    padIsBad = PR_TRUE;
-	/* if TLS, check value of first padding byte. */
-	else if (padding_length && isTLS && 
-	         padding_length != *(plaintext->buf +
-	                             plaintext->len - (padding_length + 1)))
-	    padIsBad = PR_TRUE;
-	else
-	    plaintext->len -= padding_length + 1;
+	else {
+            plaintext->len -= padding_length + 1;
+            /* In TLS all padding bytes must be equal to the padding length. */
+            if (isTLS) {
+                PRUint8 *p;
+                for (p = pPaddingLen - padding_length; p < pPaddingLen; ++p) {
+                    padIsBad |= *p ^ padding_length;
+                }
+            }
+        }
     }
 
     /* Remove the MAC. */
