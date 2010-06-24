@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.141 2010/06/24 09:24:18 nelson%bolyard.com Exp $ */
+/* $Id: ssl3con.c,v 1.142 2010/06/24 19:53:20 wtc%google.com Exp $ */
 
 #include "cert.h"
 #include "ssl.h"
@@ -8886,7 +8886,7 @@ const ssl3BulkCipherDef *cipher_def;
     }
 
     /* If it's a block cipher, check and strip the padding. */
-    if (cipher_def->type == type_block) {
+    if (cipher_def->type == type_block && !padIsBad) {
         PRUint8 * pPaddingLen = plaintext->buf + plaintext->len - 1;
 	padding_length = *pPaddingLen;
 	/* TLS permits padding to exceed the block size, up to 255 bytes. */
