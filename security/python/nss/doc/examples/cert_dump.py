@@ -150,12 +150,6 @@ filename = sys.argv[1]
 # Perform basic configuration and setup
 nss.nss_init_nodb()
 
-if False:
-    l = nss.temp_test()
-    print type(l)
-    print l
-    sys.exit(0)
-
 if len(args):
     filename = args[0]
 

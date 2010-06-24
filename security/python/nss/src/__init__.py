@@ -297,3 +297,6 @@ To be added
 
 """
 __version__ = '0.9'
+
+import nss
+nss.nss_init_nodb()

@@ -259,9 +259,9 @@ NewType_new_from_NSSType(NSSType *id)
 #define PyNone_Check(x) ((x) == Py_None)
 
 //FIXME, should be in py_nss.h
-#define PyX500AVA_Check(op)  PyObject_TypeCheck(op, &X500AVAType)
-#define PyX500RDN_Check(op)  PyObject_TypeCheck(op, &X500RDNType)
-#define PyX500Name_Check(op) PyObject_TypeCheck(op, &X500NameType)
+#define PyAVA_Check(op)  PyObject_TypeCheck(op, &AVAType)
+#define PyRDN_Check(op)  PyObject_TypeCheck(op, &RDNType)
+#define PyDN_Check(op) PyObject_TypeCheck(op, &DNType)
 
 
 #define FMT_OBJ_AND_APPEND(dst_pairs, label, src_obj, level, fail)      \
@@ -573,9 +573,9 @@ static PyTypeObject PK11SymKeyType;
 static PyTypeObject PK11ContextType;
 static PyTypeObject SecItemType;
 static PyTypeObject PK11SymKeyType;
-static PyTypeObject X500AVAType;
-static PyTypeObject X500RDNType;
-static PyTypeObject X500NameType;
+static PyTypeObject AVAType;
+static PyTypeObject RDNType;
+static PyTypeObject DNType;
 
 /* === Forward Declarations */
 
@@ -732,10 +732,10 @@ static PyObject *
 SignedCRL_new_from_CERTSignedCRL(CERTSignedCrl *signed_crl);
 
 static PyObject *
-X500AVA_repr(X500AVA *self);
+AVA_repr(AVA *self);
 
-static CERTAVA *
-CERTRDN_get_last_matching_tag(CERTRDN *rdn, int tag);
+static bool
+CERTRDN_has_tag(CERTRDN *rdn, int tag);
 
 static PyObject *
 CERTAVA_value_to_pystr(CERTAVA *ava);
@@ -744,10 +744,10 @@ static Py_ssize_t
 CERTRDN_ava_count(CERTRDN *rdn);
 
 static Py_ssize_t
-X500Name_length(X500Name *self);
+DN_length(DN *self);
 
 static PyObject *
-X500Name_item(X500Name *self, register Py_ssize_t i);
+DN_item(DN *self, register Py_ssize_t i);
 
 static PyObject *
 general_name_type_to_pystr(CERTGeneralNameType type);
@@ -793,6 +793,9 @@ BasicConstraints_new_from_SECItem(SECItem *item);
 
 static PyObject *
 cert_x509_alt_name(PyObject *self, PyObject *args, PyObject *kwds);
+
+PyObject *
+DN_new_from_CERTName(CERTName *name);
 
 /* ==================================== */
 
@@ -3214,25 +3217,61 @@ SECAlgorithmID_to_pystr(SECAlgorithmID *a)
 static PyObject *
 CERTAVA_value_to_pystr(CERTAVA *ava)
 {
+    PyObject *result = NULL;
+    SECOidTag oid_tag;
+    const char *attr_name;
+    char *oid_name;
     char value_buf[1024];
-    SECItem *decoded = NULL;
+    SECItem *value_item;
 
-    if (!ava)
-        return NULL;
-
-    if ((decoded = CERT_DecodeAVAValue(&ava->value)) == NULL) {
-        return NULL;
+    if (!ava) {
+        return PyString_FromString("");
     }
 
+    value_buf[0] = 0;
+    attr_name = NULL;
+    oid_name = NULL;
+
+    /*
+     * Get the AVA's attribute name (e.g. type) as a string.  If we
+     * can't get the canonical name use a dotted-decimal OID
+     * representation instead.
+     */
+    if ((oid_tag = CERT_GetAVATag(ava)) != -1) {
+        attr_name = ava_oid_tag_to_name(oid_tag);
+    }
+
+    if (attr_name == NULL) {
+        if ((oid_name = CERT_GetOidString(&ava->type)) == NULL) {
+            return set_nspr_error("cannot convert AVA type to OID string");
+        }
+    }
+
+    /* Get the AVA's attribute value as a string */
+    if ((value_item = CERT_DecodeAVAValue(&ava->value)) == NULL) {
+        if (oid_name) PR_smprintf_free(oid_name);
+        return set_nspr_error("unable to decode AVA value");
+    }
     if (CERT_RFC1485_EscapeAndQuote(value_buf, sizeof(value_buf),
-                                    (char *)decoded->data, decoded->len) != SECSuccess) {
-        SECITEM_FreeItem(decoded, PR_TRUE);
+                                    (char *)value_item->data,
+                                    value_item->len) != SECSuccess) {
+        if (oid_name) PR_smprintf_free(oid_name);
+        SECITEM_FreeItem(value_item, PR_TRUE);
+        return set_nspr_error("unable to escape AVA value string");
+    }
+    SECITEM_FreeItem(value_item, PR_TRUE);
+
+    /* Format "name=value" */
+    if ((result = PyString_FromFormat("%s=%s",
+                                      attr_name ? attr_name : oid_name,
+                                      value_buf)) == NULL) {
+        if (oid_name) PR_smprintf_free(oid_name);
         return NULL;
     }
 
-    SECITEM_FreeItem(decoded, PR_TRUE);
+    if (oid_name) PR_smprintf_free(oid_name);
 
-    return PyString_FromString(value_buf);
+    return result;
 }
 
 static PyObject *
@@ -6429,7 +6468,7 @@ Certificate_get_subject(Certificate *self, void *closure)
 {
     TraceMethodEnter(self);
 
-    return CERTName_to_pystr(&self->cert->subject);
+    return DN_new_from_CERTName(&self->cert->subject);
 }
 
 static PyObject *
@@ -6455,7 +6494,7 @@ Certificate_get_issuer(Certificate *self, void *closure)
 {
     TraceMethodEnter(self);
 
-    return CERTName_to_pystr(&self->cert->issuer);
+    return DN_new_from_CERTName(&self->cert->issuer);
 }
 
 static PyObject *
@@ -6549,7 +6588,7 @@ Certificate_get_subject_public_key_info(Certificate *self, void *closure)
 static PyObject *
 Certificate_get_extensions(Certificate *self, void *closure)
 {
-    CERTCertExtension **extensions;
+    CERTCertExtension **extensions = NULL;
     int num_extensions, i;
     PyObject *extensions_tuple;
 
@@ -6596,13 +6635,13 @@ PyGetSetDef Certificate_getseters[] = {
      "certificate not valid after this time (string value expressed, UTC)", NULL},
 
     {"subject",                 (getter)Certificate_get_subject,                 NULL,
-     "certificate subject", NULL},
+     "certificate subject as a DN object", NULL},
 
     {"subject_common_name",     (getter)Certificate_get_subject_common_name,     NULL,
      "certificate subject", NULL},
 
     {"issuer",                  (getter)Certificate_get_issuer,                  NULL,
-     "certificate issuer",  NULL},
+     "certificate issuer as a DN object",  NULL},
 
     {"version",                 (getter)Certificate_get_version,                 NULL,
      "certificate version",  NULL},
@@ -7128,7 +7167,6 @@ static PyMethodDef Certificate_methods[] = {
     {"verify_now",             (PyCFunction)Certificate_verify_now,             METH_VARARGS,               Certificate_verify_now_doc},
     {"format_lines",           (PyCFunction)Certificate_format_lines,           METH_VARARGS|METH_KEYWORDS, generic_format_lines_doc},
     {"format",                 (PyCFunction)Certificate_format,                 METH_VARARGS|METH_KEYWORDS, generic_format_doc},
-    //    {"", (PyCFunction)Certificate_, METH_RARGS, Certificate__doc},
     {NULL, NULL}  /* Sentinel */
 };
 
@@ -7180,14 +7218,14 @@ Certificate_init(Certificate *self, PyObject *args, PyObject *kwds)
 
     TraceMethodEnter(self);
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O:SecItem", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O:Certificate", kwlist,
                                      &py_data))
         return -1;
 
     if (py_data) {
         if (PySecItem_Check(py_data)) {
             der_item = &((SecItem *)py_data)->item;
-        } else if (PyBuffer_Check(py_data)) {
+        } else if (PyObject_CheckReadBuffer(py_data)) {
             unsigned char *data = NULL;
             Py_ssize_t data_len;
 
@@ -7535,7 +7573,7 @@ SignedCRL_new_from_CERTSignedCRL(CERTSignedCrl *signed_crl)
 }
 
 /* ========================================================================== */
-/* ============================= X500AVA Class ============================== */
+/* =============================== AVA Class ================================ */
 /* ========================================================================== */
 
 /*
@@ -7551,7 +7589,7 @@ SignedCRL_new_from_CERTSignedCRL(CERTSignedCrl *signed_crl)
 /* ============================ Attribute Access ============================ */
 
 static PyObject *
-X500AVA_get_oid(X500AVA *self, void *closure)
+AVA_get_oid(AVA *self, void *closure)
 {
     TraceMethodEnter(self);
 
@@ -7559,7 +7597,7 @@ X500AVA_get_oid(X500AVA *self, void *closure)
 }
 
 static PyObject *
-X500AVA_get_oid_tag(X500AVA *self, void *closure)
+AVA_get_oid_tag(AVA *self, void *closure)
 {
     TraceMethodEnter(self);
 
@@ -7567,7 +7605,7 @@ X500AVA_get_oid_tag(X500AVA *self, void *closure)
 }
 
 static PyObject *
-X500AVA_get_value(X500AVA *self, void *closure)
+AVA_get_value(AVA *self, void *closure)
 {
     TraceMethodEnter(self);
 
@@ -7575,27 +7613,27 @@ X500AVA_get_value(X500AVA *self, void *closure)
 }
 
 static PyObject *
-X500AVA_get_value_str(X500AVA *self, void *closure)
+AVA_get_value_str(AVA *self, void *closure)
 {
     TraceMethodEnter(self);
 
-    return X500AVA_repr(self);
+    return AVA_repr(self);
 }
 
 static
-PyGetSetDef X500AVA_getseters[] = {
-    {"oid",       (getter)X500AVA_get_oid, (setter)NULL,
+PyGetSetDef AVA_getseters[] = {
+    {"oid",       (getter)AVA_get_oid, (setter)NULL,
      "The OID (e.g. type) of the AVA as a SecItem", NULL},
-    {"oid_tag",   (getter)X500AVA_get_oid_tag, (setter)NULL,
+    {"oid_tag",   (getter)AVA_get_oid_tag, (setter)NULL,
      "The OID tag enumerated constant (i.e. SEC_OID_AVA_*) of the AVA's type", NULL},
-    {"value",     (getter)X500AVA_get_value, (setter)NULL,
+    {"value",     (getter)AVA_get_value, (setter)NULL,
      "The value of the AVA as a SecItem", NULL},
-    {"value_str", (getter)X500AVA_get_value_str, (setter)NULL,
+    {"value_str", (getter)AVA_get_value_str, (setter)NULL,
      "The value of the AVA as a UTF-8 encoded string", NULL},
     {NULL}  /* Sentinel */
 };
 
-static PyMemberDef X500AVA_members[] = {
+static PyMemberDef AVA_members[] = {
     {NULL}  /* Sentinel */
 };
 
@@ -7644,12 +7682,12 @@ CERTAVA_compare(CERTAVA *a, CERTAVA *b)
 }
 
 static int
-X500AVA_compare(X500AVA *self, X500AVA *other)
+AVA_compare(AVA *self, AVA *other)
 {
     int cmp_result;
 
-    if (!PyX500AVA_Check(other)) {
-        PyErr_SetString(PyExc_TypeError, "Bad type, must be X500AVA");
+    if (!PyAVA_Check(other)) {
+        PyErr_SetString(PyExc_TypeError, "Bad type, must be AVA");
         return -1;
     }
 
@@ -7660,20 +7698,20 @@ X500AVA_compare(X500AVA *self, X500AVA *other)
     return cmp_result;
 }
 
-static PyMethodDef X500AVA_methods[] = {
+static PyMethodDef AVA_methods[] = {
     {NULL, NULL}  /* Sentinel */
 };
 
 /* =========================== Class Construction =========================== */
 
 static PyObject *
-X500AVA_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+AVA_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
-    X500AVA *self;
+    AVA *self;
 
     TraceObjNewEnter(type);
 
-    if ((self = (X500AVA *)type->tp_alloc(type, 0)) == NULL) {
+    if ((self = (AVA *)type->tp_alloc(type, 0)) == NULL) {
         return NULL;
     }
 
@@ -7689,7 +7727,7 @@ X500AVA_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 }
 
 static void
-X500AVA_dealloc(X500AVA* self)
+AVA_dealloc(AVA* self)
 {
     TraceMethodEnter(self);
 
@@ -7700,10 +7738,10 @@ X500AVA_dealloc(X500AVA* self)
     self->ob_type->tp_free((PyObject*)self);
 }
 
-PyDoc_STRVAR(X500AVA_doc,
+PyDoc_STRVAR(AVA_doc,
 "An object representing an AVA (attribute value assertion).\n\
 \n\
-X500AVA(type, value)\n\
+AVA(type, value)\n\
 \n\
 :Parameters:\n\
      type : may be one of integer, string, SecItem\n\
@@ -7721,7 +7759,7 @@ X500AVA(type, value)\n\
          The value of the AVA, must be a string.\n\
 \n\
 RDN's (Relative Distinguished Name) are composed from AVA's.\n\
-An RDN is a sequence of AVA's.\n\
+An `RDN` is a sequence of AVA's.\n\
 \n\
 An example of an AVA is \"CN=www.redhat.com\" where CN is the X500\n\
 directory abbrevation for \"Common Name\".\n\
@@ -7743,18 +7781,18 @@ type\n\
 value\n\
     The value of the attribute (e.g. 'www.redhat.com').\n\
 \n\
-Examples:\n\
+Examples::\n\
 \n\
-The AVA cn=www.redhat.com can be created in any of the follow ways:\n\
+    The AVA cn=www.redhat.com can be created in any of the follow ways:\n\
 \n\
-    ava = nss.X500AVA('cn', 'www.redhat.com')\n\
-    ava = nss.X500AVA(nss.SEC_OID_AVA_COMMON_NAME, 'www.redhat.com')\n\
-    ava = nss.X500AVA('2.5.4.3', 'www.redhat.com')\n\
-    ava = nss.X500AVA('OID.2.5.4.3', 'www.redhat.com')\n\
+    ava = nss.AVA('cn', 'www.redhat.com')\n\
+    ava = nss.AVA(nss.SEC_OID_AVA_COMMON_NAME, 'www.redhat.com')\n\
+    ava = nss.AVA('2.5.4.3', 'www.redhat.com')\n\
+    ava = nss.AVA('OID.2.5.4.3', 'www.redhat.com')\n\
 ");
 
 static int
-X500AVA_init(X500AVA *self, PyObject *args, PyObject *kwds)
+AVA_init(AVA *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"type", "value", NULL};
     PyObject *py_type = NULL;
@@ -7766,7 +7804,7 @@ X500AVA_init(X500AVA *self, PyObject *args, PyObject *kwds)
 
     TraceMethodEnter(self);
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO:X500AVA", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO:AVA", kwlist,
                                      &py_type, &py_value))
         return -1;
 
@@ -7795,7 +7833,7 @@ X500AVA_init(X500AVA *self, PyObject *args, PyObject *kwds)
             return -1;
         }
     } else {
-        PyErr_Format(PyExc_TypeError, "X500AVA value must be a string, not %.200s",
+        PyErr_Format(PyExc_TypeError, "AVA value must be a string, not %.200s",
                      Py_TYPE(py_type)->tp_name);
         return -1;
     }
@@ -7813,7 +7851,7 @@ X500AVA_init(X500AVA *self, PyObject *args, PyObject *kwds)
 }
 
 static PyObject *
-X500AVA_repr(X500AVA *self)
+AVA_repr(AVA *self)
 {
     PyObject *py_value_str;
 
@@ -7824,18 +7862,18 @@ X500AVA_repr(X500AVA *self)
     return py_value_str;
 }
 
-static PyTypeObject X500AVAType = {
+static PyTypeObject AVAType = {
     PyObject_HEAD_INIT(NULL)
     0,						/* ob_size */
-    "nss.nss.X500AVA",				/* tp_name */
-    sizeof(X500AVA),				/* tp_basicsize */
+    "nss.nss.AVA",				/* tp_name */
+    sizeof(AVA),				/* tp_basicsize */
     0,						/* tp_itemsize */
-    (destructor)X500AVA_dealloc,		/* tp_dealloc */
+    (destructor)AVA_dealloc,			/* tp_dealloc */
     0,						/* tp_print */
     0,						/* tp_getattr */
     0,						/* tp_setattr */
-    (cmpfunc)X500AVA_compare,			/* tp_compare */
-    (reprfunc)X500AVA_repr,			/* tp_repr */
+    (cmpfunc)AVA_compare,			/* tp_compare */
+    (reprfunc)AVA_repr,				/* tp_repr */
     0,						/* tp_as_number */
     0,						/* tp_as_sequence */
     0,						/* tp_as_mapping */
@@ -7846,34 +7884,34 @@ static PyTypeObject X500AVAType = {
     0,						/* tp_setattro */
     0,						/* tp_as_buffer */
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,	/* tp_flags */
-    X500AVA_doc,				/* tp_doc */
+    AVA_doc,					/* tp_doc */
     0,						/* tp_traverse */
     0,						/* tp_clear */
     0,						/* tp_richcompare */
     0,						/* tp_weaklistoffset */
     0,						/* tp_iter */
     0,						/* tp_iternext */
-    X500AVA_methods,				/* tp_methods */
-    X500AVA_members,				/* tp_members */
-    X500AVA_getseters,				/* tp_getset */
+    AVA_methods,				/* tp_methods */
+    AVA_members,				/* tp_members */
+    AVA_getseters,				/* tp_getset */
     0,						/* tp_base */
     0,						/* tp_dict */
     0,						/* tp_descr_get */
     0,						/* tp_descr_set */
     0,						/* tp_dictoffset */
-    (initproc)X500AVA_init,			/* tp_init */
+    (initproc)AVA_init,				/* tp_init */
     0,						/* tp_alloc */
-    X500AVA_new,				/* tp_new */
+    AVA_new,					/* tp_new */
 };
 
 PyObject *
-X500AVA_new_from_CERTAVA(CERTAVA *ava)
+AVA_new_from_CERTAVA(CERTAVA *ava)
 {
-    X500AVA *self = NULL;
+    AVA *self = NULL;
 
     TraceObjNewEnter(NULL);
 
-    if ((self = (X500AVA *) X500AVAType.tp_new(&X500AVAType, NULL, NULL)) == NULL)
+    if ((self = (AVA *) AVAType.tp_new(&AVAType, NULL, NULL)) == NULL)
         return NULL;
 
     if ((self->ava = (CERTAVA*) PORT_ArenaZNew(self->arena, CERTAVA)) == NULL) {
@@ -7900,7 +7938,7 @@ X500AVA_new_from_CERTAVA(CERTAVA *ava)
 }
 
 /* ========================================================================== */
-/* ============================= X500RDN Class ============================== */
+/* =============================== RDN Class ================================ */
 /* ========================================================================== */
 
 /*
@@ -7917,11 +7955,11 @@ X500AVA_new_from_CERTAVA(CERTAVA *ava)
 /* ============================ Attribute Access ============================ */
 
 static
-PyGetSetDef X500RDN_getseters[] = {
+PyGetSetDef RDN_getseters[] = {
     {NULL}  /* Sentinel */
 };
 
-static PyMemberDef X500RDN_members[] = {
+static PyMemberDef RDN_members[] = {
     {NULL}  /* Sentinel */
 };
 
@@ -7960,12 +7998,12 @@ CERTRDN_compare(CERTRDN *a, CERTRDN *b)
 }
 
 static int
-X500RDN_compare(X500RDN *self, X500RDN *other)
+RDN_compare(RDN *self, RDN *other)
 {
     int cmp_result;
 
-    if (!PyX500RDN_Check(other)) {
-        PyErr_SetString(PyExc_TypeError, "Bad type, must be X500RDN");
+    if (!PyRDN_Check(other)) {
+        PyErr_SetString(PyExc_TypeError, "Bad type, must be RDN");
         return -1;
     }
 
@@ -7976,7 +8014,7 @@ X500RDN_compare(X500RDN *self, X500RDN *other)
     return cmp_result;
 }
 
-PyDoc_STRVAR(X500RDN_has_key_doc,
+PyDoc_STRVAR(RDN_has_key_doc,
 "has_key(arg) -> bool\n\
 \n\
 :Parameters:\n\
@@ -7988,7 +8026,7 @@ return True if RDN has an AVA whose oid can be identified by arg.\n\
 ");
 
 static PyObject *
-X500RDN_has_key(X500RDN *self, PyObject *args)
+RDN_has_key(RDN *self, PyObject *args)
 {
     PyObject *arg;
     int oid_tag;
@@ -8004,10 +8042,10 @@ X500RDN_has_key(X500RDN *self, PyObject *args)
         Py_RETURN_FALSE;
     }
 
-    if (CERTRDN_get_last_matching_tag(self->rdn, oid_tag) == NULL) {
-        Py_RETURN_FALSE;
-    } else {
+    if (CERTRDN_has_tag(self->rdn, oid_tag)) {
         Py_RETURN_TRUE;
+    } else {
+        Py_RETURN_FALSE;
     }
 }
 
@@ -8026,71 +8064,95 @@ CERTRDN_ava_count(CERTRDN *rdn)
 }
 
 static Py_ssize_t
-X500RDN_length(X500RDN *self)
+RDN_length(RDN *self)
 {
     return CERTRDN_ava_count(self->rdn);
 }
 
 static PyObject *
-X500RDN_item(X500RDN *self, register Py_ssize_t i)
+RDN_item(RDN *self, register Py_ssize_t i)
 {
     Py_ssize_t count = 0;
     CERTAVA **avas;
 
     if (i < 0 || !self->rdn || self->rdn->avas == NULL) {
-        PyErr_SetString(PyExc_IndexError, "X500RDN index out of range");
+        PyErr_SetString(PyExc_IndexError, "RDN index out of range");
         return NULL;
     }
 
     for (avas = self->rdn->avas, count = 0; *avas && count < i; avas++, count++);
 
     if (!*avas) {
-        PyErr_SetString(PyExc_IndexError, "X500RDN index out of range");
+        PyErr_SetString(PyExc_IndexError, "RDN index out of range");
         return NULL;
     }
 
-    return X500AVA_new_from_CERTAVA(*avas);
+    return AVA_new_from_CERTAVA(*avas);
 }
 
 
-/*
- * RDNs are sorted from most general to most specific.  This code
- * returns the LAST one found, the most specific one found.  This is
- * particularly appropriate for Common Name.  See RFC 2818.
- */
-static CERTAVA *
-CERTRDN_get_last_matching_tag(CERTRDN *rdn, int tag)
+static bool
+CERTRDN_has_tag(CERTRDN *rdn, int tag)
 {
     CERTAVA **avas;
-    CERTAVA *ava, *last = NULL;
+    CERTAVA *ava = NULL;
     
-    if (!rdn) return NULL;
+    if (!rdn) return false;
     for (avas = rdn->avas; avas && (ava = *avas); avas++) {
         int ava_tag = CERT_GetAVATag(ava);
         if (tag == ava_tag) {
-            last = ava;
+            return true;
         }
     }
-    return last;
+    return false;
 }
 
-static PyObject*
-X500RDN_subscript(X500RDN *self, PyObject* item)
+static PyObject *
+CERTRDN_get_matching_tag_list(CERTRDN *rdn, int tag)
 {
+    PyObject *list = NULL;
+    PyObject *py_ava = NULL;
+    CERTAVA **avas, *ava;
+
+    if ((list = PyList_New(0)) == NULL) {
+        return NULL;
+    }
+
+    if (!rdn) {
+        return list;
+    }
+
+    for (avas = rdn->avas; avas && (ava = *avas); avas++) {
+        int ava_tag = CERT_GetAVATag(ava);
+        if (tag == ava_tag) {
+            if ((py_ava = AVA_new_from_CERTAVA(ava)) == NULL) {
+                Py_DECREF(list);
+                return NULL;
+            }
+            PyList_Append(list, py_ava);
+        }
+    }
+
+    return list;
+}
+static PyObject*
+RDN_subscript(RDN *self, PyObject* item)
+{
+    PyObject* result;
+
     if (PyIndex_Check(item)) {
         Py_ssize_t i = PyNumber_AsSsize_t(item, PyExc_IndexError);
 	
         if (i == -1 && PyErr_Occurred())
             return NULL;
         if (i < 0)
-            i += X500RDN_length(self);
-        return X500RDN_item(self, i);
+            i += RDN_length(self);
+        return RDN_item(self, i);
     } else if (PySlice_Check(item)) {
         Py_ssize_t start, stop, step, slicelength, cur, i;
-        PyObject* result;
         PyObject* py_ava;
 
-        if (PySlice_GetIndicesEx((PySliceObject*)item, X500RDN_length(self),
+        if (PySlice_GetIndicesEx((PySliceObject*)item, RDN_length(self),
 				 &start, &stop, &step, &slicelength) < 0) {
             return NULL;
         }
@@ -8102,9 +8164,9 @@ X500RDN_subscript(X500RDN *self, PyObject* item)
             if (!result) return NULL;
             
             for (cur = start, i = 0; i < slicelength; cur += step, i++) {
-                /* We don't need to bump the ref count because X500RDN_item
+                /* We don't need to bump the ref count because RDN_item
                  * returns a new object */
-                py_ava = X500RDN_item(self, cur);
+                py_ava = RDN_item(self, cur);
                 if (PyList_SetItem(result, i, py_ava) == -1) {
                     Py_DECREF(result);
                     return NULL;
@@ -8114,7 +8176,6 @@ X500RDN_subscript(X500RDN *self, PyObject* item)
 	}
     } else if (PyString_Check(item) || PyUnicode_Check(item) || PySecItem_Check(item)) {
         int oid_tag;
-        CERTAVA *ava;
 
         if ((oid_tag = get_oid_tag_from_object(item)) == -1) {
             return NULL;
@@ -8131,7 +8192,12 @@ X500RDN_subscript(X500RDN *self, PyObject* item)
             }
         }
 
-        if ((ava = CERTRDN_get_last_matching_tag(self->rdn, oid_tag)) == NULL) {
+        if ((result = CERTRDN_get_matching_tag_list(self->rdn, oid_tag)) == NULL) {
+            return NULL;
+        }
+
+        if (PyList_Size(result) == 0) {
+            Py_DECREF(result);
             if (PyString_Check(item) || PyUnicode_Check(item)) {
                 char *name = PyString_AsString(item);
                 PyErr_Format(PyExc_KeyError, "oid name not found: \"%s\"", name);
@@ -8141,7 +8207,7 @@ X500RDN_subscript(X500RDN *self, PyObject* item)
                 return NULL;
             }
         } else {
-            return X500AVA_new_from_CERTAVA(ava);
+            return result;
         }
     } else {
         PyErr_Format(PyExc_TypeError,
@@ -8153,26 +8219,26 @@ X500RDN_subscript(X500RDN *self, PyObject* item)
 }
 
 static PyObject *
-X500RDN_repr(X500RDN *self)
+RDN_repr(RDN *self)
 {
     return CERTRDN_to_pystr(self->rdn);
 }
 
-static PyMethodDef X500RDN_methods[] = {
-    {"has_key", (PyCFunction)X500RDN_has_key, METH_VARARGS, X500RDN_has_key_doc},
+static PyMethodDef RDN_methods[] = {
+    {"has_key", (PyCFunction)RDN_has_key, METH_VARARGS, RDN_has_key_doc},
     {NULL, NULL}  /* Sentinel */
 };
 
 /* =========================== Class Construction =========================== */
 
 static PyObject *
-X500RDN_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+RDN_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
-    X500RDN *self;
+    RDN *self;
 
     TraceObjNewEnter(type);
 
-    if ((self = (X500RDN *)type->tp_alloc(type, 0)) == NULL) {
+    if ((self = (RDN *)type->tp_alloc(type, 0)) == NULL) {
         return NULL;
     }
 
@@ -8189,7 +8255,7 @@ X500RDN_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 }
 
 static void
-X500RDN_dealloc(X500RDN* self)
+RDN_dealloc(RDN* self)
 {
     TraceMethodEnter(self);
 
@@ -8200,84 +8266,73 @@ X500RDN_dealloc(X500RDN* self)
     self->ob_type->tp_free((PyObject*)self);
 }
 
-PyDoc_STRVAR(X500RDN_doc,
-"An object representing an X500 Relative Distinguished Name (RDN)\n\
+PyDoc_STRVAR(RDN_doc,
+"An object representing an X501 Relative Distinguished Name (e.g. RDN).\n\
 \n\
-X500RDN()\n\
-X500RDN(ava0, ...)\n\
-X500RDN([ava0, ava1])\n\
+RDN objects contain an ordered list of `AVA` objects. \n\
 \n\
-The X500RDN object constructor may be invoked with zero or more\n\
-X500AVA objects, or you may optionally pass a list or tuple of X500AVA\n\
+Examples::\n\
+\n\
+    RDN()\n\
+    RDN(nss.AVA('cn', 'www.redhat.com'))\n\
+    RDN([ava0, ava1])\n\
+\n\
+The RDN object constructor may be invoked with zero or more\n\
+`AVA` objects, or you may optionally pass a list or tuple of `AVA`\n\
 objects.\n\
 \n\
-X500RDN objects contain an ordered list of X500AVA objects. The\n\
-X500RDN object has both sequence and mapping behaviors with respect to\n\
-the ava's they contain. Thus you can index an ava by position, by\n\
+RDN objects contain an ordered list of `AVA` objects. The\n\
+RDN object has both sequence and mapping behaviors with respect to\n\
+the AVA's they contain. Thus you can index an AVA by position, by\n\
 name, or by SecItem (if it's an OID). You can iterate over the list,\n\
-get it's length or take a slice.  If you index by string the string\n\
-may be either a canonical name for the ava type (e.g. 'cn') or the\n\
-dotted-decimal notation for the oid (e.g. 2.5.4.3). Note it is not\n\
-possible to index by oid tag (e.g. nss.SEC_OID_AVA_COMMON_NAME)\n\
-because oid tags are integers and it's impossible to distinguish\n\
-between an integer representing the n'th member of the sequence and\n\
-the integer representing the oid tag. In this case positional indexing\n\
-wins (e.g. rdn[0] means the first element).\n\
+get it's length or take a slice.\n\
 \n\
-Examples:\n\
+If you index by string the string may be either a canonical name for\n\
+the AVA type (e.g. 'cn') or the dotted-decimal notation for the OID\n\
+(e.g. 2.5.4.3). There may be multiple AVA's in a RDN whose type matches\n\
+(e.g. OU=engineering+OU=boston). It is not common to have more than\n\
+one AVA in a RDN with the same type. However because of the possiblity\n\
+of being multi-valued when indexing by type a list is always returned\n\
+containing the matching AVA's. Thus::\n\
 \n\
-    >>> rdn = nss.X500RDN()\n\
-    >>> len(rdn)\n\
-    0\n\
-    >>> str(rdn)\n\
-    ''\n\
-    >>> cn_name = 'www.redhat.com'\n\
-    >>> cn_ava = nss.X500AVA('cn', cn_name)\n\
-    >>> rdn = nss.X500RDN(cn_ava)\n\
-    >>> len(rdn)\n\
-    1\n\
-    >>> str(rdn)\n\
-    'CN=www.redhat.com'\n\
-    >>> ava = rdn[0]\n\
-    >>> ava\n\
-    www.redhat.com\n\
-    >>> ou_name = 'Web Operations'\n\
-    >>> ou_ava = nss.X500AVA('ou', ou_name)\n\
-    >>> rdn = nss.X500RDN(cn_ava, ou_ava)\n\
-    >>> len(rdn)\n\
-    2\n\
-    >>> str(rdn)\n\
-    'CN=www.redhat.com+OU=Web Operations'\n\
-    >>> ava = rdn[0]\n\
-    >>> ava\n\
-    www.redhat.com\n\
-    >>> ava = rdn[1]\n\
-    >>> ava\n\
-    Web Operations\n\
-    >>> ava = rdn[2]\n\
-    IndexError: X500RDN index out of range\n\
-    >>> ava = rdn['2.5.4.3']\n\
-    >>> ava\n\
-    www.redhat.com\n\
-    >>> rdn.has_key('cn')\n\
-    True\n\
-    >>> for ava in rdn:\n\
-    ...    print \"%s %s\" % (nss.oid_tag_name(ava.oid_tag), ava)\n\
-    SEC_OID_AVA_COMMON_NAME www.redhat.com\n\
-    SEC_OID_AVA_ORGANIZATIONAL_UNIT_NAME Web Operations\n\
-    >>> ava = rdn['st']\n\
-    KeyError: 'oid name not found: \"st\"'\n\
-    >>> ava = rdn['junk']\n\
-    KeyError: 'oid name unknown: \"junk\"'\n\
+    rdn = nss.RDN(nss.AVA('OU', 'engineering'))\n\
+    rdn['ou']\n\
+        returns [AVA('OU=engineering')\n\
+\n\
+    rdn = nss.RDN(nss.AVA('OU', 'engineering'), nss.AVA('OU', 'boston'))\n\
+    rdn['ou']\n\
+        returns [AVA('OU=boston'), AVA('OU=engineering')]\n\
+\n\
+Examples::\n\
+\n\
+    rdn = nss.RDN(nss.AVA('cn', 'www.redhat.com'))\n\
+    str(rdn)\n\
+       returns 'CN=www.redhat.com'\n\
+    rdn[0]\n\
+       returns an `AVA` object with the value C=US\n\
+    rdn['cn']\n\
+        returns a list comprised of an `AVA` object with the value CN=www.redhat.com\n\
+    rdn['2.5.4.3']\n\
+        returns a list comprised of an `AVA` object with the value CN=www.redhat.com\n\
+        because 2.5.4.3 is the dotted-decimal OID for common name (i.e. cn)\n\
+    rdn.has_key('cn')\n\
+        returns True because the RDN has a common name RDN\n\
+    rdn.has_key('2.5.4.3')\n\
+        returns True because the RDN has a common name AVA\n\
+        because 2.5.4.3 is the dotted-decimal OID for common name (i.e. cn)\n\
+    len(rdn)\n\
+       returns 1 because there is one `AVA` object in it\n\
+    list(rdn)\n\
+       returns a list of each `AVA` object in it\n\
 \n\
 ");
 
 static int
-X500RDN_init(X500RDN *self, PyObject *args, PyObject *kwds)
+RDN_init(RDN *self, PyObject *args, PyObject *kwds)
 {
     PyObject *sequence, *item;
     Py_ssize_t sequence_len, i;
-    X500AVA *py_ava;
+    AVA *py_ava;
     CERTAVA *ava_arg[MAX_AVAS+1];  /* +1 for NULL terminator */
 
     TraceMethodEnter(self);
@@ -8289,14 +8344,14 @@ X500RDN_init(X500RDN *self, PyObject *args, PyObject *kwds)
         }
         sequence_len = PySequence_Length(sequence);
         if (sequence_len > MAX_AVAS) {
-            PyErr_Format(PyExc_ValueError, "to many X500AVA items, maximum is %d, received %d",
+            PyErr_Format(PyExc_ValueError, "to many AVA items, maximum is %d, received %d",
                          MAX_AVAS-1, sequence_len);
             return -1;
         }
         for (i = 0; i < sequence_len && i < MAX_AVAS; i++) {
             item = PySequence_ITEM(sequence, i);
-            if (PyX500AVA_Check(item)) {
-                py_ava = (X500AVA *)item;
+            if (PyAVA_Check(item)) {
+                py_ava = (AVA *)item;
                 if ((ava_arg[i] = CERT_CopyAVA(self->arena, py_ava->ava)) == NULL) {
                     set_nspr_error(NULL);
                     Py_DECREF(item);
@@ -8304,7 +8359,7 @@ X500RDN_init(X500RDN *self, PyObject *args, PyObject *kwds)
                 }
                 Py_DECREF(item);
             } else {
-                PyErr_Format(PyExc_TypeError, "item %d must be an X500AVA object, not %.200s",
+                PyErr_Format(PyExc_TypeError, "item %d must be an AVA object, not %.200s",
                              i, Py_TYPE(item)->tp_name);
                 Py_DECREF(item);
                 return -1;
@@ -8325,11 +8380,11 @@ X500RDN_init(X500RDN *self, PyObject *args, PyObject *kwds)
     return 0;
 }
 
-static PySequenceMethods X500RDN_as_sequence = {
-    (lenfunc)X500RDN_length,			/* sq_length */
+static PySequenceMethods RDN_as_sequence = {
+    (lenfunc)RDN_length,			/* sq_length */
     0,						/* sq_concat */
     0,						/* sq_repeat */
-    (ssizeargfunc)X500RDN_item,			/* sq_item */
+    (ssizeargfunc)RDN_item,			/* sq_item */
     0,						/* sq_slice */
     0,						/* sq_ass_item */
     0,						/* sq_ass_slice */
@@ -8338,27 +8393,27 @@ static PySequenceMethods X500RDN_as_sequence = {
     0,						/* sq_inplace_repeat */
 };
 
-static PyMappingMethods X500RDN_as_mapping = {
-    (lenfunc)X500RDN_length,			/* mp_length */
-    (binaryfunc)X500RDN_subscript,		/* mp_subscript */
+static PyMappingMethods RDN_as_mapping = {
+    (lenfunc)RDN_length,			/* mp_length */
+    (binaryfunc)RDN_subscript,			/* mp_subscript */
     0,						/* mp_ass_subscript */
 };
 
-static PyTypeObject X500RDNType = {
+static PyTypeObject RDNType = {
     PyObject_HEAD_INIT(NULL)
     0,						/* ob_size */
-    "nss.nss.X500RDN",				/* tp_name */
-    sizeof(X500RDN),				/* tp_basicsize */
+    "nss.nss.RDN",				/* tp_name */
+    sizeof(RDN),				/* tp_basicsize */
     0,						/* tp_itemsize */
-    (destructor)X500RDN_dealloc,		/* tp_dealloc */
+    (destructor)RDN_dealloc,			/* tp_dealloc */
     0,						/* tp_print */
     0,						/* tp_getattr */
     0,						/* tp_setattr */
-    (cmpfunc)X500RDN_compare,			/* tp_compare */
-    (reprfunc)X500RDN_repr,			/* tp_repr */
+    (cmpfunc)RDN_compare,			/* tp_compare */
+    (reprfunc)RDN_repr,				/* tp_repr */
     0,						/* tp_as_number */
-    &X500RDN_as_sequence,			/* tp_as_sequence */
-    &X500RDN_as_mapping,			/* tp_as_mapping */
+    &RDN_as_sequence,				/* tp_as_sequence */
+    &RDN_as_mapping,				/* tp_as_mapping */
     0,						/* tp_hash */
     0,						/* tp_call */
     0,						/* tp_str */
@@ -8366,37 +8421,37 @@ static PyTypeObject X500RDNType = {
     0,						/* tp_setattro */
     0,						/* tp_as_buffer */
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,	/* tp_flags */
-    X500RDN_doc,				/* tp_doc */
+    RDN_doc,					/* tp_doc */
     0,						/* tp_traverse */
     0,						/* tp_clear */
     0,						/* tp_richcompare */
     0,						/* tp_weaklistoffset */
     0,						/* tp_iter */
     0,						/* tp_iternext */
-    X500RDN_methods,				/* tp_methods */
-    X500RDN_members,				/* tp_members */
-    X500RDN_getseters,				/* tp_getset */
+    RDN_methods,				/* tp_methods */
+    RDN_members,				/* tp_members */
+    RDN_getseters,				/* tp_getset */
     0,						/* tp_base */
     0,						/* tp_dict */
     0,						/* tp_descr_get */
     0,						/* tp_descr_set */
     0,						/* tp_dictoffset */
-    (initproc)X500RDN_init,			/* tp_init */
+    (initproc)RDN_init,				/* tp_init */
     0,						/* tp_alloc */
-    X500RDN_new,				/* tp_new */
+    RDN_new,					/* tp_new */
 };
 
 PyObject *
-X500RDN_new_from_CERTRDN(CERTRDN *rdn)
+RDN_new_from_CERTRDN(CERTRDN *rdn)
 {
-    X500RDN *self = NULL;
+    RDN *self = NULL;
     int i;
     CERTAVA *ava_arg[MAX_AVAS+1];  /* +1 for NULL terminator */
     CERTAVA **avas, *ava;
 
     TraceObjNewEnter(NULL);
 
-    if ((self = (X500RDN *) X500RDNType.tp_new(&X500RDNType, NULL, NULL)) == NULL) {
+    if ((self = (RDN *) RDNType.tp_new(&RDNType, NULL, NULL)) == NULL) {
         return NULL;
     }
     
@@ -8427,7 +8482,7 @@ X500RDN_new_from_CERTRDN(CERTRDN *rdn)
 }
 
 /* ========================================================================== */
-/* ============================ X500Name Class ============================== */
+/* =============================== DN Class ================================= */
 /* ========================================================================== */
 
 /*
@@ -8469,79 +8524,76 @@ X500RDN_new_from_CERTRDN(CERTRDN *rdn)
  * CERT_GetCertUid
  */
 
-/*
- * RDNs are sorted from most general to most specific. This code
- * returns the FIRST one found, the most general one found.
- */
-static CERTRDN *
-CERTName_get_first_matching_tag(CERTName *name, int tag)
+static bool
+CERTName_has_tag(CERTName *name, int tag)
 {
     CERTRDN **rdns, *rdn;
     CERTAVA **avas, *ava;
 
-    if (!name) return NULL;
+    if (!name) return false;
     for (rdns = name->rdns; rdns && (rdn = *rdns); rdns++) {
 	for (avas = rdn->avas; avas && (ava = *avas); avas++) {
 	    int ava_tag = CERT_GetAVATag(ava);
 	    if (tag == ava_tag) {
-                return rdn;
+                return true;
 	    }
 	}
     }
-    return NULL;
+
+    return false;
 }
 
-/*
- * RDNs are sorted from most general to most specific.  This code
- * returns the LAST one found, the most specific one found.  This is
- * particularly appropriate for Common Name. See RFC 2818.
- */
-static CERTRDN *
-CERTName_get_last_matching_tag(CERTName *name, int tag)
+static PyObject *
+CERTName_get_matching_tag_list(CERTName *name, int tag)
 {
-    CERTRDN **rdns, *rdn, *last_rdn;
+    PyObject *list = NULL;
+    PyObject *py_rdn = NULL;
+    CERTRDN **rdns, *rdn;
     CERTAVA **avas, *ava;
 
-    if (!name) return NULL;
-    last_rdn = NULL;
+    if ((list = PyList_New(0)) == NULL) {
+        return NULL;
+    }
+
+    if (!name) {
+        return list;
+    }
+
     for (rdns = name->rdns; rdns && (rdn = *rdns); rdns++) {
 	for (avas = rdn->avas; avas && (ava = *avas); avas++) {
 	    int ava_tag = CERT_GetAVATag(ava);
 	    if (tag == ava_tag) {
-                last_rdn = rdn;
+                if ((py_rdn = RDN_new_from_CERTRDN(rdn)) == NULL) {
+                    Py_DECREF(list);
+                    return NULL;
+                }
+                PyList_Append(list, py_rdn);
+                break;
 	    }
 	}
     }
-    return last_rdn;
-}
 
-static CERTRDN *
-CERTName_get_matching_tag(CERTName *name, int tag)
-{
-    if (tag == SEC_OID_AVA_COMMON_NAME) {
-        return CERTName_get_last_matching_tag(name, tag);
-    } else {
-        return CERTName_get_first_matching_tag(name, tag);
-    }
+    return list;
 }
 
 static PyObject*
-X500Name_subscript(X500Name *self, PyObject* item)
+DN_subscript(DN *self, PyObject* item)
 {
+    PyObject* result = NULL;
+
     if (PyIndex_Check(item)) {
         Py_ssize_t i = PyNumber_AsSsize_t(item, PyExc_IndexError);
 	
         if (i == -1 && PyErr_Occurred())
             return NULL;
         if (i < 0)
-            i += X500Name_length(self);
-        return X500Name_item(self, i);
+            i += DN_length(self);
+        return DN_item(self, i);
     } else if (PySlice_Check(item)) {
         Py_ssize_t start, stop, step, slicelength, cur, i;
-        PyObject* result;
         PyObject* py_ava;
 
-        if (PySlice_GetIndicesEx((PySliceObject*)item, X500Name_length(self),
+        if (PySlice_GetIndicesEx((PySliceObject*)item, DN_length(self),
 				 &start, &stop, &step, &slicelength) < 0) {
             return NULL;
         }
@@ -8553,9 +8605,9 @@ X500Name_subscript(X500Name *self, PyObject* item)
             if (!result) return NULL;
             
             for (cur = start, i = 0; i < slicelength; cur += step, i++) {
-                /* We don't need to bump the ref count because X500RDN_item
+                /* We don't need to bump the ref count because RDN_item
                  * returns a new object */
-                py_ava = X500Name_item(self, cur);
+                py_ava = DN_item(self, cur);
                 if (PyList_SetItem(result, i, py_ava) == -1) {
                     Py_DECREF(result);
                     return NULL;
@@ -8565,7 +8617,6 @@ X500Name_subscript(X500Name *self, PyObject* item)
 	}
     } else if (PyString_Check(item) || PyUnicode_Check(item) || PySecItem_Check(item)) {
         int oid_tag;
-        CERTRDN *rdn;
 
         if ((oid_tag = get_oid_tag_from_object(item)) == -1) {
             return NULL;
@@ -8582,7 +8633,12 @@ X500Name_subscript(X500Name *self, PyObject* item)
             }
         }
 
-        if ((rdn = CERTName_get_matching_tag(&self->name, oid_tag)) == NULL) {
+        if ((result = CERTName_get_matching_tag_list(&self->name, oid_tag)) == NULL) {
+            return NULL;
+        }
+
+        if (PyList_Size(result) == 0) {
+            Py_DECREF(result);
             if (PyString_Check(item) || PyUnicode_Check(item)) {
                 char *name = PyString_AsString(item);
                 PyErr_Format(PyExc_KeyError, "oid name not found: \"%s\"", name);
@@ -8592,7 +8648,7 @@ X500Name_subscript(X500Name *self, PyObject* item)
                 return NULL;
             }
         } else {
-            return X500RDN_new_from_CERTRDN(rdn);
+            return result;
         }
     } else {
         PyErr_Format(PyExc_TypeError,
@@ -8603,7 +8659,7 @@ X500Name_subscript(X500Name *self, PyObject* item)
     return NULL;
 }
 
-PyDoc_STRVAR(X500Name_has_key_doc,
+PyDoc_STRVAR(DN_has_key_doc,
 "has_key(arg) -> bool\n\
 \n\
 :Parameters:\n\
@@ -8615,7 +8671,7 @@ return True if Name has an AVA whose oid can be identified by arg.\n\
 ");
 
 static PyObject *
-X500Name_has_key(X500Name *self, PyObject *args)
+DN_has_key(DN *self, PyObject *args)
 {
     PyObject *arg;
     int oid_tag;
@@ -8631,10 +8687,10 @@ X500Name_has_key(X500Name *self, PyObject *args)
         Py_RETURN_FALSE;
     }
 
-    if (CERTName_get_matching_tag(&self->name, oid_tag) == NULL) {
-        Py_RETURN_FALSE;
-    } else {
+    if (CERTName_has_tag(&self->name, oid_tag)) {
         Py_RETURN_TRUE;
+    } else {
+        Py_RETURN_FALSE;
     }
 }
 
@@ -8652,36 +8708,36 @@ CERTName_rdn_count(CERTName *name)
 }
 
 static Py_ssize_t
-X500Name_length(X500Name *self)
+DN_length(DN *self)
 {
     return CERTName_rdn_count(&self->name);
 }
 
 static PyObject *
-X500Name_item(X500Name *self, register Py_ssize_t i)
+DN_item(DN *self, register Py_ssize_t i)
 {
     Py_ssize_t count = 0;
     CERTRDN **rdns;
 
     if (i < 0 || self->name.rdns == NULL) {
-        PyErr_SetString(PyExc_IndexError, "X500Name index out of range");
+        PyErr_SetString(PyExc_IndexError, "DN index out of range");
         return NULL;
     }
 
     for (rdns = self->name.rdns, count = 0; *rdns && count < i; rdns++, count++);
 
     if (!*rdns) {
-        PyErr_SetString(PyExc_IndexError, "X500Name index out of range");
+        PyErr_SetString(PyExc_IndexError, "DN index out of range");
         return NULL;
     }
 
-    return X500RDN_new_from_CERTRDN(*rdns);
+    return RDN_new_from_CERTRDN(*rdns);
 }
 
 /* ============================ Attribute Access ============================ */
 
 static PyObject *
-X500Name_get_email_address(X500Name *self, void *closure)
+DN_get_email_address(DN *self, void *closure)
 {
     char *value;
 
@@ -8694,7 +8750,7 @@ X500Name_get_email_address(X500Name *self, void *closure)
 }
 
 static PyObject *
-X500Name_get_common_name(X500Name *self, void *closure)
+DN_get_common_name(DN *self, void *closure)
 {
     char *value;
 
@@ -8707,7 +8763,7 @@ X500Name_get_common_name(X500Name *self, void *closure)
 }
 
 static PyObject *
-X500Name_get_country_name(X500Name *self, void *closure)
+DN_get_country_name(DN *self, void *closure)
 {
     char *value;
 
@@ -8720,7 +8776,7 @@ X500Name_get_country_name(X500Name *self, void *closure)
 }
 
 static PyObject *
-X500Name_get_locality_name(X500Name *self, void *closure)
+DN_get_locality_name(DN *self, void *closure)
 {
     char *value;
 
@@ -8733,7 +8789,7 @@ X500Name_get_locality_name(X500Name *self, void *closure)
 }
 
 static PyObject *
-X500Name_get_state_name(X500Name *self, void *closure)
+DN_get_state_name(DN *self, void *closure)
 {
     char *value;
 
@@ -8746,7 +8802,7 @@ X500Name_get_state_name(X500Name *self, void *closure)
 }
 
 static PyObject *
-X500Name_get_org_name(X500Name *self, void *closure)
+DN_get_org_name(DN *self, void *closure)
 {
     char *value;
 
@@ -8759,7 +8815,7 @@ X500Name_get_org_name(X500Name *self, void *closure)
 }
 
 static PyObject *
-X500Name_get_org_unit_name(X500Name *self, void *closure)
+DN_get_org_unit_name(DN *self, void *closure)
 {
     char *value;
 
@@ -8772,7 +8828,7 @@ X500Name_get_org_unit_name(X500Name *self, void *closure)
 }
 
 static PyObject *
-X500Name_get_domain_component_name(X500Name *self, void *closure)
+DN_get_domain_component_name(DN *self, void *closure)
 {
     char *value;
 
@@ -8785,7 +8841,7 @@ X500Name_get_domain_component_name(X500Name *self, void *closure)
 }
 
 static PyObject *
-X500Name_get_cert_uid(X500Name *self, void *closure)
+DN_get_cert_uid(DN *self, void *closure)
 {
     char *value;
 
@@ -8798,64 +8854,64 @@ X500Name_get_cert_uid(X500Name *self, void *closure)
 }
 
 static
-PyGetSetDef X500Name_getseters[] = {
-    {"email_address", (getter)X500Name_get_email_address, (setter)NULL,
+PyGetSetDef DN_getseters[] = {
+    {"email_address", (getter)DN_get_email_address, (setter)NULL,
      "Returns the email address member as a string. Returns None if not found.", NULL},
-    {"common_name", (getter)X500Name_get_common_name, (setter)NULL,
+    {"common_name", (getter)DN_get_common_name, (setter)NULL,
      "Returns the common name member (i.e. CN) as a string. Returns None if not found.", NULL},
-    {"country_name", (getter)X500Name_get_country_name, (setter)NULL,
+    {"country_name", (getter)DN_get_country_name, (setter)NULL,
      "Returns the country name member (i.e. C) as a string. Returns None if not found.", NULL},
-    {"locality_name", (getter)X500Name_get_locality_name, (setter)NULL,
+    {"locality_name", (getter)DN_get_locality_name, (setter)NULL,
      "Returns the locality name member (i.e. L) as a string. Returns None if not found.", NULL},
-    {"state_name", (getter)X500Name_get_state_name, (setter)NULL,
+    {"state_name", (getter)DN_get_state_name, (setter)NULL,
      "Returns the state name member (i.e. ST) as a string. Returns None if not found.", NULL},
-    {"org_name", (getter)X500Name_get_org_name, (setter)NULL,
+    {"org_name", (getter)DN_get_org_name, (setter)NULL,
      "Returns the organization name member (i.e. O) as a string. Returns None if not found.", NULL},
-    {"org_unit_name", (getter)X500Name_get_org_unit_name, (setter)NULL,
+    {"org_unit_name", (getter)DN_get_org_unit_name, (setter)NULL,
      "Returns the organizational unit name member (i.e. OU) as a string. Returns None if not found.", NULL},
-    {"dc_name", (getter)X500Name_get_domain_component_name, (setter)NULL,
+    {"dc_name", (getter)DN_get_domain_component_name, (setter)NULL,
      "Returns the domain component name member (i.e. DC) as a string. Returns None if not found.", NULL},
-    {"cert_uid", (getter)X500Name_get_cert_uid, (setter)NULL,
+    {"cert_uid", (getter)DN_get_cert_uid, (setter)NULL,
      "Returns the certificate uid member (i.e. UID) as a string. Returns None if not found.", NULL},
     {NULL}  /* Sentinel */
 };
 
-static PyMemberDef X500Name_members[] = {
+static PyMemberDef DN_members[] = {
     {NULL}  /* Sentinel */
 };
 
 /* ============================== Class Methods ============================= */
 
 static int
-X500Name_compare(X500Name *self, X500Name *other)
+DN_compare(DN *self, DN *other)
 {
-    if (!PyX500Name_Check(other)) {
-        PyErr_SetString(PyExc_TypeError, "Bad type, must be X500Name");
+    if (!PyDN_Check(other)) {
+        PyErr_SetString(PyExc_TypeError, "Bad type, must be DN");
         return -1;
     }
 
     return CERT_CompareName(&self->name, &other->name);
 }
 
-PyDoc_STRVAR(X500Name_add_rdn_doc,
+PyDoc_STRVAR(DN_add_rdn_doc,
 "add_rdn(rdn) \n\
 \n\
 :Parameters:\n\
-    rdn : X500RDN object\n\
+    rdn : RDN object\n\
         The rnd to add to the name\n\
 \n\
 Adds a RDN to the name.\n\
 ");
 
 static PyObject *
-X500Name_add_rdn(X500Name *self, PyObject *args)
+DN_add_rdn(DN *self, PyObject *args)
 {
-    X500RDN *py_rdn;
+    RDN *py_rdn;
 
     TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "O!:add_rdn",
-                          &X500RDNType, &py_rdn))
+                          &RDNType, &py_rdn))
         return NULL;
 
     if (CERT_AddRDN(&self->name, py_rdn->rdn) != SECSuccess) {
@@ -8865,22 +8921,22 @@ X500Name_add_rdn(X500Name *self, PyObject *args)
     Py_RETURN_NONE;
 }
 
-static PyMethodDef X500Name_methods[] = {
-    {"has_key", (PyCFunction)X500Name_has_key, METH_VARARGS, X500Name_has_key_doc},
-    {"add_rdn", (PyCFunction)X500Name_add_rdn, METH_VARARGS, X500Name_add_rdn_doc},
+static PyMethodDef DN_methods[] = {
+    {"has_key", (PyCFunction)DN_has_key, METH_VARARGS, DN_has_key_doc},
+    {"add_rdn", (PyCFunction)DN_add_rdn, METH_VARARGS, DN_add_rdn_doc},
     {NULL, NULL}  /* Sentinel */
 };
 
 /* =========================== Class Construction =========================== */
 
 static PyObject *
-X500Name_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+DN_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
-    X500Name *self;
+    DN *self;
 
     TraceObjNewEnter(type);
 
-    if ((self = (X500Name *)type->tp_alloc(type, 0)) == NULL) {
+    if ((self = (DN *)type->tp_alloc(type, 0)) == NULL) {
         return NULL;
     }
 
@@ -8896,7 +8952,7 @@ X500Name_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 }
 
 static void
-X500Name_dealloc(X500Name* self)
+DN_dealloc(DN* self)
 {
     TraceMethodEnter(self);
 
@@ -8909,73 +8965,116 @@ X500Name_dealloc(X500Name* self)
     self->ob_type->tp_free((PyObject*)self);
 }
 
-PyDoc_STRVAR(X500Name_doc,
-"An object representing an X500 Name\n\
+PyDoc_STRVAR(DN_doc,
+"An object representing an X501 Distinguished Name (e.g DN).\n\
 \n\
-X500Name()\n\
-X500Name('CN=www.redhat.com')\n\
-X500Name(rdn0, ...)\n\
-X500Name([rdn0, rdn1])\n\
+DN objects contain an ordered list of `RDN` objects.\n\
 \n\
-The X500Name object constructor may be invoked with a string\n\
-representing an X500 name. Zero or more X500RDN objects, or you may\n\
-optionally pass a list or tuple of X500RDN objects.\n\
+The DN object constructor may be invoked with a string\n\
+representing an X500 name. Zero or more `RDN` objects, or you may\n\
+optionally pass a list or tuple of `RDN` objects.\n\
 \n\
-X500Name objects contain an ordered list of X500RDN objects. The\n\
-X500Name object has both sequence and mapping behaviors with respect to\n\
-the rdn's they contain. Thus you can index an rdn by position, by\n\
+Examples::\n\
+\n\
+    DN()\n\
+    DN('CN=www.redhat.com,OU=Web Operations,O=Red Hat Inc,L=Raleigh,ST=North Carolina,C=US')\n\
+    DN(rdn0, ...)\n\
+    DN([rdn0, rdn1])\n\
+\n\
+**The string representation of a Distinguished Name (DN) has reverse\n\
+ordering from it's sequential components.**\n\
+\n\
+The ordering is a requirement of the relevant RFC's. When a\n\
+Distinguished Name is rendered as a string it is ordered from most\n\
+specific to least specific. However it's components (RDN's) as a\n\
+sequence are ordered from least specific to most specific.\n\
+\n\
+DN objects contain an ordered list of `RDN` objects. The\n\
+DN object has both sequence and mapping behaviors with respect to\n\
+the RDN's they contain. Thus you can index an RDN by position, by\n\
 name, or by SecItem (if it's an OID). You can iterate over the list,\n\
-get it's length or take a slice.  If you index by string the string\n\
-may be either a canonical name for the rdn type (e.g. 'cn') or the\n\
-dotted-decimal notation for the oid (e.g. 2.5.4.3). Note it is not\n\
-possible to index by oid tag (e.g. nss.SEC_OID_AVA_COMMON_NAME)\n\
-because oid tags are integers and it's impossible to distinguish\n\
-between an integer representing the n'th member of the sequence and\n\
-the integer representing the oid tag. In this case positional indexing\n\
-wins (e.g. rdn[0] means the first element).\n\
+get it's length or take a slice.\n\
 \n\
-Examples:\n\
-    >>> import nss.nss as nss\n\
-    >>> nss.nss_init_nodb()\n\
-    >>> subject_name = 'CN=www.redhat.com,OU=Web Operations,O=Red Hat Inc,L=Raleigh,ST=North Carolina,C=US'\n\
-    >>> name = nss.X500Name(subject_name)\n\
-    >>> str(name)\n\
-    CN=www.redhat.com,OU=Web Operations,O=Red Hat Inc,L=Raleigh,ST=North Carolina,C=US\n\
-    >>> name[0]\n\
-    C=US\n\
-    >>> name['cn']\n\
-    CN=www.redhat.com\n\
-    >>> name['2.5.4.3']\n\
-    CN=www.redhat.com\n\
-    >>> name.common_name\n\
-    www.redhat.com\n\
-    >>> cn_rdn = nss.X500RDN(nss.X500AVA('cn', 'www.redhat.com'))\n\
-    >>> ou_rdn = nss.X500RDN(nss.X500AVA('ou', 'Web Operations'))\n\
-    >>> name = nss.X500Name(cn_rdn)\n\
-    >>> name\n\
-    CN=www.redhat.com\n\
-    >>> len(name)\n\
-    1\n\
-    >>> name.add_rdn(ou_rdn)\n\
-    >>> name\n\
-    OU=Web Operations,CN=www.redhat.com\n\
-    >>> len(name)\n\
-    2\n\
-    >>> name = nss.X500Name(cn_rdn, ou_rdn)\n\
-    >>> name\n\
-    OU=Web Operations,CN=www.redhat.com\n\
-    >>> name.has_key('cn')\n\
-    True\n\
-    >>> name.has_key('2.5.4.3')\n\
-    True\n\
+If you index by string the string may be either a canonical name for\n\
+the RDN type (e.g. 'cn') or the dotted-decimal notation for the OID\n\
+(e.g. 2.5.4.3). There may be multiple RDN's in a DN whose type matches\n\
+(e.g. OU=engineering, OU=boston). It is not common to have more than\n\
+one RDN in a DN with the same type. However because of the possiblity\n\
+of being multi-valued when indexing by type a list is always returned\n\
+containing the matching RDN's. Thus::\n\
+\n\
+    dn = nss.DN('OU=engineering')\n\
+    dn['ou']\n\
+        returns [RDN('OU=engineering')\n\
+\n\
+    dn = nss.DN('OU=engineering, OU=boston')\n\
+    dn['ou']\n\
+        returns [RDN('OU=boston'), RDN('OU=engineering')]\n\
+        Note the reverse ordering between string representation and RDN sequencing\n\
+\n\
+Note, if you use properties to access the RDN values (e.g. name.common_name,\n\
+name.org_unit_name) the string value is returned or None if not found.\n\
+If the item was multi-valued then the most appropriate item will be selected\n\
+and returned as a string value.\n\
+\n\
+Note it is not possible to index by oid tag\n\
+(e.g. nss.SEC_OID_AVA_COMMON_NAME) because oid tags are integers and\n\
+it's impossible to distinguish between an integer representing the\n\
+n'th member of the sequence and the integer representing the oid\n\
+tag. In this case positional indexing wins (e.g. rdn[0] means the\n\
+first element).\n\
+\n\
+Examples::\n\
+\n\
+    subject_name = 'CN=www.redhat.com,OU=Web Operations,O=Red Hat Inc,L=Raleigh,ST=North Carolina,C=US'\n\
+    name = nss.DN(subject_name)\n\
+    str(name)\n\
+       returns 'CN=www.redhat.com,OU=Web Operations,O=Red Hat Inc,L=Raleigh,ST=North Carolina,C=US'\n\
+    name[0]\n\
+       returns an `RDN` object with the value C=US\n\
+    name['cn']\n\
+        returns a list comprised of an `RDN` object with the value CN=www.redhat.com\n\
+    name['2.5.4.3']\n\
+        returns a list comprised of an `RDN` object with the value CN=www.redhat.com\n\
+        because 2.5.4.3 is the dotted-decimal OID for common name (i.e. cn)\n\
+    name.common_name\n\
+        returns the string www.redhat.com\n\
+        common_name is easy shorthand property, it only retuns a single string\n\
+        value or None, if it was multi-valued the most appropriate item is selected.\n\
+    name.has_key('cn')\n\
+        returns True because the DN has a common name RDN\n\
+    name.has_key('2.5.4.3')\n\
+        returns True because the DN has a common name RDN\n\
+        because 2.5.4.3 is the dotted-decimal OID for common name (i.e. cn)\n\
+\n\
+    cn_rdn = nss.RDN(nss.AVA('cn', 'www.redhat.com'))\n\
+    ou_rdn = nss.RDN(nss.AVA('ou', 'Web Operations'))\n\
+    name = nss.DN(cn_rdn)\n\
+    name\n\
+       is a DN with one RDN (e.g. CN=www.redhat.com)\n\
+    len(name)\n\
+       returns 1 because there is one RDN in it\n\
+    name.add_rdn(ou_rdn)\n\
+    name\n\
+       name is now a DN with two RDN's (e.g. OU=Web Operations,CN=www.redhat.com)\n\
+    len(name)\n\
+       returns 2 because there are now two RDN's in it\n\
+    list(name)\n\
+       returns a list with the two RDN's in it\n\
+    name[:]\n\
+       same as list(name)\n\
+    for rdn in name:\n\
+       iterate over each RDN in name\n\
+    name = nss.DN(cn_rdn, ou_rdn)\n\
+        This is an alternate way to build the above DN\n\
 ");
 
 static int
-X500Name_init(X500Name *self, PyObject *args, PyObject *kwds)
+DN_init(DN *self, PyObject *args, PyObject *kwds)
 {
     PyObject *sequence, *item;
     Py_ssize_t sequence_len, i;
-    X500RDN *py_rdn;
+    RDN *py_rdn;
     CERTRDN *new_rdn;
     CERTName *cert_name;
     CERTRDN *rdn_arg[MAX_RDNS+1];  /* +1 for NULL terminator */
@@ -9004,12 +9103,12 @@ X500Name_init(X500Name *self, PyObject *args, PyObject *kwds)
             return 0;
         }
 
-        if (PyX500RDN_Check(item)) {
+        if (PyRDN_Check(item)) {
             sequence = args;
         } else if (PyList_Check(item) || PyTuple_Check(item)) {
             sequence = item;
         } else {
-            PyErr_Format(PyExc_TypeError, "must be an X500RDN object or list or tuple of X500RDN objects, not %.200s",
+            PyErr_Format(PyExc_TypeError, "must be an RDN object or list or tuple of RDN objects, not %.200s",
                          Py_TYPE(item)->tp_name);
             return -1;
         }
@@ -9017,15 +9116,15 @@ X500Name_init(X500Name *self, PyObject *args, PyObject *kwds)
         sequence_len = PySequence_Length(sequence);
 
         if (sequence_len > MAX_RDNS) {
-            PyErr_Format(PyExc_ValueError, "to many X500RDN items, maximum is %d, received %d",
+            PyErr_Format(PyExc_ValueError, "to many RDN items, maximum is %d, received %d",
                          MAX_RDNS-1, sequence_len);
             return -1;
         }
 
         for (i = 0; i < sequence_len && i < MAX_RDNS; i++) {
             item = PySequence_ITEM(sequence, i);
-            if (PyX500RDN_Check(item)) {
-                py_rdn = (X500RDN *)item;
+            if (PyRDN_Check(item)) {
+                py_rdn = (RDN *)item;
 
                 if ((new_rdn = CERT_CreateRDN(self->arena, NULL)) == NULL) {
                     set_nspr_error(NULL);
@@ -9040,7 +9139,7 @@ X500Name_init(X500Name *self, PyObject *args, PyObject *kwds)
                 }
                 rdn_arg[i] = new_rdn;
             } else {
-                PyErr_Format(PyExc_TypeError, "item %d must be an X500RDN object, not %.200s",
+                PyErr_Format(PyExc_TypeError, "item %d must be an RDN object, not %.200s",
                              i, Py_TYPE(item)->tp_name);
                 Py_DECREF(item);
                 return -1;
@@ -9069,16 +9168,16 @@ X500Name_init(X500Name *self, PyObject *args, PyObject *kwds)
 }
 
 static PyObject *
-X500Name_repr(X500Name *self)
+DN_repr(DN *self)
 {
     return CERTName_to_pystr(&self->name);    
 }
 
-static PySequenceMethods X500Name_as_sequence = {
-    (lenfunc)X500Name_length,			/* sq_length */
+static PySequenceMethods DN_as_sequence = {
+    (lenfunc)DN_length,				/* sq_length */
     0,						/* sq_concat */
     0,						/* sq_repeat */
-    (ssizeargfunc)X500Name_item,		/* sq_item */
+    (ssizeargfunc)DN_item,			/* sq_item */
     0,						/* sq_slice */
     0,						/* sq_ass_item */
     0,						/* sq_ass_slice */
@@ -9087,63 +9186,63 @@ static PySequenceMethods X500Name_as_sequence = {
     0,						/* sq_inplace_repeat */
 };
 
-static PyMappingMethods X500Name_as_mapping = {
-    (lenfunc)X500Name_length,			/* mp_length */
-    (binaryfunc)X500Name_subscript,		/* mp_subscript */
+static PyMappingMethods DN_as_mapping = {
+    (lenfunc)DN_length,				/* mp_length */
+    (binaryfunc)DN_subscript,			/* mp_subscript */
     0,						/* mp_ass_subscript */
 };
 
-static PyTypeObject X500NameType = {
+static PyTypeObject DNType = {
     PyObject_HEAD_INIT(NULL)
     0,						/* ob_size */
-    "nss.nss.X500Name",				/* tp_name */
-    sizeof(X500Name),				/* tp_basicsize */
+    "nss.nss.DN",				/* tp_name */
+    sizeof(DN),					/* tp_basicsize */
     0,						/* tp_itemsize */
-    (destructor)X500Name_dealloc,		/* tp_dealloc */
+    (destructor)DN_dealloc,			/* tp_dealloc */
     0,						/* tp_print */
     0,						/* tp_getattr */
     0,						/* tp_setattr */
-    (cmpfunc)X500Name_compare,			/* tp_compare */
-    (reprfunc)X500Name_repr,			/* tp_repr */
+    (cmpfunc)DN_compare,			/* tp_compare */
+    (reprfunc)DN_repr,				/* tp_repr */
     0,						/* tp_as_number */
-    &X500Name_as_sequence,			/* tp_as_sequence */
-    &X500Name_as_mapping,			/* tp_as_mapping */
+    &DN_as_sequence,				/* tp_as_sequence */
+    &DN_as_mapping,				/* tp_as_mapping */
     0,						/* tp_hash */
     0,						/* tp_call */
-    (reprfunc)X500Name_repr,			/* tp_str */
+    (reprfunc)DN_repr,				/* tp_str */
     0,						/* tp_getattro */
     0,						/* tp_setattro */
     0,						/* tp_as_buffer */
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,	/* tp_flags */
-    X500Name_doc,				/* tp_doc */
+    DN_doc,					/* tp_doc */
     0,						/* tp_traverse */
     0,						/* tp_clear */
     0,						/* tp_richcompare */
     0,						/* tp_weaklistoffset */
     0,						/* tp_iter */
     0,						/* tp_iternext */
-    X500Name_methods,				/* tp_methods */
-    X500Name_members,				/* tp_members */
-    X500Name_getseters,				/* tp_getset */
+    DN_methods,					/* tp_methods */
+    DN_members,					/* tp_members */
+    DN_getseters,				/* tp_getset */
     0,						/* tp_base */
     0,						/* tp_dict */
     0,						/* tp_descr_get */
     0,						/* tp_descr_set */
     0,						/* tp_dictoffset */
-    (initproc)X500Name_init,			/* tp_init */
+    (initproc)DN_init,				/* tp_init */
     0,						/* tp_alloc */
-    X500Name_new,				/* tp_new */
+    DN_new,					/* tp_new */
 };
 
 PyObject *
-X500Name_new_from_CERTName(CERTName *name)
+DN_new_from_CERTName(CERTName *name)
 {
-    X500Name *self = NULL;
+    DN *self = NULL;
     PRArenaPool *arena;
 
     TraceObjNewEnter(NULL);
 
-    if ((self = (X500Name *) X500NameType.tp_new(&X500NameType, NULL, NULL)) == NULL) {
+    if ((self = (DN *) DNType.tp_new(&DNType, NULL, NULL)) == NULL) {
         return NULL;
     }
 
@@ -10988,7 +11087,7 @@ CRLDistributionPt_format_lines(CRLDistributionPt *self, PyObject *args, PyObject
 
     } else if (self->pt->distPointType == relativeDistinguishedName) {
 
-        if ((obj = X500RDN_new_from_CERTRDN(&self->pt->distPoint.relativeName)) == NULL) {
+        if ((obj = RDN_new_from_CERTRDN(&self->pt->distPoint.relativeName)) == NULL) {
             goto fail;
         }
 
@@ -11085,7 +11184,7 @@ CRLDistributionPt_repr(CRLDistributionPt *self)
 
     } else if (self->pt->distPointType == relativeDistinguishedName) {
 
-        if ((rdn = X500RDN_new_from_CERTRDN(&self->pt->distPoint.relativeName)) == NULL) {
+        if ((rdn = RDN_new_from_CERTRDN(&self->pt->distPoint.relativeName)) == NULL) {
             goto exit;
         }
 
@@ -12183,6 +12282,395 @@ BasicConstraints_new_from_SECItem(SECItem *item)
     TraceObjNewLeave(self);
     return (PyObject *) self;
 }
+
+/* ========================================================================== */
+/* ======================= CertificateRequest Class ========================= */
+/* ========================================================================== */
+
+static int
+CertificateRequest_init_from_SECItem(CertificateRequest *self, SECItem *der_cert_req)
+{
+    if ((self->cert_req = PORT_ArenaZAlloc(self->arena, sizeof(CERTCertificateRequest))) == NULL) {
+        set_nspr_error(NULL);
+        return -1;
+    }
+    self->cert_req->arena = self->arena;
+
+    /* Since cert request is a signed data, must decode to get the inner data */
+    if (SEC_ASN1DecodeItem(self->arena, &self->signed_data, 
+                           SEC_ASN1_GET(CERT_SignedDataTemplate),
+                           der_cert_req) != SECSuccess) {
+        set_nspr_error(NULL);
+        return -1;
+    }
+
+    if (SEC_ASN1DecodeItem(self->arena, self->cert_req, 
+                           SEC_ASN1_GET(CERT_CertificateRequestTemplate),
+                           &self->signed_data.data) != SECSuccess) {
+        set_nspr_error(NULL);
+        return -1;
+    }
+
+    if (CERT_VerifySignedDataWithPublicKeyInfo(&self->signed_data,
+                                               &self->cert_req->subjectPublicKeyInfo,
+                                               NULL) != SECSuccess) {
+        set_nspr_error(NULL);
+        return -1;
+    }
+
+   return 0;
+}
+/* ============================ Attribute Access ============================ */
+
+static PyObject *
+CertificateRequest_get_subject(CertificateRequest *self, void *closure)
+{
+    TraceMethodEnter(self);
+
+    return DN_new_from_CERTName(&self->cert_req->subject);
+}
+
+static PyObject *
+CertificateRequest_get_version(CertificateRequest *self, void *closure)
+{
+    TraceMethodEnter(self);
+
+    return integer_secitem_to_pylong(&self->cert_req->version);
+}
+
+static PyObject *
+CertificateRequest_get_subject_public_key_info(CertificateRequest *self, void *closure)
+{
+    TraceMethodEnter(self);
+
+    return SubjectPublicKeyInfo_new_from_CERTSubjectPublicKeyInfo(
+               &self->cert_req->subjectPublicKeyInfo);
+}
+
+
+static PyObject *
+CertificateRequest_get_extensions(CertificateRequest *self, void *closure)
+{
+    CERTCertExtension **extensions_list = NULL, **extensions = NULL;
+    int num_extensions, i;
+    PyObject *extensions_tuple;
+
+    TraceMethodEnter(self);
+
+    if (self->cert_req->attributes != NULL                   &&
+        self->cert_req->attributes[0] != NULL                &&
+        self->cert_req->attributes[0]->attrType.data != NULL &&
+        self->cert_req->attributes[0]->attrType.len > 0      &&
+        SECOID_FindOIDTag(&self->cert_req->attributes[0]->attrType) == SEC_OID_PKCS9_EXTENSION_REQUEST) {
+        if (CERT_GetCertificateRequestExtensions(self->cert_req, &extensions_list)  != SECSuccess) {
+            return set_nspr_error("CERT_GetCertificateRequestExtensions failed");
+        }
+    } else {
+        Py_INCREF(empty_tuple);
+        return empty_tuple;
+    }
+
+    /* First count how many extensions the cert request has */
+    for (extensions = extensions_list, num_extensions = 0;
+         extensions && *extensions;
+         extensions++, num_extensions++);
+
+    /* Allocate a tuple */
+    if ((extensions_tuple = PyTuple_New(num_extensions)) == NULL) {
+        return NULL;
+    }
+
+    /* Copy the extensions into the tuple */
+    for (extensions = extensions_list, i = 0; extensions && *extensions; extensions++, i++) {
+        CERTCertExtension *extension = *extensions;
+        PyObject *py_extension;
+        
+        if ((py_extension = CertificateExtension_new_from_CERTCertExtension(extension)) == NULL) {
+            Py_DECREF(extensions_tuple);
+            return NULL;
+        }
+
+        PyTuple_SetItem(extensions_tuple, i, py_extension);
+    }
+
+    return extensions_tuple;
+}
+
+static
+PyGetSetDef CertificateRequest_getseters[] = {
+    {"subject", (getter)CertificateRequest_get_subject, (setter)NULL,
+     "subject as an DN object", NULL},
+    {"version", (getter)CertificateRequest_get_version, (setter)NULL,
+     "version as integer", NULL},
+    {"subject_public_key_info", (getter)CertificateRequest_get_subject_public_key_info, NULL,
+     "certificate public info as SubjectPublicKeyInfo object",  NULL},
+    {"extensions", (getter)CertificateRequest_get_extensions, NULL,
+     "certificate extensions as a tuple of CertificateExtension objects",  NULL},
+
+    {NULL}  /* Sentinel */
+};
+
+static PyMemberDef CertificateRequest_members[] = {
+    {NULL}  /* Sentinel */
+};
+
+/* ============================== Class Methods ============================= */
+
+static PyObject *
+CertificateRequest_format_lines(CertificateRequest *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"level", NULL};
+    int level = 0;
+    Py_ssize_t len, i;
+    PyObject *lines = NULL;
+    PyObject *obj = NULL;
+    PyObject *obj1 = NULL;
+    PyObject *obj2 = NULL;
+    PyObject *obj3 = NULL;
+    PyObject *extensions = NULL;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i:format_lines", kwlist, &level))
+        return NULL;
+
+    if ((lines = PyList_New(0)) == NULL) {
+        goto fail;
+    }
+
+    FMT_LABEL_AND_APPEND(lines, _("Data"), level+1, fail);
+
+    if ((obj = CertificateRequest_get_version(self, NULL)) == NULL) {
+        goto fail;
+    }
+    if ((obj1 = PyInt_FromLong(1)) == NULL) {
+        goto fail;
+    }
+    if ((obj2 = PyNumber_Add(obj, obj1)) == NULL) {
+        goto fail;
+    }
+    if ((obj3 = obj_sprintf("%d (%#x)", obj2, obj)) == NULL) {
+        goto fail;
+    }
+    FMT_OBJ_AND_APPEND(lines, _("Version"), obj3, level+2, fail);
+    Py_CLEAR(obj);
+    Py_CLEAR(obj1);
+    Py_CLEAR(obj2);
+    Py_CLEAR(obj3);
+
+    if ((obj = CertificateRequest_get_subject(self, NULL)) == NULL) {
+        goto fail;
+    }
+    FMT_OBJ_AND_APPEND(lines, _("Subject"), obj, level+2, fail);
+    Py_CLEAR(obj);
+
+    FMT_LABEL_AND_APPEND(lines, _("Subject Public Key Info"), level+2, fail);
+
+    if ((obj = CertificateRequest_get_subject_public_key_info(self, NULL)) == NULL) {
+        goto fail;
+    }
+
+    CALL_FORMAT_LINES_AND_APPEND(lines, obj, level+3, fail);
+    Py_CLEAR(obj);
+
+    if ((extensions = CertificateRequest_get_extensions(self, NULL)) == NULL) {
+        goto fail;
+    }
+
+    len = PyTuple_Size(extensions);
+    if ((obj = PyString_FromFormat("Signed Extensions: (%d)", len)) == NULL) {
+        goto fail;
+    }
+    FMT_OBJ_AND_APPEND(lines, NULL, obj, level+1, fail);
+    Py_CLEAR(obj);
+
+    for (i = 0; i < len; i++) {
+        obj = PyTuple_GetItem(extensions, i);
+        CALL_FORMAT_LINES_AND_APPEND(lines, obj, level+2, fail);
+        FMT_LABEL_AND_APPEND(lines, NULL, 0, fail);
+    }
+    Py_CLEAR(extensions);
+
+    return lines;
+
+ fail:
+    Py_XDECREF(obj);
+    Py_XDECREF(obj1);
+    Py_XDECREF(obj2);
+    Py_XDECREF(obj3);
+    Py_XDECREF(lines);
+    Py_XDECREF(extensions);
+    return NULL;
+}
+
+static PyObject *
+CertificateRequest_format(CertificateRequest *self, PyObject *args, PyObject *kwds)
+{
+    TraceMethodEnter(self);
+
+    return format_from_lines((format_lines_func)CertificateRequest_format_lines, (PyObject *)self, args, kwds);
+}
+
+static PyObject *
+CertificateRequest_str(CertificateRequest *self)
+{
+    PyObject *py_formatted_result = NULL;
+
+    py_formatted_result = CertificateRequest_format(self, empty_tuple, NULL);
+    return py_formatted_result;
+
+}
+
+
+static PyMethodDef CertificateRequest_methods[] = {
+    {"format_lines",           (PyCFunction)CertificateRequest_format_lines,           METH_VARARGS|METH_KEYWORDS, generic_format_lines_doc},
+    {"format",                 (PyCFunction)CertificateRequest_format,                 METH_VARARGS|METH_KEYWORDS, generic_format_doc},
+    {NULL, NULL}  /* Sentinel */
+};
+
+/* =========================== Class Construction =========================== */
+
+static PyObject *
+CertificateRequest_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
+    CertificateRequest *self;
+
+    TraceObjNewEnter(type);
+
+    if ((self = (CertificateRequest *)type->tp_alloc(type, 0)) == NULL) {
+        return NULL;
+    }
+
+    if ((self->arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE)) == NULL) {
+        type->tp_free(self);
+        return set_nspr_error(NULL);
+    }
+
+    self->cert_req = NULL;
+    memset(&self->signed_data, 0, sizeof(self->signed_data));
+
+    TraceObjNewLeave(self);
+    return (PyObject *)self;
+}
+
+static void
+CertificateRequest_dealloc(CertificateRequest* self)
+{
+    TraceMethodEnter(self);
+
+    /* 
+     * We could call CERT_DestroyCertificateRequest() but all
+     * CERT_DestroyCertificateRequest() does is call PORT_FreeArena() on
+     * the arena stored in the CERTCertificateRequest. All the other
+     * dealloc routines for objects with arenas call PORT_FreeArena()
+     * explicitly, so for consistency and to make sure the freeing of
+     * the arena is explicit rather than hidden we do the same here.
+     *
+     * Also, self->signed_data does not need to be explicitly freed
+     * because it's allocated out of the arena.
+     */
+
+    if (self->arena) {
+        PORT_FreeArena(self->arena, PR_FALSE);
+    }
+    self->ob_type->tp_free((PyObject*)self);
+}
+
+PyDoc_STRVAR(CertificateRequest_doc,
+"CertificateRequest(data=None)\n\
+\n\
+:Parameters:\n\
+    data : SecItem or str or any buffer compatible object\n\
+        Data to initialize the certificate request from, must be in DER format\n\
+\n\
+An object representing a certificate request");
+
+static int
+CertificateRequest_init(CertificateRequest *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"data", NULL};
+    PyObject *py_data = NULL;
+    SECItem tmp_item;
+    SECItem *der_item = NULL;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O:CertificateRequest", kwlist,
+                                     &py_data))
+        return -1;
+
+    if (py_data) {
+        if (PySecItem_Check(py_data)) {
+            der_item = &((SecItem *)py_data)->item;
+        } else if (PyObject_CheckReadBuffer(py_data)) {
+            unsigned char *data = NULL;
+            Py_ssize_t data_len;
+
+            if (PyObject_AsReadBuffer(py_data, (void *)&data, &data_len))
+                return -1;
+
+            tmp_item.data = data;
+            tmp_item.len = data_len;
+            der_item = &tmp_item;
+        } else {
+            PyErr_SetString(PyExc_TypeError, "data must be SecItem or buffer compatible");
+            return -1;
+        }
+
+        return CertificateRequest_init_from_SECItem(self, der_item);
+    }
+
+    return 0;
+}
+
+static PyObject *
+CertificateRequest_repr(CertificateRequest *self)
+{
+    return PyString_FromFormat("<%s object at %p>",
+                               Py_TYPE(self)->tp_name, self);
+}
+
+static PyTypeObject CertificateRequestType = {
+    PyObject_HEAD_INIT(NULL)
+    0,						/* ob_size */
+    "nss.nss.CertificateRequest",		/* tp_name */
+    sizeof(CertificateRequest),			/* tp_basicsize */
+    0,						/* tp_itemsize */
+    (destructor)CertificateRequest_dealloc,	/* tp_dealloc */
+    0,						/* tp_print */
+    0,						/* tp_getattr */
+    0,						/* tp_setattr */
+    0,						/* tp_compare */
+    (reprfunc)CertificateRequest_repr,		/* tp_repr */
+    0,						/* tp_as_number */
+    0,						/* tp_as_sequence */
+    0,						/* tp_as_mapping */
+    0,						/* tp_hash */
+    0,						/* tp_call */
+    (reprfunc)CertificateRequest_str,		/* tp_str */
+    0,						/* tp_getattro */
+    0,						/* tp_setattro */
+    0,						/* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,	/* tp_flags */
+    CertificateRequest_doc,			/* tp_doc */
+    (traverseproc)0,				/* tp_traverse */
+    (inquiry)0,					/* tp_clear */
+    0,						/* tp_richcompare */
+    0,						/* tp_weaklistoffset */
+    0,						/* tp_iter */
+    0,						/* tp_iternext */
+    CertificateRequest_methods,			/* tp_methods */
+    CertificateRequest_members,			/* tp_members */
+    CertificateRequest_getseters,		/* tp_getset */
+    0,						/* tp_base */
+    0,						/* tp_dict */
+    0,						/* tp_descr_get */
+    0,						/* tp_descr_set */
+    0,						/* tp_dictoffset */
+    (initproc)CertificateRequest_init,		/* tp_init */
+    0,						/* tp_alloc */
+    CertificateRequest_new,			/* tp_new */
+};
 
 /* ========================== PK11 Methods =========================== */
 
@@ -14248,12 +14736,13 @@ initnss(void)
     TYPE_READY(PK11ContextType);
     TYPE_READY(CRLDistributionPtType);
     TYPE_READY(CRLDistributionPtsType);
-    TYPE_READY(X500AVAType);
-    TYPE_READY(X500RDNType);
-    TYPE_READY(X500NameType);
+    TYPE_READY(AVAType);
+    TYPE_READY(RDNType);
+    TYPE_READY(DNType);
     TYPE_READY(GeneralNameType);
     TYPE_READY(AuthKeyIDType);
     TYPE_READY(BasicConstraintsType);
+    TYPE_READY(CertificateRequestType);
 
     /* Export C API */
     if (PyModule_AddObject(m, "_C_API", PyCObject_FromVoidPtr((void *)&nspr_nss_c_api, NULL)) != 0) {
