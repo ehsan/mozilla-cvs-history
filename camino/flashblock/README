@@ -6,5 +6,5 @@ manifest.  A contents.rdf file is included to allow Camino to identify
 the contents of flashblock.jar.
 
 Camino's bundled Flashblock extension is currently synchronized with
-Flashblock 1.5.12 from
-http://downloads.mozdev.org/flashblock/flashblock-1.5.12.xpi.
+Flashblock 1.5.13 from
+http://downloads.mozdev.org/flashblock/flashblock-1.5.13.xpi.

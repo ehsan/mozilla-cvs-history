@@ -37,6 +37,12 @@ function flashblockShowPlaceholder() {
 	// parent = current.parentNode;
 	var newParent = current.parentNode;
 	parent = newParent ? newParent : parent;
+
+	// Fix for Flashblock Bug 22168 (Node was not found" code: "8").
+	// if the LSB is 1, it means the nodes are unrelated (e.g. different window).
+	if (current.compareDocumentPosition(parent)&1)
+		return;
+
 	parent.insertBefore(placeholder, current);
 	if(placeholder.isStandalone) {
 		placeholder.flashblock = "frame";
@@ -360,6 +366,12 @@ function flashblockShowPlaceholder() {
 	// parent = current.parentNode;
 	var newParent = current.parentNode;
 	parent = newParent ? newParent : parent;
+
+	// Fix for Flashblock Bug 22168 (Node was not found" code: "8").
+	// if the LSB is 1, it means the nodes are unrelated (e.g. different window).
+	if (current.compareDocumentPosition(parent)&1)
+		return;
+
 	parent.insertBefore(placeholder, current);
 	if(placeholder.isStandalone) {
 		placeholder.flashblock = "frame";
@@ -704,6 +716,7 @@ this.style.setProperty("top", "auto", "important");
 this.style.setProperty("height", "auto", "important");
 this.style.setProperty("width", "auto", "important");
 //this.style.position = "static";
+this.style.setProperty("position", "static", "important");
         ]]>
     </constructor>
   </implementation>

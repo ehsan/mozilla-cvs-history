@@ -96,6 +96,5 @@ object
 
 span.sIFR-alternate {
   -moz-binding: url("chrome://flashblock/content/flashblock.xml#sifr-alternate") !important;
-  position: static !important;
   letter-spacing: normal !important;
 }
