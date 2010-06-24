@@ -672,20 +672,31 @@ static BOOL gMadePrefManager;
   // This block can be removed in some later release, after we can assume that
   // everyone has run something later than 1.6.x
   NSString* const kSparkleCheckIntervalKey = @"SUScheduledCheckInterval";
+  NSString* const kSparkleUpdateChecksEnabled = @"SUEnableAutomaticChecks";
   NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
   if ([defaults objectForKey:kSparkleCheckIntervalKey]) {
     BOOL wasEnabled = [defaults integerForKey:kSparkleCheckIntervalKey] > 0;
     [defaults removeObjectForKey:kSparkleCheckIntervalKey];
     if (wasEnabled)
-      [defaults removeObjectForKey:@"SUEnableAutomaticChecks"];
+      [defaults removeObjectForKey:kSparkleUpdateChecksEnabled];
     else
       [[SUUpdater sharedUpdater] setAutomaticallyChecksForUpdates:NO];
   }
 
-  // If updates are disabled for this build, don't bother setting up the manifest URL.
   NSBundle* mainBundle = [NSBundle mainBundle];
-  if (![[mainBundle objectForInfoDictionaryKey:@"SUEnableAutomaticChecks"] boolValue])
+  if (![[mainBundle objectForInfoDictionaryKey:kSparkleUpdateChecksEnabled] boolValue]) {
+    // If SUEnableAutomaticChecks is set to YES in the user's prefs, that will
+    // override our plist setting, and Sparkle will check for updates anyway,
+    // which shouldn't happen. In the 2.0+ setup, SUEnableAutomaticChecks should
+    // never be set to YES at the defaults level (the options are NO at the
+    // defaults level, or YES at the plist level and nothing at the user level),
+    // so just unconditionally clear it if that somehow happens.
+    if ([[defaults objectForKey:kSparkleUpdateChecksEnabled] boolValue])
+      [defaults removeObjectForKey:kSparkleUpdateChecksEnabled];
+    // If updates are disabled for this build, don't bother setting up the
+    // manifest URL.
     return;
+  }
 
   // Get the base auto-update manifest URL.
   NSString* baseURL = [self getStringPref:kGeckoPrefUpdateURLOverride
