@@ -97,18 +97,18 @@ function flashblockShowFlash(event) {
 	parent.removeChild(placeholder);
 }
 
-function flashblockIsWhitelisted(type) {
+function flashblockIsWhitelisted(node, type) {
 	// Check if the page that loaded the Flash site is whitelisted
 	// Thanks to Neil on #mozilla for suggesting this method, I would never have
 	// thought of it on my own. :-)
 	// Lor 20041215: Use "UIEvents" to make it work in post-1.0 FF
 	// (thanks to Neil again)
+	document.QueryInterface(Components.interfaces.nsIDOMDocument);
 	var flashblockEvent = document.createEvent("UIEvents");
-
 	if(flashblockEvent) {
 		var evt = type == "silverlight" ? "silverblockCheckLoad" : "flashblockCheckLoad";
 		flashblockEvent.initEvent(evt, true, true);
-		document.dispatchEvent(flashblockEvent);
+		node.dispatchEvent(flashblockEvent);
 		if(flashblockEvent.getPreventDefault() == true) {
 			// Whitelisted
 			return true;
@@ -130,7 +130,7 @@ function flashblockSetImage(placeholder, type) {
 	var activeurl = playimage + " no-repeat center";
 	placeholder.setAttribute("bgInactive", inactiveurl);
 	placeholder.setAttribute("bgActive", activeurl);
-	placeholder.style.background = inactiveurl;
+	placeholder.style.setProperty("background", inactiveurl, "important");
 }
 
 function flashblockStylePlaceholder(flash, placeholder, isStandalone) {
@@ -253,7 +253,7 @@ if (/silverlight|ag-plugin/i.test(this.getAttribute("type")) ||
   type = "silverlight";
 }
 
-if(flashblockIsWhitelisted(type))
+if(flashblockIsWhitelisted(this, type))
     return;
 
 var current = this;
@@ -292,11 +292,15 @@ flashblockSetTimeout(flashblockShowPlaceholder, 0);
 
 // Change the placeholder background when the mouse enters/exits the div.
 placeholder.addEventListener("mouseover",
-function(event) { event.target.style.background = event.target.getAttribute("bgActive"); },
+function(event) {event.target.style.setProperty("background",
+                                                 event.target.getAttribute("bgActive"),
+                                                 "important"); },
 "false"
 );
 placeholder.addEventListener("mouseout",
-function(event) { event.target.style.background = event.target.getAttribute("bgInactive"); },
+function(event) {event.target.style.setProperty("background",
+                                                 event.target.getAttribute("bgInactive"),
+                                                 "important"); },
 "false"
 );
 
@@ -426,18 +430,18 @@ function flashblockShowFlash(event) {
 	parent.removeChild(placeholder);
 }
 
-function flashblockIsWhitelisted(type) {
+function flashblockIsWhitelisted(node, type) {
 	// Check if the page that loaded the Flash site is whitelisted
 	// Thanks to Neil on #mozilla for suggesting this method, I would never have
 	// thought of it on my own. :-)
 	// Lor 20041215: Use "UIEvents" to make it work in post-1.0 FF
 	// (thanks to Neil again)
+	document.QueryInterface(Components.interfaces.nsIDOMDocument);
 	var flashblockEvent = document.createEvent("UIEvents");
-
 	if(flashblockEvent) {
 		var evt = type == "silverlight" ? "silverblockCheckLoad" : "flashblockCheckLoad";
 		flashblockEvent.initEvent(evt, true, true);
-		document.dispatchEvent(flashblockEvent);
+		node.dispatchEvent(flashblockEvent);
 		if(flashblockEvent.getPreventDefault() == true) {
 			// Whitelisted
 			return true;
@@ -459,7 +463,7 @@ function flashblockSetImage(placeholder, type) {
 	var activeurl = playimage + " no-repeat center";
 	placeholder.setAttribute("bgInactive", inactiveurl);
 	placeholder.setAttribute("bgActive", activeurl);
-	placeholder.style.background = inactiveurl;
+	placeholder.style.setProperty("background", inactiveurl, "important");
 }
 
 function flashblockStylePlaceholder(flash, placeholder, isStandalone) {
@@ -604,7 +608,7 @@ if (/silverlight|ag-plugin/i.test(this.getAttribute("type")) ||
   type = "silverlight";
 }
 
-if(flashblockIsWhitelisted(type))
+if(flashblockIsWhitelisted(this, type))
     return;
 
 if (!isBrokenFlash(this))
@@ -646,11 +650,15 @@ flashblockSetTimeout(flashblockShowPlaceholder, 0);
 
 // Change the placeholder background when the mouse enters/exits the div.
 placeholder.addEventListener("mouseover",
-function(event) { event.target.style.background = event.target.getAttribute("bgActive"); },
+function(event) {event.target.style.setProperty("background",
+                                                 event.target.getAttribute("bgActive"),
+                                                 "important"); },
 "false"
 );
 placeholder.addEventListener("mouseout",
-function(event) { event.target.style.background = event.target.getAttribute("bgInactive"); },
+function(event) {event.target.style.setProperty("background",
+                                                 event.target.getAttribute("bgInactive"),
+                                                 "important"); },
 "false"
 );
 
@@ -672,6 +680,7 @@ placeholder.addEventListener("keypress", flashblockShowFlash, "false");
     <constructor>
         <![CDATA[
 
+document.QueryInterface(Components.interfaces.nsIDOMDocument);
 event = document.createEvent("UIEvents");
 
 if(event) {
@@ -698,6 +707,7 @@ this.style.overflow ="hidden";
     <constructor>
         <![CDATA[
 
+document.QueryInterface(Components.interfaces.nsIDOMDocument);
 var event = document.createEvent("UIEvents");
 
 if(event) {
