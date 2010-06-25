@@ -138,6 +138,12 @@ var PageLoaderCmdLineFactory =
   }
 };
 
+function NSGetFactory(cid) {
+  if (!cid.equals(TP_CMDLINE_CLSID))
+    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+
+  return PageLoaderCmdLineFactory;
+}
 
 var PageLoaderCmdLineModule =
 {
@@ -170,15 +176,7 @@ var PageLoaderCmdLineModule =
 
   getClassObject : function(compMgr, cid, iid)
   {
-    if (cid.equals(TP_CMDLINE_CLSID)) {
-      return PageLoaderCmdLineFactory;
-    }
-
-    if (!iid.equals(Components.interfaces.nsIFactory)) {
-      throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-    }
-
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    return NSGetFactory(cid);
   },
 
   canUnload : function(compMgr)
