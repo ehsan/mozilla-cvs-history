@@ -6635,13 +6635,13 @@ PyGetSetDef Certificate_getseters[] = {
      "certificate not valid after this time (string value expressed, UTC)", NULL},
 
     {"subject",                 (getter)Certificate_get_subject,                 NULL,
-     "certificate subject as a DN object", NULL},
+     "certificate subject as a `DN` object", NULL},
 
     {"subject_common_name",     (getter)Certificate_get_subject_common_name,     NULL,
      "certificate subject", NULL},
 
     {"issuer",                  (getter)Certificate_get_issuer,                  NULL,
-     "certificate issuer as a DN object",  NULL},
+     "certificate issuer as a `DN` object",  NULL},
 
     {"version",                 (getter)Certificate_get_version,                 NULL,
      "certificate version",  NULL},
@@ -12399,7 +12399,7 @@ CertificateRequest_get_extensions(CertificateRequest *self, void *closure)
 static
 PyGetSetDef CertificateRequest_getseters[] = {
     {"subject", (getter)CertificateRequest_get_subject, (setter)NULL,
-     "subject as an DN object", NULL},
+     "subject as an `DN` object", NULL},
     {"version", (getter)CertificateRequest_get_version, (setter)NULL,
      "version as integer", NULL},
     {"subject_public_key_info", (getter)CertificateRequest_get_subject_public_key_info, NULL,

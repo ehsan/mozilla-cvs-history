@@ -22,9 +22,10 @@
       CertificateExtension
       GeneralName
       SignedCRL
-      X500AVA
-      X500Name
-      X500RDN
+      DN
+      RDN
+      AVA
+      CertificateRequest
 	
   * The following module functions were added:
       nss.nss.cert_crl_reason_from_name()
