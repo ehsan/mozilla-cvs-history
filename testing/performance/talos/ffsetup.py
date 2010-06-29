@@ -108,8 +108,22 @@ class FFSetup(object):
            # Clint Talbert <ctalbert@mozilla.com>
            # Henrik Skupin <hskupin@mozilla.com>
         """
+        def find_id(desc):
+            addon_id = None
+            for elem in desc:
+                apps = elem.getElementsByTagName('em:targetApplication')
+                if apps:
+                    for app in apps:
+                        #remove targetApplication nodes, they contain id's we aren't interested in
+                        elem.removeChild(app)
+                    if elem.getElementsByTagName('em:id'):
+                        addon_id = str(elem.getElementsByTagName('em:id')[0].firstChild.data)
+                    elif elem.hasAttribute('em:id'):
+                        addon_id = str(elem.getAttribute('em:id'))
+            return addon_id
+
         tmpdir = None
-        addon_id = ''
+        addon_id = None
         tmpdir = tempfile.mkdtemp(suffix = "." + os.path.split(addon)[-1])
         compressed_file = zipfile.ZipFile(addon, "r")
         #in python2.6 can use extractall, currently limited to python2.4
@@ -127,15 +141,12 @@ class FFSetup(object):
         doc = minidom.parse(os.path.join(addon, 'install.rdf')) 
         # description_element =
         # tree.find('.//{http://www.w3.org/1999/02/22-rdf-syntax-ns#}Description/')
- 
+
         desc = doc.getElementsByTagName('Description')
-        for elem in desc:
-            apps = elem.getElementsByTagName('em:targetApplication')
-            if apps:
-                for app in apps:
-                    #remove targetApplication nodes, they contain id's we aren't interested in
-                    elem.removeChild(app)
-                addon_id = str(elem.getElementsByTagName('em:id')[0].firstChild.data)
+        addon_id = find_id(desc)
+        if not addon_id:
+          desc = doc.getElementsByTagName('RDF:Description')
+          addon_id = find_id(desc)
         
         if not addon_id: #bail out, we don't have an addon id
             raise talosError("no addon_id found for extension")
