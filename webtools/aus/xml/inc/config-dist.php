@@ -114,7 +114,8 @@ $throttleExceptions = array(
     ),
     '3.5.10' => array (
         'betatest',
-        'releasetest'
+        'releasetest',
+        'beta'
     ),
     '2.0.0.24' => array (
         'betatest',
