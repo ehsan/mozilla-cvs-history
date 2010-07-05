@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsnce.c,v 1.53 2010/03/26 20:47:57 alexei.volkov.bugs%sun.com Exp $ */
+/* $Id: sslsnce.c,v 1.54 2010/07/05 19:31:56 alexei.volkov.bugs%sun.com Exp $ */
 
 /* Note: ssl_FreeSID() in sslnonce.c gets used for both client and server 
  * cache sids!
@@ -820,7 +820,7 @@ ServerSessionIDLookup(const PRIPv6Addr *addr,
                     pcce = 0;
                 }
             }
-            if ((cndx = psce->u.ssl3.srvNameIndex) != -1) {
+            if (psce && ((cndx = psce->u.ssl3.srvNameIndex) != -1)) {
                 PRUint32 gotLock = LockSidCacheLock(cache->srvNameCacheLock,
                                                     now);
                 if (gotLock) {
