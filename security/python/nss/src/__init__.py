@@ -287,7 +287,6 @@ Issues
       OpenSSL API, there is little abstraction. Thus there is a
       sizeable body of Python code which expects the OpenSSL model for
       IO ready and has exception handlers based on OpenSSL.
-	
 
 ===
 FAQ
@@ -298,5 +297,3 @@ To be added
 """
 __version__ = '0.9'
 
-import nss
-nss.nss_init_nodb()
