@@ -1,4 +1,4 @@
-# VERSION_URL http://hg.mozilla.org/releases/comm-1.9.1/raw-file/tip/mail/config/version-191.txt
+# VERSION_URL http://hg.mozilla.org/releases/comm-1.9.1/raw-file/default/mail/config/version-191.txt
 /pub/mozilla.org/thunderbird/nightly/latest-comm-1.9.1/thunderbird-@VER@.en-US.linux-i686.complete.mar
 /pub/mozilla.org/thunderbird/nightly/latest-comm-1.9.1/thunderbird-@VER@.en-US.linux-i686.tar.bz2
 /pub/mozilla.org/thunderbird/nightly/latest-comm-1.9.1/thunderbird-@VER@.en-US.mac.complete.mar
