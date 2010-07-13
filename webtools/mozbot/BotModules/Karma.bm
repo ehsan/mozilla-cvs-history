@@ -19,6 +19,7 @@ sub RegisterConfig {
       ['secondsDelayRequired', 1, 1, 20],
       ['_lastspoken', 0, 0, {}], # nick => nick => time
       ['ranklimit', 1, 1, 10], # ranklimit is changeable if anyone want it smaller or higher
+      ['blacklist', 1, 1, []], # list of lowercase nicks who aren't permitted to have karma
     );
 }
 
@@ -68,6 +69,10 @@ sub ChangeKarma {
     my $self = shift;
     my ($event, $who, $delta) = @_;
     $self->debug("$who += $delta requested");
+    if (grep $_ eq lc $who, @{$self->{'blacklist'}}) {
+        $self->debug("$who is blacklisted. Ignoring karma change request.");
+        return 1;
+    }
     if ((defined($self->{'_lastSpoken'}->{$event->{'user'}})) and
         (defined($self->{'_lastSpoken'}->{$event->{'user'}}->{lc $who})) and
         (($event->{'time'} - $self->{'_lastSpoken'}->{$event->{'user'}}->{lc $who}) <= $self->{'secondsDelayRequired'})) {
