@@ -277,7 +277,6 @@ class TTest(object):
                 #set up the counters for this test
                 if counters:
                     cm = self.cmanager.CounterManager(self._ffprocess, browser_config['process'], counters)
-                    cm.startMonitor()
                 counter_results = {}
                 for counter in counters:
                     counter_results[counter] = []

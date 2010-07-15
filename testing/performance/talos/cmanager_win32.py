@@ -43,7 +43,6 @@ import win32pdhutil
 class CounterManager:
 
   def __init__(self, ffprocess, process, counters=None, childProcess="plugin-container"):
-    self.process = process
     self.ffprocess = ffprocess
     self.childProcess = childProcess
     self.registeredCounters = {}
@@ -51,6 +50,27 @@ class CounterManager:
     # PDH might need to be "refreshed" if it has been queried while the browser
     # is closed
     win32pdh.EnumObjects(None, None, 0, 1)
+
+    # Add the counter path for the default process.
+    for counter in self.registeredCounters:
+      path = win32pdh.MakeCounterPath((None, 'process', process,
+                                       None, -1, counter))
+      hq = win32pdh.OpenQuery()
+      try:
+        hc = win32pdh.AddCounter(hq, path)
+      except:
+        win32pdh.CloseQuery(hq)
+        #assume that this is a memory counter for the system, not a process counter
+        path = win32pdh.MakeCounterPath((None, 'Memory', None, None, -1 , counter))
+        hq = win32pdh.OpenQuery()  
+        try:                                                                       
+          hc = win32pdh.AddCounter(hq, path)                                       
+        except:                                                                    
+          win32pdh.CloseQuery(hq)    
+
+      self.registeredCounters[counter] = [hq, [(hc, path)]]
+      self.updateCounterPathsForChildProcesses(counter)
+
 
   def registerCounters(self, counters):
     # self.registeredCounters[counter][0] is a counter query handle
@@ -126,31 +146,6 @@ class CounterManager:
 
   def getProcess(self):
     return self.process
-
-  def startMonitor(self):
-    # PDH might need to be "refreshed" if it has been queried while the browser
-    # is closed
-    win32pdh.EnumObjects(None, None, 0, 1)
-
-    # Add the counter path for the default process.
-    for counter in self.registeredCounters:
-      path = win32pdh.MakeCounterPath((None, 'process', self.process,
-                                       None, -1, counter))
-      hq = win32pdh.OpenQuery()
-      try:
-        hc = win32pdh.AddCounter(hq, path)
-      except:
-        win32pdh.CloseQuery(hq)
-        #assume that this is a memory counter for the system, not a process counter
-        path = win32pdh.MakeCounterPath((None, 'Memory', None, None, -1 , counter))
-        hq = win32pdh.OpenQuery()  
-        try:                                                                       
-          hc = win32pdh.AddCounter(hq, path)                                       
-        except:                                                                    
-          win32pdh.CloseQuery(hq)    
-
-      self.registeredCounters[counter] = [hq, [(hc, path)]]
-      self.updateCounterPathsForChildProcesses(counter)
 
   def stopMonitor(self):
     try:

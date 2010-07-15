@@ -23,6 +23,7 @@
 #   Annie Sullivan <annie.sullivan@gmail.com> (original author)
 #   Ben Hearsum    <bhearsum@wittydomain.com> (ported to linux)
 #   Zach Lipton    <zach@zachlipton.com>  (Mac port)
+#   Alice Nodelman    <anodelman@mozilla.com>  (removed threading)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -43,7 +44,6 @@ __author__ = 'annie.sullivan@gmail.com (Annie Sullivan)'
 
 import os
 import time
-import threading
 import subprocess
 
 def GetProcessData(pid):
@@ -84,7 +84,7 @@ counterDict["Private Bytes"] = GetPrivateBytes
 counterDict["RSS"] = GetResidentSize
 counterDict["% Processor Time"] = GetCpuTime
 
-class CounterManager(threading.Thread):
+class CounterManager():
   """This class manages the monitoring of a process with any number of
      counters.
 
@@ -93,8 +93,6 @@ class CounterManager(threading.Thread):
      Some examples are: CalcCPUTime, GetResidentSize, and GetPrivateBytes
   """
   
-  pollInterval = .25
-
   def __init__(self, ffprocess, process, counters=None):
     """Args:
          counters: A list of counters to monitor. Any counters whose name does
@@ -102,15 +100,12 @@ class CounterManager(threading.Thread):
     """
     self.allCounters = {}
     self.registeredCounters = {}
-    self.process = process
-    self.runThread = False
-    self.pid = -1
     self.ffprocess = ffprocess
+    # the last process is the useful one
+    self.pid = self.ffprocess.GetPidsByName(process)[-1]
 
     self._loadCounters()
     self.registerCounters(counters)
-
-    threading.Thread.__init__(self)
 
   def _loadCounters(self):
     """Loads all of the counters defined in the counterDict"""
@@ -142,61 +137,11 @@ class CounterManager(threading.Thread):
   def getCounterValue(self, counterName):
     """Returns the last value of the counter 'counterName'"""
     try:
-      if counterName is "% Processor Time":
-        return self._getCounterAverage(counterName)
-      else:
-        return self.registeredCounters[counterName][1][-1]
+      return self.registeredCounters[counterName][0](self.pid)
     except:
+      print "Error in collecting counter: " + counterName
       return None
-
-  def _getCounterAverage(self, counterName):
-    """Returns the average value of the counter 'counterName'"""
-    try:
-      total = 0
-      for v in self.registeredCounters[counterName][1]:
-        total += v
-      return total / len(self.registeredCounters[counterName][1])
-    except:
-      return None
-
-  def getProcess(self):
-    """Returns the process currently associated with this CounterManager"""
-    return self.process
-
-  def startMonitor(self):
-    """Starts the monitoring process.
-       Throws an exception if any error occurs
-    """
-    # TODO: make this function less ugly
-    try:
-      # the last process is the useful one
-      self.pid = self.ffprocess.GetPidsByName(self.process)[-1]
-      self.runThread = True
-      self.start()
-    except:
-      print 'WARNING: problem starting counter monitor'
 
   def stopMonitor(self):
-    """Stops the monitor"""
-    # TODO: should probably wait until we know run() is completely stopped
-    # before setting self.pid to None. Use a lock?
-    self.runThread = False
-
-  def run(self):
-    """Performs the actual monitoring of the process. Will keep running
-       until stopMonitor() is called
-    """
-    while self.runThread:
-      for counter in self.registeredCounters.keys():
-        # counter[0] is a function that gets the current value for
-        # a counter
-        # counter[1] is a list of recorded values
-        try:
-          self.registeredCounters[counter][1].append(
-            self.registeredCounters[counter][0](self.pid))
-        except:
-          # if a counter throws an exception, remove it
-          #self.unregisterCounters([counter]) #don't remove, let it try and resolve on next cycle
-          print "Error in collecting counter: " + counter
-
-      time.sleep(self.pollInterval)
+     """any final cleanup"""
+     return
