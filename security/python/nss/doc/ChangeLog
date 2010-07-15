@@ -1,5 +1,9 @@
 2010-05-28  John Dennis  <jdennis@redhat.com> 0.9
 
+  * Correct definciencies in auth_certificate_callback found in several
+    of the example files and documentation. If you've copied that code
+    you should merge those changes in.
+
   * Unicode objects now accepted as well as str objects for
     interfaces expecting a string.
 
@@ -75,22 +79,22 @@
       SecItem.get_oid_sequence()
       SecItem.to_hex()
       SignedCRL.delete_permanently()
-      X500AVA.oid
-      X500AVA.oid_tag
-      X500AVA.value
-      X500AVA.value_str
-      X500Name.cert_uid
-      X500Name.common_name
-      X500Name.country_name
-      X500Name.dc_name
-      X500Name.email_address
-      X500Name.locality_name
-      X500Name.org_name
-      X500Name.org_unit_name
-      X500Name.state_name
-      X500Name.add_rdn()
-      X500Name.has_key()
-      X500RDN.has_key()
+      AVA.oid
+      AVA.oid_tag
+      AVA.value
+      AVA.value_str
+      DN.cert_uid
+      DN.common_name
+      DN.country_name
+      DN.dc_name
+      DN.email_address
+      DN.locality_name
+      DN.org_name
+      DN.org_unit_name
+      DN.state_name
+      DN.add_rdn()
+      DN.has_key()
+      RDN.has_key()
 
   * The following module functions were removed:
     Note: use nss.nss.oid_tag() instead
