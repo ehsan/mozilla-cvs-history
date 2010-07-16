@@ -125,7 +125,7 @@ counterDict["RSS"] = GetResidentSize
 counterDict["% Processor Time"] = GetCpuTime
 counterDict["XRes"] = GetXRes
 
-class CounterManager():
+class CounterManager:
   """This class manages the monitoring of a process with any number of
      counters.
 

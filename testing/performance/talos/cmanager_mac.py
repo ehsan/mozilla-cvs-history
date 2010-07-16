@@ -84,7 +84,7 @@ counterDict["Private Bytes"] = GetPrivateBytes
 counterDict["RSS"] = GetResidentSize
 counterDict["% Processor Time"] = GetCpuTime
 
-class CounterManager():
+class CounterManager:
   """This class manages the monitoring of a process with any number of
      counters.
 
