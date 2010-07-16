@@ -13125,6 +13125,29 @@ nss_indented_format(PyObject *self, PyObject *args, PyObject *kwds)
 
 /* ============================== Module Methods ============================= */
 
+PyDoc_STRVAR(nss_is_initialized_doc,
+"nss_is_initialized() --> bool\n\
+\n\
+Returns whether Network Security Services has already been initialized or not.\n\
+");
+
+static PyObject *
+nss_is_initialized(PyObject *self, PyObject *args)
+{
+    PRBool is_init;
+    TraceMethodEnter(self);
+
+    Py_BEGIN_ALLOW_THREADS
+    is_init = NSS_IsInitialized();
+    Py_END_ALLOW_THREADS
+
+    if (is_init) {
+        Py_RETURN_TRUE;
+    } else {
+        Py_RETURN_FALSE;
+    }
+}
+
 PyDoc_STRVAR(nss_init_doc,
 "nss_init(cert_dir)\n\
 \n\
@@ -14614,6 +14637,7 @@ cert_cert_usage_flags(PyObject *self, PyObject *args, PyObject *kwds)
 /* List of functions exported by this module. */
 static PyMethodDef
 module_methods[] = {
+    {"nss_is_initialized",               (PyCFunction)nss_is_initialized,                  METH_NOARGS,                nss_is_initialized_doc},
     {"nss_init",                         (PyCFunction)nss_init,                            METH_VARARGS,               nss_init_doc},
     {"nss_init_nodb",                    (PyCFunction)nss_init_nodb,                       METH_NOARGS,                nss_init_nodb_doc},
     {"nss_shutdown",                     (PyCFunction)nss_shutdown,                        METH_NOARGS,                nss_shutdown_doc},

@@ -32,6 +32,7 @@
       CertificateRequest
 	
   * The following module functions were added:
+      nss.nss.nss_is_initialized()
       nss.nss.cert_crl_reason_from_name()
       nss.nss.cert_crl_reason_name()
       nss.nss.cert_general_name_type_from_name()
