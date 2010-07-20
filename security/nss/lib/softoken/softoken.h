@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: softoken.h,v 1.23 2009/02/26 06:57:15 nelson%bolyard.com Exp $ */
+/* $Id: softoken.h,v 1.24 2010/07/20 01:26:03 wtc%google.com Exp $ */
 
 #ifndef _SOFTOKEN_H_
 #define _SOFTOKEN_H_
@@ -265,7 +265,7 @@ extern PRBool sftk_fatalError;
 /*
 ** macros to check for forked child process after C_Initialize
 */
-#if defined(XP_UNIX) && !defined(NO_CHECK_FORK)
+#if defined(XP_UNIX) && !defined(NO_FORK_CHECK)
 
 #ifdef DEBUG
 

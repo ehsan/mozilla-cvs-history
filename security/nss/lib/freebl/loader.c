@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: loader.c,v 1.44 2009/03/29 03:45:32 wtc%google.com Exp $ */
+/* $Id: loader.c,v 1.45 2010/07/20 01:26:02 wtc%google.com Exp $ */
 
 #include "loader.h"
 #include "prmem.h"
@@ -1253,13 +1253,14 @@ BLAPI_SHVerify(const char *name, PRFuncPtr addr)
 
 /*
  * The Caller is expected to pass NULL as the name, which will
- * trigger the p_BLAPI_VerifySelf() to return 'TRUE'. If we really loaded
- * from a shared library, BLAPI_VerifySelf will get pick up the real name
- * from the static set in freebl_LoadDSO( void ) 
+ * trigger the p_BLAPI_VerifySelf() to return 'TRUE'. Pass the real
+ * name of the shared library we loaded (the static libraryName set
+ * in freebl_LoadDSO) to p_BLAPI_VerifySelf.
  */
 PRBool
 BLAPI_VerifySelf(const char *name)
 {
+  PORT_Assert(!name);
   if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
       return PR_FALSE;
   return vector->p_BLAPI_VerifySelf(libraryName);

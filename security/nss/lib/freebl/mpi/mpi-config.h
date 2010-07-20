@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: mpi-config.h,v 1.5 2004/04/25 15:03:10 gerv%gerv.net Exp $ */
+/* $Id: mpi-config.h,v 1.6 2010/07/20 01:26:02 wtc%google.com Exp $ */
 
 #ifndef MPI_CONFIG_H_
 #define MPI_CONFIG_H_
@@ -100,7 +100,7 @@
 #endif
 
 #ifndef MP_MACRO
-#define MP_MACRO      0  /* use macros for frequent calls?      */
+#define MP_MACRO      1  /* use macros for frequent calls?      */
 #endif
 
 #ifndef MP_SQUARE
