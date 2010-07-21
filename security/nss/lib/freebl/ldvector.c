@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ldvector.c,v 1.22 2010/07/21 16:46:16 wtc%google.com Exp $ */
+/* $Id: ldvector.c,v 1.23 2010/07/21 16:53:05 wtc%google.com Exp $ */
 
 #ifdef FREEBL_NO_DEPEND
 extern int FREEBL_InitStubs(void);
@@ -257,9 +257,13 @@ static const struct FREEBLVectorStr vector =
     PRNGTEST_Instantiate,
     PRNGTEST_Reseed,
     PRNGTEST_Generate,
-    PRNGTEST_Uninstantiate
+    PRNGTEST_Uninstantiate,
 
     /* End of Version 3.011. */
+
+    MGF1
+
+    /* End of Version 3.012 */
 };
 
 const FREEBLVector * 
