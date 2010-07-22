@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: loader.h,v 1.27 2010/07/21 16:53:06 wtc%google.com Exp $ */
+/* $Id: loader.h,v 1.28 2010/07/22 23:09:46 wtc%google.com Exp $ */
 
 #ifndef _LOADER_H_
 #define _LOADER_H_ 1
@@ -540,10 +540,10 @@ struct FREEBLVectorStr {
 
  SECStatus (* p_PRNGTEST_Uninstantiate)(void);
    /* Version 3.011 came to here */
-   
+
  SECStatus (* p_MGF1)(HASH_HashType hashAlg,
-                      const unsigned char *mgfSeed, unsigned int mgfSeedLen,
-                      unsigned char *mask, unsigned int maskLen);
+                      unsigned char *mask, unsigned int maskLen,
+                      const unsigned char *mgfSeed, unsigned int mgfSeedLen);
   /* Version 3.012 came to here */
 };
 

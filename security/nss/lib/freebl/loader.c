@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: loader.c,v 1.46 2010/07/21 16:53:06 wtc%google.com Exp $ */
+/* $Id: loader.c,v 1.47 2010/07/22 23:09:46 wtc%google.com Exp $ */
 
 #include "loader.h"
 #include "prmem.h"
@@ -1697,11 +1697,11 @@ PRNGTEST_Uninstantiate()
     return (vector->p_PRNGTEST_Uninstantiate)();
 }
 
-SECStatus 
-MGF1(HASH_HashType hashAlg, const unsigned char *mgfSeed, unsigned int mgfSeedLen,
-     unsigned char *mask, unsigned int maskLen)
+SECStatus
+MGF1(HASH_HashType hashAlg, unsigned char *mask, unsigned int maskLen,
+     const unsigned char *mgfSeed, unsigned int mgfSeedLen)
 {
     if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
 	return SECFailure;
-    return (vector->p_MGF1)(hashAlg, mgfSeed, mgfSeedLen, mask, maskLen);
+    return (vector->p_MGF1)(hashAlg, mask, maskLen, mgfSeed, mgfSeedLen);
 }

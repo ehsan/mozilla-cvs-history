@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: mgf1.c,v 1.1 2010/07/21 16:53:06 wtc%google.com Exp $ */
+/* $Id: mgf1.c,v 1.2 2010/07/22 23:09:46 wtc%google.com Exp $ */
 
 #ifdef FREEBL_NO_DEPEND
 #include "stubs.h"
@@ -46,9 +46,9 @@
 #include "blapi.h"
 #include "hasht.h"
 
-SECStatus 
-MGF1(HASH_HashType hashAlg, const unsigned char *mgfSeed, unsigned int mgfSeedLen,
-     unsigned char *mask, unsigned int maskLen)
+SECStatus
+MGF1(HASH_HashType hashAlg, unsigned char *mask, unsigned int maskLen,
+     const unsigned char *mgfSeed, unsigned int mgfSeedLen)
 {
     unsigned int digestLen;
     PRUint32 counter, rounds;
@@ -61,6 +61,7 @@ MGF1(HASH_HashType hashAlg, const unsigned char *mgfSeed, unsigned int mgfSeedLe
     if (hash == NULL)
         return SECFailure;
 
+    hashContext = (*hash->create)();
     rounds = (maskLen + hash->length - 1) / hash->length;
     for (counter = 0; counter < rounds; counter++) {
         C[0] = (unsigned char)((counter >> 24) & 0xff);
@@ -70,7 +71,6 @@ MGF1(HASH_HashType hashAlg, const unsigned char *mgfSeed, unsigned int mgfSeedLe
 
         /* This could be optimized when the clone functions in
          * rawhash.c are implemented. */
-        hashContext = (*hash->create)();
         (*hash->begin)(hashContext);
         (*hash->update)(hashContext, mgfSeed, mgfSeedLen); 
         (*hash->update)(hashContext, C, sizeof C);
@@ -84,8 +84,8 @@ MGF1(HASH_HashType hashAlg, const unsigned char *mgfSeed, unsigned int mgfSeedLe
             PORT_Memcpy(tempHash, temp, maskLen - counter * hash->length);
             PORT_Free(temp);
         }
-        (*hash->destroy)(hashContext, PR_TRUE);
     }
+    (*hash->destroy)(hashContext, PR_TRUE);
 
     return SECSuccess;
 }
