@@ -205,6 +205,10 @@ ifeq ($(OS_ARCH),WINCE)
 OS_LIBS		= ws2.lib
 endif
 
+ifeq ($(OS_TARGET),Android)
+OS_LIBS		+= -llog
+endif
+
 ifeq ($(OS_TARGET),MacOSX)
 OS_LIBS		= -framework CoreServices -framework CoreFoundation
 endif
