@@ -789,7 +789,7 @@ nsDOMAttribute::EnsureChildState(PRBool aSetText, PRBool &aHasChild) const
   aHasChild = !value.IsEmpty();
 
   if (aSetText && aHasChild) {
-    mChild->SetText(value, PR_TRUE);
+    mChild->SetText(value, PR_FALSE);
   }
 
   return NS_OK;
