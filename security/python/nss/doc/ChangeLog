@@ -1,3 +1,27 @@
+2010-07-25  John Dennis  <jdennis@redhat.com> 0.10
+  * The following classes were added:
+      InitParameters
+      InitContext
+
+  * The following module functions were added:
+      nss.nss.nss_initialize()
+      nss.nss.nss_init_context()
+      nss.nss.nss_shutdown_context()
+      nss.nss.nss_init_flags()
+
+  * The following constants were added:
+      NSS_INIT_READONLY
+      NSS_INIT_NOCERTDB
+      NSS_INIT_NOMODDB
+      NSS_INIT_FORCEOPEN
+      NSS_INIT_NOROOTINIT
+      NSS_INIT_OPTIMIZESPACE
+      NSS_INIT_PK11THREADSAFE
+      NSS_INIT_PK11RELOAD
+      NSS_INIT_NOPK11FINALIZE
+      NSS_INIT_RESERVED
+      NSS_INIT_COOPERATE
+
 2010-05-28  John Dennis  <jdennis@redhat.com> 0.9
 
   * Correct definciencies in auth_certificate_callback found in several

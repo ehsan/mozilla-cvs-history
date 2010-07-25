@@ -53,9 +53,27 @@ NewType_get_classproperty(NewType *self, void *closure)
     return NULL;
 }
 
+static int
+NewType_set_classproperty(NewType *self, PyObject *value, void *closure)
+{
+    TraceMethodEnter(self);
+
+    if (value == NULL) {
+        PyErr_SetString(PyExc_TypeError, "Cannot delete the classproperty attribute");
+        return -1;
+    }
+  
+    if (!PyString_Check(value)) {
+        PyErr_SetString(PyExc_TypeError, "The first attribute value must be a string");
+        return -1;
+    }
+      
+    return 0;
+}
+
 static
 PyGetSetDef NewType_getseters[] = {
-    {"classproperty", (getter)NewType_get_classproperty,    (setter)NULL,
+    {"classproperty", (getter)NewType_get_classproperty,    (setter)NewType_set_classproperty,
      "xxx", NULL},
     {NULL}  /* Sentinel */
 };
@@ -3601,6 +3619,124 @@ cert_usage_flags(unsigned int flags)
     return py_flags;
 }
 
+static PyObject *
+nss_init_flags(unsigned int flags)
+{
+    PyObject *py_flags = NULL;
+    PyObject *py_flag = NULL;
+
+
+    if ((py_flags = PyList_New(0)) == NULL)
+        return NULL;
+
+    if (flags & NSS_INIT_READONLY) {
+        flags &= ~NSS_INIT_READONLY;
+	if ((py_flag = PyString_FromString("READONLY")) == NULL) {
+            Py_DECREF(py_flags);
+            return NULL;
+        }
+        PyList_Append(py_flags, py_flag);
+	Py_DECREF(py_flag);
+    }
+    if (flags & NSS_INIT_NOCERTDB) {
+        flags &= ~NSS_INIT_NOCERTDB;
+	if ((py_flag = PyString_FromString("NOCERTDB")) == NULL) {
+            Py_DECREF(py_flags);
+            return NULL;
+        }
+        PyList_Append(py_flags, py_flag);
+	Py_DECREF(py_flag);
+    }
+    if (flags & NSS_INIT_NOMODDB) {
+        flags &= ~NSS_INIT_NOMODDB;
+	if ((py_flag = PyString_FromString("NOMODDB")) == NULL) {
+            Py_DECREF(py_flags);
+            return NULL;
+        }
+        PyList_Append(py_flags, py_flag);
+	Py_DECREF(py_flag);
+    }
+    if (flags & NSS_INIT_FORCEOPEN) {
+        flags &= ~NSS_INIT_FORCEOPEN;
+	if ((py_flag = PyString_FromString("FORCEOPEN")) == NULL) {
+            Py_DECREF(py_flags);
+            return NULL;
+        }
+        PyList_Append(py_flags, py_flag);
+	Py_DECREF(py_flag);
+    }
+    if (flags & NSS_INIT_NOROOTINIT) {
+        flags &= ~NSS_INIT_NOROOTINIT;
+	if ((py_flag = PyString_FromString("NOROOTINIT")) == NULL) {
+            Py_DECREF(py_flags);
+            return NULL;
+        }
+        PyList_Append(py_flags, py_flag);
+	Py_DECREF(py_flag);
+    }
+    if (flags & NSS_INIT_OPTIMIZESPACE) {
+        flags &= ~NSS_INIT_OPTIMIZESPACE;
+	if ((py_flag = PyString_FromString("OPTIMIZESPACE")) == NULL) {
+            Py_DECREF(py_flags);
+            return NULL;
+        }
+        PyList_Append(py_flags, py_flag);
+	Py_DECREF(py_flag);
+    }
+    if (flags & NSS_INIT_PK11THREADSAFE) {
+        flags &= ~NSS_INIT_PK11THREADSAFE;
+	if ((py_flag = PyString_FromString("PK11THREADSAFE")) == NULL) {
+            Py_DECREF(py_flags);
+            return NULL;
+        }
+        PyList_Append(py_flags, py_flag);
+	Py_DECREF(py_flag);
+    }
+    if (flags & NSS_INIT_PK11RELOAD) {
+        flags &= ~NSS_INIT_PK11RELOAD;
+	if ((py_flag = PyString_FromString("PK11RELOAD")) == NULL) {
+            Py_DECREF(py_flags);
+            return NULL;
+        }
+        PyList_Append(py_flags, py_flag);
+	Py_DECREF(py_flag);
+    }
+    if (flags & NSS_INIT_NOPK11FINALIZE) {
+        flags &= ~NSS_INIT_NOPK11FINALIZE;
+	if ((py_flag = PyString_FromString("NOPK11FINALIZE")) == NULL) {
+            Py_DECREF(py_flags);
+            return NULL;
+        }
+        PyList_Append(py_flags, py_flag);
+	Py_DECREF(py_flag);
+    }
+    if (flags & NSS_INIT_RESERVED) {
+        flags &= ~NSS_INIT_RESERVED;
+	if ((py_flag = PyString_FromString("RESERVED")) == NULL) {
+            Py_DECREF(py_flags);
+            return NULL;
+        }
+        PyList_Append(py_flags, py_flag);
+	Py_DECREF(py_flag);
+    }
+
+    if (flags) {
+        if ((py_flag = PyString_FromFormat("unknown bit flags %#x", flags)) == NULL) {
+            Py_DECREF(py_flags);
+            return NULL;
+        }
+        PyList_Append(py_flags, py_flag);
+	Py_DECREF(py_flag);
+    }
+
+    if (PyList_Sort(py_flags) == -1) {
+            Py_DECREF(py_flags);
+            return NULL;
+    }
+
+    return py_flags;
+}
+
 
 static PyObject *
 ip_addr_secitem_to_pystr(SECItem *item)
@@ -6882,6 +7018,9 @@ Possible usage bitfield values are:\n\
 Returns valid_usages, a bitfield of certificate usages.  If\n\
 required_usages is non-zero, the returned bitmap is only for those\n\
 required usages, otherwise it is for all possible usages.\n\
+\n\
+Hint: You can obtain a printable representation of the usage flags\n\
+via `cert_usage_flags`.\n\
 ");
 
 static PyObject *
@@ -12672,6 +12811,1034 @@ static PyTypeObject CertificateRequestType = {
     CertificateRequest_new,			/* tp_new */
 };
 
+/* ========================================================================== */
+/* ========================== InitParameters Class ========================== */
+/* ========================================================================== */
+
+/* ============================ Attribute Access ============================ */
+
+static PyObject *
+InitParameters_get_password_required(InitParameters *self, void *closure)
+{
+    TraceMethodEnter(self);
+
+    return PyBool_FromLong(self->params.passwordRequired);
+}
+
+static int
+InitParameters_set_password_required(InitParameters *self, PyObject *value, void *closure)
+{
+    TraceMethodEnter(self);
+
+    if (value == NULL) {
+        PyErr_SetString(PyExc_TypeError, "Cannot delete the password_required attribute");
+        return -1;
+    }
+  
+    switch(PyObject_IsTrue(value)) {
+    case 0:
+        self->params.passwordRequired = PR_FALSE;
+        return 0;
+    case 1:
+        self->params.passwordRequired = PR_TRUE;
+        return 0;
+    default:
+        PyErr_SetString(PyExc_TypeError, "The password_required attribute value must be a boolean");
+        return -1;
+    }
+}
+
+static PyObject *
+InitParameters_get_min_password_len(InitParameters *self, void *closure)
+{
+    TraceMethodEnter(self);
+
+    return PyInt_FromLong(self->params.minPWLen);
+}
+
+static int
+InitParameters_set_min_password_len(InitParameters *self, PyObject *value, void *closure)
+{
+    TraceMethodEnter(self);
+
+    if (value == NULL) {
+        PyErr_SetString(PyExc_TypeError, "Cannot delete the min_password_len attribute");
+        return -1;
+    }
+  
+    if (!PyInt_Check(value)) {
+        PyErr_SetString(PyExc_TypeError, "The min_password_len attribute value must be an integer");
+        return -1;
+    }
+      
+    self->params.minPWLen = PyInt_AsLong(value);
+
+    return 0;
+}
+
+static PyObject *
+InitParameters_get_manufacturer_id(InitParameters *self, void *closure)
+{
+    TraceMethodEnter(self);
+
+    if (self->params.manufactureID == NULL) {
+        Py_RETURN_NONE;
+    }
+
+    return PyUnicode_DecodeUTF8(self->params.manufactureID, strlen(self->params.manufactureID), NULL);
+}
+
+static int
+InitParameters_set_manufacturer_id(InitParameters *self, PyObject *value, void *closure)
+{
+    PyObject *args = NULL;
+    char *new_value = NULL;
+
+    TraceMethodEnter(self);
+
+    if (value == NULL) {
+        if (self->params.manufactureID) {
+            free(self->params.manufactureID);
+        }
+        self->params.manufactureID = NULL;
+        return 0;
+    }
+  
+    if ((args = Py_BuildValue("(O)", value)) == NULL) {
+        return -1;
+    }
+
+    if (PyArg_ParseTuple(args, "es", "utf-8", &new_value) == -1) {
+        Py_DECREF(args);
+        PyErr_SetString(PyExc_TypeError, "The manufacturer_id attribute value must be a string or unicode");
+        return -1;
+    }
+
+    if (self->params.manufactureID) {
+        free(self->params.manufactureID);
+        self->params.manufactureID = NULL;
+    }
+    
+    self->params.manufactureID = new_value;
+    Py_DECREF(args);
+    return 0;
+}
+
+static PyObject *
+InitParameters_get_library_description(InitParameters *self, void *closure)
+{
+    TraceMethodEnter(self);
+
+    if (self->params.libraryDescription == NULL) {
+        Py_RETURN_NONE;
+    }
+
+    return PyUnicode_DecodeUTF8(self->params.libraryDescription, strlen(self->params.libraryDescription), NULL);
+}
+
+static int
+InitParameters_set_library_description(InitParameters *self, PyObject *value, void *closure)
+{
+    PyObject *args = NULL;
+    char *new_value = NULL;
+
+    TraceMethodEnter(self);
+
+    if (value == NULL) {
+        if (self->params.libraryDescription) {
+            free(self->params.libraryDescription);
+        }
+        self->params.libraryDescription = NULL;
+        return 0;
+    }
+  
+    if ((args = Py_BuildValue("(O)", value)) == NULL) {
+        return -1;
+    }
+
+    if (PyArg_ParseTuple(args, "es", "utf-8", &new_value) == -1) {
+        Py_DECREF(args);
+        PyErr_SetString(PyExc_TypeError, "The library_description attribute value must be a string or unicode");
+        return -1;
+    }
+
+    if (self->params.libraryDescription) {
+        free(self->params.libraryDescription);
+        self->params.libraryDescription = NULL;
+    }
+    
+    self->params.libraryDescription = new_value;
+    Py_DECREF(args);
+    return 0;
+}
+
+
+
+static PyObject *
+InitParameters_get_crypto_token_description(InitParameters *self, void *closure)
+{
+    TraceMethodEnter(self);
+
+    if (self->params.cryptoTokenDescription == NULL) {
+        Py_RETURN_NONE;
+    }
+
+    return PyUnicode_DecodeUTF8(self->params.cryptoTokenDescription, strlen(self->params.cryptoTokenDescription), NULL);
+}
+
+static int
+InitParameters_set_crypto_token_description(InitParameters *self, PyObject *value, void *closure)
+{
+    PyObject *args = NULL;
+    char *new_value = NULL;
+
+    TraceMethodEnter(self);
+
+    if (value == NULL) {
+        if (self->params.cryptoTokenDescription) {
+            free(self->params.cryptoTokenDescription);
+        }
+        self->params.cryptoTokenDescription = NULL;
+        return 0;
+    }
+  
+    if ((args = Py_BuildValue("(O)", value)) == NULL) {
+        return -1;
+    }
+
+    if (PyArg_ParseTuple(args, "es", "utf-8", &new_value) == -1) {
+        Py_DECREF(args);
+        PyErr_SetString(PyExc_TypeError, "The crypto_token_description attribute value must be a string or unicode");
+        return -1;
+    }
+
+    if (self->params.cryptoTokenDescription) {
+        free(self->params.cryptoTokenDescription);
+        self->params.cryptoTokenDescription = NULL;
+    }
+    
+    self->params.cryptoTokenDescription = new_value;
+    Py_DECREF(args);
+    return 0;
+}
+
+
+
+static PyObject *
+InitParameters_get_db_token_description(InitParameters *self, void *closure)
+{
+    TraceMethodEnter(self);
+
+    if (self->params.dbTokenDescription == NULL) {
+        Py_RETURN_NONE;
+    }
+
+    return PyUnicode_DecodeUTF8(self->params.dbTokenDescription, strlen(self->params.dbTokenDescription), NULL);
+}
+
+static int
+InitParameters_set_db_token_description(InitParameters *self, PyObject *value, void *closure)
+{
+    PyObject *args = NULL;
+    char *new_value = NULL;
+
+    TraceMethodEnter(self);
+
+    if (value == NULL) {
+        if (self->params.dbTokenDescription) {
+            free(self->params.dbTokenDescription);
+        }
+        self->params.dbTokenDescription = NULL;
+        return 0;
+    }
+  
+    if ((args = Py_BuildValue("(O)", value)) == NULL) {
+        return -1;
+    }
+
+    if (PyArg_ParseTuple(args, "es", "utf-8", &new_value) == -1) {
+        Py_DECREF(args);
+        PyErr_SetString(PyExc_TypeError, "The db_token_description attribute value must be a string or unicode");
+        return -1;
+    }
+
+    if (self->params.dbTokenDescription) {
+        free(self->params.dbTokenDescription);
+        self->params.dbTokenDescription = NULL;
+    }
+    
+    self->params.dbTokenDescription = new_value;
+    Py_DECREF(args);
+    return 0;
+}
+
+static PyObject *
+InitParameters_get_fips_token_description(InitParameters *self, void *closure)
+{
+    TraceMethodEnter(self);
+
+    if (self->params.FIPSTokenDescription == NULL) {
+        Py_RETURN_NONE;
+    }
+
+    return PyUnicode_DecodeUTF8(self->params.FIPSTokenDescription, strlen(self->params.FIPSTokenDescription), NULL);
+}
+
+static int
+InitParameters_set_fips_token_description(InitParameters *self, PyObject *value, void *closure)
+{
+    PyObject *args = NULL;
+    char *new_value = NULL;
+
+    TraceMethodEnter(self);
+
+    if (value == NULL) {
+        if (self->params.FIPSTokenDescription) {
+            free(self->params.FIPSTokenDescription);
+        }
+        self->params.FIPSTokenDescription = NULL;
+        return 0;
+    }
+  
+    if ((args = Py_BuildValue("(O)", value)) == NULL) {
+        return -1;
+    }
+
+    if (PyArg_ParseTuple(args, "es", "utf-8", &new_value) == -1) {
+        Py_DECREF(args);
+        PyErr_SetString(PyExc_TypeError, "The fips_token_description attribute value must be a string or unicode");
+        return -1;
+    }
+
+    if (self->params.FIPSTokenDescription) {
+        free(self->params.FIPSTokenDescription);
+        self->params.FIPSTokenDescription = NULL;
+    }
+    
+    self->params.FIPSTokenDescription = new_value;
+    Py_DECREF(args);
+    return 0;
+}
+
+static PyObject *
+InitParameters_get_crypto_slot_description(InitParameters *self, void *closure)
+{
+    TraceMethodEnter(self);
+
+    if (self->params.cryptoSlotDescription == NULL) {
+        Py_RETURN_NONE;
+    }
+
+    return PyUnicode_DecodeUTF8(self->params.cryptoSlotDescription, strlen(self->params.cryptoSlotDescription), NULL);
+}
+
+static int
+InitParameters_set_crypto_slot_description(InitParameters *self, PyObject *value, void *closure)
+{
+    PyObject *args = NULL;
+    char *new_value = NULL;
+
+    TraceMethodEnter(self);
+
+    if (value == NULL) {
+        if (self->params.cryptoSlotDescription) {
+            free(self->params.cryptoSlotDescription);
+        }
+        self->params.cryptoSlotDescription = NULL;
+        return 0;
+    }
+  
+    if ((args = Py_BuildValue("(O)", value)) == NULL) {
+        return -1;
+    }
+
+    if (PyArg_ParseTuple(args, "es", "utf-8", &new_value) == -1) {
+        Py_DECREF(args);
+        PyErr_SetString(PyExc_TypeError, "The crypto_slot_description attribute value must be a string or unicode");
+        return -1;
+    }
+
+    if (self->params.cryptoSlotDescription) {
+        free(self->params.cryptoSlotDescription);
+        self->params.cryptoSlotDescription = NULL;
+    }
+    
+    self->params.cryptoSlotDescription = new_value;
+    Py_DECREF(args);
+    return 0;
+}
+
+static PyObject *
+InitParameters_get_db_slot_description(InitParameters *self, void *closure)
+{
+    TraceMethodEnter(self);
+
+    if (self->params.dbSlotDescription == NULL) {
+        Py_RETURN_NONE;
+    }
+
+    return PyUnicode_DecodeUTF8(self->params.dbSlotDescription, strlen(self->params.dbSlotDescription), NULL);
+}
+
+static int
+InitParameters_set_db_slot_description(InitParameters *self, PyObject *value, void *closure)
+{
+    PyObject *args = NULL;
+    char *new_value = NULL;
+
+    TraceMethodEnter(self);
+
+    if (value == NULL) {
+        if (self->params.dbSlotDescription) {
+            free(self->params.dbSlotDescription);
+        }
+        self->params.dbSlotDescription = NULL;
+        return 0;
+    }
+  
+    if ((args = Py_BuildValue("(O)", value)) == NULL) {
+        return -1;
+    }
+
+    if (PyArg_ParseTuple(args, "es", "utf-8", &new_value) == -1) {
+        Py_DECREF(args);
+        PyErr_SetString(PyExc_TypeError, "The db_slot_description attribute value must be a string or unicode");
+        return -1;
+    }
+
+    if (self->params.dbSlotDescription) {
+        free(self->params.dbSlotDescription);
+        self->params.dbSlotDescription = NULL;
+    }
+    
+    self->params.dbSlotDescription = new_value;
+    Py_DECREF(args);
+    return 0;
+}
+
+static PyObject *
+InitParameters_get_fips_slot_description(InitParameters *self, void *closure)
+{
+    TraceMethodEnter(self);
+
+    if (self->params.FIPSSlotDescription == NULL) {
+        Py_RETURN_NONE;
+    }
+
+    return PyUnicode_DecodeUTF8(self->params.FIPSSlotDescription, strlen(self->params.FIPSSlotDescription), NULL);
+}
+
+static int
+InitParameters_set_fips_slot_description(InitParameters *self, PyObject *value, void *closure)
+{
+    PyObject *args = NULL;
+    char *new_value = NULL;
+
+    TraceMethodEnter(self);
+
+    if (value == NULL) {
+        if (self->params.FIPSSlotDescription) {
+            free(self->params.FIPSSlotDescription);
+        }
+        self->params.FIPSSlotDescription = NULL;
+        return 0;
+    }
+  
+    if ((args = Py_BuildValue("(O)", value)) == NULL) {
+        return -1;
+    }
+
+    if (PyArg_ParseTuple(args, "es", "utf-8", &new_value) == -1) {
+        Py_DECREF(args);
+        PyErr_SetString(PyExc_TypeError, "The fips_slot_description attribute value must be a string or unicode");
+        return -1;
+    }
+
+    if (self->params.FIPSSlotDescription) {
+        free(self->params.FIPSSlotDescription);
+        self->params.FIPSSlotDescription = NULL;
+    }
+    
+    self->params.FIPSSlotDescription = new_value;
+    Py_DECREF(args);
+    return 0;
+}
+
+static
+PyGetSetDef InitParameters_getseters[] = {
+    {"password_required",
+     (getter)InitParameters_get_password_required,
+     (setter)InitParameters_set_password_required,
+     "boolean indicating if a password is required", NULL},
+
+    {"min_password_len",
+     (getter)InitParameters_get_min_password_len,
+     (setter)InitParameters_set_min_password_len,
+     "minimum password length", NULL},
+
+    {"manufacturer_id",
+     (getter)InitParameters_get_manufacturer_id,
+     (setter)InitParameters_set_manufacturer_id,
+     "manufacturer id (max 32 chars)", NULL},
+
+    {"library_description",
+     (getter)InitParameters_get_library_description,
+     (setter)InitParameters_set_library_description,
+     "", NULL},
+
+    {"crypto_token_description",
+     (getter)InitParameters_get_crypto_token_description,
+     (setter)InitParameters_set_crypto_token_description,
+     "", NULL},
+
+    {"db_token_description",
+     (getter)InitParameters_get_db_token_description,
+     (setter)InitParameters_set_db_token_description,
+     "", NULL},
+
+    {"fips_token_description",
+     (getter)InitParameters_get_fips_token_description,
+     (setter)InitParameters_set_fips_token_description,
+     "", NULL},
+
+    {"crypto_slot_description",
+     (getter)InitParameters_get_crypto_slot_description,
+     (setter)InitParameters_set_crypto_slot_description,
+     "", NULL},
+
+    {"db_slot_description",
+     (getter)InitParameters_get_db_slot_description,
+     (setter)InitParameters_set_db_slot_description,
+     "", NULL},
+
+    {"fips_slot_description",
+     (getter)InitParameters_get_fips_slot_description,
+     (setter)InitParameters_set_fips_slot_description,
+     "", NULL},
+
+    {NULL}  /* Sentinel */
+};
+
+static PyObject *
+InitParameters_format_lines(InitParameters *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"level", NULL};
+    int level = 0;
+    PyObject *lines = NULL;
+    PyObject *obj = NULL;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i:format_lines", kwlist, &level))
+        return NULL;
+
+    if ((lines = PyList_New(0)) == NULL) {
+        return NULL;
+    }
+
+    if ((obj = InitParameters_get_password_required(self, NULL)) == NULL) {
+        goto fail;
+    }
+    FMT_OBJ_AND_APPEND(lines, _("Password Required"), obj, level, fail);
+    Py_CLEAR(obj);
+    
+    if ((obj = InitParameters_get_min_password_len(self, NULL)) == NULL) {
+        goto fail;
+    }
+    FMT_OBJ_AND_APPEND(lines, _("Minimum Password Length"), obj, level, fail);
+    Py_CLEAR(obj);
+
+    if ((obj = InitParameters_get_manufacturer_id(self, NULL)) == NULL) {
+        goto fail;
+    }
+    FMT_OBJ_AND_APPEND(lines, _("Manufacturer ID"), obj, level, fail);
+    Py_CLEAR(obj);
+
+    if ((obj = InitParameters_get_library_description(self, NULL)) == NULL) {
+        goto fail;
+    }
+    FMT_OBJ_AND_APPEND(lines, _("Library Description"), obj, level, fail);
+    Py_CLEAR(obj);
+
+    if ((obj = InitParameters_get_crypto_token_description(self, NULL)) == NULL) {
+        goto fail;
+    }
+    FMT_OBJ_AND_APPEND(lines, _("Crypto Token Description"), obj, level, fail);
+    Py_CLEAR(obj);
+
+    if ((obj = InitParameters_get_db_token_description(self, NULL)) == NULL) {
+        goto fail;
+    }
+    FMT_OBJ_AND_APPEND(lines, _("Database Token Description"), obj, level, fail);
+    Py_CLEAR(obj);
+
+    if ((obj = InitParameters_get_fips_token_description(self, NULL)) == NULL) {
+        goto fail;
+    }
+    FMT_OBJ_AND_APPEND(lines, _("FIPS Token Description"), obj, level, fail);
+    Py_CLEAR(obj);
+
+    if ((obj = InitParameters_get_crypto_slot_description(self, NULL)) == NULL) {
+        goto fail;
+    }
+    FMT_OBJ_AND_APPEND(lines, _("Crypto Slot Description"), obj, level, fail);
+    Py_CLEAR(obj);
+
+    if ((obj = InitParameters_get_db_slot_description(self, NULL)) == NULL) {
+        goto fail;
+    }
+    FMT_OBJ_AND_APPEND(lines, _("Database Slot Description"), obj, level, fail);
+    Py_CLEAR(obj);
+
+    if ((obj = InitParameters_get_fips_slot_description(self, NULL)) == NULL) {
+        goto fail;
+    }
+    FMT_OBJ_AND_APPEND(lines, _("FIPS Slot Description"), obj, level, fail);
+    Py_CLEAR(obj);
+
+    return lines;
+
+ fail:
+    Py_XDECREF(obj);
+    Py_XDECREF(lines);
+    return NULL;
+}
+
+static PyObject *
+InitParameters_format(InitParameters *self, PyObject *args, PyObject *kwds)
+{
+    TraceMethodEnter(self);
+
+    return format_from_lines((format_lines_func)InitParameters_format_lines, (PyObject *)self, args, kwds);
+}
+
+static PyMemberDef InitParameters_members[] = {
+    {NULL}  /* Sentinel */
+};
+
+/* ============================== Class Methods ============================= */
+
+
+static PyMethodDef InitParameters_methods[] = {
+    {"format_lines", (PyCFunction)InitParameters_format_lines,   METH_VARARGS|METH_KEYWORDS, generic_format_lines_doc},
+    {"format",       (PyCFunction)InitParameters_format,         METH_VARARGS|METH_KEYWORDS, generic_format_doc},
+    {NULL, NULL}  /* Sentinel */
+};
+
+/* =========================== Class Construction =========================== */
+
+static PyObject *
+InitParameters_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
+    InitParameters *self;
+
+    TraceObjNewEnter(type);
+
+    if ((self = (InitParameters *)type->tp_alloc(type, 0)) == NULL) {
+        return NULL;
+    }
+
+    memset(&self->params, 0, sizeof(self->params));
+    self->params.length = sizeof(self->params);
+
+    TraceObjNewLeave(self);
+    return (PyObject *)self;
+}
+
+static void
+InitParameters_dealloc(InitParameters* self)
+{
+    TraceMethodEnter(self);
+
+    if (self->params.manufactureID) {
+        free(self->params.manufactureID);
+    }
+    if (self->params.libraryDescription) {
+        free(self->params.libraryDescription);
+    }
+    if (self->params.cryptoTokenDescription) {
+        free(self->params.cryptoTokenDescription);
+    }
+    if (self->params.dbTokenDescription) {
+        free(self->params.dbTokenDescription);
+    }
+    if (self->params.FIPSTokenDescription) {
+        free(self->params.FIPSTokenDescription);
+    }
+    if (self->params.cryptoSlotDescription) {
+        free(self->params.cryptoSlotDescription);
+    }
+    if (self->params.dbSlotDescription) {
+        free(self->params.dbSlotDescription);
+    }
+    if (self->params.FIPSSlotDescription) {
+        free(self->params.FIPSSlotDescription);
+    }
+
+    self->ob_type->tp_free((PyObject*)self);
+}
+
+PyDoc_STRVAR(InitParameters_doc,
+"An object representing NSS Initialization Parameters");
+
+static int
+InitParameters_init(InitParameters *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"password_required",
+                             "min_password_len",
+                             "manufacturer_id",
+                             "library_description",
+                             "crypto_token_description",
+                             "db_token_description",
+                             "fips_token_description",
+                             "crypto_slot_description",
+                             "db_slot_description",
+                             "fips_slot_description",
+                             NULL};
+
+    PyObject *py_password_required = NULL;
+    PyObject *py_min_password_len = NULL;
+    PyObject *py_manufacturer_id = NULL;
+    PyObject *py_library_description = NULL;
+    PyObject *py_crypto_token_description = NULL;
+    PyObject *py_db_token_description = NULL;
+    PyObject *py_fips_token_description = NULL;
+    PyObject *py_crypto_slot_description = NULL;
+    PyObject *py_db_slot_description = NULL;
+    PyObject *py_fips_slot_description = NULL;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OOOOOOOOOO:InitParameters", kwlist,
+                                     &py_password_required,
+                                     &py_min_password_len,
+                                     &py_manufacturer_id,
+                                     &py_library_description,
+                                     &py_crypto_token_description,
+                                     &py_db_token_description,
+                                     &py_fips_token_description,
+                                     &py_crypto_slot_description,
+                                     &py_db_slot_description,
+                                     &py_fips_slot_description))
+        return -1;
+
+    if (py_password_required) {
+        if (InitParameters_set_password_required(self, py_password_required, NULL) == -1) {
+            return -1;
+        }
+    }
+
+    if (py_min_password_len) {
+        if (InitParameters_set_min_password_len(self, py_min_password_len, NULL) == -1) {
+            return -1;
+        }
+    }
+
+    if (py_manufacturer_id) {
+        if (InitParameters_set_manufacturer_id(self, py_manufacturer_id, NULL) == -1) {
+            return -1;
+        }
+    }
+
+    if (py_library_description) {
+        if (InitParameters_set_library_description(self, py_library_description, NULL) == -1) {
+            return -1;
+        }
+    }
+
+    if (py_crypto_token_description) {
+        if (InitParameters_set_crypto_token_description(self, py_crypto_token_description, NULL) == -1) {
+            return -1;
+        }
+    }
+
+    if (py_db_token_description) {
+        if (InitParameters_set_db_token_description(self, py_db_token_description, NULL) == -1) {
+            return -1;
+        }
+    }
+
+    if (py_fips_token_description) {
+        if (InitParameters_set_fips_token_description(self, py_fips_token_description, NULL) == -1) {
+            return -1;
+        }
+    }
+
+    if (py_crypto_slot_description) {
+        if (InitParameters_set_crypto_slot_description(self, py_crypto_slot_description, NULL) == -1) {
+            return -1;
+        }
+    }
+
+    if (py_db_slot_description) {
+        if (InitParameters_set_db_slot_description(self, py_db_slot_description, NULL) == -1) {
+            return -1;
+        }
+    }
+
+    if (py_fips_slot_description) {
+        if (InitParameters_set_fips_slot_description(self, py_fips_slot_description, NULL) == -1) {
+            return -1;
+        }
+    }
+
+
+    return 0;
+}
+
+static PyObject *
+InitParameters_str(InitParameters *self)
+{
+    const char *fmt_str = "password_required=%s, min_password_len=%s, manufacturer_id=%s, library_description=%s, crypto_token_description=%s, db_token_description=%s, fips_token_description=%s, crypto_slot_description=%s, db_slot_description=%s, fips_slot_description=%s";
+
+    PyObject *result = NULL;
+    PyObject *fmt = NULL;
+    PyObject *args = NULL;
+    PyObject *py_password_required = NULL;
+    PyObject *py_min_password_len = NULL;
+    PyObject *py_manufacturer_id = NULL;
+    PyObject *py_library_description = NULL;
+    PyObject *py_crypto_token_description = NULL;
+    PyObject *py_db_token_description = NULL;
+    PyObject *py_fips_token_description = NULL;
+    PyObject *py_crypto_slot_description = NULL;
+    PyObject *py_db_slot_description = NULL;
+    PyObject *py_fips_slot_description = NULL;
+
+    if ((py_password_required = InitParameters_get_password_required(self, NULL)) == NULL) {
+        goto fail;
+    }
+    
+    if ((py_min_password_len = InitParameters_get_min_password_len(self, NULL)) == NULL) {
+        goto fail;
+    }
+
+    if ((py_manufacturer_id = InitParameters_get_manufacturer_id(self, NULL)) == NULL) {
+        goto fail;
+    }
+
+    if ((py_library_description = InitParameters_get_library_description(self, NULL)) == NULL) {
+        goto fail;
+    }
+
+    if ((py_crypto_token_description = InitParameters_get_crypto_token_description(self, NULL)) == NULL) {
+        goto fail;
+    }
+
+    if ((py_db_token_description = InitParameters_get_db_token_description(self, NULL)) == NULL) {
+        goto fail;
+    }
+
+    if ((py_fips_token_description = InitParameters_get_fips_token_description(self, NULL)) == NULL) {
+        goto fail;
+    }
+
+    if ((py_crypto_slot_description = InitParameters_get_crypto_slot_description(self, NULL)) == NULL) {
+        goto fail;
+    }
+
+    if ((py_db_slot_description = InitParameters_get_db_slot_description(self, NULL)) == NULL) {
+        goto fail;
+    }
+
+    if ((py_fips_slot_description = InitParameters_get_fips_slot_description(self, NULL)) == NULL) {
+        goto fail;
+    }
+
+
+    if ((fmt = PyString_FromString(fmt_str)) == NULL) {
+        goto fail;
+    }
+
+    if ((args = PyTuple_New(10)) == NULL) {
+        goto fail;
+    }
+
+    /*
+     * We bump the ref count when inserting into the tuple to simpify clean
+     * up. We always DECREF the variable on exit and also DECREF the
+     * tuple. When the tuple is deallocated it will DECREF it's members,
+     * then subsequently we'll individually DECREF the variable, thus
+     * requiring the INCREF when it's inserted into the tuple.
+     */
+    PyTuple_SetItem(args, 0, py_password_required);        Py_INCREF(py_password_required);
+    PyTuple_SetItem(args, 1, py_min_password_len);         Py_INCREF(py_min_password_len);
+    PyTuple_SetItem(args, 2, py_manufacturer_id);          Py_INCREF(py_manufacturer_id);
+    PyTuple_SetItem(args, 3, py_library_description);      Py_INCREF(py_library_description);
+    PyTuple_SetItem(args, 4, py_crypto_token_description); Py_INCREF(py_crypto_token_description);
+    PyTuple_SetItem(args, 5, py_db_token_description);     Py_INCREF(py_db_token_description);
+    PyTuple_SetItem(args, 6, py_fips_token_description);   Py_INCREF(py_fips_token_description);
+    PyTuple_SetItem(args, 7, py_crypto_slot_description);  Py_INCREF(py_crypto_slot_description);
+    PyTuple_SetItem(args, 8, py_db_slot_description);      Py_INCREF(py_db_slot_description);
+    PyTuple_SetItem(args, 9, py_fips_slot_description);    Py_INCREF(py_fips_slot_description);
+
+    if ((result = PyString_Format(fmt, args)) == NULL) {
+        goto fail;
+    }
+    
+    goto exit;
+
+ fail:
+    Py_CLEAR(result);
+ exit:
+    Py_XDECREF(fmt);
+    Py_XDECREF(args);
+    Py_XDECREF(py_password_required);
+    Py_XDECREF(py_min_password_len);
+    Py_XDECREF(py_manufacturer_id);
+    Py_XDECREF(py_library_description);
+    Py_XDECREF(py_crypto_token_description);
+    Py_XDECREF(py_db_token_description);
+    Py_XDECREF(py_fips_token_description);
+    Py_XDECREF(py_crypto_slot_description);
+    Py_XDECREF(py_db_slot_description);
+    Py_XDECREF(py_fips_slot_description);
+
+    return result;
+}
+
+static PyTypeObject InitParametersType = {
+    PyObject_HEAD_INIT(NULL)
+    0,						/* ob_size */
+    "nss.nss.InitParameters",			/* tp_name */
+    sizeof(InitParameters),			/* tp_basicsize */
+    0,						/* tp_itemsize */
+    (destructor)InitParameters_dealloc,		/* tp_dealloc */
+    0,						/* tp_print */
+    0,						/* tp_getattr */
+    0,						/* tp_setattr */
+    0,						/* tp_compare */
+    0,						/* tp_repr */
+    0,						/* tp_as_number */
+    0,						/* tp_as_sequence */
+    0,						/* tp_as_mapping */
+    0,						/* tp_hash */
+    0,						/* tp_call */
+    (reprfunc)InitParameters_str,		/* tp_str */
+    0,						/* tp_getattro */
+    0,						/* tp_setattro */
+    0,						/* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,	/* tp_flags */
+    InitParameters_doc,				/* tp_doc */
+    (traverseproc)0,				/* tp_traverse */
+    (inquiry)0,					/* tp_clear */
+    0,						/* tp_richcompare */
+    0,						/* tp_weaklistoffset */
+    0,						/* tp_iter */
+    0,						/* tp_iternext */
+    InitParameters_methods,			/* tp_methods */
+    InitParameters_members,			/* tp_members */
+    InitParameters_getseters,			/* tp_getset */
+    0,						/* tp_base */
+    0,						/* tp_dict */
+    0,						/* tp_descr_get */
+    0,						/* tp_descr_set */
+    0,						/* tp_dictoffset */
+    (initproc)InitParameters_init,		/* tp_init */
+    0,						/* tp_alloc */
+    InitParameters_new,				/* tp_new */
+};
+
+/* ========================================================================== */
+/* =========================== InitContext Class ============================ */
+/* ========================================================================== */
+
+/* =========================== Class Construction =========================== */
+
+static PyObject *
+InitContext_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
+    InitContext *self;
+
+    TraceObjNewEnter(type);
+
+    if ((self = (InitContext *)type->tp_alloc(type, 0)) == NULL) {
+        return NULL;
+    }
+
+    self->context = NULL;
+
+    TraceObjNewLeave(self);
+    return (PyObject *)self;
+}
+
+static void
+InitContext_dealloc(InitContext* self)
+{
+    TraceMethodEnter(self);
+
+    self->ob_type->tp_free((PyObject*)self);
+}
+
+PyDoc_STRVAR(InitContext_doc,
+"An object representing NSSInitContext");
+
+
+static PyObject *
+InitContext_repr(InitContext *self)
+{
+    return PyString_FromFormat("<%s object at %p>",
+                               Py_TYPE(self)->tp_name, self);
+}
+
+static PyTypeObject InitContextType = {
+    PyObject_HEAD_INIT(NULL)
+    0,						/* ob_size */
+    "nss.nss.InitContext",				/* tp_name */
+    sizeof(InitContext),				/* tp_basicsize */
+    0,						/* tp_itemsize */
+    (destructor)InitContext_dealloc,		/* tp_dealloc */
+    0,						/* tp_print */
+    0,						/* tp_getattr */
+    0,						/* tp_setattr */
+    0,						/* tp_compare */
+    (reprfunc)InitContext_repr,			/* tp_repr */
+    0,						/* tp_as_number */
+    0,						/* tp_as_sequence */
+    0,						/* tp_as_mapping */
+    0,						/* tp_hash */
+    0,						/* tp_call */
+    0,						/* tp_str */
+    0,						/* tp_getattro */
+    0,						/* tp_setattro */
+    0,						/* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,	/* tp_flags */
+    InitContext_doc,				/* tp_doc */
+    (traverseproc)0,				/* tp_traverse */
+    (inquiry)0,					/* tp_clear */
+    0,						/* tp_richcompare */
+    0,						/* tp_weaklistoffset */
+    0,						/* tp_iter */
+    0,						/* tp_iternext */
+    0,						/* tp_methods */
+    0,						/* tp_members */
+    0,						/* tp_getset */
+    0,						/* tp_base */
+    0,						/* tp_dict */
+    0,						/* tp_descr_get */
+    0,						/* tp_descr_set */
+    0,						/* tp_dictoffset */
+    0,						/* tp_init */
+    0,						/* tp_alloc */
+    0,						/* tp_new */
+};
+
+static PyObject *
+InitContext_new_from_NSSInitContext(NSSInitContext *context)
+{
+    InitContext *self = NULL;
+
+    TraceObjNewEnter(NULL);
+
+    if ((self = (InitContext *) InitContext_new(&InitContextType, NULL, NULL)) == NULL) {
+        return NULL;
+    }
+
+    self->context = context;
+
+    TraceObjNewLeave(self);
+    return (PyObject *) self;
+}
 /* ========================== PK11 Methods =========================== */
 
 static char *
@@ -13125,14 +14292,14 @@ nss_indented_format(PyObject *self, PyObject *args, PyObject *kwds)
 
 /* ============================== Module Methods ============================= */
 
-PyDoc_STRVAR(nss_is_initialized_doc,
+PyDoc_STRVAR(nss_nss_is_initialized_doc,
 "nss_is_initialized() --> bool\n\
 \n\
 Returns whether Network Security Services has already been initialized or not.\n\
 ");
 
 static PyObject *
-nss_is_initialized(PyObject *self, PyObject *args)
+nss_nss_is_initialized(PyObject *self, PyObject *args)
 {
     PRBool is_init;
     TraceMethodEnter(self);
@@ -13148,7 +14315,7 @@ nss_is_initialized(PyObject *self, PyObject *args)
     }
 }
 
-PyDoc_STRVAR(nss_init_doc,
+PyDoc_STRVAR(nss_nss_init_doc,
 "nss_init(cert_dir)\n\
 \n\
 :Parameters:\n\
@@ -13161,23 +14328,26 @@ Network Security Services.\n\
 ");
 
 static PyObject *
-nss_init(PyObject *self, PyObject *args)
+nss_nss_init(PyObject *self, PyObject *args)
 {
     char *cert_dir;
 
     TraceMethodEnter(self);
 
-    if (!PyArg_ParseTuple(args, "s:nss_init", &cert_dir)) {
+    if (!PyArg_ParseTuple(args, "es:nss_init",
+                          "utf-8", &cert_dir)) {
         return NULL;
     }
 
     Py_BEGIN_ALLOW_THREADS
     if (NSS_Init(cert_dir) != SECSuccess) {
         Py_BLOCK_THREADS
+            free(cert_dir);
         return set_nspr_error(NULL);
     }
     Py_END_ALLOW_THREADS
 
+    free(cert_dir);
     Py_RETURN_NONE;
 }
 
@@ -13213,7 +14383,296 @@ nss_init_nodb(PyObject *self, PyObject *args)
     Py_RETURN_NONE;
 }
 
-PyDoc_STRVAR(nss_shutdown_doc,
+PyDoc_STRVAR(nss_nss_initialize_doc,
+"nss_initialize(cert_dir=None, cert_prefix=None, key_prefix=None, secmod_name=None, flags=0)\n\
+\n\
+:Parameters:\n\
+    cert_dir : string\n\
+        Pathname of the directory where the certificate, key, and\n\
+        security module databases reside.\n\
+ \n\
+    cert_prefix : string\n\
+        Prefix added to the beginning of the certificate database,\n\
+        for example,\"https-server1-\".\n\
+\n\
+    key_prefix : string\n\
+        Prefix added to the beginning of the key database,\n\
+        for example, \"https-server1-\".\n\
+\n\
+    secmod_name : string\n\
+        Name of the security module database,\n\
+        usually \"secmod.db\".\n\
+\n\
+    flags\n\
+        Bit flags that specify how NSS should be initialized.\n\
+\n\
+NSS_Initialize initializes NSS. It is more flexible than NSS_Init,\n\
+NSS_InitReadWrite, and NSS_NoDB_Init. If any of those simpler NSS\n\
+initialization functions suffices for your needs, call that instead.\n\
+\n\
+The flags parameter is a bitwise OR of the following flags:\n\
+\n\
+NSS_INIT_READONLY\n\
+    Open the databases read only.\n\
+\n\
+NSS_INIT_NOCERTDB\n\
+    Don't open the cert DB and key DB's, just initialize the volatile\n\
+    certdb.\n\
+\n\
+NSS_INIT_NOMODDB\n\
+    Don't open the security module DB, just initialize the PKCS #11 module.\n\
+\n\
+NSS_INIT_FORCEOPEN\n\
+    Continue to force initializations even if the databases cannot be\n\
+    opened.\n\
+\n\
+NSS_INIT_NOROOTINIT\n\
+    Don't try to look for the root certs module automatically.\n\
+\n\
+NSS_INIT_OPTIMIZESPACE\n\
+    Optimize for space instead of speed. Use smaller tables and caches.\n\
+\n\
+NSS_INIT_PK11THREADSAFE\n\
+    Only load PKCS#11 modules that are thread-safe, i.e., that support\n\
+    locking - either OS locking or NSS-provided locks . If a PKCS#11 module\n\
+    isn't thread-safe, don't serialize its calls; just don't load it\n\
+    instead. This is necessary if another piece of code is using the same\n\
+    PKCS#11 modules that NSS is accessing without going through NSS, for\n\
+    example, the Java SunPKCS11 provider.\n\
+\n\
+NSS_INIT_PK11RELOAD\n\
+    Ignore the CKR_CRYPTOKI_ALREADY_INITIALIZED error when loading PKCS#11\n\
+    modules. This is necessary if another piece of code is using the same\n\
+    PKCS#11 modules that NSS is accessing without going through NSS, for\n\
+    example, Java SunPKCS11 provider.\n\
+\n\
+NSS_INIT_NOPK11FINALIZE\n\
+    Never call C_Finalize on any PKCS#11 module. This may be necessary in\n\
+    order to ensure continuous operation and proper shutdown sequence if\n\
+    another piece of code is using the same PKCS#11 modules that NSS is\n\
+    accessing without going through NSS, for example, Java SunPKCS11\n\
+    provider. The following limitation applies when this is set :\n\
+    SECMOD_WaitForAnyTokenEvent will not use C_WaitForSlotEvent, in order\n\
+    to prevent the need for C_Finalize. This call will be emulated instead.\n\
+\n\
+NSS_INIT_RESERVED\n\
+    Currently has no effect, but may be used in the future to trigger\n\
+    better cooperation between PKCS#11 modules used by both NSS and the\n\
+    Java SunPKCS11 provider. This should occur after a new flag is defined\n\
+    for C_Initialize by the PKCS#11 working group.\n\
+\n\
+NSS_INIT_COOPERATE\n\
+    Sets the above four recommended options for applications that use both\n\
+    NSS and the Java SunPKCS11 provider.\n\
+\n\
+Hint: You can obtain a printable representation of the flags via `nss_init_flags`.\n\
+");
+
+static PyObject *
+nss_nss_initialize(PyObject *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"cert_dir", "cert_prefix", "key_prefix", "secmod_name", "flags", NULL};
+    char *cert_dir = NULL;
+    char *cert_prefix = NULL;
+    char *key_prefix = NULL;
+    char *secmod_name = NULL;
+    unsigned long flags = 0;
+    SECStatus status;
+
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|esesesesk:nss_initialize", kwlist,
+                                     "utf-8", &cert_dir,
+                                     "utf-8", &cert_prefix,
+                                     "utf-8", &key_prefix,
+                                     "utf-8", &secmod_name,
+                                     &flags))
+        return NULL;
+
+    if ((status = NSS_Initialize(cert_dir, cert_prefix, key_prefix, secmod_name, flags)) != SECSuccess) {
+        set_nspr_error(NULL);
+    }
+
+    if (cert_dir)    free(cert_dir);
+    if (cert_prefix) free(cert_prefix);
+    if (key_prefix)  free(key_prefix);
+    if (secmod_name) free(secmod_name);
+
+    if (status == SECSuccess) {
+        Py_RETURN_NONE;
+    } else {
+        return NULL;
+    }
+}
+
+PyDoc_STRVAR(nss_nss_init_context_doc,
+"nss_init_context(cert_dir=None, cert_prefix=None, key_prefix=None, secmod_name=None, init_params=None, flags=0)\n\
+\n\
+:Parameters:\n\
+    cert_dir : string\n\
+        Pathname of the directory where the certificate, key, and\n\
+        security module databases reside.\n\
+ \n\
+    cert_prefix : string\n\
+        Prefix added to the beginning of the certificate database,\n\
+        for example,\"https-server1-\".\n\
+\n\
+    key_prefix : string\n\
+        Prefix added to the beginning of the key database,\n\
+        for example, \"https-server1-\".\n\
+\n\
+    secmod_name : string\n\
+        Name of the security module database,\n\
+        usually \"secmod.db\".\n\
+\n\
+    init_params : `InitContext` object\n\
+        Object with a set of initialization parameters.\n\
+        See `InitContext`.\n\
+\n\
+    flags\n\
+        Bit flags that specify how NSS should be initialized.\n\
+\n\
+NSS_Initialize initializes NSS. It is more flexible than NSS_Init,\n\
+NSS_InitReadWrite, and NSS_NoDB_Init. If any of those simpler NSS\n\
+initialization functions suffices for your needs, call that instead.\n\
+\n\
+The flags parameter is a bitwise OR of the following flags:\n\
+\n\
+NSS_INIT_READONLY\n\
+    Open the databases read only.\n\
+\n\
+NSS_INIT_NOCERTDB\n\
+    Don't open the cert DB and key DB's, just initialize the volatile\n\
+    certdb.\n\
+\n\
+NSS_INIT_NOMODDB\n\
+    Don't open the security module DB, just initialize the PKCS #11 module.\n\
+\n\
+NSS_INIT_FORCEOPEN\n\
+    Continue to force initializations even if the databases cannot be\n\
+    opened.\n\
+\n\
+NSS_INIT_NOROOTINIT\n\
+    Don't try to look for the root certs module automatically.\n\
+\n\
+NSS_INIT_OPTIMIZESPACE\n\
+    Optimize for space instead of speed. Use smaller tables and caches.\n\
+\n\
+NSS_INIT_PK11THREADSAFE\n\
+    Only load PKCS#11 modules that are thread-safe, i.e., that support\n\
+    locking - either OS locking or NSS-provided locks . If a PKCS#11 module\n\
+    isn't thread-safe, don't serialize its calls; just don't load it\n\
+    instead. This is necessary if another piece of code is using the same\n\
+    PKCS#11 modules that NSS is accessing without going through NSS, for\n\
+    example, the Java SunPKCS11 provider.\n\
+\n\
+NSS_INIT_PK11RELOAD\n\
+    Ignore the CKR_CRYPTOKI_ALREADY_INITIALIZED error when loading PKCS#11\n\
+    modules. This is necessary if another piece of code is using the same\n\
+    PKCS#11 modules that NSS is accessing without going through NSS, for\n\
+    example, Java SunPKCS11 provider.\n\
+\n\
+NSS_INIT_NOPK11FINALIZE\n\
+    Never call C_Finalize on any PKCS#11 module. This may be necessary in\n\
+    order to ensure continuous operation and proper shutdown sequence if\n\
+    another piece of code is using the same PKCS#11 modules that NSS is\n\
+    accessing without going through NSS, for example, Java SunPKCS11\n\
+    provider. The following limitation applies when this is set :\n\
+    SECMOD_WaitForAnyTokenEvent will not use C_WaitForSlotEvent, in order\n\
+    to prevent the need for C_Finalize. This call will be emulated instead.\n\
+\n\
+NSS_INIT_RESERVED\n\
+    Currently has no effect, but may be used in the future to trigger\n\
+    better cooperation between PKCS#11 modules used by both NSS and the\n\
+    Java SunPKCS11 provider. This should occur after a new flag is defined\n\
+    for C_Initialize by the PKCS#11 working group.\n\
+\n\
+NSS_INIT_COOPERATE\n\
+    Sets the above four recommended options for applications that use both\n\
+    NSS and the Java SunPKCS11 provider.\n\
+\n\
+Hint: You can obtain a printable representation of the flags via `nss_init_flags`.\n\
+");
+
+static PyObject *
+nss_nss_init_context(PyObject *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"cert_dir", "cert_prefix", "key_prefix",
+                             "secmod_name", "init_params", "flags", NULL};
+    char *cert_dir = NULL;
+    char *cert_prefix = NULL;
+    char *key_prefix = NULL;
+    char *secmod_name = NULL;
+    InitParameters *py_init_params = NULL;
+    unsigned long flags = 0;
+    NSSInitContext *init_context = NULL;
+    PyObject *py_init_context = NULL;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|esesesesO!k:nss_init_context", kwlist,
+                                     "utf-8", &cert_dir,
+                                     "utf-8", &cert_prefix,
+                                     "utf-8", &key_prefix,
+                                     "utf-8", &secmod_name,
+                                     &InitParametersType, &py_init_params,
+                                     &flags))
+        return NULL;
+
+    if ((init_context = NSS_InitContext(cert_dir, cert_prefix, key_prefix, secmod_name,
+                                        py_init_params ? &py_init_params->params : NULL,
+                                        flags)) == NULL) {
+        set_nspr_error(NULL);
+    }
+
+    if ((py_init_context = InitContext_new_from_NSSInitContext(init_context)) == NULL) {
+        NSS_ShutdownContext(init_context);
+        init_context = NULL;
+    }
+
+    if (cert_dir)    free(cert_dir);
+    if (cert_prefix) free(cert_prefix);
+    if (key_prefix)  free(key_prefix);
+    if (secmod_name) free(secmod_name);
+
+    if (init_context != NULL) {
+        return py_init_context;
+    } else {
+        return NULL;
+    }
+}
+
+PyDoc_STRVAR(nss_nss_shutdown_context_doc,
+"nss_shutdown_context(context) -> \n\
+\n\
+:Parameters:\n\
+    context : `InitContext` object\n\
+        A `InitContext` returned from a previous\n\
+        call to `nss_init_context`.\n\
+\n\
+xxx\n\
+");
+
+static PyObject *
+nss_nss_shutdown_context(PyObject *self, PyObject *args)
+{
+    InitContext *py_context = NULL;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTuple(args, "O!:nss_shutdown_context",
+                          &InitContextType, &py_context))
+        return NULL;
+
+    if (NSS_ShutdownContext(py_context->context) != SECSuccess) {
+        return set_nspr_error(NULL);
+    }
+
+    Py_RETURN_NONE;
+}
+
+PyDoc_STRVAR(nss_nss_shutdown_doc,
 "nss_shutdown()\n\
 \n\
 Closes the key and certificate databases that were opened by nss_init().\n\
@@ -13224,7 +14683,7 @@ with the error code SEC_ERROR_BUSY.\n\
 ");
 
 static PyObject *
-nss_shutdown(PyObject *self, PyObject *args)
+nss_nss_shutdown(PyObject *self, PyObject *args)
 {
     TraceMethodEnter(self);
 
@@ -14608,7 +16067,7 @@ cert_general_name_type_from_name(PyObject *self, PyObject *args)
 }
 
 PyDoc_STRVAR(cert_cert_usage_flags_doc,
-"cert_usage_str(flags) -> ['flag_name', ...]\n\
+"cert_usage_flags(flags) -> ['flag_name', ...]\n\
 \n\
 :Parameters:\n\
     flags : int\n\
@@ -14620,27 +16079,55 @@ list of their string names.\n\
 ");
 
 static PyObject *
-cert_cert_usage_flags(PyObject *self, PyObject *args, PyObject *kwds)
+cert_cert_usage_flags(PyObject *self, PyObject *args)
 {
-    static char *kwlist[] = {"flags", NULL};
     int flags = 0;
 
     TraceMethodEnter(self);
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "i:cert_usage_flags", kwlist,
-                                     &flags))
+    if (!PyArg_ParseTuple(args, "i:cert_usage_flags",
+                          &flags))
         return NULL;
 
     return cert_usage_flags(flags);
 }
 
+PyDoc_STRVAR(nss_nss_init_flags_doc,
+"nss_init_flags(flags) -> ['flag_name', ...]\n\
+\n\
+:Parameters:\n\
+    flags : int\n\
+        NSS_INIT* bit flags\n\
+\n\
+Given an integer with NSS_INIT*\n\
+(e.g. nss.NSS_INIT_READONLY) bit flags return a sorted\n\
+list of their string names.\n\
+");
+
+static PyObject *
+nss_nss_init_flags(PyObject *self, PyObject *args)
+{
+    int flags = 0;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTuple(args, "i:nss_init_flags",
+                          &flags))
+        return NULL;
+
+    return nss_init_flags(flags);
+}
+
 /* List of functions exported by this module. */
 static PyMethodDef
 module_methods[] = {
-    {"nss_is_initialized",               (PyCFunction)nss_is_initialized,                  METH_NOARGS,                nss_is_initialized_doc},
-    {"nss_init",                         (PyCFunction)nss_init,                            METH_VARARGS,               nss_init_doc},
+    {"nss_is_initialized",               (PyCFunction)nss_nss_is_initialized,              METH_NOARGS,                nss_nss_is_initialized_doc},
+    {"nss_init",                         (PyCFunction)nss_nss_init,                        METH_VARARGS,               nss_nss_init_doc},
     {"nss_init_nodb",                    (PyCFunction)nss_init_nodb,                       METH_NOARGS,                nss_init_nodb_doc},
-    {"nss_shutdown",                     (PyCFunction)nss_shutdown,                        METH_NOARGS,                nss_shutdown_doc},
+    {"nss_initialize",                   (PyCFunction)nss_nss_initialize,                  METH_VARARGS|METH_KEYWORDS, nss_nss_initialize_doc},
+    {"nss_init_context",                 (PyCFunction)nss_nss_init_context,                METH_VARARGS|METH_KEYWORDS, nss_nss_init_context_doc},
+    {"nss_shutdown",                     (PyCFunction)nss_nss_shutdown,                    METH_NOARGS,                nss_nss_shutdown_doc},
+    {"nss_shutdown_context",             (PyCFunction)nss_nss_shutdown_context,            METH_VARARGS,               nss_nss_shutdown_context_doc},
     {"set_password_callback",            (PyCFunction)pk11_set_password_callback,          METH_VARARGS,               pk11_set_password_callback_doc},
     {"find_cert_from_nickname",          (PyCFunction)pk11_find_cert_from_nickname,        METH_VARARGS,               pk11_find_cert_from_nickname_doc},
     {"find_key_by_any_cert",             (PyCFunction)pk11_find_key_by_any_cert,           METH_VARARGS,               pk11_find_key_by_any_cert_doc},
@@ -14688,7 +16175,8 @@ module_methods[] = {
     {"x509_key_usage",                   (PyCFunction)cert_x509_key_usage,                 METH_VARARGS,               cert_x509_key_usage_doc},
     {"x509_ext_key_usage",               (PyCFunction)cert_x509_ext_key_usage,             METH_VARARGS|METH_KEYWORDS, cert_x509_ext_key_usage_doc},
     {"x509_alt_name",                    (PyCFunction)cert_x509_alt_name,                  METH_VARARGS|METH_KEYWORDS, cert_x509_alt_name_doc},
-    {"cert_usage_flags",                 (PyCFunction)cert_cert_usage_flags,               METH_VARARGS|METH_KEYWORDS, cert_cert_usage_flags_doc},
+    {"cert_usage_flags",                 (PyCFunction)cert_cert_usage_flags,               METH_VARARGS,               cert_cert_usage_flags_doc},
+    {"nss_init_flags",                   (PyCFunction)nss_nss_init_flags,                  METH_VARARGS,               nss_nss_init_flags_doc},
     {NULL, NULL} /* Sentinel */
 };
 
@@ -14767,6 +16255,8 @@ initnss(void)
     TYPE_READY(AuthKeyIDType);
     TYPE_READY(BasicConstraintsType);
     TYPE_READY(CertificateRequestType);
+    TYPE_READY(InitParametersType);
+    TYPE_READY(InitContextType);
 
     /* Export C API */
     if (PyModule_AddObject(m, "_C_API", PyCObject_FromVoidPtr((void *)&nspr_nss_c_api, NULL)) != 0) {
@@ -14804,6 +16294,18 @@ initnss(void)
     AddIntConstant(certificateUsageProtectedObjectSigner);
     AddIntConstant(certificateUsageStatusResponder);
     AddIntConstant(certificateUsageAnyCA);
+
+    AddIntConstant(NSS_INIT_READONLY);
+    AddIntConstant(NSS_INIT_NOCERTDB);
+    AddIntConstant(NSS_INIT_NOMODDB);
+    AddIntConstant(NSS_INIT_FORCEOPEN);
+    AddIntConstant(NSS_INIT_NOROOTINIT);
+    AddIntConstant(NSS_INIT_OPTIMIZESPACE);
+    AddIntConstant(NSS_INIT_PK11THREADSAFE);
+    AddIntConstant(NSS_INIT_PK11RELOAD);
+    AddIntConstant(NSS_INIT_NOPK11FINALIZE);
+    AddIntConstant(NSS_INIT_RESERVED);
+    AddIntConstant(NSS_INIT_COOPERATE);
 
     AddIntConstant(ssl_kea_null);
     AddIntConstant(ssl_kea_rsa);
