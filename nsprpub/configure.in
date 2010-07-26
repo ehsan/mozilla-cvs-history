@@ -1698,8 +1698,12 @@ arm-android-eabi)
            elif test $_CC_BUILD -ge 762; then
               _USE_DYNAMICBASE=1
            fi
+           AC_DEFINE(_CRT_SECURE_NO_DEPRECATE)
+           AC_DEFINE(_CRT_NONSTDC_NO_DEPRECATE)
         elif test $_CC_MAJOR_VERSION -ge 15; then
            _USE_DYNAMICBASE=1    
+           AC_DEFINE(_CRT_SECURE_NO_WARNINGS)
+           AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
         fi
 
         if test -n "$_USE_DYNAMICBASE"; then
