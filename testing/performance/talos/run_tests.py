@@ -70,6 +70,23 @@ def shortName(name):
   else: 
     return name
 
+def isMemoryMetric(resultName):
+  memory_metric = ['memset', 'rss', 'pbytes', 'xres', 'modlistbytes'] #measured in bytes
+  return bool([ i for i in memory_metric if i in resultName])
+
+def filesizeformat(bytes):
+  """
+  Format the value like a 'human-readable' file size (i.e. 13 KB, 4.1 MB, 102
+  bytes, etc).
+  """
+  bytes = float(bytes)
+  formats = ('B', 'KB', 'MB')
+  for f in formats:
+    if bytes < 1024:
+      return "%.1f%s" % (bytes, f)
+    bytes /= 1024
+  return "%.1fGB" % bytes #has to be GB
+
 def process_tpformat(line):
   # each line of the string is of the format i;page_name;median;mean;min;max;time vals\n
   r = line.split(';')
@@ -155,8 +172,9 @@ def send_to_csv(csv_dir, results):
       raise talosError("Unknown print format in send_to_csv")
     for cd in counter_dump:
       for count_type in cd:
+        counterName = res + '_' + shortName(count_type)
         if csv_dir:
-          writer = csv.writer(open(os.path.join(csv_dir, res + '_' + count_type + '.csv'), "wb"))
+          writer = csv.writer(open(os.path.join(csv_dir, counterName + '.csv'), "wb"))
         else:
           writer = csv.writer(sys.stdout)
         writer.writerow(['i', 'value'])
@@ -164,21 +182,10 @@ def send_to_csv(csv_dir, results):
         for val in cd[count_type]:
           writer.writerow([i, val])
           i += 1
-        writer.writerow(['RETURN: ' + res + '_' + count_type + ': ' + avg_excluding_max(cd[count_type]),])
-
-def filesizeformat(bytes):
-    """
-    Format the value like a 'human-readable' file size (i.e. 13 KB, 4.1 MB, 102
-    bytes, etc).
-    """
-    bytes = float(bytes)
-    if bytes < 1024:
-        return "%dB" % (bytes)
-    if bytes < 1024 * 1024:
-        return "%.1fKB" % (bytes / 1024)
-    if bytes < 1024 * 1024 * 1024:
-        return "%.1fMB" % (bytes / (1024 * 1024))
-    return "%.1fGB" % (bytes / (1024 * 1024 * 1024))
+        if isMemoryMetric(shortName(count_type)):
+          writer.writerow(['RETURN: ' + counterName + ': ' + filesizeformat(avg_excluding_max(cd[count_type])),])
+        else:
+          writer.writerow(['RETURN: ' + counterName + ': ' + avg_excluding_max(cd[count_type]),])
 
 def construct_results (machine, testname, branch, sourcestamp, buildid, date, vals):
   """ 
@@ -269,7 +276,6 @@ def results_from_graph(links, results_server):
   first_results = 'RETURN:<br>'
   last_results = '' 
   full_results = '\nRETURN:<p style="font-size:smaller;">Details:<br>'  
-  memory_metric = ['memset', 'rss', 'pbytes', 'xres', 'modlistbytes']
   lines = links.split('\n')
   for line in lines:
     if line == "":
@@ -284,7 +290,7 @@ def results_from_graph(links, results_server):
       linkvalue = float(values[1])
       linkdetail = values[2]
     if linkvalue > -1:
-      if filter(lambda x: x in linkName, memory_metric): #measured in bytes
+      if isMemoryMetric(linkName):
         linkName += ": " + filesizeformat(linkvalue)
       else:
         linkName += ": " + str(linkvalue)
@@ -296,7 +302,6 @@ def results_from_graph(links, results_server):
       link = link_format % (url, linkName)
       last_results = last_results + '| ' + link + ' '
   full_results = first_results + full_results + last_results + '|</p>'
-  print 'RETURN: new graph links'
   print full_results
 
 def browserInfo(browser_config, devicemanager = None):
