@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: rsawrapr.c,v 1.13 2010/08/03 22:55:22 wtc%google.com Exp $ */
+/* $Id: rsawrapr.c,v 1.14 2010/08/04 00:29:45 wtc%google.com Exp $ */
 
 #include "blapi.h"
 #include "softoken.h"
@@ -1082,9 +1082,6 @@ RSA_CheckSignPSS(CK_RSA_PKCS_PSS_PARAMS *pss_params,
 	PORT_SetError(SEC_ERROR_NO_MEMORY);
 	return SECFailure;
     }
-
-    hashAlg = GetHashTypeFromMechanism(pss_params->hashAlg);
-    maskHashAlg = GetHashTypeFromMechanism(pss_params->mgf);
 
     rv = RSA_PublicKeyOp(&key->u.rsa, buffer, sign);
     if (rv != SECSuccess) {
