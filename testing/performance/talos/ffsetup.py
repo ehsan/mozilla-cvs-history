@@ -59,6 +59,21 @@ import utils
 from utils import talosError
 import subprocess
 
+def zip_extractall(zipfile, rootdir):
+    """Python 2.4 compatibility instead of ZipFile.extractall."""
+    for name in zipfile.namelist():
+        if name.endswith('/'):
+            os.makedirs(os.path.join(rootdir, name))
+        else:
+            destfile = os.path.join(rootdir, name)
+            destdir = os.path.dirname(destfile)
+            if not os.path.isdir(destdir):
+                os.makedirs(destdir)
+            data = zipfile.read(name)
+            f = open(destfile, 'w')
+            f.write(data)
+            f.close()
+
 class FFSetup(object):
 
     ffprocess = None
@@ -125,17 +140,7 @@ class FFSetup(object):
         tmpdir = None
         addon_id = None
         tmpdir = tempfile.mkdtemp(suffix = "." + os.path.split(addon)[-1])
-        compressed_file = zipfile.ZipFile(addon, "r")
-        #in python2.6 can use extractall, currently limited to python2.4
-        for name in compressed_file.namelist():
-            if name.endswith('/'):
-                os.makedirs(os.path.join(tmpdir, name))
-            else:
-                if not os.path.isdir(os.path.dirname(os.path.join(tmpdir, name))):
-                    os.makedirs(os.path.dirname(os.path.join(tmpdir, name)))
-                data = compressed_file.read(name)
-                f = open(os.path.join(tmpdir, name), 'w')
-                f.write(data) ; f.close()
+        zip_extractall(zipfile.ZipFile(addon), tmpdir)
         addon = tmpdir
 
         doc = minidom.parse(os.path.join(addon, 'install.rdf')) 
@@ -212,6 +217,19 @@ class FFSetup(object):
         todir = os.path.join(os.path.dirname(browser_path), os.path.basename(os.path.normpath(dir_path)))
         for fromfile in fromfiles:
             self.ffprocess.copyFile(fromfile, todir)
+
+    def InstallBundleInBrowser(self, browser_path, bundlename, bundle_path):
+        """
+        Take the given directory and unzip the bundle into
+        distribution/bundles/bundlename.
+        """
+        destpath = os.path.join(os.path.dirname(browser_path),
+                                'distribution', 'bundles', bundlename)
+        if os.path.exists(destpath):
+            shutil.rmtree(destpath)
+
+        os.makedirs(destpath)
+        zip_extractall(zipfile.ZipFile(bundle_path), destpath)
 
     def InitializeNewProfile(self, browser_path, process, child_process, browser_wait, extra_args, profile_dir, init_url, log):
         """Runs browser with the new profile directory, to negate any performance

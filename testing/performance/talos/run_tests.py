@@ -387,7 +387,8 @@ def test_file(filename, to_screen):
                     'branch'       : yaml_config['branch'],
                     'buildid'      : yaml_config['buildid'],
                     'env'          : yaml_config['env'],
-                    'dirs'         : yaml_config['dirs'],
+                    'dirs'         : yaml_config.get('dirs', {}),
+                    'bundles'      : yaml_config.get('bundles', {}),
                     'init_url'     : yaml_config['init_url']}
 
   if 'child_process' in yaml_config:
@@ -435,6 +436,8 @@ def test_file(filename, to_screen):
   browser_config['browser_path'] = os.path.normpath(browser_config['browser_path'])
   for dir in browser_config['dirs']:
     browser_config['dirs'][dir] = os.path.normpath(browser_config['dirs'][dir])
+  for bname in browser_config['bundles']:
+    browser_config['bundles'][bname] = os.path.normpath(browser_config['bundles'][bname])
   tests = yaml_config['tests']
   config_file.close()
   if (testdate != ''):

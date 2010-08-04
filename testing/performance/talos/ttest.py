@@ -204,6 +204,11 @@ class TTest(object):
                 msg = " already running before testing started (unclean system)"
                 utils.debug(browser_config['process'] + msg)
                 raise talosError("system not clean")
+
+            for bundlename in browser_config['bundles']:
+                self._ffsetup.InstallBundleInBrowser(browser_config['browser_path'],
+                                                     bundlename,
+                                                     browser_config['bundles'][bundlename])
   
             # add any provided directories to the installed browser
             for dir in browser_config['dirs']:
