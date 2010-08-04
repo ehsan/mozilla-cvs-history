@@ -21,6 +21,11 @@ window.onload = function ()  {
 			/* stop scrolling if we're at the end */
 			if (target.scrollTop == lastScrollPos) {
 				clearInterval(intervalId);
+				// For X11: screenX requests info from the
+				// server, so this waits for the server to
+				// complete the scrolling.
+				var sync = window.screenX;
+
 				var totalDuration = new Date() - start;
 				var avg = totalDuration/(target.scrollTop/stepSize);
 				tpRecordTime(Math.ceil(avg*1000)); // record microseconds
