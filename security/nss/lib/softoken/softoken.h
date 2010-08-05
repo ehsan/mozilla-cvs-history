@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: softoken.h,v 1.26 2010/08/04 00:37:39 wtc%google.com Exp $ */
+/* $Id: softoken.h,v 1.27 2010/08/05 00:19:26 wtc%google.com Exp $ */
 
 #ifndef _SOFTOKEN_H_
 #define _SOFTOKEN_H_
@@ -97,7 +97,7 @@ extern
 SECStatus RSA_SignPSS(CK_RSA_PKCS_PSS_PARAMS *pss_params,
 		      NSSLOWKEYPrivateKey *key, 
 		      unsigned char *output, unsigned int *output_len, 
-		      unsigned int max_output_len, unsigned char *input,
+		      unsigned int max_output_len, const unsigned char *input,
 		      unsigned int input_len);
 extern
 SECStatus RSA_CheckSign(NSSLOWKEYPublicKey *key, unsigned char *sign,
