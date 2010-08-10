@@ -21,6 +21,7 @@
 
 use strict;
 use Data::Dumper;
+use JSON::PP;
 require 'header.pl';
 
 my %colormap = (
@@ -86,6 +87,7 @@ sub do_static($) {
                   ['quickparse.txt', 'do_quickparse'],
                   ['stats.hdml', 'do_hdml'],
                   ['json.js', 'do_json'],
+                  ['json2.js', 'do_json2'],
                   ['status.vxml', 'do_vxml'] );
 
     my ($key, $value);
@@ -143,6 +145,38 @@ sub do_json($) {
     $line =~ s/\r//g;
     $line =~ s/: ,/: '',/g;
     print "$line\n";
+}
+
+##
+# Return all data that the waterfall normally would, but as valid JSON not HTML.
+##
+sub do_json2($) {
+    my ($form_ref) = (@_);
+    my $tinderbox_data = tb_load_data($form_ref);
+    if (!$form_ref->{static}) {
+        print "Content-Type: text/javascript; charset=utf-8\n";
+        print "Content-Access-Control: allow <*>\n\n";
+    }
+
+    my $json = new JSON::PP;
+
+    # there are recursive references in $tinderbox_data
+    $Data::Dumper::Indent = 0;
+    my $line = Dumper($tinderbox_data);
+    $line =~ s/=>/:/g;
+    $line =~ s/\$VAR1//g;
+    $line =~ s/undef/'undef'/g;
+    $line =~ s/\n/\\n/g;
+    $line =~ s/\r//g;
+    $line =~ s/: ,/: '',/g;
+    $line =~ s/^ = //g;
+    $line =~ s/;$//g;
+
+    $json = $json->loose(1);
+    $json = $json->allow_singlequote(1);
+    my $json_text = $json->encode($json->decode($line));
+
+    print $json_text;
 }
 
 sub print_page_head($$) {

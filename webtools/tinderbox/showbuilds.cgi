@@ -34,8 +34,8 @@ my %form = &split_cgi_args();
 &show_tree_selector(\%form),  exit if $form{tree} eq '';
 
 my $mode_count=0;
-foreach my $mode ('quickparse', 'express', 'rdf', 'flash',
-                  'static', 'panel', 'hdml', 'vxml', 'wml', 'json') {
+foreach my $mode ('quickparse', 'express', 'rdf', 'flash', 'static', 'panel', 
+                  'hdml', 'vxml', 'wml', 'json', 'json2') {
     $mode_count++ if defined($form{$mode});
 }
 
@@ -55,6 +55,7 @@ if ($mode_count > 1) {
 &do_vxml(\%form),             exit if $form{vxml};
 &do_wml(\%form),              exit if $form{wml}; 
 &do_json(\%form),             exit if $form{json}; 
+&do_json2(\%form),            exit if $form{json2}; 
 &do_tinderbox(\%form),        exit;
 
 # end of main
