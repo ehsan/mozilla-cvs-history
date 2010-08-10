@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: loader.c,v 1.47 2010/07/22 23:09:46 wtc%google.com Exp $ */
+/* $Id: loader.c,v 1.48 2010/08/10 22:03:36 rrelyea%redhat.com Exp $ */
 
 #include "loader.h"
 #include "prmem.h"
@@ -1705,3 +1705,13 @@ MGF1(HASH_HashType hashAlg, unsigned char *mask, unsigned int maskLen,
 	return SECFailure;
     return (vector->p_MGF1)(hashAlg, mask, maskLen, mgfSeed, mgfSeedLen);
 }
+
+SECStatus 
+TLS_P_hash(HASH_HashType hashAlg, const SECItem *secret, const char *label,
+           SECItem *seed, SECItem *result, PRBool isFIPS)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_TLS_P_hash)(hashAlg, secret, label, seed, result, isFIPS);
+}
+
