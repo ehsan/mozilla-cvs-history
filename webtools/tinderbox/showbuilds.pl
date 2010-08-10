@@ -159,24 +159,7 @@ sub do_json2($) {
     }
 
     my $json = new JSON::PP;
-
-    # there are recursive references in $tinderbox_data
-    $Data::Dumper::Indent = 0;
-    my $line = Dumper($tinderbox_data);
-    $line =~ s/=>/:/g;
-    $line =~ s/\$VAR1//g;
-    $line =~ s/undef/'undef'/g;
-    $line =~ s/\n/\\n/g;
-    $line =~ s/\r//g;
-    $line =~ s/: ,/: '',/g;
-    $line =~ s/^ = //g;
-    $line =~ s/;$//g;
-
-    $json = $json->loose(1);
-    $json = $json->allow_singlequote(1);
-    my $json_text = $json->encode($json->decode($line));
-
-    print $json_text;
+    print $json->encode($tinderbox_data);
 }
 
 sub print_page_head($$) {

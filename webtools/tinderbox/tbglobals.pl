@@ -677,6 +677,59 @@ sub tb_loadquickparseinfo {
   }
 }
 
+sub tb_load_json_data($) {
+    my ($form_ref) = @_;
+    my $tree = $form_ref->{tree};
+
+    return undef unless $tree;
+
+    &tb_load_treedata($tree);
+
+    my $td = {};
+    $td->{name} = $tree;
+    my $hours = $form_ref->{hours} || $::default_hours;
+    $td->{maxdate} = $form_ref->{maxdate};
+    # FIXME if not defined should be max builddate, for caching
+    if (!defined($td->{maxdate}) || $td->{maxdate} <= 0) {
+        $td->{maxdate} = $::nowdate;
+    }
+
+    # Mindate must be within $max_hours of maxdate
+    $td->{mindate} = $form_ref->{mindate};
+    # FIXME if not defined should be min builddate, for caching
+    if (!defined($td->{mindate})) {
+        $td->{mindate} = $td->{maxdate} - $hours*60*60;
+    } elsif ($td->{mindate} < $td->{maxdate} - $max_hours*60*60) {
+        $td->{mindate} = $td->{maxdate} - $max_hours*60*60;
+    }
+    $td->{mindate} = 0 if ($td->{mindate} < 0);
+
+    my $builds = &load_buildlog($td, $form_ref);
+
+    my @consolidated_builds = ();
+    foreach my $build (@$builds) {
+        my $buildname = $build->{buildname};
+
+        my $entry = {
+            buildname   => $buildname,
+            buildstatus => $build->{buildstatus},
+            buildtime   => $build->{buildtime},
+            endtime     => $build->{endtime},
+            errorparser => $build->{errorparser},
+            logfile     => $build->{logfile},
+        };
+        push(@consolidated_builds, $entry);
+    }
+    $td->{build_table} = \@consolidated_builds;
+    $td->{ignore_builds} = &tb_load_ignorebuilds($tree);
+    $td->{scrape_builds} = &tb_load_scrapebuilds($tree);
+    $td->{warning_builds} = &tb_load_warningbuilds($tree);
+    $td->{scrape} = &load_scrape($td);
+    $td->{warnings} = &load_warnings($td);
+
+    return $td;
+}
+
 sub tb_last_status($$) {
   my ($td, $build_index) = @_;
 
