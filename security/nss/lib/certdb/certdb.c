@@ -39,7 +39,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.104 2010/04/25 00:44:55 nelson%bolyard.com Exp $
+ * $Id: certdb.c,v 1.105 2010/08/11 22:52:06 wtc%google.com Exp $
  */
 
 #include "nssilock.h"
@@ -2110,7 +2110,7 @@ loser:
 	PORT_Free(nickname);
     }
 
-    nickname = "";
+    nickname = NULL;
     
 done:
     if ( firstname ) {
