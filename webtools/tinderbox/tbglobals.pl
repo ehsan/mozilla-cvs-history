@@ -704,10 +704,10 @@ sub tb_load_json_data($) {
     }
     $td->{mindate} = 0 if ($td->{mindate} < 0);
 
-    my $builds = &load_buildlog($td, $form_ref);
+    my $build_list = &load_buildlog($td, $form_ref);
 
     my @consolidated_builds = ();
-    foreach my $build (@$builds) {
+    foreach my $build (@$build_list) {
         my $buildname = $build->{buildname};
 
         my $entry = {
@@ -726,6 +726,31 @@ sub tb_load_json_data($) {
     $td->{warning_builds} = &tb_load_warningbuilds($tree);
     $td->{scrape} = &load_scrape($td);
     $td->{warnings} = &load_warnings($td);
+
+    &get_build_name_index(\$td, $build_list);
+    &get_build_time_index(\$td, $build_list);
+
+    # BEGIN FIXME this is all just to load note_array, make this easier
+    my ($ti, $bi, $ti1, $br, $br1);
+
+    my $build_table = [];
+
+    # Create the build table
+    #
+    for (my $ii=0; $ii < $td->{time_count}; $ii++){
+        $build_table->[$ii] = [];
+    }
+
+    # Populate the build table with build data
+    #
+    foreach $br (reverse @$build_list) {
+        $ti = $td->{build_time_index}->{$br->{buildtime}};
+        $bi = $td->{build_name_index}->{$br->{buildname}};
+        $build_table->[$ti][$bi] = $br;
+    }
+
+    &load_notes(\$td, \$build_table);
+    # END FIXME
 
     return $td;
 }
