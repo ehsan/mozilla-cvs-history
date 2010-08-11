@@ -152,7 +152,7 @@ sub do_json($) {
 ##
 sub do_json2($) {
     my ($form_ref) = (@_);
-    my $tinderbox_data = tb_load_data($form_ref);
+    my $tinderbox_data = tb_load_json_data($form_ref);
     if (!$form_ref->{static}) {
         print "Content-Type: text/javascript; charset=utf-8\n";
         print "Content-Access-Control: allow <*>\n\n";
