@@ -706,31 +706,14 @@ sub tb_load_json_data($) {
 
     my $build_list = &load_buildlog($td, $form_ref);
 
-    my @consolidated_builds = ();
-    foreach my $build (@$build_list) {
-        my $buildname = $build->{buildname};
+    my $build_name_index = &get_build_name_index(\$td, $build_list);
+    my $build_time_index = &get_build_time_index(\$td, $build_list);
+    my $ignore_builds = &tb_load_ignorebuilds($tree);
+    my $scrape_builds = &tb_load_scrapebuilds($tree);
+    my $warning_builds = &tb_load_warningbuilds($tree);
+    my $scrape = &load_scrape($td);
+    my $warnings = &load_warnings($td);
 
-        my $entry = {
-            buildname   => $buildname,
-            buildstatus => $build->{buildstatus},
-            buildtime   => $build->{buildtime},
-            endtime     => $build->{endtime},
-            errorparser => $build->{errorparser},
-            logfile     => $build->{logfile},
-        };
-        push(@consolidated_builds, $entry);
-    }
-    $td->{build_table} = \@consolidated_builds;
-    $td->{ignore_builds} = &tb_load_ignorebuilds($tree);
-    $td->{scrape_builds} = &tb_load_scrapebuilds($tree);
-    $td->{warning_builds} = &tb_load_warningbuilds($tree);
-    $td->{scrape} = &load_scrape($td);
-    $td->{warnings} = &load_warnings($td);
-
-    &get_build_name_index(\$td, $build_list);
-    &get_build_time_index(\$td, $build_list);
-
-    # BEGIN FIXME this is all just to load note_array, make this easier
     my ($ti, $bi, $ti1, $br, $br1);
 
     my $build_table = [];
@@ -750,9 +733,52 @@ sub tb_load_json_data($) {
     }
 
     &load_notes(\$td, \$build_table);
-    # END FIXME
 
-    return $td;
+    my @consolidated_builds = ();
+    foreach my $row (@$build_table) {
+      foreach my $build (@$row) {
+        if (!defined($build->{buildname})) {
+            next;
+        }
+        my $buildname = $build->{buildname};
+        my $build_logfile = $build->{logfile};
+
+        my $build_scrape_on = $scrape_builds->{$buildname};
+        my $build_warnings_on = $warning_builds->{$buildname};
+        my $build_ignored_on = $ignore_builds->{$buildname};
+
+        my $entry = {
+            buildname        => $buildname,
+            buildstatus      => $build->{buildstatus},
+            buildtime        => $build->{buildtime},
+            endtime          => $build->{endtime},
+            errorparser      => $build->{errorparser},
+            logfile          => $build_logfile,
+            scrape_enabled   => $build_scrape_on ? $build_scrape_on : 0,
+            warnings_enabled => $build_warnings_on ? $build_warnings_on : 0,
+            ignored          => $build_ignored_on ? $build_ignored_on : 0,
+        };
+
+        # optional, only attach if they have data
+        if (defined($td->{scrape}->{$build_logfile})) {
+            $entry->{scrape} = $td->{scrape}->{$build_logfile};
+        }
+        if ($build->{hasnote}) {
+            $entry->{notes} = $td->{note_array}[$build->{noteid}];
+        }
+        if (defined($td->{warnings}->{$build_logfile})) {
+            $entry->{warnings} = $td->{warnings}->{$build_logfile};
+        }
+        if ($build->{binaryurl} != "") {
+            $entry->{binaryurl} = $build->{binaryurl};
+        }
+
+        push(@consolidated_builds, $entry);
+      }
+    }
+    my $json->{builds} = \@consolidated_builds;
+
+    return $json;
 }
 
 sub tb_last_status($$) {
