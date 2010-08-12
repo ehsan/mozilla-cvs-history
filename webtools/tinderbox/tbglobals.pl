@@ -777,7 +777,8 @@ sub tb_load_json_data($) {
         push(@consolidated_builds, $entry);
       }
     }
-    my $json->{builds} = \@consolidated_builds;
+    my $json = {};
+    $json->{builds} = \@consolidated_builds;
 
     return $json;
 }
