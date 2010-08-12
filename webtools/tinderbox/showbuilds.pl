@@ -21,7 +21,7 @@
 
 use strict;
 use Data::Dumper;
-use JSON::PP;
+use JSON;
 require 'header.pl';
 
 my %colormap = (
@@ -158,7 +158,7 @@ sub do_json2($) {
         print "Content-Access-Control: allow <*>\n\n";
     }
 
-    my $json = new JSON::PP;
+    my $json = new JSON;
     print $json->encode($tinderbox_data);
 }
 
