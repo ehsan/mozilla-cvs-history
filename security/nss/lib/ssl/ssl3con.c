@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.143 2010/07/30 03:00:16 wtc%google.com Exp $ */
+/* $Id: ssl3con.c,v 1.144 2010/08/12 01:15:38 wtc%google.com Exp $ */
 
 #include "cert.h"
 #include "ssl.h"
@@ -86,7 +86,8 @@ static SECStatus ssl3_SendServerHello(       sslSocket *ss);
 static SECStatus ssl3_SendServerHelloDone(   sslSocket *ss);
 static SECStatus ssl3_SendServerKeyExchange( sslSocket *ss);
 static SECStatus ssl3_NewHandshakeHashes(    sslSocket *ss);
-static SECStatus ssl3_UpdateHandshakeHashes( sslSocket *ss, unsigned char *b, 
+static SECStatus ssl3_UpdateHandshakeHashes( sslSocket *ss,
+                                             const unsigned char *b,
                                              unsigned int l);
 
 static SECStatus Null_Cipher(void *ctx, unsigned char *output, int *outputLen,
@@ -3174,7 +3175,8 @@ loser:
 ** Caller must hold the ssl3Handshake lock.
 */
 static SECStatus
-ssl3_UpdateHandshakeHashes(sslSocket *ss, unsigned char *b, unsigned int l)
+ssl3_UpdateHandshakeHashes(sslSocket *ss, const unsigned char *b,
+			   unsigned int l)
 {
     SECStatus  rv = SECSuccess;
 
