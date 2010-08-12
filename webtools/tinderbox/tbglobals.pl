@@ -760,9 +760,10 @@ sub tb_load_json_data($) {
         };
 
         # optional, only attach if they have data
-        if (defined($td->{scrape}->{$build_logfile})) {
-            $entry->{scrape} = $td->{scrape}->{$build_logfile};
+        if (defined($scrape->{$build_logfile})) {
+            $entry->{scrape} = $scrape->{$build_logfile};
         }
+
         if ($build->{hasnote}) {
             $entry->{notes} = $td->{note_array}[$build->{noteid}];
         }
