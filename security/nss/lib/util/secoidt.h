@@ -43,7 +43,7 @@
 /*
  * secoidt.h - public data structures for ASN.1 OID functions
  *
- * $Id: secoidt.h,v 1.32 2010/07/20 23:53:31 wtc%google.com Exp $
+ * $Id: secoidt.h,v 1.33 2010/08/13 01:18:19 wtc%google.com Exp $
  */
 
 #include "secitem.h"
@@ -274,6 +274,9 @@ typedef enum {
     SEC_OID_X942_DIFFIE_HELMAN_KEY = 174,
 
     /* Netscape other name types */
+    /* SEC_OID_NETSCAPE_NICKNAME is an otherName field of type IA5String
+     * in the subjectAltName certificate extension.  NSS dropped support
+     * for SEC_OID_NETSCAPE_NICKNAME in NSS 3.13. */
     SEC_OID_NETSCAPE_NICKNAME = 175,
 
     /* Cert Server OIDS */

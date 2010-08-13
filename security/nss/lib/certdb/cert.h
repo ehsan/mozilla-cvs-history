@@ -37,7 +37,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.80 2010/04/30 07:47:47 nelson%bolyard.com Exp $
+ * $Id: cert.h,v 1.81 2010/08/13 01:18:18 wtc%google.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -1295,9 +1295,6 @@ CERT_GetCertificateNames(CERTCertificate *cert, PLArenaPool *arena);
 CERTGeneralName *
 CERT_GetConstrainedCertificateNames(CERTCertificate *cert, PLArenaPool *arena,
                                     PRBool includeSubjectCommonName);
-
-char *
-CERT_GetNickName(CERTCertificate   *cert, CERTCertDBHandle *handle, PLArenaPool *nicknameArena);
 
 /*
  * Creates or adds to a list of all certs with a give subject name, sorted by
