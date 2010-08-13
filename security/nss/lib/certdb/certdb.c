@@ -39,7 +39,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.105 2010/08/11 22:52:06 wtc%google.com Exp $
+ * $Id: certdb.c,v 1.106 2010/08/13 01:08:48 wtc%google.com Exp $
  */
 
 #include "nssilock.h"
@@ -2550,18 +2550,16 @@ CERT_ImportCerts(CERTCertDBHandle *certdb, SECCertUsage usage,
 	if ( keepCerts ) {
 	    for ( i = 0; i < fcerts; i++ ) {
                 char* canickname = NULL;
-                PRBool freeNickname = PR_FALSE;
+                PRBool isCA;
 
 		SECKEY_UpdateCertPQG(certs[i]);
                 
-                if ( CERT_IsCACert(certs[i], NULL) ) {
+                isCA = CERT_IsCACert(certs[i], NULL);
+                if ( isCA ) {
                     canickname = CERT_MakeCANickname(certs[i]);
-                    if ( canickname != NULL ) {
-                        freeNickname = PR_TRUE;
-                    }
                 }
 
-		if(CERT_IsCACert(certs[i], NULL) && (fcerts > 1)) {
+		if(isCA && (fcerts > 1)) {
 		    /* if we are importing only a single cert and specifying
 		     * a nickname, we want to use that nickname if it a CA,
 		     * otherwise if there are more than one cert, we don't
@@ -2574,9 +2572,7 @@ CERT_ImportCerts(CERTCertDBHandle *certdb, SECCertUsage usage,
                                                 nickname?nickname:canickname, NULL);
 		}
 
-                if (PR_TRUE == freeNickname) {
-                    PORT_Free(canickname);
-                }
+                PORT_Free(canickname);
 		/* don't care if it fails - keep going */
 	    }
 	}
