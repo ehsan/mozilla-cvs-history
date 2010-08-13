@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: blapi.h,v 1.36 2010/08/10 22:03:36 rrelyea%redhat.com Exp $ */
+/* $Id: blapi.h,v 1.37 2010/08/13 01:01:41 wtc%google.com Exp $ */
 
 #ifndef _BLAPI_H_
 #define _BLAPI_H_
@@ -1029,7 +1029,7 @@ extern SHA384Context * SHA384_Resurrect(unsigned char *space, void *arg);
 extern void SHA384_Clone(SHA384Context *dest, SHA384Context *src);
 
 /****************************************
- * implement TLS 1.0, 1.1 and 1.2 Pseudo Random Function (PRF)
+ * implement TLS 1.0 Pseudo Random Function (PRF) and TLS P_hash function
  */
 
 extern SECStatus
