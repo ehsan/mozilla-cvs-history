@@ -35,6 +35,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * FIXME - below are general things which need fixing
+ *
+ * repr() vs. str() class methods. repr should just use the default of 
+ * printing out the object class name and object pointer, not the contents
+ * of the object, that's the role of str().
+ *
+ * When receiving string parameters via PyArg_ParseTuple*() we should
+ * allow both str and unicode objects and encode unicode to UTF-8
+ * this would be done by changing the 's' format specifier to 'es'
+ * and adding a 'utf-8' parameter prior to the string address parameter.
+ * Unlike the 's' format specifier the char pointer will need to be 
+ * freed because it's copy of the encoded string.
+ *
+ * We should consider setting the default encoding to UTF-8 when our
+ * module loads. This is global and would affect all other modules loaded
+ * into the Python application. At the moment the default is 'ascii' which
+ * breaks anything which is expecting a sane default.
+ */
+
 #if 0
 
 //Template for new classes

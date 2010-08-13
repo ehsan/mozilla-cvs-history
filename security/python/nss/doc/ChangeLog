@@ -22,6 +22,9 @@
       NSS_INIT_RESERVED
       NSS_INIT_COOPERATE
 
+  * The following file was added:
+      test/setup_certs.py
+
 2010-05-28  John Dennis  <jdennis@redhat.com> 0.9
 
   * Correct definciencies in auth_certificate_callback found in several

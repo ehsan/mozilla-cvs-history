@@ -112,7 +112,7 @@ server's hostname will be "myhost.example.com".
 3. Create a server certificate and sign it. Our example server will
    use this::
 
-     certutil -d pki -S -c myca -s "CN=myhost.example.com" -n myhost -t "C,C,C" -m 2
+     certutil -d pki -S -c myca -s "CN=myhost.example.com" -n myhost -t "u,u,u" -m 2
 
    This creates an individual certificate issued by the CA "myca" and
    adds it to the certificate database with a subject of
@@ -295,5 +295,5 @@ FAQ
 To be added
 
 """
-__version__ = '0.9'
+__version__ = '0.10'
 

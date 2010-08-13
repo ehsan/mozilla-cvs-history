@@ -57,12 +57,13 @@ REQUIRE_CLIENT_CERT_ALWAYS = 4
 # command line parameters, default them to something reasonable
 client = False
 server = False
-password = ''
+password = 'passwd'
 use_ssl = True
 client_cert_action = NO_CLIENT_CERT
 certdir = 'pki'
 hostname = os.uname()[1]
-nickname = hostname.split('.')[0]
+server_nickname = 'test_server'
+client_nickname = 'test_user'
 port = 1234
 
 
@@ -189,7 +190,7 @@ def Client():
         sock.set_handshake_callback(handshake_callback)
 
         # Provide a callback to supply our client certificate info
-        sock.set_client_auth_data_callback(client_auth_data_callback, nickname,
+        sock.set_client_auth_data_callback(client_auth_data_callback, client_nickname,
                                            password, nss.get_default_certdb())
 
         # Provide a callback to verify the servers certificate
@@ -229,7 +230,7 @@ def Server():
     ssl.config_server_session_id_cache()
 
     # Get our certificate and private key
-    server_cert = nss.find_cert_from_nickname(nickname, password)
+    server_cert = nss.find_cert_from_nickname(server_nickname, password)
     priv_key = nss.find_key_by_any_cert(server_cert, password)
     server_cert_kea = server_cert.find_kea_type();
 
@@ -301,7 +302,8 @@ usage_str = '''
 -S --server     run as the server (default: %(server)s)
 -d --certdir    certificate directory (default: %(certdir)s)
 -h --hostname   host to connect to (default: %(hostname)s)
--n --nickname   certificate nickname (default: %(nickname)s)
+-n --server_nickname server certificate nickname (default: %(server_nickname)s)
+-N --client_nickname client certificate nickname (default: %(client_nickname)s)
 -w --password   certificate database password (default: %(password)s)
 -p --port       host port (default: %(port)s)
 -e --encrypt    use SSL (default) (default: %(encrypt)s)
@@ -316,7 +318,8 @@ usage_str = '''
        'server'              : server,
        'certdir'             : certdir,
        'hostname'            : hostname,
-       'nickname'            : nickname,
+       'server_nickname'     : server_nickname,
+       'client_nickname'     : client_nickname,
        'password'            : password,
        'port'                : port,
        'encrypt'             : use_ssl is True,
@@ -331,9 +334,10 @@ def usage():
     print usage_str
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "Hd:h:n:w:p:CSeEfFrR",
+    opts, args = getopt.getopt(sys.argv[1:], "Hd:h:n:N:w:p:CSeEfFrR",
                                ["help", "certdir=", "hostname=",
-                                "nickname=", "password=", "port=",
+                                "server_nickname=", "client_nickname=",
+                                "password=", "port=",
                                 "client", "server", "encrypt", "noencrypt",
                                 "require_cert_once", "require_cert_always",
                                 "request_cert_once", "request_cert_always",
@@ -347,31 +351,36 @@ except getopt.GetoptError:
 for o, a in opts:
     if o in ("-d", "--certdir"):
         certdir = a
-    if o in ("-h", "--hostname"):
+    elif o in ("-h", "--hostname"):
         hostname = a
-    if o in ("-n", "--nickname"):
-        nickname = a
-    if o in ("-w", "--password"):
+    elif o in ("-n", "--server_nickname"):
+        server_nickname = a
+    elif o in ("-N", "--client_nickname"):
+        client_nickname = a
+    elif o in ("-w", "--password"):
         password = a
-    if o in ("-p", "--port"):
+    elif o in ("-p", "--port"):
         port = int(a)
-    if o in ("-C", "--client"):
+    elif o in ("-C", "--client"):
         client = True
-    if o in ("-S", "--server"):
+    elif o in ("-S", "--server"):
         server = True
-    if o in ("-e", "--encrypt"):
+    elif o in ("-e", "--encrypt"):
         use_ssl = True
-    if o in ("-E", "--noencrypt"):
+    elif o in ("-E", "--noencrypt"):
         use_ssl = False
-    if o in ("-f", "--require_cert_once"):
+    elif o in ("-f", "--require_cert_once"):
         client_cert_action = REQUIRE_CLIENT_CERT_ONCE
-    if o in ("-F", "--require_cert_always"):
+    elif o in ("-F", "--require_cert_always"):
         client_cert_action = REQUIRE_CLIENT_CERT_ALWAYS
-    if o in ("-r", "--request_cert_once"):
+    elif o in ("-r", "--request_cert_once"):
         client_cert_action = REQUEST_CLIENT_CERT_ONCE
-    if o in ("-R", "--request_cert_always"):
+    elif o in ("-R", "--request_cert_always"):
         client_cert_action = REQUEST_CLIENT_CERT_ALWAYS
-    if o in ("-H", "--help"):
+    elif o in ("-H", "--help"):
+        usage()
+        sys.exit()
+    else:
         usage()
         sys.exit()
 
