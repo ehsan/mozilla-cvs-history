@@ -12,6 +12,7 @@ doc/examples/verify_server.py
 lib/httplib.py
 test/cipher_test.py
 test/digest_test.py
+test/setup_certs.py
 test/test_cert_components.py
 src/NSPRerrs.h
 src/SECerrs.h
