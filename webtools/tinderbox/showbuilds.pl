@@ -133,7 +133,7 @@ sub do_json($) {
     my $tinderbox_data = tb_load_data($form_ref);
     if (!$form_ref->{static}) {
         print "Content-Type: text/javascript; charset=utf-8\n";
-        print "Content-Access-Control: allow <*>\n\n";
+        print "Access-Control-Allow-Origin: *\n\n";
     }
     print "tinderbox_data";
     $Data::Dumper::Indent = 0;
@@ -155,7 +155,7 @@ sub do_json2($) {
     my $tinderbox_data = tb_load_json_data($form_ref);
     if (!$form_ref->{static}) {
         print "Content-Type: text/javascript; charset=utf-8\n";
-        print "Content-Access-Control: allow <*>\n\n";
+        print "Access-Control-Allow-Origin: *\n\n";
     }
 
     my $json = new JSON;
