@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslerr.h,v 1.11 2010/06/24 09:24:18 nelson%bolyard.com Exp $ */
+/* $Id: sslerr.h,v 1.12 2010/08/16 18:19:02 wtc%google.com Exp $ */
 #ifndef __SSL_ERR_H_
 #define __SSL_ERR_H_
 
@@ -200,6 +200,8 @@ SSL_ERROR_RENEGOTIATION_NOT_ALLOWED     = (SSL_ERROR_BASE + 112),
 SSL_ERROR_UNSAFE_NEGOTIATION            = (SSL_ERROR_BASE + 113),
 
 SSL_ERROR_RX_UNEXPECTED_UNCOMPRESSED_RECORD	= (SSL_ERROR_BASE + 114),
+
+SSL_ERROR_WEAK_SERVER_KEY               = (SSL_ERROR_BASE + 115),
 
 SSL_ERROR_END_OF_LIST	/* let the c compiler determine the value of this. */
 } SSLErrorCodes;
