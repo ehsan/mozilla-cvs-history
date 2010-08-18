@@ -91,7 +91,7 @@ $productThrottling = array(
          '3.5.11' => 0
      ),
      'Thunderbird' => array(
-         '2.0.0.24' => 0
+         '2.0.0.24' => 10
      ),
 );
 
