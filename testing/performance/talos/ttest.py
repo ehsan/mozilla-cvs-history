@@ -149,6 +149,8 @@ class TTest(object):
         elif platform.system() == 'Linux':
             if platform.machine() == 'armv6l':
                 stackwalkpaths = ['maemo', 'minidump_stackwalk']
+            elif '64' in platform.architecture()[0]: #are we 64 bit?
+                stackwalkpaths = ['linux64', 'minidump_stackwalk']
             else:
                 stackwalkpaths = ['linux', 'minidump_stackwalk']
         elif platform.system() == 'Darwin':
