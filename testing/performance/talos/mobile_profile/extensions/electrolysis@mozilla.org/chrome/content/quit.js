@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Mozilla Automated Testing Code
+ * The Original Code is The Original Code is Mozilla Automated Testing Code
  *
  * The Initial Developer of the Original Code is
  * Mozilla Corporation.
@@ -40,37 +40,6 @@
   These files did not have a license
 */
 
-var ipcMode = false; // running in e10s build and need to use IPC?
-try {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var ipcsanity = Components.classes["@mozilla.org/preferences-service;1"]
-                    .getService(Components.interfaces.nsIPrefBranch);
-  ipcsanity.setIntPref("mochitest.ipcmode", 0);
-} catch (e) {
-  ipcMode = true;
-}
-
-function contentDispatchEvent(type, data, sync) {
-  if (typeof(data) === "undefined") {
-    data = {};
-  }
-
-  var element = document.createEvent("datacontainerevent");
-  element.initEvent("contentEvent", true, false);
-  element.setData("sync", sync);
-  element.setData("type", type);
-  element.setData("data", JSON.stringify(data));
-  document.dispatchEvent(element);
-}
-
-function contentSyncEvent(type, data) {
-  contentDispatchEvent(type, data, 1);
-}
-
-function contentAsyncEvent(type, data) {
-  contentDispatchEvent(type, data, 0);
-}
-
 function canQuitApplication()
 {
   var os = Components.classes["@mozilla.org/observer-service;1"]
@@ -79,7 +48,7 @@ function canQuitApplication()
   {
     return true;
   }
-
+  
   try 
   {
     var cancelQuit = Components.classes["@mozilla.org/supports-PRBool;1"]
@@ -95,29 +64,11 @@ function canQuitApplication()
   catch (ex) 
   {
   }
-  os.notifyObservers(null, "quit-application-granted", null);
   return true;
 }
 
 function goQuitApplication()
 {
-  if (ipcMode == true) {
-    contentAsyncEvent("QuitApplication");
-    return;
-  }
-
-  const privs = 'UniversalPreferencesRead UniversalPreferencesWrite ' +
-    'UniversalXPConnect';
-
-  try
-  {
-    netscape.security.PrivilegeManager.enablePrivilege(privs);
-  }
-  catch(ex)
-  {
-    throw('goQuitApplication: privilege failure ' + ex);
-  }
-
   if (!canQuitApplication())
   {
     return false;
@@ -133,7 +84,6 @@ function goQuitApplication()
     appService = Components.classes[kAppStartup].
       getService(Components.interfaces.nsIAppStartup);
     forceQuit  = Components.interfaces.nsIAppStartup.eForceQuit;
-
   }
   else if (kAppShell in Components.classes)
   {
@@ -144,24 +94,6 @@ function goQuitApplication()
   else
   {
     throw 'goQuitApplication: no AppStartup/appShell';
-  }
-
-  var windowManager = Components.
-    classes['@mozilla.org/appshell/window-mediator;1'].getService();
-
-  var windowManagerInterface = windowManager.
-    QueryInterface(Components.interfaces.nsIWindowMediator);
-
-  var enumerator = windowManagerInterface.getEnumerator(null);
-
-  while (enumerator.hasMoreElements())
-  {
-    var domWindow = enumerator.getNext();
-    if (("tryToClose" in domWindow) && !domWindow.tryToClose())
-    {
-      return false;
-    }
-    domWindow.close();
   }
 
   try
@@ -175,5 +107,4 @@ function goQuitApplication()
 
   return true;
 }
-
 

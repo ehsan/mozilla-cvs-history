@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 <!-- ***** BEGIN LICENSE BLOCK *****
    - Version: MPL 1.1/GPL 2.0/LGPL 2.1
    -
@@ -11,16 +12,14 @@
    - for the specific language governing rights and limitations under the
    - License.
    -
-   - The Original Code is Windows performance test.
+   - The Original Code is Mozilla's layout acceptance tests.
    -
-   - The Initial Developer of the Original Code is
-   - Google Inc.
-   - Portions created by the Initial Developer are Copyright (C) 1999
+   - The Initial Developer of the Original Code is the Mozilla Foundation.
+   - Portions created by the Initial Developer are Copyright (C) 2006
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s):
-   - Annie Sullivan <annie.sullivan@gmail.com>
-   - Alice Nodelman <anodelman@mozilla.com>
+   -   Joel Maher <joel.maher@gmail.com>, Mozilla Corporation (original author)
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,23 +35,36 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-  <head>
-    <script language="Javascript" type="text/javascript" src="page_load_test/quit.js"></script>
-    <title>shutdown script</title>
-  </head>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 
-  <body onload="
-	if (window.dump) {
-            dump('__metrics\tScreen width/height:' + screen.width + '/' + screen.height + '\n\tcolorDepth:' + screen.colorDepth + '\n');
-            dump('\tBrowser inner width/height: ' + window.innerWidth + '/' + window.innerHeight + '\n');
-//JMAHER: this is temporarily commented out because this hangs the fennec browser
-//            dump('\tBrowser outer width/height: ' + window.outerWidth + '/' + window.outerHeight);
-            dump('__metrics')
-	}
-	goQuitApplication();
-	window.close();
-">
-  </body>
-</html>
+<overlay id="browserTestOverlay"
+         xmlns:html="http://www.w3.org/1999/xhtml"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+         xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<window>
+<script type="application/javascript" src="chrome://talos/content/quit.js" />
+<script type="application/javascript;version=1.7">
+
+function messageHandler(m) {
+  var data = m.json.data;
+
+  switch(m.json.type) {
+  case 'QuitApplication':
+    messageManager.removeMessageListener("chromeEvent", messageHandler);
+    goQuitApplication();
+    break;
+  default:
+    break;
+  }
+}
+
+function setup() {
+  window.removeEventListener("load", setup, false);
+  messageManager.loadFrameScript("chrome://talos/content/ipc.js", true);
+  messageManager.addMessageListener("chromeEvent", messageHandler);
+}
+
+window.addEventListener("load", setup, false);
+</script>
+</window></overlay>

@@ -23,15 +23,11 @@
     }
     parseParams();
     if (test == "Zoom" || test == "PanDown") {
-      var element = document.createElement("myExtensionDataElement");
-      element.setAttribute("attribute1", test);
-
-      element.setAttribute("webServer", webServer);
-      document.documentElement.appendChild(element);
-
-      var evt = document.createEvent("Events");
-      evt.initEvent("myExtensionEvent", true, false);
-      element.dispatchEvent(evt);
+      var element = document.createEvent("datacontainerevent");
+      element.initEvent("fbContentEvent", true, false);
+      element.setData("test", test);
+      element.setData("webServer", webServer);
+      document.dispatchEvent(element);
     }
   </script>
 </body>
