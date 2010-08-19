@@ -21,7 +21,6 @@
 
 use strict;
 use Data::Dumper;
-use JSON;
 require 'header.pl';
 
 my %colormap = (
@@ -152,14 +151,11 @@ sub do_json($) {
 ##
 sub do_json2($) {
     my ($form_ref) = (@_);
-    my $tinderbox_data = tb_load_json_data($form_ref);
     if (!$form_ref->{static}) {
         print "Content-Type: text/javascript; charset=utf-8\n";
         print "Access-Control-Allow-Origin: *\n\n";
     }
-
-    my $json = new JSON;
-    print $json->encode($tinderbox_data);
+    tb_print_json_data($form_ref);
 }
 
 sub print_page_head($$) {

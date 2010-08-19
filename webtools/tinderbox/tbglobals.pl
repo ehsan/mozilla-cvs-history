@@ -26,6 +26,7 @@ use Digest::MD5 qw(md5_hex);
 use Tie::IxHash;
 use FileHandle;
 use Fcntl qw(:DEFAULT :flock);
+use JSON;
 
 require 'header.pl';
 
@@ -677,7 +678,7 @@ sub tb_loadquickparseinfo {
   }
 }
 
-sub tb_load_json_data($) {
+sub tb_print_json_data($) {
     my ($form_ref) = @_;
     my $tree = $form_ref->{tree};
 
@@ -734,9 +735,14 @@ sub tb_load_json_data($) {
 
     &load_notes(\$td, \$build_table);
 
-    my @consolidated_builds = ();
+    my $json = new JSON;
+    print '{"builds":[';
+    my $count = 0;
     foreach my $row (@$build_table) {
       foreach my $build (@$row) {
+        if ($count > 0) {
+          print ',';
+        }
         if (!defined($build->{buildname})) {
             next;
         }
@@ -774,13 +780,11 @@ sub tb_load_json_data($) {
             $entry->{binaryurl} = $build->{binaryurl};
         }
 
-        push(@consolidated_builds, $entry);
+        print $json->encode($entry);
+        $count++;
       }
     }
-    my $json = {};
-    $json->{builds} = \@consolidated_builds;
-
-    return $json;
+    print ']}';
 }
 
 sub tb_last_status($$) {
