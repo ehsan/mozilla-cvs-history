@@ -942,7 +942,8 @@ sub CreatePastReleasePatchinfo {
     }
 
     # Multiply by two for the partial and the complete...
-    $totalPastUpdates *= 2;
+    # DISABLED IN BUG 514040
+    #$totalPastUpdates *= 2;
 
     printf("Past release patch info - $totalPastUpdates to create\n");
 
@@ -1104,13 +1105,14 @@ sub CreatePastReleasePatchinfo {
                     # Now, write the same information as a partial, since
                     # for now, we publish the "partial" and "complete" updates
                     # as pointers to the complete.
-                    $completePatch->{'type'} = 'partial';
-                    $completePatch->{'info_path'} = "$ausPrefix/partial.txt";
-                    PrintProgress(total => $totalPastUpdates,
-                     current => ++$patchInfoFilesCreated,
-                     string => "$prettyPrefix/$fromAusPlatform/$locale/$channel/partial"); 
-                    write_patch_info(patch => $completePatch,
-                                     schemaVer => $patchLocaleNode->{'schema'});
+                    # DISABLED IN BUG 514040
+                    #$completePatch->{'type'} = 'partial';
+                    #$completePatch->{'info_path'} = "$ausPrefix/partial.txt";
+                    #PrintProgress(total => $totalPastUpdates,
+                    # current => ++$patchInfoFilesCreated,
+                    # string => "$prettyPrefix/$fromAusPlatform/$locale/$channel/partial"); 
+                    #write_patch_info(patch => $completePatch,
+                    #                 schemaVer => $patchLocaleNode->{'schema'});
                     print("done\n");
                 }
             }
