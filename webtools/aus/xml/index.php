@@ -84,6 +84,16 @@ $clean['channel'] = isset($path[6]) ? trim($path[6]) : null;
 $clean['platformVersion'] = isset($path[7]) ? trim($path[7]) : null;
 $clean['dist'] = isset($path[8]) ? trim($path[8]) : null;
 $clean['distVersion'] = isset($path[9]) ? trim($path[9]) : null;
+
+// Check to see if we have a beta on PPC, and if so don't update since beta 4
+// doesn't work on PPC.  See bug 588412.
+if ( $clean['product'] == 'Firefox'
+     && (preg_match('/^4\.0.*$/', $clean['version']) || preg_match('/^3\.7.*$/', $clean['version']))
+     && strpos($_SERVER['HTTP_USER_AGENT'], 'PPC')) {
+        $xml->printXml();
+        exit;
+}
+
  
 // Check to see if the user is explicitly requesting an update.  If they are,
 // skip throttling.  If they aren't, and throttling is enabled, first check
