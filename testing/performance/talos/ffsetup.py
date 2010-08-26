@@ -63,7 +63,8 @@ def zip_extractall(zipfile, rootdir):
     """Python 2.4 compatibility instead of ZipFile.extractall."""
     for name in zipfile.namelist():
         if name.endswith('/'):
-            os.makedirs(os.path.join(rootdir, name))
+            if not os.path.exists(os.path.join(rootdir, name)):
+                os.makedirs(os.path.join(rootdir, name))
         else:
             destfile = os.path.join(rootdir, name)
             destdir = os.path.dirname(destfile)
