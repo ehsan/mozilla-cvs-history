@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsecur.c,v 1.44 2010/07/30 03:00:17 wtc%google.com Exp $ */
+/* $Id: sslsecur.c,v 1.45 2010/08/26 18:04:41 wtc%google.com Exp $ */
 #include "cert.h"
 #include "secitem.h"
 #include "keyhi.h"
@@ -1358,16 +1358,9 @@ SSL_DataPending(PRFileDesc *fd)
     ss = ssl_FindSocket(fd);
 
     if (ss && ss->opt.useSecurity) {
-
-	ssl_Get1stHandshakeLock(ss);
-	ssl_GetSSL3HandshakeLock(ss);
-
 	ssl_GetRecvBufLock(ss);
 	rv = ss->gs.writeOffset - ss->gs.readOffset;
 	ssl_ReleaseRecvBufLock(ss);
-
-	ssl_ReleaseSSL3HandshakeLock(ss);
-	ssl_Release1stHandshakeLock(ss);
     }
 
     return rv;
