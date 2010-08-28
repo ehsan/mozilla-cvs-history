@@ -213,10 +213,6 @@ ifeq ($(OS_TARGET),MacOSX)
 OS_LIBS		= -framework CoreServices -framework CoreFoundation
 endif
 
-ifdef GC_LEAK_DETECTOR
-EXTRA_LIBS	= -L$(dist_libdir) -lboehm
-endif
-
 EXTRA_LIBS += $(OS_LIBS)
 
 #
@@ -311,10 +307,6 @@ OBJS += \
 	cplus/$(OBJDIR)/rcnetio.$(OBJ_SUFFIX) \
 	cplus/$(OBJDIR)/rcthread.$(OBJ_SUFFIX) \
 	cplus/$(OBJDIR)/rctime.$(OBJ_SUFFIX)
-endif
-
-ifdef GC_LEAK_DETECTOR
-OBJS += memory/$(OBJDIR)/prgcleak.$(OBJ_SUFFIX)
 endif
 
 ifeq ($(OS_ARCH), WINNT)
