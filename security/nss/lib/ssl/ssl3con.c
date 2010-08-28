@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.146 2010/08/28 00:56:10 wtc%google.com Exp $ */
+/* $Id: ssl3con.c,v 1.147 2010/08/28 18:22:07 nelson%bolyard.com Exp $ */
 
 #include "cert.h"
 #include "ssl.h"
@@ -2848,7 +2848,11 @@ ssl3_DeriveMasterSecret(sslSocket *ss, PK11SymKey *pms)
     }
 
     if (pms || !pwSpec->master_secret) {
-	master_params.pVersion                     = &pms_version;
+	if (isDH) {
+	    master_params.pVersion                     = NULL;
+	} else {
+	    master_params.pVersion                     = &pms_version;
+	}
 	master_params.RandomInfo.pClientRandom     = cr;
 	master_params.RandomInfo.ulClientRandomLen = SSL3_RANDOM_LENGTH;
 	master_params.RandomInfo.pServerRandom     = sr;
