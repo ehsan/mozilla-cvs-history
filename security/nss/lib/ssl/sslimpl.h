@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslimpl.h,v 1.79 2010/08/28 00:56:10 wtc%google.com Exp $ */
+/* $Id: sslimpl.h,v 1.80 2010/08/28 18:52:46 wtc%google.com Exp $ */
 
 #ifndef __sslimpl_h_
 #define __sslimpl_h_
@@ -1259,9 +1259,11 @@ extern PRBool    ssl3_CanFalseStart(sslSocket *ss);
 #define SSL_UNLOCK_WRITER(ss)		if (ss->sendLock) PZ_Unlock(ss->sendLock)
 
 /* firstHandshakeLock -> recvBufLock */
+/* The assertion is commented out because it's too strict when reentering
+ * firstHandshakeLock.  See bug 588698 comment 25. */
 #define ssl_Get1stHandshakeLock(ss)     \
     { if (!ss->opt.noLocks) { \
-	  PORT_Assert(!ssl_HaveRecvBufLock(ss)); \
+	  /*PORT_Assert(!ssl_HaveRecvBufLock(ss));*/ \
 	  PZ_EnterMonitor((ss)->firstHandshakeLock); \
       } }
 #define ssl_Release1stHandshakeLock(ss) \
