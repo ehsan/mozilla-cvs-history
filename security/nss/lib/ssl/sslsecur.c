@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsecur.c,v 1.46 2010/08/28 00:56:10 wtc%google.com Exp $ */
+/* $Id: sslsecur.c,v 1.47 2010/08/28 21:28:48 wtc%google.com Exp $ */
 #include "cert.h"
 #include "secitem.h"
 #include "keyhi.h"
@@ -84,7 +84,8 @@
  *
  * 3.   SECWouldBlock was returned by one of the callback functions, via
  *	one of these paths:
- * -	ssl2_HandleMessage() -> ssl2_HandleRequestCertificate() -> ss->getClientAuthData()
+ * -	ssl2_HandleMessage() -> ssl2_HandleRequestCertificate() ->
+ *	ss->getClientAuthData()
  *
  * -	ssl2_HandleServerHelloMessage() -> ss->handleBadCert()
  *
