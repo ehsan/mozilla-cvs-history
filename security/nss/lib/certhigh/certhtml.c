@@ -37,7 +37,7 @@
 /*
  * certhtml.c --- convert a cert to html
  *
- * $Id: certhtml.c,v 1.8 2007/05/15 23:14:25 julien.pierre.bugs%sun.com Exp $
+ * $Id: certhtml.c,v 1.9 2010/08/28 17:52:45 nelson%bolyard.com Exp $
  */
 
 #include "seccomon.h"
@@ -205,7 +205,7 @@ char *CERT_FormatName (CERTName *name)
     /* allocate buffer */
     buf = (char *)PORT_Alloc(len);
     if ( !buf ) {
-	return(0);
+	goto loser;
     }
 
     tmpbuf = buf;
