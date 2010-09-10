@@ -33,7 +33,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nsslowhash.c,v 1.5 2010/08/18 05:55:38 emaldona%redhat.com Exp $ */
+/* $Id: nsslowhash.c,v 1.6 2010/09/10 00:42:36 emaldona%redhat.com Exp $ */
 
 #include "stubs.h"
 #include "prtypes.h"
@@ -294,7 +294,7 @@ static int nsslow_GetFIPSEnabled(void) {
 
     f = fopen("/proc/sys/crypto/fips_enabled", "r");
     if (!f)
-        return 1;
+        return 0;
 
     size = fread(&d, 1, 1, f);
     fclose(f);
