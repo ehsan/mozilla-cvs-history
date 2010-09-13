@@ -10,6 +10,7 @@ CONFIG_FILE=$CONFIG_DIR/$1.txt
 
 VER=
 VERSION_URL=$(grep "VERSION_URL" "$CONFIG_FILE" | tail -n 1 | sed 's/.*VERSION_URL[[:space:]]*//')
+SHIPPED_LOCALES_URL=$(grep "SHIPPED_LOCALES_URL" "$CONFIG_FILE" | tail -n 1 | sed 's/.*SHIPPED_LOCALES_URL[[:space:]]*//')
 
 if [ ! -z $VERSION_URL ]; then
     VER=$(wget -q --timeout=7 -O- "$VERSION_URL" | grep -P '^\d\.\d.*' | tail -n 1)
@@ -19,8 +20,25 @@ if [ ! -z $VERSION_URL ]; then
     fi
 fi
 
+if [ ! -z $SHIPPED_LOCALES_URL ]; then
+    LOCALES=$(wget -q --timeout=7 -O- "$SHIPPED_LOCALES_URL" | grep -vE '^(ja|en-US)')
+    if [ -z "$LOCALES" ]; then
+        echo "Cannot get locale information"
+        exit 1
+    fi
+fi
 
-output=`for i in $(grep -v ^# $CONFIG_FILE | tr -d '\r' | sed "s/@VER@/$VER/g" ); do $CONFIG_DIR/check_nightly_builds -a 100800 -f $i; done | grep CRITICAL`
+output=$(grep -v ^# $CONFIG_FILE | tr -d '\r' | sed "s/@VER@/$VER/g"  | \
+while read line; do
+    if [[ "$line" =~ @LOCALE@ ]]; then
+        for locale in $LOCALES; do
+            $CONFIG_DIR/check_nightly_builds -a 100800 -f ${line/@LOCALE@/$locale}
+        done
+    else
+        $CONFIG_DIR/check_nightly_builds -a 100800 -f $line
+    fi
+
+done | grep CRITICAL)
 
 if [ ! -z "$output" ]; then
   echo $output | sed 's/CRITICAL: //g'

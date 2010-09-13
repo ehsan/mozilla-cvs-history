@@ -1,4 +1,5 @@
 # VERSION_URL http://hg.mozilla.org/releases/mozilla-1.9.1/raw-file/default/browser/config/version.txt
+# SHIPPED_LOCALES_URL http://hg.mozilla.org/releases/mozilla-1.9.1/raw-file/default/browser/locales/shipped-locales
 /pub/mozilla.org/firefox/nightly/latest-mozilla-1.9.1/firefox-@VER@.en-US.linux-i686.complete.mar
 /pub/mozilla.org/firefox/nightly/latest-mozilla-1.9.1/firefox-@VER@.en-US.linux-i686.tar.bz2
 /pub/mozilla.org/firefox/nightly/latest-mozilla-1.9.1/firefox-@VER@.en-US.linux-x86_64.complete.mar
@@ -10,3 +11,11 @@
 /pub/mozilla.org/firefox/nightly/latest-mozilla-1.9.1/firefox-@VER@.en-US.win32.installer.exe
 /pub/mozilla.org/firefox/nightly/latest-mozilla-1.9.1/firefox-@VER@.en-US.win32.zip
 /pub/mozilla.org/firefox/nightly/latest-mozilla-1.9.1-l10n
+/pub/mozilla.org/firefox/nightly/latest-mozilla-1.9.1-l10n/firefox-@VER@.@LOCALE@.linux-i686.tar.bz2
+/pub/mozilla.org/firefox/nightly/latest-mozilla-1.9.1-l10n/firefox-@VER@.@LOCALE@.mac.dmg
+/pub/mozilla.org/firefox/nightly/latest-mozilla-1.9.1-l10n/firefox-@VER@.@LOCALE@.win32.installer.exe
+/pub/mozilla.org/firefox/nightly/latest-mozilla-1.9.1-l10n/firefox-@VER@.@LOCALE@.win32.zip
+/pub/mozilla.org/firefox/nightly/latest-mozilla-1.9.1-l10n/firefox-@VER@.ja.linux-i686.tar.bz2
+/pub/mozilla.org/firefox/nightly/latest-mozilla-1.9.1-l10n/firefox-@VER@.ja-JP-mac.mac.dmg
+/pub/mozilla.org/firefox/nightly/latest-mozilla-1.9.1-l10n/firefox-@VER@.ja.win32.installer.exe
+/pub/mozilla.org/firefox/nightly/latest-mozilla-1.9.1-l10n/firefox-@VER@.ja.win32.zip
