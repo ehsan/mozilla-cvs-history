@@ -147,6 +147,14 @@ if ($_cached_xml) {
     switch ($clean['updateVersion']) {
         
         /*
+         * This is for the fifth revision, adding %PLATFORM_VERSION%.
+         * /update/4/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/%PLATFORM_VERSION%/update.xml
+         */
+        case 4:
+
+            // Nothing special.
+        
+        /*
          * This is for the fourth revision, adding %DISTRIBUTION% and
          * %DISTRIBUTION_VERSION%.
          * /update/3/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml
