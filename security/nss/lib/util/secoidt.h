@@ -43,7 +43,7 @@
 /*
  * secoidt.h - public data structures for ASN.1 OID functions
  *
- * $Id: secoidt.h,v 1.33 2010/08/13 01:18:19 wtc%google.com Exp $
+ * $Id: secoidt.h,v 1.34 2010/09/18 21:17:53 nelson%bolyard.com Exp $
  */
 
 #include "secitem.h"
@@ -460,6 +460,11 @@ typedef enum {
     SEC_OID_PKCS1_SHA224_WITH_RSA_ENCRYPTION = 308,
 
     SEC_OID_SHA224                          = 309,
+
+    SEC_OID_EV_INCORPORATION_LOCALITY       = 310,
+    SEC_OID_EV_INCORPORATION_STATE          = 311,
+    SEC_OID_EV_INCORPORATION_COUNTRY        = 312,
+    SEC_OID_BUSINESS_CATEGORY               = 313,
 
     SEC_OID_TOTAL
 } SECOidTag;

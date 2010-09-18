@@ -39,7 +39,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.108 2010/08/22 20:59:01 nelson%bolyard.com Exp $
+ * $Id: certdb.c,v 1.109 2010/09/18 21:17:51 nelson%bolyard.com Exp $
  */
 
 #include "nssilock.h"
@@ -1654,8 +1654,7 @@ finish:
  *   - return value is NULL
  */
 CERTGeneralName *
-cert_GetSubjectAltNameList(CERTCertificate *cert,
-                           PRArenaPool *arena)
+cert_GetSubjectAltNameList(CERTCertificate *cert, PRArenaPool *arena)
 {
     CERTGeneralName * nameList       = NULL;
     SECStatus         rv             = SECFailure;
