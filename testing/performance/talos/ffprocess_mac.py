@@ -48,6 +48,7 @@ from select import select
 from ffprocess import FFProcess
 import shutil
 import utils
+import platform
 
 class MacProcess(FFProcess):
 
@@ -71,6 +72,14 @@ class MacProcess(FFProcess):
                             extra_args,
                             profile_arg,
                             url)
+        """
+        If running on OS X 10.5 or older, wrap |cmd| so that it will
+        be executed as an i386 binary, in case it's a 32-bit/64-bit universal
+        binary.
+        """
+        if hasattr(platform, 'mac_ver') and platform.mac_ver()[0][:4] < '10.6':
+            return "arch -arch i386 " + cmd
+
         return cmd
 
 
