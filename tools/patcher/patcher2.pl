@@ -747,6 +747,7 @@ sub CreateCompletePatchinfo {
                 my $detailsUrl = SubstitutePath(
                  path => $u_config->{$u}->{'details'},
                  locale => $l,
+                 platform => $p,
                  version => $to->{'appv'});
 
                 my $licenseUrl = undef;
@@ -1017,6 +1018,7 @@ sub CreatePastReleasePatchinfo {
                 my $detailsUrl = SubstitutePath(
                  path => $config->GetCurrentUpdate()->{'details'},
                  locale => $locale,
+                 platform => $fromPlatform,
                  version => $patchLocaleNode->{'appv'});
 
                 my $licenseUrl = undef;
@@ -1239,6 +1241,7 @@ sub CreatePartialPatchinfo {
                 my $detailsUrl = SubstitutePath(
                  path => $u_config->{$u}->{'details'},
                  locale => $l,
+                 platform => $p,
                  version => $to->{'appv'});
             
                 my $licenseUrl = undef;
