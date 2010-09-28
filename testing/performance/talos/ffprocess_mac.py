@@ -77,7 +77,7 @@ class MacProcess(FFProcess):
         be executed as an i386 binary, in case it's a 32-bit/64-bit universal
         binary.
         """
-        if hasattr(platform, 'mac_ver') and platform.mac_ver()[0][:4] < '10.6':
+        if hasattr(platform, 'mac_ver') and platform.mac_ver()[0][:4] == '10.5':
             return "arch -arch i386 " + cmd
 
         return cmd
