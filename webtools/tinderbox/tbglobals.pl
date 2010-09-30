@@ -740,11 +740,11 @@ sub tb_print_json_data($) {
     my $count = 0;
     foreach my $row (@$build_table) {
       foreach my $build (@$row) {
-        if ($count > 0) {
-          print ',';
-        }
         if (!defined($build->{buildname})) {
             next;
+        }
+        if ($count > 0) {
+          print ',';
         }
         my $buildname = $build->{buildname};
         my $build_logfile = $build->{logfile};
