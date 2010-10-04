@@ -176,6 +176,10 @@ $productBranchVersions = array(
         '2.0*'    =>  array(
            'nightly'                 => 'mozilla-central',
            'nightly-mozilla-2.0'     => 'mozilla-2.0'
+        ),
+        '4.0*'    =>  array(
+           'nightly'                 => 'mozilla-central',
+           'nightly-mozilla-2.0'     => 'mozilla-2.0'
         )
     ),
 );
