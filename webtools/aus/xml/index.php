@@ -94,15 +94,6 @@ if ( $clean['product'] == 'Firefox'
         exit;
 }
 
-// Also block nightly updates for 10.5 users screwed by the change to the universal builds
-// bug 600829
-if ( $clean['product'] == 'Firefox'
-     && (preg_match('/^4\.0.*pre$/', $clean['version']) || preg_match('/^3\.7.*pre$/', $clean['version']))
-     && (preg_match('/^Darwin 9\./', $clean['platformVersion']))) {
-        $xml->printXml();
-        exit;
-}
-
  
 // Check to see if the user is explicitly requesting an update.  If they are,
 // skip throttling.  If they aren't, and throttling is enabled, first check
