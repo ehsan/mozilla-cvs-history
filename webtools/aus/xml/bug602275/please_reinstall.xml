@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<updates>
+ <update type="minor" version="4.0b7pre" extensionVersion="4.0b7pre" buildID="20101003" detailsURL="http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/experimental/bug602275//details.html" billboardURL="http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/experimental/bug602275/please_reinstall.html" showPrompt="true">
+  <patch type="complete" URL="http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/experimental/bug602275/empty.mar" hashFunction="MD5" hashValue="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" size="775"/>
+ </update>
+</updates>
+
