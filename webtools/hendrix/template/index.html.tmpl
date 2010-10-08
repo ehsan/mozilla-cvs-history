@@ -84,26 +84,24 @@ function onLoad() {
 [% END %]
   
 [% PROCESS header.html.tmpl 
-   title = "Hendrix - mozilla.org Feedback System"
+   title = "Hendrix - the Mozilla Feedback System"
    onload = "onLoad()"
 %]
 
-<p>This system is for feedback on Firefox and other Mozilla
+<p>Here you can give your feedback on Firefox and most other Mozilla
 projects. (Thunderbird feedback goes in <a href="http://getsatisfaction.com/mozilla_messaging">GetSatisfaction</a>.)</p>
 
 <fieldset>
   <legend>Other Options</legend>
   <ul>
-  <li><b>Need support?</b> 
-      <a href="http://www.mozilla.org/support/">Go here</a>
-  <li><b>Broken website?</b> 
-      Visit it, then select <tt>Help | Report Broken Web Site...</tt> from the browser menu
-  <li><b>Specific and detailed bug report?</b> 
-      <a href="https://bugzilla.mozilla.org/enter_bug.cgi">Go here</a>
+  <li><b>Need help or support?</b> 
+      <a href="http://www.mozilla.org/support/">Go here</a>.
+  <li><b>Have a specific and detailed bug report?</b> 
+      <a href="https://bugzilla.mozilla.org/enter_bug.cgi">Go here</a>.
   </ul>
 </fieldset>
 
-<p style="text-align: center; color: darkred">
+<p style="color: darkred">
 <b>Please accept our thanks, but do not expect a response to feedback submitted here.</b></p>
 
 <form id="feedback-form" method="POST">
@@ -112,6 +110,7 @@ projects. (Thunderbird feedback goes in <a href="http://getsatisfaction.com/mozi
       <td class="label">Name&nbsp;(optional):</td>
       <td class="widget">
         <input id="name" name="name" type="text" 
+               placeholder="Note: will be made public"
                value="[% form.email FILTER html %]"/>
       </td>
     </tr>
@@ -119,6 +118,7 @@ projects. (Thunderbird feedback goes in <a href="http://getsatisfaction.com/mozi
       <td class="label">Email&nbsp;(optional):</td>
       <td class="widget">
         <input id="email" name="email" type="text"
+               placeholder="Note: will be made public in obfuscated form"
                value="[% form.email FILTER html %]"/>
       </td>
     </tr>
@@ -149,11 +149,19 @@ projects. (Thunderbird feedback goes in <a href="http://getsatisfaction.com/mozi
     </tr>
     <tr>
       <td class="label">
-        Detailed&nbsp;Feedback: 
+        Feedback: 
       </td>
       <td class="widget">
         <textarea id="comments" name="comments" wrap="hard" cols="72"
         >[% form.comments FILTER html %]</textarea>
+      </td>
+    </tr>
+    <tr>
+      <td></td>
+      <td>
+        <p style="max-width: 40em">
+        Do not enter information you want to keep private. All information you submit here, including name and email address, will be made <b>totally and irrevocably public</b>, both by Mozilla and through news group syndication and search engines. Your email address will be reformatted to thwart spammers, but will still be readable by real people.
+        </p>
       </td>
     </tr>
     <tr>
@@ -180,14 +188,7 @@ projects. (Thunderbird feedback goes in <a href="http://getsatisfaction.com/mozi
     <tr>
       <td></td>
       <td>
-        <p>
-        <b>All</b> information submitted here, including name and email address, will be world-readable. <b>Do not submit information you want to keep private.</b> Your email address will be obfuscated to make life difficult for spammers.
-        </p>
-      </td>
-    </tr>
-    <tr>
-      <td></td>
-      <td>
+        <br>
         <input id="send-feedback" type="submit" value="Send Feedback"/>
       </td>
     </tr>
