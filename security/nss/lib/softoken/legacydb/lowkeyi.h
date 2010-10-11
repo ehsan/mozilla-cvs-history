@@ -34,7 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: lowkeyi.h,v 1.3 2010/07/20 01:26:04 wtc%google.com Exp $ */
+/* $Id: lowkeyi.h,v 1.4 2010/10/11 19:30:10 wtc%google.com Exp $ */
 
 #ifndef _LOWKEYI_H_
 #define _LOWKEYI_H_
@@ -95,7 +95,7 @@ extern SECStatus nsslowkey_DeleteKey(NSSLOWKEYDBHandle *handle,
 /*
 ** Store a key in the database, indexed by its public key modulus.
 **	"pk" is the private key to store
-**	"f" is a the callback function for getting the password
+**	"f" is the callback function for getting the password
 **	"arg" is the argument for the callback
 */
 extern SECStatus nsslowkey_StoreKeyByPublicKey(NSSLOWKEYDBHandle *handle, 
