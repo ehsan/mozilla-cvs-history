@@ -380,12 +380,19 @@ endif
 #
 
 
+# We use a 'build' target here to ensure that we build $(TARGETS) after
+# looping over $(DIRS) to create the object files in a parallel build.
+# Recipe commands are executed sequentially in a parallel build while
+# target dependencies are executed in parallel.
+export::
+	$(MAKE) build
+
 #
 # The Client build wants the shared libraries in $(dist_bindir)
 # so we also install them there.
 #
 
-export:: $(TARGETS)
+build:: $(TARGETS)
 	$(INSTALL) -m 444 $(TARGETS) $(dist_libdir)
 ifdef SHARED_LIBRARY
 ifeq ($(OS_ARCH),HP-UX)
