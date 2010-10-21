@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.148 2010/09/01 19:43:48 wtc%google.com Exp $ */
+/* $Id: ssl3con.c,v 1.149 2010/10/21 17:31:36 wtc%google.com Exp $ */
 
 #include "cert.h"
 #include "ssl.h"
@@ -7771,6 +7771,7 @@ static SECStatus
 ssl3_HandleCertificate(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 {
     ssl3CertNode *   c;
+    ssl3CertNode *   lastCert 	= NULL;
     ssl3CertNode *   certs 	= NULL;
     PRArenaPool *    arena 	= NULL;
     CERTCertificate *cert;
@@ -7898,8 +7899,13 @@ ssl3_HandleCertificate(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 	if (c->cert->trust)
 	    trusted = PR_TRUE;
 
-	c->next = certs;
-	certs = c;
+	c->next = NULL;
+	if (lastCert) {
+	    lastCert->next = c;
+	} else {
+	    certs = c;
+	}
+	lastCert = c;
     }
 
     if (remaining != 0)
