@@ -90,10 +90,7 @@ $productThrottling = array(
          '3.0.19' => 0,
          '3.5.14' => 0,
          '3.5.15' => 0
-     ),
-     'Thunderbird' => array(
-         '2.0.0.24' => 25
-     ),
+     )
 );
 
 // List of exceptions for throttling.
@@ -119,10 +116,6 @@ $throttleExceptions = array(
         'release'
     ),
     '3.5.15' => array (
-        'betatest',
-        'releasetest'
-    ),
-    '2.0.0.24' => array (
         'betatest',
         'releasetest'
     )
