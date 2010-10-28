@@ -88,7 +88,6 @@ define('THROTTLE_LOGGING',false);
 $productThrottling = array(
      'Firefox' => array(
          '3.0.19' => 0,
-         '3.5.14' => 0,
          '3.5.15' => 0
      )
 );
@@ -109,11 +108,6 @@ $throttleExceptions = array(
     '3.0.19' => array (
         'betatest',
         'releasetest',
-    ),
-    '3.5.14' => array (
-        'betatest',
-        'releasetest',
-        'release'
     ),
     '3.5.15' => array (
         'betatest',
