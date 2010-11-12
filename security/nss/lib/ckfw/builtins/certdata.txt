@@ -34,7 +34,7 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
-CVS_ID "@(#) $RCSfile: certdata.txt,v $ $Revision: 1.65 $ $Date: 2010/08/27 15:45:14 $"
+CVS_ID "@(#) $RCSfile: certdata.txt,v $ $Revision: 1.66 $ $Date: 2010/11/12 20:46:21 $"
 
 #
 # certdata.txt
@@ -4551,7 +4551,7 @@ CKA_ISSUER MULTILINE_OCTAL
 \144\040\103\101\040\122\157\157\164
 END
 CKA_SERIAL_NUMBER MULTILINE_OCTAL
-\001
+\002\001\001
 END
 CKA_VALUE MULTILINE_OCTAL
 \060\202\004\036\060\202\003\006\240\003\002\001\002\002\001\001
