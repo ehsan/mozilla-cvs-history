@@ -87,7 +87,8 @@ sub do_static($) {
                   ['stats.hdml', 'do_hdml'],
                   ['json.js', 'do_json'],
                   ['json2.js', 'do_json2'],
-                  ['status.vxml', 'do_vxml'] );
+                  ['status.vxml', 'do_vxml'],
+                  ['status.html', 'do_status'] );
 
     my ($key, $value);
     $rel_path = $::static_rel_path;
@@ -156,6 +157,23 @@ sub do_json2($) {
         print "Access-Control-Allow-Origin: *\n\n";
     }
     tb_print_json_data($form_ref);
+}
+
+##
+# Return the tree status by itself for easier scraping.
+##
+sub do_status($) {
+    my ($form_ref) = (@_);
+    if (!$form_ref->{static}) {
+        print "Content-Type: text/html; charset=utf-8\n";
+        print "Access-Control-Allow-Origin: *\n\n";
+    }
+    my $tree = $form_ref->{tree};
+    my $status_message = &tb_load_status($tree);
+    $status_message =~ s:^\s*|\s*$::gs;
+    if ($status_message and length($status_message) gt 0) {
+        print "$status_message";
+    }
 }
 
 sub print_page_head($$) {
