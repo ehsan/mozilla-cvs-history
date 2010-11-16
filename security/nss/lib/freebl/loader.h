@@ -37,14 +37,14 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: loader.h,v 1.30 2010/08/18 05:55:28 emaldona%redhat.com Exp $ */
+/* $Id: loader.h,v 1.31 2010/11/16 19:08:48 rrelyea%redhat.com Exp $ */
 
 #ifndef _LOADER_H_
 #define _LOADER_H_ 1
 
 #include "blapi.h"
 
-#define FREEBL_VERSION 0x030C
+#define FREEBL_VERSION 0x030D
 
 struct FREEBLVectorStr {
 
@@ -541,6 +541,9 @@ struct FREEBLVectorStr {
  SECStatus (* p_PRNGTEST_Uninstantiate)(void);
    /* Version 3.011 came to here */
 
+ SECStatus (*p_RSA_PopulatePrivateKey)(RSAPrivateKey *key);
+  /* Version 3.012 came to here */
+
  SECStatus (* p_MGF1)(HASH_HashType hashAlg,
                       unsigned char *mask, unsigned int maskLen,
                       const unsigned char *mgfSeed, unsigned int mgfSeedLen);
@@ -567,7 +570,8 @@ struct FREEBLVectorStr {
  SECStatus (* p_SHA224_Flatten)(SHA224Context *cx,unsigned char *space);
  SHA224Context * (* p_SHA224_Resurrect)(unsigned char *space, void *arg);
  void (* p_SHA224_Clone)(SHA224Context *dest, SHA224Context *src);
-  /* Version 3.012 came to here */
+  /* Version 3.013 came to here */
+
 };
 
 typedef struct FREEBLVectorStr FREEBLVector;

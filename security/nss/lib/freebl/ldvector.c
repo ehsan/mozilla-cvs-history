@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ldvector.c,v 1.25 2010/08/18 05:55:07 emaldona%redhat.com Exp $ */
+/* $Id: ldvector.c,v 1.26 2010/11/16 19:08:48 rrelyea%redhat.com Exp $ */
 
 #ifdef FREEBL_NO_DEPEND
 extern int FREEBL_InitStubs(void);
@@ -257,9 +257,13 @@ static const struct FREEBLVectorStr vector =
     PRNGTEST_Instantiate,
     PRNGTEST_Reseed,
     PRNGTEST_Generate,
+
     PRNGTEST_Uninstantiate,
 
     /* End of Version 3.011. */
+
+    RSA_PopulatePrivateKey,
+    /* End of Version 3.012 */
 
     MGF1,
     TLS_P_hash,
@@ -276,7 +280,7 @@ static const struct FREEBLVectorStr vector =
     SHA224_Resurrect,
     SHA224_Clone
 
-    /* End of Version 3.012 */
+    /* End of Version 3.013 */
 };
 
 const FREEBLVector * 
