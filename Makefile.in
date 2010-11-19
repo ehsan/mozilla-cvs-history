@@ -175,6 +175,9 @@ endif
 SYMBOL_ARCHIVE_BASENAME = \
   $(MOZ_APP_NAME)-$(MOZ_APP_VERSION)-$(OS_ARCH)-$(BUILDID)$(EXTRA_BUILDID)
 
+export SYMBOL_INDEX_NAME = \
+  $(MOZ_APP_NAME)-$(MOZ_APP_VERSION)-$(OS_TARGET)-$(BUILDID)$(EXTRA_BUILDID)-symbols.txt
+
 buildsymbols:
 ifdef MOZ_CRASHREPORTER
 	echo building symbol store
