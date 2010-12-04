@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ldvector.c,v 1.26 2010/11/16 19:08:48 rrelyea%redhat.com Exp $ */
+/* $Id: ldvector.c,v 1.27 2010/12/04 18:57:16 rrelyea%redhat.com Exp $ */
 
 #ifdef FREEBL_NO_DEPEND
 extern int FREEBL_InitStubs(void);
@@ -263,6 +263,14 @@ static const struct FREEBLVectorStr vector =
     /* End of Version 3.011. */
 
     RSA_PopulatePrivateKey,
+
+    DSA_NewRandom,
+
+    JPAKE_Sign,
+    JPAKE_Verify,
+    JPAKE_Round2,
+    JPAKE_Final,
+
     /* End of Version 3.012 */
 
     MGF1,
