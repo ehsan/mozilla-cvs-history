@@ -34,7 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: shvfy.c,v 1.14 2010/07/20 01:26:02 wtc%google.com Exp $ */
+/* $Id: shvfy.c,v 1.15 2010/12/06 17:22:49 kaie%kuix.de Exp $ */
 
 #ifdef FREEBL_NO_DEPEND
 #include "stubs.h"
@@ -307,8 +307,26 @@ readItem(PRFileDesc *fd, SECItem *item)
 PRBool
 BLAPI_SHVerify(const char *name, PRFuncPtr addr)
 {
+    PRBool result = PR_FALSE; /* if anything goes wrong,
+			       * the signature does not verify */
     /* find our shared library name */
     char *shName = PR_GetLibraryFilePathname(name, addr);
+    if (!shName) {
+	goto loser;
+    }
+    result = BLAPI_SHVerifyFile(shName);
+
+loser:
+    if (shName != NULL) {
+	PR_Free(shName);
+    }
+
+    return result;
+}
+
+PRBool
+BLAPI_SHVerifyFile(const char *shName)
+{
     char *checkName = NULL;
     PRFileDesc *checkFD = NULL;
     PRFileDesc *shFD = NULL;
@@ -468,9 +486,6 @@ BLAPI_SHVerify(const char *name, PRFuncPtr addr)
 
 
 loser:
-    if (shName != NULL) {
-	PR_Free(shName);
-    }
     if (checkName != NULL) {
 	PORT_Free(checkName);
     }

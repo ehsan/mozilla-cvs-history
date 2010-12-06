@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: blapi.h,v 1.40 2010/12/04 18:57:16 rrelyea%redhat.com Exp $ */
+/* $Id: blapi.h,v 1.41 2010/12/06 17:22:49 kaie%kuix.de Exp $ */
 
 #ifndef _BLAPI_H_
 #define _BLAPI_H_
@@ -1334,6 +1334,11 @@ extern void BL_Unload(void);
  *  Verify a given Shared library signature                               *
  **************************************************************************/
 PRBool BLAPI_SHVerify(const char *name, PRFuncPtr addr);
+
+/**************************************************************************
+ *  Verify a given filename's signature                               *
+ **************************************************************************/
+PRBool BLAPI_SHVerifyFile(const char *shName);
 
 /**************************************************************************
  *  Verify Are Own Shared library signature                               *

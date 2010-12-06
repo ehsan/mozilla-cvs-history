@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: loader.h,v 1.32 2010/12/04 18:57:16 rrelyea%redhat.com Exp $ */
+/* $Id: loader.h,v 1.33 2010/12/06 17:22:49 kaie%kuix.de Exp $ */
 
 #ifndef _LOADER_H_
 #define _LOADER_H_ 1
@@ -596,6 +596,7 @@ struct FREEBLVectorStr {
  SECStatus (* p_SHA224_Flatten)(SHA224Context *cx,unsigned char *space);
  SHA224Context * (* p_SHA224_Resurrect)(unsigned char *space, void *arg);
  void (* p_SHA224_Clone)(SHA224Context *dest, SHA224Context *src);
+ PRBool (*p_BLAPI_SHVerifyFile)(const char *name);
   /* Version 3.013 came to here */
 
 };

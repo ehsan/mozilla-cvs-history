@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ldvector.c,v 1.27 2010/12/04 18:57:16 rrelyea%redhat.com Exp $ */
+/* $Id: ldvector.c,v 1.28 2010/12/06 17:22:49 kaie%kuix.de Exp $ */
 
 #ifdef FREEBL_NO_DEPEND
 extern int FREEBL_InitStubs(void);
@@ -286,7 +286,8 @@ static const struct FREEBLVectorStr vector =
     SHA224_FlattenSize,
     SHA224_Flatten,
     SHA224_Resurrect,
-    SHA224_Clone
+    SHA224_Clone,
+    BLAPI_SHVerifyFile
 
     /* End of Version 3.013 */
 };

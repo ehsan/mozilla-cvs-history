@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: loader.c,v 1.51 2010/12/04 18:57:16 rrelyea%redhat.com Exp $ */
+/* $Id: loader.c,v 1.52 2010/12/06 17:22:49 kaie%kuix.de Exp $ */
 
 #include "loader.h"
 #include "prmem.h"
@@ -1874,3 +1874,10 @@ SHA224_Clone(SHA224Context *dest, SHA224Context *src)
   (vector->p_SHA224_Clone)(dest, src);
 }
 
+PRBool
+BLAPI_SHVerifyFile(const char *name)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return PR_FALSE;
+  return vector->p_BLAPI_SHVerifyFile(name);
+}
