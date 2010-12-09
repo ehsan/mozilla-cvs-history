@@ -130,7 +130,12 @@ if (!$action) {
 }
 elsif ($action eq "submit") {  
     # Check the poster's IP against some blacklists
-    $rbl->lookup($::ENV{REMOTE_ADDR});
+    my $remote_addr = $::ENV{REMOTE_ADDR};
+    
+    # RBL can't cope with IPv6 and this interacts badly with my dev box...
+    $remote_addr = "127.0.0.1" if $remote_addr eq "::1";
+    
+    $rbl->lookup($remote_addr);
     my %rbl_results = $rbl->txt_hash();
     if (scalar(keys %rbl_results) > 0) {
       $vars->{'rbl_results'} = \%rbl_results;
