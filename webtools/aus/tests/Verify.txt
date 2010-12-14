@@ -158,6 +158,20 @@
 |1.5.0.5|1100000002|nightly-branch|complete|partial|false|false|false|true|
 |6.0|1100000001|nightly|complete|partial|false|false|false|true|
 
+!1 Localized nightly updates (one repack behind master locale)
+ 1 2nd last nightly for master locale (ie en-US)
+ 2 last nightly for master locale
+ 3 old localized gets most recent complete mar for locale
+ 4 2nd last localized build gets partial + complete for locale
+ 5 latest localized isn't going anywhere
+|aus.Verify|${host}|${updateVersion}|${product}|${version}|${platform}|${locale}|NULL|
+|version|build|channel|locale|complete|partial|hasUpdate?|hasComplete?|hasPartial?|isValidXml?|
+|2.0.0.2|1100000001|nightly|locale|complete001|NULL|true|true|false|true|
+|2.0.0.2|1100000002|nightly|locale|complete001|partial001|true|true|true|true|
+|2.0.0.2|1100000000|nightly|otherlocale|complete000-otherlocale|NULL|true|true|false|true|
+|2.0.0.2|1100000001|nightly|otherlocale|complete000-otherlocale|partial000-otherlocale|true|true|true|true|
+|2.0.0.2|1100000002|nightly|otherlocale|NULL|NULL|false|false|false|true|
+
 !1 Dist URLs 
  1 complete update works with schema 3
  2 complete and partial update works with schema 3

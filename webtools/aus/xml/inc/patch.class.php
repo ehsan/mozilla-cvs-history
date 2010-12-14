@@ -261,7 +261,7 @@ class Patch extends AUS_Object {
         if ($this->isComplete() && $this->isNightlyChannel($channel)) {
 
             // Get the latest build that has an update for this branch.
-            $latestCompleteBuild = $this->getLatestCompleteBuild($product,$branchVersion,$platform);
+            $latestCompleteBuild = $this->getLatestCompleteBuild($product,$branchVersion,$platform,$locale);
 
             // If we have the latest complete build, the path is valid, the file exists, and the filesize is greater than zero, we have a valid complete patch.
             if ($latestCompleteBuild && $this->setPath($product,$platform,$locale,$branchVersion,$latestCompleteBuild,2,$channel) && file_exists($this->path) && filesize($this->path) > 0) {
@@ -448,15 +448,16 @@ class Patch extends AUS_Object {
      * @param string $platform
      * @param return string|false false if there is no matching build
      */
-    function getLatestCompleteBuild($product,$branchVersion,$platform) {
+    function getLatestCompleteBuild($product,$branchVersion,$platform,$locale) {
         $files = array();
 
         $dir = SOURCE_DIR.'/2/'.$product.'/'.$branchVersion.'/'.$platform;
 
         // Find the build ids for the given product/branchVersion/platform.  The last complete update
-        // is found in the second-to-last build directory.
+        // is normally found in the second-to-last build directory.
         //
-        // To get this build id, we sort the directory listing by number and retrieve $files[1].
+        // To get this build id, we sort the directory listing by number and search for non-empty
+        // complete.txt file
         if (is_dir($dir)) {
             $fp = opendir($dir);
             while (false !== ($filename = readdir($fp))) {
@@ -468,9 +469,14 @@ class Patch extends AUS_Object {
             
             rsort($files,SORT_NUMERIC); 
 
-            // Only return the build id if it is not empty and not numeric.
-            if (!empty($files[1]) && is_numeric($files[1])) {
-                return $files[1];
+            // Return the directory with the non-empty complete.txt, which is the latest available build
+            foreach ($files as $buildID) {
+                if (!empty($buildID) && is_numeric($buildID)) {
+                    $testPath = $dir.'/'.$buildID.'/'.$locale.'/complete.txt';
+                    if (file_exists($testPath) && filesize($testPath) > 0) {
+                        return $buildID;
+                    }
+                }
             }
         }
 
