@@ -31,6 +31,8 @@ $TAR cfj $BACKUP_DIR/$backupDirName.tar.bz2 . --exclude 'Firefox/1.5*' --exclude
 popd > /dev/null
 
 # push the file over to Phoenix to aid checking all is in sync there
-$SCP -q $BACKUP_DIR/$backupDirName.tar.bz2 dp-ausstage01:$BACKUP_DIR/
+if [[ 'dm-ausstage01.mozilla.org' == `uname -n` ]]; then
+  $SCP -q $BACKUP_DIR/$backupDirName.tar.bz2 dp-ausstage01:$BACKUP_DIR/
+fi
 
 exit 0
