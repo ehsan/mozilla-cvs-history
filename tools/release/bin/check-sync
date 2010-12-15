@@ -1,0 +1,74 @@
+#!/bin/bash
+
+# runs on data centers remote from the master snippet store in MPT, eg Phoenix
+# relies on the nightly tarball being up to date; calls to this script should
+# be made contingent on the backup & tarball push succeeding
+
+set -e
+
+LIVE_SNIPPET_DIR=/opt/aus2/incoming/3
+NEW_SNIPPET_DIR=/opt/aus2/incoming/3.new
+BACKUP_DIR=/opt/aus2/snippets/backup
+
+DATE=/bin/date
+TAR=/bin/tar
+GREP=/bin/grep
+RSYNC=/usr/bin/rsync
+FIND=/usr/bin/find
+
+currentDate=`$DATE +%Y%m%d`
+
+if [[ -d $NEW_SNIPPET_DIR ]]; then
+  rm -rf $NEW_SNIPPET_DIR
+fi
+
+latestBackup=`ls $BACKUP_DIR/*nightly* | tail -1`
+
+if [[ -z $latestBackup || ! -r $latestBackup ]]; then
+  echo Error: cannot read latestBackup at \"$latestBackup\"
+  exit 1
+fi
+
+mkdir -p $NEW_SNIPPET_DIR
+cd $NEW_SNIPPET_DIR
+
+# don't let the shell screw up what tar wants to set on extraction
+umask 0000
+
+# extract the really old files like Firefox & T'bird 1.5, Firefox 2.0
+# and hide the warnings about files modified in 2013.
+# we initially ignore errors from tar and handle them by catching the output
+$TAR xfjp $BACKUP_DIR/20091129-FX15-FX20-TB15-FINAL-BACKUP.tar.bz2 > /tmp/extract.log 2>&1 || true
+# grep has unhelpful exit status for set -e: 0 for a match, 1 or a non-match, 2 for an error
+unknownOutput=`$GREP -v 'Firefox/1.5.0.2/Darwin_Universal-gcc3.*in the future$' /tmp/extract.log || true`
+if [[ -n $unknownOutput ]]; then
+  echo "Errors unpacking old snippets. Output (excluding any complaints about future dates):"
+  echo "$unknownOutput"
+  exit 1
+fi
+
+# extract the 'active' snippets, any errors here can be shown directly on the output
+$TAR xfjp $latestBackup
+
+# test for differences with production, we initially ignore any rsync error again
+$RSYNC -ni -avO --delete $NEW_SNIPPET_DIR/ $LIVE_SNIPPET_DIR/ > /tmp/rsync.log 2>&1 || true
+
+# exclude rsync's normal output
+nonTrivialLogLines=`$GREP -vE '^(building file list|sent [0-9]+|total size|$)' /tmp/rsync.log || true`
+# then test the output for lines we weren't expecting (datastore differences!)
+if [[ -n $nonTrivialLogLines ]]; then
+  echo "Error or differences between MPT backup and remote production."
+  echo "rsync dry-run log (with itemized changes):"
+  cat /tmp/rsync.log
+  echo
+  echo "Moving existing production data to $LIVE_SNIPPET_DIR.$currentDate"
+  mv $LIVE_SNIPPET_DIR $LIVE_SNIPPET_DIR.$currentDate
+  echo "Moving data from MPT into production"
+  mv $NEW_SNIPPET_DIR $LIVE_SNIPPET_DIR
+  echo "RelEng: you should go investigate how we got different data in two colos"
+  exit 1;
+else
+  cd ~
+  rm -rf $NEW_SNIPPET_DIR;
+  $FIND $BACKUP_DIR -type f -mtime +30 -name '*nightly*' -exec rm -f {} \;
+fi

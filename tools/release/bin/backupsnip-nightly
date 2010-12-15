@@ -9,8 +9,8 @@ BACKUP_DIR=/opt/aus2/snippets/backup
 WC=/usr/bin/wc
 DATE=/bin/date
 TAR=/bin/tar
-SED=/bin/sed
 GREP=/bin/grep
+SCP=/usr/bin/scp
 
 currentDate=`$DATE +%Y%m%d`
 
@@ -27,8 +27,10 @@ let backupDirCount=$backupDirCount+1
 backupDirName=$currentDate-nightly-$backupDirCount
 
 pushd $LIVE_SNIPPET_DIR > /dev/null
-echo Running time $TAR cfvj $BACKUP_DIR/$backupDirName.tar.bz2 . --exclude 'Firefox/1.5*' --exclude 'Firefox/2.0*' --exclude 'Thunderbird/1.5*'
-time $TAR cfvj $BACKUP_DIR/$backupDirName.tar.bz2 . --exclude 'Firefox/1.5*' --exclude 'Firefox/2.0*' --exclude 'Thunderbird/1.5*'
+$TAR cfj $BACKUP_DIR/$backupDirName.tar.bz2 . --exclude 'Firefox/1.5*' --exclude 'Firefox/2.0*' --exclude 'Thunderbird/1.5*'
 popd > /dev/null
+
+# push the file over to Phoenix to aid checking all is in sync there
+$SCP -q $BACKUP_DIR/$backupDirName.tar.bz2 dp-ausstage01:$BACKUP_DIR/
 
 exit 0
