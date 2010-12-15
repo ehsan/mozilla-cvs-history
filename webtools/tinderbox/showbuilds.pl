@@ -591,7 +591,7 @@ sub open_showbuilds_url {
     my %args = (@_);
     my $url = "${rel_path}showbuilds.cgi?tree=$args{tree}";
     while (my ($key, $value) = each %args) {
-        $url .= "&$key=$value" if ($value ne '' && $key ne 'tree');
+        $url .= "&amp;" . url_encode($key) . "=" . url_encode($value) if ($value ne '' && $key ne 'tree');
     }
     return $url;
 }
