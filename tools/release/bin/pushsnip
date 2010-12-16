@@ -13,7 +13,7 @@ if [[ 'dm-ausstage01.mozilla.org' == `uname -n` ]]; then
   UPDATE_PHX=1
   PHX_HOST=dp-ausstage01.phx.mozilla.com
   PHX_USER=ffxbld
-  PHX_KEY=~/.ssh/auspush;
+  PHX_KEY=~/.ssh/auspush
 else
   UPDATE_PHX=0
 fi
