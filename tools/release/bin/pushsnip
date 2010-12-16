@@ -9,6 +9,15 @@ STAGING_DIR=/opt/aus2/snippets/staging
 RSYNC=/usr/bin/rsync
 SED=/bin/sed
 
+if [[ 'dm-ausstage01.mozilla.org' == `uname -n` ]]; then
+  UPDATE_PHX=1
+  PHX_HOST=dp-ausstage01.phx.mozilla.com
+  PHX_USER=ffxbld
+  PHX_KEY=~/.ssh/auspush;
+else
+  UPDATE_PHX=0
+fi
+
 if test -z $1; then 
    echo Usage: $0 [snippet-directory-to-sync-in from $STAGING_DIR]
    exit 1
@@ -22,8 +31,23 @@ if ! test -d $STAGING_DIR/$newSnippetDir; then
 fi
 
 # publish the new snippets
-echo Running $RSYNC -PaO $STAGING_DIR/$1/ $LIVE_SNIPPET_DIR
-$RSYNC -PaO $STAGING_DIR/$1/ $LIVE_SNIPPET_DIR
+echo "---------------------------------------------------------------------------"
+echo Updating MPT:
+echo Running time $RSYNC -PaO $STAGING_DIR/$1/ $LIVE_SNIPPET_DIR
+time $RSYNC -PaO $STAGING_DIR/$1/ $LIVE_SNIPPET_DIR
+echo
+echo Touching $LIVE_SNIPPET_DIR
 touch $LIVE_SNIPPET_DIR
+
+if [[ $UPDATE_PHX -eq 1 ]]; then
+  echo "---------------------------------------------------------------------------"
+  echo Updating PHX:
+  echo Running time $RSYNC -e \"ssh -i $PHX_KEY\" -PaO $STAGING_DIR/$1/ ${PHX_USER}@${PHX_HOST}:$LIVE_SNIPPET_DIR
+  time $RSYNC -e "ssh -i $PHX_KEY" -PaO $STAGING_DIR/$1/ ${PHX_USER}@${PHX_HOST}:$LIVE_SNIPPET_DIR
+  echo 
+  echo Running ssh -i $PHX_KEY ${PHX_USER}@${PHX_HOST} touch $LIVE_SNIPPET_DIR
+  ssh -i $PHX_KEY ${PHX_USER}@${PHX_HOST} touch $LIVE_SNIPPET_DIR
+  echo "---------------------------------------------------------------------------"
+fi
 
 exit 0
