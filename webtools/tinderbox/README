@@ -276,9 +276,6 @@ Other Files
 
 Empty.html	Document used for an empty frame by ???
 
-addimage.cgi	The form that lets you add a new image to the list of
-		images that Tinderbox picks from randomly.
-
 addnote.cgi	Add a note to a build log.
 
 admintree.cgi	Lets you perform various admin tasks on a Tinderbox tree.
@@ -295,12 +292,8 @@ ep_windows.pl	Knows how to parse Windows build error logs.  Used by ???
 
 faq.html	Wildly out of date.
 
-fixupimages.pl	???
 tbglobals.pl	???
-imagelog.pl	???
 index.html	???
 reledanim.gif	???
-
-showimages.cgi	Show all the images in the Tinderbox list.  Password-protected.
 
 star.gif	The "star" image used to annotate builds. Used by showbuilds.cgi

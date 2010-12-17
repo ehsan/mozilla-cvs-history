@@ -214,16 +214,9 @@ sub print_page_head($$) {
     # Quote and Legend
     #
     if ($form_ref->{legend}) {
-        my ($imageurl,$imagewidth,$imageheight,$quote) = &get_image;
         print qq{
             <table width="100%" cellpadding=0 cellspacing=0>
                 <tr>
-                <td valign=bottom>
-                <p><center><a href=addimage.cgi><img src="$rel_path$imageurl"
-                width=$imagewidth height=$imageheight><br>
-                $quote</a><br>
-                </center>
-                <p>
                 <td align=right valign=bottom>
                 <table cellspacing=0 cellpadding=1 border=0>
                 <tr>

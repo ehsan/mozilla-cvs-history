@@ -89,10 +89,6 @@ do
   wget $bonsai_link/data/$tree/batch-$id.pl
 done
 
-cd $tinderbox_dir/data
-rm -f imagelog.txt
-wget $tinderbox_link/data/imagelog.txt
-
 cd $tinderbox_dir
 perl copylogs
 

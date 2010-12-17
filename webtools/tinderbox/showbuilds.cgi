@@ -23,7 +23,6 @@
 use strict;
 use lib "@TINDERBOX_DIR@";
 require 'tbglobals.pl';
-require 'imagelog.pl';
 require 'showbuilds.pl';
 
 umask 002;
