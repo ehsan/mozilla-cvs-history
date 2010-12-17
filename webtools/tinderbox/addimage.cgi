@@ -369,7 +369,7 @@ sub URLsize {
     } elsif ( m@image/xbm@i || m@image/x-xbm@i || m@image/x-xbitmap@i ) {
         $size = &xbmsize($S);
     } else {
-        Error "Not a GIF, JPEG, or XBM: that was of type \"$ctype\".";
+        Error "Not a GIF, JPEG, or XBM.";
     }               
 
     $_ = $size;
