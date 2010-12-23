@@ -367,12 +367,15 @@ sub SubstitutePath
     my $locale = $args{'locale'} ||'UNDEFINED';
     my $version = $args{'version'} || 'UNDEFINED';
     my $app = $args{'app'} || 'UNDEFINED';
+    my $filepath_platform = 'UNDEFINED';
 
     my %bouncer_platforms = GetBouncerPlatformStrings();
     my $bouncer_platform = $bouncer_platforms{$platform};
     
-    my %filepath_platforms = GetFilepathPlatformStrings();
-    my $filepath_platform = $filepath_platforms{$platform};
+    if ($platform ne 'UNDEFINED') {
+        my %filepath_platforms = GetFilepathPlatformStrings();
+        $filepath_platform = $filepath_platforms{$platform};
+    }
 
     $string =~ s/%platform%/$filepath_platform/g;
     $string =~ s/%locale%/$locale/g;
