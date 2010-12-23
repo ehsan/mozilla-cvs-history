@@ -73,7 +73,7 @@ use vars qw($MAR_BIN $MBSDIFF_BIN $MAKE_BIN
             $INCREMENTAL_UPDATE_BIN $UNWRAP_FULL_UPDATE_BIN
             $FAST_INCREMENTAL_UPDATE_BIN
             $TMPDIR_PREFIX 
-            %BOUNCER_PLATFORMS %AUS2_PLATFORMS
+            %BOUNCER_PLATFORMS %FILEPATH_PLATFORMS %AUS2_PLATFORMS
             $DEFAULT_PARTIAL_MAR_OUTPUT_FILE
             $DEFAULT_SNIPPET_BASE_DIR $DEFAULT_SNIPPET_TEST_DIR
             $SNIPPET_CHECKSUM_HASH_CACHE);
@@ -93,17 +93,27 @@ $TMPDIR_PREFIX = '/dev/shm/tmp/MozAUSLib';
                        'linux-i686' => 'linux',
                        'linux-x86_64' => 'linux64',
                        'mac' => 'osx',
-                       'mac64' => 'osx64',
+                       'mac64' => 'osx',
                        'unimac' => 'osx',
                      );
 
-%AUS2_PLATFORMS = ( 'macppc' => 'Darwin_ppc-gcc3',
-                    'mac' => 'Darwin_Universal-gcc3',
-                    'mac64' => 'Darwin_x86_64-gcc3',
-                    'linux-i686' => 'Linux_x86-gcc3',
-                    'linux-x86_64' => 'Linux_x86_64-gcc3',
-                    'win32' => 'WINNT_x86-msvc',
-                    'wince-arm' => 'WINCE_arm-msvc',
+%FILEPATH_PLATFORMS = ( 'win32' => 'win32',
+                        'linux-i686' => 'linux-i686',
+                        'linux-x86_64' => 'linux-x86_64',
+                        'mac' => 'mac',
+                        'mac64' => 'mac',
+                      );
+
+%AUS2_PLATFORMS = ( 'macppc' => ['Darwin_ppc-gcc3'],
+                    'mac' => ['Darwin_Universal-gcc3',
+                              'Darwin_x86-gcc3-u-ppc-i386'],
+                    'mac64' => ['Darwin_x86_64-gcc3',
+                                'Darwin_x86-gcc3-u-i386-x86_64',
+                                'Darwin_x86_64-gcc3-u-i386-x86_64'],
+                    'linux-i686' => ['Linux_x86-gcc3'],
+                    'linux-x86_64' => ['Linux_x86_64-gcc3'],
+                    'win32' => ['WINNT_x86-msvc'],
+                    'wince-arm' => ['WINCE_arm-msvc'],
                   );
 
 $DEFAULT_PARTIAL_MAR_OUTPUT_FILE = 'partial.mar';
@@ -184,6 +194,12 @@ sub GetAUS2PlatformStrings
 sub GetBouncerPlatformStrings
 {
     my %retHash = %BOUNCER_PLATFORMS;
+    return %retHash;
+}
+
+sub GetFilepathPlatformStrings
+{
+    my %retHash = %FILEPATH_PLATFORMS;
     return %retHash;
 }
 
@@ -354,8 +370,11 @@ sub SubstitutePath
 
     my %bouncer_platforms = GetBouncerPlatformStrings();
     my $bouncer_platform = $bouncer_platforms{$platform};
+    
+    my %filepath_platforms = GetFilepathPlatformStrings();
+    my $filepath_platform = $filepath_platforms{$platform};
 
-    $string =~ s/%platform%/$platform/g;
+    $string =~ s/%platform%/$filepath_platform/g;
     $string =~ s/%locale%/$locale/g;
     $string =~ s/%bouncer\-platform%/$bouncer_platform/g;
     $string =~ s/%version%/$version/g;
