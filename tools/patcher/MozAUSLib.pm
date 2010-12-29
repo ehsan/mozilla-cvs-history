@@ -106,7 +106,8 @@ $TMPDIR_PREFIX = '/dev/shm/tmp/MozAUSLib';
 
 %AUS2_PLATFORMS = ( 'macppc' => ['Darwin_ppc-gcc3'],
                     'mac' => ['Darwin_Universal-gcc3',
-                              'Darwin_x86-gcc3-u-ppc-i386'],
+                              'Darwin_x86-gcc3-u-ppc-i386',
+                              'Darwin_ppc-gcc3-u-ppc-i386'],
                     'mac64' => ['Darwin_x86_64-gcc3',
                                 'Darwin_x86-gcc3-u-i386-x86_64',
                                 'Darwin_x86_64-gcc3-u-i386-x86_64'],
