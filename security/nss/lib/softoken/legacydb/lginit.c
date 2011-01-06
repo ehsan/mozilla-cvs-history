@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: lginit.c,v 1.15 2010/07/20 01:26:04 wtc%google.com Exp $ */
+/* $Id: lginit.c,v 1.16 2011/01/06 19:33:14 wtc%google.com Exp $ */
 
 #include "lowkeyi.h"
 #include "pcert.h"
@@ -560,9 +560,11 @@ lg_init(SDB **pSdb, int flags, NSSLOWCERTCertDBHandle *certdbPtr,
 	goto loser;
     }
 
+    sdb->private = lgdb_p;
+    sdb->version = 0;
     sdb->sdb_type = SDB_LEGACY;
     sdb->sdb_flags = flags;
-    sdb->private = lgdb_p;
+    sdb->app_private = NULL;
     sdb->sdb_FindObjectsInit = lg_FindObjectsInit;
     sdb->sdb_FindObjects = lg_FindObjects;
     sdb->sdb_FindObjectsFinal = lg_FindObjectsFinal;
