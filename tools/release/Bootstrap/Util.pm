@@ -14,10 +14,12 @@ our @EXPORT_OK = qw(CvsCatfile CvsTag
                     GetDiffFileList
                     GetFtpNightlyDir
                     LoadLocaleManifest
+                    GetEqualPlatforms
                     GetLocaleManifest
                     GetBouncerPlatforms GetPatcherPlatforms
                     GetBouncerToPatcherPlatformMap
-                    GetBuildbotToFTPPlatformMap);
+                    GetBuildbotToFTPPlatformMap
+                    GetFTPToBuildbotiPlatformMap);
 
 our($DEFAULT_SHELL_TIMEOUT);
 
@@ -50,6 +52,7 @@ my %PLATFORM_FTP_MAP = (# buildbot platform => ftp directory
                         'macosx64' => 'mac64',
                         'win32' => 'win32');
 
+my %EQUAL_PLATFORMS = ('linux' => ['linux64'], 'osx' => ['osx64']);
 
 my $DEFAULT_CVSROOT = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
 
@@ -75,6 +78,19 @@ sub GetBuildbotToFTPPlatformMap {
 
 sub GetBouncerPlatforms {
    return keys(%PLATFORM_MAP);
+}
+
+sub GetEqualPlatforms {
+   my $platform = shift;
+   return $EQUAL_PLATFORMS{$platform} || 0;
+}
+
+sub GetFTPToBuildbotPlatformMap {
+    my %ret;
+    while (my ($key, $value) = each %PLATFORM_FTP_MAP){
+        $ret{$value}=$key;
+    }
+    return %ret;
 }
 
 ##
