@@ -19,7 +19,7 @@ our @EXPORT_OK = qw(CvsCatfile CvsTag
                     GetBouncerPlatforms GetPatcherPlatforms
                     GetBouncerToPatcherPlatformMap
                     GetBuildbotToFTPPlatformMap
-                    GetFTPToBuildbotiPlatformMap);
+                    GetFTPToBuildbotPlatformMap);
 
 our($DEFAULT_SHELL_TIMEOUT);
 
