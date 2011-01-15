@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: loader.c,v 1.52 2010/12/06 17:22:49 kaie%kuix.de Exp $ */
+/* $Id: loader.c,v 1.53 2011/01/15 19:54:49 nelson%bolyard.com Exp $ */
 
 #include "loader.h"
 #include "prmem.h"
@@ -122,7 +122,7 @@ getLibName(void)
     long cpu = sysconf(_SC_CPU_VERSION);
     return (cpu == CPU_PA_RISC2_0) 
 		? "libfreebl_32fpu_3.sl"
-	        : "libfreebl_32int32_3.sl" ;
+	        : "libfreebl_32int_3.sl" ;
 }
 #else
 /* default case, for platforms/ABIs that have only one freebl shared lib. */
