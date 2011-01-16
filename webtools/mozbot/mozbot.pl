@@ -2318,7 +2318,7 @@ sub Felt {
 #  <pinkerton> lol
 
 # BTW. They aren't kidding. See:
-# http://lxr.mozilla.org/seamonkey/search?string=NS_TWIPS_TO_KILOMETERS
+# http://mxr.mozilla.org/seamonkey/search?string=NS_TWIPS_TO_KILOMETERS
 
 # Saw - Called for all emotes
 sub Saw {

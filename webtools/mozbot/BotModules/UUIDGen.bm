@@ -4,7 +4,7 @@
 
 # "uuidgen" should be installed on the path somewhere.
 # you can get the source of uuidgen from CVS, see:
-# http://lxr.mozilla.org/mozilla/source/webtools/mozbot/uuidgen/
+# http://mxr.mozilla.org/webtools/source/mozbot/uuidgen/
 
 package BotModules::UUIDGen;
 use vars qw(@ISA);

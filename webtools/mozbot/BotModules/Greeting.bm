@@ -76,7 +76,7 @@ sub RegisterConfig {
         ['lastEvil', 1, 0, 0], # when the last c++ insult took place
         ['assumeThanksTime', 1, 1, 10], # how long to assume that thanks are directed to us after hearing from them (seconds)
         ['_lastSpoken', 0, 0, {}], # who has spoken to us
-        ['source', 1, 1, 'http://lxr.mozilla.org/mozilla/source/webtools/mozbot/'], # reply to give for CTCP SOURCE
+        ['source', 1, 1, 'http://mxr.mozilla.org/webtools/source/mozbot/'], # reply to give for CTCP SOURCE
     );
 }
 
