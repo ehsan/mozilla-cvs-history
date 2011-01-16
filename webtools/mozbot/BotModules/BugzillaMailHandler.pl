@@ -432,7 +432,7 @@ sub generate_log ($) {
         my $attach_id = $3;
 
         # Flags get a *very* special handling.
-        if ($field =~ /Flag$/) {
+        if ($field =~ /Flags?$/) {
             my %flags = parse_flags($new, $old);
             foreach my $flag (keys %flags) {
                 my ($old_flag, $new_flag) = @{$flags{$flag}};
