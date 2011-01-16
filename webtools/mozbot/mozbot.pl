@@ -122,6 +122,7 @@ use POSIX ":sys_wait_h";
 use Carp qw(cluck confess);
 use Configuration; # internal
 use Mails; # internal
+use Encode;
 
 # Net::IRC 0.74+ require Time::HiRes, if its missing, Net::IRC will fail with
 # a "No method called "time" for object." error during mozbot startup.
@@ -1071,15 +1072,42 @@ sub drainmsgqueue {
             my $type;
             if ($do eq 'msg') {
                 &debug("->$who: $msg"); # XXX this makes logfiles large quickly...
-                $self->privmsg($who, $msg); # it seems 'who' can be an arrayref and it works
+                eval {
+                    $self->privmsg($who, $msg);
+                };
+                if($@) {
+                    if ($@ =~ /wide character/io){
+                        $self->privmsg($who, Encode::encode('utf8',$msg));
+                    } else {
+                        &debug("Error: $@");
+                    }
+                }
                 $type = 'Heard';
             } elsif ($do eq 'me') {
                 &debug("->$who * $msg"); # XXX
+                eval {
                 $self->me($who, $msg);
+                };
+                if($@) {
+                    if ($@ =~ /wide character/io){
+                        $self->me($who, Encode::encode('utf8',$msg));
+                    } else {
+                        &debug("Error: $@");
+                    }
+                }
                 $type = 'Saw';
             } elsif ($do eq 'notice') {
                 &debug("=notice=>$who: $msg");
+                eval {
                 $self->notice($who, $msg);
+                };
+                if($@) {
+                    if ($@ =~ /wide character/io){
+                        $self->notice($who, Encode::encode('utf8',$msg));
+                    } else {
+                        &debug("Error: $@");
+                    }
+                }
                 # $type = 'XXX';
             } elsif ($do eq 'ctcpSend') {
                 { local $" = ' '; &debug("->$who CTCP PRIVMSG @$msg"); }
@@ -1961,7 +1989,16 @@ sub privsay {
     my ($event, $data) = @_;
 	return unless defined $event->{'target'};
 	$data =~ s/^\Q$event->{'target'}\E: //gs;
+    eval {
 	$event->{'bot'}->privmsg($event->{'target'}, $data);
+    };
+    if($@) {
+        if ($@ =~ /wide character/io){
+            $event->{'bot'}->privmsg($event->{'target'}, Encode::encode('utf8',$data));
+        } else {
+            $self->debug("Error: $@");
+        }
+    }
 }
 
 # announce - Sends a message to every channel
