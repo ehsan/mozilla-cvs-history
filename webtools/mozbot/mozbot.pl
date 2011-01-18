@@ -302,12 +302,11 @@ my %authenticatedUsers; # hash of user@hostname=>users who have authenticated
 
 sub setEventArgs {
     my $event = shift;
-    if ($Net::IRC::VERSION == 0.75) {
-        # curses. This version of Net::IRC is broken. Work around
-        # it here.
-        return $event->args(\@_);
-    } else {
+	#Net::IRC 0.75 and higher requires array refs for Event::Args.
+    if ($Net::IRC::VERSION < 0.75) {
         return $event->args(@_);
+    } else {
+        return $event->args(\@_);
     }
 }
 
