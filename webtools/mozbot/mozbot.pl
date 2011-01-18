@@ -82,9 +82,9 @@
 #     <endico> hee hee. nice smily in the error message
 
 # catch nasty occurances
-$SIG{'INT'}  = sub { &killed('INT'); };
-$SIG{'KILL'} = sub { &killed('KILL'); };
-$SIG{'TERM'} = sub { &killed('TERM'); };
+$SIG{'INT'}  = sub { killed('INT'); };
+$SIG{'KILL'} = sub { killed('KILL'); };
+$SIG{'TERM'} = sub { killed('TERM'); };
 
 # this allows us to exit() without shutting down (by exec($0)ing)
 BEGIN { exit() if ((defined($ARGV[0])) and ($ARGV[0] eq '--abort')); }
@@ -157,11 +157,11 @@ if ($LOGGING) {
 }
 
 # begin session log...
-&debug('-'x80);
-&debug('mozbot starting up');
-&debug('compilation took '.&days($^T).'.');
+debug('-'x80);
+debug('mozbot starting up');
+debug('compilation took '.days($^T).'.');
 if ($CHROOT) {
-    &debug('mozbot chroot()ed successfully');
+    debug('mozbot chroot()ed successfully');
 }
 
 # secure the environment
@@ -181,7 +181,7 @@ delete (@ENV{'IFS', 'CDPATH', 'ENV', 'BASH_ENV'});
 my $cfgfile = shift || "$0.cfg";
 $cfgfile =~ /^(.*)$/os;
 $cfgfile = $1; # untaint it -- we trust this, it comes from the admin.
-&debug("reading configuration from '$cfgfile'...");
+debug("reading configuration from '$cfgfile'...");
 
 # - setup variables
 # note: owner is only used by the Mails module
@@ -196,7 +196,7 @@ my $recentMessageCountPenalty = 10; # if we hit the threshold, bump it up by thi
 my $recentMessageCountLimit = 20; # limit above which the count won't go
 my $recentMessageCountDecrementRate = 0.1; # how much to take off per $delaytime
 my $variablepattern = '[-_:a-zA-Z0-9]+';
-my %users = ('admin' => &newPassword('password')); # default password for admin
+my %users = ('admin' => newPassword('password')); # default password for admin
 my %userFlags = ('admin' => 3); # bitmask; 0x1 = admin, 0x2 = delete user a soon as other admin authenticates
 my $helpline = 'http://www.mozilla.org/projects/mozbot/'; # used in IRC name and in help
 my $serverRestrictsIRCNames = '';
@@ -207,7 +207,7 @@ my $gender = 'female'; #changed to female by special request
 my $umode;
 
 # - which variables can be saved.
-&registerConfigVariables(
+registerConfigVariables(
     [\$server, 'server'],
     [\$port, 'port'],
     [\$password, 'password'],
@@ -223,7 +223,7 @@ my $umode;
     [\$sleepdelay, 'sleep'],
     [\$connectTimeout, 'connectTimeout'],
     [\$delaytime, 'throttleTime'],
-    [\%users, 'users'], # usernames => &newPassword(passwords)
+    [\%users, 'users'], # usernames => newPassword(passwords)
     [\%userFlags, 'userFlags'], # usernames => bits
     [\$variablepattern, 'variablepattern'],
     [\$helpline, 'helpline'],
@@ -237,13 +237,13 @@ my $umode;
 );
 
 # - read file
-&Configuration::Get($cfgfile, &configStructure()); # empty gets entire structure
+Configuration::Get($cfgfile, configStructure()); # empty gets entire structure
 
 # - check variables are ok
 # note. Ensure only works on an interactive terminal (-t).
 # It will abort otherwise.
 { my $changed; # scope this variable
-$changed = &Configuration::Ensure([
+$changed = Configuration::Ensure([
     ['Connect to which server?', \$server],
     ['To which port should I connect?', \$port],
     ['Connect to this port using SSL?', \$ssl],
@@ -255,7 +255,7 @@ $changed = &Configuration::Ensure([
 
 # - check we have some nicks
 until (@nicks) {
-    $changed = &Configuration::Ensure([['What nicks should I use? (I need at least one.)', \@nicks]]) || $changed;
+    $changed = Configuration::Ensure([['What nicks should I use? (I need at least one.)', \@nicks]]) || $changed;
     # the original 'mozbot 2.0' development codename (and thus nick) was oopsbot.
 }
 
@@ -270,25 +270,25 @@ foreach (@channels) { $_ = lc; }
 # save configuration straight away, to make sure it is possible and to save
 # any initial settings on the first run, if anything changed.
 if ($changed) {
-    &debug("saving configuration to '$cfgfile'...");
-    &Configuration::Save($cfgfile, &configStructure());
+    debug("saving configuration to '$cfgfile'...");
+    Configuration::Save($cfgfile, configStructure());
 }
 
 } # close the scope for the $changed variable
 
 # ensure Mails is ready
-&debug("setting up Mails module...");
+debug("setting up Mails module...");
 $Mails::debug = \&debug;
 $Mails::owner = \$owner;
 
 # setup the IRC variables
-&debug("setting up IRC variables...");
+debug("setting up IRC variables...");
 my $uptime;
-my $irc = new Net::IRC or confess("Could not create a new Net::IRC object. Aborting");
+my $irc = Net::IRC->new() or confess("Could not create a new Net::IRC object. Aborting");
 
 # connect
-&debug("attempting initial connection...");
-&connect(); # hmm.
+debug("attempting initial connection...");
+setup_connection();
 
 # setup the modules array
 my @modules; # we initialize it lower down (at the bottom in fact)
@@ -313,10 +313,10 @@ sub setEventArgs {
 my $lastNick;
 
 # setup connection
-sub connect {
+sub setup_connection {
     $uptime = time();
 
-    &debug("connecting to $server:$port using nick '$nicks[$nick]'..." 
+    debug("connecting to $server:$port using nick '$nicks[$nick]'..." 
 			. ($ssl && lc($ssl) eq 'yes')? "via SSL" : "");
     my ($bot, $mailed);
 
@@ -343,28 +343,28 @@ sub connect {
              LocalAddr => $localAddr,
 			 SSL => ($ssl && lc($ssl) eq 'yes') ? 'true' : undef, 
            )) {
-        &debug("Could not connect. Are you sure '$server:$port' is a valid host?");
+        debug("Could not connect. Are you sure '$server:$port' is a valid host?");
         unless (inet_aton($server)) {
-            &debug('I couldn\'t resolve it.');
+            debug('I couldn\'t resolve it.');
         }
         if (defined($localAddr)) {
-            &debug("Is '$localAddr' the correct address of the interface to use?");
+            debug("Is '$localAddr' the correct address of the interface to use?");
         } else {
-            &debug("Try editing '$cfgfile' to set 'localAddr' to the address of the interface to use.");
+            debug("Try editing '$cfgfile' to set 'localAddr' to the address of the interface to use.");
         }
         if ($Net::IRC::VERSION < 0.73) {
-            &debug("Note that to use 'localAddr' you need Net::IRC version 0.73 or higher (you have $Net::IRC::VERSION)");
+            debug("Note that to use 'localAddr' you need Net::IRC version 0.73 or higher (you have $Net::IRC::VERSION)");
         }
-        $mailed = &Mails::ServerDown($server, $port, $localAddr, $nicks[$nick], $ircname, $identd) unless $mailed;
+        $mailed = Mails::ServerDown($server, $port, $localAddr, $nicks[$nick], $ircname, $identd) unless $mailed;
         sleep($sleepdelay);
-        &Configuration::Get($cfgfile, &configStructure(\$server, \$port, \$password, \@nicks, \$nick, \$owner, \$sleepdelay));
-        &debug("connecting to $server:$port again...");
+        Configuration::Get($cfgfile, configStructure(\$server, \$port, \$password, \@nicks, \$nick, \$owner, \$sleepdelay));
+        debug("connecting to $server:$port again...");
     }
 
-    &debug("connected! woohoo!");
+    debug("connected! woohoo!");
 
     # add the handlers
-    &debug("adding event handlers");
+    debug("adding event handlers");
 
     # $bot->debug(1); # this can help when debugging API stuff
 
@@ -463,19 +463,19 @@ sub on_startup {
     my ($self, $event) = @_;
     my (@args) = $event->args;
     shift(@args);
-    &debug(join(' ', @args));
+    debug(join(' ', @args));
 }
 
 # called when the client receives a server notice
 sub on_notice {
     my ($self, $event) = @_;
-    &debug($event->type.': '.join(' ', $event->args));
+    debug($event->type.': '.join(' ', $event->args));
 }
 
 # called when the client receives whois data
 sub on_whois {
     my ($self, $event) = @_;
-    &debug('collecting whois information: '.join('|', $event->args));
+    debug('collecting whois information: '.join('|', $event->args));
     # XXX could cache this information and then autoop people from
     # the bot's host, or whatever
 }
@@ -503,7 +503,7 @@ sub on_set_nick {
     }
     # set variable
     $nick = $newnick;
-    &debug("using nick '$nicks[$nick]'");
+    debug("using nick '$nicks[$nick]'");
 
     # try to get our hostname
     $self->whois($nicks[$nick]);
@@ -514,7 +514,7 @@ sub on_set_nick {
     }
 
     # save
-    &Configuration::Save($cfgfile, &::configStructure(\$nick, \@nicks));
+    Configuration::Save($cfgfile, ::configStructure(\$nick, \@nicks));
 }
 
 sub on_nick_taken {
@@ -523,26 +523,26 @@ sub on_nick_taken {
 
     if ($event->type eq 'erroneusnickname') {
         my ($currentNick, $triedNick, $err) = $event->args; # current, tried, errmsg
-        &debug("requested nick ('$triedNick') refused by server ('$err')");
+        debug("requested nick ('$triedNick') refused by server ('$err')");
     } elsif ($event->type eq 'nicknameinuse') {
         my ($currentNick, $triedNick, $err) = $event->args; # current, tried, errmsg
-        &debug("requested nick ('$triedNick') already in use ('$err')");
+        debug("requested nick ('$triedNick') already in use ('$err')");
     } else {
         my $type = $event->type;
         my $args = join(' ', $event->args);
-        &debug("message $type from server: $args");
+        debug("message $type from server: $args");
     }
 
     if (defined $lastNick) {
-        &debug("silently abandoning nick change idea :-)");
+        debug("silently abandoning nick change idea :-)");
         return;
     }
 
     # at this point, we don't yet have a nick, but we need one
     
     if ($nickSlept) {
-        &debug("waited for a bit -- reading $cfgfile then searching for a nick...");
-        &Configuration::Get($cfgfile, &configStructure(\@nicks, \$nick));
+        debug("waited for a bit -- reading $cfgfile then searching for a nick...");
+        Configuration::Get($cfgfile, configStructure(\@nicks, \$nick));
         $nick = 0 if ($nick > $#nicks) or ($nick < 0); # sanitise
         $nickFirstTried = $nick;
     } else {
@@ -556,15 +556,15 @@ sub on_nick_taken {
         if ($nick == $nickFirstTried) {
             # looped!
             local $" = ", ";
-            &debug("could not find an acceptable nick");
-            &debug("nicks tried: @nicks");
+            debug("could not find an acceptable nick");
+            debug("nicks tried: @nicks");
 
             if (not -t) {
-                &debug("edit $cfgfile to add more nicks *hint* *hint*");
+                debug("edit $cfgfile to add more nicks *hint* *hint*");
                 $nickProblemEscalated ||= # only e-mail once (returns 0 on failure)
                   Mails::NickShortage($cfgfile, $self->server, $self->port,
-                                      $self->username, $self->ircname, @nicks)
-                &debug("going to wait $sleepdelay seconds so as not to overload ourselves.");
+                                      $self->username, $self->ircname, @nicks);
+                debug("going to wait $sleepdelay seconds so as not to overload ourselves.");
                 $self->schedule($sleepdelay, \&on_nick_taken, $event, 1); # try again
                 return; # otherwise we no longer respond to pings.
             }
@@ -574,7 +574,7 @@ sub on_nick_taken {
             my $new = <>;
             chomp($new);
             if (not $new) {
-                &debug("Could not find an acceptable nick");
+                debug("Could not find an acceptable nick");
                 exit(1);
             }
             # XXX this could introduce duplicates
@@ -584,8 +584,8 @@ sub on_nick_taken {
         }
     }
 
-    &debug("now going to try nick '$nicks[$nick]'");
-    &Configuration::Save($cfgfile, &configStructure(\$nick, \@nicks));
+    debug("now going to try nick '$nicks[$nick]'");
+    Configuration::Save($cfgfile, configStructure(\$nick, \@nicks));
     $self->nick($nicks[$nick]);
 }
 
@@ -594,7 +594,7 @@ sub on_set_umode {
     my ($self, $event) = @_;
     # set usermode for the bot
     if ($umode) {
-        &debug("using umode: '$umode'");
+        debug("using umode: '$umode'");
         $self->mode($self->nick, $umode);
     }
 }
@@ -604,10 +604,10 @@ sub on_connect {
     my $self = shift;
 
     if (defined($self->{'__mozbot__shutdown'})) { # HACK HACK HACK
-        &debug('Uh oh. I connected anyway, even though I thought I had timed out.');
-        &debug('I\'m going to increase the timeout time by 20%.');
+        debug('Uh oh. I connected anyway, even though I thought I had timed out.');
+        debug('I\'m going to increase the timeout time by 20%.');
         $connectTimeout = $connectTimeout * 1.2;
-        &Configuration::Save($cfgfile, &configStructure(\$connectTimeout));
+        Configuration::Save($cfgfile, configStructure(\$connectTimeout));
         $self->quit('having trouble connecting, brb...');
         # XXX we don't call the SpottedQuit handlers here
         return;
@@ -629,17 +629,17 @@ sub on_connect {
         next if $_ eq 'Admin'; # Admin is static and is installed manually above
         my $result = LoadModule($_);
         if (ref($result)) {
-            &debug("loaded $_");
+            debug("loaded $_");
         } else {
-            &debug("failed to load $_", $result);
+            debug("failed to load $_", $result);
         }
     }
 
     # mass-configure the modules
-    &debug("loading module configurations...");
+    debug("loading module configurations...");
     { my %struct; # scope this variable
     foreach my $module (@modules) { %struct = (%struct, %{$module->configStructure()}); }
-    &Configuration::Get($cfgfile, \%struct);
+    Configuration::Get($cfgfile, \%struct);
     } # close the scope for the %struct variable
 
     # tell the modules they have joined IRC
@@ -651,18 +651,18 @@ sub on_connect {
     }
 
     # tell the modules to set up the scheduled commands
-    &debug('setting up scheduler...');
+    debug('setting up scheduler...');
     foreach my $module (@modules) {
         eval {
             $module->Schedule($event);
         };
         if ($@) {
-            &debug("Warning: An error occured while loading the module:\n$@");
+            debug("Warning: An error occured while loading the module:\n$@");
         }
     }
 
     # join the channels
-    &debug('going to join: '.join(',', @channels));
+    debug('going to join: '.join(',', @channels));
     foreach my $channel (@channels) {
         if (defined($channelKeys{$channel})) {
             $self->join($channel, $channelKeys{$channel});
@@ -673,14 +673,14 @@ sub on_connect {
     @channels = ();
 
     # enable the drainmsgqueue
-    &drainmsgqueue($self);
+    drainmsgqueue($self);
     $self->schedule($delaytime, \&lowerRecentMessageCount);
 
     # signal that we are connected (see next two functions)
     $self->{'__mozbot__active'} = 1; # HACK HACK HACK
 
     # all done!
-    &debug('initialisation took '.&days($uptime).'.');
+    debug('initialisation took '.days($uptime).'.');
     $uptime = time();
 
 }
@@ -689,12 +689,12 @@ sub on_check_connect {
     my $self = shift;
     return if (defined($self->{'__mozbot__shutdown'}) or defined($self->{'__mozbot__active'})); # HACK HACK HACK
     $self->{'__mozbot__shutdown'} = 1; # HACK HACK HACK
-    &debug("connection timed out -- trying again");
+    debug("connection timed out -- trying again");
     # XXX we don't call the SpottedQuit handlers here
     foreach (@modules) { $_->unload(); }
     @modules = ();
     $self->quit('connection timed out -- trying to reconnect');
-    &connect();
+    setup_connection();
 }
 
 # if something nasty happens
@@ -702,7 +702,7 @@ sub on_disconnected {
     my ($self, $event) = @_;
     return if defined($self->{'__mozbot__shutdown'}); # HACK HACK HACK
     $self->{'__mozbot__shutdown'} = 1; # HACK HACK HACK
-    # &do(@_, 'SpottedQuit'); # XXX do we want to do this?
+    # perform(@_, 'SpottedQuit'); # XXX do we want to do this?
     my($reason) = $event->args;
     if ($reason =~ /Connection timed out/osi
         and ($serverRestrictsIRCNames ne $server
@@ -710,49 +710,49 @@ sub on_disconnected {
         # try to set everything up as simple as possible
         $serverRestrictsIRCNames = $server;
         $serverExpectsValidUsername = $server;
-        &Configuration::Save($cfgfile, &configStructure(\$serverRestrictsIRCNames));
-        &debug("Hrm, $server is having issues.");
-        &debug("We're gonna try again with different settings, hold on.");
-        &debug("The full message from the server was: '$reason'");
+        Configuration::Save($cfgfile, configStructure(\$serverRestrictsIRCNames));
+        debug("Hrm, $server is having issues.");
+        debug("We're gonna try again with different settings, hold on.");
+        debug("The full message from the server was: '$reason'");
     } elsif ($reason =~ /Bad user info/osi and $serverRestrictsIRCNames ne $server) {
         # change our IRC name to something simpler by setting the flag
         $serverRestrictsIRCNames = $server;
-        &Configuration::Save($cfgfile, &configStructure(\$serverRestrictsIRCNames));
-        &debug("Hrm, $server didn't like our IRC name.");
-        &debug("Trying again with a simpler one, hold on.");
-        &debug("The full message from the server was: '$reason'");
+        Configuration::Save($cfgfile, configStructure(\$serverRestrictsIRCNames));
+        debug("Hrm, $server didn't like our IRC name.");
+        debug("Trying again with a simpler one, hold on.");
+        debug("The full message from the server was: '$reason'");
     } elsif ($reason =~ /identd/osi and $serverExpectsValidUsername ne $server) {
         # try setting our username to the actual username
         $serverExpectsValidUsername = $server;
-        &Configuration::Save($cfgfile, &configStructure(\$delaytime));
-        &debug("Hrm, $server said something about an identd problem.");
-        &debug("Trying again with our real username, hold on.");
-        &debug("The full message from the server was: '$reason'");
+        Configuration::Save($cfgfile, configStructure(\$delaytime));
+        debug("Hrm, $server said something about an identd problem.");
+        debug("Trying again with our real username, hold on.");
+        debug("The full message from the server was: '$reason'");
     } elsif ($reason =~ /Excess Flood/osi) {
         # increase the delay by 20%
         $delaytime = $delaytime * 1.2;
-        &Configuration::Save($cfgfile, &configStructure(\$delaytime));
-        &debug('Hrm, we it seems flooded the server. Trying again with a delay 20% longer.');
-        &debug("The full message from the server was: '$reason'");
+        Configuration::Save($cfgfile, configStructure(\$delaytime));
+        debug('Hrm, we it seems flooded the server. Trying again with a delay 20% longer.');
+        debug("The full message from the server was: '$reason'");
     } elsif ($reason =~ /Bad Password/osi) {
-        &debug('Hrm, we don\'t seem to know the server password.');
-        &debug("The full message from the server was: '$reason'");
+        debug('Hrm, we don\'t seem to know the server password.');
+        debug("The full message from the server was: '$reason'");
         if (-t) {
             print "Please enter the server password: ";
             $password = <>;
             chomp($password);
-            &Configuration::Save($cfgfile, &configStructure(\$password));
+            Configuration::Save($cfgfile, configStructure(\$password));
         } else {
-            &debug("edit $cfgfile to set the password *hint* *hint*");
-            &debug("going to wait $sleepdelay seconds so as not to overload ourselves.");
+            debug("edit $cfgfile to set the password *hint* *hint*");
+            debug("going to wait $sleepdelay seconds so as not to overload ourselves.");
             sleep $sleepdelay;
         }
     } else {
-        &debug("eek! disconnected from network: '$reason'");
+        debug("eek! disconnected from network: '$reason'");
     }
     foreach (@modules) { $_->unload(); }
     @modules = ();
-    &connect();
+    setup_connection();
 }
 
 # on_join_channel: called when we join a channel
@@ -761,8 +761,8 @@ sub on_join_channel {
     my ($nick, $channel) = $event->args;
     $channel = lc($channel);
     push(@channels, $channel);
-    &Configuration::Save($cfgfile, &configStructure(\@channels));
-    &debug("joined $channel, about to autojoin modules...");
+    Configuration::Save($cfgfile, configStructure(\@channels));
+    debug("joined $channel, about to autojoin modules...");
     foreach (@modules) {
         $_->JoinedChannel(newEvent({
             'bot' => $self,
@@ -775,7 +775,7 @@ sub on_join_channel {
 
 # if something nasty happens
 sub on_destroy {
-    &debug("Connection: garbage collected");
+    debug("Connection: garbage collected");
 }
 
 sub targetted {
@@ -792,19 +792,19 @@ sub on_public {
         if ($_ ne '') {
             setEventArgs($event, $_);
             $event->{'__mozbot__fulldata'} = $data;
-            &do($self, $event, 'Told', 'Baffled');
+            perform($self, $event, 'Told', 'Baffled');
         } else {
-            &do($self, $event, 'Heard');
+            perform($self, $event, 'Heard');
         }
     } else {
         foreach my $nick (@ignoredTargets) {
             if (defined targetted($data, $nick)) {
-                my $channel = &toToChannel($self, @{$event->to});
-                &debug("Ignored (target matched /$nick/): $channel <".$event->nick.'> '.join(' ', $event->args));
+                my $channel = toToChannel($self, @{$event->to});
+                debug("Ignored (target matched /$nick/): $channel <".$event->nick.'> '.join(' ', $event->args));
                 return;
             }
         }
-        &do($self, $event, 'Heard');
+        perform($self, $event, 'Heard');
     }
 }
 
@@ -813,7 +813,7 @@ sub on_public {
 # some things (like opn's NickServ) it's appropriate.
 sub on_noticemsg {
     my ($self, $event) = @_;
-    &do($self, $event, 'Noticed');
+    perform($self, $event, 'Noticed');
 }
 
 sub on_private {
@@ -826,7 +826,7 @@ sub on_private {
         # have to remember to omit the bot name).
         setEventArgs($event, $2);
     }
-    &do($self, $event, 'Told', 'Baffled');
+    perform($self, $event, 'Told', 'Baffled');
 }
 
 # on_me: /me actions (CTCP actually)
@@ -837,9 +837,9 @@ sub on_me {
     setEventArgs($event, $data);
     my $nick = quotemeta($nicks[$nick]);
     if ($data =~ /(?:^|[\s":<([])$nick(?:[])>.,?!\s'&":]|$)/is) {
-        &do($self, $event, 'Felt');
+        perform($self, $event, 'Felt');
     } else {
-        &do($self, $event, 'Saw');
+        perform($self, $event, 'Saw');
     }
 }
 
@@ -855,7 +855,7 @@ sub on_topic {
         setEventArgs($event, $topic);
         $event->to($channel);
     }
-    &do(@_, 'SpottedTopicChange');
+    perform(@_, 'SpottedTopicChange');
 }
 
 # on_kick: parse the kick event
@@ -867,9 +867,9 @@ sub on_kick {
     foreach (@$who) {
         setEventArgs($event, $_);
         if ($_ eq $nicks[$nick]) {
-            &do(@_, 'Kicked');
+            perform(@_, 'Kicked');
         } else {
-            &do(@_, 'SpottedKick');
+            perform(@_, 'SpottedKick');
         }
     }
 }
@@ -877,7 +877,7 @@ sub on_kick {
 # Gives lag results for outgoing PINGs.
 sub on_cpong {
     my ($self, $event) = @_;
-    &debug('completed CTCP PING with '.$event->nick.': '.days($event->args->[0]));
+    debug('completed CTCP PING with '.$event->nick.': '.days($event->args->[0]));
     # XXX should be able to use this then... see also Greeting module
     # in standard distribution
 }
@@ -904,19 +904,19 @@ sub on_nick {
     if ($event->nick eq $nicks[$nick]) {
         on_set_nick($self, $event);
     }
-    &do(@_, 'SpottedNickChange');
+    perform(@_, 'SpottedNickChange');
 }
 
 # simple handler for when users do various things and stuff
-sub on_join { &do(@_, 'SpottedJoin'); }
-sub on_part { &do(@_, 'SpottedPart'); }
-sub on_quit { &do(@_, 'SpottedQuit'); }
-sub on_invite { &do(@_, 'Invited'); }
-sub on_mode { &do(@_, 'ModeChange'); } # XXX need to parse modes # XXX on key change, change %channelKeys hash
-sub on_umode { &do(@_, 'UModeChange'); }
-sub on_version { &do(@_, 'CTCPVersion'); }
-sub on_source { &do(@_, 'CTCPSource'); }
-sub on_cping { &do(@_, 'CTCPPing'); }
+sub on_join { perform(@_, 'SpottedJoin'); }
+sub on_part { perform(@_, 'SpottedPart'); }
+sub on_quit { perform(@_, 'SpottedQuit'); }
+sub on_invite { perform(@_, 'Invited'); }
+sub on_mode { perform(@_, 'ModeChange'); } # XXX need to parse modes # XXX on key change, change %channelKeys hash
+sub on_umode { perform(@_, 'UModeChange'); }
+sub on_version { perform(@_, 'CTCPVersion'); }
+sub on_source { perform(@_, 'CTCPSource'); }
+sub on_cping { perform(@_, 'CTCPPing'); }
 
 sub newEvent($) {
     my $event = shift;
@@ -943,11 +943,11 @@ sub toToChannel {
 
 # XXX some code below calls this, on lines marked "hack hack hack". We
 # should fix this so that those are supported calls.
-sub do {
+sub perform {
     my $self = shift @_;
     my $event = shift @_;
     my $to = $event->to;
-    my $channel = &toToChannel($self, @$to);
+    my $channel = toToChannel($self, @$to);
     my $e = newEvent({
         'bot' => $self,
         '_event' => $event, # internal internal internal do not use... ;-)
@@ -982,7 +982,7 @@ sub do {
             my @modulesInNextLoop = @modules;
             $continue = 1;
             $e->{'type'} = $type;
-            &debug("$type: $channel <".$event->nick.'> '.join(' ', $event->args));
+            debug("$type: $channel <".$event->nick.'> '.join(' ', $event->args));
             do {
                 $level++;
                 $e->{'level'} = $level;
@@ -995,9 +995,9 @@ sub do {
                     };
                     if ($@) {
                         # $@ contains the error
-                        &debug("ERROR IN MODULE $module->{'_name'}!!!", $@);
+                        debug("ERROR IN MODULE $module->{'_name'}!!!", $@);
                     } elsif (!defined($currentResponse)) {
-                        &debug("ERROR IN MODULE $module->{'_name'}: invalid response code to event '$type'.");
+                        debug("ERROR IN MODULE $module->{'_name'}: invalid response code to event '$type'.");
                     } else {
                         if ($currentResponse > $level) {
                             push(@modulesInNextLoop, $module);
@@ -1008,9 +1008,9 @@ sub do {
             } while ($continue and @modulesInNextLoop);
         } while ($continue and scalar(@_));
     } else {
-        &debug('Ignored (from \'' . $event->userhost . "'): $channel <".$event->nick.'> '.join(' ', $event->args));
+        debug('Ignored (from \'' . $event->userhost . "'): $channel <".$event->nick.'> '.join(' ', $event->args));
     }
-    &doLog($e);
+    doLog($e);
 }
 
 sub doLog {
@@ -1021,7 +1021,7 @@ sub doLog {
         };
         if ($@) {
             # $@ contains the error
-            &debug("ERROR!!!", $@);
+            debug("ERROR!!!", $@);
         }
     }
 }
@@ -1070,7 +1070,7 @@ sub drainmsgqueue {
         unless (weHaveSaidThisTooManyTimesAlready($self, \$who, \$msg, \$do)) {
             my $type;
             if ($do eq 'msg') {
-                &debug("->$who: $msg"); # XXX this makes logfiles large quickly...
+                debug("->$who: $msg"); # XXX this makes logfiles large quickly...
                 eval {
                     $self->privmsg($who, $msg);
                 };
@@ -1078,12 +1078,12 @@ sub drainmsgqueue {
                     if ($@ =~ /wide character/io){
                         $self->privmsg($who, Encode::encode('utf8',$msg));
                     } else {
-                        &debug("Error: $@");
+                        debug("Error: $@");
                     }
                 }
                 $type = 'Heard';
             } elsif ($do eq 'me') {
-                &debug("->$who * $msg"); # XXX
+                debug("->$who * $msg"); # XXX
                 eval {
                 $self->me($who, $msg);
                 };
@@ -1091,12 +1091,12 @@ sub drainmsgqueue {
                     if ($@ =~ /wide character/io){
                         $self->me($who, Encode::encode('utf8',$msg));
                     } else {
-                        &debug("Error: $@");
+                        debug("Error: $@");
                     }
                 }
                 $type = 'Saw';
             } elsif ($do eq 'notice') {
-                &debug("=notice=>$who: $msg");
+                debug("=notice=>$who: $msg");
                 eval {
                 $self->notice($who, $msg);
                 };
@@ -1104,27 +1104,27 @@ sub drainmsgqueue {
                     if ($@ =~ /wide character/io){
                         $self->notice($who, Encode::encode('utf8',$msg));
                     } else {
-                        &debug("Error: $@");
+                        debug("Error: $@");
                     }
                 }
                 # $type = 'XXX';
             } elsif ($do eq 'ctcpSend') {
-                { local $" = ' '; &debug("->$who CTCP PRIVMSG @$msg"); }
+                { local $" = ' '; debug("->$who CTCP PRIVMSG @$msg"); }
                 my $type = shift @$msg; # @$msg contains (type, args)
                 $self->ctcp($type, $who, @$msg);
                 # $type = 'XXX';
             } elsif ($do eq 'ctcpReply') {
-                &debug("->$who CTCP NOTICE $msg");
+                debug("->$who CTCP NOTICE $msg");
                 $self->ctcp_reply($who, $msg);
                 # $type = 'XXX';
             } else {
-                &debug("Unknown action '$do' intended for '$who' (content: '$msg') ignored.");
+                debug("Unknown action '$do' intended for '$who' (content: '$msg') ignored.");
             }
             if (defined($type)) {
-                &doLog(newEvent({
+                doLog(newEvent({
                     'bot' => $self,
                     '_event' => undef,
-                    'channel' => &toToChannel($self, $who),
+                    'channel' => toToChannel($self, $who),
                     'from' => $nicks[$nick],
                     'target' => $who,
                     'user' => undef, # XXX
@@ -1141,7 +1141,7 @@ sub drainmsgqueue {
         }
         if (@msgqueue > 0) {
             if ((@msgqueue % 10 == 0) and (time() - $timeLastSetAway > 5 * $delaytime)) {
-                &bot_longprocess($self, "Long send queue. There were $qln, and I just sent one to $who.");
+                bot_longprocess($self, "Long send queue. There were $qln, and I just sent one to $who.");
                 $timeLastSetAway = time();
                 $self->schedule($delaytime * 4, # because previous one counts as message, plus you want to delay an extra bit regularly
                     \&drainmsgqueue);
@@ -1149,7 +1149,7 @@ sub drainmsgqueue {
                 $self->schedule($delaytime, \&drainmsgqueue);
             }
         } else {
-            &bot_back($self); # clear away state
+            bot_back($self); # clear away state
         }
     }
 }
@@ -1183,18 +1183,18 @@ sub weHaveSaidThisTooManyTimesAlready {
             $recentMessages{$key} = $recentMessageCountLimit;
         }
         if ($$do eq 'msg') {
-            &debug("MUTED: ->$$who: $$msg");
+            debug("MUTED: ->$$who: $$msg");
         } elsif ($$do eq 'me') {
-            &debug("MUTED: ->$$who * $$msg"); # XXX
+            debug("MUTED: ->$$who * $$msg"); # XXX
         } elsif ($$do eq 'notice') {
-            &debug("MUTED: =notice=>$$who: $$msg");
+            debug("MUTED: =notice=>$$who: $$msg");
         } elsif ($$do eq 'ctcpSend') {
             local $" = ' ';
-            &debug("MUTED: ->$$who CTCP PRIVMSG @{$$msg}");
+            debug("MUTED: ->$$who CTCP PRIVMSG @{$$msg}");
         } elsif ($$do eq 'ctcpReply') {
-            &debug("MUTED: ->$$who CTCP NOTICE $$msg");
+            debug("MUTED: ->$$who CTCP NOTICE $$msg");
         } else {
-            &debug("MUTED: Unknown action '$$do' intended for '$$who' (content: '$$msg') ignored.");
+            debug("MUTED: Unknown action '$$do' intended for '$$who' (content: '$$msg') ignored.");
         }
         return 1;
     }
@@ -1253,7 +1253,7 @@ sub getnextmsg {
     my $index = 0;
     while ($index < @msgqueue) {
         if ($msgqueue[$index]->[0] eq $who) {
-            push(@newmsgqueue, &yank($index, \@msgqueue));
+            push(@newmsgqueue, yank($index, \@msgqueue));
         } else {
             $index++;
         }
@@ -1267,7 +1267,7 @@ my $markedaway = 0;
 # mark bot as being away
 sub bot_longprocess {
     my $self = shift;
-    &debug('[away: '.join(' ',@_).']');
+    debug('[away: '.join(' ',@_).']');
     $self->away(join(' ',@_));
     $markedaway = @_;
 }
@@ -1289,7 +1289,7 @@ sub bot_select {
     local $/;
     undef $/;
     my $data = <$pipe>;
-    &debug("child ${$pipe}->{'BotModules_PID'} completed ${$pipe}->{'BotModules_ChildType'}".
+    debug("child ${$pipe}->{'BotModules_PID'} completed ${$pipe}->{'BotModules_ChildType'}".
            (${$pipe}->{'BotModules_Module'}->{'_shutdown'} ?
             ' (nevermind, module has shutdown)': ''));
     kill 9, ${$pipe}->{'BotModules_PID'}; # ensure child is dead
@@ -1307,7 +1307,7 @@ sub bot_select {
     };
     if ($@) {
         # $@ contains the error
-        &debug("ERROR!!!", $@);
+        debug("ERROR!!!", $@);
     }
     # prevent any memory leaks by cleaning up all the variables we added
     foreach (keys %{${$pipe}}) {
@@ -1317,7 +1317,7 @@ sub bot_select {
 
 sub bot_select_data_available {
     my ($handle) = @_;
-    &debug("Module ${$handle}->{'BotModules_Module'}->{'_name'} received some data");
+    debug("Module ${$handle}->{'BotModules_Module'}->{'_name'} received some data");
     # read data while there is some
     my $fh = '';
     vec($fh, fileno($handle), 1) = 1;
@@ -1343,17 +1343,17 @@ sub bot_select_data_available {
         };
         if ($@) {
             # $@ contains the error
-            &debug("ERROR!!!", $@);
+            debug("ERROR!!!", $@);
         }
     } else {
         # module doesn't care, it was shut down
-        &debug("Dropping data - module is already shut down.");
+        debug("Dropping data - module is already shut down.");
         $close = 1;
     }
     if ($close) {
         # Note: It's the responsibility of the module to actually
         # close the handle.
-        &debug("Dropping handle...");
+        debug("Dropping handle...");
         $irc->removefh($handle);
         # prevent any memory leaks by cleaning up all the variables we added
         foreach (keys %{${$handle}}) {
@@ -1372,12 +1372,12 @@ sub debug {
         $line = $_; # can't chomp $_ since it is a hardref to the arguments...
         chomp $line; # ...and they are probably a constant string!
         if (-t) {
-            print &logdate() . " ($$) $line";
+            print logdate() . " ($$) $line";
         }
         if ($LOGGING) {
             # XXX this file grows without bounds!!!
             if (open(LOG, ">>$LOGFILEPREFIX.$$.log")) {
-                print LOG &logdate() . " $line\n";
+                print LOG logdate() . " $line\n";
                 close(LOG);
                 print "\n";
             } else {
@@ -1417,9 +1417,9 @@ sub days {
 # signal handler
 sub killed {
     my($sig) = @_;
-    &debug("received signal $sig. shutting down...");
-    &debug('This is evil. You should /msg me a shutdown command instead.');
-    &debug('WARNING: SHUTTING ME DOWN LIKE THIS CAN CAUSE FORKED PROCESSES TO START UP AS BOTS!!!'); # XXX which we should fix, of course.
+    debug("received signal $sig. shutting down...");
+    debug('This is evil. You should /msg me a shutdown command instead.');
+    debug('WARNING: SHUTTING ME DOWN LIKE THIS CAN CAUSE FORKED PROCESSES TO START UP AS BOTS!!!'); # XXX which we should fix, of course.
     exit(1); # sane exit, including shutting down any modules
 }
 
@@ -1439,7 +1439,7 @@ my %configStructure; # hash of cfg file keys and associated variable refs
 sub registerConfigVariables {
     my (@variables) = @_;
     foreach (@variables) {
-        $configStructure{$$_[0]} = [$$_[1], $$_[0]];
+        $configStructure{$_->[0]} = [$_->[1], $_->[0]];
     }
 } # are you confused yet?
 
@@ -1507,7 +1507,7 @@ sub LoadModule {
                         # if ok, then add it to the @modules list
                         push(@modules, $newmodule);
                         push(@modulenames, $newmodule->{'_name'});
-                        &Configuration::Save($cfgfile, &::configStructure(\@modulenames));
+                        Configuration::Save($cfgfile, ::configStructure(\@modulenames));
                         # Done!!!
                         return $newmodule;
                     }
@@ -1550,7 +1550,7 @@ sub UnloadModule {
     } else {
         @modules = @newmodules;
         @modulenames = @newmodulenames;
-        &Configuration::Save($cfgfile, &::configStructure(\@modulenames));
+        Configuration::Save($cfgfile, ::configStructure(\@modulenames));
         return;
     }
 }
@@ -1564,7 +1564,7 @@ sub getSalt {
 
 sub newPassword {
     my($text) = @_;
-    return crypt($text, &getSalt());
+    return crypt($text, getSalt());
 }
 
 sub checkPassword {
@@ -1702,14 +1702,14 @@ sub do {
 sub debug {
     my $self = shift;
     foreach my $line (@_) {
-        &::debug('Module '.$self->{'_name'}.': '.$line);
+        ::debug('Module '.$self->{'_name'}.': '.$line);
     }
 }
 
 # saveConfig - call this when you change a configuration option. It resaves the config file.
 sub saveConfig {
     my $self = shift;
-    &Configuration::Save($cfgfile, $self->configStructure());
+    Configuration::Save($cfgfile, $self->configStructure());
 }
 
 # registerVariables - Registers a variable with the config system and the var setting system
@@ -1747,7 +1747,7 @@ sub doScheduled {
     };
     if ($@) {
         # $@ contains the error
-        &::debug("ERROR!!!", $@);
+        ::debug("ERROR!!!", $@);
     }
 }
 
@@ -1806,7 +1806,7 @@ sub spawnChild {
                     $pipe->writer(); # get writing end of pipe, ready to output the result
                     my $output;
                     if (ref($command) eq 'CODE') {
-                        $output = &$command(@$arguments);
+                        $output = $command->(@$arguments);
                     } else {
                         # it would be nice if some of this was on a timeout...
                         my $result = IO::SecurePipe->new(); # create a new pipe for $command
@@ -1902,13 +1902,13 @@ sub getURI {
 # returns a reference to a module -- DO NOT STORE THIS REFERENCE!!!
 sub getModule {
     my $self = shift;
-    return &::getModule(@_);
+    return ::getModule(@_);
 }
 
 # returns a reference to @msgqueue
 # manipulating this is probably not a good idea. In particular,
 # don't add anything to this array (use the appropriate methods
-# instead, those that use &::sendmsg, below).
+# instead, those that use ::sendmsg(), below).
 sub getMessageQueue {
     my $self = shift;
     return \@msgqueue;
@@ -1938,7 +1938,7 @@ sub tellAdmin {
     my ($event, $data) = @_;
     if ($lastadmin) {
         $self->debug("Trying to tell admin '$lastadmin' this: $data");
-        &::sendmsg($event->{'bot'}, $lastadmin, $data);
+        ::sendmsg($event->{'bot'}, $lastadmin, $data);
     } else {
         $self->debug("Wanted to tell an admin '$data', but I've never seen one.");
     }
@@ -1948,7 +1948,7 @@ sub tellAdmin {
 sub ctcpSend {
     my $self = shift;
     my ($event, $type, $data) = @_;
-    &::sendmsg($event->{'bot'}, $event->{'target'}, [$type, $data], 'ctcpSend');
+    ::sendmsg($event->{'bot'}, $event->{'target'}, [$type, $data], 'ctcpSend');
 }
 
 # ctcpReply - Sends a CTCP reply to someone
@@ -1959,9 +1959,9 @@ sub ctcpReply {
         cluck('No type passed to ctcpReply - ignored');
     }
     if (defined($data)) {
-        &::sendmsg($event->{'bot'}, $event->{'from'}, "$type $data", 'ctcpReply');
+        ::sendmsg($event->{'bot'}, $event->{'from'}, "$type $data", 'ctcpReply');
     } else {
-        &::sendmsg($event->{'bot'}, $event->{'from'}, $type, 'ctcpReply');
+        ::sendmsg($event->{'bot'}, $event->{'from'}, $type, 'ctcpReply');
     }
 }
 
@@ -1969,7 +1969,7 @@ sub ctcpReply {
 sub notice {
     my $self = shift;
     my ($event, $data) = @_;
-    &::sendmsg($event->{'bot'}, $event->{'target'}, $data, 'notice');
+    ::sendmsg($event->{'bot'}, $event->{'target'}, $data, 'notice');
 }
 
 # say - Sends a message to the channel
@@ -1978,7 +1978,7 @@ sub say {
     my ($event, $data) = @_;
     return unless defined $event->{'target'};
     $data =~ s/^\Q$event->{'target'}\E: //gs;
-    &::sendmsg($event->{'bot'}, $event->{'target'}, $data);
+    ::sendmsg($event->{'bot'}, $event->{'target'}, $data);
 }
 
 # privsay - Sends message to person or channel directly
@@ -2005,7 +2005,7 @@ sub announce {
     my $self = shift;
     my ($event, $data) = @_;
     foreach (@{$self->{'channels'}}) {
-        &::sendmsg($event->{'bot'}, $_, $data);
+        ::sendmsg($event->{'bot'}, $_, $data);
     }
 }
 
@@ -2013,14 +2013,14 @@ sub announce {
 sub directSay {
     my $self = shift;
     my ($event, $data) = @_;
-    &::sendmsg($event->{'bot'}, $event->{'from'}, $data);
+    ::sendmsg($event->{'bot'}, $event->{'from'}, $data);
 }
 
 # channelSay - Sends a message to the channel the message came from, IFF it came from a channel.
 sub channelSay {
     my $self = shift;
     my ($event, $data) = @_;
-    &::sendmsg($event->{'bot'}, $event->{'channel'}, $data) if $event->{'channel'};
+    ::sendmsg($event->{'bot'}, $event->{'channel'}, $data) if $event->{'channel'};
 }
 
 # -- #mozilla was here --
@@ -2038,14 +2038,14 @@ sub channelSay {
 sub emote {
     my $self = shift;
     my ($event, $data) = @_;
-    &::sendmsg($event->{'bot'}, $event->{'target'}, $data, 'me');
+    ::sendmsg($event->{'bot'}, $event->{'target'}, $data, 'me');
 }
 
 # directEmote - Sends an emote to the person who spoke
 sub directEmote {
     my $self = shift;
     my ($event, $data) = @_;
-    &::sendmsg($event->{'bot'}, $event->{'from'}, $data, 'me');
+    ::sendmsg($event->{'bot'}, $event->{'from'}, $data, 'me');
 }
 
 # sayOrEmote - calls say() or emote() depending on whether the string starts with /me or not.
@@ -2186,7 +2186,7 @@ sub convertASCIICode {
 sub days {
     my $self = shift;
     my ($then) = @_;
-    return &::days($then);
+    return ::days($then);
 }
 
 # return the argument if it is a valid regular expression,
@@ -2457,7 +2457,7 @@ sub Scheduled {
     my $self = shift;
     my ($event, @data) = @_;
     if (ref($data[0]) eq 'CODE') {
-        &{$data[0]}($event, @data);
+        $data[0]->($event, @data);
     } else {
         $self->debug('Unhandled scheduled event... :-/');
     }
@@ -2614,7 +2614,7 @@ sub RegisterConfig {
 sub saveConfig {
     my $self = shift;
     $self->SUPER::saveConfig(@_);
-    &Configuration::Save($cfgfile, &::configStructure());
+    Configuration::Save($cfgfile, ::configStructure());
 }
 
 # Set - called to set a variable to a particular value.
@@ -2667,7 +2667,7 @@ sub Get {
         return \@users;
     } else {
         # else, check for known global variables...
-        my $configStructure = &::configStructure();
+        my $configStructure = ::configStructure();
         if (defined($configStructure->{$variable})) {
             return $configStructure->{$variable};
         } else {
@@ -2723,12 +2723,12 @@ sub Told {
     if ($message =~ /^\s*auth\s+($variablepattern)\s+($variablepattern)(\s+quiet)?\s*$/osi) {
         if (not $event->{'channel'}) {
             if (defined($users{$1})) {
-                if (&::checkPassword($2, $users{$1})) {
+                if (::checkPassword($2, $users{$1})) {
                     $authenticatedUsers{$event->{'user'}} = $1;
                     if (not defined($3)) {
                         $self->directSay($event, "Hi $1!");
                     }
-                    &::do($event->{'bot'}, $event->{'_event'}, 'Authed'); # hack hack hack
+                    ::perform($event->{'bot'}, $event->{'_event'}, 'Authed'); # hack hack hack
                 } else {
                     $self->directSay($event, "No...");
                 }
@@ -2741,8 +2741,8 @@ sub Told {
             if ($authenticatedUsers{$event->{'user'}}) {
                 if ($2 ne $3) {
                     $self->say($event, 'New passwords did not match. Try again.');
-                } elsif (&::checkPassword($1, $users{$authenticatedUsers{$event->{'user'}}})) {
-                    $users{$authenticatedUsers{$event->{'user'}}} = &::newPassword($2);
+                } elsif (::checkPassword($1, $users{$authenticatedUsers{$event->{'user'}}})) {
+                    $users{$authenticatedUsers{$event->{'user'}}} = ::newPassword($2);
                     delete($authenticatedUsers{$event->{'user'}});
                     $self->say($event, 'Password changed. Please reauthenticate.');
                     $self->saveConfig();
@@ -2759,7 +2759,7 @@ sub Told {
             } elsif ( $2 ne $3 ) {
                 $self->say($event, 'New passwords did not match. Try again.');
             } elsif ($1) {
-                $users{$1} = &::newPassword($2);
+                $users{$1} = ::newPassword($2);
                 $userFlags{$1} = 0;
                 $self->directSay($event, "New user '$1' added with password '$2' and no rights.");
                 $self->saveConfig();
@@ -2816,7 +2816,7 @@ sub Told {
             } elsif ($2 ne $3) {
                 $self->say($event, 'New passwords did not match. Try again.');
             } else {
-                $users{$1} = &::newPassword($2);
+                $users{$1} = ::newPassword($2);
                 my $count = 0;
                 foreach my $user (keys %authenticatedUsers) {
                     if ($authenticatedUsers{$user} eq $1) {
@@ -2845,7 +2845,7 @@ sub Told {
             #     ...but it should have the right channel/nick/reason info
             # XXX we don't unload the modules here?
             $event->{'bot'}->quit($reason);
-            &Configuration::Get($cfgfile, &::configStructure());
+            Configuration::Get($cfgfile, ::configStructure());
         } elsif ($message =~ /^\s*join\s+([&#+][^\s]+)(?:\s+please)?\s*[?!.]*\s*$/osi) {
             $self->Invited($event, $1);
         } elsif ($message =~ /^\s*part\s+([&#+][^\s]+)(?:\s+please)?\s*[?!.]*\s*$/osi) {
@@ -3153,18 +3153,18 @@ sub PartedChannel {
     my %channels = map { $_ => 1 } @channels;
     delete($channels{$channel});
     @channels = keys %channels;
-    &Configuration::Save($cfgfile, &::configStructure(\@channels));
+    Configuration::Save($cfgfile, ::configStructure(\@channels));
     return $self->SUPER::PartedChannel($event, $channel);
 }
 
 sub LoadModule {
     my $self = shift;
     my ($event, $name, $requested) = @_;
-    my $newmodule = &::LoadModule($name);
+    my $newmodule = ::LoadModule($name);
     if (ref($newmodule)) {
         # configure module
         $newmodule->{'channels'} = [@channels];
-        &Configuration::Get($cfgfile, $newmodule->configStructure());
+        Configuration::Get($cfgfile, $newmodule->configStructure());
         eval {
             $newmodule->Schedule($event);
         };
@@ -3196,7 +3196,7 @@ sub LoadModule {
 sub UnloadModule {
     my $self = shift;
     my ($event, $name, $requested) = @_;
-    my $result = &::UnloadModule($name);
+    my $result = ::UnloadModule($name);
     if (defined($result)) { # failed
         if ($requested) {
             $self->say($event, $result);
@@ -3255,9 +3255,9 @@ package main;
 # Do this at the very end, so we can intersperse "my" initializations outside
 # of routines above and be assured that they will run.
 
-&debug('starting up command loop...');
+debug('starting up command loop...');
 
-END { &debug('perl is shutting down...'); }
+END { debug('perl is shutting down...'); }
 
 $irc->start();
 

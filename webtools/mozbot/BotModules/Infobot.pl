@@ -8,20 +8,21 @@ use AnyDBM_File;
 use Fcntl;
 
 if (not @ARGV == 2) {
-    &use();
+    display_usage();
 } else {
     my $command = shift @ARGV;
     my $filename = shift @ARGV;
+
     if ($command eq '-d') {
-        &dump($filename);
+        dump_file($filename);
     } elsif ($command eq '-i') {
-        &import($filename);
+        import_from_file($filename);
     } else {
-        &use();
+        display_usage();
     }
 }
 
-sub use {
+sub display_usage {
     print "\n";
     print "  usage:  $0 -d dbname\n";
     print "          prints out an ascii flat file of the database listed.\n";
@@ -39,7 +40,7 @@ sub use {
     exit(1);
 }
 
-sub dump {
+sub dump_file {
     my %db;
     tie(%db, 'AnyDBM_File', shift, O_RDONLY, 0666);
     while (my ($key, $val) = each %db) {
@@ -48,7 +49,7 @@ sub dump {
     }
 }
 
-sub import {
+sub import_from_file {
     my %db;
     tie(%db, 'AnyDBM_File', shift, O_WRONLY|O_CREAT, 0666);
     while (<STDIN>) {
