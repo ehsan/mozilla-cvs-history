@@ -67,8 +67,11 @@
       </versionRange>
     </emItem>
     <emItem id="{8CE11043-9A15-4207-A565-0C94C42D590D}"/>
+    <emItem id="{AB2CE124-6272-4b12-94A9-7303C7397BD1}">
+      <versionRange severity="1"/>
+    </emItem>
     <emItem id="{B13721C7-F507-4982-B2E5-502A71474FED}">
-      <versionRange minVersion=" " maxVersion="3.3.0.3970" severity="1"/>
+      <versionRange severity="1"/>
     </emItem>
     <emItem id="{E8E88AB0-7182-11DF-904E-6045E0D72085}"/>
   </emItems>
