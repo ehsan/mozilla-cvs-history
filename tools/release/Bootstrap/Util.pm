@@ -42,17 +42,16 @@ my %PLATFORM_MAP = (# bouncer/shipped-locales platform => patcher2 platform
                     'linux' => 'linux-i686',
                     'linux64' => 'linux-x86_64',
                     'osx' => 'mac',
-                    'osx64' => 'mac64',
                     'osxppc' => 'macppc');
 
 my %PLATFORM_FTP_MAP = (# buildbot platform => ftp directory
                         'linux' => 'linux-i686',
                         'linux64' => 'linux-x86_64',
                         'macosx' => 'mac',
-                        'macosx64' => 'mac64',
+                        'macosx64' => 'mac',
                         'win32' => 'win32');
 
-my %EQUAL_PLATFORMS = ('linux' => ['linux64'], 'osx' => ['osx64']);
+my %EQUAL_PLATFORMS = ('linux' => ['linux64']);
 
 my $DEFAULT_CVSROOT = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
 
@@ -88,6 +87,14 @@ sub GetEqualPlatforms {
 sub GetFTPToBuildbotPlatformMap {
     my %ret;
     while (my ($key, $value) = each %PLATFORM_FTP_MAP){
+        # Special case for platforms with overlapping ftp names.  macosx and
+        # macosx64 buildbot platforms become "mac" on FTP. To prevent
+        # unexpected reverse mapping for the following hash, we ignore macosx
+        # here. macosx is not supported by Firefox 4.x release automation, but
+        # still may be used for some internal conversions.
+        if ($key eq 'macosx'){
+            next;
+        }
         $ret{$value}=$key;
     }
     return %ret;
