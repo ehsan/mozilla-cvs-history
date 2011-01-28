@@ -216,7 +216,18 @@ extern PRInt32 _PR_ppc_AtomicSet(PRInt32 *val, PRInt32 newval);
 })
 #endif
 
-#if defined(__arm__) && defined(_PR_ARM_KUSER)
+#if defined(__arm__)
+#if defined(__GCC_HAVE_SYNC_COMPARE_AND_SWAP_4)
+/* Use GCC built-in functions */
+#define _PR_HAVE_ATOMIC_OPS
+#define _MD_INIT_ATOMIC()
+
+#define _MD_ATOMIC_INCREMENT(ptr) __sync_add_and_fetch(ptr, 1)
+#define _MD_ATOMIC_DECREMENT(ptr) __sync_sub_and_fetch(ptr, 1)
+#define _MD_ATOMIC_SET(ptr, nv) __sync_lock_test_and_set(ptr, nv)
+#define _MD_ATOMIC_ADD(ptr, i) __sync_add_and_fetch(ptr, i)
+
+#elif defined(_PR_ARM_KUSER)
 #define _PR_HAVE_ATOMIC_OPS
 #define _MD_INIT_ATOMIC()
 
@@ -259,6 +270,7 @@ static inline PRInt32 _MD_ATOMIC_SET(PRInt32 *ptr, PRInt32 nv)
     return ov;
 }
 #endif
+#endif /* __arm__ */
 
 #define USE_SETJMP
 #if defined(__GLIBC__) && __GLIBC__ >= 2
