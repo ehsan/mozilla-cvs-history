@@ -3113,8 +3113,8 @@ if test -n "$MOZ_THUMB2"; then
     ;;
   esac
 else
-  case "$target_cpu" in
-    arm*)
+  case "$target" in
+    arm-android-eabi)
       if test "$GNU_CC"; then
         CFLAGS="$CFLAGS -march=armv5te -mthumb-interwork -Wa,-march=armv5te -Wa,-mthumb-interwork"
         CXXFLAGS="$CXXFLAGS -march=armv5te -mthumb-interwork -Wa,-march=armv5te -Wa,-mthumb-interwork"
