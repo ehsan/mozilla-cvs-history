@@ -37,7 +37,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.82 2010/09/24 13:27:28 kaie%kuix.de Exp $
+ * $Id: cert.h,v 1.83 2011/01/29 16:49:31 emaldona%redhat.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -520,12 +520,6 @@ SECStatus CERT_CacheCRL(CERTCertDBHandle* dbhandle, SECItem* newcrl);
    for the application to free the memory after a successful removal
 */
 SECStatus CERT_UncacheCRL(CERTCertDBHandle* dbhandle, SECItem* oldcrl);
-
-/*
-** Decode a certificate and put it into the temporary certificate database
-*/
-extern CERTCertificate *
-CERT_DecodeCertificate (SECItem *derCert, char *nickname,PRBool copyDER);
 
 /*
 ** Find a certificate in the database
