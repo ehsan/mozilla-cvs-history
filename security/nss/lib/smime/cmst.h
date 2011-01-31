@@ -37,7 +37,7 @@
 /*
  * Header for CMS types.
  *
- * $Id: cmst.h,v 1.11 2011/01/28 23:03:59 rrelyea%redhat.com Exp $
+ * $Id: cmst.h,v 1.12 2011/01/31 23:56:30 rrelyea%redhat.com Exp $
  */
 
 #ifndef _CMST_H_
@@ -116,6 +116,14 @@ typedef SECStatus (*NSSCMSGenericWrapperDataCallback)
 						(NSSCMSGenericWrapperData *);
 typedef   void    (*NSSCMSGenericWrapperDataDestroy) 
 						(NSSCMSGenericWrapperData *);
+
+extern const SEC_ASN1Template NSSCMSGenericWrapperDataTemplate[];
+extern const SEC_ASN1Template NSS_PointerToCMSGenericWrapperDataTemplate[];
+
+SEC_ASN1_CHOOSER_DECLARE(NSS_PointerToCMSGenericWrapperDataTemplate)
+SEC_ASN1_CHOOSER_DECLARE(NSSCMSGenericWrapperDataTemplate)
+
+
 
 /*
  * Type of function passed to NSSCMSDecode or NSSCMSDecoderStart.

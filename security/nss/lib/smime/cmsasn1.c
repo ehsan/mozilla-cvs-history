@@ -37,7 +37,7 @@
 /*
  * CMS ASN.1 templates
  *
- * $Id: cmsasn1.c,v 1.8 2011/01/28 23:03:59 rrelyea%redhat.com Exp $
+ * $Id: cmsasn1.c,v 1.9 2011/01/31 23:56:30 rrelyea%redhat.com Exp $
  */
 
 #include "cmslocal.h"
@@ -479,6 +479,20 @@ const SEC_ASN1Template NSS_PointerToCMSEncryptedDataTemplate[] = {
     { SEC_ASN1_POINTER, 0, NSSCMSEncryptedDataTemplate }
 };
 
+const SEC_ASN1Template NSSCMSGenericWrapperDataTemplate[] = {
+    { SEC_ASN1_INLINE,
+	  offsetof(NSSCMSGenericWrapperData,contentInfo),
+	  NSSCMSEncapsulatedContentInfoTemplate },
+};
+
+SEC_ASN1_CHOOSER_IMPLEMENT(NSSCMSGenericWrapperDataTemplate);
+
+const SEC_ASN1Template NSS_PointerToCMSGenericWrapperDataTemplate[] = {
+    { SEC_ASN1_POINTER, 0, NSSCMSGenericWrapperDataTemplate }
+};
+
+SEC_ASN1_CHOOSER_IMPLEMENT(NSS_PointerToCMSGenericWrapperDataTemplate);
+
 /* -----------------------------------------------------------------------------
  * FORTEZZA KEA
  */
@@ -555,14 +569,12 @@ nss_cms_choose_content_template(void *src_or_dest, PRBool encoding)
 
     cinfo = (NSSCMSContentInfo *)src_or_dest;
     type = NSS_CMSContentInfo_GetContentTypeTag(cinfo);
-    if (NSS_CMSType_IsData(type)) {
-	theTemplate = SEC_ASN1_GET(SEC_PointerToOctetStringTemplate);
-    } else switch (type) {
+    switch (type) {
     default:
 	theTemplate = NSS_CMSType_GetTemplate(type);
-	if (theTemplate == NULL) {
-	    theTemplate = SEC_ASN1_GET(SEC_PointerToAnyTemplate);
-	}
+	break;
+    case SEC_OID_PKCS7_DATA:
+	theTemplate = SEC_ASN1_GET(SEC_PointerToOctetStringTemplate);
 	break;
     case SEC_OID_PKCS7_SIGNED_DATA:
 	theTemplate = NSS_PointerToCMSSignedDataTemplate;

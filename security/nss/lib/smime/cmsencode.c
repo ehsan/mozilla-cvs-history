@@ -37,7 +37,7 @@
 /*
  * CMS encoding.
  *
- * $Id: cmsencode.c,v 1.8 2011/01/28 23:03:59 rrelyea%redhat.com Exp $
+ * $Id: cmsencode.c,v 1.9 2011/01/31 23:56:30 rrelyea%redhat.com Exp $
  */
 
 #include "cmslocal.h"
@@ -549,7 +549,7 @@ NSS_CMSEncoder_Start(NSSCMSMessage *cmsg,
 	break;
     default:
         if (NSS_CMSType_IsWrapper(tag)) {
-	    rv = NSS_CMSGenericWrapperData_Encode_AfterData(tag, 
+	    rv = NSS_CMSGenericWrapperData_Encode_BeforeStart(tag, 
 						p7ecx->content.genericData);
 	} else {
 	    rv = SECFailure;
