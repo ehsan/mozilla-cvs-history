@@ -2576,6 +2576,8 @@ strtod
 			for(; c == '0'; c = *++s)
 				nz++;
 			if (c > '0' && c <= '9') {
+				bc.dp0 = s0 - s;
+				bc.dp1 = bc.dp0 + bc.dplen;
 				s0 = s;
 				nf += nz;
 				nz = 0;
@@ -4022,7 +4024,12 @@ dtoa
 				  }
 #endif
 				dval(&u) += dval(&u);
-				if (dval(&u) > ds || (dval(&u) == ds && L & 1)) {
+#ifdef ROUND_BIASED
+				if (dval(&u) >= ds)
+#else
+				if (dval(&u) > ds || (dval(&u) == ds && L & 1))
+#endif
+					{
  bump_up:
 					while(*--s == '9')
 						if (s == s0) {
@@ -4106,15 +4113,6 @@ dtoa
 	 * and for all and pass them and a shift to quorem, so it
 	 * can do shifts and ors to compute the numerator for q.
 	 */
-#ifdef Pack_32
-	if ((i = ((s5 ? 32 - hi0bits(S->x[S->wds-1]) : 1) + s2) & 0x1f))
-		i = 32 - i;
-#define iInc 28
-#else
-	if (i = ((s5 ? 32 - hi0bits(S->x[S->wds-1]) : 1) + s2) & 0xf)
-		i = 16 - i;
-#define iInc 12
-#endif
 	i = dshift(S, s2);
 	b2 += i;
 	m2 += i;
@@ -4207,7 +4205,11 @@ dtoa
 				if (j1 > 0) {
 					b = lshift(b, 1);
 					j1 = cmp(b, S);
+#ifdef ROUND_BIASED
+					if (j1 >= 0 /*)*/
+#else
 					if ((j1 > 0 || (j1 == 0 && dig & 1))
+#endif
 					&& dig++ == '9')
 						goto round_9_up;
 					}
@@ -4267,7 +4269,12 @@ dtoa
 #endif
 	b = lshift(b, 1);
 	j = cmp(b, S);
-	if (j > 0 || (j == 0 && dig & 1)) {
+#ifdef ROUND_BIASED
+	if (j >= 0)
+#else
+	if (j > 0 || (j == 0 && dig & 1))
+#endif
+		{
  roundoff:
 		while(*--s == '9')
 			if (s == s0) {
