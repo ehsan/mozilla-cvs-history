@@ -40,11 +40,18 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: mpi.c,v 1.48 2010/07/20 01:26:02 wtc%google.com Exp $ */
+/* $Id: mpi.c,v 1.49 2011/02/06 08:42:27 nelson%bolyard.com Exp $ */
 
 #include "mpi-priv.h"
 #if defined(OSF1)
 #include <c_asm.h>
+#endif
+
+#if defined(__arm__) && \
+    ((defined(__thumb__) && !defined(__thumb2__)) || defined(__ARM_ARCH_3__))
+/* 16-bit thumb or ARM v3 doesn't work inlined assember version */
+#undef MP_ASSEMBLY_MULTIPLY
+#undef MP_ASSEMBLY_SQUARE
 #endif
 
 #if MP_LOGTAB
