@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sha512.c,v 1.16 2010/11/18 18:32:26 kaie%kuix.de Exp $ */
+/* $Id: sha512.c,v 1.17 2011/02/06 08:49:34 nelson%bolyard.com Exp $ */
 
 #ifdef FREEBL_NO_DEPEND
 #include "stubs.h"
@@ -132,6 +132,26 @@ static __inline__ PRUint32 swap4b(PRUint32 value)
 {
     __asm__("bswap %0" : "+r" (value));
     return (value);
+}
+#define SHA_HTONL(x) swap4b(x)
+#define BYTESWAP4(x)  x = SHA_HTONL(x)
+
+#elif defined(__GNUC__) && (defined(__thumb2__) || \
+      (!defined(__thumb__) && \
+      (defined(__ARM_ARCH_6__) || \
+       defined(__ARM_ARCH_6J__) || \
+       defined(__ARM_ARCH_6K__) || \
+       defined(__ARM_ARCH_6Z__) || \
+       defined(__ARM_ARCH_6ZK__) || \
+       defined(__ARM_ARCH_6T2__) || \
+       defined(__ARM_ARCH_7__) || \
+       defined(__ARM_ARCH_7A__) || \
+       defined(__ARM_ARCH_7R__))))
+static __inline__ PRUint32 swap4b(PRUint32 value)
+{
+    PRUint32 ret;
+    __asm__("rev %0, %1" : "=r" (ret) : "r"(value));
+    return ret;
 }
 #define SHA_HTONL(x) swap4b(x)
 #define BYTESWAP4(x)  x = SHA_HTONL(x)
