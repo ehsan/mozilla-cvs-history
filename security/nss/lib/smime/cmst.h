@@ -37,7 +37,7 @@
 /*
  * Header for CMS types.
  *
- * $Id: cmst.h,v 1.12 2011/01/31 23:56:30 rrelyea%redhat.com Exp $
+ * $Id: cmst.h,v 1.13 2011/02/11 01:53:17 emaldona%redhat.com Exp $
  */
 
 #ifndef _CMST_H_
@@ -182,7 +182,7 @@ struct NSSCMSContentInfoStr {
 							 * (only used by creation code) */
     SECOidTag			contentEncAlgTag;	/* oid tag of encryption algorithm
 							 * (only used by creation code) */
-    NSSCMSContentInfoPrivate	*private;		/* place for NSS private info */
+    NSSCMSContentInfoPrivate	*privateInfo;		/* place for NSS private info */
     void		*reserved;			/* keep binary compatibility */
 };
 
