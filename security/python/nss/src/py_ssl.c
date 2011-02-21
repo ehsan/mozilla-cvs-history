@@ -54,24 +54,6 @@
 
 static PyObject *py_ssl_implemented_ciphers = NULL;
 
-// FIXME: this should be imported from socket module
-static PyObject *
-NetworkAddress_new_from_PRNetAddr(PRNetAddr *pr_netaddr)
-{
-    NetworkAddress *self = NULL;
-
-    TraceObjNewEnter(NULL);
-
-    if ((self = (NetworkAddress *) NetworkAddressType.tp_new(&NetworkAddressType, NULL, NULL)) == NULL) {
-        return NULL;
-    }
-
-    self->addr = *pr_netaddr;
-
-    TraceObjNewLeave(self);
-    return (PyObject *) self;
-}
-
 static PyObject *
 SSLSocket_new_from_PRFileDesc(PRFileDesc *pr_socket, int family)
 {
@@ -2382,15 +2364,12 @@ initssl(void)
         return;
 
     SSLSocketType.tp_base = &SocketType;
-    if (PyType_Ready(&SSLSocketType) < 0)
-        return;
 
     if ((m = Py_InitModule3("nss.ssl", module_methods, module_doc)) == NULL) {
         return;
     }
 
-    Py_INCREF(&SSLSocketType);
-    PyModule_AddObject(m, "SSLSocket", (PyObject *)&SSLSocketType);
+    TYPE_READY(SSLSocketType);
 
     /* Export C API */
     if (PyModule_AddObject(m, "_C_API", PyCObject_FromVoidPtr((void *)&nss_ssl_c_api, NULL)) != 0)

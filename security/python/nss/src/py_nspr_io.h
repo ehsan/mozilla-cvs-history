@@ -42,6 +42,20 @@
 #include "prnetdb.h"
 
 /* ========================================================================== */
+/* ============================== AddrInfo Class ============================ */
+/* ========================================================================== */
+
+typedef struct {
+    PyObject_HEAD
+    PRAddrInfo *pr_addrinfo;
+    PyObject *py_hostname;
+    PyObject *py_canonical_name;
+    PyObject *py_netaddrs;
+} AddrInfo;
+
+#define PyAddrInfo_Check(op) PyObject_TypeCheck(op, &AddrInfoType)
+
+/* ========================================================================== */
 /* ============================= HostEntry Class ============================ */
 /* ========================================================================== */
 
@@ -49,6 +63,8 @@ typedef struct {
     PyObject_HEAD
     PRHostEnt entry;
     char buffer[PR_NETDB_BUF_SIZE]; /* this is where data pointed to in PRHostEnt is stored */
+    PyObject *py_aliases;
+    PyObject *py_netaddrs;
 } HostEntry;
 
 #define PyHostEntry_Check(op) PyObject_TypeCheck(op, &HostEntryType)
@@ -59,7 +75,7 @@ typedef struct {
 
 typedef struct {
     PyObject_HEAD
-    PRNetAddr addr;
+    PRNetAddr pr_netaddr;
     PyObject *py_hostname;
     HostEntry *py_hostentry;
 } NetworkAddress;
@@ -113,6 +129,7 @@ typedef struct {
     PyTypeObject *host_entry_type;
     PyTypeObject *socket_type;
     void         (*Socket_init_from_PRFileDesc)(Socket *py_socket, PRFileDesc *pr_socket, int family);
+    PyObject     *(*NetworkAddress_new_from_PRNetAddr)(PRNetAddr *pr_netaddr);
 } PyNSPR_IO_C_API_Type;
 
 #ifdef NSS_IO_MODULE
@@ -129,6 +146,7 @@ static PyNSPR_IO_C_API_Type nspr_io_c_api;
 #define SocketType (*nspr_io_c_api.socket_type)
 
 #define Socket_init_from_PRFileDesc (*nspr_io_c_api.Socket_init_from_PRFileDesc)
+#define NetworkAddress_new_from_PRNetAddr (*nspr_io_c_api.NetworkAddress_new_from_PRNetAddr)
 
 static int
 import_nspr_io_c_api(void)

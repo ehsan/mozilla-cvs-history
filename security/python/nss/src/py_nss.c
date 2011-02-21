@@ -104,7 +104,7 @@ static PyMemberDef NewType_members[] = {
 
 /* ============================== Class Methods ============================= */
 
-PyDoc_STRVAR(cert_func_name_doc,
+PyDoc_STRVAR(NewType_func_name_doc,
 "func_name() -> \n\
 \n\
 :Parameters:\n\
@@ -115,7 +115,7 @@ xxx\n\
 ");
 
 static PyObject *
-cert_func_name(PyObject *self, PyObject *args, PyObject *kwds)
+NewType_func_name(PyObject *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"arg1", NULL};
     PyObject *arg;
@@ -130,7 +130,7 @@ cert_func_name(PyObject *self, PyObject *args, PyObject *kwds)
 }
 
 static PyMethodDef NewType_methods[] = {
-    {"func_name", (PyCFunction)cert_func_name, METH_VARARGS|METH_KEYWORDS, cert_func_name_doc},
+    {"func_name", (PyCFunction)NewType_func_name, METH_VARARGS|METH_KEYWORDS, NewType_func_name_doc},
     {NULL, NULL}  /* Sentinel */
 };
 
@@ -178,7 +178,13 @@ NewType_dealloc(NewType* self)
 }
 
 PyDoc_STRVAR(NewType_doc,
-"An object representing xxx");
+"NewType(obj)\n\
+\n\
+:Parameters:\n\
+    obj : xxx\n\
+\n\
+An object representing NewType.\n\
+");
 
 static int
 NewType_init(NewType *self, PyObject *args, PyObject *kwds)
@@ -5479,6 +5485,8 @@ PublicKey_format_lines(PublicKey *self, PyObject *args, PyObject *kwds)
     case keaKey:
     case ecKey:
     case nullKey:
+    case rsaPssKey:
+    case rsaOaepKey:
         break;
     }
 
@@ -5654,6 +5662,8 @@ PublicKey_new_from_SECKEYPublicKey(SECKEYPublicKey *pk)
     case keaKey:
     case ecKey:
     case nullKey:
+    case rsaPssKey:
+    case rsaOaepKey:
         break;
     }
 
@@ -12918,7 +12928,7 @@ InitParameters_set_manufacturer_id(InitParameters *self, PyObject *value, void *
 
     if (value == NULL) {
         if (self->params.manufactureID) {
-            free(self->params.manufactureID);
+            PyMem_Free(self->params.manufactureID);
         }
         self->params.manufactureID = NULL;
         return 0;
@@ -12935,7 +12945,7 @@ InitParameters_set_manufacturer_id(InitParameters *self, PyObject *value, void *
     }
 
     if (self->params.manufactureID) {
-        free(self->params.manufactureID);
+        PyMem_Free(self->params.manufactureID);
         self->params.manufactureID = NULL;
     }
     
@@ -12966,7 +12976,7 @@ InitParameters_set_library_description(InitParameters *self, PyObject *value, vo
 
     if (value == NULL) {
         if (self->params.libraryDescription) {
-            free(self->params.libraryDescription);
+            PyMem_Free(self->params.libraryDescription);
         }
         self->params.libraryDescription = NULL;
         return 0;
@@ -12983,7 +12993,7 @@ InitParameters_set_library_description(InitParameters *self, PyObject *value, vo
     }
 
     if (self->params.libraryDescription) {
-        free(self->params.libraryDescription);
+        PyMem_Free(self->params.libraryDescription);
         self->params.libraryDescription = NULL;
     }
     
@@ -13016,7 +13026,7 @@ InitParameters_set_crypto_token_description(InitParameters *self, PyObject *valu
 
     if (value == NULL) {
         if (self->params.cryptoTokenDescription) {
-            free(self->params.cryptoTokenDescription);
+            PyMem_Free(self->params.cryptoTokenDescription);
         }
         self->params.cryptoTokenDescription = NULL;
         return 0;
@@ -13033,7 +13043,7 @@ InitParameters_set_crypto_token_description(InitParameters *self, PyObject *valu
     }
 
     if (self->params.cryptoTokenDescription) {
-        free(self->params.cryptoTokenDescription);
+        PyMem_Free(self->params.cryptoTokenDescription);
         self->params.cryptoTokenDescription = NULL;
     }
     
@@ -13066,7 +13076,7 @@ InitParameters_set_db_token_description(InitParameters *self, PyObject *value, v
 
     if (value == NULL) {
         if (self->params.dbTokenDescription) {
-            free(self->params.dbTokenDescription);
+            PyMem_Free(self->params.dbTokenDescription);
         }
         self->params.dbTokenDescription = NULL;
         return 0;
@@ -13083,7 +13093,7 @@ InitParameters_set_db_token_description(InitParameters *self, PyObject *value, v
     }
 
     if (self->params.dbTokenDescription) {
-        free(self->params.dbTokenDescription);
+        PyMem_Free(self->params.dbTokenDescription);
         self->params.dbTokenDescription = NULL;
     }
     
@@ -13114,7 +13124,7 @@ InitParameters_set_fips_token_description(InitParameters *self, PyObject *value,
 
     if (value == NULL) {
         if (self->params.FIPSTokenDescription) {
-            free(self->params.FIPSTokenDescription);
+            PyMem_Free(self->params.FIPSTokenDescription);
         }
         self->params.FIPSTokenDescription = NULL;
         return 0;
@@ -13131,7 +13141,7 @@ InitParameters_set_fips_token_description(InitParameters *self, PyObject *value,
     }
 
     if (self->params.FIPSTokenDescription) {
-        free(self->params.FIPSTokenDescription);
+        PyMem_Free(self->params.FIPSTokenDescription);
         self->params.FIPSTokenDescription = NULL;
     }
     
@@ -13162,7 +13172,7 @@ InitParameters_set_crypto_slot_description(InitParameters *self, PyObject *value
 
     if (value == NULL) {
         if (self->params.cryptoSlotDescription) {
-            free(self->params.cryptoSlotDescription);
+            PyMem_Free(self->params.cryptoSlotDescription);
         }
         self->params.cryptoSlotDescription = NULL;
         return 0;
@@ -13179,7 +13189,7 @@ InitParameters_set_crypto_slot_description(InitParameters *self, PyObject *value
     }
 
     if (self->params.cryptoSlotDescription) {
-        free(self->params.cryptoSlotDescription);
+        PyMem_Free(self->params.cryptoSlotDescription);
         self->params.cryptoSlotDescription = NULL;
     }
     
@@ -13210,7 +13220,7 @@ InitParameters_set_db_slot_description(InitParameters *self, PyObject *value, vo
 
     if (value == NULL) {
         if (self->params.dbSlotDescription) {
-            free(self->params.dbSlotDescription);
+            PyMem_Free(self->params.dbSlotDescription);
         }
         self->params.dbSlotDescription = NULL;
         return 0;
@@ -13227,7 +13237,7 @@ InitParameters_set_db_slot_description(InitParameters *self, PyObject *value, vo
     }
 
     if (self->params.dbSlotDescription) {
-        free(self->params.dbSlotDescription);
+        PyMem_Free(self->params.dbSlotDescription);
         self->params.dbSlotDescription = NULL;
     }
     
@@ -13258,7 +13268,7 @@ InitParameters_set_fips_slot_description(InitParameters *self, PyObject *value, 
 
     if (value == NULL) {
         if (self->params.FIPSSlotDescription) {
-            free(self->params.FIPSSlotDescription);
+            PyMem_Free(self->params.FIPSSlotDescription);
         }
         self->params.FIPSSlotDescription = NULL;
         return 0;
@@ -13275,7 +13285,7 @@ InitParameters_set_fips_slot_description(InitParameters *self, PyObject *value, 
     }
 
     if (self->params.FIPSSlotDescription) {
-        free(self->params.FIPSSlotDescription);
+        PyMem_Free(self->params.FIPSSlotDescription);
         self->params.FIPSSlotDescription = NULL;
     }
     
@@ -13471,28 +13481,28 @@ InitParameters_dealloc(InitParameters* self)
     TraceMethodEnter(self);
 
     if (self->params.manufactureID) {
-        free(self->params.manufactureID);
+        PyMem_Free(self->params.manufactureID);
     }
     if (self->params.libraryDescription) {
-        free(self->params.libraryDescription);
+        PyMem_Free(self->params.libraryDescription);
     }
     if (self->params.cryptoTokenDescription) {
-        free(self->params.cryptoTokenDescription);
+        PyMem_Free(self->params.cryptoTokenDescription);
     }
     if (self->params.dbTokenDescription) {
-        free(self->params.dbTokenDescription);
+        PyMem_Free(self->params.dbTokenDescription);
     }
     if (self->params.FIPSTokenDescription) {
-        free(self->params.FIPSTokenDescription);
+        PyMem_Free(self->params.FIPSTokenDescription);
     }
     if (self->params.cryptoSlotDescription) {
-        free(self->params.cryptoSlotDescription);
+        PyMem_Free(self->params.cryptoSlotDescription);
     }
     if (self->params.dbSlotDescription) {
-        free(self->params.dbSlotDescription);
+        PyMem_Free(self->params.dbSlotDescription);
     }
     if (self->params.FIPSSlotDescription) {
-        free(self->params.FIPSSlotDescription);
+        PyMem_Free(self->params.FIPSSlotDescription);
     }
 
     self->ob_type->tp_free((PyObject*)self);
@@ -14362,12 +14372,12 @@ nss_nss_init(PyObject *self, PyObject *args)
     Py_BEGIN_ALLOW_THREADS
     if (NSS_Init(cert_dir) != SECSuccess) {
         Py_BLOCK_THREADS
-            free(cert_dir);
+            PyMem_Free(cert_dir);
         return set_nspr_error(NULL);
     }
     Py_END_ALLOW_THREADS
 
-    free(cert_dir);
+    PyMem_Free(cert_dir);
     Py_RETURN_NONE;
 }
 
@@ -14514,10 +14524,10 @@ nss_nss_initialize(PyObject *self, PyObject *args, PyObject *kwds)
         set_nspr_error(NULL);
     }
 
-    if (cert_dir)    free(cert_dir);
-    if (cert_prefix) free(cert_prefix);
-    if (key_prefix)  free(key_prefix);
-    if (secmod_name) free(secmod_name);
+    if (cert_dir)    PyMem_Free(cert_dir);
+    if (cert_prefix) PyMem_Free(cert_prefix);
+    if (key_prefix)  PyMem_Free(key_prefix);
+    if (secmod_name) PyMem_Free(secmod_name);
 
     if (status == SECSuccess) {
         Py_RETURN_NONE;
@@ -14651,10 +14661,10 @@ nss_nss_init_context(PyObject *self, PyObject *args, PyObject *kwds)
         init_context = NULL;
     }
 
-    if (cert_dir)    free(cert_dir);
-    if (cert_prefix) free(cert_prefix);
-    if (key_prefix)  free(key_prefix);
-    if (secmod_name) free(secmod_name);
+    if (cert_dir)    PyMem_Free(cert_dir);
+    if (cert_prefix) PyMem_Free(cert_prefix);
+    if (key_prefix)  PyMem_Free(key_prefix);
+    if (secmod_name) PyMem_Free(secmod_name);
 
     if (init_context != NULL) {
         return py_init_context;
@@ -16217,14 +16227,6 @@ static PyNSPR_NSS_C_API_Type nspr_nss_c_api =
 };
 
 /* ============================== Module Construction ============================= */
-
-#define TYPE_READY(type)                                                \
-{                                                                       \
-    if (PyType_Ready(&type) < 0)                                        \
-        return;                                                         \
-    Py_INCREF(&type);                                                   \
-    PyModule_AddObject(m, rindex(type.tp_name, '.')+1, (PyObject *)&type); \
-}
 
 PyDoc_STRVAR(module_doc,
 "This module implements the NSS functions\n\

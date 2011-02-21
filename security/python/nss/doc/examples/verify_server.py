@@ -54,6 +54,7 @@ import nss.ssl as ssl
 certdir = '/etc/pki/nssdb'
 hostname = 'www.verisign.com'
 port = 443
+timeout_secs = 3
 
 request = '''\
 GET /index.html HTTP/1.0
@@ -133,26 +134,42 @@ def auth_certificate_callback(sock, check_sig, is_server, certdb):
 # -----------------------------------------------------------------------------
 
 def client():
+    valid_addr = False
     # Get the IP Address of our server
-    net_addr = io.NetworkAddress(hostname, port)
-    sock = ssl.SSLSocket()
-    # Set client SSL socket options
-    sock.set_ssl_option(ssl.SSL_SECURITY, True)
-    sock.set_ssl_option(ssl.SSL_HANDSHAKE_AS_CLIENT, True)
-    sock.set_hostname(hostname)
+    try:
+        addr_info = io.AddrInfo(hostname)
+    except:
+        print "ERROR: could not resolve hostname \"%s\"" % hostname
+        return
 
-    # Provide a callback which notifies us when the SSL handshake is
-    # complete
-    sock.set_handshake_callback(handshake_callback)
+    for net_addr in addr_info:
+        net_addr.port = port
+        sock = ssl.SSLSocket()
+        # Set client SSL socket options
+        sock.set_ssl_option(ssl.SSL_SECURITY, True)
+        sock.set_ssl_option(ssl.SSL_HANDSHAKE_AS_CLIENT, True)
+        sock.set_hostname(hostname)
 
-    # Provide a callback to verify the servers certificate
-    sock.set_auth_certificate_callback(auth_certificate_callback,
-                                       nss.get_default_certdb())
+        # Provide a callback which notifies us when the SSL handshake is
+        # complete
+        sock.set_handshake_callback(handshake_callback)
 
-    print "client connecting to: %s" % (net_addr)
-    sock.connect(net_addr)
+        # Provide a callback to verify the servers certificate
+        sock.set_auth_certificate_callback(auth_certificate_callback,
+                                           nss.get_default_certdb())
 
-    sock.reset_handshake(False) # FIXME: is this needed
+        try:
+            print "try connecting to: %s" % (net_addr)
+            sock.connect(net_addr, timeout=io.seconds_to_interval(timeout_secs))
+            print "connected to: %s" % (net_addr)
+            valid_addr = True
+            break
+        except:
+            continue
+
+    if not valid_addr:
+        print "ERROR: could not connect to \"%s\"" % hostname
+        return
 
     try:
         # Talk to the server

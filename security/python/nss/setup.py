@@ -50,7 +50,7 @@ from distutils.util import subst_vars, change_root
 from distutils.command.build_py import build_py as _build_py
 from distutils.command.sdist import sdist as _sdist
 
-version = "0.10"
+version = "0.11"
 
 def update_version():
     """If the version string in __init__.py doesn't match the current
@@ -304,13 +304,14 @@ Python bindings for Network Security Services (NSS) and Netscape Portable Runtim
 
 debug_compile_args = ['-O0', '-g']
 # force debug build until package matures
-# extra_compile_args = debug_compile_args
-extra_compile_args = []
+extra_compile_args = debug_compile_args
+#extra_compile_args = []
 
 nss_error_extension = \
     Extension('nss.error',
               sources            = ['src/py_nspr_error.c'],
               include_dirs       = ['/usr/include/nss3', '/usr/include/nspr4'],
+              depends            = ['src/py_nspr_common.h', 'src/py_nspr_error.h'],
               libraries          = ['nspr4'],
               extra_compile_args = extra_compile_args,
               )
@@ -319,6 +320,7 @@ nss_io_extension = \
     Extension('nss.io',
               sources            = ['src/py_nspr_io.c'],
               include_dirs       = ['/usr/include/nss3', '/usr/include/nspr4'],
+              depends            = ['src/py_nspr_common.h', 'src/py_nspr_error.h', 'src/py_nspr_io.h'],
               libraries          = ['nspr4'],
               extra_compile_args = extra_compile_args,
               )
@@ -327,6 +329,7 @@ nss_nss_extension = \
     Extension('nss.nss',
               sources            = ['src/py_nss.c'],
               include_dirs       = ['src', '/usr/include/nss3', '/usr/include/nspr4'],
+              depends            = ['src/py_nspr_common.h', 'src/py_nspr_error.h', 'src/py_nss.h'],
               libraries          = ['nspr4', 'ssl3', 'nss3'],
               extra_compile_args = extra_compile_args,
               )
@@ -335,6 +338,8 @@ nss_ssl_extension = \
     Extension('nss.ssl',
               sources            = ['src/py_ssl.c'],
               include_dirs       = ['src', '/usr/include/nss3', '/usr/include/nspr4'],
+              depends            = ['src/py_nspr_common.h', 'src/py_nspr_error.h', 'src/py_nspr_io.h',
+                                    'src/py_ssl.h', 'src/py_nss.h'],
               libraries          = ['nspr4', 'ssl3'],
               extra_compile_args = extra_compile_args,
               )

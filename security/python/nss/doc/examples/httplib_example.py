@@ -38,6 +38,7 @@
 # ***** END LICENSE BLOCK *****
 
 import sys
+import errno
 import getopt
 import urlparse
 import httplib
@@ -59,6 +60,7 @@ nickname = ''
 url = 'https://sourceforge.net/projects/python'
 use_ssl = True
 use_connection_class = True
+timeout_secs = 3
 
 #------------------------------------------------------------------------------
 
@@ -168,15 +170,16 @@ class NSSConnection(httplib.HTTPConnection):
             raise RuntimeError("dbdir is required")
 
         logging.debug('%s init %s', self.__class__.__name__, host)
-        nss.nss_init(dbdir)
+        if not nss.nss_is_initialized(): nss.nss_init(dbdir)
+        self.sock = None
         ssl.set_domestic_policy()
         nss.set_password_callback(password_callback)
 
-        # Create the socket here so we can do things like let the caller
-        # override the NSS callbacks
+    def _create_socket(self):
         self.sock = ssl.SSLSocket()
         self.sock.set_ssl_option(ssl.SSL_SECURITY, True)
         self.sock.set_ssl_option(ssl.SSL_HANDSHAKE_AS_CLIENT, True)
+        self.sock.set_hostname(self.host)
 
         # Provide a callback which notifies us when the SSL handshake is complete
         self.sock.set_handshake_callback(handshake_callback)
@@ -185,12 +188,27 @@ class NSSConnection(httplib.HTTPConnection):
         self.sock.set_auth_certificate_callback(auth_certificate_callback,
                                            nss.get_default_certdb())
 
+
     def connect(self):
         logging.debug("connect: host=%s port=%s", self.host, self.port)
-        self.sock.set_hostname(self.host)
-        net_addr = io.NetworkAddress(self.host, self.port)
-        logging.debug("connect: %s", net_addr)
-        self.sock.connect(net_addr)
+        try:
+            addr_info = io.AddrInfo(self.host)
+        except Exception, e:
+            logging.error("could not resolve host address \"%s\"", self.host)
+            raise
+
+        for net_addr in addr_info:
+            net_addr.port = self.port
+            self._create_socket()
+            try:
+                logging.debug("try connect: %s", net_addr)
+                self.sock.connect(net_addr, timeout=io.seconds_to_interval(timeout_secs))
+                logging.debug("connected to: %s", net_addr)
+                return
+            except Exception, e:
+                logging.debug("connect failed: %s (%s)", net_addr, e)
+
+        raise IOError(errno.ENOTCONN, "could not connect to %s at port %d" % (self.host, self.port))
 
 class NSPRConnection(httplib.HTTPConnection):
     default_port = httplib.HTTPConnection.default_port
@@ -199,14 +217,29 @@ class NSPRConnection(httplib.HTTPConnection):
         httplib.HTTPConnection.__init__(self, host, port, strict)
 
         logging.debug('%s init %s', self.__class__.__name__, host)
-        nss.nss_init_nodb()
+        if not nss.nss_is_initialized(): nss.nss_init_nodb()
+        self.sock = None
 
-        self.sock = io.Socket()
     def connect(self):
         logging.debug("connect: host=%s port=%s", self.host, self.port)
-        net_addr = io.NetworkAddress(self.host, self.port)
-        logging.debug("connect: %s", net_addr)
-        self.sock.connect(net_addr)
+        try:
+            addr_info = io.AddrInfo(self.host)
+        except Exception, e:
+            logging.error("could not resolve host address \"%s\"", self.host)
+            raise
+
+        for net_addr in addr_info:
+            net_addr.port = self.port
+            self.sock = io.Socket()
+            try:
+                logging.debug("try connect: %s", net_addr)
+                self.sock.connect(net_addr, timeout=io.seconds_to_interval(timeout_secs))
+                logging.debug("connected to: %s", net_addr)
+                return
+            except Exception, e:
+                logging.debug("connect failed: %s (%s)", net_addr, e)
+
+        raise IOError(errno.ENOTCONN, "could not connect to %s at port %d" % (self.host, self.port))
 
 class NSSHTTPS(httplib.HTTP):
     _http_vsn = 11
@@ -276,6 +309,9 @@ else:
 
 url = urlparse.urlunsplit(url_components)
 url_components = urlparse.urlsplit(url)
+if not url_components.scheme or not url_components.netloc:
+    print "ERROR: bad url \"%s\"" % (url)
+    sys.exit(1)
 
 if use_connection_class:
     if use_ssl:

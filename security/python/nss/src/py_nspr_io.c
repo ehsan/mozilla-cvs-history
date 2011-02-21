@@ -55,6 +55,10 @@ static char *unset_string = "<unset>";
 #define Py_RETURN_BOOL(condition) {if (condition) Py_RETURN_TRUE; else Py_RETURN_FALSE;}
 
 /* ========================================================================== */
+/* ============================= Type Declarations ========================== */
+/* ========================================================================== */
+
+/* ========================================================================== */
 /* =========================== Forward Declarations ========================= */
 /* ========================================================================== */
 
@@ -112,25 +116,33 @@ err_closed(void)
 static const char*
 pr_family_str(value)
 {
+    static char buf[80];
+
     switch(value) {
     case PR_AF_INET:   return "PR_AF_INET";
     case PR_AF_INET6:  return "PR_AF_INET6";
     case PR_AF_LOCAL:  return "PR_AF_LOCAL";
     case PR_AF_UNSPEC: return "PR_AF_UNSPEC";
-    default:           return "unknown";
+    default:
+        snprintf(buf, sizeof(buf), "unknown(%#x)", value);
+        return buf;
     }
 }
 
 static const char*
 pr_file_desc_type_str(value)
 {
+    static char buf[80];
+
     switch(value) {
     case PR_DESC_FILE:       return "PR_DESC_FILE";
     case PR_DESC_SOCKET_TCP: return "PR_DESC_SOCKET_TCP";
     case PR_DESC_SOCKET_UDP: return "PR_DESC_SOCKET_UDP";
     case PR_DESC_LAYERED:    return "PR_DESC_LAYERED";
     case PR_DESC_PIPE:       return "PR_DESC_PIPE";
-    default:                 return "unknown";
+    default:
+        snprintf(buf, sizeof(buf), "unknown(%#x)", value);
+        return buf;
     }
 }
 
@@ -138,6 +150,8 @@ pr_file_desc_type_str(value)
 static const char*
 pr_sock_option_str(value)
 {
+    static char buf[80];
+
     switch(value) {
     case PR_SockOpt_Nonblocking:     return "PR_SockOpt_Nonblocking";
     case PR_SockOpt_Linger:          return "PR_SockOpt_Linger";
@@ -155,7 +169,9 @@ pr_sock_option_str(value)
     case PR_SockOpt_NoDelay:         return "PR_SockOpt_NoDelay";
     case PR_SockOpt_MaxSegment:      return "PR_SockOpt_MaxSegment";
     case PR_SockOpt_Broadcast:       return "PR_SockOpt_Broadcast";
-    default:                         return "unknown";
+    default:
+        snprintf(buf, sizeof(buf), "unknown(%#x)", value);
+        return buf;
     }
 }
 #endif
@@ -165,22 +181,31 @@ pr_sock_option_str(value)
 static const char*
 pr_initialize_netaddr_str(value)
 {
+    static char buf[80];
+
     switch(value) {
     case PR_IpAddrNull:     return "PR_IpAddrNull";
     case PR_IpAddrAny:      return "PR_IpAddrAny";
     case PR_IpAddrLoopback: return "PR_IpAddrLoopback";
-    default:                return "unknown";
+    case PR_IpAddrV4Mapped: return "PR_IpAddrV4Mapped";
+    default:
+        snprintf(buf, sizeof(buf), "unknown(%#x)", value);
+        return buf;
     }
 }
 
 static const char*
 pr_socket_shutdown_str(value)
 {
+    static char buf[80];
+
     switch(value) {
     case PR_SHUTDOWN_RCV:  return "PR_SHUTDOWN_RCV";
     case PR_SHUTDOWN_SEND: return "PR_SHUTDOWN_SEND";
     case PR_SHUTDOWN_BOTH: return "PR_SHUTDOWN_BOTH";
-    default:               return "unknown";
+    default:
+        snprintf(buf, sizeof(buf), "unknown(%#x)", value);
+        return buf;
     }
 }
 
@@ -191,6 +216,79 @@ pr_socket_shutdown_str(value)
 /* =========================== NetworkAddress Class ========================= */
 /* ========================================================================== */
 
+static PyObject *
+NetworkAddress_init_from_address_string(NetworkAddress *self, const char *addr_str, int port, int family)
+{
+    PRAddrInfo *pr_addrinfo;
+    const char *canonical_name;
+    PRBool found = PR_FALSE;
+    void *iter = NULL;
+
+    Py_CLEAR(self->py_hostentry);
+    Py_CLEAR(self->py_hostname);
+
+    /*
+     * NSS WART
+     *
+     * The inerface presented by PR_GetAddrInfoByName is so crippled
+     * that it's impossible to specify many of the selection criteria
+     * which give getaddrinfo the flexibility it's designers
+     * intended. As a simple example it's impossible to specify you
+     * only want IPv6 addresses. :-( Plus a host (no pun intended) of
+     * other useful criteria.
+     *
+     * Therefore we call PR_GetAddrInfoByName with PR_AF_UNSPEC instead
+     * of the family passed to us, we then scan the results for the first
+     * match on the family requested.
+     */
+
+    Py_BEGIN_ALLOW_THREADS
+    if ((pr_addrinfo = PR_GetAddrInfoByName(addr_str, PR_AF_UNSPEC, PR_AI_ADDRCONFIG)) == NULL) {
+        Py_BLOCK_THREADS
+        set_nspr_error(NULL);
+        return NULL;
+    }
+    Py_END_ALLOW_THREADS
+
+    iter = NULL;
+    found = PR_FALSE;
+    while((iter = PR_EnumerateAddrInfo(iter, pr_addrinfo, port, &self->pr_netaddr)) != NULL) {
+        if (family == PR_AF_UNSPEC ||
+            family == PR_NetAddrFamily(&self->pr_netaddr)) {
+            found = PR_TRUE;
+        }
+    }
+
+    if (!found) {
+        memset(&self->pr_netaddr, 0, sizeof(self->pr_netaddr));
+        PR_FreeAddrInfo(pr_addrinfo);
+        PyErr_Format(PyExc_ValueError, "no address for \"%s\" in family %s",
+                     addr_str, pr_family_str(family));
+        return NULL;
+    }
+      
+    if ((canonical_name = PR_GetCanonNameFromAddrInfo(pr_addrinfo)) != NULL) {
+        if ((self->py_hostname = PyString_FromString(canonical_name)) == NULL) {
+            PR_FreeAddrInfo(pr_addrinfo);
+            return NULL;
+        }
+    } else {
+        if ((self->py_hostname = PyString_FromString(addr_str)) == NULL) {
+            PR_FreeAddrInfo(pr_addrinfo);
+            return NULL;
+        }
+    }
+
+    PR_FreeAddrInfo(pr_addrinfo);
+    Py_RETURN_NONE;
+}
+
+static PRUint16
+PRNetAddr_port(PRNetAddr *pr_netaddr)
+{
+    return PR_ntohs(PR_NetAddrInetPort(pr_netaddr));
+}
+
 /* ============================ Attribute Access ============================ */
 
 static PyObject *
@@ -198,9 +296,15 @@ NetworkAddress_get_hostentry(NetworkAddress *self, void *closure)
 {
     TraceMethodEnter(self);
 
+    if (PyErr_WarnEx(PyExc_DeprecationWarning,
+                     "HostEntry objects only support IPv4, this property will be removed, use AddrInfo instead", 1) < 0)
+        return NULL;
+
+
     if (self->py_hostentry == NULL) {
-        self->py_hostentry = (HostEntry *)HostEntry_new_from_PRNetAddr(&self->addr);
+        self->py_hostentry = (HostEntry *)HostEntry_new_from_PRNetAddr(&self->pr_netaddr);
     }
+    Py_XINCREF(self->py_hostentry);
     return (PyObject *)self->py_hostentry;
 }
 
@@ -209,18 +313,8 @@ NetworkAddress_get_hostname(NetworkAddress *self, void *closure)
 {
     TraceMethodEnter(self);
 
-    if (self->py_hostname) {
-        Py_INCREF(self->py_hostname);
-        return self->py_hostname;
-    }
-
-    if (self->py_hostentry == NULL) {
-        if ((self->py_hostentry = (HostEntry *)HostEntry_new_from_PRNetAddr(&self->addr)) == NULL)
-            return NULL;
-    }
-
-    if ((self->py_hostname = HostEntry_get_hostname(self->py_hostentry, NULL)) == NULL) {
-        return NULL;
+    if (self->py_hostname == NULL) {
+        Py_RETURN_NONE;
     }
 
     Py_INCREF(self->py_hostname);
@@ -228,11 +322,37 @@ NetworkAddress_get_hostname(NetworkAddress *self, void *closure)
 }
 
 static PyObject *
+NetworkAddress_get_address(NetworkAddress *self, void *closure)
+{
+    char buf[1024];
+
+    TraceMethodEnter(self);
+
+    if (PR_NetAddrFamily(&self->pr_netaddr) == PR_AF_UNSPEC) {
+        return PyString_FromString(unset_string);
+    }
+
+    if (PR_NetAddrToString(&self->pr_netaddr, buf, sizeof(buf)) != PR_SUCCESS) {
+        return set_nspr_error(NULL);
+    }
+
+    return PyString_FromString(buf);
+}
+
+static PyObject *
+NetworkAddress_get_family(NetworkAddress *self, void *closure)
+{
+    TraceMethodEnter(self);
+
+    return PyInt_FromLong(PR_NetAddrFamily(&self->pr_netaddr));
+}
+
+static PyObject *
 NetworkAddress_get_port(NetworkAddress *self, void *closure)
 {
     TraceMethodEnter(self);
 
-    return PyInt_FromLong(PR_ntohs(self->addr.inet.port));
+    return PyInt_FromLong(PRNetAddr_port(&self->pr_netaddr));
 }
 
 static int
@@ -253,7 +373,8 @@ NetworkAddress_set_port(NetworkAddress *self, PyObject *value, void *closure)
     }
 
     port = PyInt_AsLong(value);
-    if (PR_InitializeNetAddr(PR_IpAddrNull, port, &self->addr) != PR_SUCCESS) {
+    if (PR_SetNetAddr(PR_IpAddrNull, PR_NetAddrFamily(&self->pr_netaddr),
+                      port, &self->pr_netaddr) != PR_SUCCESS) {
         set_nspr_error(NULL);
         return -1;
     }
@@ -263,67 +384,89 @@ NetworkAddress_set_port(NetworkAddress *self, PyObject *value, void *closure)
 
 static PyGetSetDef
 NetworkAddress_getseters[] = {
-    {"hostentry", (getter)NetworkAddress_get_hostentry, NULL, "HostEntry object representing this NetworkAddress", NULL},
-    {"hostname",  (getter)NetworkAddress_get_hostname, NULL,
-     "If a hostname was used to construct this NetworkAddress then return that name (e.g. NetworkAddress(hostname), else return the reverse lookup hostname (equivalent to self.hostentry.hostname)", NULL},
+    {"hostentry", (getter)NetworkAddress_get_hostentry, (setter)NULL, "HostEntry object representing this NetworkAddress (Warning: Deprecated, use AddrInfo instead)", NULL},
+    {"hostname",  (getter)NetworkAddress_get_hostname,  (setter)NULL,
+     "If an address string was used to construct this NetworkAddress then return the canonical hostname if available, otherwise the original address string", NULL},
+    {"address",   (getter)NetworkAddress_get_address,   (setter)NULL, "address as string", NULL},
+    {"family",    (getter)NetworkAddress_get_family,    (setter)NULL, "address family (e.g. PR_AF_INET, etc.)", NULL},
     {"port",      (getter)NetworkAddress_get_port,      (setter)NetworkAddress_set_port, "network address port", NULL},
     {NULL}  /* Sentinel */
 };
 
 static PyMemberDef
 NetworkAddress_members[] = {
-    {"family", T_INT, offsetof(NetworkAddress, addr.raw.family), 0, "network address family"},
     {NULL}  /* Sentinel */
 };
 
 /* ============================== Class Methods ============================= */
 
 PyDoc_STRVAR(NetworkAddress_set_from_string_doc,
-"set_from_string(addr)\n\
+"set_from_string(addr, family=PR_AF_INET)\n\
 \n\
 :Parameters:\n\
     addr : string\n\
         the address string to convert\n\
+    family : integer\n\
+        one of:\n\
+            - PR_AF_INET\n\
+            - PR_AF_INET6\n\
+            - PR_AF_UNSPEC\n\
 \n\
 Reinitializes the NetworkAddress object given a string.\n\
 Identical to constructing nss.io.NetworkAddress() with a\n\
-string value (see constructor for documentation).\n\
+string value (see `NetworkAddress` constructor for documentation).\n\
+\n\
+**WARNING:** NetworkAddress initialization from a string only works with IPv4\n\
+and its use should be considered *deprecated*. Use `AddrInfo` instead.\n\
 ");
 static PyObject *
-NetworkAddress_set_from_string(NetworkAddress *self, PyObject *args)
+NetworkAddress_set_from_string(NetworkAddress *self, PyObject *args, PyObject *kwds)
 {
+    static char *kwlist[] = {"addr", "family",  NULL};
     PyObject *addr = NULL;
-    char *addr_str = NULL;
+    int family = PR_AF_INET;
+    PyObject *result = NULL;
 
-    if (!PyArg_ParseTuple(args, "O!:set_from_string", &PyString_Type, &addr))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O:set_from_string", kwlist,
+                                     &addr, &family))
         return NULL;
-    addr_str = PyString_AsString(addr);
 
-    /* First try to parse as a dotted decimal, if that fails try a DNS lookup */
-    if (PR_StringToNetAddr(addr_str, &self->addr) != PR_SUCCESS) {
-        /* Not an address string, try DNS */
-        PRHostEnt entry;
-        char buffer[PR_NETDB_BUF_SIZE];
+    if (PyErr_WarnEx(PyExc_DeprecationWarning,
+                     "NetworkAddress initialization from a string parameter only works for IPv4, use AddrInfo instead.", 1) < 0)
+        return NULL;
 
-        ASSIGN_REF(self->py_hostname, addr);
+    if (addr && (PyString_Check(addr) || PyUnicode_Check(addr))) {
+        PyObject *ascii_str = NULL;
+        char *addr_str = NULL;
 
-        Py_BEGIN_ALLOW_THREADS
-        if (PR_GetHostByName(addr_str, buffer, sizeof(buffer), &entry) != PR_SUCCESS) {
-            Py_BLOCK_THREADS
-            return set_nspr_error("cannot resolve address (%s)", addr_str);
+        if (PyUnicode_Check(addr)) {
+            if ((ascii_str = PyUnicode_AsASCIIString(addr)) == NULL) {
+                return NULL;
+            }
+        } else {
+            ascii_str = addr;
+            Py_INCREF(ascii_str);
         }
-        Py_END_ALLOW_THREADS
 
-        if (PR_EnumerateHostEnt(0, &entry, 0, &self->addr) < 0) {
-            return set_nspr_error(NULL);
+        if ((addr_str = PyString_AsString(ascii_str)) == NULL) {
+            Py_DECREF(ascii_str);
+            return NULL;
         }
+        
+        result = NetworkAddress_init_from_address_string(self, addr_str,
+                                                         PRNetAddr_port(&self->pr_netaddr),
+                                                         family);
+        Py_DECREF(ascii_str);
+    } else {
+        PyErr_SetString(PyExc_TypeError, "addr must be string or unicode object");
     }
-        Py_RETURN_NONE;
+
+    return result;
 }
 
 static PyMethodDef
 NetworkAddress_methods[] = {
-    {"set_from_string", (PyCFunction)NetworkAddress_set_from_string, METH_VARARGS, NetworkAddress_set_from_string_doc},
+    {"set_from_string", (PyCFunction)NetworkAddress_set_from_string, METH_VARARGS|METH_KEYWORDS, NetworkAddress_set_from_string_doc},
     {NULL, NULL}  /* Sentinel */
 };
 
@@ -339,7 +482,7 @@ NetworkAddress_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     if ((self = (NetworkAddress *)type->tp_alloc(type, 0)) == NULL) {
         return NULL;
     }
-    memset(&self->addr, 0, sizeof(self->addr));
+    memset(&self->pr_netaddr, 0, sizeof(self->pr_netaddr));
     self->py_hostname = NULL;
     self->py_hostentry = NULL;
 
@@ -358,7 +501,7 @@ NetworkAddress_new_from_PRNetAddr(PRNetAddr *pr_netaddr)
         return NULL;
     }
 
-    self->addr = *pr_netaddr;
+    self->pr_netaddr = *pr_netaddr;
 
     TraceObjNewLeave(self);
     return (PyObject *) self;
@@ -392,22 +535,24 @@ NetworkAddress_dealloc(NetworkAddress* self)
 }
 
 PyDoc_STRVAR(NetworkAddress_doc,
-"NetworkAddress(addr, port=0)\n\
+"NetworkAddress(addr, port=0, family=PR_AF_INET)\n\
 \n\
 :Parameters:\n\
     addr : string or integer\n\
         may be an int or a string.\n\
     port : integer\n\
         port number\n\
+    family : integer\n\
+        one of:\n\
+            - PR_AF_INET\n\
+            - PR_AF_INET6\n\
 \n\
-If addr argument is a string it may be either a numeric address or a DNS host\n\
-name. First the addr string is tested to see if it can be parsed as a IPv4\n\
-Dotted Decimal Notation or IPv6 Hexadecimal Notation, Otherwise the addr string\n\
-is passed to PR_GetHostByName to resolve the name. If the name is resolved the\n\
-first host entry returned by PR_EnumerateHostEnt is used to initialize the\n\
-NetworkAddress. If you need more fine grained control over which address is\n\
-selected from the HostEntry then utilize HostEntry.get_network_addresses()\n\
-instead.\n\
+If addr argument is a string it may be either a numeric address or a\n\
+DNS host name and is passed to the `AddrInfo` constructor along with\n\
+the family parameter. The first address in the `AddrInfo` object is\n\
+selected. If you need more fine grained control over which address is\n\
+selected from the `AddrInfo` object then invoke `AddrInfo` and select\n\
+one of the `NetworkAddress` it provides.\n\
 \n\
 If the addr argument is an integer it may be one of the following constants:\n\
 \n\
@@ -422,6 +567,8 @@ PR_IpAddrAny\n\
 PR_IpAddrLoopback\n\
     Assign logical PR_INADDR_LOOPBACK. A client can use this value to connect to\n\
     itself without knowing the host's network address.\n\
+PR_IpAddrV4Mapped\n\
+    Use IPv4 mapped address\n\
 \n\
 The optional port argument sets the port number in the NetworkAddress object.\n\
 The port number may be modfied later by assigning to the port attribute.\n\
@@ -436,21 +583,24 @@ Example::\n\
     Output:\n\
     82.94.237.218:0 www.python.org\n\
     82.94.237.218:0 dinsdale.python.org\n\
+\n\
+**WARNING:** NetworkAddress initialization from a string only works with IPv4\n\
+and its use should be considered *deprecated*. Use `AddrInfo` instead.\n\
 ");
 
 static int
 NetworkAddress_init(NetworkAddress *self, PyObject *args, PyObject *kwds)
 {
-    static char *kwlist[] = {"addr", "port",  NULL};
+    static char *kwlist[] = {"addr", "port", "family",  NULL};
     PyObject *addr = NULL;
     int port = 0;
+    int family = PR_AF_INET;
     int addr_int = PR_IpAddrNull;
-    char *addr_str = NULL;
-
 
     TraceMethodEnter(self);
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|Oi", kwlist, &addr, &port))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|Oii", kwlist,
+                                     &addr, &port, &family))
         return -1;
 
     if (addr && !(PyInt_Check(addr) || PyString_Check(addr) || PyUnicode_Check(addr))) {
@@ -464,43 +614,62 @@ NetworkAddress_init(NetworkAddress *self, PyObject *args, PyObject *kwds)
         case PR_IpAddrNull:
         case PR_IpAddrAny:
         case PR_IpAddrLoopback:
+        case PR_IpAddrV4Mapped:
             break;
         default:
-            PyErr_SetString(PyExc_ValueError, "addr is an int, must be PR_IpAddrNull, PR_IpAddrAny or PR_IpAddrLoopback");
+            PyErr_SetString(PyExc_ValueError, "addr is an int, must be PR_IpAddrNull, PR_IpAddrAny, PR_IpAddrLoopback or PR_IpAddrV4Mapped");
             return -1;
         }
     }
 
-    if (PR_InitializeNetAddr(addr_int, port, &self->addr) != PR_SUCCESS) {
+    switch(family) {
+    case PR_AF_INET:
+    case PR_AF_INET6:
+        break;
+    default:
+        PyErr_SetString(PyExc_ValueError, "family must be PR_AF_INET or PR_AF_INET6");
+        return -1;
+    }
+
+    Py_CLEAR(self->py_hostentry);
+    Py_CLEAR(self->py_hostname);
+
+    if (PR_SetNetAddr(addr_int, family, port, &self->pr_netaddr) != PR_SUCCESS) {
         set_nspr_error(NULL);
         return -1;
     }
 
     if (addr && (PyString_Check(addr) || PyUnicode_Check(addr))) {
-        addr_str = PyString_AsString(addr);
+        PyObject *ascii_str = NULL;
+        char *addr_str = NULL;
+        PyObject *result = NULL;
 
-        /* First try to parse as a dotted decimal, if that fails try a DNS lookup */
-        if (PR_StringToNetAddr(addr_str, &self->addr) != PR_SUCCESS) {
-            /* Not an address string, try DNS */
-            PRHostEnt entry;
-            char buffer[PR_NETDB_BUF_SIZE];
+        if (PyErr_WarnEx(PyExc_DeprecationWarning,
+                         "NetworkAddress initialization from a string parameter only works for IPv4, use AddrInfo instead.", 1) < 0)
+            return -1;
 
-            ASSIGN_REF(self->py_hostname, addr);
-
-            Py_BEGIN_ALLOW_THREADS
-            if (PR_GetHostByName(addr_str, buffer, sizeof(buffer), &entry) != PR_SUCCESS) {
-                Py_BLOCK_THREADS
-                set_nspr_error("cannot resolve address (%s)", addr_str);
+        if (PyUnicode_Check(addr)) {
+            if ((ascii_str = PyUnicode_AsASCIIString(addr)) == NULL) {
                 return -1;
             }
-            Py_END_ALLOW_THREADS
-
-            if (PR_EnumerateHostEnt(0, &entry, port, &self->addr) < 0) {
-                set_nspr_error(NULL);
-                return -1;
-            }
+        } else {
+            ascii_str = addr;
+            Py_INCREF(ascii_str);
         }
+
+        if ((addr_str = PyString_AsString(ascii_str)) == NULL) {
+            Py_DECREF(ascii_str);
+            return -1;
+        }
+
+        if ((result = NetworkAddress_init_from_address_string(self, addr_str, port, family)) == NULL) {
+            Py_DECREF(ascii_str);
+            return -1;
+        }
+        Py_DECREF(ascii_str);
+        Py_DECREF(result);
     }
+
     return 0;
 }
 
@@ -509,19 +678,19 @@ NetworkAddress_str(NetworkAddress *self)
 {
     char buf[1024];
 
-    if (self->addr.raw.family == PR_AF_UNSPEC) {
+    if (PR_NetAddrFamily(&self->pr_netaddr) == PR_AF_UNSPEC) {
         return PyString_FromString(unset_string);
     }
 
-    if (PR_NetAddrToString(&self->addr, buf, sizeof(buf)) != PR_SUCCESS) {
+    if (PR_NetAddrToString(&self->pr_netaddr, buf, sizeof(buf)) != PR_SUCCESS) {
         return set_nspr_error(NULL);
     }
 
-    switch(self->addr.raw.family) {
+    switch(PR_NetAddrFamily(&self->pr_netaddr)) {
     case PR_AF_INET:
-        return PyString_FromFormat("%s:%d", buf, PR_ntohs(self->addr.inet.port));
+        return PyString_FromFormat("%s:%d", buf, PR_ntohs(self->pr_netaddr.inet.port));
     case PR_AF_INET6:
-        return PyString_FromFormat("[%s]:%d", buf, PR_ntohs(self->addr.ipv6.port));
+        return PyString_FromFormat("[%s]:%d", buf, PR_ntohs(self->pr_netaddr.ipv6.port));
     default:
         return PyString_FromString(buf);
     }
@@ -571,6 +740,375 @@ NetworkAddressType = {
 };
 
 /* ========================================================================== */
+/* ============================= AddrInfo Class ============================== */
+/* ========================================================================== */
+
+/* ============================ Attribute Access ============================ */
+
+static PyObject *
+AddrInfo_get_hostname(AddrInfo *self, void *closure)
+{
+    TraceMethodEnter(self);
+
+    Py_INCREF(self->py_hostname);
+    return self->py_hostname;
+}
+
+static PyObject *
+AddrInfo_get_canonical_name(AddrInfo *self, void *closure)
+{
+    TraceMethodEnter(self);
+
+    Py_INCREF(self->py_canonical_name);
+    return self->py_canonical_name;
+}
+
+static
+PyGetSetDef AddrInfo_getseters[] = {
+    {"hostname", (getter)AddrInfo_get_hostname, (setter)NULL,
+     "Returns the hostname this object was initialized from", NULL},
+    {"canonical_name", (getter)AddrInfo_get_canonical_name, (setter)NULL,
+     "Returns the canonical name associated with the IP address or None if not known", NULL},
+    {NULL}  /* Sentinel */
+};
+
+static PyMemberDef AddrInfo_members[] = {
+    {NULL}  /* Sentinel */
+};
+
+/* ============================== Class Methods ============================= */
+
+static PyMethodDef AddrInfo_methods[] = {
+    {NULL, NULL}  /* Sentinel */
+};
+
+/* =========================== Class Construction =========================== */
+
+static PyObject *
+AddrInfo_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
+    AddrInfo *self;
+
+    TraceObjNewEnter(type);
+
+    if ((self = (AddrInfo *)type->tp_alloc(type, 0)) == NULL) {
+        return NULL;
+    }
+
+    self->pr_addrinfo       = NULL;
+    self->py_hostname       = NULL;
+    self->py_canonical_name = NULL;
+    self->py_netaddrs       = NULL;
+
+    TraceObjNewLeave(self);
+    return (PyObject *)self;
+}
+
+static int
+AddrInfo_traverse(AddrInfo *self, visitproc visit, void *arg)
+{
+    Py_VISIT(self->py_hostname);
+    Py_VISIT(self->py_canonical_name);
+    Py_VISIT(self->py_netaddrs);
+    return 0;
+}
+
+static int
+AddrInfo_clear(AddrInfo* self)
+{
+    TraceMethodEnter(self);
+
+    Py_CLEAR(self->py_hostname);
+    Py_CLEAR(self->py_canonical_name);
+    Py_CLEAR(self->py_netaddrs);
+    return 0;
+}
+
+static void
+AddrInfo_dealloc(AddrInfo* self)
+{
+    TraceMethodEnter(self);
+
+    if (self->pr_addrinfo) {
+        PR_FreeAddrInfo(self->pr_addrinfo);
+        self->pr_addrinfo = NULL;
+    }
+    AddrInfo_clear(self);
+    self->ob_type->tp_free((PyObject*)self);
+}
+
+PyDoc_STRVAR(AddrInfo_doc,
+"AddrInfo(hostname, family=PR_AF_UNSPEC, flags=PR_AI_ADDRCONFIG)\n\
+\n\
+:Parameters:\n\
+    hostname : str or unicode object\n\
+        Either a hostname or an address string (dotted-decimal for IPv4\n\
+        or a hex string for IPv6.\n\
+    family : int\n\
+        May be:\n\
+             -  PR_AF_UNSPEC\n\
+             -  PR_AF_INET.\n\
+    flags : int\n\
+        May be either:\n\
+            - PR_AI_ADDRCONFIG\n\
+            - PR_AI_ADDRCONFIG | PR_AI_NOCANONNAME\n\
+\n\
+        Include PR_AI_NOCANONNAME to suppress the determination of\n\
+        the canonical name corresponding to hostname.\n\
+\n\
+An object used to encapsulate network address information for a\n\
+specific host.\n\
+\n\
+After successful initialization the AddrInfo object will contain\n\
+an ordered sequence of `NetworkAddress` objects which may be\n\
+accessed via iteration or indexing. It is suggested you try connecting\n\
+with the each `NetworkAddress` object in sequential order until\n\
+one succeeds.\n\
+\n\
+Example Usage::\n\
+\n\
+    try:\n\
+        addr_info = io.AddrInfo(hostname)\n\
+    except Exception, e:\n\
+        print \"ERROR: could not resolve address for %s\" % hostname\n\
+        return\n\
+    for net_addr in addr_info:\n\
+        net_addr.port = port\n\
+        sock = io.Socket()\n\
+        try:\n\
+            sock.connect(net_addr, timeout=io.seconds_to_interval(1))\n\
+            return\n\
+        except Exception, e:\n\
+            pass\n\
+     print \"ERROR: could not connect to %s at port %d\" % (hostname, port)\n\
+\n\
+Note, the NSPR interface to getaddrinfo() does not provide a way to\n\
+select just IPv6 addresses. The solution is filter them yourself, e.g.::\n\
+\n\
+    for net_addr in addr_info:\n\
+       if net_addr.family != io.PR_AF_INET6: continue\n\
+\n\
+");
+
+static int
+AddrInfo_init(AddrInfo *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"hostname", "family", "flags", NULL};
+    char *hostname = NULL;
+    int family = PR_AF_UNSPEC;
+    int flags = PR_AI_ADDRCONFIG;
+    Py_ssize_t i = 0, len = 0;
+    void *iter = NULL;
+    PRNetAddr pr_netaddr;
+    PyObject *py_netaddr = NULL;
+    const char *canonical_name;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "s|ii:AddrInfo", kwlist,
+                                     &hostname, &family, &flags))
+        return -1;
+
+    if ((self->py_hostname = PyString_FromString(hostname)) == NULL) {
+        return -1;
+    }
+
+    Py_BEGIN_ALLOW_THREADS
+    if ((self->pr_addrinfo = PR_GetAddrInfoByName(hostname, family, flags)) == NULL) {
+        Py_BLOCK_THREADS
+        set_nspr_error(NULL);
+        return -1;
+    }
+    Py_END_ALLOW_THREADS
+
+    len = 0;
+    iter = NULL;
+    while ((iter = PR_EnumerateAddrInfo(iter, self->pr_addrinfo, 0, &pr_netaddr)) != NULL) {
+        len++;
+    }
+    
+    if ((self->py_netaddrs = PyTuple_New(len)) == NULL) {
+        return -1;
+    }
+
+    i = 0;
+    iter = NULL;
+    while ((iter = PR_EnumerateAddrInfo(iter, self->pr_addrinfo, 0, &pr_netaddr)) != NULL) {
+        if ((py_netaddr = NetworkAddress_new_from_PRNetAddr(&pr_netaddr)) == NULL) {
+            Py_CLEAR(self->py_netaddrs);
+            return -1;
+        }
+        PyTuple_SetItem(self->py_netaddrs, i, py_netaddr);
+        i++;
+    }
+    
+    if ((canonical_name = PR_GetCanonNameFromAddrInfo(self->pr_addrinfo)) == NULL) {
+        self->py_canonical_name = Py_None;
+        Py_INCREF(self->py_canonical_name);
+    } else {
+        if ((self->py_canonical_name = PyString_FromString(canonical_name)) == NULL) {
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+static PyObject *
+AddrInfo_repr(AddrInfo *self)
+{
+    return PyString_FromFormat("<%s object at %p>",
+                               Py_TYPE(self)->tp_name, self);
+}
+
+static PyObject *
+AddrInfo_str(AddrInfo *self)
+{
+    Py_ssize_t i = 0, len = 0;
+    PyObject *py_netaddr = NULL;
+    PyObject *args = NULL;
+    PyObject *format = NULL;
+    PyObject *addr_str = NULL;
+    PyObject *text = NULL;
+
+    if (!self->py_netaddrs) {
+        PyErr_Format(PyExc_ValueError, "%s is uninitialized", Py_TYPE(self)->tp_name);
+        return NULL;
+    }
+
+    len = PyTuple_Size(self->py_netaddrs);
+
+    if ((args = Py_BuildValue("(OOi)",
+                              self->py_hostname,
+                              self->py_canonical_name,
+                              len)) == NULL) {
+        goto fail;
+    }
+
+    if ((format = PyString_FromString("host=%s canonical=%s (%d addrs)")) == NULL) {
+        goto fail;
+    }
+
+    if ((text = PyString_Format(format, args)) == NULL) {
+        goto fail;
+    }
+
+    Py_CLEAR(format);
+    Py_CLEAR(args);
+
+    if ((format = PyString_FromString(" addr[%d]=%s")) == NULL) {
+        goto fail;
+    }
+
+    for (i = 0; i < len; i++) {
+        py_netaddr = PyTuple_GetItem(self->py_netaddrs, i);
+        if ((args = Py_BuildValue("(iO)", i, py_netaddr)) == NULL) {
+            goto fail;
+        }
+
+        if ((addr_str = PyString_Format(format, args)) == NULL) {
+            goto fail;
+        }
+
+        PyString_ConcatAndDel(&text, addr_str);
+        if (text == NULL) {
+            goto fail;
+        }
+
+        Py_CLEAR(args);
+    }
+
+    Py_DECREF(format);
+    return text;
+ fail:
+    Py_XDECREF(args);
+    Py_XDECREF(format);
+    Py_XDECREF(addr_str);
+    Py_XDECREF(text);
+    return NULL;
+}
+
+static Py_ssize_t
+AddrInfo_length(AddrInfo *self)
+{
+    if (!self->py_netaddrs) {
+        PyErr_Format(PyExc_ValueError, "%s is uninitialized", Py_TYPE(self)->tp_name);
+        return -1;
+    }
+
+    return PyTuple_Size(self->py_netaddrs);
+}
+
+static PyObject *
+AddrInfo_item(AddrInfo *self, register Py_ssize_t i)
+{
+    PyObject *py_netaddr = NULL;
+
+    if (!self->py_netaddrs) {
+        return PyErr_Format(PyExc_ValueError, "%s is uninitialized", Py_TYPE(self)->tp_name);
+    }
+
+    py_netaddr = PyTuple_GetItem(self->py_netaddrs, i);
+    Py_XINCREF(py_netaddr);
+    return py_netaddr;
+}
+
+static PySequenceMethods AddrInfo_as_sequence = {
+    (lenfunc)AddrInfo_length,			/* sq_length */
+    0,						/* sq_concat */
+    0,						/* sq_repeat */
+    (ssizeargfunc)AddrInfo_item,		/* sq_item */
+    0,						/* sq_slice */
+    0,						/* sq_ass_item */
+    0,						/* sq_ass_slice */
+    0,						/* sq_contains */
+    0,						/* sq_inplace_concat */
+    0,						/* sq_inplace_repeat */
+};
+
+static PyTypeObject AddrInfoType = {
+    PyObject_HEAD_INIT(NULL)
+    0,						/* ob_size */
+    "nss.io.AddrInfo",				/* tp_name */
+    sizeof(AddrInfo),				/* tp_basicsize */
+    0,						/* tp_itemsize */
+    (destructor)AddrInfo_dealloc,		/* tp_dealloc */
+    0,						/* tp_print */
+    0,						/* tp_getattr */
+    0,						/* tp_setattr */
+    0,						/* tp_compare */
+    (reprfunc)AddrInfo_repr,			/* tp_repr */
+    0,						/* tp_as_number */
+    &AddrInfo_as_sequence,			/* tp_as_sequence */
+    0,						/* tp_as_mapping */
+    0,						/* tp_hash */
+    0,						/* tp_call */
+    (reprfunc)AddrInfo_str,			/* tp_str */
+    0,						/* tp_getattro */
+    0,						/* tp_setattro */
+    0,						/* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_GC,	/* tp_flags */
+    AddrInfo_doc,				/* tp_doc */
+    (traverseproc)AddrInfo_traverse,		/* tp_traverse */
+    (inquiry)AddrInfo_clear,			/* tp_clear */
+    0,						/* tp_richcompare */
+    0,						/* tp_weaklistoffset */
+    0,						/* tp_iter */
+    0,						/* tp_iternext */
+    AddrInfo_methods,				/* tp_methods */
+    AddrInfo_members,				/* tp_members */
+    AddrInfo_getseters,				/* tp_getset */
+    0,						/* tp_base */
+    0,						/* tp_dict */
+    0,						/* tp_descr_get */
+    0,						/* tp_descr_set */
+    0,						/* tp_dictoffset */
+    (initproc)AddrInfo_init,			/* tp_init */
+    0,						/* tp_alloc */
+    AddrInfo_new,				/* tp_new */
+};
+
+/* ========================================================================== */
 /* ============================= HostEntry Class ============================ */
 /* ========================================================================== */
 
@@ -585,39 +1123,31 @@ HostEntry_get_hostname(HostEntry *self, void *closure)
 }
 
 static PyObject *
-HostEntry_get_aliases(HostEntry *self, void *closure)
+HostEntry_get_family(HostEntry *self, void *closure)
 {
-    int len, i;
-    PyObject *alias_tuple = NULL;
-    PyObject *alias = NULL;
-
     TraceMethodEnter(self);
 
-    if (self->entry.h_aliases) {
-        for (len = 0; self->entry.h_aliases[len]; len++);
-    } else {
-        len = 0;
+    return PyInt_FromLong(self->entry.h_addrtype);
+}
+
+static PyObject *
+HostEntry_get_aliases(HostEntry *self, void *closure)
+{
+    TraceMethodEnter(self);
+
+    if (self->py_aliases == NULL) {
+        Py_RETURN_NONE;
     }
 
-    if ((alias_tuple = PyTuple_New(len)) == NULL) {
-        return NULL;
-    }
-
-    for (i = 0; i < len; i++) {
-        if ((alias = PyString_FromString(self->entry.h_aliases[i])) == NULL) {
-            Py_DECREF(alias_tuple);
-            return NULL;
-        }
-        PyTuple_SetItem(alias_tuple, i, alias);
-    }
-
-    return alias_tuple;
+    Py_INCREF(self->py_aliases);
+    return self->py_aliases;
 }
 
 static PyGetSetDef
 HostEntry_getseters[] = {
     {"hostname", (getter)HostEntry_get_hostname, (setter)NULL, "official name of host", NULL},
-    {"aliases",  (getter)HostEntry_get_aliases, (setter)NULL, "tuple of aliases for host", NULL},
+    {"family",   (getter)HostEntry_get_family,   (setter)NULL, "address family (e.g. PR_AF_INET, etc.)", NULL},
+    {"aliases",  (getter)HostEntry_get_aliases,  (setter)NULL, "tuple of aliases for host", NULL},
     {NULL}  /* Sentinel */
 };
 
@@ -638,39 +1168,21 @@ static PyObject *
 HostEntry_get_network_addresses(HostEntry *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"port", NULL};
-    int len, i;
-    PyObject *addr_tuple = NULL;
-    PyObject *py_netaddr = NULL;
-    PRNetAddr pr_netaddr;
-
     int port = 0;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i:get_network_addresses", kwlist, &port))
         return NULL;
 
-    if (self->entry.h_addr_list) {
-        for (len = 0; self->entry.h_addr_list[len]; len++);
-    } else {
-        len = 0;
-    }
-
-    if ((addr_tuple = PyTuple_New(len)) == NULL) {
+    if (PyErr_WarnEx(PyExc_DeprecationWarning,
+                     "Use iteration instead (e.g. for net_adder in hostentry), the port parameter is not respected, port will be value when HostEntry object was created.", 1) < 0)
         return NULL;
+
+    if (self->py_netaddrs == NULL) {
+        Py_RETURN_NONE;
     }
 
-    for (i = 0; i < len; i++) {
-        if (PR_EnumerateHostEnt(i, &self->entry, port, &pr_netaddr) < 0) {
-            Py_DECREF(addr_tuple);
-            return set_nspr_error(NULL);
-        }
-        if ((py_netaddr = NetworkAddress_new_from_PRNetAddr(&pr_netaddr)) == NULL) {
-            Py_DECREF(addr_tuple);
-            return NULL;
-        }
-        PyTuple_SetItem(addr_tuple, i, py_netaddr);
-    }
-
-    return addr_tuple;
+    Py_INCREF(self->py_netaddrs);
+    return self->py_netaddrs;
 }
 
 PyDoc_STRVAR(HostEntry_get_network_address_doc,
@@ -689,31 +1201,21 @@ static PyObject *
 HostEntry_get_network_address(HostEntry *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"port", NULL};
-    NetworkAddress *netaddr = NULL;
     int port = 0;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i:get_network_address", kwlist, &port)) {
         return NULL;
     }
 
-    if (!self->entry.h_addr_list) {
-        Py_RETURN_NONE;
-    }
-
-    if (!self->entry.h_addr_list[0]) {
-        Py_RETURN_NONE;
-    }
-
-    if ((netaddr = (NetworkAddress *) NetworkAddressType.tp_new(&NetworkAddressType, NULL, NULL)) == NULL) {
+    if (PyErr_WarnEx(PyExc_DeprecationWarning,
+                     "Use indexing instead (e.g. hostentry[i]), the port parameter is not respected, port will be value when HostEntry object was created.", 1) < 0)
         return NULL;
+
+    if (self->py_netaddrs == NULL) {
+        Py_RETURN_NONE;
     }
 
-    if (PR_EnumerateHostEnt(0, &self->entry, port, &netaddr->addr) < 0) {
-        Py_DECREF(netaddr);
-        return set_nspr_error(NULL);
-    }
-
-    return (PyObject *)netaddr;
+    return PyTuple_GetItem(self->py_netaddrs, 0);
 }
 
 static PyMethodDef
@@ -737,10 +1239,306 @@ HostEntry_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     }
     memset(&self->entry,  0, sizeof(self->entry));
     memset(&self->buffer, 0, sizeof(self->buffer));
+    self->py_aliases = NULL;
+    self->py_netaddrs = NULL;
 
     TraceObjNewLeave(self);
     return (PyObject *)self;
 }
+
+static int
+HostEntry_traverse(HostEntry *self, visitproc visit, void *arg)
+{
+    Py_VISIT(self->py_aliases);
+    Py_VISIT(self->py_netaddrs);
+    return 0;
+}
+
+static int
+HostEntry_clear(HostEntry* self)
+{
+    TraceMethodEnter(self);
+
+    Py_CLEAR(self->py_aliases);
+    Py_CLEAR(self->py_netaddrs);
+    return 0;
+}
+
+static void
+HostEntry_dealloc(HostEntry* self)
+{
+    TraceMethodEnter(self);
+
+    HostEntry_clear(self);
+    self->ob_type->tp_free((PyObject*)self);
+}
+
+PyDoc_STRVAR(HostEntry_doc,
+"HostEntry(addr)\n\
+\n\
+:Parameters:\n\
+    addr : string or NetworkAddr object\n\
+        May be either a string or a NetworkAddr object.\n\
+            - If addr is string it is equivalent to GetHostByName.\n\
+            - If addr is a NetworkAddress object it is equivalent to GetHostByAddr.\n\
+\n\
+A HostEntry contains an official name of the host, a set of aliases\n\
+for the host name, an address family and a set of network addresses (all\n\
+within the single address family).\n\
+\n\
+After successful initialization the HostEntry object will contain\n\
+an unordered sequence of `NetworkAddress` objects which may be\n\
+accessed via iteration or indexing. It is suggested you try connecting\n\
+with the each `NetworkAddress` object in sequential order until\n\
+one succeeds.\n\
+\n\
+Example Usage::\n\
+\n\
+    host_entry = io.HostEntry(hostname)\n\
+    for net_addr in host_entry:\n\
+        net_addr.port = port\n\
+        sock = io.Socket()\n\
+        try:\n\
+            sock.connect(net_addr, timeout=io.seconds_to_interval(1))\n\
+            break\n\
+        except Exception, e:\n\
+            pass\n\
+\n\
+**WARNING:** HostEntry only supports IPv4 lookups and it's address\n\
+list is unordered, HostEntry should be considered *deprecated*. Use\n\
+`AddrInfo` instead.\n\
+");
+
+static int
+HostEntry_init(HostEntry *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"addr", NULL};
+    PyObject *addr = NULL;
+    Py_ssize_t i = 0, len = 0;
+    PyObject *py_alias = NULL;
+    PyObject *py_netaddr = NULL;
+    PRNetAddr pr_netaddr;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|i", kwlist,
+                                     &addr))
+        return -1;
+
+    if (PyString_Check(addr) || PyUnicode_Check(addr)) {
+        PyObject *ascii_str = NULL;
+        char *addr_str = NULL;
+
+        if (PyUnicode_Check(addr)) {
+            if ((ascii_str = PyUnicode_AsASCIIString(addr)) == NULL) {
+                return -1;
+            }
+        } else {
+            ascii_str = addr;
+            Py_INCREF(ascii_str);
+        }
+
+        if ((addr_str = PyString_AsString(ascii_str)) == NULL) {
+            Py_DECREF(ascii_str);
+            return -1;
+        }
+
+        Py_BEGIN_ALLOW_THREADS
+        if (PR_GetHostByName(addr_str, self->buffer,
+                             sizeof(self->buffer), &self->entry) != PR_SUCCESS) {
+            Py_BLOCK_THREADS
+            set_nspr_error(NULL);
+            Py_DECREF(ascii_str);
+            return -1;
+        }
+        Py_END_ALLOW_THREADS
+
+    } else if (PyNetworkAddress_Check(addr)) {
+
+        Py_BEGIN_ALLOW_THREADS
+        if (PR_GetHostByAddr(&((NetworkAddress *)addr)->pr_netaddr, self->buffer,
+                             sizeof(self->buffer), &self->entry) != PR_SUCCESS) {
+            Py_BLOCK_THREADS
+            set_nspr_error(NULL);
+            return -1;
+        }
+        Py_END_ALLOW_THREADS
+    } else {
+        PyErr_SetString(PyExc_TypeError, "addr must be string, unicode or NetworkAddress object");
+        return -1;
+    }
+
+    /* Build tuple of alias strings */
+    if (self->entry.h_aliases) {
+        for (len = 0; self->entry.h_aliases[len]; len++);
+    } else {
+        len = 0;
+    }
+
+    if ((self->py_aliases = PyTuple_New(len)) == NULL) {
+        return -1;
+    }
+
+    for (i = 0; i < len; i++) {
+        if ((py_alias = PyString_FromString(self->entry.h_aliases[i])) == NULL) {
+            Py_CLEAR(self->py_aliases);
+            return -1;
+        }
+        PyTuple_SetItem(self->py_aliases, i, py_alias);
+    }
+
+
+    /* Build tuple of NetworkAddress objects */
+    if (self->entry.h_addr_list) {
+        for (len = 0; self->entry.h_addr_list[len]; len++);
+    } else {
+        len = 0;
+    }
+
+    if ((self->py_netaddrs = PyTuple_New(len)) == NULL) {
+        return -1;
+    }
+
+    for (i = 0; i < len; i++) {
+        if (PR_EnumerateHostEnt(i, &self->entry, 0, &pr_netaddr) < 0) {
+            Py_CLEAR(self->py_netaddrs);
+            set_nspr_error(NULL);
+            return -1;
+        }
+        if ((py_netaddr = NetworkAddress_new_from_PRNetAddr(&pr_netaddr)) == NULL) {
+            Py_CLEAR(self->py_netaddrs);
+            return -1;
+        }
+        PyTuple_SetItem(self->py_netaddrs, i, py_netaddr);
+    }
+
+    return 0;
+}
+
+static PyObject *
+HostEntry_str(HostEntry *self)
+{
+    PyObject *aliases = NULL;
+    PyObject *addrs = NULL;
+    PyObject *args = NULL;
+    PyObject *format;
+    PyObject *text = NULL;
+
+    if (self->py_aliases) {
+        aliases = tuple_str(self->py_aliases);
+    } else {
+        aliases = Py_None;
+        Py_INCREF(aliases);
+    }
+
+    if (self->py_netaddrs) {
+        addrs = tuple_str(self->py_netaddrs);
+    } else {
+        addrs = Py_None;
+        Py_INCREF(addrs);
+    }
+
+    if ((args = Py_BuildValue("(ssOO)", self->entry.h_name ? self->entry.h_name : "None",
+                              pr_family_str(self->entry.h_addrtype),
+                              aliases, addrs)) == NULL) {
+        goto exit;
+    }
+
+    if ((format = PyString_FromString("name=%s family=%s aliases=%s addresses=%s")) == NULL) {
+        goto exit;
+    }
+
+    text = PyString_Format(format, args);
+
+ exit:
+    Py_XDECREF(aliases);
+    Py_XDECREF(addrs);
+    Py_XDECREF(args);
+    Py_XDECREF(format);
+    return text;
+
+}
+
+static Py_ssize_t
+HostEntry_length(HostEntry *self)
+{
+    if (!self->py_netaddrs) {
+        PyErr_Format(PyExc_ValueError, "%s is uninitialized", Py_TYPE(self)->tp_name);
+        return -1;
+    }
+
+    return PyTuple_Size(self->py_netaddrs);
+}
+
+static PyObject *
+HostEntry_item(HostEntry *self, register Py_ssize_t i)
+{
+    PyObject *py_netaddr = NULL;
+
+    if (!self->py_netaddrs) {
+        return PyErr_Format(PyExc_ValueError, "%s is uninitialized", Py_TYPE(self)->tp_name);
+    }
+
+    py_netaddr = PyTuple_GetItem(self->py_netaddrs, i);
+    Py_XINCREF(py_netaddr);
+    return py_netaddr;
+}
+
+static PySequenceMethods HostEntry_as_sequence = {
+    (lenfunc)HostEntry_length,			/* sq_length */
+    0,						/* sq_concat */
+    0,						/* sq_repeat */
+    (ssizeargfunc)HostEntry_item,		/* sq_item */
+    0,						/* sq_slice */
+    0,						/* sq_ass_item */
+    0,						/* sq_ass_slice */
+    0,						/* sq_contains */
+    0,						/* sq_inplace_concat */
+    0,						/* sq_inplace_repeat */
+};
+
+static PyTypeObject
+HostEntryType = {
+    PyObject_HEAD_INIT(NULL)
+    0,						/* ob_size */
+    "nss.io.HostEntry",				/* tp_name */
+    sizeof(HostEntry),				/* tp_basicsize */
+    0,						/* tp_itemsize */
+    (destructor)HostEntry_dealloc,		/* tp_dealloc */
+    0,						/* tp_print */
+    0,						/* tp_getattr */
+    0,						/* tp_setattr */
+    0,						/* tp_compare */
+    0,						/* tp_repr */
+    0,						/* tp_as_number */
+    &HostEntry_as_sequence,			/* tp_as_sequence */
+    0,						/* tp_as_mapping */
+    0,						/* tp_hash */
+    0,						/* tp_call */
+    (reprfunc)HostEntry_str,			/* tp_str */
+    0,						/* tp_getattro */
+    0,						/* tp_setattro */
+    0,						/* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_GC,	/* tp_flags */
+    HostEntry_doc,				/* tp_doc */
+    (traverseproc)HostEntry_traverse,		/* tp_traverse */
+    (inquiry)HostEntry_clear,			/* tp_clear */
+    0,						/* tp_richcompare */
+    0,						/* tp_weaklistoffset */
+    0,						/* tp_iter */
+    0,						/* tp_iternext */
+    HostEntry_methods,				/* tp_methods */
+    HostEntry_members,				/* tp_members */
+    HostEntry_getseters,			/* tp_getset */
+    0,						/* tp_base */
+    0,						/* tp_dict */
+    0,						/* tp_descr_get */
+    0,						/* tp_descr_set */
+    0,						/* tp_dictoffset */
+    (initproc)HostEntry_init,			/* tp_init */
+    0,						/* tp_alloc */
+    HostEntry_new,				/* tp_new */
+};
 
 static PyObject *
 HostEntry_new_from_PRNetAddr(PRNetAddr *pr_netaddr)
@@ -766,162 +1564,6 @@ HostEntry_new_from_PRNetAddr(PRNetAddr *pr_netaddr)
     TraceObjNewLeave(self);
     return (PyObject *) self;
 }
-
-static void
-HostEntry_dealloc(HostEntry* self)
-{
-    TraceMethodEnter(self);
-
-    self->ob_type->tp_free((PyObject*)self);
-}
-
-PyDoc_STRVAR(HostEntry_doc,
-"HostEntry(addr)\n\
-\n\
-:Parameters:\n\
-    addr : string or NetworkAddr object\n\
-        May be either a string or a NetworkAddr object.\n\
-            - If addr is string it is equivalent to GetHostByName.\n\
-            - If addr is a NetworkAddress object it is equivalent to GetHostByAddr.\n\
-\n\
-An object used to encapsulate network address information for a\n\
-specific host.\n\
-");
-
-static int
-HostEntry_init(HostEntry *self, PyObject *args)
-{
-    PyObject *addr = NULL;
-
-    TraceMethodEnter(self);
-
-    if (!PyArg_ParseTuple(args, "O", &addr))
-        return -1;
-
-    if (PyString_Check(addr) || PyUnicode_Check(addr)) {
-
-        Py_BEGIN_ALLOW_THREADS
-        if (PR_GetHostByName(PyString_AsString(addr), self->buffer,
-                             sizeof(self->buffer), &self->entry) != PR_SUCCESS) {
-            Py_BLOCK_THREADS
-            set_nspr_error(NULL);
-            return -1;
-        }
-        Py_END_ALLOW_THREADS
-
-    }
-    else if (PyNetworkAddress_Check(addr)) {
-
-        Py_BEGIN_ALLOW_THREADS
-        if (PR_GetHostByAddr(&((NetworkAddress *)addr)->addr, self->buffer,
-                             sizeof(self->buffer), &self->entry) != PR_SUCCESS) {
-            Py_BLOCK_THREADS
-            set_nspr_error(NULL);
-            return -1;
-        }
-        Py_END_ALLOW_THREADS
-    }
-
-    return 0;
-}
-
-static PyObject *
-HostEntry_str(HostEntry *self)
-{
-    PyObject *addrs = NULL;
-    PyObject *addr_list = NULL;
-    PyObject *addr_iter = NULL;
-    PyObject *addr = NULL;
-    PyObject *str = NULL;
-    PyObject *aliases = NULL;
-    PyObject *args = NULL;
-    PyObject *text = NULL;
-    PyObject *format;
-    int i;
-
-    addrs = PyObject_CallMethod((PyObject *)self, "get_network_addresses", NULL);
-    if ((addr_list = PyTuple_New(PyTuple_Size(addrs))) == NULL) {
-        goto exit;
-    }
-
-    if ((addr_iter = PyObject_GetIter(addrs)) == NULL) {
-        goto exit;
-    }
-
-    for (i = 0; (addr = PyIter_Next(addr_iter)); i++) {
-        if ((str = PyObject_Str(addr)) == NULL) {
-            Py_DECREF(addr);
-            goto exit;
-        }
-        Py_DECREF(addr);
-        if (PyTuple_SetItem(addr_list, i, str) == -1) {
-            Py_DECREF(str);
-            goto exit;
-        }
-    }
-
-    if ((aliases = PyObject_GetAttrString((PyObject *)self, "aliases")) == NULL) {
-        goto exit;
-    }
-
-    args = Py_BuildValue("(sOO)", self->entry.h_name ? self->entry.h_name : "None",
-                         aliases, addr_list);
-    format = PyString_FromString("name=%s aliases=%s addresses=%s");
-    text = PyString_Format(format, args);
-    Py_DECREF(format);
-
- exit:
-    Py_XDECREF(addrs);
-    Py_XDECREF(addr_list);
-    Py_XDECREF(addr_iter);
-    Py_XDECREF(aliases);
-    Py_XDECREF(args);
-    return text;
-
-}
-
-static PyTypeObject
-HostEntryType = {
-    PyObject_HEAD_INIT(NULL)
-    0,						/* ob_size */
-    "nss.io.HostEntry",				/* tp_name */
-    sizeof(HostEntry),				/* tp_basicsize */
-    0,						/* tp_itemsize */
-    (destructor)HostEntry_dealloc,		/* tp_dealloc */
-    0,						/* tp_print */
-    0,						/* tp_getattr */
-    0,						/* tp_setattr */
-    0,						/* tp_compare */
-    0,						/* tp_repr */
-    0,						/* tp_as_number */
-    0,						/* tp_as_sequence */
-    0,						/* tp_as_mapping */
-    0,						/* tp_hash */
-    0,						/* tp_call */
-    (reprfunc)HostEntry_str,			/* tp_str */
-    0,						/* tp_getattro */
-    0,						/* tp_setattro */
-    0,						/* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,	/* tp_flags */
-    HostEntry_doc,				/* tp_doc */
-    0,						/* tp_traverse */
-    0,						/* tp_clear */
-    0,						/* tp_richcompare */
-    0,						/* tp_weaklistoffset */
-    0,						/* tp_iter */
-    0,						/* tp_iternext */
-    HostEntry_methods,				/* tp_methods */
-    HostEntry_members,				/* tp_members */
-    HostEntry_getseters,			/* tp_getset */
-    0,						/* tp_base */
-    0,						/* tp_dict */
-    0,						/* tp_descr_get */
-    0,						/* tp_descr_set */
-    0,						/* tp_dictoffset */
-    (initproc)HostEntry_init,			/* tp_init */
-    0,						/* tp_alloc */
-    HostEntry_new,				/* tp_new */
-};
 
 /* ========================================================================== */
 /* ============================== Socket Class ============================== */
@@ -1167,22 +1809,22 @@ Socket_set_socket_option(Socket *self, PyObject *args)
                               &NetworkAddressType, &mcaddr,
                               &NetworkAddressType, &ifaddr))
             return NULL;
-        data.value.add_member.mcaddr = mcaddr->addr;
-        data.value.add_member.ifaddr = ifaddr->addr;
+        data.value.add_member.mcaddr = mcaddr->pr_netaddr;
+        data.value.add_member.ifaddr = ifaddr->pr_netaddr;
         break;
     case PR_SockOpt_DropMember:
         if (!PyArg_ParseTuple(args, "iO!O!:set_socket_option", &option,
                               &NetworkAddressType, &mcaddr,
                               &NetworkAddressType, &ifaddr))
             return NULL;
-        data.value.drop_member.mcaddr = mcaddr->addr;
-        data.value.drop_member.ifaddr = ifaddr->addr;
+        data.value.drop_member.mcaddr = mcaddr->pr_netaddr;
+        data.value.drop_member.ifaddr = ifaddr->pr_netaddr;
         break;
     case PR_SockOpt_McastInterface:
         if (!PyArg_ParseTuple(args, "iO!:set_socket_option", &option,
                               &NetworkAddressType, &ifaddr))
             return NULL;
-        data.value.mcast_if = ifaddr->addr;
+        data.value.mcast_if = ifaddr->pr_netaddr;
         break;
     case PR_SockOpt_McastTimeToLive:
         if (!PyArg_ParseTuple(args, "iI:set_socket_option", &option, &uint))
@@ -1451,7 +2093,7 @@ Socket_connect(Socket *self, PyObject *args, PyObject *kwds)
     ASSIGN_REF(self->py_netaddr, py_netaddr);
 
     Py_BEGIN_ALLOW_THREADS
-        if (PR_Connect(self->pr_socket, &py_netaddr->addr, timeout) != PR_SUCCESS) {
+        if (PR_Connect(self->pr_socket, &py_netaddr->pr_netaddr, timeout) != PR_SUCCESS) {
         Py_BLOCK_THREADS
         return set_nspr_error(NULL);
     }
@@ -1648,7 +2290,7 @@ Socket_bind(Socket *self, PyObject *args)
     ASSIGN_REF(self->py_netaddr, py_netaddr);
 
     Py_BEGIN_ALLOW_THREADS
-        if (PR_Bind(self->pr_socket, &py_netaddr->addr) != PR_SUCCESS) {
+        if (PR_Bind(self->pr_socket, &py_netaddr->pr_netaddr) != PR_SUCCESS) {
         Py_BLOCK_THREADS
         return set_nspr_error(NULL);
     }
@@ -2180,7 +2822,7 @@ Socket_recv_from(Socket *self, PyObject *args, PyObject *kwds)
 
     Py_BEGIN_ALLOW_THREADS
     amount_read = PR_RecvFrom(self->pr_socket, PyString_AS_STRING(py_buf),
-                              requested_amount, 0, &py_netaddr->addr, timeout);
+                              requested_amount, 0, &py_netaddr->pr_netaddr, timeout);
     Py_END_ALLOW_THREADS
 
     if (amount_read < 0) {
@@ -2319,7 +2961,7 @@ Socket_send_to(Socket *self, PyObject *args, PyObject *kwds)
     ASSIGN_REF(self->py_netaddr, py_netaddr);
 
     Py_BEGIN_ALLOW_THREADS
-    amount = PR_SendTo(self->pr_socket, buf, len, 0, &py_netaddr->addr, timeout);
+    amount = PR_SendTo(self->pr_socket, buf, len, 0, &py_netaddr->pr_netaddr, timeout);
     Py_END_ALLOW_THREADS
 
     if (amount < 0) {
@@ -3108,6 +3750,27 @@ io_interval_to_microseconds(PyObject *self, PyObject *args)
     return PyInt_FromLong(microseconds);
 }
 
+PyDoc_STRVAR(io_addr_family_name_doc,
+"addr_family_name(family) -> string\n\
+\n\
+:Parameters:\n\
+    family : int\n\
+        An address family constant, (i.e. PR_AF_INET)\n\
+\n\
+Given an address family constant returns the string name.\n\
+");
+static PyObject *
+io_addr_family_name(PyObject *self, PyObject *args)
+{
+    int family;
+
+    if (!PyArg_ParseTuple(args, "i:addr_family_name", &family)) {
+        return NULL;
+    }
+
+    return PyString_FromString(pr_family_str(family));
+}
+
 /* List of functions exported by this module. */
 static PyMethodDef
 module_methods[] = {
@@ -3125,6 +3788,7 @@ module_methods[] = {
     {"interval_to_seconds",          io_interval_to_seconds,      METH_VARARGS, io_interval_to_seconds_doc},
     {"interval_to_milliseconds",     io_interval_to_milliseconds, METH_VARARGS, io_interval_to_milliseconds_doc},
     {"interval_to_microseconds",     io_interval_to_microseconds, METH_VARARGS, io_interval_to_microseconds_doc},
+    {"addr_family_name",             io_addr_family_name,         METH_VARARGS, io_addr_family_name_doc},
     {NULL,                  NULL}            /* Sentinel */
 };
 
@@ -3132,10 +3796,11 @@ module_methods[] = {
 
 static PyNSPR_IO_C_API_Type nspr_io_c_api =
 {
-    &NetworkAddressType,        /* network_address_type */
-    &HostEntryType,             /* host_entry_type */
-    &SocketType,                /* socket_type */
-    Socket_init_from_PRFileDesc /* Socket_init_from_PRFileDesc */
+    &NetworkAddressType,              /* network_address_type */
+    &HostEntryType,                   /* host_entry_type */
+    &SocketType,                      /* socket_type */
+    Socket_init_from_PRFileDesc,      /* Socket_init_from_PRFileDesc */
+    NetworkAddress_new_from_PRNetAddr /* NetworkAddress_new_from_PRNetAddr */
 };
 
 /* ============================== Module Construction ============================= */
@@ -3153,27 +3818,14 @@ initio(void)
     if (import_nspr_error_c_api() < 0)
         return;
 
-    if (PyType_Ready(&NetworkAddressType) < 0)
-        return;
-
-    if (PyType_Ready(&HostEntryType) < 0)
-        return;
-
-    if (PyType_Ready(&SocketType) < 0)
-        return;
-
     if ((m = Py_InitModule3("io", module_methods, module_doc)) == NULL) {
         return;
     }
 
-    Py_INCREF(&NetworkAddressType);
-    PyModule_AddObject(m, "NetworkAddress", (PyObject *)&NetworkAddressType);
-
-    Py_INCREF(&HostEntryType);
-    PyModule_AddObject(m, "HostEntry", (PyObject *)&HostEntryType);
-
-    Py_INCREF(&SocketType);
-    PyModule_AddObject(m, "Socket", (PyObject *)&SocketType);
+    TYPE_READY(NetworkAddressType);
+    TYPE_READY(AddrInfoType);
+    TYPE_READY(HostEntryType);
+    TYPE_READY(SocketType);
 
     /* Export C API */
     if (PyModule_AddObject(m, "_C_API", PyCObject_FromVoidPtr((void *)&nspr_io_c_api, NULL)) != 0)
@@ -3185,10 +3837,18 @@ initio(void)
     AddIntConstant(PR_AF_LOCAL);
     AddIntConstant(PR_AF_UNSPEC);
 
+    /* AddrInfo flags */
+    AddIntConstant(PR_AI_ALL);
+    AddIntConstant(PR_AI_V4MAPPED);
+    AddIntConstant(PR_AI_ADDRCONFIG);
+    AddIntConstant(PR_AI_NOCANONNAME);
+    AddIntConstant(PR_AI_DEFAULT);
+
     /* PR_InitializeNetAddr */
     AddIntConstant(PR_IpAddrNull);
     AddIntConstant(PR_IpAddrAny);
     AddIntConstant(PR_IpAddrLoopback);
+    AddIntConstant(PR_IpAddrV4Mapped);
 
     /* PR_Shutdown */
     AddIntConstant(PR_SHUTDOWN_RCV);

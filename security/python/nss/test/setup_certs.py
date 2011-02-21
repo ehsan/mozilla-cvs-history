@@ -8,7 +8,7 @@ import logging
 import subprocess
 import shutil
 import shlex
-import mypty as pty
+import pty
 import tty
 import re
 

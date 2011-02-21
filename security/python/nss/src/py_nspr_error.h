@@ -43,6 +43,7 @@
 typedef struct {
     PyObject     *nspr_exception;
     PyObject     *(*set_nspr_error)(const char *format, ...);
+    PyObject     *(*tuple_str)(PyObject *tuple);
 } PyNSPR_ERROR_C_API_Type;
 
 #ifdef NSS_ERROR_MODULE
@@ -52,6 +53,7 @@ typedef struct {
 static PyNSPR_ERROR_C_API_Type nspr_error_c_api;
 
 #define set_nspr_error (*nspr_error_c_api.set_nspr_error)
+#define tuple_str (*nspr_error_c_api.tuple_str)
 
 static int
 import_nspr_error_c_api(void)

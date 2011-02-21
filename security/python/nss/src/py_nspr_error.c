@@ -246,12 +246,79 @@ init_py_nspr_errors(PyObject *module)
     return py_error_doc;
 }
 
+/* ================= Utilities shared with other modules  ================= */
+
+
+/*
+ * Format a tuple into a string by calling the str() method on
+ * each member of the tuple.
+ * 
+ * Tuples do not implement a str method only a repr with the 
+ * unfortunate result repr() is invoked on each of its members.
+ */
+static PyObject *tuple_str(PyObject *tuple)
+{
+    PyObject *separator = NULL;
+    PyObject *obj = NULL;
+    PyObject *tmp_obj = NULL;
+    PyObject *text = NULL;
+    Py_ssize_t i, len;
+        
+    if (!PyTuple_Check(tuple)) return NULL;
+
+    len = PyTuple_GET_SIZE(tuple);
+    
+    if (len == 0) {
+        return PyString_FromString("()");
+    }
+
+    if ((text = PyString_FromString("(")) == NULL) {
+        goto exit;
+    }
+
+    if (len > 1) {
+        if ((separator = PyString_FromString(", ")) == NULL) {
+            goto exit;
+        }
+    }
+
+    for (i = 0; i < len; i++) {
+        obj = PyTuple_GET_ITEM(tuple, i);
+        tmp_obj = PyObject_Str(obj);
+        PyString_ConcatAndDel(&text, tmp_obj);
+        if (text == NULL) {
+            goto exit;
+        }
+        if (i < len-1) {
+            PyString_Concat(&text, separator);
+            if (text == NULL) {
+                goto exit;
+            }
+        }
+    }
+
+    if ((tmp_obj = PyString_FromString(")")) == NULL) {
+        Py_CLEAR(text);
+        goto exit;
+    }
+
+    PyString_ConcatAndDel(&text, tmp_obj);
+    if (text == NULL) {
+        goto exit;
+    }
+
+ exit:
+    Py_XDECREF(separator);
+    return text;
+}
+
 /* ============================== Module Exports ============================= */
 
 static PyNSPR_ERROR_C_API_Type nspr_error_c_api =
 {
     NULL,                       /* nspr_exception */
     set_nspr_error,             /* set_nspr_error */
+    tuple_str
 };
 
 /* ============================== Module Construction ============================= */

@@ -97,6 +97,14 @@ typedef PyObject *(*ssizessizeargfunc)(PyObject *, Py_ssize_t, Py_ssize_t);
 #define Py_TPFLAGS_HAVE_NEWBUFFER 0
 #endif
 
+#define TYPE_READY(type)                                                \
+{                                                                       \
+    if (PyType_Ready(&type) < 0)                                        \
+        return;                                                         \
+    Py_INCREF(&type);                                                   \
+    PyModule_AddObject(m, rindex(type.tp_name, '.')+1, (PyObject *)&type); \
+}
+
 #define AddIntConstant(c) if (PyModule_AddIntConstant(m, #c, c) < 0) return;
 
 #ifdef DEBUG
