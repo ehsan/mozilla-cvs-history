@@ -304,8 +304,8 @@ Python bindings for Network Security Services (NSS) and Netscape Portable Runtim
 
 debug_compile_args = ['-O0', '-g']
 # force debug build until package matures
-extra_compile_args = debug_compile_args
-#extra_compile_args = []
+#extra_compile_args = debug_compile_args
+extra_compile_args = []
 
 nss_error_extension = \
     Extension('nss.error',
