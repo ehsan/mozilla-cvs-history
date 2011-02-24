@@ -4086,7 +4086,7 @@ NS_IMETHODIMP PresShell::GetLinkLocation(nsIDOMNode* aNode, nsAString& aLocation
   NS_ENSURE_ARG_POINTER(aNode);
   nsresult rv;
   nsAutoString anchorText;
-  static char strippedChars[] = {'\t','\r','\n'};
+  static const char strippedChars[] = "\t\r\n";
 
   // are we an anchor?
   nsCOMPtr<nsIDOMHTMLAnchorElement> anchor(do_QueryInterface(aNode));
