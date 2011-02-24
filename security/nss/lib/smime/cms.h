@@ -37,7 +37,7 @@
 /*
  * Interfaces of the CMS implementation.
  *
- * $Id: cms.h,v 1.25 2011/01/31 23:56:29 rrelyea%redhat.com Exp $
+ * $Id: cms.h,v 1.26 2011/02/24 22:06:14 emaldona%redhat.com Exp $
  */
 
 #ifndef _CMS_H_
@@ -1171,7 +1171,7 @@ NSS_CMSDEREncode(NSSCMSMessage *cmsg, SECItem *input, SECItem *derOut,
  *  against that data structure.
  */
 SECStatus NSS_CMSType_RegisterContentType(SECOidTag type,
-                          SEC_ASN1Template *template, size_t size,
+                          SEC_ASN1Template *asn1Template, size_t size,
                           NSSCMSGenericWrapperDataDestroy  destroy,
                           NSSCMSGenericWrapperDataCallback decode_before,
                           NSSCMSGenericWrapperDataCallback decode_after,
