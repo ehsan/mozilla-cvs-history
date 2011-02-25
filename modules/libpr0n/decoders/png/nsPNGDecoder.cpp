@@ -240,7 +240,7 @@ NS_IMETHODIMP nsPNGDecoder::Init(imgILoad *aLoad)
   /* Always decode to 24 bit pixdepth */
 
 #ifdef PNG_USER_MEM_SUPPORTED
-  if (gfxPlatform::GetCMSMode() != eCMSMode_Off) {
+  if (gfxPlatform::IsCMSEnabled()) {
     mPNG = png_create_read_struct_2(PNG_LIBPNG_VER_STRING,
                                     NULL,
                                     error_callback,
@@ -277,7 +277,7 @@ NS_IMETHODIMP nsPNGDecoder::Init(imgILoad *aLoad)
   
 # if PNG_LIBPNG_VER < 10401
 #  if defined(PNG_WRITE_SUPPORTED)
-  if (gfxPlatform::GetCMSMode() != eCMSMode_Off) {
+  if (gfxPlatform::IsCMSEnabled()) {
     /* Increase speed of decompressing large iCCP chunks (default buffer
        size is 8192) */
     png_set_compression_buffer_size(mPNG, (png_size_t)32768L);
@@ -704,7 +704,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
 
 #ifdef PNG_USER_MEM_SUPPORTED
   /* Revert to the default memory allocator */
-  if (gfxPlatform::GetCMSMode() != eCMSMode_Off)
+  if (gfxPlatform::IsCMSEnabled())
      png_set_mem_fn(decoder->mPNG, NULL, NULL, NULL);
 #endif
 
@@ -712,7 +712,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
 # if PNG_LIBPNG_VER < 10401
 #  if defined(PNG_WRITE_SUPPORTED)
   /* Revert to the default zlib buffer size */
-  if (gfxPlatform::GetCMSMode() != eCMSMode_Off) {
+  if (gfxPlatform::IsCMSEnabled()) {
     png_set_compression_buffer_size(decoder->mPNG, (png_size_t)8192);
   }
 #  endif
