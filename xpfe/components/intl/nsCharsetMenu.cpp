@@ -1252,6 +1252,10 @@ nsresult nsCharsetMenu::InitMoreSubmenus(nsCStringArray& aDecs)
   NS_TIMELINE_START_TIMER("nsCharsetMenu::InitMoreSubmenus");
 
   nsresult res = NS_OK;
+ 
+  // remove charsets "not for browser"
+  res = RemoveFlaggedCharsets(aDecs, NS_LITERAL_STRING(".notForBrowser"));
+  if (NS_FAILED(res)) return res;
 
   nsCOMPtr<nsIRDFContainer> container1;
   nsCOMPtr<nsIRDFContainer> container2;
