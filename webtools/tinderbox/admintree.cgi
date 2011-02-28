@@ -116,34 +116,35 @@ if (defined($treedata)) {
 #  Trim logs.
 #
 
-    # Determine the collective size & age of the build logs
-    opendir(TRIM_DIR, &shell_escape("$::tree_dir/$tree")) || die "opendir($safe_tree): $!";
-    my @trim_files = grep { /\.(?:gz|brief\.html)$/ && -f "$::tree_dir/$tree/$_" } readdir(TRIM_DIR);
-    close(TRIM_DIR);
-    my $trim_bytes = 0;
-    my $trim_size;
-    my $now = time();
-    my $trim_oldest = $now;
-    my $size_K = 1024;
-    my $size_M = 1048576;
-    my $size_G = 1073741824;
-    for my $file (@trim_files) {
-        my @file_stat = stat("$::tree_dir/$tree/$file");
-        $trim_bytes += $file_stat[7];
-        $trim_oldest = $file_stat[9] if ($trim_oldest > $file_stat[9]);
-    }
-    my $trim_days = int (($now - $trim_oldest) / 86400);
-    if ($trim_bytes < $size_K) {
-        $trim_size = "$trim_bytes b";
-    } elsif ($trim_bytes < $size_M) {
-        $trim_size = int($trim_bytes / $size_K) . " Kb";
-    } elsif ($trim_bytes < $size_G){
-        $trim_size = int($trim_bytes / $size_M) . " Mb";
-    } else {
-        $trim_size = (int($trim_bytes / $size_G * 1000)/1000) . " Gb";
-    }
+    if ($form{trimlogsui} == 1) {
+        # Determine the collective size & age of the build logs
+        opendir(TRIM_DIR, &shell_escape("$::tree_dir/$tree")) || die "opendir($safe_tree): $!";
+        my @trim_files = grep { /\.(?:gz|brief\.html)$/ && -f "$::tree_dir/$tree/$_" } readdir(TRIM_DIR);
+        close(TRIM_DIR);
+        my $trim_bytes = 0;
+        my $trim_size;
+        my $now = time();
+        my $trim_oldest = $now;
+        my $size_K = 1024;
+        my $size_M = 1048576;
+        my $size_G = 1073741824;
+        for my $file (@trim_files) {
+            my @file_stat = stat("$::tree_dir/$tree/$file");
+            $trim_bytes += $file_stat[7];
+            $trim_oldest = $file_stat[9] if ($trim_oldest > $file_stat[9]);
+        }
+        my $trim_days = int (($now - $trim_oldest) / 86400);
+        if ($trim_bytes < $size_K) {
+            $trim_size = "$trim_bytes b";
+        } elsif ($trim_bytes < $size_M) {
+            $trim_size = int($trim_bytes / $size_K) . " Kb";
+        } elsif ($trim_bytes < $size_G){
+            $trim_size = int($trim_bytes / $size_M) . " Mb";
+        } else {
+            $trim_size = (int($trim_bytes / $size_G * 1000)/1000) . " Gb";
+        }
 
-    print "
+        print "
 <FORM method=post action=doadmin.cgi>
 <INPUT TYPE=HIDDEN NAME=tree VALUE='$safe_tree'>
 <INPUT TYPE=HIDDEN NAME=command VALUE=trim_logs>
@@ -154,7 +155,12 @@ Tinderbox is configured to show up to $::global_treedata->{$tree}->{who_days} da
 <INPUT TYPE=SUBMIT VALUE='Trim Logs'>
 </FORM>
 <hr>
-"   ;
+"       ;
+    } else {
+          delete $form{trimlogsui};
+          print '<a href="admintree.cgi', &make_cgi_args(%form),
+                '&trimlogsui=1">List logs for deletion (very slow)</a><hr>';
+    }
 
 #
 # Individual tree administration
