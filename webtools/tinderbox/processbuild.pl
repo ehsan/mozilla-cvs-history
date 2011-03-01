@@ -186,20 +186,12 @@ sub process_mailfile($) {
         if -r "$::tree_dir/$tinderbox{tree}/scrapebuilds.pl";
     package main;
 
-    if (defined $TreeConfig::scrape_builds
-        and defined($TreeConfig::scrape_builds->{$tinderbox{build}})
-        and $tinderbox{status} ne 'building') {
-
     my $doscrape = $::default_scrape;
     if ($tinderbox{status} eq 'building') {
         $doscrape = 0;
-    } else {
-        if (defined($TreeConfig::scrape_builds) &&
-            defined($TreeConfig::scrape_builds->{$tinderbox{build}})) {
-                $doscrape = $TreeConfig::scrape_builds->{$tinderbox{build}};
-        } else {
-            $doscrape = $::default_scrape;
-        }
+    } elsif (defined($TreeConfig::scrape_builds) &&
+             defined($TreeConfig::scrape_builds->{$tinderbox{build}})) {
+        $doscrape = $TreeConfig::scrape_builds->{$tinderbox{build}};
     }
     if ($doscrape) {
         $err = system("./scrape.pl", "$tinderbox{tree}", "$tinderbox{logfile}");
