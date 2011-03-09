@@ -116,7 +116,7 @@ $nightlyChannels = array(
     'nightly',
     'nightly-tracemonkey',
     'nightly-electrolysis',
-    'nightly-mozilla-2.0',
+    'nightly-mozilla-2.1',
 );
 
 // This hash defines the product->version->patch relationships for nightlies
@@ -158,11 +158,11 @@ $productBranchVersions = array(
     'Fennec'      =>  array(
         '2.0*'    =>  array(
            'nightly'                 => 'mozilla-central',
-           'nightly-mozilla-2.0'     => 'mozilla-2.0'
+           'nightly-mozilla-2.1'     => 'mozilla-2.1'
         ),
         '4.0*'    =>  array(
            'nightly'                 => 'mozilla-central',
-           'nightly-mozilla-2.0'     => 'mozilla-2.0'
+           'nightly-mozilla-2.1'     => 'mozilla-2.1'
         )
     ),
 );
