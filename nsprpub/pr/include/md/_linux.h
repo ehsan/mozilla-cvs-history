@@ -83,6 +83,8 @@
 #define _PR_SI_ARCHITECTURE "sh"
 #elif defined(__avr32__)
 #define _PR_SI_ARCHITECTURE "avr32"
+#elif defined(__m32r__)
+#define _PR_SI_ARCHITECTURE "m32r"
 #else
 #error "Unknown CPU architecture"
 #endif
@@ -470,6 +472,18 @@ extern void _MD_CleanupBeforeExit(void);
 #define _MD_SP_TYPE __ptr_t
 #else
 #error "SH/Linux pre-glibc2 not supported yet"
+#endif /* defined(__GLIBC__) && __GLIBC__ >= 2 */
+
+#elif defined(__m32r__)
+/* Linux/M32R */
+#if defined(__GLIBC__) && __GLIBC__ >= 2
+#define _MD_GET_SP(_t) (_t)->md.context[0].__jmpbuf[0].__regs[JB_SP]
+#define _MD_SET_FP(_t, val) ((_t)->md.context[0].__jmpbuf[0].__regs[JB_FP] = (val))
+#define _MD_GET_SP_PTR(_t) &(_MD_GET_SP(_t))
+#define _MD_GET_FP_PTR(_t) (&(_t)->md.context[0].__jmpbuf[0].__regs[JB_FP])
+#define _MD_SP_TYPE __ptr_t
+#else
+#error "Linux/M32R pre-glibc2 not supported yet"
 #endif /* defined(__GLIBC__) && __GLIBC__ >= 2 */
 
 #else
