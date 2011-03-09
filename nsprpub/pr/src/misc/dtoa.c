@@ -84,7 +84,12 @@
  * #define RND_PRODQUOT to use rnd_prod and rnd_quot (assembly routines
  *	that use extended-precision instructions to compute rounded
  *	products and quotients) with IBM.
- * #define ROUND_BIASED for IEEE-format with biased rounding.
+ * #define ROUND_BIASED for IEEE-format with biased rounding and arithmetic
+ *	that rounds toward +Infinity.
+ * #define ROUND_BIASED_without_Round_Up for IEEE-format with biased
+ *	rounding when the underlying floating-point arithmetic uses
+ *	unbiased rounding.  This prevent using ordinary floating-point
+ *	arithmetic when the result could be computed with one rounding error.
  * #define Inaccurate_Divide for IEEE-format with correctly rounded
  *	products but inaccurate quotients, e.g., for Intel i860.
  * #define NO_LONG_LONG on machines that do not have a "long long"
@@ -453,6 +458,11 @@ extern int strtod_diglim;
 
 #ifndef IEEE_Arith
 #define ROUND_BIASED
+#else
+#ifdef ROUND_BIASED_without_Round_Up
+#undef  ROUND_BIASED
+#define ROUND_BIASED
+#endif
 #endif
 
 #ifdef RND_PRODQUOT
@@ -2705,6 +2715,7 @@ strtod
 			) {
 		if (!e)
 			goto ret;
+#ifndef ROUND_BIASED_without_Round_Up
 		if (e > 0) {
 			if (e <= Ten_pmax) {
 #ifdef VAX
@@ -2765,6 +2776,7 @@ strtod
 			goto ret;
 			}
 #endif
+#endif /* ROUND_BIASED_without_Round_Up */
 		}
 	e1 += nd - k;
 
@@ -3680,6 +3692,9 @@ dtoa
 	U d2, eps, u;
 	double ds;
 	char *s, *s0;
+#ifdef IEEE_Arith
+	U eps1;
+#endif
 #ifdef SET_INEXACT
 	int inexact, oldinexact;
 #endif
@@ -3943,14 +3958,26 @@ dtoa
 			 * generating digits needed.
 			 */
 			dval(&eps) = 0.5/tens[ilim-1] - dval(&eps);
+#ifdef IEEE_Arith
+			if (k0 < 0 && j1 >= 307) {
+				eps1.d = 1.01e256; /* 1.01 allows roundoff in the next few lines */
+				word0(&eps1) -= Exp_msk1 * (Bias+P-1);
+				dval(&eps1) *= tens[j1 & 0xf];
+				for(i = 0, j = (j1-256) >> 4; j; j >>= 1, i++)
+					if (j & 1)
+						dval(&eps1) *= bigtens[i];
+				if (eps.d < eps1.d)
+					eps.d = eps1.d;
+				}
+#endif
 			for(i = 0;;) {
 				L = dval(&u);
 				dval(&u) -= L;
 				*s++ = '0' + (int)L;
-				if (dval(&u) < dval(&eps))
-					goto ret1;
 				if (1. - dval(&u) < dval(&eps))
 					goto bump_up;
+				if (dval(&u) < dval(&eps))
+					goto ret1;
 				if (++i >= ilim)
 					break;
 				dval(&eps) *= 10.;
