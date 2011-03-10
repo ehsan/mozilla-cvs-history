@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslimpl.h,v 1.81 2010/10/20 23:54:04 wtc%google.com Exp $ */
+/* $Id: sslimpl.h,v 1.82 2011/03/10 04:29:04 alexei.volkov.bugs%sun.com Exp $ */
 
 #ifndef __sslimpl_h_
 #define __sslimpl_h_
@@ -1532,7 +1532,7 @@ extern PRInt32 ssl3_SendServerNameXtn(sslSocket *ss, PRBool append,
  * fails to do so. If cert and keyPair are NULL - unconfigures
  * sslSocket of kea type.*/
 extern SECStatus ssl_ConfigSecureServer(sslSocket *ss, CERTCertificate *cert,
-                                        CERTCertificateList *certChain,
+                                        const CERTCertificateList *certChain,
                                         ssl3KeyPair *keyPair, SSLKEAType kea);
 /* Return key type for the cert */
 extern SSLKEAType ssl_FindCertKEAType(CERTCertificate * cert);

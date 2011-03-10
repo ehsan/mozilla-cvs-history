@@ -37,7 +37,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.83 2011/01/29 16:49:31 emaldona%redhat.com Exp $
+ * $Id: cert.h,v 1.84 2011/03/10 04:29:03 alexei.volkov.bugs%sun.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -1106,7 +1106,7 @@ extern CERTCertificateList *
 CERT_CertListFromCert(CERTCertificate *cert);
 
 extern CERTCertificateList *
-CERT_DupCertList(CERTCertificateList * oldList);
+CERT_DupCertList(const CERTCertificateList * oldList);
 
 extern void CERT_DestroyCertificateList(CERTCertificateList *list);
 

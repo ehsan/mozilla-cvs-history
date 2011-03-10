@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsecur.c,v 1.47 2010/08/28 21:28:48 wtc%google.com Exp $ */
+/* $Id: sslsecur.c,v 1.48 2011/03/10 04:29:04 alexei.volkov.bugs%sun.com Exp $ */
 #include "cert.h"
 #include "secitem.h"
 #include "keyhi.h"
@@ -678,7 +678,7 @@ static PRStatus serverCAListSetup(void *arg)
 
 SECStatus
 ssl_ConfigSecureServer(sslSocket *ss, CERTCertificate *cert,
-                       CERTCertificateList *certChain,
+                       const CERTCertificateList *certChain,
                        ssl3KeyPair *keyPair, SSLKEAType kea)
 {
     CERTCertificateList *localCertChain = NULL;
@@ -756,6 +756,15 @@ SECStatus
 SSL_ConfigSecureServer(PRFileDesc *fd, CERTCertificate *cert,
 		       SECKEYPrivateKey *key, SSL3KEAType kea)
 {
+
+    return SSL_ConfigSecureServerWithChainOpt(fd, cert, key, kea, NULL);
+}
+
+SECStatus
+SSL_ConfigSecureServerWithChainOpt(PRFileDesc *fd, CERTCertificate *cert,
+                                   SECKEYPrivateKey *key, SSL3KEAType kea,
+                                   const CERTCertificateList *certChainOpt)
+{
     sslSocket *ss;
     SECKEYPublicKey *pubKey = NULL;
     ssl3KeyPair *keyPair = NULL;
@@ -826,7 +835,7 @@ SSL_ConfigSecureServer(PRFileDesc *fd, CERTCertificate *cert,
         }
 	pubKey = NULL; /* adopted by serverKeyPair */
     }
-    if (ssl_ConfigSecureServer(ss, cert, NULL,
+    if (ssl_ConfigSecureServer(ss, cert, certChainOpt,
                                keyPair, kea) == SECFailure) {
         goto loser;
     }
