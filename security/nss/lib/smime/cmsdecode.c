@@ -37,7 +37,7 @@
 /*
  * CMS decoding.
  *
- * $Id: cmsdecode.c,v 1.12 2011/02/11 01:53:17 emaldona%redhat.com Exp $
+ * $Id: cmsdecode.c,v 1.13 2011/03/15 17:45:21 emaldona%redhat.com Exp $
  */
 
 #include "cmslocal.h"
@@ -290,6 +290,9 @@ nss_cms_before_data(NSSCMSDecoderContext *p7dcx)
     childp7dcx->content.pointer = (void *)PORT_ArenaZAlloc(poolp, size);
     if (childp7dcx->content.pointer == NULL)
 	goto loser;
+
+    /* give the parent a copy of the pointer so that it doesn't get lost */
+    cinfo->content.pointer = childp7dcx->content.pointer;
 
     /* start the child decoder */
     childp7dcx->dcx = SEC_ASN1DecoderStart(poolp, childp7dcx->content.pointer, 
