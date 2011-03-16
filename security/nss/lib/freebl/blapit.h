@@ -38,7 +38,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: blapit.h,v 1.23 2010/08/18 05:54:48 emaldona%redhat.com Exp $ */
+/* $Id: blapit.h,v 1.24 2011/03/16 18:37:41 alexei.volkov.bugs%sun.com Exp $ */
 
 #ifndef _BLAPIT_H_
 #define _BLAPIT_H_
@@ -115,6 +115,10 @@
 #define AES_KEY_WRAP_IV_BYTES    8
 #define AES_KEY_WRAP_BLOCK_SIZE  8  /* bytes */
 #define AES_BLOCK_SIZE          16  /* bytes */
+
+#define AES_128_KEY_LENGTH      16  /* bytes */
+#define AES_192_KEY_LENGTH      24  /* bytes */
+#define AES_256_KEY_LENGTH      32  /* bytes */
 
 #define CAMELLIA_BLOCK_SIZE          16  /* bytes */
 
