@@ -37,7 +37,7 @@
 /*
  * Tool for converting builtin CA certs.
  *
- * $Id: addbuiltin.c,v 1.14 2007/02/14 00:35:52 alexei.volkov.bugs%sun.com Exp $
+ * $Id: addbuiltin.c,v 1.15 2011/03/23 20:07:30 kaie%kuix.de Exp $
  */
 
 #include "nssrenam.h"
@@ -77,6 +77,8 @@ char *getTrustString(unsigned int trust)
 		return "CKT_NETSCAPE_TRUSTED_DELEGATOR";
 	} else if (trust & CERTDB_VALID_CA) {
 		return "CKT_NETSCAPE_VALID_DELEGATOR";
+	} else if (trust & CERTDB_VALID_PEER) {
+		return "CKT_NETSCAPE_VALID";
 	} else {
 		return "CKT_NETSCAPE_TRUST_UNKNOWN";
 	}
@@ -213,7 +215,7 @@ void printheader() {
 "#\n"
 "# ***** END LICENSE BLOCK *****\n"
      "#\n"
-     "CVS_ID \"@(#) $RCSfile: addbuiltin.c,v $ $Revision: 1.14 $ $Date: 2007/02/14 00:35:52 $\"\n"
+     "CVS_ID \"@(#) $RCSfile: addbuiltin.c,v $ $Revision: 1.15 $ $Date: 2011/03/23 20:07:30 $\"\n"
      "\n"
      "#\n"
      "# certdata.txt\n"
