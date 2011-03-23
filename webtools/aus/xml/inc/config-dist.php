@@ -163,12 +163,14 @@ $productBranchVersions = array(
     'Fennec'      =>  array(
         '2.0*'    =>  array(
            'nightly'                 => 'mozilla-central',
-           'nightly-mozilla-2.1'     => 'mozilla-2.1'
         ),
         '4.0*'    =>  array(
            'nightly'                 => 'mozilla-central',
            'nightly-mozilla-2.1'     => 'mozilla-2.1'
-        )
+        ),
+        '4.1*'    =>  array(
+           'nightly'                 => 'mozilla-central',
+        ),
     ),
 );
 
