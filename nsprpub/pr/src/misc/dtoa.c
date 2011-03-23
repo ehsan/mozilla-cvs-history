@@ -70,7 +70,8 @@
  * #define IBM for IBM mainframe-style floating-point arithmetic.
  * #define VAX for VAX-style floating-point arithmetic (D_floating).
  * #define No_leftright to omit left-right logic in fast floating-point
- *	computation of dtoa.
+ *	computation of dtoa.  This will cause dtoa modes 4 and 5 to be
+ *	treated the same as modes 2 and 3 for some inputs.
  * #define Honor_FLT_ROUNDS if FLT_ROUNDS can assume the values 2 or 3
  *	and strtod and dtoa should round accordingly.  Unless Trust_FLT_ROUNDS
  *	is also #defined, fegetround() will be queried for the rounding mode.
