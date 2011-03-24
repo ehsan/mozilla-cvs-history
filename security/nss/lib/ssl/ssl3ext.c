@@ -41,7 +41,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* TLS extension code moved here from ssl3ecc.c */
-/* $Id: ssl3ext.c,v 1.15 2011/03/16 18:37:42 alexei.volkov.bugs%sun.com Exp $ */
+/* $Id: ssl3ext.c,v 1.16 2011/03/24 01:40:14 alexei.volkov.bugs%sun.com Exp $ */
 
 #include "nssrenam.h"
 #include "nss.h"
@@ -1266,14 +1266,17 @@ no_ticket:
 			SSL_GETPID(), ss->fd));
 	ssl3stats = SSL_GetStatistics();
 	SSL_AtomicIncrementLong(& ssl3stats->hch_sid_ticket_parse_failures );
-	if (sid) {
-	    ssl_FreeSID(sid);
-	    sid = NULL;
-	}
     }
     rv = SECSuccess;
 
 loser:
+	/* ss->sec.ci.sid == sid if it did NOT come here via goto statement
+	 * in that case do not free sid
+	 */
+	if (sid && (ss->sec.ci.sid != sid)) {
+	    ssl_FreeSID(sid);
+	    sid = NULL;
+	}
     if (decrypted_state != NULL) {
 	SECITEM_FreeItem(decrypted_state, PR_TRUE);
 	decrypted_state = NULL;
