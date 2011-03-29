@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: secsign.c,v 1.24 2010/08/18 05:54:28 emaldona%redhat.com Exp $ */
+/* $Id: secsign.c,v 1.25 2011/03/29 15:12:45 wtc%google.com Exp $ */
 
 #include <stdio.h>
 #include "cryptohi.h"
@@ -377,7 +377,7 @@ SEC_DerSignData(PRArenaPool *arena, SECItem *result,
 
     /* Fill out SignedData object */
     PORT_Memset(&sd, 0, sizeof(sd));
-    sd.data.data = buf;
+    sd.data.data = (unsigned char*) buf;
     sd.data.len = len;
     sd.signature.data = it.data;
     sd.signature.len = it.len << 3;		/* convert to bit string */
