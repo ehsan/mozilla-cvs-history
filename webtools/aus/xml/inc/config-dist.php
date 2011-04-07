@@ -123,6 +123,7 @@ $nightlyChannels = array(
     'nightly-electrolysis',
     'nightly-mozilla-2.1',
     'nightly-jaegermonkey',
+    'aurora',
 );
 
 // This hash defines the product->version->patch relationships for nightlies
@@ -134,19 +135,18 @@ $productBranchVersions = array(
         '3.6*'    => 'mozilla-1.9.2',
         '3.7*'    => array(
            'nightly'                 => 'mozilla-central',
-           'nightly-tracemonkey'     => 'tracemonkey',
-           'nightly-electrolysis'    => 'electrolysis'
         ),
         '4.0*'    => array(
            'nightly'                 => 'mozilla-central',
-           'nightly-tracemonkey'     => 'tracemonkey',
-           'nightly-electrolysis'    => 'electrolysis'
         ),
         '4.2*'    => array(
            'nightly'                 => 'mozilla-central',
+        ),
+        '*'       => array(
            'nightly-tracemonkey'     => 'tracemonkey',
            'nightly-electrolysis'    => 'electrolysis',
-           'nightly-jaegermonkey'    => 'jaegermonkey'
+           'nightly-jaegermonkey'    => 'jaegermonkey',
+           'aurora'                  => 'aurora'
         )
     ),
     'Thunderbird' =>  array(
