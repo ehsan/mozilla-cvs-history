@@ -40,7 +40,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: mpi.c,v 1.49 2011/02/06 08:42:27 nelson%bolyard.com Exp $ */
+/* $Id: mpi.c,v 1.50 2011/04/07 22:35:18 wtc%google.com Exp $ */
 
 #include "mpi-priv.h"
 #if defined(OSF1)
@@ -2862,7 +2862,6 @@ void s_mp_setz(mp_digit *dp, mp_size count)
 /* Copy 'count' digits from sp to dp                                      */
 void s_mp_copy(const mp_digit *sp, mp_digit *dp, mp_size count)
 {
-  ++mp_copies;
 #if MP_MEMCPY == 0
   int  ix;
 
@@ -2871,6 +2870,7 @@ void s_mp_copy(const mp_digit *sp, mp_digit *dp, mp_size count)
 #else
   memcpy(dp, sp, count * sizeof(mp_digit));
 #endif
+  ++mp_copies;
 
 } /* end s_mp_copy() */
 #endif
