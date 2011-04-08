@@ -37,7 +37,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.84 2011/03/10 04:29:03 alexei.volkov.bugs%sun.com Exp $
+ * $Id: cert.h,v 1.85 2011/04/08 22:53:02 kaie%kuix.de Exp $
  */
 
 #ifndef _CERT_H_
@@ -1656,26 +1656,33 @@ extern SECStatus CERT_PKIXVerifyCert(
 	CERTValInParam *paramsIn,
 	CERTValOutParam *paramsOut,
 	void *wincx);
-/*
- * This function changes the application defaults for the Verify function.
- * It should be called once at app initialization time, and only changes
- * if the default configuration changes.
- *
- * This changes the default values for the parameters specified. These
- * defaults can be overridden in CERT_PKIXVerifyCert() by explicitly 
- * setting the value in paramsIn.
- */
-extern SECStatus CERT_PKIXSetDefaults(CERTValInParam *paramsIn);
 
 /* Makes old cert validation APIs(CERT_VerifyCert, CERT_VerifyCertificate)
  * to use libpkix validation engine. The function should be called ones at
  * application initialization time.
  * Function is not thread safe.*/
-SECStatus CERT_SetUsePKIXForValidation(PRBool enable);
+extern SECStatus CERT_SetUsePKIXForValidation(PRBool enable);
 
 /* The function return PR_TRUE if cert validation should use
  * libpkix cert validation engine. */
-PRBool CERT_GetUsePKIXForValidation(void);
+extern PRBool CERT_GetUsePKIXForValidation(void);
+
+/*
+ * Allocate a parameter container of type CERTRevocationFlags,
+ * and allocate the inner arrays of the given sizes.
+ * To cleanup call CERT_DestroyCERTRevocationFlags.
+ */
+extern CERTRevocationFlags *
+CERT_AllocCERTRevocationFlags(
+    PRUint32 number_leaf_methods, PRUint32 number_leaf_pref_methods,
+    PRUint32 number_chain_methods, PRUint32 number_chain_pref_methods);
+
+/*
+ * Destroy the arrays inside flags,
+ * and destroy the object pointed to by flags, too.
+ */
+extern void
+CERT_DestroyCERTRevocationFlags(CERTRevocationFlags *flags);
 
 SEC_END_PROTOS
 
