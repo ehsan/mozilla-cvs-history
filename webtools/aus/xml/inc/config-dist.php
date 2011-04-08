@@ -129,38 +129,19 @@ $nightlyChannels = array(
 // This hash defines the product->version->patch relationships for nightlies
 // It determines which patches are associated to which incoming client versions.
 // @todo replace this with a better datasource that can be easily managed via a GUI.
+// The ordering is !important!, given the wildcard block at the bottom.
 $productBranchVersions = array(
     'Firefox'     =>  array(
         '3.5*'    => 'mozilla-1.9.1',
         '3.6*'    => 'mozilla-1.9.2',
-        '3.7*'    => array(
-           'nightly'                 => 'mozilla-central',
-        ),
-        '4.0*'    => array(
-           'nightly'                 => 'mozilla-central',
-        ),
-        '4.2*'    => array(
-           'nightly'                 => 'mozilla-central',
-        ),
+        '4.0.*'   => 'mozilla-2.0',
         '*'       => array(
+           'nightly'                 => 'mozilla-central',
            'nightly-tracemonkey'     => 'tracemonkey',
            'nightly-electrolysis'    => 'electrolysis',
            'nightly-jaegermonkey'    => 'jaegermonkey',
            'aurora'                  => 'aurora'
         )
-    ),
-    'Thunderbird' =>  array(
-        '1.5.0.*' =>  '1.5.0.x',
-        '2.0*'    =>  '2.0',
-        '3.0*'    =>  'trunk'
-    ),
-    'Sunbird'     =>  array(
-        '0.4a1'   =>  'branch',
-        '0.5*'    =>  'branch',
-        '0.7*'    =>  'branch',
-        '0.8*'    =>  'branch',
-        '0.9*'    =>  'branch',
-        '0.6a1'   =>  'trunk'
     ),
     'Fennec'      =>  array(
         '2.0*'    =>  array(
