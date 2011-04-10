@@ -144,7 +144,7 @@ def client():
 
     for net_addr in addr_info:
         net_addr.port = port
-        sock = ssl.SSLSocket()
+        sock = ssl.SSLSocket(net_addr.family)
         # Set client SSL socket options
         sock.set_ssl_option(ssl.SSL_SECURITY, True)
         sock.set_ssl_option(ssl.SSL_HANDSHAKE_AS_CLIENT, True)

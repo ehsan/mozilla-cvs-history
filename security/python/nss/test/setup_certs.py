@@ -225,6 +225,7 @@ def usage():
 -d --debug              show run information
 -w --password           set the certificate database password
 -d --dbdir              set the datbase directory
+-s --server-subject     set the server's subject
 
 Examples:
 
@@ -240,9 +241,9 @@ def main(argv=None):
 
     try:
         try:
-            opts, args = getopt.getopt(argv[1:], 'hl:L:vDw:d:',
+            opts, args = getopt.getopt(argv[1:], 'hl:L:vDw:d:s:',
                                        ['help', 'logfile=', 'verbose', 'debug',
-                                        'password', 'dbdir'])
+                                        'password', 'dbdir', 'server-subject'])
         except getopt.GetoptError, e:
             raise Usage(e)
             return 2
@@ -269,6 +270,8 @@ def main(argv=None):
                 config['db_passwd'] = a
             elif o in ('-d', '--dbdir'):
                 config['dbdir'] = a
+            elif o in ('-s', '--server-subject'):
+                config['server_subject'] = 'CN=%s' % a
             else:
                 raise Usage("command argument '%s' not handled, internal error" % o)
     except Usage, e:

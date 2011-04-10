@@ -776,7 +776,7 @@ Example::\n\
                     pass\n\
             return False\n\
     \n\
-    sock = ssl.SSLSocket()\n\
+    sock = ssl.SSLSocket(net_addr.family)\n\
     sock.set_client_auth_data_callback(client_auth_data_callback, nickname, password, nss.get_default_certdb())\n\
 \n\
 ");
@@ -887,7 +887,7 @@ Example::\n\
     def handshake_callback(sock):\n\
         print 'handshake complete, peer = %s' % (sock.get_peer_name())\n\
     \n\
-    sock = ssl.SSLSocket()\n\
+    sock = ssl.SSLSocket(net_addr.family)\n\
     sock.set_handshake_callback(handshake_callback)\n\
 \n\
 ");

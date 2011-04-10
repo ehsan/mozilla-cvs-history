@@ -37,6 +37,9 @@
 #
 # ***** END LICENSE BLOCK *****
 
+import warnings
+warnings.simplefilter( "always", DeprecationWarning)
+
 import os
 import sys
 import getopt
@@ -190,7 +193,7 @@ def Client():
         net_addr.port = port
 
         if use_ssl:
-            sock = ssl.SSLSocket()
+            sock = ssl.SSLSocket(net_addr.family)
 
             # Set client SSL socket options
             sock.set_ssl_option(ssl.SSL_SECURITY, True)
@@ -209,7 +212,7 @@ def Client():
             sock.set_auth_certificate_callback(auth_certificate_callback,
                                                nss.get_default_certdb())
         else:
-            sock = io.Socket()
+            sock = io.Socket(net_addr.family)
 
         try:
             print "client trying connection to: %s" % (net_addr)
@@ -283,7 +286,7 @@ def Server():
     net_addr = io.NetworkAddress(io.PR_IpAddrAny, port, family)
 
     if use_ssl:
-        sock = ssl.SSLSocket()
+        sock = ssl.SSLSocket(net_addr.family)
 
         # Set server SSL socket options
         sock.set_pkcs11_pin_arg(password)
@@ -302,7 +305,7 @@ def Server():
         sock.reset_handshake(True) # FIXME: is this needed?
 
     else:
-        sock = io.Socket()
+        sock = io.Socket(net_addr.family)
 
     # Bind to our network address and listen for clients
     sock.bind(net_addr)

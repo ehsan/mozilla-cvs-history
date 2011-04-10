@@ -111,6 +111,14 @@ should not be used, they will be removed in a subsequent release.
     nss_shutdown() has been moved to the nss module, use
     `nss.nss_shutdown()` instead of ssl.nss_shutdown()
 
+`io.Socket()` and `ssl.SSLSocket()` without explicit family parameter
+    Socket initialization will require the family parameter in the future.
+    The default family parameter of PR_AF_INET is deprecated because
+    when iterating through `NetworkAddress` objects returned by
+    `AddrInfo` some address may be an IPv6 address. Suggest using the
+    family property of the NetworkAddress object associated with the
+    socket, e.g. Socket(net_addr.family)
+
 ===============
 Getting Started
 ===============
@@ -194,7 +202,7 @@ Things All NSS programs must do
 - If you are implementing an SSL server call config_secure_server()
   (see ssl_example.py)::
 
-    sock = ssl.SSLSocket()
+    sock = ssl.SSLSocket(net_addr.family)
     sock.config_secure_server(server_cert, priv_key, server_cert_kea)
 
   **WARNING** you must call config_secure_server() for SSL servers, if

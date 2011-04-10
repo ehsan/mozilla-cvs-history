@@ -175,8 +175,8 @@ class NSSConnection(httplib.HTTPConnection):
         ssl.set_domestic_policy()
         nss.set_password_callback(password_callback)
 
-    def _create_socket(self):
-        self.sock = ssl.SSLSocket()
+    def _create_socket(self, family):
+        self.sock = ssl.SSLSocket(family)
         self.sock.set_ssl_option(ssl.SSL_SECURITY, True)
         self.sock.set_ssl_option(ssl.SSL_HANDSHAKE_AS_CLIENT, True)
         self.sock.set_hostname(self.host)
@@ -199,7 +199,7 @@ class NSSConnection(httplib.HTTPConnection):
 
         for net_addr in addr_info:
             net_addr.port = self.port
-            self._create_socket()
+            self._create_socket(net_addr.family)
             try:
                 logging.debug("try connect: %s", net_addr)
                 self.sock.connect(net_addr, timeout=io.seconds_to_interval(timeout_secs))
@@ -230,7 +230,7 @@ class NSPRConnection(httplib.HTTPConnection):
 
         for net_addr in addr_info:
             net_addr.port = self.port
-            self.sock = io.Socket()
+            self.sock = io.Socket(net_addr.family)
             try:
                 logging.debug("try connect: %s", net_addr)
                 self.sock.connect(net_addr, timeout=io.seconds_to_interval(timeout_secs))

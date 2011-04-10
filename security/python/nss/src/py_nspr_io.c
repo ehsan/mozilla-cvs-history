@@ -874,7 +874,7 @@ Example Usage::\n\
         return\n\
     for net_addr in addr_info:\n\
         net_addr.port = port\n\
-        sock = io.Socket()\n\
+        sock = io.Socket(net_addr.family)\n\
         try:\n\
             sock.connect(net_addr, timeout=io.seconds_to_interval(1))\n\
             return\n\
@@ -1297,7 +1297,7 @@ Example Usage::\n\
     host_entry = io.HostEntry(hostname)\n\
     for net_addr in host_entry:\n\
         net_addr.port = port\n\
-        sock = io.Socket()\n\
+        sock = io.Socket(net_addr.family)\n\
         try:\n\
             sock.connect(net_addr, timeout=io.seconds_to_interval(1))\n\
             break\n\
@@ -1421,7 +1421,7 @@ HostEntry_str(HostEntry *self)
     PyObject *aliases = NULL;
     PyObject *addrs = NULL;
     PyObject *args = NULL;
-    PyObject *format;
+    PyObject *format = NULL;
     PyObject *text = NULL;
 
     if (self->py_aliases) {
@@ -1568,6 +1568,17 @@ HostEntry_new_from_PRNetAddr(PRNetAddr *pr_netaddr)
 /* ========================================================================== */
 /* ============================== Socket Class ============================== */
 /* ========================================================================== */
+
+#define SOCKET_CHECK_FAMILY(py_netaddr)                                 \
+{                                                                       \
+    if (self->family != PR_NetAddrFamily(&py_netaddr->pr_netaddr)) {    \
+        PyErr_Format(PyExc_ValueError,                                  \
+                     "Socket family (%s) does not match NetworkAddress family (%s)", \
+                     pr_family_str(self->family),                       \
+                     pr_family_str(PR_NetAddrFamily(&py_netaddr->pr_netaddr))); \
+        return NULL;                                                    \
+    }                                                                   \
+}
 
 static void
 Socket_init_from_PRFileDesc(Socket *self, PRFileDesc *pr_socket, int family)
@@ -2090,6 +2101,8 @@ Socket_connect(Socket *self, PyObject *args, PyObject *kwds)
                                      &NetworkAddressType, &py_netaddr, &timeout))
         return NULL;
 
+    SOCKET_CHECK_FAMILY(py_netaddr);
+
     ASSIGN_REF(self->py_netaddr, py_netaddr);
 
     Py_BEGIN_ALLOW_THREADS
@@ -2286,6 +2299,8 @@ Socket_bind(Socket *self, PyObject *args)
 
     if (!PyArg_ParseTuple(args, "O!:bind", &NetworkAddressType, &py_netaddr))
         return NULL;
+
+    SOCKET_CHECK_FAMILY(py_netaddr);
 
     ASSIGN_REF(self->py_netaddr, py_netaddr);
 
@@ -2814,6 +2829,8 @@ Socket_recv_from(Socket *self, PyObject *args, PyObject *kwds)
                                      &requested_amount, &NetworkAddressType, &py_netaddr, &timeout))
         return NULL;
 
+    SOCKET_CHECK_FAMILY(py_netaddr);
+
     ASSIGN_REF(self->py_netaddr, py_netaddr);
 
     if ((py_buf = PyString_FromStringAndSize((char *) 0, requested_amount)) == NULL) {
@@ -2957,6 +2974,8 @@ Socket_send_to(Socket *self, PyObject *args, PyObject *kwds)
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "s#O!|I:send_to", kwlist,
                                      &buf, &len, &NetworkAddressType, &py_netaddr, &timeout))
         return NULL;
+
+    SOCKET_CHECK_FAMILY(py_netaddr);
 
     ASSIGN_REF(self->py_netaddr, py_netaddr);
 
@@ -3375,15 +3394,25 @@ static int
 Socket_init(Socket *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"family", "type", NULL};
+    PyObject *py_family = NULL;
     int family = PR_AF_INET;
     int desc_type = PR_DESC_SOCKET_TCP;
     PRFileDesc *pr_socket = NULL;
 
     TraceMethodEnter(self);
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|ii", kwlist,
-                                     &family, &desc_type))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O!i", kwlist,
+                                     &PyInt_Type, &py_family, &desc_type))
         return -1;
+
+    if (py_family) {
+        family = PyInt_AsLong(py_family);
+    } else {
+        if (PyErr_WarnEx(PyExc_DeprecationWarning,
+                         "Socket initialization will require family parameter in future, default family parameter of PR_AF_INET is deprecated. Suggest using the family property of the NetworkAddress object associated with the socket, e.g. Socket(net_addr.family)", 1) < 0)
+            return -1;
+        
+    }
 
     /* If reinitializing, first close down previous socket */
     if (self->pr_socket) {
