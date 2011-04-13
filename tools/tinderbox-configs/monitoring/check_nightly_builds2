@@ -15,7 +15,7 @@ SHIPPED_LOCALES_URL=$(grep "SHIPPED_LOCALES_URL" "$CONFIG_FILE" | tail -n 1 | se
 if [ ! -z $VERSION_URL ]; then
     VER=$(wget -q --timeout=7 -O- "$VERSION_URL" | grep -P '^\d\.\d.*' | tail -n 1)
     if [ -z $VER ]; then
-        echo "Cannot parse version information"
+        echo "Cannot parse version information using '$VERSION_URL'"
         exit 1
     fi
 fi
@@ -23,7 +23,7 @@ fi
 if [ ! -z $SHIPPED_LOCALES_URL ]; then
     LOCALES=$(wget -q --timeout=7 -O- "$SHIPPED_LOCALES_URL" | grep -vE '^(ja|en-US)')
     if [ -z "$LOCALES" ]; then
-        echo "Cannot get locale information"
+        echo "Cannot get locale information from $SHIPPED_LOCALES_URL"
         exit 1
     fi
 fi
