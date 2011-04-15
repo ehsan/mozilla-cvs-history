@@ -140,7 +140,7 @@ $productBranchVersions = array(
            'nightly-tracemonkey'     => 'tracemonkey',
            'nightly-electrolysis'    => 'electrolysis',
            'nightly-jaegermonkey'    => 'jaegermonkey',
-           'aurora'                  => 'aurora'
+           'aurora'                  => 'mozilla-aurora'
         )
     ),
     'Fennec'      =>  array(
