@@ -110,10 +110,15 @@ if ($form{note}) {
   print "<H1>The following comment has been added to the log</h1>\n";
   print "<pre>\n[<b>$who - ".print_time($now)."</b>]\n$note\n</pre>";
 
-  my $enc_buildname = url_encode($buildname);
-  print "<p><a href='showlog.cgi?tree=$tree&buildname=$enc_buildname"
-    ."&buildtime=$buildtime&logfile=$logfile&errorparser=$errorparser'>"
-    ."Go back to the Error Log</a><br><a href='showbuilds.cgi?tree=$tree'>"
+  my $enc_tree        = url_encode($tree);
+  my $enc_buildname   = url_encode($buildname);
+  my $enc_buildtime   = url_encode($buildtime);
+  my $enc_errorparser = url_encode($errorparser);
+  my $enc_logfile     = url_encode($logfile);
+
+  print "<p><a href='showlog.cgi?tree=$enc_tree&buildname=$enc_buildname"
+    ."&buildtime=$enc_buildtime&logfile=$enc_logfile&errorparser=$enc_errorparser'>"
+    ."Go back to the Error Log</a><br><a href='showbuilds.cgi?tree=$enc_tree'>"
     ."Go back to the build Page</a>";
 
   # Rebuild the static tinderbox pages
@@ -131,14 +136,16 @@ if ($form{note}) {
 
   # Retrieve the email address from the cookie jar.
   #
-  my $emailvalue = '';
-  $emailvalue = " value='$cookie_jar{email}'" if defined $cookie_jar{email};
-  $emailvalue =~ s/\&/&amp;/gi;
-  $emailvalue =~ s/\</&lt;/gi;
-  $emailvalue =~ s/\>/&gt;/gi;
+  my $emailvalue = defined $cookie_jar{email} ? value_quote($cookie_jar{email}) : "";
+
+  my $enc_buildname   = value_quote($buildname);
+  my $enc_buildtime   = value_quote($buildtime);
+  my $enc_tree        = value_quote($tree);
+  my $enc_logfile     = value_quote($logfile);
+  my $enc_errorparser = value_quote($errorparser);
 
   print <<__END_FORM;
-<head><title>Add a Comment to $buildname log</title></head>
+<head><title>Add a Comment to $enc_buildname log</title></head>
 <body BGCOLOR="#FFFFFF" TEXT="#000000"LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
 
 <table><tr><td>
@@ -147,24 +154,24 @@ if ($form{note}) {
   </font></b>
 </td></tr><tr><td>
   <b><code>
-    $buildname
+    $enc_buildname
   </code></b>
 </td></tr></table>
 
 <form action='addnote.cgi' METHOD='post'>
 
-<INPUT Type='hidden' name='buildname' value='${buildname}'>
-<INPUT Type='hidden' name='buildtime' value='${buildtime}'>
-<INPUT Type='hidden' name='errorparser' value='$errorparser'>
-<INPUT Type='hidden' name='logfile' value='$logfile'>
-<INPUT Type='hidden' name='tree' value='$tree'>
+<INPUT Type='hidden' name='buildname' value='$enc_buildname'>
+<INPUT Type='hidden' name='buildtime' value='$enc_buildtime'>
+<INPUT Type='hidden' name='errorparser' value='$enc_errorparser'>
+<INPUT Type='hidden' name='logfile' value='$enc_logfile'>
+<INPUT Type='hidden' name='tree' value='$enc_tree'>
 
 <table border=0 cellpadding=4 cellspacing=1>
 <tr valign=top>
   <td align=right>
      <NOWRAP>Email address:</NOWRAP>
   </td><td>
-     <INPUT Type='input' name='who' size=32$emailvalue><BR>
+     <INPUT Type='input' name='who' size='32' value='$emailvalue'><BR>
   </td>
 </tr><tr valign=top>
   <td align=right>
