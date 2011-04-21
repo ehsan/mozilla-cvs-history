@@ -221,7 +221,7 @@ static PRBool _pr_ipv6_v6only_on_by_default;
 #if defined(SOLARIS)            
 #ifndef PROTO_SDP
 /* on solaris, SDP is a new type of protocol */
-#deinfe PROTO_SDP   257
+#define PROTO_SDP   257
 #endif 
 #define _PR_HAVE_SDP
 #elif defined(LINUX)
