@@ -179,3 +179,9 @@
 |build|channel|complete|partial|hasUpdate?|hasComplete?|hasPartial?|isValidXml?|
 |1000000001|channel|complete001|partial001|true|true|false|true|
 |1000000002|channel|complete002|partial002|true|true|true|true|
+
+!1 Channel changing (newchannel)
+ 2 newchannel with release works
+|aus.Verify|${host}|3|${product}|${version}|${platform}|${locale}|${osVersion}|
+|build|channel|complete|partial|newchannel|hasUpdate?|hasComplete?|hasPartial?|isValidXml?|
+|1000000002|channel|complete002|partial002|channel|true|true|false|true|

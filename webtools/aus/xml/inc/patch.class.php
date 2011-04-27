@@ -65,6 +65,9 @@ class Patch extends AUS_Object {
     // Array the defines which channels are flagged as 'nightly' channels.
     var $nightlyChannels;
 
+    // Array that defines which releases are considered the latest, for channel-changing purposes.
+    var $latestRelease;
+
     // Valid patch flag.
     var $isPatch;
 
@@ -81,13 +84,18 @@ class Patch extends AUS_Object {
     var $hasUpdateInfo;
     var $hasDetailsUrl;
 
+    // Is this a channel-changing request?
+    var $isChangingChannel;
+
     /**
      * Constructor.
      */
-    function Patch($productBranchVersions=array(),$nightlyChannels,$type='complete') {
+    function Patch($productBranchVersions=array(),$nightlyChannels,$type='complete',$latestRelease=null) {
         $this->setProductBranchVersions($productBranchVersions);
         $this->setNightlyChannels($nightlyChannels);
+        $this->setVar('latestRelease',$latestRelease);
         $this->setVar('isPatch',false);
+        $this->setVar('isChangingChannel',false);
         $this->setVar('patchType',$type);
         $this->setVar('updateType','minor');
         $this->setVar('hasUpdateInfo',false);
@@ -257,18 +265,35 @@ class Patch extends AUS_Object {
         // Determine the branch of the client's version.
         $branchVersion = $this->getBranch($product,$version,$channel);
 
-        // Otherwise, if it is a complete patch and a nightly channel, force the complete update to take the user to the latest build.
-        if ($this->isComplete() && $this->isNightlyChannel($channel)) {
+        if ($this->isComplete()) {
+            // If it is a complete patch and a nightly channel, force the complete update to take the user to the latest build.
+            if ($this->isNightlyChannel($channel) || $this->isChangingChannel()) {
+                $buildSource = 3;
+                if ($this->isNightlyChannel($channel)) {
+                    $buildSource = 2;
+                } else {
+                   if (isset($this->latestRelease[$product][$channel])) {
+                       $branchVersion = $this->latestRelease[$product][$channel];
+                       if (!$branchVersion) {
+                           return false;
+                       }
+                   }
+                }
 
-            // Get the latest build that has an update for this branch.
-            $latestCompleteBuild = $this->getLatestCompleteBuild($product,$branchVersion,$platform,$locale);
-
-            // If we have the latest complete build, the path is valid, the file exists, and the filesize is greater than zero, we have a valid complete patch.
-            if ($latestCompleteBuild && $this->setPath($product,$platform,$locale,$branchVersion,$latestCompleteBuild,2,$channel) && file_exists($this->path) && filesize($this->path) > 0) {
-                $this->setSnippet($this->path); 
-                return $this->isNewerBuild($build);
+                // Get the latest build that has an update for this branch.
+                $latestCompleteBuild = $this->getLatestCompleteBuild($product,$branchVersion,$platform,$locale,$buildSource,$channel);
+    
+                // If we have the latest complete build, the path is valid, the file exists, and the filesize is greater than zero, we have a valid complete patch.
+                if ($latestCompleteBuild && $this->setPath($product,$platform,$locale,$branchVersion,$latestCompleteBuild,$buildSource,$channel) && file_exists($this->path) && filesize($this->path) > 0) {
+                    $this->setSnippet($this->path); 
+                    if ($this->isChangingChannel()) {
+                        return true;
+                    } elseif ($this->isNightlyChannel($channel)) {
+                        return $this->isNewerBuild($build);
+                    }
+                }
             }
-        } 
+        }
 
         // Otherwise, check for the partial snippet info.  If an update exists, pass it along.
         if ($this->isPartial() && $this->isNightlyChannel($channel) && $this->setPath($product,$platform,$locale,$branchVersion,$build,2,$channel) && file_exists($this->path) && filesize($this->path) > 0) {
@@ -323,6 +348,25 @@ class Patch extends AUS_Object {
      */
     function isNightlyChannel($channel) {
         return in_array($channel,$this->nightlyChannels);
+    }
+
+    /**
+     * Set whether this is a channel-changing request.
+     *
+     * @param boolean $option
+     * @return boolean
+     */
+    function setChangingChannel($option) {
+       return $this->setVar('isChangingChannel', $option, true);
+    }
+
+    /**
+     * Determine whether or not this is a channel-changing request.
+     * 
+     * @return boolean
+     */
+    function isChangingChannel() {
+        return $this->isChangingChannel;
     }
 
     /**
@@ -448,10 +492,10 @@ class Patch extends AUS_Object {
      * @param string $platform
      * @param return string|false false if there is no matching build
      */
-    function getLatestCompleteBuild($product,$branchVersion,$platform,$locale) {
+    function getLatestCompleteBuild($product,$branchVersion,$platform,$locale,$buildSource,$channel) {
         $files = array();
 
-        $dir = SOURCE_DIR.'/2/'.$product.'/'.$branchVersion.'/'.$platform;
+        $dir = SOURCE_DIR.'/'.$buildSource.'/'.$product.'/'.$branchVersion.'/'.$platform;
 
         // Find the build ids for the given product/branchVersion/platform.  The last complete update
         // is normally found in the second-to-last build directory.
@@ -472,7 +516,10 @@ class Patch extends AUS_Object {
             // Return the directory with the non-empty complete.txt, which is the latest available build
             foreach ($files as $buildID) {
                 if (!empty($buildID) && is_numeric($buildID)) {
-                    $testPath = $dir.'/'.$buildID.'/'.$locale.'/complete.txt';
+                    $testPath = $dir.'/'.$buildID.'/'.$locale.'/'.$channel.'/complete.txt';
+                    if ($this->isNightlyChannel($channel)) {  
+                        $testPath = $dir.'/'.$buildID.'/'.$locale.'/complete.txt';
+                    }
                     if (file_exists($testPath) && filesize($testPath) > 0) {
                         return $buildID;
                     }
@@ -481,7 +528,7 @@ class Patch extends AUS_Object {
         }
 
         // By default we return false, meaning that there is no latest complete update.
-        // Doing so means no updates for the nightly channel.
+        // Doing so means no updates for this channel.
         return false;
     }
 

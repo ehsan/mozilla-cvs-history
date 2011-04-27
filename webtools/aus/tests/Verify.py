@@ -31,6 +31,7 @@ class Verify(ColumnFixture):
                "dist": "String",
                "distVersion": "String",
                "force": "String",
+               "newchannel": "String",
                "licenseUrl": "String",
                "lastURI": "String",
                "newURI": "String",
@@ -57,6 +58,7 @@ class Verify(ColumnFixture):
         self.dist = ""
         self.distVersion = ""
         self.force = ""
+        self.newchannel = ""
 
         # For storign the last retrieved AUS XML and its URI.
         self.lastURI = ""
@@ -86,7 +88,7 @@ class Verify(ColumnFixture):
     def hasLicenseUrl(self):
         return (self.licenseUrl in self.getXml())
 
-    # Check to see if the XML has a licenseURL.
+    # Check to see if the XML has force set.
     def hasForce (self):
         return ('force=1' in self.getXml())
 
@@ -155,6 +157,9 @@ class Verify(ColumnFixture):
                 ))
         if (self.force == 'true'):
             url += '?force=1'
+
+        if (self.newchannel != "NULL"):
+            url += '?newchannel=' + self.newchannel
 
         return url
            

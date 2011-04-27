@@ -72,6 +72,11 @@ $rawPath = substr(urldecode($_SERVER['QUERY_STRING']),5,255);
 // Munge he resulting string and store it in $path.
 $path = explode('/',$rawPath);
 
+// Check to see if the user is requesting channel changing.
+if ( !(empty($_GET['newchannel']))) {
+    $newchannel = $_GET['newchannel'];
+}
+
 // Determine incoming request and clean inputs.
 $clean = Array();
 $clean['updateVersion'] = isset($path[0]) ? intval($path[0]) : null;
@@ -84,6 +89,7 @@ $clean['channel'] = isset($path[6]) ? trim($path[6]) : null;
 $clean['platformVersion'] = isset($path[7]) ? trim($path[7]) : null;
 $clean['dist'] = isset($path[8]) ? trim($path[8]) : null;
 $clean['distVersion'] = isset($path[9]) ? trim($path[9]) : null;
+$clean['newchannel'] = isset($newchannel) ? trim($newchannel) : null;
 
 // Check to see if we have a beta on PPC, and if so don't update since beta 4
 // doesn't work on PPC.  See bug 588412.
@@ -192,10 +198,16 @@ if ($_cached_xml) {
             $update = new Update();
 
             // Instantiate our complete patch.
-            $completePatch = new Patch($productBranchVersions,$nightlyChannels,'complete');
+            $completePatch = new Patch($productBranchVersions,$nightlyChannels,'complete',$latestRelease);
+
+            $channel = $clean['channel'];
+            if (isset($clean['newchannel'])) {
+                $completePatch->setChangingChannel(true);
+                $channel = $clean['newchannel'];
+            }
 
             // If our complete patch exists and is valid, set the patch line.
-            if ($completePatch->findPatch($clean['product'],$clean['platform'],$clean['locale'],$clean['version'],$clean['build'],$clean['channel']) && $completePatch->isPatch()) {
+            if ($completePatch->findPatch($clean['product'],$clean['platform'],$clean['locale'],$clean['version'],$clean['build'],$channel) && $completePatch->isPatch()) {
                 
                 // Set our patchLine.
                 $xml->setPatchLine($completePatch);
@@ -223,16 +235,20 @@ if ($_cached_xml) {
                 }
             }
 
-            // Instantiate our partial patch.
-            $partialPatch = new Patch($productBranchVersions,$nightlyChannels,'partial');
+            // if we are channel-switching, do not check for partial updates.
+            if (!isset($clean['newchannel'])) {
 
-            // If our partial patch exists and is valid, set the patch line.
-            if ($partialPatch->findPatch($clean['product'],$clean['platform'],$clean['locale'],$clean['version'],$clean['build'],$clean['channel']) 
-                  && $partialPatch->isPatch() 
-                  && $partialPatch->isOneStepFromLatest($completePatch->build)) {
-                $xml->setPatchLine($partialPatch);
-             }
+                // Instantiate our partial patch.
+                $partialPatch = new Patch($productBranchVersions,$nightlyChannels,'partial');
+    
+                // If our partial patch exists and is valid, set the patch line.
+                if ($partialPatch->findPatch($clean['product'],$clean['platform'],$clean['locale'],$clean['version'],$clean['build'],$clean['channel']) 
+                      && $partialPatch->isPatch() 
+                      && $partialPatch->isOneStepFromLatest($completePatch->build)) {
+                    $xml->setPatchLine($partialPatch);
+                }
 
+            }
             // If we have valid patchLine(s), set up our output.
             if ($xml->hasPatchLine() && $completePatch->isSupported($completePatch->updateType, $clean['product'], $clean['version'], $clean['platformVersion'], $unsupportedPlatforms)) {
                 $xml->startUpdate($update);
