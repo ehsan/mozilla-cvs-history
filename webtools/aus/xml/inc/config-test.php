@@ -111,6 +111,16 @@ $productBranchVersions = array(
     )
 );
 
+// Specify which release should be used for channel-changers wanting to go to 
+// release or beta channels.
+
+$latestRelease = array(
+    'Firefox' => array(
+        'beta' => '5.0',
+        'release' => '5.0'
+    )
+);
+
 // Config for memcache.
 define('MEMCACHE_NAMESPACE', 'aus'); // set memcache namespace.  Keep this string as short and simple as possible.
 define('MEMCACHE_EXPIRE', 1800); // how long items are stored in memcache
