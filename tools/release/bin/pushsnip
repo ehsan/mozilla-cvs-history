@@ -3,6 +3,8 @@
 set -e
 #set -v
 
+unset SSH_AUTH_SOCK
+
 LIVE_SNIPPET_DIR=/opt/aus2/incoming/3
 STAGING_DIR=/opt/aus2/snippets/staging
 
