@@ -115,9 +115,8 @@ $productBranchVersions = array(
 // release or beta channels.
 
 $latestRelease = array(
-    'Firefox' => array(
-        'beta' => '5.0',
-        'release' => '5.0'
+    'Synthetic' => array(
+        'channel' => '1.0',
     )
 );
 
