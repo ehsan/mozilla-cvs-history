@@ -242,7 +242,8 @@ $unsupportedPlatforms = array(
             'GTK 2.6.',
             'GTK 2.7.',
             'GTK 2.8.',
-            'GTK 2.9.'
+            'GTK 2.9.',
+            '.el5 '
         ),
         '3.6*' => array(
             'Darwin 6',
@@ -260,7 +261,8 @@ $unsupportedPlatforms = array(
             'GTK 2.6.',
             'GTK 2.7.',
             'GTK 2.8.',
-            'GTK 2.9.'
+            'GTK 2.9.',
+            '.el5 '
         )
     ),
     'Thunderbird'     =>  array(
