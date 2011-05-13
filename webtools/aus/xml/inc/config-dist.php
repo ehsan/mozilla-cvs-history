@@ -123,6 +123,7 @@ $nightlyChannels = array(
     'nightly-electrolysis',
     'nightly-mozilla-2.1',
     'nightly-jaegermonkey',
+    'nightly-ux',
     'aurora',
 );
 
@@ -140,6 +141,7 @@ $productBranchVersions = array(
            'nightly-tracemonkey'     => 'tracemonkey',
            'nightly-electrolysis'    => 'electrolysis',
            'nightly-jaegermonkey'    => 'jaegermonkey',
+           'nightly-ux'              => 'ux',
            'aurora'                  => 'mozilla-aurora'
         )
     ),
