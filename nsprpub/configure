@@ -4206,8 +4206,8 @@ EOF
     RESOLVE_LINK_SYMBOLS=1
 
     if test -n "$GNU_CC"; then
-        CC="$CC -mno-cygwin"
-        CXX="$CXX -mno-cygwin"
+        CC="$CC -mwindows"
+        CXX="$CXX -mwindows"
         DLL_SUFFIX=dll
         MKSHLIB='$(CC) -shared -Wl,--export-all-symbols -Wl,--out-implib -Wl,$(IMPORT_LIBRARY) $(DLLBASE) -o $(subst $(OBJDIR)/,,$(SHARED_LIBRARY))'
         RC=$WINDRES
