@@ -125,6 +125,7 @@ $nightlyChannels = array(
     'nightly-jaegermonkey',
     'nightly-ux',
     'aurora',
+    'auroratest'
 );
 
 // This hash defines the product->version->patch relationships for nightlies
@@ -142,7 +143,8 @@ $productBranchVersions = array(
            'nightly-electrolysis'    => 'electrolysis',
            'nightly-jaegermonkey'    => 'jaegermonkey',
            'nightly-ux'              => 'ux',
-           'aurora'                  => 'mozilla-aurora'
+           'aurora'                  => 'mozilla-aurora',
+           'auroratest'              => 'mozilla-aurora-test'
         )
     ),
     'Fennec'      =>  array(
