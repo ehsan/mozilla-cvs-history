@@ -60,7 +60,8 @@ use MozAUSLib qw(CreatePartialMarFile
                  EnsureDeliverablesDir
                  ValidateToolsDirectory SubstitutePath
                  GetSnippetDirFromChannel
-                 CachedHashFile);
+                 CachedHashFile
+                 $OBJDIR);
 
 use MozBuild::Util qw(MkdirWithPath RunShellCommand DownloadFile);
 
@@ -262,7 +263,7 @@ sub BuildTools {
         print MOZCFG $mozconfig;
         close(MOZCFG);
 
-        my $makeArgs = ['-f', './client.mk'];
+        my $makeArgs = ['-f', './client.mk', "MOZ_OBJDIR=$OBJDIR"];
 
         # When we're building out of Mercurial this goes straight to compiling
         # the tools. When we're building out of CVS this checks outo the

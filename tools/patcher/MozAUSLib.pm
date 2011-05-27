@@ -61,6 +61,7 @@ require Exporter;
                 SubstitutePath
                 GetSnippetDirFromChannel
                 CachedHashFile
+                $OBJDIR
                );
 
 use strict;
@@ -69,7 +70,7 @@ use strict;
 ## CONSTANTS 
 ##
 
-use vars qw($MAR_BIN $MBSDIFF_BIN $MAKE_BIN
+use vars qw($OBJDIR $MAR_BIN $MBSDIFF_BIN $MAKE_BIN
             $INCREMENTAL_UPDATE_BIN $UNWRAP_FULL_UPDATE_BIN
             $FAST_INCREMENTAL_UPDATE_BIN
             $TMPDIR_PREFIX 
@@ -78,8 +79,9 @@ use vars qw($MAR_BIN $MBSDIFF_BIN $MAKE_BIN
             $DEFAULT_SNIPPET_BASE_DIR $DEFAULT_SNIPPET_TEST_DIR
             $SNIPPET_CHECKSUM_HASH_CACHE);
 
-$MAR_BIN = 'dist/host/bin/mar';
-$MBSDIFF_BIN = 'dist/host/bin/mbsdiff';
+$OBJDIR = 'obj';
+$MAR_BIN = "$OBJDIR/dist/host/bin/mar";
+$MBSDIFF_BIN = "$OBJDIR/dist/host/bin/mbsdiff";
 
 $INCREMENTAL_UPDATE_BIN = 'tools/update-packaging/make_incremental_update.sh';
 $FAST_INCREMENTAL_UPDATE_BIN = 'tools/update-packaging/make_incremental_updates.py';
