@@ -646,7 +646,7 @@ sub CreatePartialPatches {
           $config->{'mPartialPatchlistFile'}];
 
          $ENV{'PATH'} = catfile($config->GetToolsDir(), 
-          'mozilla', 'dist', 'host', 'bin') . ':' . $ENV{'PATH'};
+          'mozilla', $OBJDIR, 'dist', 'host', 'bin') . ':' . $ENV{'PATH'};
          run_shell_command(cmd => 'python',
                            cmdArgs => $args,
                            timeout => 10800);
