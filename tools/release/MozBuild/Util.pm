@@ -592,15 +592,15 @@ sub GetBuildIDFromFTP {
 
     my ($bh, $buildIDTempFile) = tempfile(UNLINK => 1);
     $bh->close();
+    my $info_url = 'http://' . $stagingServer . '/' . $releaseDir . '/' . $os . '_info.txt';
     my $rv = RunShellCommand(
       command => 'wget',
       args => ['-O', $buildIDTempFile,
-               'http://' . $stagingServer . '/' . $releaseDir . '/' .
-               $os . '_info.txt']
+               $info_url]
     );
 
     if ($rv->{'timedOut'} || $rv->{'dumpedCore'} || ($rv->{'exitValue'} != 0)) {
-        die('wget of ' . $os . '_info.txt failed.');
+        die("wget of $info_url failed.");
     }
 
     my $buildID;
