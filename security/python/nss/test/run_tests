@@ -1,0 +1,124 @@
+#!/usr/bin/python
+
+import getopt
+import sys
+import os
+import unittest
+from util import get_build_dir
+
+#-------------------------------------------------------------------------------
+
+prog_name = os.path.basename(sys.argv[0])
+
+config = {
+    'in_tree'          : True,
+}
+
+#-------------------------------------------------------------------------------
+
+def run_tests():
+
+    import setup_certs
+    import test_cert_components
+    import test_cipher
+    import test_digest
+    import test_pkcs12
+    import test_client_server
+
+    setup_certs.setup_certs()
+
+    loader = unittest.TestLoader()
+    runner = unittest.TextTestRunner()
+
+    suite  = loader.loadTestsFromModule(test_cert_components)
+    suite.addTests(loader.loadTestsFromModule(test_cipher))
+    suite.addTests(loader.loadTestsFromModule(test_digest))
+    suite.addTests(loader.loadTestsFromModule(test_pkcs12))
+    suite.addTests(loader.loadTestsFromModule(test_client_server))
+
+    result = runner.run(suite)
+    return len(result.failures)
+
+#-------------------------------------------------------------------------------
+
+class Usage(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+
+def usage():
+    'Print command help.'
+
+    return '''\
+%(prog_name)s [-i]
+
+-h --help          print help
+-i --installed     runs the test using installed libraries
+                   instead of "in tree" libraries
+
+Runs unit tests.
+By default test is done "in tree".
+
+Examples:
+
+Run test using libraries built in this tree
+%(prog_name)s
+
+Run post install test
+%(prog_name)s -i
+''' % {'prog_name' : prog_name,
+      }
+
+#-------------------------------------------------------------------------------
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+
+    try:
+        try:
+            opts, args = getopt.getopt(argv[1:], 'hi',
+                                       ['help', 'installed',])
+        except getopt.GetoptError, e:
+            raise Usage(e)
+            return 2
+
+        for o, a in opts:
+            if o in ('-h', '--help'):
+                print >>sys.stdout, usage()
+                return 0
+            elif o in ('-i', '--installed'):
+                config['in_tree'] = False
+            else:
+                raise Usage("command argument '%s' not handled, internal error" % o)
+    except Usage, e:
+        print >>sys.stderr, e.msg
+        print >>sys.stderr, "for help use --help"
+        return 2
+
+
+    if config['in_tree']:
+        # Run the tests "in the tree"
+        # Rather than testing with installed versions run the test
+        # with the package built in this tree.
+
+        build_dir = get_build_dir()
+        if build_dir and os.path.exists(build_dir):
+            print "Using local libraries from tree, located here:\n%s\n" % build_dir
+            sys.path.insert(0, build_dir)
+        else:
+            print >>sys.stderr, "ERROR: Unable to locate in tree libraries"
+            return 2
+    else:
+        print "Using installed libraries"
+
+    num_failures = run_tests()
+
+    if num_failures == 0:
+        return 0
+    else:
+        return 1
+
+#-------------------------------------------------------------------------------
+
+if __name__ == '__main__':
+    sys.exit(main())

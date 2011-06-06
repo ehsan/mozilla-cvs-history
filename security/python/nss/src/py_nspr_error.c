@@ -140,10 +140,11 @@ set_nspr_error(const char *format, ...)
     va_list vargs;
     PyObject *v;
     const NSPRErrorDesc *error_desc;
-    char *errstr=NULL;
-    PRErrorCode err;
+    char *pr_err_msg=NULL;
+    PRInt32 pr_err_msg_len;
+    PRErrorCode error_code;
     PyObject *detail = NULL;
-    char buf[1024];
+    char *final_err_msg=NULL;
 
     if (format) {
 #ifdef HAVE_STDARG_PROTOTYPES
@@ -155,28 +156,39 @@ set_nspr_error(const char *format, ...)
 	va_end(vargs);
     }
 
-    err = PR_GetError();
-    PR_GetErrorText(errstr);
-    if (errstr == NULL) {
-        if ((error_desc = lookup_nspr_error(err)) != NULL) {
-            snprintf(buf, sizeof(buf), "(%s) %s", error_desc->name, error_desc->string);
-            errstr = buf;
-        } else {
-            errstr = NULL;
-        }
+    error_code = PR_GetError();
+    error_desc = lookup_nspr_error(error_code);
 
+    if ((pr_err_msg_len = PR_GetErrorTextLength())) {
+        if ((pr_err_msg = PyMem_Malloc(pr_err_msg_len + 1))) {
+            PR_GetErrorText(pr_err_msg);
+        }
+    }
+
+    if (pr_err_msg && error_desc) {
+        final_err_msg = PR_smprintf("%s (%s) %s", pr_err_msg, error_desc->name, error_desc->string);
+    } else if (error_desc) {
+        final_err_msg = PR_smprintf("(%s) %s", error_desc->name, error_desc->string);
+    } else if (pr_err_msg) {
+        final_err_msg = PR_smprintf("%s", pr_err_msg);
+    } else {
+        final_err_msg = PR_smprintf("error (%d) unknown", error_code);
     }
 
     if (detail) {
-        v = Py_BuildValue("(isS)", err, errstr, detail);
+        v = Py_BuildValue("(isS)", error_code, final_err_msg, detail);
 	Py_DECREF(detail);
     } else {
-        v = Py_BuildValue("(is)", err, errstr);
+        v = Py_BuildValue("(is)", error_code, final_err_msg);
     }
     if (v != NULL) {
         PyErr_SetObject(NSPR_Exception, v);
         Py_DECREF(v);
     }
+
+    if (final_err_msg) PR_smprintf_free(final_err_msg);
+    if (pr_err_msg) PyMem_Free(pr_err_msg);
+
     return NULL;
 }
 

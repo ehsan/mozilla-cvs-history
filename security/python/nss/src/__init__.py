@@ -345,5 +345,5 @@ FAQ
 To be added
 
 """
-__version__ = '0.11'
+__version__ = '0.12'
 

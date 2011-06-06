@@ -1,3 +1,130 @@
+2011-04-22  John Dennis  <jdennis@redhat.com> 0.12
+  * Major new enhancement is additon of PKCS12 support and
+    AlgorithmID's.
+
+  * setup.py build enhancements
+    - Now searches for the NSS and NSPR header files rather
+      than hardcoding their location. This makes building friendlier
+      on other systems (i.e. debian)
+    - Now takes optional command line arguments, -d or --debug
+      will turn on debug options during the build.
+
+  * Fix reference counting bug in PK11_password_callback() which
+    contributed to NSS not being able to shutdown due to
+    resources still in use.
+
+  * Add UTF-8 support to ssl.config_server_session_id_cache()
+
+  * Added unit tests for cipher, digest, client_server.
+
+  * All unittests now run, added test/run_tests to invoke
+    full test suite.
+
+  * Fix bug in test/setup_certs.py, hardcoded full path to
+    libnssckbi.so was causing failures on 64-bit systems,
+    just use the libnssckbi.so basename, modutil will find
+    it on the standard search path.
+
+  * doc/examples/cert_dump.py uses new AlgorithmID class to
+    dump Signature Algorithm
+
+  * doc/examples/ssl_example.py now can cleanly shutdown NSS.
+
+  * Exception error messages now include PR error text if available.
+
+  * The following classes were replaced:
+    - SignatureAlgorithm replaced by new class AlgorithmID
+
+  * The following classes were added:
+    - AlgorithmID
+    - PKCS12DecodeItem
+    - PKCS12Decoder
+
+  * The following class methods were added:
+    - PK11Slot.authenticate()
+    - PK11Slot.get_disabled_reason()
+    - PK11Slot.has_protected_authentication_path()
+    - PK11Slot.has_root_certs()
+    - PK11Slot.is_disabled()
+    - PK11Slot.is_friendly()
+    - PK11Slot.is_internal()
+    - PK11Slot.is_logged_in()
+    - PK11Slot.is_removable()
+    - PK11Slot.logout()
+    - PK11Slot.need_login()
+    - PK11Slot.need_user_init()
+    - PK11Slot.user_disable()
+    - PK11Slot.user_enable()
+    - PKCS12DecodeItem.format()
+    - PKCS12DecodeItem.format_lines()
+    - PKCS12Decoder.database_import()
+    - PKCS12Decoder.format()
+    - PKCS12Decoder.format_lines()
+
+  * The following class properties were added:
+    - AlgorithmID.id_oid
+    - AlgorithmID.id_str
+    - AlgorithmID.id_tag
+    - AlgorithmID.parameters
+    - PKCS12DecodeItem.certificate
+    - PKCS12DecodeItem.friendly_name
+    - PKCS12DecodeItem.has_key
+    - PKCS12DecodeItem.shroud_algorithm_id
+    - PKCS12DecodeItem.signed_cert_der
+    - PKCS12DecodeItem.type
+    - SignedData.data
+    - SignedData.der
+
+  * The following module functions were added:
+    - nss.nss.dump_certificate_cache_info()
+    - nss.nss.find_slot_by_name()
+    - nss.nss.fingerprint_format_lines()
+    - nss.nss.get_internal_slot()
+    - nss.nss.is_fips()
+    - nss.nss.need_pw_init()
+    - nss.nss.nss_init_read_write()
+    - nss.nss.pk11_disabled_reason_name()
+    - nss.nss.pk11_disabled_reason_str()
+    - nss.nss.pk11_logout_all()
+    - nss.nss.pkcs12_cipher_from_name()
+    - nss.nss.pkcs12_cipher_name()
+    - nss.nss.pkcs12_enable_all_ciphers()
+    - nss.nss.pkcs12_enable_cipher()
+    - nss.nss.pkcs12_export()
+    - nss.nss.pkcs12_map_cipher()
+    - nss.nss.pkcs12_set_nickname_collision_callback()
+    - nss.nss.pkcs12_set_preferred_cipher()
+    - nss.nss.token_exists()
+    - nss.ssl.config_mp_server_sid_cache()
+    - nss.ssl.config_server_session_id_cache_with_opt()
+    - nss.ssl.get_max_server_cache_locks()
+    - nss.ssl.set_max_server_cache_locks()
+    - nss.ssl.shutdown_server_session_id_cache()
+
+  * The following constants were added:
+    - nss.nss.int.PK11_DIS_COULD_NOT_INIT_TOKEN
+    - nss.nss.int.PK11_DIS_NONE
+    - nss.nss.int.PK11_DIS_TOKEN_NOT_PRESENT
+    - nss.nss.int.PK11_DIS_TOKEN_VERIFY_FAILED
+    - nss.nss.int.PK11_DIS_USER_SELECTED
+    - nss.nss.int.PKCS12_DES_56
+    - nss.nss.int.PKCS12_DES_EDE3_168
+    - nss.nss.int.PKCS12_RC2_CBC_128
+    - nss.nss.int.PKCS12_RC2_CBC_40
+    - nss.nss.int.PKCS12_RC4_128
+    - nss.nss.int.PKCS12_RC4_40
+
+  * The following files were added:
+    - test/run_tests
+    - test/test_cipher.py (replaces cipher_test.py)
+    - test/test_client_server.py
+    - test/test_digest.py (replaces digest_test.py)
+    - test/test_pkcs12.py
+	
+  * The following were deprecated:
+    - SignatureAlgorithm
+
+
 2011-02-21  John Dennis  <jdennis@redhat.com> 0.11
 
     External Changes:
@@ -151,7 +278,7 @@
 
   * The following classes were added:
       AuthKeyID
-      BasicConstraints	
+      BasicConstraints
       CRLDistributionPoint
       CRLDistributionPts
       CertificateExtension
@@ -161,7 +288,7 @@
       RDN
       AVA
       CertificateRequest
-	
+
   * The following module functions were added:
       nss.nss.nss_is_initialized()
       nss.nss.cert_crl_reason_from_name()
@@ -247,7 +374,7 @@
     adding object traversal and clear methods
 
   * Identify static variables, move to thread local storage
-	
+
   * Remove python-nss specific httplib.py, no longer needed
     python-nss now compatible with standard library
 

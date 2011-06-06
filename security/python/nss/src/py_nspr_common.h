@@ -47,6 +47,8 @@
 
 #define NSS_THREAD_LOCAL_KEY "nss"
 
+#define PyBoolAsPRBool(x) ((x) == Py_True ? PR_TRUE : PR_FALSE)
+
 #define ASSIGN_REF(dst, obj)                    \
 do {                                            \
     PyObject *tmp;                              \
@@ -97,6 +99,8 @@ typedef PyObject *(*ssizessizeargfunc)(PyObject *, Py_ssize_t, Py_ssize_t);
 #define Py_TPFLAGS_HAVE_NEWBUFFER 0
 #endif
 
+#define PyNone_Check(x) ((x) == Py_None)
+
 #define TYPE_READY(type)                                                \
 {                                                                       \
     if (PyType_Ready(&type) < 0)                                        \
@@ -109,8 +113,9 @@ typedef PyObject *(*ssizessizeargfunc)(PyObject *, Py_ssize_t, Py_ssize_t);
 
 #ifdef DEBUG
 
-#define DumpRefCount(_obj)                                              \
+#define DumpRefCount(x)                                                 \
 {                                                                       \
+    PyObject *_obj = (PyObject *) (x);                                  \
     printf("<%s object at %p refcnt=%d>\n", Py_TYPE(_obj)->tp_name, _obj, _obj->ob_refcnt); \
 }
 
@@ -120,8 +125,9 @@ typedef PyObject *(*ssizessizeargfunc)(PyObject *, Py_ssize_t, Py_ssize_t);
     printf("%s\n", _msg);                       \
 }
 
-#define TraceMethodEnter(_obj)                                          \
+#define TraceMethodEnter(x)                                             \
 {                                                                       \
+    PyObject *_obj = (PyObject *) (x);                                  \
     const char *name = NULL;                                            \
                                                                         \
     if (_obj) {                                                         \
@@ -131,8 +137,9 @@ typedef PyObject *(*ssizessizeargfunc)(PyObject *, Py_ssize_t, Py_ssize_t);
            __FUNCTION__, name, _obj, _obj ? _obj->ob_refcnt : -9999);   \
 }
 
-#define TraceMethodLeave(_obj)                                          \
+#define TraceMethodLeave(x)                                             \
 {                                                                       \
+    PyObject *_obj = (PyObject *) (x);                                  \
     const char *name = NULL;                                            \
                                                                         \
     if (_obj) {                                                         \
@@ -152,8 +159,9 @@ typedef PyObject *(*ssizessizeargfunc)(PyObject *, Py_ssize_t, Py_ssize_t);
 }
 
 
-#define TraceObjNewLeave(_obj)                                          \
+#define TraceObjNewLeave(x)                                             \
 {                                                                       \
+    PyObject *_obj = (PyObject *) (x);                                  \
     const char *name = NULL;                                            \
                                                                         \
     if (_obj) {                                                         \

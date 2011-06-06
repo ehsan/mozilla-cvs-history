@@ -49,6 +49,7 @@
 #include "sslt.h"
 #include "key.h"
 #include "pk11pub.h"
+#include "pkcs12.h"
 
 /* ========================================================================== */
 
@@ -185,7 +186,7 @@ typedef struct {
 } KEYPQGParams;
 
 /* ========================================================================== */
-/* ======================== SignatureAlgorithm Class ======================== */
+/* ============================ AlgorithmID Class =========================== */
 /* ========================================================================== */
 
 typedef struct {
@@ -193,7 +194,7 @@ typedef struct {
     SECAlgorithmID id;
     PyObject *py_id;
     PyObject *py_parameters;
-} SignatureAlgorithm;
+} AlgorithmID;
 
 /* ========================================================================== */
 /* ============================= SignedData Class =========================== */
@@ -203,6 +204,7 @@ typedef struct {
     PyObject_HEAD
     PRArenaPool *arena;
     CERTSignedData signed_data;
+    PyObject *py_der;
     PyObject *py_data;
     PyObject *py_algorithm;
     PyObject *py_signature;
@@ -354,6 +356,30 @@ typedef struct {
     PyObject_HEAD
     NSSInitContext *context;
 } InitContext;
+
+/* ========================================================================== */
+/* =========================== PKCS12DecodeItem Class ======================= */
+/* ========================================================================== */
+
+typedef struct {
+    PyObject_HEAD
+    SECOidTag type;
+    PRBool    has_key;
+    PyObject *py_signed_cert_der;
+    PyObject *py_cert;
+    PyObject *py_friendly_name;
+    PyObject *py_shroud_algorithm_id;
+} PKCS12DecodeItem;
+
+/* ========================================================================== */
+/* ============================ PKCS12Decoder Class ========================= */
+/* ========================================================================== */
+
+typedef struct {
+    PyObject_HEAD
+    SEC_PKCS12DecoderContext *decoder_ctx;
+    PyObject *py_decode_items;    /* tuple */
+} PKCS12Decoder;
 
 /* ========================================================================== */
 

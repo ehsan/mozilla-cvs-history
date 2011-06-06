@@ -28,11 +28,11 @@ client_username = 'test_user'
 config = {
     'verbose'          : False,
     'debug'            : False,
-    'logfile'          : prog_name + '.log',
+    'logfile'          : None,
     'log_level'        : logging.INFO,
     'interactive'      : sys.stdout.isatty(),
-    'dbdir'            : 'pki',
-    'db_passwd'        : 'passwd',
+    'dbdir'            : os.path.join(os.path.dirname(sys.argv[0]), 'pki'),
+    'db_passwd'        : 'db_passwd',
     'noise_file'       : 'noise_file',
     'ca_subject'       : 'CN=Test CA',
     'ca_nickname'      : 'test_ca',
@@ -134,6 +134,8 @@ def run_cmd_with_password(cmd, password_prompt, password):
 #-------------------------------------------------------------------------------
 
 def setup_certs():
+    print "setting up certs ..."
+
     if os.path.exists(config['dbdir']):
        shutil.rmtree(config['dbdir'])
     os.makedirs(config['dbdir'])
@@ -186,7 +188,7 @@ def setup_certs():
 
         # 5. Import public root CA's
 
-        cmd = 'modutil -dbdir %s -add ca_certs -libfile /usr/lib/libnssckbi.so' % \
+        cmd = 'modutil -dbdir %s -add ca_certs -libfile libnssckbi.so' % \
             (config['dbdir'])
 
         exit_code, stdout, stderr = run_cmd(cmd)

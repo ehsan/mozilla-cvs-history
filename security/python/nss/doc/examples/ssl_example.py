@@ -60,7 +60,7 @@ REQUIRE_CLIENT_CERT_ALWAYS = 4
 # command line parameters, default them to something reasonable
 client = False
 server = False
-password = 'passwd'
+password = 'db_passwd'
 use_ssl = True
 client_cert_action = NO_CLIENT_CERT
 certdir = 'pki'
@@ -199,7 +199,6 @@ def Client():
             sock.set_ssl_option(ssl.SSL_SECURITY, True)
             sock.set_ssl_option(ssl.SSL_HANDSHAKE_AS_CLIENT, True)
             sock.set_hostname(hostname)
-            sock.reset_handshake(False) # FIXME: is this needed
 
             # Provide a callback which notifies us when the SSL handshake is complete
             sock.set_handshake_callback(handshake_callback)
@@ -221,22 +220,13 @@ def Client():
             valid_addr = True
             break
         except Exception, e:
+            sock.close()
             print "client connection to: %s failed (%s)" % (net_addr, e)
 
     if not valid_addr:
         print "Could not establish valid address for \"%s\" in family %s" % \
         (hostname, io.addr_family_name(family))
         return
-    try:
-        print "client connected to: %s" % sock.get_peer_name()
-    except Exception, e:
-        print e.strerror
-        try:
-            sock.shutdown()
-        except:
-            pass
-        return
-        
 
     # Talk to the server
     try:
@@ -244,12 +234,13 @@ def Client():
         buf = sock.recv(1024)
         if not buf:
             print "client lost connection"
+            sock.close()
             return
         print "client received: %s" % (buf)
     except Exception, e:
         print e.strerror
         try:
-            sock.shutdown()
+            sock.close()
         except:
             pass
         return
@@ -260,7 +251,13 @@ def Client():
             sock.shutdown()
         except:
             pass
-        return
+
+    try:
+        sock.close()
+        if use_ssl:
+            ssl.clear_session_cache()
+    except Exception, e:
+        print e
 
 # -----------------------------------------------------------------------------
 # Server Implementation
@@ -302,7 +299,6 @@ def Server():
 
         # Configure the server SSL socket
         sock.config_secure_server(server_cert, priv_key, server_cert_kea)
-        sock.reset_handshake(True) # FIXME: is this needed?
 
     else:
         sock = io.Socket(net_addr.family)
@@ -333,6 +329,7 @@ def Server():
                 client_sock.send("Goodbye")
                 try:
                     client_sock.shutdown(io.PR_SHUTDOWN_RCV)
+                    client_sock.close()
                 except:
                     pass
                 break
@@ -343,7 +340,11 @@ def Server():
 
     try:
         sock.shutdown()
-    except:
+        sock.close()
+        if use_ssl:
+            ssl.shutdown_server_session_id_cache()
+    except Exception, e:
+        print e
         pass
 
 # -----------------------------------------------------------------------------
@@ -485,4 +486,9 @@ if client:
 if server:
     print "starting as server"
     Server()
+
+try:
+    nss.nss_shutdown()
+except Exception, e:
+    print e
 

@@ -1,0 +1,58 @@
+#!/usr/bin/python
+
+import types
+import inspect
+
+import nss.io as io
+import nss.ssl as ssl
+import nss.nss as nss
+
+def isint(object):
+    "Return true if the object is an integer."
+    return isinstance(object, types.IntType)
+
+def isstring(object):
+    "Return true if the object is a string."
+    return isinstance(object, types.StringTypes)
+
+class Package:
+    def __init__(self, modules):
+        self.modules = modules
+
+class Class:
+    def __init__(self, cls):
+        self.cls = cls
+        self.name = cls.__name__
+        self.methods = [x[0] for x in inspect.getmembers(self.cls, inspect.ismethoddescriptor) if not x[0].startswith('_')]
+        self.properties = [x[0] for x in inspect.getmembers(cls, inspect.isgetsetdescriptor)]
+
+
+class Module:
+    def __init__(self, module):
+        self.module = module
+        self.name = module.__name__
+        self.classes = [Class(x) for x in [x[1] for x in inspect.getmembers(self.module, inspect.isclass)]]
+        self.functions = [x[0] for x in inspect.getmembers(self.module, inspect.isbuiltin)]
+        self.ints = [x[0] for x in inspect.getmembers(self.module, isint)]
+        self.strings = [x[0] for x in inspect.getmembers(self.module, isstring)]
+
+    def dump(self):
+        for cls in self.classes:
+            print '%s.class.%s' % (self.name, cls.name)
+            for prop in cls.properties:
+                print '%s.property.%s.%s' % (self.name, cls.name, prop)
+            for method in cls.methods:
+                print '%s.method.%s.%s()' % (self.name, cls.name, method)
+
+        for func in self.functions:
+            print "%s.function.%s()" % (self.name, func)
+
+        for i in self.ints:
+            print "%s.int.%s" % (self.name, i)
+
+        for s in self.strings:
+            print "%s.str.%s" % (self.name, s)
+
+for m in (io, ssl, nss):
+    mod = Module(m)
+    mod.dump()

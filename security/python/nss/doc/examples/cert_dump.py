@@ -167,7 +167,8 @@ print nss.indented_format([(0, 'Certificate:'),
                            (1, 'Data:')])
 print nss.indented_format([(2, 'Version: %d (%#x)' % (cert.version+1, cert.version))])
 print nss.indented_format([(2, 'Serial Number: %d (%#x)' % (cert.serial_number, cert.serial_number))])
-print nss.indented_format([(2, 'Signature Algorithm: %s' % cert.signature_algorithm)])
+print nss.indented_format([(2, 'Signature Algorithm:')])
+print nss.indented_format(cert.signature_algorithm.format_lines(3))
 print nss.indented_format([(2, 'Issuer: "%s"' % cert.issuer)])
 print nss.indented_format([(2, 'Validity:'),
                            (3, 'Not Before: %s' % cert.valid_not_before_str),

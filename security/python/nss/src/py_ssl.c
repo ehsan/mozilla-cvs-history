@@ -1,3 +1,30 @@
+#if 0
+PyDoc_STRVAR(SSL_func_name_doc,
+"func_name() -> \n\
+\n\
+:Parameters:\n\
+    arg1 : object\n\
+        xxx\n\
+\n\
+xxx\n\
+");
+
+static PyObject *
+SSL_func_name(PyObject *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"arg1", NULL};
+    PyObject *arg;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|i:func_name", kwlist,
+                                     &arg))
+        return NULL;
+
+    return NULL;
+}
+
+#endif
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -1293,8 +1320,8 @@ PyDoc_STRVAR(SSLSocket_set_cipher_pref_doc,
 :Parameters:\n\
     cipher : integer\n\
         The cipher suite enumeration (e.g. SSL_RSA_WITH_NULL_MD5, etc.)\n\
-    enabled : bool\n\
-        Boolean value\n\
+    enabled : bool or int\n\
+        True enables, False disables\n\
 \n\
 Sets preference for the specified SSL2, SSL3, or TLS cipher on the\n\
 socket. A cipher suite is used only if the policy allows it and the\n\
@@ -1919,6 +1946,8 @@ NSSinit(PyObject *self, PyObject *args)
 {
     char *cert_dir;
 
+    TraceMethodEnter(self);
+
     if (PyErr_Warn(PyExc_DeprecationWarning, "nssinit() has been moved to the nss module, use nss.nss_init() instead of ssl.nssinit()") < 0)
         return NULL;
 
@@ -1950,6 +1979,8 @@ NSS_init(PyObject *self, PyObject *args)
 {
     char *cert_dir;
 
+    TraceMethodEnter(self);
+
     if (PyErr_Warn(PyExc_DeprecationWarning, "nss_init() has been moved to the nss module, use nss.nss_init() instead of ssl.nss_init()") < 0)
         return NULL;
 
@@ -1978,6 +2009,8 @@ with the error code SEC_ERROR_BUSY.\n\
 static PyObject *
 NSS_shutdown(PyObject *self, PyObject *args)
 {
+    TraceMethodEnter(self);
+
     if (PyErr_Warn(PyExc_DeprecationWarning, "nss_shutdown() has been moved to the nss module, use nss.nss_shutdown() instead of ssl.nss_shutdown()") < 0)
         return NULL;
 
@@ -2006,6 +2039,8 @@ SSL_set_ssl_default_option(PyObject *self, PyObject *args)
     int option;
     int value;
 
+    TraceMethodEnter(self);
+
     if (!PyArg_ParseTuple(args, "ii:set_ssl_default_option", &option, &value)) {
         return NULL;
     }
@@ -2030,6 +2065,8 @@ SSL_get_ssl_default_option(PyObject *self, PyObject *args)
 {
     int option;
     int value;
+
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "i:get_ssl_default_option", &option)) {
         return NULL;
@@ -2068,6 +2105,8 @@ SSL_set_default_cipher_pref(PyObject *self, PyObject *args)
     int cipher;
     int enabled;
 
+    TraceMethodEnter(self);
+
     if (!PyArg_ParseTuple(args, "ii:set_default_cipher_pref", &cipher, &enabled))
         return NULL;
 
@@ -2094,6 +2133,8 @@ SSL_get_default_cipher_pref(PyObject *self, PyObject *args)
 {
     int cipher;
     int enabled;
+
+    TraceMethodEnter(self);
 
     if (!PyArg_ParseTuple(args, "i:get_default_cipher_pref", &cipher))
         return NULL;
@@ -2135,6 +2176,8 @@ SSL_set_cipher_policy(PyObject *self, PyObject *args)
     int cipher;
     int policy;
 
+    TraceMethodEnter(self);
+
     if (!PyArg_ParseTuple(args, "ii:set_cipher_policy", &cipher, &policy))
         return NULL;
 
@@ -2161,6 +2204,8 @@ SSL_get_cipher_policy(PyObject *self, PyObject *args)
     int cipher;
     int policy;
 
+    TraceMethodEnter(self);
+
     if (!PyArg_ParseTuple(args, "i:get_cipher_policy", &cipher))
         return NULL;
 
@@ -2176,7 +2221,7 @@ SSL_get_cipher_policy(PyObject *self, PyObject *args)
 }
 
 PyDoc_STRVAR(SSL_config_server_session_id_cache_doc,
-"config_server_session_id_cache([max_cache_entries=0, ssl2_timeout=0, ssl3_timeout=0, directory=None])\n\
+"config_server_session_id_cache(max_cache_entries=0, ssl2_timeout=0, ssl3_timeout=0, directory=None)\n\
 \n\
 :Parameters:\n\
     max_cache_entries : integer\n\
@@ -2203,7 +2248,7 @@ handshake as a server, you must call config_server_session_id_cache()\n\
 to configure the session caches for server sessions.\n\
 \n\
 If your server application uses multiple processes (instead of or in\n\
-addition to multiple threads), use config_mp_server_sid_cache()\n\
+addition to multiple threads), use `ssl.config_mp_server_sid_cache()`\n\
 instead.  You must use one of these functions to create a server\n\
 cache.\n\
 \n\
@@ -2228,20 +2273,267 @@ SSL_config_server_session_id_cache(PyObject *self, PyObject *args, PyObject *kwd
     int max_cache_entries = 0;
     PRUint32 ssl2_timeout = 0;
     PRUint32 ssl3_timeout = 0;
+    PyObject *py_directory = Py_None;
+    PyObject *py_directory_utf8 = NULL;
     char *directory = NULL;
 
     TraceMethodEnter(self);
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|iIIz:config_server_session_id_cache", kwlist,
-                                     &max_cache_entries, &ssl2_timeout, &ssl3_timeout, &directory))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|iIIO:config_server_session_id_cache", kwlist,
+                                     &max_cache_entries, &ssl2_timeout, &ssl3_timeout, &py_directory))
         return NULL;
+
+    if (PyString_Check(py_directory) || PyUnicode_Check(py_directory)) {
+        if (PyString_Check(py_directory)) {
+            py_directory_utf8 = py_directory;
+            Py_INCREF(py_directory_utf8);
+        } else {
+            py_directory_utf8 = PyUnicode_AsUTF8String(py_directory);
+        }
+        directory = PyString_AsString(py_directory_utf8);
+    } else if (PyNone_Check(py_directory)) {
+        directory = NULL;
+    } else {
+        PyErr_Format(PyExc_TypeError, "directory must be string or None, not %.200s",
+                     Py_TYPE(py_directory)->tp_name);
+        return NULL;
+    }
 
     if (SSL_ConfigServerSessionIDCache(max_cache_entries, ssl2_timeout,
                                        ssl3_timeout, directory) != SECSuccess) {
+        Py_XDECREF(py_directory_utf8);
+        return set_nspr_error(NULL);
+    }
+
+    Py_XDECREF(py_directory_utf8);
+    Py_RETURN_NONE;
+}
+
+PyDoc_STRVAR(SSL_config_server_session_id_cache_with_opt_doc,
+"config_server_session_id_cache_with_opt(max_cache_entries=0, max_cert_cache_entries=0, max_server_name_cache_entries=0, ssl2_timeout=0, ssl3_timeout=0, directory=None, enable_mp_cache=False)\n\
+\n\
+:Parameters:\n\
+    max_cache_entries : integer\n\
+        The maximum number of entries in the cache. If ZERO the server\n\
+        default value is used (10,000).\n\
+    \n\
+    max_cert_cache_entries : integer\n\
+        The maximum number of entries in the cert cache. If ZERO the server\n\
+        default value is used (10,000).\n\
+    \n\
+    max_server_name_cache_entries : integer\n\
+        The maximum number of entries in the server name cache. If ZERO the server\n\
+        default value is used (10,000).\n\
+    \n\
+    ssl2_timeout : integer\n\
+        The lifetime in seconds of an SSL2 session. The minimum timeout\n\
+        value is 5 seconds and the maximum is 24 hours. Values outside\n\
+        this range are replaced by the server default value (100 seconds).\n\
+    \n\
+    ssl3_timeout : integer\n\
+        The lifetime in seconds of an SSL3 session. The minimum timeout\n\
+        value is 5 seconds and the maximum is 24 hours. Values outside\n\
+        this range are replaced by the server default value (24 hours).\n\
+    \n\
+    directory : string\n\
+        A string specifying the pathname of the directory that will\n\
+        contain the session cache. If None the server default value is\n\
+        used (/tmp (Unix) or \\temp (NT)).\n\
+    \n\
+    enable_mp_cache : bool\n\
+        If True enable the multi-process cache.\n\
+\n\
+Configure a secure server's session-id cache. Depends on value of\n\
+enable_mp_cache, configures multi-proc or single proc cache.\n\
+\n\
+A zero value or a value that is out of range for any of the parameters\n\
+causes the server default value to be used in the server cache. Note,\n\
+this function only affects the server cache, not the client cache.\n\
+");
+
+
+static PyObject *
+SSL_config_server_session_id_cache_with_opt(PyObject *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"max_cache_entries", "max_cert_cache_entries", "max_server_name_cache_entries",
+                             "ssl2_timeout", "ssl3_timeout", "directory", "enable_mp_cache", NULL};
+    int max_cache_entries = 0;
+    int max_cert_cache_entries = 0;
+    int max_server_name_cache_entries = 0;
+    PRUint32 ssl2_timeout = 0;
+    PRUint32 ssl3_timeout = 0;
+    PyObject *py_directory = Py_None;
+    PyObject *py_directory_utf8 = NULL;
+    char *directory = NULL;
+    PyObject * py_enable_mp_cache = NULL;
+    PRBool enable_mp_cache = PR_FALSE;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|iiiIIO:config_server_session_id_cache_with_opt", kwlist,
+                                     &max_cache_entries, &max_cert_cache_entries, &max_server_name_cache_entries,
+                                     &ssl2_timeout, &ssl3_timeout, &py_directory, &py_enable_mp_cache))
+        return NULL;
+
+    if (PyString_Check(py_directory) || PyUnicode_Check(py_directory)) {
+        if (PyString_Check(py_directory)) {
+            py_directory_utf8 = py_directory;
+            Py_INCREF(py_directory_utf8);
+        } else {
+            py_directory_utf8 = PyUnicode_AsUTF8String(py_directory);
+        }
+        directory = PyString_AsString(py_directory_utf8);
+    } else if (PyNone_Check(py_directory)) {
+        directory = NULL;
+    } else {
+        PyErr_Format(PyExc_TypeError, "directory must be string or None, not %.200s",
+                     Py_TYPE(py_directory)->tp_name);
+        return NULL;
+    }
+
+    if (py_enable_mp_cache) {
+        enable_mp_cache = PyBoolAsPRBool(py_enable_mp_cache);
+    }
+
+    if (SSL_ConfigServerSessionIDCacheWithOpt(ssl2_timeout, ssl3_timeout, directory,
+                                              max_cache_entries, max_cert_cache_entries,
+                                              max_server_name_cache_entries,
+                                              enable_mp_cache) != SECSuccess) {
+        Py_XDECREF(py_directory_utf8);
+        return set_nspr_error(NULL);
+    }
+
+    Py_XDECREF(py_directory_utf8);
+    Py_RETURN_NONE;
+}
+
+PyDoc_STRVAR(SSL_config_mp_server_sid_cache_doc,
+"config_mp_server_sid_cache(max_cache_entries=0, ssl2_timeout=0, ssl3_timeout=0, directory=None)\n\
+\n\
+:Parameters:\n\
+    max_cache_entries : integer\n\
+        The maximum number of entries in the cache. If ZERO the server\n\
+        default value is used (10,000).\n\
+    \n\
+    ssl2_timeout : integer\n\
+        The lifetime in seconds of an SSL2 session. The minimum timeout\n\
+        value is 5 seconds and the maximum is 24 hours. Values outside\n\
+        this range are replaced by the server default value (100 seconds).\n\
+    \n\
+    ssl3_timeout : integer\n\
+        The lifetime in seconds of an SSL3 session. The minimum timeout\n\
+        value is 5 seconds and the maximum is 24 hours. Values outside\n\
+        this range are replaced by the server default value (24 hours).\n\
+    \n\
+    directory : string\n\
+        A string specifying the pathname of the directory that will\n\
+        contain the session cache. If None the server default value is\n\
+        used (/tmp (Unix) or \\temp (NT)).\n\
+\n\
+This function sets up a Server Session ID (SID) cache that is safe for\n\
+access by multiple processes on the same system.\n\
+\n\
+Like `ssl.config_server_session_id_cache()`, with one important\n\
+difference.  If the application will run multiple processes (as\n\
+opposed to, or in addition to multiple threads), then it must call\n\
+this function, instead of calling\n\
+`ssl.config_server_session_id_cache()`.  This has nothing to do with\n\
+the number of processors, only processes.\n\
+");
+
+
+static PyObject *
+SSL_config_mp_server_sid_cache(PyObject *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"max_cache_entries", "ssl2_timeout", "ssl3_timeout", "directory", NULL};
+    int max_cache_entries = 0;
+    PRUint32 ssl2_timeout = 0;
+    PRUint32 ssl3_timeout = 0;
+    PyObject *py_directory = Py_None;
+    PyObject *py_directory_utf8 = NULL;
+    char *directory = NULL;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|iIIO:config_mp_server_sid_cache", kwlist,
+                                     &max_cache_entries, &ssl2_timeout, &ssl3_timeout, &py_directory))
+        return NULL;
+
+    if (PyString_Check(py_directory) || PyUnicode_Check(py_directory)) {
+        if (PyString_Check(py_directory)) {
+            py_directory_utf8 = py_directory;
+            Py_INCREF(py_directory_utf8);
+        } else {
+            py_directory_utf8 = PyUnicode_AsUTF8String(py_directory);
+        }
+        directory = PyString_AsString(py_directory_utf8);
+    } else if (PyNone_Check(py_directory)) {
+        directory = NULL;
+    } else {
+        PyErr_Format(PyExc_TypeError, "directory must be string or None, not %.200s",
+                     Py_TYPE(py_directory)->tp_name);
+        return NULL;
+    }
+
+    if (SSL_ConfigMPServerSIDCache(max_cache_entries, ssl2_timeout,
+                                   ssl3_timeout, directory) != SECSuccess) {
+        Py_XDECREF(py_directory_utf8);
+        return set_nspr_error(NULL);
+    }
+
+    Py_XDECREF(py_directory_utf8);
+    Py_RETURN_NONE;
+}
+
+PyDoc_STRVAR(SSL_get_max_server_cache_locks_doc,
+"get_max_server_cache_locks() -> int\n\
+\n\
+Get the configured maximum number of mutexes used for the server's\n\
+store of SSL sessions.  This value is used by the server session ID\n\
+cache initialization functions.\n\
+");
+
+static PyObject *
+SSL_get_max_server_cache_locks(PyObject *self, PyObject *args)
+{
+    TraceMethodEnter(self);
+
+    return PyInt_FromLong(SSL_GetMaxServerCacheLocks());
+}
+
+PyDoc_STRVAR(SSL_set_max_server_cache_locks_doc,
+"set_max_server_cache_locks(max_locks)\n\
+\n\
+:Parameters:\n\
+    max_locks : int\n\
+        Maximum number of locks\n\
+\n\
+Set the configured maximum number of mutexes used for the server's\n\
+store of SSL sessions.  This value is used by the server session ID\n\
+cache initialization functions.  Note that on some platforms, these\n\
+mutexes are actually implemented with POSIX semaphores, or with\n\
+unnamed pipes.  The default value varies by platform.  An attempt to\n\
+set a too-low maximum will return an error and the configured value\n\
+will not be changed.\n\
+");
+
+static PyObject *
+SSL_set_max_server_cache_locks(PyObject *self, PyObject *args)
+{
+    unsigned int max_locks;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTuple(args, "I:set_max_server_cache_locks",
+                                     &max_locks))
+        return NULL;
+
+    if (SSL_SetMaxServerCacheLocks(max_locks) != SECSuccess) {
         return set_nspr_error(NULL);
     }
 
     Py_RETURN_NONE;
+
 }
 
 PyDoc_STRVAR(SSL_clear_session_cache_doc,
@@ -2259,7 +2551,23 @@ in RAM (not on disk).\n\
 static PyObject *
 SSL_clear_session_cache(PyObject *self, PyObject *args)
 {
+    TraceMethodEnter(self);
+
     SSL_ClearSessionCache();
+    Py_RETURN_NONE;
+}
+
+PyDoc_STRVAR(SSL_shutdown_server_session_id_cache_doc,
+"shutdown_server_session_id_cache()\n\
+\n\
+");
+
+static PyObject *
+SSL_shutdown_server_session_id_cache(PyObject *self, PyObject *args)
+{
+    TraceMethodEnter(self);
+
+    SSL_ShutdownServerSessionIDCache();
     Py_RETURN_NONE;
 }
 
@@ -2274,6 +2582,8 @@ features.\n\
 static PyObject *
 NSS_set_domestic_policy(PyObject *self, PyObject *args)
 {
+    TraceMethodEnter(self);
+
     if (NSS_SetDomesticPolicy() != SECSuccess) {
         return set_nspr_error(NULL);
     }
@@ -2292,6 +2602,8 @@ features.\n\
 static PyObject *
 NSS_set_export_policy(PyObject *self, PyObject *args)
 {
+    TraceMethodEnter(self);
+
     if (NSS_SetExportPolicy() != SECSuccess) {
         return set_nspr_error(NULL);
     }
@@ -2309,6 +2621,8 @@ regulations related to software products with encryption features.\n\
 static PyObject *
 NSS_set_france_policy(PyObject *self, PyObject *args)
 {
+    TraceMethodEnter(self);
+
     if (NSS_SetFrancePolicy() != SECSuccess) {
         return set_nspr_error(NULL);
     }
@@ -2318,20 +2632,25 @@ NSS_set_france_policy(PyObject *self, PyObject *args)
 
 /* List of functions exported by this module. */
 static PyMethodDef module_methods[] = {
-{"nssinit",                        (PyCFunction)NSSinit,                            METH_VARARGS,               NSSinit_doc},
-{"nss_init",                       (PyCFunction)NSS_init,                           METH_VARARGS,               NSS_init_doc},
-{"nss_shutdown",                   (PyCFunction)NSS_shutdown,                       METH_NOARGS,                NSS_shutdown_doc},
-{"set_ssl_default_option",         (PyCFunction)SSL_set_ssl_default_option,         METH_VARARGS,               SSL_set_ssl_default_option_doc},
-{"get_ssl_default_option",         (PyCFunction)SSL_get_ssl_default_option,         METH_VARARGS,               SSL_get_ssl_default_option_doc},
-{"set_default_cipher_pref",        (PyCFunction)SSL_set_default_cipher_pref,        METH_VARARGS,               SSL_set_default_cipher_pref_doc},
-{"get_default_cipher_pref",        (PyCFunction)SSL_get_default_cipher_pref,        METH_VARARGS,               SSL_get_default_cipher_pref_doc},
-{"set_cipher_policy",              (PyCFunction)SSL_set_cipher_policy,              METH_VARARGS,               SSL_set_cipher_policy_doc},
-{"get_cipher_policy",              (PyCFunction)SSL_get_cipher_policy,              METH_VARARGS,               SSL_get_cipher_policy_doc},
-{"config_server_session_id_cache", (PyCFunction)SSL_config_server_session_id_cache, METH_VARARGS|METH_KEYWORDS, SSL_config_server_session_id_cache_doc},
-{"clear_session_cache",            (PyCFunction)SSL_clear_session_cache,            METH_NOARGS,                SSL_clear_session_cache_doc},
-{"set_domestic_policy",            (PyCFunction)NSS_set_domestic_policy,            METH_NOARGS,                NSS_set_domestic_policy_doc},
-{"set_export_policy",              (PyCFunction)NSS_set_export_policy,              METH_NOARGS,                NSS_set_export_policy_doc},
-{"set_france_policy",              (PyCFunction)NSS_set_france_policy,              METH_NOARGS,                NSS_set_france_policy_doc},
+{"nssinit",                                 (PyCFunction)NSSinit,                                     METH_VARARGS,               NSSinit_doc},
+{"nss_init",                                (PyCFunction)NSS_init,                                    METH_VARARGS,               NSS_init_doc},
+{"nss_shutdown",                            (PyCFunction)NSS_shutdown,                                METH_NOARGS,                NSS_shutdown_doc},
+{"set_ssl_default_option",                  (PyCFunction)SSL_set_ssl_default_option,                  METH_VARARGS,               SSL_set_ssl_default_option_doc},
+{"get_ssl_default_option",                  (PyCFunction)SSL_get_ssl_default_option,                  METH_VARARGS,               SSL_get_ssl_default_option_doc},
+{"set_default_cipher_pref",                 (PyCFunction)SSL_set_default_cipher_pref,                 METH_VARARGS,               SSL_set_default_cipher_pref_doc},
+{"get_default_cipher_pref",                 (PyCFunction)SSL_get_default_cipher_pref,                 METH_VARARGS,               SSL_get_default_cipher_pref_doc},
+{"set_cipher_policy",                       (PyCFunction)SSL_set_cipher_policy,                       METH_VARARGS,               SSL_set_cipher_policy_doc},
+{"get_cipher_policy",                       (PyCFunction)SSL_get_cipher_policy,                       METH_VARARGS,               SSL_get_cipher_policy_doc},
+{"config_server_session_id_cache",          (PyCFunction)SSL_config_server_session_id_cache,          METH_VARARGS|METH_KEYWORDS, SSL_config_server_session_id_cache_doc},
+{"config_mp_server_sid_cache",              (PyCFunction)SSL_config_mp_server_sid_cache,              METH_VARARGS|METH_KEYWORDS, SSL_config_mp_server_sid_cache_doc},
+{"config_server_session_id_cache_with_opt", (PyCFunction)SSL_config_server_session_id_cache_with_opt, METH_VARARGS|METH_KEYWORDS, SSL_config_server_session_id_cache_with_opt_doc},
+{"get_max_server_cache_locks",              (PyCFunction)SSL_get_max_server_cache_locks,              METH_NOARGS,                SSL_get_max_server_cache_locks_doc},
+{"set_max_server_cache_locks",              (PyCFunction)SSL_set_max_server_cache_locks,              METH_VARARGS,               SSL_set_max_server_cache_locks_doc},
+{"clear_session_cache",                     (PyCFunction)SSL_clear_session_cache,                     METH_NOARGS,                SSL_clear_session_cache_doc},
+{"shutdown_server_session_id_cache",        (PyCFunction)SSL_shutdown_server_session_id_cache,        METH_NOARGS,                SSL_shutdown_server_session_id_cache_doc},
+{"set_domestic_policy",                     (PyCFunction)NSS_set_domestic_policy,                     METH_NOARGS,                NSS_set_domestic_policy_doc},
+{"set_export_policy",                       (PyCFunction)NSS_set_export_policy,                       METH_NOARGS,                NSS_set_export_policy_doc},
+{"set_france_policy",                       (PyCFunction)NSS_set_france_policy,                       METH_NOARGS,                NSS_set_france_policy_doc},
 {NULL, NULL}            /* Sentinel */
 };
 
