@@ -111,6 +111,7 @@ $throttleExceptions = array(
     ),
     '3.6.18' => array (
         'betatest',
+        'beta',
         'releasetest'
     )
 );
