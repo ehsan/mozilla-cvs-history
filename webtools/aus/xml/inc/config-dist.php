@@ -89,21 +89,6 @@ $productThrottling = array(
      'Firefox' => array(
          // Completely throttled at the request of release-drivers, currently
          // pointing at 5.0
-         '3.6.2' => 0,
-         '3.6.3' => 0,
-         '3.6.4' => 0,
-         '3.6.6' => 0,
-         '3.6.7' => 0,
-         '3.6.8' => 0,
-         '3.6.9' => 0,
-         '3.6.10' => 0,
-         '3.6.11' => 0,
-         '3.6.12' => 0,
-         '3.6.13' => 0,
-         '3.6.14' => 0,
-         '3.6.15' => 0,
-         '3.6.16' => 0,
-         '3.6.17' => 0,
          '3.6.18' => 0,
          // Upcoming version of 3.6, whose MUs we want throttled out of the gate.
          '3.6.19' => 0
@@ -123,66 +108,6 @@ $productThrottling = array(
 // In this example, 3.0.11 with channel names that match these channels will not
 // be throttled unless there is a global throttle enabled.
 $throttleExceptions = array(
-    '3.6.2' => array (
-        'betatest',
-        'releasetest'
-    ),
-    '3.6.3' => array (
-        'betatest',
-        'releasetest'
-    ),
-    '3.6.4' => array (
-        'betatest',
-        'releasetest'
-    ),
-    '3.6.6' => array (
-        'betatest',
-        'releasetest'
-    ),
-    '3.6.7' => array (
-        'betatest',
-        'releasetest'
-    ),
-    '3.6.8' => array (
-        'betatest',
-        'releasetest'
-    ),
-    '3.6.9' => array (
-        'betatest',
-        'releasetest'
-    ),
-    '3.6.10' => array (
-        'betatest',
-        'releasetest'
-    ),
-    '3.6.11' => array (
-        'betatest',
-        'releasetest'
-    ),
-    '3.6.12' => array (
-        'betatest',
-        'releasetest'
-    ),
-    '3.6.13' => array (
-        'betatest',
-        'releasetest'
-    ),
-    '3.6.14' => array (
-        'betatest',
-        'releasetest'
-    ),
-    '3.6.15' => array (
-        'betatest',
-        'releasetest'
-    ),
-    '3.6.16' => array (
-        'betatest',
-        'releasetest'
-    ),
-    '3.6.17' => array (
-        'betatest',
-        'releasetest'
-    ),
     '3.6.18' => array (
         'betatest',
         'releasetest'
