@@ -48,11 +48,7 @@ if ($mode_count > 1) {
 &do_express(\%form),          exit if $form{express};
 &do_rdf(\%form),              exit if $form{rdf};
 &do_static(\%form),           exit if $form{static};
-&do_flash(\%form),            exit if $form{flash};
 &do_panel(\%form),            exit if $form{panel};
-&do_hdml(\%form),             exit if $form{hdml};
-&do_vxml(\%form),             exit if $form{vxml};
-&do_wml(\%form),              exit if $form{wml};
 &do_json(\%form),             exit if $form{json};
 &do_json2(\%form),            exit if $form{json2};
 &do_status(\%form),           exit if $form{status};
