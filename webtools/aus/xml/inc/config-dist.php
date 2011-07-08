@@ -109,6 +109,7 @@ $productThrottling = array(
 // be throttled unless there is a global throttle enabled.
 $throttleExceptions = array(
     '3.6.18' => array (
+        'beta',
         'betatest',
         'releasetest'
     ),
