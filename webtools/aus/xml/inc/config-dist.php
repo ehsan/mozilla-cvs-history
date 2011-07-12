@@ -87,10 +87,7 @@ define('THROTTLE_LOGGING',false);
 // );
 $productThrottling = array(
      'Firefox' => array(
-         // Completely throttled at the request of release-drivers, currently
-         // pointing at 5.0
-         '3.6.18' => 0,
-         // Upcoming version of 3.6, whose MUs we want throttled out of the gate.
+         // Completely throttled MU to 5.0
          '3.6.19' => 0
      )
 );
@@ -108,11 +105,6 @@ $productThrottling = array(
 // In this example, 3.0.11 with channel names that match these channels will not
 // be throttled unless there is a global throttle enabled.
 $throttleExceptions = array(
-    '3.6.18' => array (
-        'beta',
-        'betatest',
-        'releasetest'
-    ),
     '3.6.19' => array (
         'betatest',
         'releasetest'
