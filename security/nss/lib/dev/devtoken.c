@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.55 $ $Date: 2011/04/13 00:10:25 $";
+static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.56 $ $Date: 2011/07/12 21:29:20 $";
 #endif /* DEBUG */
 
 #include "pkcs11.h"
@@ -1172,9 +1172,7 @@ nssToken_FindTrustForCertificate (
     }
 
     NSS_CK_TEMPLATE_START(tobj_template, attr, tobj_size);
-    if (searchType == nssTokenSearchType_SessionOnly) {
-	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_false);
-    } else if (searchType == nssTokenSearchType_TokenOnly) {
+    if (searchType == nssTokenSearchType_TokenOnly) {
 	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
     }
     NSS_CK_SET_ATTRIBUTE_VAR( attr, CKA_CLASS,          tobjc);
