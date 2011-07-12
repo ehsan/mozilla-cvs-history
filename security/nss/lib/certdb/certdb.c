@@ -39,7 +39,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.112 2011/04/13 00:10:23 rrelyea%redhat.com Exp $
+ * $Id: certdb.c,v 1.113 2011/07/12 12:38:40 kaie%kuix.de Exp $
  */
 
 #include "nssilock.h"
@@ -2550,7 +2550,17 @@ CERT_ImportCerts(CERTCertDBHandle *certdb, SECCertUsage usage,
 	                                            NULL,
 	                                            PR_FALSE,
 	                                            PR_TRUE);
-	    if (certs[fcerts]) fcerts++;
+	    if (certs[fcerts]) {
+		SECItem subjKeyID = {siBuffer, NULL, 0};
+		if (CERT_FindSubjectKeyIDExtension(certs[fcerts],
+		                                   &subjKeyID) == SECSuccess) {
+		    if (subjKeyID.data) {
+			cert_AddSubjectKeyIDMapping(&subjKeyID, certs[fcerts]);
+		    }
+		    SECITEM_FreeItem(&subjKeyID, PR_FALSE);
+		}
+		fcerts++;
+	    }
 	}
 
 	if ( keepCerts ) {
