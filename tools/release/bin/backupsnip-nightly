@@ -27,7 +27,7 @@ let backupDirCount=$backupDirCount+1
 backupDirName=$currentDate-nightly-$backupDirCount
 
 pushd $LIVE_SNIPPET_DIR > /dev/null
-$TAR cfj $BACKUP_DIR/$backupDirName.tar.bz2 . --exclude 'Firefox/1.5*' --exclude 'Firefox/2.0*' --exclude 'Thunderbird/1.5*'
+$TAR cfj $BACKUP_DIR/$backupDirName.tar.bz2 . --exclude 'Firefox/1.5*' --exclude 'Firefox/2.0*' --exclude 'Firefox/3.0*' --exclude 'Thunderbird/1.5*'
 popd > /dev/null
 
 # push the file over to Phoenix to aid checking all is in sync there
