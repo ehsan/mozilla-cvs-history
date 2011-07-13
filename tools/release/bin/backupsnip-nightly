@@ -18,7 +18,7 @@ currentDate=`$DATE +%Y%m%d`
 ## directories we may have pushed today... kinda lame, but it works.
 
 pushd $BACKUP_DIR > /dev/null
-backupDirCount=`echo $currentDate-nightly-?-* | $GREP -v \? | $WC -w`
+backupDirCount=`echo $currentDate-nightly-?.* | $GREP -v \? | $WC -w`
 popd > /dev/null
 
 ## Increment the count by one, for the new snippet backup directory we're
