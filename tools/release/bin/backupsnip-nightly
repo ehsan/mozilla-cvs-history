@@ -26,6 +26,8 @@ popd > /dev/null
 let backupDirCount=$backupDirCount+1
 backupDirName=$currentDate-nightly-$backupDirCount
 
+# Make the backup. This takes forever, thanks NFS!
+# don't forget to update check-sync if you extend the exclude list
 pushd $LIVE_SNIPPET_DIR > /dev/null
 $TAR cfj $BACKUP_DIR/$backupDirName.tar.bz2 . --exclude 'Firefox/1.5*' --exclude 'Firefox/2.0*' --exclude 'Firefox/3.0*' --exclude 'Thunderbird/1.5*'
 popd > /dev/null

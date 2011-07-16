@@ -47,6 +47,9 @@ if [[ -n $unknownOutput ]]; then
   exit 1
 fi
 
+# extract the Firefox 3.0 snippets, any errors here can be shown directly on the output
+$TAR xfjp $BACKUP_DIR/20110712-FX30-FINAL-BACKUP.tar.bz2
+
 # extract the 'active' snippets, any errors here can be shown directly on the output
 $TAR xfjp $latestBackup
 
