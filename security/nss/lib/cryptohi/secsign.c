@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: secsign.c,v 1.25 2011/03/29 15:12:45 wtc%google.com Exp $ */
+/* $Id: secsign.c,v 1.26 2011/07/24 13:48:12 wtc%google.com Exp $ */
 
 #include <stdio.h>
 #include "cryptohi.h"
@@ -83,8 +83,7 @@ SGN_NewContext(SECOidTag alg, SECKEYPrivateKey *key)
 
     /* verify our key type */
     if (key->keyType != keyType &&
-	!((key->keyType == dsaKey) && (keyType == fortezzaKey)) &&
-	!((key->keyType == fortezzaKey) && (keyType == dsaKey)) ) {
+	!((key->keyType == dsaKey) && (keyType == fortezzaKey)) ) {
 	PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
 	return 0;
     }
