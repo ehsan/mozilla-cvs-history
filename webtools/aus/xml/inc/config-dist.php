@@ -133,7 +133,6 @@ $productBranchVersions = array(
     'Firefox'     =>  array(
         '3.5*'    => 'mozilla-1.9.1',
         '3.6*'    => 'mozilla-1.9.2',
-        '4.0.*'   => 'mozilla-2.0',
         '*'       => array(
            'nightly'                 => 'mozilla-central',
            'nightly-tracemonkey'     => 'tracemonkey',
