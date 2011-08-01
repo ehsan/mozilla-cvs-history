@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nssinit.c,v 1.106 2010/04/03 20:06:00 nelson%bolyard.com Exp $ */
+/* $Id: nssinit.c,v 1.107 2011/08/01 07:08:08 kaie%kuix.de Exp $ */
 
 #include <ctype.h>
 #include <string.h>
@@ -1203,4 +1203,10 @@ NSS_VersionCheck(const char *importedVersion)
         return PR_FALSE;
     }
     return PR_TRUE;
+}
+
+const char *
+NSS_GetVersion(void)
+{
+    return NSS_VERSION;
 }
