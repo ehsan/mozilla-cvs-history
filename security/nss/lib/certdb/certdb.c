@@ -39,7 +39,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.115 2011/07/28 21:38:14 wtc%google.com Exp $
+ * $Id: certdb.c,v 1.116 2011/08/05 01:13:14 wtc%google.com Exp $
  */
 
 #include "nssilock.h"
@@ -1188,8 +1188,9 @@ CERT_KeyUsageAndTypeForCertUsage(SECCertUsage usage,
 	switch ( usage ) {
 	  case certUsageSSLClient:
 	    /* 
-	     * Only accept KU_DIGITAL_SIGNATURE.
-	     * KU_NON_REPUDIATION cannot be used for SSL client auth.
+	     * RFC 5280 lists digitalSignature and keyAgreement for
+	     * id-kp-clientAuth.  NSS does not support the *_fixed_dh and
+	     * *_fixed_ecdh client certificate types.
 	     */
 	    requiredKeyUsage = KU_DIGITAL_SIGNATURE;
 	    requiredCertType = NS_CERT_TYPE_SSL_CLIENT;
@@ -1216,7 +1217,8 @@ CERT_KeyUsageAndTypeForCertUsage(SECCertUsage usage,
 	    requiredCertType = NS_CERT_TYPE_EMAIL;
 	    break;
 	  case certUsageObjectSigner:
-	    requiredKeyUsage = KU_DIGITAL_SIGNATURE_OR_NON_REPUDIATION;
+	    /* RFC 5280 lists only digitalSignature for id-kp-codeSigning. */
+	    requiredKeyUsage = KU_DIGITAL_SIGNATURE;
 	    requiredCertType = NS_CERT_TYPE_OBJECT_SIGNING;
 	    break;
 	  case certUsageStatusResponder:
