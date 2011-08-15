@@ -45,8 +45,8 @@ VPATH		= @srcdir@
 include $(MOD_DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/config.mk
 
-EXPORT_HEADERS = prgc.h
-HEADERS = $(EXPORT_HEADERS) gcint.h
+EXPORT_HEADERS = $(srcdir)/prgc.h
+HEADERS = $(EXPORT_HEADERS) $(srcdir)/gcint.h
 
 RELEASE_HEADERS = $(EXPORT_HEADERS)
 RELEASE_HEADERS_DEST = $(RELEASE_INCLUDE_DIR)

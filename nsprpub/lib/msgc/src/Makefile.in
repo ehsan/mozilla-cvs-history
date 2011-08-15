@@ -46,7 +46,7 @@ include $(MOD_DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-INCLUDES = -I$(dist_includedir) -I../include
+INCLUDES = -I$(dist_includedir) -I$(srcdir)/../include
 
 CSRCS = prgcapi.c prmsgc.c
 
