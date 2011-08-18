@@ -94,7 +94,7 @@
  * if you pass an IPv4-mapped IPv6 address to it.
  */
 #define _PR_GHBA_DISALLOW_V4MAPPED
-#ifdef XP_MACOSX
+#ifdef __APPLE__
 #if !defined(MAC_OS_X_VERSION_10_3) || \
     MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_3
 /*
@@ -108,7 +108,7 @@
 /* Mac OS X 10.2 has inet_ntop and inet_pton. */
 #define _PR_HAVE_INET_NTOP
 #endif /* DT >= 10.2 */
-#endif /* XP_MACOSX */
+#endif /* __APPLE__ */
 #define _PR_IPV6_V6ONLY_PROBE
 /* The IPV6_V6ONLY socket option is not defined on Mac OS X 10.1. */
 #ifndef IPV6_V6ONLY
