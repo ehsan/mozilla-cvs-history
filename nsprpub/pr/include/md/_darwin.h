@@ -40,6 +40,7 @@
 
 #include "prthread.h"
 
+#include <libkern/OSAtomic.h>
 #include <sys/syscall.h>
 
 #ifdef __APPLE__
@@ -57,6 +58,8 @@
 #define _PR_SI_ARCHITECTURE "ppc"
 #elif defined(__arm__)
 #define _PR_SI_ARCHITECTURE "arm"
+#else
+#error "Unknown CPU architecture"
 #endif
 #define PR_DLL_SUFFIX		".dylib"
 
@@ -150,6 +153,22 @@ extern PRInt32 _PR_Darwin_x86_64_AtomicSet(PRInt32 *val, PRInt32 newval);
 extern PRInt32 _PR_Darwin_x86_64_AtomicAdd(PRInt32 *ptr, PRInt32 val);
 #define _MD_ATOMIC_ADD(ptr, val)    _PR_Darwin_x86_64_AtomicAdd(ptr, val)
 #endif /* __x86_64__ */
+
+#ifdef __arm__
+#define _PR_HAVE_ATOMIC_OPS
+#define _MD_INIT_ATOMIC()
+#define _MD_ATOMIC_INCREMENT(val)   OSAtomicIncrement32(val)
+#define _MD_ATOMIC_DECREMENT(val)   OSAtomicDecrement32(val)
+static inline PRInt32 _MD_ATOMIC_SET(PRInt32 *val, PRInt32 newval)
+{
+    PRInt32 oldval;
+    do {
+        oldval = *val;
+    } while (!OSAtomicCompareAndSwap32(oldval, newval, val));
+    return oldval;
+}
+#define _MD_ATOMIC_ADD(ptr, val)    OSAtomicAdd32(val, ptr)
+#endif /* __arm__ */
 
 #define USE_SETJMP
 
