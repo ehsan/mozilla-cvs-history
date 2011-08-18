@@ -569,11 +569,20 @@ if test "$target" != "$host"; then
         dnl versions of PPC OS X 10.4 aren't fat, so these target compiler
         dnl checks will fail.  Fake a working SDK in that case.
         _SAVE_CFLAGS=$CFLAGS 
-        _SAVE_CXXFLAGS=$CXXLAGS
+        _SAVE_CXXFLAGS=$CXXFLAGS
         CFLAGS="-isysroot /Developer/SDKs/MacOSX10.4u.sdk $CFLAGS"
         CXXFLAGS="-isysroot /Developer/SDKs/MacOSX10.4u.sdk $CXXFLAGS"
-        ;;        
-    esac            
+        ;;
+      *:arm*-apple-darwin*)
+        dnl The arm compiler doesn't appear to know about its root by default,
+        dnl so explicitly pass it one here. Later on we'll put this in CFLAGS
+        dnl anyway.
+        _SAVE_CFLAGS=$CFLAGS
+        _SAVE_CXXFLAGS=$CXXFLAGS
+        CFLAGS="-isysroot $MACOS_SDK_DIR $CFLAGS"
+        CXXFLAGS="-isysroot $MACOS_SDK_DIR $CXXFLAGS"
+        ;;
+    esac
 
     AC_CHECK_PROGS(CC, $CC "${target_alias}-gcc" "${target}-gcc", echo)
     unset ac_cv_prog_CC
@@ -585,7 +594,7 @@ if test "$target" != "$host"; then
     fi
 
     case "$build:$target" in
-      powerpc-apple-darwin8*:i?86-apple-darwin*)
+      powerpc-apple-darwin8*:i?86-apple-darwin*|*:arm*-apple-darwin*)
         dnl Revert the changes made above.  From this point on, the target
         dnl compiler will never be used without applying the SDK to CFLAGS
         dnl (see --with-macos-sdk below).
@@ -1334,6 +1343,9 @@ case "$target" in
     AS='$(CC) -x assembler-with-cpp'
     CFLAGS="$CFLAGS -Wall -fno-common"
     case "${target_cpu}" in
+        arm*)
+            CPU_ARCH=arm
+            ;;
         i*86*)
             if test -n "$USE_64"; then
                 CPU_ARCH=x86_64
@@ -1348,6 +1360,7 @@ case "$target" in
     if test "`echo $CC | grep -c '\-arch '`" = "0"; then
         CC="$CC -arch $CPU_ARCH"
     fi
+    AC_CHECK_HEADER(crt_externs.h)
     DSO_CFLAGS=-fPIC
     DSO_LDOPTS='-dynamiclib -compatibility_version 1 -current_version 1 -all_load -install_name @executable_path/$@ -headerpad_max_install_names'
     _OPTIMIZE_FLAGS=-O2
