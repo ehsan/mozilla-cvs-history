@@ -42,7 +42,7 @@
  * you.  If that has a problem, then just move out what you need, changing
  * its name as appropriate!
  *
- * $Id: cmslocal.h,v 1.6 2011/01/28 23:03:59 rrelyea%redhat.com Exp $
+ * $Id: cmslocal.h,v 1.7 2011/08/21 01:14:18 wtc%google.com Exp $
  */
 
 #ifndef _CMSLOCAL_H_
@@ -198,14 +198,6 @@ NSS_CMSUtil_EncryptSymKey_RSAPubKey(PLArenaPool *poolp,
  */
 extern PK11SymKey *
 NSS_CMSUtil_DecryptSymKey_RSA(SECKEYPrivateKey *privkey, SECItem *encKey, SECOidTag bulkalgtag);
-
-extern SECStatus
-NSS_CMSUtil_EncryptSymKey_MISSI(PLArenaPool *poolp, CERTCertificate *cert, PK11SymKey *key,
-			SECOidTag symalgtag, SECItem *encKey, SECItem **pparams, void *pwfn_arg);
-
-extern PK11SymKey *
-NSS_CMSUtil_DecryptSymKey_MISSI(SECKEYPrivateKey *privkey, SECItem *encKey,
-			SECAlgorithmID *keyEncAlg, SECOidTag bulkalgtag, void *pwfn_arg);
 
 extern SECStatus
 NSS_CMSUtil_EncryptSymKey_ESDH(PLArenaPool *poolp, CERTCertificate *cert, PK11SymKey *key,
