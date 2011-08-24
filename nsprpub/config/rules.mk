@@ -381,7 +381,13 @@ endif	# MOZ_PROFILE_USE
 ifdef MOZ_PROFILE_GENERATE
 # Clean up profiling data during PROFILE_GENERATE phase
 export::
-	-$(RM) *.pgd *.gcda
+ifeq ($(OS_ARCH)_$(NS_USE_GCC), WINNT_)
+	$(foreach pgd,$(wildcard *.pgd),pgomgr -clear $(pgd);)
+else
+ifdef NS_USE_GCC
+	-$(RM) *.gcda
+endif
+endif
 endif
 
 ################################################################################
