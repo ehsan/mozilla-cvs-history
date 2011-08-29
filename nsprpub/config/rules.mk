@@ -166,6 +166,7 @@ endif
 
 ALL_TRASH		= $(TARGETS) $(OBJS) $(RES) $(filter-out . .., $(OBJDIR)) LOGS TAGS $(GARBAGE) \
 			  $(NOSUCHFILE) \
+			  $(OBJS:.$(OBJ_SUFFIX)=.i_o) \
 			  so_locations
 
 ifndef RELEASE_LIBS_DEST
@@ -375,6 +376,15 @@ $(PROGRAM): pgo.relink
 
 endif	# WINNT && !GCC
 endif	# MOZ_PROFILE_USE
+
+ifneq (,$(MOZ_PROFILE_GENERATE)$(MOZ_PROFILE_USE))
+ifdef NS_USE_GCC
+# Force rebuilding libraries and programs in both passes because each
+# pass uses different object files.
+$(PROGRAM) $(SHARED_LIBRARY) $(LIBRARY): FORCE
+.PHONY: FORCE
+endif
+endif
 
 ################################################################################
 
