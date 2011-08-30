@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nssinit.c,v 1.109 2011/08/25 22:27:48 rrelyea%redhat.com Exp $ */
+/* $Id: nssinit.c,v 1.110 2011/08/30 20:37:59 wtc%google.com Exp $ */
 
 #include <ctype.h>
 #include <string.h>
@@ -1154,6 +1154,7 @@ NSS_Shutdown(void)
     }
     rv = nss_Shutdown();
     PZ_Unlock(nssInitLock);
+    return rv;
 }
 
 /*
