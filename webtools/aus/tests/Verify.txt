@@ -109,13 +109,8 @@
  7 no update is served for Windows 95
  8 no update is served for Windows 98
  9 no update is served for Windows ME
- 0 no update is served for Windows NT 4
- 1 no update is served for OS X 10.3
- 2 no update is served for Linux with GTK < 2.10
- 3 major update is served for Linux with GTK > 2.20
- 4 minor update is served for OS X 10.3
- 5 minor update is served for Linux with GTK < 2.10
- 6 minor update is served for Windows 98
+ 0 no update is served for OS X 10.3
+ 1  no update is served for Linux with GTK < 2.10
 |aus.Verify|${host}|${updateVersion}|${product}|${version}|${platform}|${locale}|
 |build|channel|complete|partial|osVersion|hasUpdate?|isMinorUpdate?|isMajorUpdate?|hasComplete?|hasPartial?|isValidXml?|
 |9000000001|channel|complete|partial|Windows_NT 5.0|true|false|true|true|true|true|
@@ -127,7 +122,6 @@
 |9000000001|channel|complete|partial|Windows_95|false|false|false|false|false|true|
 |9000000001|channel|complete|partial|Windows_98|false|false|false|false|false|true|
 |9000000001|channel|complete|partial|Windows_98 4.90|false|false|false|false|false|true|
-|9000000001|channel|complete|partial|Windows_NT 4|false|false|false|false|false|true|
 |9000000001|channel|complete|partial|Darwin 7.0|false|false|false|false|false|true|
 |9000000001|channel|complete|partial|Linux 2.6.21.5-smp (GTK 2.8.20)|false|false|false|false|false|true|
 |9000000001|channel|complete|partial|Linux 2.6.21.5-smp (GTK 2.20.20)|true|false|true|true|true|true|

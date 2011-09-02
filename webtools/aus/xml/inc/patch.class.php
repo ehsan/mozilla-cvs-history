@@ -377,15 +377,11 @@ class Patch extends AUS_Object {
      * @return boolean
      */
     function isMatchingVersion($version,$versionPattern) {
-        // 1.0b3+ style, everything from 1.0b3 upwards
-        if (substr($versionPattern, -1) === '+' &&  
-            version_compare($version, $versionPattern, '>=')) {
-            return true;
-        // '1.0b3' (plain) style, only that version
-        } elseif (strpos($versionPattern, '*') === false &&
-                  $versionPattern == $version) {
-            return true;
-        // * wildcard style, eg '1.0*' is anything starting with 1.0 
+        // No need to create a regular expression if there's no wildcard
+        if (strpos ($versionPattern, '*') === false) {
+            if ($versionPattern == $version) {
+                return true;
+            }
         } elseif (preg_match('/^'. str_replace('\\*', '.*', preg_quote($versionPattern, '/')) .'$/', $version)) {
              return true;
         } 
@@ -542,15 +538,20 @@ class Patch extends AUS_Object {
      *
      * @param string updateType type of update (major|minor)
      * @param string product name of the product
-     * @param string version of the update found
+     * @param string version product version
      * @param string os OS_VERSION
      * @param array unsupportedPlatforms - array of unsupported platforms
      * @return boolean
      */
-    function isSupported($updateType, $product, $newVersion, $os, $unsupportedPlatforms) {
+    function isSupported($updateType, $product, $version, $os, $unsupportedPlatforms) {
+
+        // If it's not a major update, we're not blocking platforms.
+        if ($updateType == 'minor' || empty($unsupportedPlatforms[$product])) {
+            return true;
+        }
 
         foreach ($unsupportedPlatforms[$product] as $versionPattern => $badPlatforms) {
-            if ($this->isMatchingVersion($newVersion,$versionPattern)) {
+            if ($version == $versionPattern || preg_match('/^'. str_replace('\\*', '.*', preg_quote($versionPattern, '/')) .'$/', $version)) {
                 foreach ($badPlatforms as $badPlatform) {
                     if (strpos($os, $badPlatform) !== false) {
                         return false;

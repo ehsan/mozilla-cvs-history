@@ -185,12 +185,13 @@ $memcache_config = array(
 
 /*
  * Array that defines which %OS_VERSION% values are no longer supported.
- * Applies to all updates and uses the version of the update to be 
- * served to determine blocking (bug 666735). Previously only applied to
- * major updates, and used the version from the incoming URI (bug 418129)
- * Use of this array is in inc/patch.class.php.  
+ * For incoming URIs containing these as their platformVersion, no updates
+ * will be offered.  As of bug 418129, this has to be branch-specific and aware
+ * of whether or not an update is major.  Use of this array is in
+ * inc/patch.class.php.  
  *
- * The Array format is considered to be:
+ * Array format has changed, and is considered to be:
+
  * array(
  *      $Product => array(
  *          $Version => array(
@@ -201,18 +202,14 @@ $memcache_config = array(
  *
  * $Product is the product name (Firefox, Thunderbird, etc. - %PRODUCT%).
  *
- * $Version is a string which identifies some set of releases
- *   '1.0.2'  - an exact version
- *   '1.0*'   - all versions starting '1.0' (via a regexp)
- *   '1.0b3+' - all versions from 1.0b3 onwards (via php's version_compare)
+ * $Version is the client version in the URL (%VERSION%).
  *
  * $OS_VERSION is used in a string match (existence anywhere in passed
  * %OS_VERSION% triggers blocklisting of that OS).
  */
 $unsupportedPlatforms = array(
-    'Firefox'     =>  array(
-        // Mac 10.2/10.3, Win < 2k, GTK < 2.10 - bug 418129
-        '3.0b1+' => array(
+    'Firefox'     =>  array( // Change to Synthetic for tests
+        '2.0*' => array( // Change to 1.0* for tests
             'Darwin 6',
             'Darwin 7',
             'Windows_95',
@@ -229,27 +226,47 @@ $unsupportedPlatforms = array(
             'GTK 2.8.',
             'GTK 2.9.'
         ),
-        // Mac 10.4 - bug 640044
-        // See index.php for PPC
-        '4.0b1+' => array(
-            'Darwin 8'
+        '3.5*' => array(
+            'Darwin 6',
+            'Darwin 7',
+            'Darwin 8',
+            'Windows_95',
+            'Windows_98',
+            'Windows_NT 4',
+            'GTK 2.0.',
+            'GTK 2.1.',
+            'GTK 2.2.',
+            'GTK 2.3.',
+            'GTK 2.4.',
+            'GTK 2.5.',
+            'GTK 2.6.',
+            'GTK 2.7.',
+            'GTK 2.8.',
+            'GTK 2.9.',
+            '.el5 '
         ),
-        // RHEL5 has too old libstdc++ - bug 655917
-        // Fx6 will ship with --enable-stdcxx-compat
-        '4.0*' => array(
-            '.el5'
-        ),
-        '5.0*' => array(
-            '.el5'
-        ),
-        // Too old freetype - bug 666735
-        '7.0a2+' => array(
-            'GTK 2.10.'
+        '3.6*' => array(
+            'Darwin 6',
+            'Darwin 7',
+            'Darwin 8',
+            'Windows_95',
+            'Windows_98',
+            'Windows_NT 4',
+            'GTK 2.0.',
+            'GTK 2.1.',
+            'GTK 2.2.',
+            'GTK 2.3.',
+            'GTK 2.4.',
+            'GTK 2.5.',
+            'GTK 2.6.',
+            'GTK 2.7.',
+            'GTK 2.8.',
+            'GTK 2.9.',
+            '.el5 '
         )
     ),
     'Thunderbird'     =>  array(
-        // Mac 10.2/10.3, Win < 2k, GTK < 2.10 - bug 418129
-        '3.0a1+' => array(
+        '2.0*' => array(
             'Darwin 6',
             'Darwin 7',
             'Windows_95',

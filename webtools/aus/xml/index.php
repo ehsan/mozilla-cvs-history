@@ -208,7 +208,7 @@ if ($_cached_xml) {
 
             // If our complete patch exists and is valid, set the patch line.
             if ($completePatch->findPatch($clean['product'],$clean['platform'],$clean['locale'],$clean['version'],$clean['build'],$channel) && $completePatch->isPatch()) {
-
+                
                 // Set our patchLine.
                 $xml->setPatchLine($completePatch);
 
@@ -250,7 +250,7 @@ if ($_cached_xml) {
 
             }
             // If we have valid patchLine(s), set up our output.
-            if ($xml->hasPatchLine() && $completePatch->isSupported($completePatch->updateType, $clean['product'], $completePatch->updateVersion, $clean['platformVersion'], $unsupportedPlatforms)) {
+            if ($xml->hasPatchLine() && $completePatch->isSupported($completePatch->updateType, $clean['product'], $clean['version'], $clean['platformVersion'], $unsupportedPlatforms)) {
                 $xml->startUpdate($update);
                 $xml->drawPatchLines();
                 $xml->endUpdate();
