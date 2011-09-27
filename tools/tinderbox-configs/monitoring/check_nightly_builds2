@@ -13,7 +13,7 @@ VERSION_URL=$(grep "VERSION_URL" "$CONFIG_FILE" | tail -n 1 | sed 's/.*VERSION_U
 SHIPPED_LOCALES_URL=$(grep "SHIPPED_LOCALES_URL" "$CONFIG_FILE" | tail -n 1 | sed 's/.*SHIPPED_LOCALES_URL[[:space:]]*//')
 
 if [ ! -z $VERSION_URL ]; then
-    VER=$(wget -q --timeout=7 -O- "$VERSION_URL" | grep -P '^\d\.\d.*' | tail -n 1)
+    VER=$(wget -q --timeout=7 -O- "$VERSION_URL" | grep -P '^\d+\.\d+.*' | tail -n 1)
     if [ -z $VER ]; then
         echo "Cannot parse version information using '$VERSION_URL'"
         exit 1
