@@ -191,3 +191,10 @@
 |aus.Verify|${host}|3|${product}|${version}|${platform}|${locale}|${osVersion}|
 |build|channel|complete|partial|newchannel|hasUpdate?|hasComplete?|hasPartial?|isValidXml?|
 |1000000002|channel|complete009|partial009|channel|true|true|false|true|
+
+!1 Snippet schema v2 attributes (bug 459972)
+ 2 newchannel with release works
+|aus.Verify|${host}|3|${product}|${version}|${platform}|${locale}|${osVersion}|
+|build|channel|complete|partial|hasUpdate?|hasComplete?|hasPartial?|isValidXml?|hasBillboardURL?|isShowPrompt?|isShowNeverForVersion?|isShowSurvey?|hasActions?|hasOpenURL?|hasNotificationURL?|hasAlertURL?|
+|2000000001|channel|complete002|partial002|true|true|true|true|true|true|false|true|true|true|true|true|
+|2000000002|channel|complete002|partial002|true|true|true|true|true|false|true|true|true|true|true|true|

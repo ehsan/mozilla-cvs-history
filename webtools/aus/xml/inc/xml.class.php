@@ -63,12 +63,59 @@ class Xml extends AUS_Object {
      * @param object $update
      */
     function startUpdate($update) {
+        $snippetSchemaVersion = htmlentities($update->snippetSchemaVersion);
         $type = htmlentities($update->type);
-        $version = htmlentities($update->version);
-        $extensionVersion = htmlentities($update->extensionVersion);
-        $build = htmlentities($update->build);
+
+        if ($snippetSchemaVersion == SNIPPET_SCHEMA_VER_2) {
+            $displayVersion = isset($update->displayVersion) ? htmlentities($update->displayVersion) : '';
+            $appVersion = isset($update->appVersion) ? htmlentities($update->appVersion) : '';
+            $platformVersion = isset($update->platformVersion) ? htmlentities($update->platformVersion) : '';
+        } else {
+            $version = isset($update->version) ? htmlentities($update->version) : '';
+            $extensionVersion = isset($update->extensionVersion) ? htmlentities($update->extensionVersion) : '';
+        }
+
+        $build = isset($update->build) ? htmlentities($update->build) : '';
         $details = htmlentities($update->details);
         $license = htmlentities($update->license);
+        $billboard = isset($update->billboard) ? htmlentities($update->billboard) : '';
+        $showPrompt = isset($update->showPrompt) ? htmlentities($update->showPrompt) : '';
+        $showNeverForVersion = isset($update->showNeverForVersion) ? htmlentities($update->showNeverForVersion) : '';
+        $showSurvey = isset($update->showSurvey) ? htmlentities($update->showSurvey) : '';
+        $actions = isset($update->actions) ? htmlentities($update->actions) : '';
+        $open = isset($update->open) ? htmlentities($update->open) : '';
+        $notification = isset($update->notification) ? htmlentities($update->notification) : '';
+        $alert = isset($update->alert) ? htmlentities($update->alert) : '';
+
+        $version_xml = '';
+        if (!empty($version)) {
+            $version_xml = " version=\"{$version}\"";
+        }
+
+        $extensionVersion_xml= '';
+        if (!empty($extensionVersion)) {
+            $extensionVersion_xml = " extensionVersion=\"{$extensionVersion}\"";
+        }
+
+        $displayVersion_xml = '';
+        if (!empty($displayVersion)) {
+            $displayVersion_xml = " displayVersion=\"{$displayVersion}\"";
+        }
+
+        $appVersion_xml = '';
+        if (!empty($appVersion)) {
+            $appVersion_xml = " appVersion=\"{$appVersion}\"";
+        }
+
+        $platformVersion_xml = '';
+        if (!empty($platformVersion)) {
+            $platformVersion_xml = " platformVersion=\"{$platformVersion}\"";
+        }
+
+        $build_xml = '';
+        if (!empty($build)) {
+            $build_xml = " buildID=\"{$build}\"";
+        }
 
         $details_xml = '';
         if (!empty($details)) {
@@ -80,9 +127,49 @@ class Xml extends AUS_Object {
             $license_xml = " licenseURL=\"{$license}\"";
         }
 
+        $billboard_xml = '';
+        if (!empty($billboard)) {
+            $billboard_xml = " billboardURL=\"{$billboard}\"";
+        }
+
+        $showPrompt_xml = '';
+        if (!empty($showPrompt)) {
+            $showPrompt_xml = " showPrompt=\"{$showPrompt}\"";
+        }
+
+        $showNeverForVersion_xml = '';
+        if (!empty($showNeverForVersion)) {
+            $showNeverForVersion_xml = " showNeverForVersion=\"{$showNeverForVersion}\"";
+        }
+
+        $showSurvey_xml = '';
+        if (!empty($showSurvey)) {
+            $showSurvey_xml = " showSurvey=\"{$showSurvey}\"";
+        }
+
+        $actions_xml = '';
+        if (!empty($actions)) {
+            $actions_xml = " actions=\"{$actions}\"";
+        }
+
+        $open_xml = '';
+        if (!empty($open)) {
+            $open_xml = " openURL=\"{$open}\"";
+        }
+
+        $notification_xml = '';
+        if (!empty($notification)) {
+            $notification_xml = " notificationURL=\"{$notification}\"";
+        }
+
+        $alert_xml = '';
+        if (!empty($alert)) {
+            $alert_xml = " alertURL=\"{$alert}\"";
+        }
+
         $this->xmlOutput .= <<<startUpdate
 
-    <update type="{$type}" version="{$version}" extensionVersion="{$extensionVersion}" buildID="{$build}"{$details_xml}{$license_xml}>
+    <update type="{$type}"{$version_xml}{$extensionVersion_xml}{$displayVersion_xml}{$appVersion_xml}{$platformVersion_xml}{$build_xml}{$details_xml}{$license_xml}{$billboard_xml}{$showPrompt_xml}{$showNeverForVersion_xml}{$showSurvey_xml}{$actions_xml}{$open_xml}{$notification_xml}{$alert_xml}>
 startUpdate;
 
         /**

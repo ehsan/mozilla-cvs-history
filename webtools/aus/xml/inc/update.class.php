@@ -49,6 +49,17 @@ class Update extends AUS_Object {
     var $build;
     var $details;
     var $license;
+    var $billboard;
+    var $showPrompt;
+    var $showNeverForVersion;
+    var $showSurvey;
+    var $actions;
+    var $open;
+    var $notification;
+    var $alert;
+    var $displayVersion;
+    var $appVersion;
+    var $platformVersion;
 
     /**
      * Default constructor.
@@ -107,6 +118,101 @@ class Update extends AUS_Object {
         return $this->license = $license;
      }
 
+     /**
+      * Set the billboard URL.
+      * @param string $billboard
+      */
+     function setBillboard($billboard) {
+        return $this->billboard = $billboard;
+     }
+
+     /**
+      * Set showPrompt.
+      * @param string $showPrompt
+      */
+     function setShowPrompt($showPrompt) {
+        return $this->showPrompt = $showPrompt;
+     }
+
+     /**
+      * Set showNeverForVersion.
+      * @param string $showNeverForVersion
+      */
+     function setShowNeverForVersion($showNeverForVersion) {
+        return $this->showNeverForVersion = $showNeverForVersion;
+     }
+
+     /**
+      * Set showSurvey.
+      * @param string $showSurvey
+      */
+     function setShowSurvey($showSurvey) {
+        return $this->showSurvey = $showSurvey;
+     }
+
+     /**
+      * Set actions.
+      * @param string $actions
+      */
+     function setActions($actions) {
+        return $this->actions = $actions;
+     }
+
+     /**
+      * Set the open URL.
+      * @param string $open
+      */
+     function setOpen($open) {
+        return $this->open = $open;
+     }
+
+     /**
+      * Set the notification URL.
+      * @param string $notification
+      */
+     function setNotification($notification) {
+        return $this->notification = $notification;
+     }
+
+     /**
+      * Set the alert URL.
+      * @param string $alert
+      */
+     function setAlert($alert) {
+        return $this->alert = $alert;
+     }
+
+     /**
+      * Set the displayVersion.
+      * @param string $displayVersion
+      */
+     function setDisplayVersion($displayVersion) {
+        return $this->displayVersion = $displayVersion;
+     }
+
+     /**
+      * Set the appVersion.
+      * @param string $appVersion
+      */
+     function setAppVersion($appVersion) {
+        return $this->appVersion = $appVersion;
+     }
+
+     /**
+      * Set the platformVersion.
+      * @param string $platformVersion
+      */
+     function setPlatformVersion($platformVersion) {
+        return $this->platformVersion = $platformVersion;
+     }
+
+     /**
+      * Set the snippet schema version.
+      * @param string $snippetSchemaVersion
+      */
+     function setSnippetSchemaVersion($snippetSchemaVersion) {
+        return $this->snippetSchemaVersion = $snippetSchemaVersion;
+     }
 
      /**
       * Get type.

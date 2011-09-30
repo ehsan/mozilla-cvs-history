@@ -38,7 +38,8 @@
 // ***** END LICENSE BLOCK *****
 
 define('DEFAULT_SNIPPET_SCHEMA_VER', 0);
-define('CURRENT_SNIPPET_SCHEMA_VER', 1);
+define('SNIPPET_SCHEMA_VER_1', 1);
+define('SNIPPET_SCHEMA_VER_2', 2);
 
 /**
  * AUS Patch class.
@@ -79,10 +80,35 @@ class Patch extends AUS_Object {
     var $updateVersion;
     var $updateExtensionVersion;
     var $licenseUrl;
+    var $billboardUrl;
+    var $showPrompt;
+    var $showNeverForVersion;
+    var $showSurvey;
+    var $actions;
+    var $open;
+    var $notification;
+    var $alert;
+    var $displayVersion;
+    var $appVersion;
+    var $platformVersion;
+    var $snippetSchemaVersion;
     
     // Do we have Update metadata information?
+    // FIXME hasUpdateInfo not used by snippet schema v2, needs refactoring
     var $hasUpdateInfo;
     var $hasDetailsUrl;
+    var $hasBillboardUrl;
+    var $hasShowPrompt;
+    var $hasShowNeverForVersion;
+    var $hasShowSurvey;
+    var $hasActions;
+    var $hasOpenUrl;
+    var $hasNotificationUrl;
+    var $hasAlertUrl;
+    var $hasDisplayVersion;
+    var $hasAppVersion;
+    var $hasPlatformVersion;
+    var $hasSnippetSchemaVersion;
 
     // Is this a channel-changing request?
     var $isChangingChannel;
@@ -98,6 +124,7 @@ class Patch extends AUS_Object {
         $this->setVar('isChangingChannel',false);
         $this->setVar('patchType',$type);
         $this->setVar('updateType','minor');
+        // FIXME hasUpdateInfo not used by snippet schema v2, needs refactoring
         $this->setVar('hasUpdateInfo',false);
         $this->setVar('hasDetailsUrl',false);
     }
@@ -149,6 +176,11 @@ class Patch extends AUS_Object {
             $snippetSchemaVersion = $matches[1];
         }
 
+        $this->setVar('snippetSchemaVersion',$snippetSchemaVersion,true);
+        if (isset($this->snippetSchemaVersion)) {
+            $this->setVar('hasSnippetSchemaVersion', true, true);
+        }
+
         /**
          * This is the "legacy" way of reading snippet files.  This will be phased out.
          */
@@ -166,6 +198,7 @@ class Patch extends AUS_Object {
             if ($this->isComplete() && isset($file[6]) && isset($file[7])) {
                 $this->setVar('updateVersion',$file[6],true);
                 $this->setVar('updateExtensionVersion',$file[7],true);
+                // FIXME hasUpdateInfo not used by snippet schema v2, needs refactoring
                 $this->setVar('hasUpdateInfo',true,true);
             }
             
@@ -185,7 +218,7 @@ class Patch extends AUS_Object {
          *      foo=bar
          *      bar=foo
          */
-        elseif (CURRENT_SNIPPET_SCHEMA_VER == $snippetSchemaVersion) {
+        elseif (SNIPPET_SCHEMA_VER_1 == $snippetSchemaVersion) {
 
             // For each line in the file, read the key=value pairing.
             //
@@ -204,11 +237,81 @@ class Patch extends AUS_Object {
                 if (isset($this->appv) && isset($this->extv)) {
                     $this->setVar('updateVersion', $this->appv, true);
                     $this->setVar('updateExtensionVersion', $this->extv, true);
+                    // FIXME hasUpdateInfo not used by snippet schema v2, needs refactoring
                     $this->setVar('hasUpdateInfo', true, true);
                 }
 
                 if (isset($this->detailsUrl)) {
                     $this->setVar('hasDetailsUrl', true, true);
+                }
+            }
+
+            $this->setVar('isPatch',true,true);
+            return true;
+        }
+        elseif (SNIPPET_SCHEMA_VER_2 == $snippetSchemaVersion) {
+
+            // For each line in the file, read the key=value pairing.
+            //
+            // If the pairing is matches our expected schema format, set them appropriately.
+            foreach ($file as $row) {
+                if (preg_match('/^(\w+)=(.+)$/', $row, $matches)) {
+                    $snippetKey = $matches[1];
+                    $snippetValue = $matches[2];
+                    $this->setVar($snippetKey, $snippetValue, true);
+                }
+            }
+
+            // Store information found only in complete snippets.
+            // This information is tied to the <update> element.
+            if ($this->isComplete()) {
+
+                if (isset($this->detailsUrl)) {
+                    $this->setVar('hasDetailsUrl', true, true);
+                }
+
+                if (isset($this->billboardURL)) {
+                    $this->setVar('hasBillboardUrl', true, true);
+                }
+
+                if (isset($this->showPrompt)) {
+                    $this->setVar('hasShowPrompt', true, true);
+                }
+
+                if (isset($this->showNeverForVersion)) {
+                    $this->setVar('hasShowNeverForVersion', true, true);
+                }
+
+                if (isset($this->showSurvey)) {
+                    $this->setVar('hasShowSurvey', true, true);
+                }
+
+                if (isset($this->actions)) {
+                    $this->setVar('hasActions', true, true);
+                }
+
+                if (isset($this->openURL)) {
+                    $this->setVar('hasOpenUrl', true, true);
+                }
+
+                if (isset($this->notificationURL)) {
+                    $this->setVar('hasNotificationUrl', true, true);
+                }
+
+                if (isset($this->alertURL)) {
+                    $this->setVar('hasAlertUrl', true, true);
+                }
+
+                if (isset($this->displayVersion)) {
+                    $this->setVar('hasDisplayVersion', true, true);
+                }
+
+                if (isset($this->appVersion)) {
+                    $this->setVar('hasAppVersion', true, true);
+                }
+
+                if (isset($this->platformVersion)) {
+                    $this->setVar('hasPlatformVersion', true, true);
                 }
             }
 
@@ -458,6 +561,91 @@ class Patch extends AUS_Object {
     }
 
     /**
+     * Determine whether or not this patch has a billboard URL.
+     */
+    function hasBillboardUrl() {
+       return $this->hasBillboardUrl;
+    }
+
+    /**
+     * Determine whether or not this patch has showPrompt set.
+     */
+    function hasShowPrompt() {
+       return $this->hasShowPrompt;
+    }
+
+    /**
+     * Determine whether or not this patch has showNeverForVersion set.
+     */
+    function hasShowNeverForVersion() {
+       return $this->hasShowNeverForVersion;
+    }
+
+    /**
+     * Determine whether or not this patch has showSurvey set.
+     */
+    function hasShowSurvey() {
+       return $this->hasShowSurvey;
+    }
+
+    /**
+     * Determine whether or not this patch has actions set.
+     */
+    function hasActions() {
+       return $this->hasActions;
+    }
+
+    /**
+     * Determine whether or not this patch has openUrl set.
+     */
+    function hasOpenUrl() {
+       return $this->hasOpenUrl;
+    }
+
+    /**
+     * Determine whether or not this patch has notificationUrl set.
+     */
+    function hasNotificationUrl() {
+       return $this->hasNotificationUrl;
+    }
+
+    /**
+     * Determine whether or not this patch has alertUrl set.
+     */
+    function hasAlertUrl() {
+       return $this->hasAlertUrl;
+    }
+
+    /**
+     * Determine whether or not this patch has displayVersion set.
+     */
+    function hasDisplayVersion() {
+       return $this->hasDisplayVersion;
+    }
+
+    /**
+     * Determine whether or not this patch has appVersion set.
+     */
+    function hasAppVersion() {
+       return $this->hasAppVersion;
+    }
+
+    /**
+     * Determine whether or not this patch has platformVersion set.
+     */
+    function hasPlatformVersion() {
+       return $this->hasPlatformVersion;
+    }
+
+    /**
+     * Determine whether or not this patch has snippetSchemaVersion set.
+     */
+    function hasSnippetSchemaVersion() {
+       return $this->hasSnippetSchemaVersion;
+    }
+
+    /**
+     * FIXME hasUpdateInfo not used by snippet schema v2, needs refactoring
      * Determine whether or not this patch has update information.
      * @TODO Make this a bit more graceful.
      */

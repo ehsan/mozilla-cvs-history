@@ -213,9 +213,12 @@ if ($_cached_xml) {
                 $xml->setPatchLine($completePatch);
 
                 // If available, pull update information from the build snippet.
+                // FIXME hasUpdateInfo not used by snippet schema v2, needs refactoring
                 if ($completePatch->hasUpdateInfo()) {
                     $update->setVersion($completePatch->updateVersion);
                     $update->setExtensionVersion($completePatch->updateExtensionVersion);
+                }
+                if (isset($completePatch->build)) {
                     $update->setBuild($completePatch->build);
                 }
 
@@ -232,6 +235,66 @@ if ($_cached_xml) {
                 // If we have a license URL, pass it along.
                 if ($completePatch->hasLicenseUrl()) {
                     $update->setLicense($completePatch->licenseUrl);
+                }
+
+                // If we have a billboard URL, pass it along.
+                if ($completePatch->hasBillboardUrl()) {
+                    $update->setBillboard($completePatch->billboardURL);
+                }
+
+                // If showPrompt is set, pass it along.
+                if ($completePatch->hasShowPrompt()) {
+                    $update->setShowPrompt($completePatch->showPrompt);
+                }
+
+                // If showNeverForVersion is set, pass it along.
+                if ($completePatch->hasShowNeverForVersion()) {
+                    $update->setShowNeverForVersion($completePatch->showNeverForVersion);
+                }
+
+                // If showSurvey is set, pass it along.
+                if ($completePatch->hasShowSurvey()) {
+                    $update->setShowSurvey($completePatch->showSurvey);
+                }
+
+                // If actions is set, pass it along.
+                if ($completePatch->hasActions()) {
+                    $update->setActions($completePatch->actions);
+                }
+
+                // If we have a open URL, pass it along.
+                if ($completePatch->hasOpenUrl()) {
+                    $update->setOpen($completePatch->openURL);
+                }
+
+                // If we have a notification URL, pass it along.
+                if ($completePatch->hasNotificationUrl()) {
+                    $update->setNotification($completePatch->notificationURL);
+                }
+
+                // If we have a alert URL, pass it along.
+                if ($completePatch->hasAlertUrl()) {
+                    $update->setAlert($completePatch->alertURL);
+                }
+
+                // If we have a display version, pass it along.
+                if ($completePatch->hasDisplayVersion()) {
+                    $update->setDisplayVersion($completePatch->displayVersion);
+                }
+
+                // If we have an app version, pass it along.
+                if ($completePatch->hasAppVersion()) {
+                    $update->setAppVersion($completePatch->appVersion);
+                }
+
+                // If we have a platform version, pass it along.
+                if ($completePatch->hasPlatformVersion()) {
+                    $update->setPlatformVersion($completePatch->platformVersion);
+                }
+
+                // If we have a snippet schema version, pass it along.
+                if ($completePatch->hasSnippetSchemaVersion()) {
+                    $update->setSnippetSchemaVersion($completePatch->snippetSchemaVersion);
                 }
             }
 

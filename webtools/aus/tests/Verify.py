@@ -42,7 +42,15 @@ class Verify(ColumnFixture):
                "isValidXml": "Boolean",
                "isMinorUpdate": "Boolean",
                "isMajorUpdate": "Boolean",
-               "hasForce": "Boolean"}
+               "hasForce": "Boolean",
+               "hasBillboardURL": "Boolean",
+               "isShowPrompt": "Boolean",
+               "isShowNeverForVersion": "Boolean",
+               "isShowSurvey": "Boolean",
+               "hasActions": "Boolean",
+               "hasOpenURL": "Boolean",
+               "hasNotificationURL": "Boolean",
+               "hasAlertURL": "Boolean"}
 
     def __init__(self):
         super(Verify, self).__init__()
@@ -59,8 +67,16 @@ class Verify(ColumnFixture):
         self.distVersion = ""
         self.force = ""
         self.newchannel = ""
+        self.billboardURL = ""
+        self.showPrompt = ""
+        self.showNeverForVersion = ""
+        self.showSurvey = ""
+        self.actions = ""
+        self.openURL = ""
+        self.notificationURL = ""
+        self.alertURL = ""
 
-        # For storign the last retrieved AUS XML and its URI.
+        # For storing the last retrieved AUS XML and its URI.
         self.lastURI = ""
         self.lastXML = ""
 
@@ -91,6 +107,30 @@ class Verify(ColumnFixture):
     # Check to see if the XML has force set.
     def hasForce (self):
         return ('force=1' in self.getXml())
+
+    def hasBillboardURL(self):
+        return ('billboardURL="http://billboardURL"' in self.getXml())
+
+    def isShowPrompt(self):
+        return ('showPrompt="true"' in self.getXml())
+
+    def isShowNeverForVersion(self):
+        return ('showNeverForVersion="true"' in self.getXml())
+
+    def isShowSurvey(self):
+        return ('showSurvey="true"' in self.getXml())
+
+    def hasActions(self):
+        return ('actions="showNotification showAlert"' in self.getXml())
+
+    def hasOpenURL(self):
+        return ('openURL="http://openURL' in self.getXml())
+
+    def hasNotificationURL(self):
+        return ('notificationURL="http://notificationURL' in self.getXml())
+
+    def hasAlertURL(self):
+        return ('alertURL="http://alertURL' in self.getXml())
 
     # Check if the AUS XML document is well-formed.
     def isValidXml(self):
