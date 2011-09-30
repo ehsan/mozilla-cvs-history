@@ -33,7 +33,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslmutex.c,v 1.25 2010/04/03 18:27:33 nelson%bolyard.com Exp $ */
+/* $Id: sslmutex.c,v 1.26 2011/09/30 23:27:08 rrelyea%redhat.com Exp $ */
 
 #include "seccomon.h"
 /* This ifdef should match the one in sslsnce.c */
@@ -168,7 +168,7 @@ loser:
 }
 
 SECStatus
-sslMutex_Destroy(sslMutex *pMutex)
+sslMutex_Destroy(sslMutex *pMutex, PRBool processLocal)
 {
     if (PR_FALSE == pMutex->isMultiProcess) {
         return single_process_sslMutex_Destroy(pMutex);
@@ -179,6 +179,10 @@ sslMutex_Destroy(sslMutex *pMutex)
     }
     close(pMutex->u.pipeStr.mPipes[0]);
     close(pMutex->u.pipeStr.mPipes[1]);
+
+    if (processLocal) {
+	return SECSuccess;
+    }
 
     pMutex->u.pipeStr.mPipes[0] = -1;
     pMutex->u.pipeStr.mPipes[1] = -1;
@@ -409,7 +413,7 @@ sslMutex_Init(sslMutex *pMutex, int shared)
 }
 
 SECStatus
-sslMutex_Destroy(sslMutex *pMutex)
+sslMutex_Destroy(sslMutex *pMutex, PRBool processLocal)
 {
     HANDLE hMutex;
     int    rv;
@@ -422,7 +426,6 @@ sslMutex_Destroy(sslMutex *pMutex)
 
     /*  multi-process mode */    
 #ifdef WINNT
-    /* on NT, get rid of the PRLock used for fibers within a process */
     retvalue = sslMutex_2LevelDestroy(pMutex);
 #endif
     
@@ -435,9 +438,10 @@ sslMutex_Destroy(sslMutex *pMutex)
     }
     
     rv = CloseHandle(hMutex); /* ignore error */
-    if (rv) {
+    if (!processLocal && rv) {
         pMutex->u.sslMutx = hMutex = INVALID_HANDLE_VALUE;
-    } else {
+    }
+    if (!rv) {
         nss_MD_win32_map_default_error(GetLastError());
         retvalue = SECFailure;
     }
@@ -557,11 +561,16 @@ sslMutex_Init(sslMutex *pMutex, int shared)
 }
 
 SECStatus 
-sslMutex_Destroy(sslMutex *pMutex)
+sslMutex_Destroy(sslMutex *pMutex, PRBool processLocal)
 {
     int rv;
     if (PR_FALSE == pMutex->isMultiProcess) {
         return single_process_sslMutex_Destroy(pMutex);
+    }
+
+    /* are semaphores global resources. See SEM_DESTROY(3) man page */
+    if (processLocal) {
+	return SECSuccess;
     }
     do {
 	rv = sem_destroy(&pMutex->u.sem);
@@ -623,7 +632,7 @@ sslMutex_Init(sslMutex *pMutex, int shared)
 }
 
 SECStatus 
-sslMutex_Destroy(sslMutex *pMutex)
+sslMutex_Destroy(sslMutex *pMutex, PRBool processLocal)
 {
     PR_ASSERT(pMutex);
     if (PR_FALSE == pMutex->isMultiProcess) {
