@@ -42,7 +42,7 @@
  * you.  If that has a problem, then just move out what you need, changing
  * its name as appropriate!
  *
- * $Id: cmslocal.h,v 1.7 2011/08/21 01:14:18 wtc%google.com Exp $
+ * $Id: cmslocal.h,v 1.8 2011/09/30 19:42:09 rrelyea%redhat.com Exp $
  */
 
 #ifndef _CMSLOCAL_H_
@@ -347,6 +347,12 @@ NSS_CMSAttributeArray_SetAttr(PLArenaPool *poolp, NSSCMSAttribute ***attrs, SECO
  */
 extern SECStatus
 NSS_CMSSignedData_AddTempCertificate(NSSCMSSignedData *sigd, CERTCertificate *cert);
+
+/*
+ * local function to handle compatibility issues
+ * by mapping a signature algorithm back to a digest.
+ */
+SECOidTag NSS_CMSUtil_MapSignAlgs(SECOidTag signAlg);
 
 
 /************************************************************************/
