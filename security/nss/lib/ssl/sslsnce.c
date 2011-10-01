@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsnce.c,v 1.57 2011/09/30 23:27:08 rrelyea%redhat.com Exp $ */
+/* $Id: sslsnce.c,v 1.58 2011/10/01 00:11:02 wtc%google.com Exp $ */
 
 /* Note: ssl_FreeSID() in sslnonce.c gets used for both client and server 
  * cache sids!
@@ -1030,8 +1030,9 @@ CloseCache(cacheDesc *cache)
 	if (cache->sharedCache) {
 	    sidCacheLock *pLock = cache->sidCacheLocks;
 	    for (; locks_initialized > 0; --locks_initialized, ++pLock ) {
-		/* If everInherited is true, this shared cache was (and may 			** still be) in use by multiple processes.  We do not wish to 
-		** destroy the mutexes while they are still in use, but we do 
+		/* If everInherited is true, this shared cache was (and may
+		** still be) in use by multiple processes.  We do not wish to
+		** destroy the mutexes while they are still in use, but we do
 		** want to free mutex resources associated with this process.
 		*/
 		sslMutex_Destroy(&pLock->mutex,
