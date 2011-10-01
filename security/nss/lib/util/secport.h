@@ -37,7 +37,7 @@
 /*
  * secport.h - portability interfaces for security libraries
  *
- * $Id: secport.h,v 1.24 2011/09/16 19:16:51 emaldona%redhat.com Exp $
+ * $Id: secport.h,v 1.25 2011/10/01 16:38:12 emaldona%redhat.com Exp $
  */
 
 #ifndef _SECPORT_H_
@@ -149,7 +149,7 @@ SEC_END_PROTOS
 
 #define PORT_Atoi(buff)	(int)strtol(buff, NULL, 10)
 
-/* Returns a UTF-8 encoded constant error string for "errNum".
+/* Returns a UTF-8 encoded constant error string for err.
  * Returns NULL if initialization of the error tables fails
  * due to insufficient memory.
  *
