@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nssinit.c,v 1.111 2011/10/04 02:24:50 emaldona%redhat.com Exp $ */
+/* $Id: nssinit.c,v 1.112 2011/10/04 02:35:58 emaldona%redhat.com Exp $ */
 
 #include <ctype.h>
 #include <string.h>
@@ -380,7 +380,6 @@ nss_InitModules(const char *configdir, const char *certPrefix,
 		PRBool isContextInit)
 {
     SECStatus rv = SECFailure;
-    PRStatus status = PR_SUCCESS;
     char *moduleSpec = NULL;
     char *flags = NULL;
     char *lconfigdir = NULL;
@@ -393,10 +392,9 @@ nss_InitModules(const char *configdir, const char *certPrefix,
     char *lupdateID = NULL;
     char *lupdateName = NULL;
 
-    status = NSS_InitializePRErrorTable();
-    if (status != PR_SUCCESS) {
-	PORT_SetError(status);
-	return SECFailure;
+    if (NSS_InitializePRErrorTable() != SECSuccess) {
+	PORT_SetError(SEC_ERROR_NO_MEMORY);
+	return rv;
     }
 
     flags = nss_makeFlags(readOnly,noCertDB,noModDB,forceOpen,

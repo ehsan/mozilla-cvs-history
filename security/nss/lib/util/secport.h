@@ -37,7 +37,7 @@
 /*
  * secport.h - portability interfaces for security libraries
  *
- * $Id: secport.h,v 1.25 2011/10/01 16:38:12 emaldona%redhat.com Exp $
+ * $Id: secport.h,v 1.26 2011/10/04 02:35:59 emaldona%redhat.com Exp $
  */
 
 #ifndef _SECPORT_H_
@@ -153,8 +153,7 @@ SEC_END_PROTOS
  * Returns NULL if initialization of the error tables fails
  * due to insufficient memory.
  *
- * This string must not be modified by the application, but may be
- * modified by a subsequent call to PORT_ErrorToString.
+ * This string must not be modified by the application.
  */
 #define PORT_ErrorToString(err) PR_ErrorToString(err, PR_LANGUAGE_I_DEFAULT)
 
