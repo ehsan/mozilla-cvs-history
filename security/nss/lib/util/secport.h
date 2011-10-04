@@ -37,7 +37,7 @@
 /*
  * secport.h - portability interfaces for security libraries
  *
- * $Id: secport.h,v 1.26 2011/10/04 02:35:59 emaldona%redhat.com Exp $
+ * $Id: secport.h,v 1.27 2011/10/04 18:46:04 emaldona%redhat.com Exp $
  */
 
 #ifndef _SECPORT_H_
@@ -155,7 +155,7 @@ SEC_END_PROTOS
  *
  * This string must not be modified by the application.
  */
-#define PORT_ErrorToString(err) PR_ErrorToString(err, PR_LANGUAGE_I_DEFAULT)
+#define PORT_ErrorToString(err) PR_ErrorToString((err), PR_LANGUAGE_I_DEFAULT)
 
 #define PORT_ErrorToName PR_ErrorToName
 
