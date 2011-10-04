@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nssinit.c,v 1.110 2011/08/30 20:37:59 wtc%google.com Exp $ */
+/* $Id: nssinit.c,v 1.111 2011/10/04 02:24:50 emaldona%redhat.com Exp $ */
 
 #include <ctype.h>
 #include <string.h>
@@ -53,7 +53,6 @@
 #include "nss.h"
 #include "pk11func.h"
 #include "secerr.h"
-#include "errstrs.h"
 #include "nssbase.h"
 #include "nssutil.h"
 #include "pkixt.h"
