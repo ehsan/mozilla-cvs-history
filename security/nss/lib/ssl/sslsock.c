@@ -40,7 +40,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsock.c,v 1.73 2011/10/01 03:59:54 bsmith%mozilla.com Exp $ */
+/* $Id: sslsock.c,v 1.74 2011/10/06 22:42:34 wtc%google.com Exp $ */
 #include "seccomon.h"
 #include "cert.h"
 #include "keyhi.h"
@@ -170,12 +170,12 @@ static sslOptions ssl_defaults = {
     2,	        /* requireCertificate */
     PR_FALSE,	/* handshakeAsClient  */
     PR_FALSE,	/* handshakeAsServer  */
-    PR_TRUE,	/* enableSSL2         */
+    PR_FALSE,	/* enableSSL2         */ /* now defaults to off in NSS 3.13 */
     PR_TRUE,	/* enableSSL3         */
     PR_TRUE, 	/* enableTLS          */ /* now defaults to on in NSS 3.0 */
     PR_FALSE,	/* noCache            */
     PR_FALSE,	/* fdx                */
-    PR_TRUE,	/* v2CompatibleHello  */
+    PR_FALSE,	/* v2CompatibleHello  */ /* now defaults to off in NSS 3.13 */
     PR_TRUE,	/* detectRollBack     */
     PR_FALSE,   /* noStepDown         */
     PR_FALSE,   /* bypassPKCS11       */
