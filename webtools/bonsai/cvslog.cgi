@@ -48,6 +48,8 @@ sub sillyness {
 require 'CGI.pl';
 require 'cvsblame.pl';
 
+use Cwd qw(abs_path);
+use File::Basename;
 use Date::Parse;
 use Date::Format;
 
@@ -56,7 +58,7 @@ use Date::Format;
 $| = 1;
 
 my @src_roots = getRepositoryList();
-
+my $root = dirname(abs_path(__FILE__));
 
 # Handle the "file" argument
 #
@@ -69,6 +71,16 @@ if ($filename eq '')
     PutsTrailer();
     exit;
 }
+
+# Be careful not to allow directory traversal.
+$filename = abs_path($filename);
+if ($filename !~ /^\Q$root\E/) {
+    print "Content-Type: text/html; charset=UTF-8\n\n";
+    &print_usage;
+    PutsTrailer();
+    exit;
+}
+
 my ($file_head, $file_tail) = $filename =~ m@(.*/)?(.+)@;
 my $url_filename = url_quote($filename);
 my $url_file_tail = url_quote($file_tail);
