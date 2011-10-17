@@ -120,6 +120,7 @@ $nightlyChannels = array(
     'nightly-jaegermonkey',
     'nightly-ux',
     'nightly-maple',
+    'nightly-birch',
     'aurora',
     'auroratest'
 );
@@ -139,6 +140,7 @@ $productBranchVersions = array(
            'nightly-jaegermonkey'    => 'jaegermonkey',
            'nightly-ux'              => 'ux',
            'nightly-maple'           => 'maple',
+           'nightly-birch'           => 'birch',
            'aurora'                  => 'mozilla-aurora',
            'auroratest'              => 'mozilla-aurora-test'
         )
