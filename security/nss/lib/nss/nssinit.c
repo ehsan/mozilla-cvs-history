@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nssinit.c,v 1.112 2011/10/04 02:35:58 emaldona%redhat.com Exp $ */
+/* $Id: nssinit.c,v 1.113 2011/10/18 17:50:26 rrelyea%redhat.com Exp $ */
 
 #include <ctype.h>
 #include <string.h>
@@ -761,6 +761,11 @@ loser:
 	   PR_smprintf_free(configStrings);
 	}
     }
+    PZ_Lock(nssInitLock);
+    nssIsInInit--;
+    /* We failed to init, allow one to move forward */
+    PZ_NotifyCondVar(nssInitCondition);
+    PZ_Unlock(nssInitLock);
     return SECFailure;
 }
 
