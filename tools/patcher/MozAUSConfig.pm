@@ -418,6 +418,14 @@ sub CreateUpdateGraph
         $u_config->{$u_key}->{'details'} = $u_details;
         $u_config->{$u_key}->{'license'} = $u_license;
         $u_config->{$u_key}->{'updateType'} = $u_updateType;
+
+        my @schema_2_attributes = qw( billboardURL openURL notificationURL
+                                      alertURL showPrompt showNeverForVersion
+                                      showSurvey actions );
+        foreach my $arg (@schema_2_attributes) {
+            $u_config->{$u_key}->{$arg} = $u->{$arg};
+        }
+
         $u_config->{$u_key}->{'force'} = $u_force;
         $u_config->{$u_key}->{'platforms'} = {};
 

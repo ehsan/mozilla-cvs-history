@@ -78,7 +78,9 @@ use vars qw($PID_FILE
             $DEFAULT_HASH_TYPE
             $DEFAULT_CVSROOT
             $DEFAULT_HGROOT
-            $DEFAULT_SCHEMA_VERSION $CURRENT_SCHEMA_VERSION
+            $DEFAULT_SCHEMA_VERSION
+            @SCHEMA_2_OPTIONAL_ATTR
+            @COMPUTED_URLS
             $ST_SIZE );
 
 $PID_FILE = 'patcher2.pid';
@@ -86,8 +88,22 @@ $DEFAULT_HASH_TYPE = 'SHA512';
 $DEFAULT_CVSROOT = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
 $DEFAULT_HGROOT  = 'http://hg.mozilla.org/mozilla-central';
 
-$DEFAULT_SCHEMA_VERSION = 0;
-$CURRENT_SCHEMA_VERSION = 1;
+$DEFAULT_SCHEMA_VERSION = 2;
+
+# URLS which will have %platform%, %locale%, and %version% expanded
+#   from schema 1: details, license
+#   from schema 2: billboardURL, openURL, notificationURL, alertURL
+@COMPUTED_URLS = qw(details
+                    license
+                    billboardURL
+                    openURL
+                    notificationURL
+                    alertURL);
+
+@SCHEMA_2_OPTIONAL_ATTR = qw(showPrompt
+                             showNeverForVersion
+                             showSurvey
+                             actions);
 
 $ST_SIZE = 7;
 
@@ -745,18 +761,15 @@ sub CreateCompletePatchinfo {
                                                       version => $to->{'appv'},
                                                       locale => $l );
 
-                my $detailsUrl = SubstitutePath(
-                 path => $u_config->{$u}->{'details'},
-                 locale => $l,
-                 platform => $p,
-                 version => $to->{'appv'});
-
-                my $licenseUrl = undef;
-                if (defined($u_config->{$u}->{'license'})) {
-                    $licenseUrl = SubstitutePath(
-                     path => $u_config->{$u}->{'license'},
-                     locale => $l,
-                     version => $to->{'appv'});
+                my $computed_urls = {};
+                foreach my $attr (@COMPUTED_URLS) {
+                    if (defined($u_config->{$u}->{$attr})) {
+                        $computed_urls->{$attr} = SubstitutePath(
+                                                    path => $u_config->{$u}->{$attr},
+                                                    locale => $l,
+                                                    platform => $p,
+                                                    version => $to->{'appv'});
+                    }
                 }
 
                 my $updateType = $config->GetCurrentUpdate()->{'updateType'};
@@ -834,10 +847,17 @@ sub CreateCompletePatchinfo {
                             $complete_patch->{'url'} = $gen_complete_url;
                         }
     
-                        $complete_patch->{'details'} = $detailsUrl;
-                        $complete_patch->{'license'} = $licenseUrl;
+                        foreach my $attr (keys %{$computed_urls}) {
+                            $complete_patch->{$attr} = $computed_urls->{$attr};
+                        }
+                        foreach my $attr (@SCHEMA_2_OPTIONAL_ATTR) {
+                            if (defined($u_config->{$u}->{$attr})) {
+                                $complete_patch->{$attr} = $u_config->{$u}->{$attr};
+                            }
+                        }
+
                         $complete_patch->{'updateType'} = $updateType;
-    
+
                         write_patch_info(patch => $complete_patch,
                                          schemaVer => $to->{'schema'});
     
@@ -1017,18 +1037,15 @@ sub CreatePastReleasePatchinfo {
                                                     version => $patchLocaleNode->{'appv'},
                                                     locale => $locale );
 
-                my $detailsUrl = SubstitutePath(
-                 path => $config->GetCurrentUpdate()->{'details'},
-                 locale => $locale,
-                 platform => $fromPlatform,
-                 version => $patchLocaleNode->{'appv'});
-
-                my $licenseUrl = undef;
-                if (defined($config->GetCurrentUpdate()->{'license'})) {
-                    $licenseUrl = SubstitutePath(
-                     path => $config->GetCurrentUpdate()->{'license'},
-                     locale => $locale,
-                     version => $patchLocaleNode->{'appv'});
+                my $computed_urls = {};
+                foreach my $attr (@COMPUTED_URLS) {
+                    if (defined($config->GetCurrentUpdate()->{$attr})) {
+                        $computed_urls->{$attr} = SubstitutePath(
+                                                    path => $config->GetCurrentUpdate()->{$attr},
+                                                    locale => $locale,
+                                                    platform => $fromPlatform,
+                                                    version => $patchLocaleNode->{'appv'});
+                    }
                 }
 
                 my $updateType = $config->GetCurrentUpdate()->{'updateType'};
@@ -1099,8 +1116,15 @@ sub CreatePastReleasePatchinfo {
                             $completePatch->{'url'} = $genCompleteUrl;
                         }
     
-                        $completePatch->{'details'} = $detailsUrl;
-                        $completePatch->{'license'} = $licenseUrl;
+                        foreach my $attr (keys %{$computed_urls}) {
+                            $completePatch->{$attr} = $computed_urls->{$attr};
+                        }
+                        foreach my $attr (@SCHEMA_2_OPTIONAL_ATTR) {
+                            if (defined($config->GetCurrentUpdate()->{$attr})) {
+                                $completePatch->{$attr} = $config->GetCurrentUpdate()->{$attr};
+                            }
+                        }
+
                         $completePatch->{'updateType'} = $updateType;
     
                         write_patch_info(patch => $completePatch,
@@ -1242,18 +1266,15 @@ sub CreatePartialPatchinfo {
 
                 my $completePatchSize = (stat($complete_pathname))[$ST_SIZE];
 
-                my $detailsUrl = SubstitutePath(
-                 path => $u_config->{$u}->{'details'},
-                 locale => $l,
-                 platform => $p,
-                 version => $to->{'appv'});
-            
-                my $licenseUrl = undef;
-                if (defined($u_config->{$u}->{'license'})) {
-                    $licenseUrl = SubstitutePath(
-                     path => $u_config->{$u}->{'license'},
-                     locale => $l,
-                     version => $to->{'appv'});
+                my $computed_urls = {};
+                foreach my $attr (@COMPUTED_URLS) {
+                    if (defined($u_config->{$u}->{$attr})) {
+                        $computed_urls->{$attr} = SubstitutePath(
+                                                    path => $u_config->{$u}->{$attr},
+                                                    locale => $l,
+                                                    platform => $p,
+                                                    version => $to->{'appv'});
+                    }
                 }
 
                 my $updateType = $u_config->{$u}->{'updateType'};
@@ -1348,8 +1369,15 @@ sub CreatePartialPatchinfo {
                             $partial_patch->{'url'} = $snippetUrl;
                         }
     
-                        $partial_patch->{'details'} = $detailsUrl;
-                        $partial_patch->{'license'} = $licenseUrl;
+                        foreach my $attr (keys %{$computed_urls}) {
+                            $partial_patch->{$attr} = $computed_urls->{$attr};
+                        }
+                        foreach my $attr (@SCHEMA_2_OPTIONAL_ATTR) {
+                            if (defined($u_config->{$u}->{$attr})) {
+                                $partial_patch->{$attr} = $u_config->{$u}->{$attr};
+                            }
+                        }
+
                         $partial_patch->{'updateType'} = $updateType;
     
                         write_patch_info(patch => $partial_patch,
@@ -1464,7 +1492,7 @@ sub write_patch_info {
     my $info_path_parent = dirname($patch->{'info_path'});
     my $text;
 
-    if ($DEFAULT_SCHEMA_VERSION == $schemaVersion) {
+    if (0 == $schemaVersion) {
         $text  = "$patch->{'type'}\n";
         $text .= "$patch->{'url'}\n";
         $text .= "$patch->{'hash_type'}\n";
@@ -1485,7 +1513,7 @@ sub write_patch_info {
         if (defined($patch->{'updateType'})) {
             $text .= "$patch->{'updateType'}\n";
         }
-    } elsif ($CURRENT_SCHEMA_VERSION == $schemaVersion) {
+    } elsif (1 == $schemaVersion) {
         $text = "version=1\n";
         $text .= "type=$patch->{'type'}\n";
         $text .= "url=$patch->{'url'}\n";
@@ -1504,6 +1532,35 @@ sub write_patch_info {
 
         if (defined($patch->{'license'})) {
             $text .= "licenseUrl=$patch->{'license'}\n";
+        }
+
+        if (defined($patch->{'updateType'})) {
+            $text .= "updateType=$patch->{'updateType'}\n";
+        }
+    } elsif (2 == $schemaVersion) {
+        $text = "version=2\n";
+        $text .= "type=$patch->{'type'}\n";
+        $text .= "url=$patch->{'url'}\n";
+
+        $text .= "hashFunction=$patch->{'hash_type'}\n";
+        $text .= "hashValue=$patch->{'hash_value'}\n";
+
+        $text .= "size=$patch->{'size'}\n";
+        $text .= "build=$patch->{'build_id'}\n";
+        $text .= "displayVersion=$patch->{'appv'}\n";
+        $text .= "appVersion=$patch->{'extv'}\n";
+        $text .= "platformVersion=$patch->{'extv'}\n";
+
+        foreach my $attr ((@COMPUTED_URLS, @SCHEMA_2_OPTIONAL_ATTR)) {
+            if (defined($patch->{$attr})) {
+                if ($attr eq 'details') {
+                    $text .= "detailsUrl=$patch->{'details'}\n";
+                } elsif ($attr eq 'license') {
+                    $text .= "licenseUrl=$patch->{'license'}\n";
+                } else {
+                    $text .= "$attr=$patch->{$attr}\n";
+                }
+            }
         }
 
         if (defined($patch->{'updateType'})) {
