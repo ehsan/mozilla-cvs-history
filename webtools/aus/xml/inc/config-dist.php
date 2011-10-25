@@ -121,6 +121,9 @@ $nightlyChannels = array(
     'nightly-ux',
     'nightly-maple',
     'nightly-birch',
+    'nightly-ash',
+    'nightly-elm',
+    'nightly-oak',
     'aurora',
     'auroratest'
 );
@@ -155,7 +158,7 @@ $productBranchVersions = array(
         '*'       => array(
            'nightly'                 => 'mozilla-central',
            'aurora'                  => 'mozilla-aurora',
-           'nightly-birch'           => 'birch'
+           'nightly-birch'           => 'birch',
            'nightly-ash'             => 'ash',
            'nightly-oak'             => 'oak'
         )
