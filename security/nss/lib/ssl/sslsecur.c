@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsecur.c,v 1.49 2011/04/08 05:37:44 wtc%google.com Exp $ */
+/* $Id: sslsecur.c,v 1.50 2011/10/30 00:08:59 wtc%google.com Exp $ */
 #include "cert.h"
 #include "secitem.h"
 #include "keyhi.h"
@@ -391,6 +391,18 @@ SSL_ForceHandshake(PRFileDesc *fd)
     /* Don't waste my time */
     if (!ss->opt.useSecurity) 
     	return SECSuccess;
+
+    if (!ssl_SocketIsBlocking(ss)) {
+	ssl_GetXmitBufLock(ss);
+	if (ss->pendingBuf.len != 0) {
+	    rv = ssl_SendSavedWriteData(ss);
+	    if ((rv < 0) && (PORT_GetError() != PR_WOULD_BLOCK_ERROR)) {
+		ssl_ReleaseXmitBufLock(ss);
+		return SECFailure;
+	    }
+	}
+	ssl_ReleaseXmitBufLock(ss);
+    }
 
     ssl_Get1stHandshakeLock(ss);
 
@@ -1141,7 +1153,6 @@ ssl_SecureRecv(sslSocket *ss, unsigned char *buf, int len, int flags)
 		ssl_ReleaseXmitBufLock(ss);
 		return SECFailure;
 	    }
-	    /* XXX short write? */
 	}
 	ssl_ReleaseXmitBufLock(ss);
     }
