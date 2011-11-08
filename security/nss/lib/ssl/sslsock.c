@@ -40,7 +40,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsock.c,v 1.76 2011/10/29 00:29:11 bsmith%mozilla.com Exp $ */
+/* $Id: sslsock.c,v 1.77 2011/11/08 22:12:05 bsmith%mozilla.com Exp $ */
 #include "seccomon.h"
 #include "cert.h"
 #include "keyhi.h"
@@ -1312,7 +1312,6 @@ SSL_SetNextProtoCallback(PRFileDesc *fd, SSLNextProtoCallback callback,
     if (!ss) {
 	SSL_DBG(("%d: SSL[%d]: bad socket in SSL_SetNextProtoCallback", SSL_GETPID(),
 		 fd));
-	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return SECFailure;
     }
 
@@ -1340,7 +1339,6 @@ ssl_NextProtoNegoCallback(void *arg, PRFileDesc *fd,
     if (!ss) {
 	SSL_DBG(("%d: SSL[%d]: bad socket in ssl_NextProtoNegoCallback",
 		 SSL_GETPID(), fd));
-	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return SECFailure;
     }
 
@@ -1384,14 +1382,14 @@ SECStatus
 SSL_SetNextProtoNego(PRFileDesc *fd, const unsigned char *data,
 		     unsigned int length)
 {
-    sslSocket *ss = ssl_FindSocket(fd);
+    sslSocket *ss;
     SECStatus rv;
     SECItem dataItem = { siBuffer, (unsigned char *) data, length };
 
+    ss = ssl_FindSocket(fd);
     if (!ss) {
 	SSL_DBG(("%d: SSL[%d]: bad socket in SSL_SetNextProtoNego",
 		 SSL_GETPID(), fd));
-	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return SECFailure;
     }
 
@@ -1418,7 +1416,6 @@ SSL_GetNextProto(PRFileDesc *fd, SSLNextProtoState *state, unsigned char *buf,
     if (!ss) {
 	SSL_DBG(("%d: SSL[%d]: bad socket in SSL_GetNextProto", SSL_GETPID(),
 		 fd));
-	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return SECFailure;
     }
 

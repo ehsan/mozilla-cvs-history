@@ -41,7 +41,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* TLS extension code moved here from ssl3ecc.c */
-/* $Id: ssl3ext.c,v 1.17 2011/10/29 00:29:11 bsmith%mozilla.com Exp $ */
+/* $Id: ssl3ext.c,v 1.19 2011/11/11 19:06:52 bsmith%mozilla.com Exp $ */
 
 #include "nssrenam.h"
 #include "nss.h"
@@ -590,7 +590,6 @@ ssl3_ClientHandleNextProtoNegoXtn(sslSocket *ss, PRUint16 ex_type,
 {
     SECStatus rv;
     unsigned char resultBuffer[255];
-    unsigned char * newData;
     SECItem result = { siBuffer, resultBuffer, 0 };
 
     if (ss->firstHsDone) {
