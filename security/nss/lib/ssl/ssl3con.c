@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.154 2011/11/11 18:47:20 bsmith%mozilla.com Exp $ */
+/* $Id: ssl3con.c,v 1.155 2011/11/11 19:06:52 bsmith%mozilla.com Exp $ */
 
 #include "cert.h"
 #include "ssl.h"
@@ -5580,7 +5580,7 @@ ssl3_HandleCertificateRequest(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     }
     switch (rv) {
     case SECWouldBlock:	/* getClientAuthData has put up a dialog box. */
-	ssl_SetAlwaysBlock(ss);
+	ssl3_SetAlwaysBlock(ss);
 	break;	/* not an error */
 
     case SECSuccess:
@@ -7972,7 +7972,7 @@ ssl3_HandleCertificate(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 			 SSL_GETPID(), ss->fd));
 		ss->ssl3.peerCertChain = certs;
 		certs               = NULL;
-		ssl_SetAlwaysBlock(ss);
+		ssl3_SetAlwaysBlock(ss);
 		goto cert_block;
 	    }
 	    /* cert is bad */
