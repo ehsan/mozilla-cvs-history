@@ -39,7 +39,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.117 2011/11/11 18:47:17 bsmith%mozilla.com Exp $
+ * $Id: certdb.c,v 1.118 2011/11/12 05:22:17 bsmith%mozilla.com Exp $
  */
 
 #include "nssilock.h"
@@ -1825,7 +1825,7 @@ CERT_VerifyCertName(CERTCertificate *cert, const char *hn)
 }
 
 PRBool
-CERT_CompareCerts(CERTCertificate *c1, CERTCertificate *c2)
+CERT_CompareCerts(const CERTCertificate *c1, const CERTCertificate *c2)
 {
     SECComparison comp;
     

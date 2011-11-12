@@ -37,7 +37,7 @@
 /*
  * Support for various policy related extensions
  *
- * $Id: pppolicy.c,v 1.3 2005/02/22 20:02:22 wtchang%redhat.com Exp $
+ * $Id: pppolicy.c,v 1.4 2011/11/12 05:22:15 bsmith%mozilla.com Exp $
  */
 
 #include "seccomon.h"
@@ -91,7 +91,7 @@ static const SEC_ASN1Template secu_CertificatePoliciesTemplate[] = {
 
 
 static CERTCertificatePolicies *
-secu_DecodeCertificatePoliciesExtension(SECItem *extnValue)
+secu_DecodeCertificatePoliciesExtension(const SECItem *extnValue)
 {
     PRArenaPool *arena = NULL;
     SECStatus rv;
@@ -241,7 +241,7 @@ secu_PrintPolicyInfo(FILE *out,CERTPolicyInfo *policyInfo,char *msg,int level)
 }
 
 void
-SECU_PrintPolicy(FILE *out, SECItem *value, char *msg, int level)
+SECU_PrintPolicy(FILE *out, const SECItem *value, const char *msg, int level)
 {
    CERTCertificatePolicies *policies = NULL;
    CERTPolicyInfo **policyInfos;
@@ -268,8 +268,8 @@ SECU_PrintPolicy(FILE *out, SECItem *value, char *msg, int level)
 
 
 void
-SECU_PrintPrivKeyUsagePeriodExtension(FILE *out, SECItem *value, 
-			              char *msg, int level)
+SECU_PrintPrivKeyUsagePeriodExtension(FILE *out, const SECItem *value, 
+			              const char *msg, int level)
 {
     CERTPrivKeyUsagePeriod * prd;
     PLArenaPool * arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);

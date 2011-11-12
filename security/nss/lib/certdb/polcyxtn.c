@@ -37,7 +37,7 @@
 /*
  * Support for various policy related extensions
  *
- * $Id: polcyxtn.c,v 1.11 2008/02/13 04:03:19 julien.pierre.boogz%sun.com Exp $
+ * $Id: polcyxtn.c,v 1.12 2011/11/12 05:22:17 bsmith%mozilla.com Exp $
  */
 
 #include "seccomon.h"
@@ -313,7 +313,7 @@ CERT_DestroyPolicyMappingsExtension(CERTCertificatePolicyMappings *mappings)
 SECStatus
 CERT_DecodePolicyConstraintsExtension
                              (CERTCertificatePolicyConstraints *decodedValue,
-                              SECItem *encodedValue)
+                              const SECItem *encodedValue)
 {
     CERTCertificatePolicyConstraints decodeContext;
     PRArenaPool *arena = NULL;
@@ -369,7 +369,7 @@ CERT_DecodePolicyConstraintsExtension
 }
 
 SECStatus CERT_DecodeInhibitAnyExtension
-        (CERTCertificateInhibitAny *decodedValue, SECItem *encodedValue)
+        (CERTCertificateInhibitAny *decodedValue, const SECItem *encodedValue)
 {
     CERTCertificateInhibitAny decodeContext;
     PRArenaPool *arena = NULL;
@@ -402,7 +402,7 @@ SECStatus CERT_DecodeInhibitAnyExtension
 }
 
 CERTUserNotice *
-CERT_DecodeUserNotice(SECItem *noticeItem)
+CERT_DecodeUserNotice(const SECItem *noticeItem)
 {
     PRArenaPool *arena = NULL;
     SECStatus rv;
@@ -636,7 +636,7 @@ const SEC_ASN1Template CERT_OidSeqTemplate[] = {
 };
 
 CERTOidSequence *
-CERT_DecodeOidSequence(SECItem *seqItem)
+CERT_DecodeOidSequence(const SECItem *seqItem)
 {
     PRArenaPool *arena = NULL;
     SECStatus rv;
