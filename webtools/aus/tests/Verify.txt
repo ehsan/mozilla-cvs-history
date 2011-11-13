@@ -1,7 +1,7 @@
 !1 Variables
 !define COMMAND_PATTERN {python %m -v %p}
-!define TEST_RUNNER {/var/lib/hudson/jobs/AUSv2/workspace/pyfit/fit/FitServer.py}
-!define host {http://sm-hudson01:82/aus/update}
+!define TEST_RUNNER {/var/lib/jenkins/jobs/AUSv2/workspace/pyfit/fit/FitServer.py}
+!define host {http://localhost/aus/update}
 !define updateVersion {2}
 !define product {Synthetic}
 !define version {1.0}
