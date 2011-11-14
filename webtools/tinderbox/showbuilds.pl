@@ -546,7 +546,9 @@ sub print_table_footer($$) {
     $footer_form{legend} = 0;
     undef $footer_form{static};
 
-    my $hours = $footer_form{hours} || $::default_hours;
+    my $hours = $footer_form{hours};
+    $hours =~ s/\D//g;
+    $hours ||= $::default_hours;
 
     $footer_form{maxdate} = $td->{maxdate} - $hours*60*60;
     print open_showbuilds_href(%footer_form) .
