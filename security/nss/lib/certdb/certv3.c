@@ -37,7 +37,7 @@
 /*
  * Code for dealing with X509.V3 extensions.
  *
- * $Id: certv3.c,v 1.11 2011/11/12 05:22:17 bsmith%mozilla.com Exp $
+ * $Id: certv3.c,v 1.12 2011/11/16 19:12:32 kaie%kuix.de Exp $
  */
 
 #include "cert.h"
@@ -57,7 +57,7 @@ CERT_FindCertExtensionByOID(CERTCertificate *cert, SECItem *oid,
     
 
 SECStatus
-CERT_FindCertExtension(const CERTCertificate *cert, int tag, SECItem *value)
+CERT_FindCertExtension(CERTCertificate *cert, int tag, SECItem *value)
 {
     return (cert_FindExtension (cert->extensions, tag, value));
 }

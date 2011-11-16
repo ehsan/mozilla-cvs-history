@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.103 $ $Date: 2011/11/11 18:47:19 $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.104 $ $Date: 2011/11/16 19:12:34 $";
 #endif /* DEBUG */
 
 /*
@@ -592,6 +592,10 @@ cert_trust_from_stan_trust(NSSTrust *t, PRArenaPool *arena)
     rvTrust->sslFlags |= client;
     rvTrust->emailFlags = get_nss3trust_from_nss4trust(t->emailProtection);
     rvTrust->objectSigningFlags = get_nss3trust_from_nss4trust(t->codeSigning);
+    /* The cert is a valid step-up cert (in addition to/lieu of trust above */
+    if (t->stepUpApproved) {
+	rvTrust->sslFlags |= CERTDB_GOVT_APPROVED_CA;
+    }
     return rvTrust;
 }
 

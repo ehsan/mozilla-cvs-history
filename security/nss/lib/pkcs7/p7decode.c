@@ -38,7 +38,7 @@
 /*
  * PKCS7 decoding, verification.
  *
- * $Id: p7decode.c,v 1.27 2011/11/12 05:22:19 bsmith%mozilla.com Exp $
+ * $Id: p7decode.c,v 1.28 2011/11/16 19:12:34 kaie%kuix.de Exp $
  */
 
 #include "p7local.h"
@@ -1114,7 +1114,7 @@ SEC_PKCS7DecoderFinish(SEC_PKCS7DecoderContext *p7dcx)
 
 
 SEC_PKCS7ContentInfo *
-SEC_PKCS7DecodeItem(const SECItem *p7item,
+SEC_PKCS7DecodeItem(SECItem *p7item,
 		    SEC_PKCS7DecoderContentCallback cb, void *cb_arg,
 		    SECKEYGetPasswordKey pwfn, void *pwfn_arg,
 		    SEC_PKCS7GetDecryptKeyCallback decrypt_key_cb, 

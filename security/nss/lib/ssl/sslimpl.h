@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslimpl.h,v 1.87 2011/11/11 19:06:52 bsmith%mozilla.com Exp $ */
+/* $Id: sslimpl.h,v 1.88 2011/11/16 19:12:35 kaie%kuix.de Exp $ */
 
 #ifndef __sslimpl_h_
 #define __sslimpl_h_
@@ -775,6 +775,8 @@ const ssl3CipherSuiteDef *suite_def;
     unsigned long         msg_len;
     SECItem               ca_list;     /* used only by client */
     PRBool                isResuming;  /* are we resuming a session */
+    PRBool                rehandshake; /* immediately start another handshake 
+                                        * when this one finishes */
     PRBool                usedStepDownKey;  /* we did a server key exchange. */
     PRBool                sendingSCSV; /* instead of empty RI */
     sslBuffer             msgState;    /* current state for handshake messages*/
@@ -1148,6 +1150,7 @@ extern FILE *                  ssl_keylog_iob;
 extern CERTDistNames *         ssl3_server_ca_list;
 extern PRUint32                ssl_sid_timeout;
 extern PRUint32                ssl3_sid_timeout;
+extern PRBool                  ssl3_global_policy_some_restricted;
 
 extern const char * const      ssl_cipherName[];
 extern const char * const      ssl3_cipherName[];
@@ -1261,7 +1264,7 @@ extern PRBool    ssl_FdIsBlocking(PRFileDesc *fd);
 
 extern PRBool    ssl_SocketIsBlocking(sslSocket *ss);
 
-extern void      ssl3_SetAlwaysBlock(sslSocket *ss);
+extern void      ssl_SetAlwaysBlock(sslSocket *ss);
 
 extern SECStatus ssl_EnableNagleDelay(sslSocket *ss, PRBool enabled);
 
@@ -1350,11 +1353,16 @@ extern void ssl_FreeSocket(struct sslSocketStr *ssl);
 extern SECStatus SSL3_SendAlert(sslSocket *ss, SSL3AlertLevel level,
 				SSL3AlertDescription desc);
 
+extern int ssl2_RestartHandshakeAfterCertReq(sslSocket *          ss,
+					     CERTCertificate *    cert, 
+					     SECKEYPrivateKey *   key);
+
 extern SECStatus ssl3_RestartHandshakeAfterCertReq(sslSocket *    ss,
 					     CERTCertificate *    cert, 
 					     SECKEYPrivateKey *   key,
 					     CERTCertificateList *certChain);
 
+extern int ssl2_RestartHandshakeAfterServerCert(sslSocket *ss);
 extern int ssl3_RestartHandshakeAfterServerCert(sslSocket *ss);
 
 /*

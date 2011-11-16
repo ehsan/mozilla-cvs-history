@@ -43,7 +43,7 @@
  * secder.h - public data structures and prototypes for the DER encoding and
  *	      decoding utilities library
  *
- * $Id: secder.h,v 1.14 2011/11/12 05:22:20 bsmith%mozilla.com Exp $
+ * $Id: secder.h,v 1.15 2011/11/16 19:12:36 kaie%kuix.de Exp $
  */
 
 #if defined(_WIN32_WCE)
@@ -108,14 +108,14 @@ extern SECStatus DER_SetUInteger(PLArenaPool *arena, SECItem *dst, PRUint32 src)
 ** If "-1" is returned, then the caller should check the error in
 ** XP_GetError() to see if an overflow occurred (SEC_ERROR_BAD_DER).
 */
-extern long DER_GetInteger(const SECItem *src);
+extern long DER_GetInteger(SECItem *src);
 
 /*
 ** Decode a der encoded *unsigned* integer that is stored in "src".
 ** If the ULONG_MAX is returned, then the caller should check the error
 ** in XP_GetError() to see if an overflow occurred (SEC_ERROR_BAD_DER).
 */
-extern unsigned long DER_GetUInteger(const SECItem *src);
+extern unsigned long DER_GetUInteger(SECItem *src);
 
 /*
 ** Convert an NSPR time value to a der encoded time value.

@@ -41,7 +41,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* TLS extension code moved here from ssl3ecc.c */
-/* $Id: ssl3ext.c,v 1.19 2011/11/11 19:06:52 bsmith%mozilla.com Exp $ */
+/* $Id: ssl3ext.c,v 1.20 2011/11/16 19:12:35 kaie%kuix.de Exp $ */
 
 #include "nssrenam.h"
 #include "nss.h"

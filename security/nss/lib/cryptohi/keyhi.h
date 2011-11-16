@@ -35,7 +35,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: keyhi.h,v 1.19 2011/11/12 05:22:18 bsmith%mozilla.com Exp $ */
+/* $Id: keyhi.h,v 1.20 2011/11/16 19:12:33 kaie%kuix.de Exp $ */
 
 #ifndef _KEYHI_H_
 #define _KEYHI_H_
@@ -171,7 +171,7 @@ SECKEY_ConvertAndDecodeSubjectPublicKeyInfo(char *spkistr);
  * (used by JSS).
  */
 extern SECKEYPublicKey *
-SECKEY_ExtractPublicKey(const CERTSubjectPublicKeyInfo *);
+SECKEY_ExtractPublicKey(CERTSubjectPublicKeyInfo *);
 
 /*
 ** Destroy a private key object.

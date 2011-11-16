@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslerr.h,v 1.16 2011/11/11 19:06:52 bsmith%mozilla.com Exp $ */
+/* $Id: sslerr.h,v 1.17 2011/11/16 19:12:35 kaie%kuix.de Exp $ */
 #ifndef __SSL_ERR_H_
 #define __SSL_ERR_H_
 
@@ -206,8 +206,6 @@ SSL_ERROR_RX_UNEXPECTED_UNCOMPRESSED_RECORD	= (SSL_ERROR_BASE + 114),
 SSL_ERROR_WEAK_SERVER_EPHEMERAL_DH_KEY  = (SSL_ERROR_BASE + 115),
 
 SSL_ERROR_NEXT_PROTOCOL_DATA_INVALID	= (SSL_ERROR_BASE + 116),
-
-SSL_ERROR_FEATURE_NOT_SUPPORTED_FOR_SSL2 = (SSL_ERROR_BASE + 117),
 
 SSL_ERROR_END_OF_LIST	/* let the c compiler determine the value of this. */
 } SSLErrorCodes;
