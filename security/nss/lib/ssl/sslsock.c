@@ -40,7 +40,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsock.c,v 1.79 2011/11/16 19:12:35 kaie%kuix.de Exp $ */
+/* $Id: sslsock.c,v 1.80 2011/11/17 00:20:22 bsmith%mozilla.com Exp $ */
 #include "seccomon.h"
 #include "cert.h"
 #include "keyhi.h"
@@ -1214,7 +1214,6 @@ SSL_CipherPrefGet(PRFileDesc *fd, PRInt32 which, PRBool *enabled)
 SECStatus
 NSS_SetDomesticPolicy(void)
 {
-#ifndef EXPORT_VERSION
     SECStatus      status = SECSuccess;
     cipherPolicy * policy;
 
@@ -1224,37 +1223,18 @@ NSS_SetDomesticPolicy(void)
 	    break;
     }
     return status;
-#else
-    return NSS_SetExportPolicy();
-#endif
 }
 
 SECStatus
 NSS_SetExportPolicy(void)
 {
-    SECStatus      status = SECSuccess;
-    cipherPolicy * policy;
-
-    for (policy = ssl_ciphers; policy->cipher != 0; ++policy) {
-	status = SSL_SetPolicy(policy->cipher, policy->export);
-	if (status != SECSuccess)
-	    break;
-    }
-    return status;
+    return NSS_SetDomesticPolicy();
 }
 
 SECStatus
 NSS_SetFrancePolicy(void)
 {
-    SECStatus      status = SECSuccess;
-    cipherPolicy * policy;
-
-    for (policy = ssl_ciphers; policy->cipher != 0; ++policy) {
-	status = SSL_SetPolicy(policy->cipher, policy->france);
-	if (status != SECSuccess)
-	    break;
-    }
-    return status;
+    return NSS_SetDomesticPolicy();
 }
 
 

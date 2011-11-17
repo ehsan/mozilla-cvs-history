@@ -39,7 +39,7 @@
 #define _PKCS11N_H_
 
 #ifdef DEBUG
-static const char CKT_CVS_ID[] = "@(#) $RCSfile: pkcs11n.h,v $ $Revision: 1.25 $ $Date: 2011/11/16 19:12:36 $";
+static const char CKT_CVS_ID[] = "@(#) $RCSfile: pkcs11n.h,v $ $Revision: 1.26 $ $Date: 2011/11/17 00:20:22 $";
 #endif /* DEBUG */
 
 /*
@@ -162,7 +162,6 @@ static const char CKT_CVS_ID[] = "@(#) $RCSfile: pkcs11n.h,v $ $Revision: 1.25 $
 #define CKA_CERT_MD5_HASH		(CKA_TRUST + 101)
 
 /* NSS trust stuff */
-/* XXX fgmr new ones here-- step-up, etc. */
 
 /* HISTORICAL: define used to pass in the database key for DSA private keys */
 #define CKA_NETSCAPE_DB                 0xD5A0DB00L
