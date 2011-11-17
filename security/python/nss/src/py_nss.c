@@ -38,7 +38,7 @@
 /*
  * FIXME - below are general things which need fixing
  *
- * repr() vs. str() class methods. repr should just use the default of 
+ * repr() vs. str() class methods. repr should just use the default of
  * printing out the object class name and object pointer, not the contents
  * of the object, that's the role of str().
  *
@@ -46,7 +46,7 @@
  * allow both str and unicode objects and encode unicode to UTF-8
  * this would be done by changing the 's' format specifier to 'es'
  * and adding a 'utf-8' parameter prior to the string address parameter.
- * Unlike the 's' format specifier the char pointer will need to be 
+ * Unlike the 's' format specifier the char pointer will need to be
  * freed because it's copy of the encoded string.
  *
  * We should consider setting the default encoding to UTF-8 when our
@@ -82,12 +82,12 @@ NewType_set_classproperty(NewType *self, PyObject *value, void *closure)
         PyErr_SetString(PyExc_TypeError, "Cannot delete the classproperty attribute");
         return -1;
     }
-  
+
     if (!PyString_Check(value)) {
         PyErr_SetString(PyExc_TypeError, "The first attribute value must be a string");
         return -1;
     }
-      
+
     return 0;
 }
 
@@ -405,7 +405,7 @@ typedef struct DnAvaPropsStr {
 
 static const DnAvaProps dn_ava_props[] = {
 /* IANA registered type names
- * (See: http://www.iana.org/assignments/ldap-parameters) 
+ * (See: http://www.iana.org/assignments/ldap-parameters)
  */
 /* RFC 3280, 4630 MUST SUPPORT */
     { "CN",             64, SEC_OID_AVA_COMMON_NAME,    SEC_ASN1_UTF8_STRING},
@@ -906,12 +906,12 @@ static BitStringTable KeyUsageDef[] = {
 
 /*
  * read_data_from_file(PyObject *file_arg)
- * 
+ *
  * :Parameters:
  *     file_arg : file name or file object
  *         If string treat as file path to open and read,
  *         if file object read from file object.
- * 
+ *
  * Read the contents of a file and return as a PyString object.
  * If file is a string then treat it as a file pathname and open
  * and read the contents of that file. If file is a file object
@@ -940,7 +940,7 @@ read_data_from_file(PyObject *file_arg)
         return NULL;
     }
     Py_DECREF(py_file);
-    
+
     return py_file_contents;
 }
 
@@ -953,7 +953,7 @@ secport_ucs2_swap_bytes(SECItem *ucs2_item)
     if ((ucs2_item == NULL) || (ucs2_item->len % 2)) {
         return SECFailure;
     }
-    
+
     for (i = 0; i < ucs2_item->len; i += 2) {
         tmp = ucs2_item->data[i];
         ucs2_item->data[i] = ucs2_item->data[i+1];
@@ -1019,7 +1019,7 @@ der_bitstring_to_nss_bitstring(SECItem *dst, SECItem *src) {
 
     src_len = src->len;
     src_data = src->data;
-    
+
     /* First octet is ASN1 type */
     if (src_len <= 0) goto bad_data;
     octet = *src_data++; src_len--;
@@ -1232,7 +1232,7 @@ decode_oid_sequence_to_tuple(SECItem *item, RepresentationKind repr_kind)
     return tuple;
 }
 
-/* NSS WART: CERT_CopyAVA is hidden, but we need it, copied here from secname.c */ 
+/* NSS WART: CERT_CopyAVA is hidden, but we need it, copied here from secname.c */
 CERTAVA *
 CERT_CopyAVA(PRArenaPool *arena, CERTAVA *from)
 {
@@ -1263,11 +1263,11 @@ CERT_CopyGeneralName(PRArenaPool *arena, CERTGeneralName **pdst, CERTGeneralName
      * NSS WART
      * There is no public API to create a CERTGeneralName, copy it, or free it.
      * You don't know what arena was used to create the general name.
-     * GeneralNames are linked in a list, this makes it difficult for a 
+     * GeneralNames are linked in a list, this makes it difficult for a
      * general name to exist independently, it would have been better if there
      * was a list container independent general names could be placed in,
      * then you wouldn't have to worry about the link fields in each independent name.
-     * 
+     *
      * The logic here is copied from cert_CopyOneGeneralName in certdb/genname.c
      */
 
@@ -1292,30 +1292,30 @@ CERT_CopyGeneralName(PRArenaPool *arena, CERTGeneralName **pdst, CERTGeneralName
     dst->type = src->type;
 
     switch (src->type) {
-    case certDirectoryName: 
-	if ((result = SECITEM_CopyItem(arena, &dst->derDirectoryName, 
+    case certDirectoryName:
+	if ((result = SECITEM_CopyItem(arena, &dst->derDirectoryName,
                                        &src->derDirectoryName)) != SECSuccess) {
             goto exit;
         }
-        if ((result = CERT_CopyName(arena, &dst->name.directoryName, 
+        if ((result = CERT_CopyName(arena, &dst->name.directoryName,
                                     &src->name.directoryName)) != SECSuccess) {
             goto exit;
         }
 	break;
 
-    case certOtherName: 
-	if ((result = SECITEM_CopyItem(arena, &dst->name.OthName.name, 
+    case certOtherName:
+	if ((result = SECITEM_CopyItem(arena, &dst->name.OthName.name,
                                        &src->name.OthName.name)) != SECSuccess) {
             goto exit;
         }
-        if ((result = SECITEM_CopyItem(arena, &dst->name.OthName.oid, 
+        if ((result = SECITEM_CopyItem(arena, &dst->name.OthName.oid,
                                        &src->name.OthName.oid)) != SECSuccess) {
             goto exit;
         }
 	break;
 
-    default: 
-	if ((result = SECITEM_CopyItem(arena, &dst->name.other, 
+    default:
+	if ((result = SECITEM_CopyItem(arena, &dst->name.other,
                                        &src->name.other)) != SECSuccess) {
             goto exit;
         }
@@ -1323,7 +1323,7 @@ CERT_CopyGeneralName(PRArenaPool *arena, CERTGeneralName **pdst, CERTGeneralName
 
     }
 
-    
+
  exit:
     if (result == SECSuccess) {
         *pdst = dst;
@@ -1420,7 +1420,7 @@ CERT_CopyGeneralNameList(PRArenaPool *arena, CERTGeneralName **pdst, CERTGeneral
      * There is no publice API to copy a list of GeneralNames.
      *
      * GeneralNames are an exception to all other NSS data containers.
-     * Normally homogeneous collections are stored in a array of pointers to 
+     * Normally homogeneous collections are stored in a array of pointers to
      * the items with the last array element being NULL. However GeneralNames are
      * exception, they embed a linked list for assembling them in a list. Not only
      * is this an awkward deviation but it means the GeneralName cannot belong to
@@ -1495,8 +1495,8 @@ CERT_CopyCRLDistributionPoint(PRArenaPool *arena, CRLDistributionPoint **pdst, C
     if ((dst = PORT_ArenaZNew(arena, CRLDistributionPoint)) == NULL) {
         result = SECFailure;
         goto exit;
-    }        
-    
+    }
+
     switch((dst->distPointType = src->distPointType)) {
     case generalName:
         if ((result = CERT_CopyGeneralNameList(arena,
@@ -1526,26 +1526,26 @@ CERT_CopyCRLDistributionPoint(PRArenaPool *arena, CRLDistributionPoint **pdst, C
     if ((result = SECITEM_CopyItem(arena, &dst->reasons, &src->reasons)) != SECSuccess) {
         goto exit;
     }
-    
+
     /*
      * WARNING: NSS WART
      * src->bitsmap is a SECItem whose length is a bit count and whose data
      * omits the leading DER bitstring "unused" octet.
      */
-    
+
     tmp_item = src->bitsmap;
     DER_ConvertBitString(&tmp_item); /* make len a byte count */
     if ((result = SECITEM_CopyItem(arena, &dst->bitsmap, &tmp_item)) != SECSuccess) {
         goto exit;
     }
     dst->bitsmap.len = src->bitsmap.len;
-    
+
     if (src->crlIssuer) {
         if ((result = CERT_CopyGeneralName(arena, &dst->crlIssuer, src->crlIssuer)) != SECSuccess) {
             goto exit;
         }
     }
-    
+
     /*
      * WARNING: we don't copy these because they're only used during decoding:
      * derDistPoint, derRelativeName, derCrlIssuer, derFullName
@@ -1578,8 +1578,8 @@ CERT_CopyAuthKeyID(PRArenaPool *arena, CERTAuthKeyID **pdst, CERTAuthKeyID *src)
     if ((dst = PORT_ArenaZNew(arena, CERTAuthKeyID)) == NULL) {
         result = SECFailure;
         goto exit;
-    }        
-    
+    }
+
     if ((result = SECITEM_CopyItem(arena, &dst->keyID, &src->keyID)) != SECSuccess) {
         goto exit;
     }
@@ -1914,7 +1914,7 @@ set_thread_local(const char *name, PyObject *obj)
         PyErr_SetString(PyExc_RuntimeError, "cannot store object in thread local data dict");
         return -1;
     }
-    
+
     return 0;
 }
 
@@ -2125,7 +2125,7 @@ obj_sprintf(const char *fmt, ...)
     PyObject *py_fmt = NULL;
     PyObject *result = NULL;
     const char *s;
-    
+
     for (s = fmt, n_fmts = 0; *s; s++) {
         if (*s == '%') {
             if (s > fmt) {
@@ -2873,7 +2873,7 @@ der_boolean_secitem_to_pystr(SECItem *item)
 /*
  * Decodes ASN1 integer. Properly handles large magnitude.
  * PyInt object returned if value fits, PyLong object otherwise.
- * 
+ *
  * item is a decoded ASN1 integer, if the integer is a DER encoded
  * integer with a tag and length then call encoded_integer_secitem_to_pylong
  */
@@ -2904,7 +2904,7 @@ integer_secitem_to_pylong(SECItem *item)
     } else {
         if ((l = PyInt_FromLong(0)) == NULL) {
             goto error;
-        }      
+        }
     }
 
     if ((eight = PyInt_FromLong(8)) == NULL) {
@@ -2921,11 +2921,11 @@ integer_secitem_to_pylong(SECItem *item)
         }
 
         Py_CLEAR(l);
-        
+
         if ((l = PyNumber_Or(tmp, new_bits)) == NULL) {
             goto error;
         }
-        
+
         Py_CLEAR(tmp);
         Py_CLEAR(new_bits);
 
@@ -2935,7 +2935,7 @@ integer_secitem_to_pylong(SECItem *item)
             goto exit;
         }
     }
-    
+
  error:
     Py_CLEAR(l);
  exit:
@@ -3443,7 +3443,7 @@ fingerprint_format_lines(SECItem *item, int level)
 static PyObject *
 CERTGeneralName_type_string_to_pystr(CERTGeneralName *general_name)
 {
-    
+
     switch(general_name->type) {
     case certOtherName: {
         PyObject *py_oid = oid_secitem_to_pystr_desc(&general_name->name.OthName.oid);
@@ -3501,7 +3501,7 @@ CERTGeneralName_to_pystr(CERTGeneralName *general_name)
     default:
         PyErr_Format(PyExc_ValueError, _("unknown type [%d]"), (int)general_name->type - 1);
         return NULL;
-        
+
     }
 }
 
@@ -3520,7 +3520,7 @@ CERTGeneralName_to_pystr_with_label(CERTGeneralName *general_name)
     py_value = CERTGeneralName_to_pystr(general_name);
 
     if (py_label && py_value) {
-        result = PyString_FromFormat("%s: %s", 
+        result = PyString_FromFormat("%s: %s",
                                      PyString_AS_STRING(py_label),
                                      PyString_AS_STRING(py_value));
     } else if (py_value) {
@@ -4669,7 +4669,7 @@ RSAPSSParams_format_lines(SECItem *item, int level)
     }
 
     if (params.hashAlg) {
-        obj = oid_secitem_to_pystr_desc(&params->hashAlg->algorithm);
+        obj = oid_secitem_to_pystr_desc(&params.hashAlg->algorithm);
     } else {
         obj = PyString_FromString("default, SHA-1");
     }
@@ -4677,8 +4677,8 @@ RSAPSSParams_format_lines(SECItem *item, int level)
     Py_CLEAR(obj);
 
     if (params.maskAlg) {
-        obj = oid_secitem_to_pystr_desc(&params->maskAlg->algorithm);
-        if (SEC_QuickDERDecodeItem(pool, &mask_hash_alg,
+        obj = oid_secitem_to_pystr_desc(&params.maskAlg->algorithm);
+        if (SEC_QuickDERDecodeItem(arena, &mask_hash_alg,
                                    SEC_ASN1_GET(SECOID_AlgorithmIDTemplate),
                                    &params.maskAlg->parameters) == SECSuccess) {
             obj1 = oid_secitem_to_pystr_desc(&mask_hash_alg);
@@ -6091,7 +6091,7 @@ SignedData_new_from_SECItem(SECItem *item)
         return NULL;
     }
 
-    if ((self->py_algorithm = 
+    if ((self->py_algorithm =
          AlgorithmID_new_from_SECAlgorithmID(&self->signed_data.signatureAlgorithm)) == NULL) {
         Py_CLEAR(self);
         return NULL;
@@ -7493,7 +7493,7 @@ Certificate_get_extensions(Certificate *self, void *closure)
     for (extensions = self->cert->extensions, i = 0; extensions && *extensions; extensions++, i++) {
         CERTCertExtension *extension = *extensions;
         PyObject *py_extension;
-        
+
         if ((py_extension = CertificateExtension_new_from_CERTCertExtension(extension)) == NULL) {
             Py_DECREF(extensions_tuple);
             return NULL;
@@ -8716,7 +8716,7 @@ AVA_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     }
 
     self->ava = NULL;
-    
+
     TraceObjNewLeave(self);
     return (PyObject *)self;
 }
@@ -9091,7 +9091,7 @@ CERTRDN_has_tag(CERTRDN *rdn, int tag)
 {
     CERTAVA **avas;
     CERTAVA *ava = NULL;
-    
+
     if (!rdn) return false;
     for (avas = rdn->avas; avas && (ava = *avas); avas++) {
         int ava_tag = CERT_GetAVATag(ava);
@@ -9137,7 +9137,7 @@ RDN_subscript(RDN *self, PyObject* item)
 
     if (PyIndex_Check(item)) {
         Py_ssize_t i = PyNumber_AsSsize_t(item, PyExc_IndexError);
-	
+
         if (i == -1 && PyErr_Occurred())
             return NULL;
         if (i < 0)
@@ -9157,7 +9157,7 @@ RDN_subscript(RDN *self, PyObject* item)
         } else {
             result = PyList_New(slicelength);
             if (!result) return NULL;
-            
+
             for (cur = start, i = 0; i < slicelength; cur += step, i++) {
                 /* We don't need to bump the ref count because RDN_item
                  * returns a new object */
@@ -9449,7 +9449,7 @@ RDN_new_from_CERTRDN(CERTRDN *rdn)
     if ((self = (RDN *) RDNType.tp_new(&RDNType, NULL, NULL)) == NULL) {
         return NULL;
     }
-    
+
     i = 0;
     if (rdn) {
         for (avas = rdn->avas; i < MAX_AVAS && avas && (ava = *avas); avas++, i++) {
@@ -9489,10 +9489,10 @@ RDN_new_from_CERTRDN(CERTRDN *rdn)
  *
  * CERT_CreateName() does not allow you to pass in an arena, it creates one
  * and stores it internally. But to call CERT_CreateName() you have to call
- * CERT_CopyRDN() which requires an arena. This means a CERTName object has to 
+ * CERT_CopyRDN() which requires an arena. This means a CERTName object has to
  * have 2 arenas when one would have sufficed, it also means more bookkeeping
  * to manage the second unnecessary arena.
- * 
+ *
  * CERT_CopyAVA() doesn't return SECStatus unlike other copy routines.
  */
 
@@ -9578,7 +9578,7 @@ DN_subscript(DN *self, PyObject* item)
 
     if (PyIndex_Check(item)) {
         Py_ssize_t i = PyNumber_AsSsize_t(item, PyExc_IndexError);
-	
+
         if (i == -1 && PyErr_Occurred())
             return NULL;
         if (i < 0)
@@ -9598,7 +9598,7 @@ DN_subscript(DN *self, PyObject* item)
         } else {
             result = PyList_New(slicelength);
             if (!result) return NULL;
-            
+
             for (cur = start, i = 0; i < slicelength; cur += step, i++) {
                 /* We don't need to bump the ref count because RDN_item
                  * returns a new object */
@@ -10165,7 +10165,7 @@ DN_init(DN *self, PyObject *args, PyObject *kwds)
 static PyObject *
 DN_repr(DN *self)
 {
-    return CERTName_to_pystr(&self->name);    
+    return CERTName_to_pystr(&self->name);
 }
 
 static PySequenceMethods DN_as_sequence = {
@@ -10570,7 +10570,7 @@ GeneralName_new_from_CERTGeneralName(CERTGeneralName *name)
      * NSS WART
      * There is no public API to create a CERTGeneralName, copy it, or free it.
      * You don't know what arena was used to create the general name.
-     * GeneralNames are linked in a list, this makes it difficult for a 
+     * GeneralNames are linked in a list, this makes it difficult for a
      * general name to exist independently, it would have been better if there
      * was a list container independent general names could be placed in,
      * then you wouldn't have to worry about the link fields in each independent name.
@@ -11299,7 +11299,7 @@ PK11Slot_authenticate(PK11Slot *self, PyObject *args, PyObject *kwds)
     Py_DECREF(pin_args);
 
     Py_RETURN_NONE;
-    
+
 }
 
 PyDoc_STRVAR(PK11Slot_logout_doc,
@@ -12521,7 +12521,7 @@ CRLDistributionPt_repr(CRLDistributionPt *self)
 
         name_desc = PyString_FromFormat(_("Relative Distinguished Name: %s"),
                                         PyString_AsString(name_str));
-        
+
     } else {
         PyErr_Format(PyExc_ValueError, "unknown distribution point type (%d), "
                      "expected generalName or relativeDistinguishedName",
@@ -12536,7 +12536,7 @@ CRLDistributionPt_repr(CRLDistributionPt *self)
     if ((crl_issuer_str = PyObject_Str(crl_issuer)) == NULL) {
         goto exit;
     }
-        
+
     if ((reasons = crl_reason_bitstr_to_tuple(&self->pt->bitsmap, AsEnumDescription)) == NULL) {
         goto exit;
     }
@@ -12794,7 +12794,7 @@ CRLDistributionPts_init_from_SECItem(CRLDistributionPts *self, SECItem *item)
     }
 
     count = CERTCrlDistributionPoints_count(dist_pts);
-    
+
     if ((py_pts = PyTuple_New(count)) == NULL) {
         PORT_FreeArena(arena, PR_FALSE);
 	return -1;
@@ -13088,7 +13088,7 @@ AuthKeyID_format_lines(AuthKeyID *self, PyObject *args, PyObject *kwds)
     }
 
     FMT_LABEL_AND_APPEND(lines, _("Key ID"), level, fail);
-    
+
     if ((obj = AuthKeyID_get_key_id(self, NULL)) == NULL) {
         goto fail;
     }
@@ -13452,7 +13452,7 @@ BasicConstraints_format_lines(BasicConstraints *self, PyObject *args, PyObject *
     Py_INCREF(obj);
     FMT_OBJ_AND_APPEND(lines, _("Is CA"), obj, level, fail);
     Py_CLEAR(obj);
-    
+
     if ((obj = PyString_FromFormat("%d", self->bc.pathLenConstraint)) == NULL) {
         goto fail;
     }
@@ -13624,14 +13624,14 @@ CertificateRequest_init_from_SECItem(CertificateRequest *self, SECItem *der_cert
     self->cert_req->arena = self->arena;
 
     /* Since cert request is a signed data, must decode to get the inner data */
-    if (SEC_ASN1DecodeItem(self->arena, &self->signed_data, 
+    if (SEC_ASN1DecodeItem(self->arena, &self->signed_data,
                            SEC_ASN1_GET(CERT_SignedDataTemplate),
                            der_cert_req) != SECSuccess) {
         set_nspr_error(NULL);
         return -1;
     }
 
-    if (SEC_ASN1DecodeItem(self->arena, self->cert_req, 
+    if (SEC_ASN1DecodeItem(self->arena, self->cert_req,
                            SEC_ASN1_GET(CERT_CertificateRequestTemplate),
                            &self->signed_data.data) != SECSuccess) {
         set_nspr_error(NULL);
@@ -13711,7 +13711,7 @@ CertificateRequest_get_extensions(CertificateRequest *self, void *closure)
     for (extensions = extensions_list, i = 0; extensions && *extensions; extensions++, i++) {
         CERTCertExtension *extension = *extensions;
         PyObject *py_extension;
-        
+
         if ((py_extension = CertificateExtension_new_from_CERTCertExtension(extension)) == NULL) {
             Py_DECREF(extensions_tuple);
             return NULL;
@@ -13885,7 +13885,7 @@ CertificateRequest_dealloc(CertificateRequest* self)
 {
     TraceMethodEnter(self);
 
-    /* 
+    /*
      * We could call CERT_DestroyCertificateRequest() but all
      * CERT_DestroyCertificateRequest() does is call PORT_FreeArena() on
      * the arena stored in the CERTCertificateRequest. All the other
@@ -14022,7 +14022,7 @@ InitParameters_set_password_required(InitParameters *self, PyObject *value, void
         PyErr_SetString(PyExc_TypeError, "Cannot delete the password_required attribute");
         return -1;
     }
-  
+
     switch(PyObject_IsTrue(value)) {
     case 0:
         self->params.passwordRequired = PR_FALSE;
@@ -14053,12 +14053,12 @@ InitParameters_set_min_password_len(InitParameters *self, PyObject *value, void 
         PyErr_SetString(PyExc_TypeError, "Cannot delete the min_password_len attribute");
         return -1;
     }
-  
+
     if (!PyInt_Check(value)) {
         PyErr_SetString(PyExc_TypeError, "The min_password_len attribute value must be an integer");
         return -1;
     }
-      
+
     self->params.minPWLen = PyInt_AsLong(value);
 
     return 0;
@@ -14091,7 +14091,7 @@ InitParameters_set_manufacturer_id(InitParameters *self, PyObject *value, void *
         self->params.manufactureID = NULL;
         return 0;
     }
-  
+
     if ((args = Py_BuildValue("(O)", value)) == NULL) {
         return -1;
     }
@@ -14106,7 +14106,7 @@ InitParameters_set_manufacturer_id(InitParameters *self, PyObject *value, void *
         PyMem_Free(self->params.manufactureID);
         self->params.manufactureID = NULL;
     }
-    
+
     self->params.manufactureID = new_value;
     Py_DECREF(args);
     return 0;
@@ -14139,7 +14139,7 @@ InitParameters_set_library_description(InitParameters *self, PyObject *value, vo
         self->params.libraryDescription = NULL;
         return 0;
     }
-  
+
     if ((args = Py_BuildValue("(O)", value)) == NULL) {
         return -1;
     }
@@ -14154,7 +14154,7 @@ InitParameters_set_library_description(InitParameters *self, PyObject *value, vo
         PyMem_Free(self->params.libraryDescription);
         self->params.libraryDescription = NULL;
     }
-    
+
     self->params.libraryDescription = new_value;
     Py_DECREF(args);
     return 0;
@@ -14189,7 +14189,7 @@ InitParameters_set_crypto_token_description(InitParameters *self, PyObject *valu
         self->params.cryptoTokenDescription = NULL;
         return 0;
     }
-  
+
     if ((args = Py_BuildValue("(O)", value)) == NULL) {
         return -1;
     }
@@ -14204,7 +14204,7 @@ InitParameters_set_crypto_token_description(InitParameters *self, PyObject *valu
         PyMem_Free(self->params.cryptoTokenDescription);
         self->params.cryptoTokenDescription = NULL;
     }
-    
+
     self->params.cryptoTokenDescription = new_value;
     Py_DECREF(args);
     return 0;
@@ -14239,7 +14239,7 @@ InitParameters_set_db_token_description(InitParameters *self, PyObject *value, v
         self->params.dbTokenDescription = NULL;
         return 0;
     }
-  
+
     if ((args = Py_BuildValue("(O)", value)) == NULL) {
         return -1;
     }
@@ -14254,7 +14254,7 @@ InitParameters_set_db_token_description(InitParameters *self, PyObject *value, v
         PyMem_Free(self->params.dbTokenDescription);
         self->params.dbTokenDescription = NULL;
     }
-    
+
     self->params.dbTokenDescription = new_value;
     Py_DECREF(args);
     return 0;
@@ -14287,7 +14287,7 @@ InitParameters_set_fips_token_description(InitParameters *self, PyObject *value,
         self->params.FIPSTokenDescription = NULL;
         return 0;
     }
-  
+
     if ((args = Py_BuildValue("(O)", value)) == NULL) {
         return -1;
     }
@@ -14302,7 +14302,7 @@ InitParameters_set_fips_token_description(InitParameters *self, PyObject *value,
         PyMem_Free(self->params.FIPSTokenDescription);
         self->params.FIPSTokenDescription = NULL;
     }
-    
+
     self->params.FIPSTokenDescription = new_value;
     Py_DECREF(args);
     return 0;
@@ -14335,7 +14335,7 @@ InitParameters_set_crypto_slot_description(InitParameters *self, PyObject *value
         self->params.cryptoSlotDescription = NULL;
         return 0;
     }
-  
+
     if ((args = Py_BuildValue("(O)", value)) == NULL) {
         return -1;
     }
@@ -14350,7 +14350,7 @@ InitParameters_set_crypto_slot_description(InitParameters *self, PyObject *value
         PyMem_Free(self->params.cryptoSlotDescription);
         self->params.cryptoSlotDescription = NULL;
     }
-    
+
     self->params.cryptoSlotDescription = new_value;
     Py_DECREF(args);
     return 0;
@@ -14383,7 +14383,7 @@ InitParameters_set_db_slot_description(InitParameters *self, PyObject *value, vo
         self->params.dbSlotDescription = NULL;
         return 0;
     }
-  
+
     if ((args = Py_BuildValue("(O)", value)) == NULL) {
         return -1;
     }
@@ -14398,7 +14398,7 @@ InitParameters_set_db_slot_description(InitParameters *self, PyObject *value, vo
         PyMem_Free(self->params.dbSlotDescription);
         self->params.dbSlotDescription = NULL;
     }
-    
+
     self->params.dbSlotDescription = new_value;
     Py_DECREF(args);
     return 0;
@@ -14431,7 +14431,7 @@ InitParameters_set_fips_slot_description(InitParameters *self, PyObject *value, 
         self->params.FIPSSlotDescription = NULL;
         return 0;
     }
-  
+
     if ((args = Py_BuildValue("(O)", value)) == NULL) {
         return -1;
     }
@@ -14446,7 +14446,7 @@ InitParameters_set_fips_slot_description(InitParameters *self, PyObject *value, 
         PyMem_Free(self->params.FIPSSlotDescription);
         self->params.FIPSSlotDescription = NULL;
     }
-    
+
     self->params.FIPSSlotDescription = new_value;
     Py_DECREF(args);
     return 0;
@@ -14529,7 +14529,7 @@ InitParameters_format_lines(InitParameters *self, PyObject *args, PyObject *kwds
     }
     FMT_OBJ_AND_APPEND(lines, _("Password Required"), obj, level, fail);
     Py_CLEAR(obj);
-    
+
     if ((obj = InitParameters_get_min_password_len(self, NULL)) == NULL) {
         goto fail;
     }
@@ -14796,7 +14796,7 @@ InitParameters_str(InitParameters *self)
     if ((py_password_required = InitParameters_get_password_required(self, NULL)) == NULL) {
         goto fail;
     }
-    
+
     if ((py_min_password_len = InitParameters_get_min_password_len(self, NULL)) == NULL) {
         goto fail;
     }
@@ -14863,7 +14863,7 @@ InitParameters_str(InitParameters *self)
     if ((result = PyString_Format(fmt, args)) == NULL) {
         goto fail;
     }
-    
+
     goto exit;
 
  fail:
@@ -15504,7 +15504,7 @@ PKCS12_nickname_collision_callback(SECItem *old_nickname, PRBool *returned_cance
         returned_nickname->data = (unsigned char *)PORT_Strdup(PyString_AsString(py_new_nickname_utf8));
         returned_nickname->len = PyString_Size(py_new_nickname_utf8);
     }
-    
+
 
  exit:
     TraceMessage("PKCS12_nickname_collision_callback: exiting");
@@ -15892,7 +15892,7 @@ PKCS12Decoder_init(PKCS12Decoder *self, PyObject *args, PyObject *kwds)
         result = -1;
         goto exit;
     }
-            
+
     if (SEC_PKCS12DecoderIterateInit(self->decoder_ctx) != SECSuccess) {
         set_nspr_error("PKCS12 item iteration failed");
         result = -1;
@@ -17167,7 +17167,7 @@ cert_oid_tag_name(PyObject *self, PyObject *args)
 
     if (!PyArg_ParseTuple(args, "O:oid_tag_name", &arg))
         return NULL;
-    
+
     oid_tag = get_oid_tag_from_object(arg);
     if (oid_tag == SEC_OID_UNKNOWN || oid_tag == -1) {
         return NULL;
@@ -17207,7 +17207,7 @@ cert_oid_tag(PyObject *self, PyObject *args)
 
     if (!PyArg_ParseTuple(args, "O:oid_tag", &arg))
         return NULL;
-    
+
     oid_tag = get_oid_tag_from_object(arg);
     if (oid_tag == SEC_OID_UNKNOWN || oid_tag == -1) {
         return NULL;
@@ -17247,7 +17247,7 @@ cert_oid_dotted_decimal(PyObject *self, PyObject *args)
 
     if (!PyArg_ParseTuple(args, "O:oid_dotted_decimal", &arg))
         return NULL;
-    
+
     oid_tag = get_oid_tag_from_object(arg);
     if (oid_tag == SEC_OID_UNKNOWN || oid_tag == -1) {
         return NULL;
@@ -18221,7 +18221,7 @@ cert_read_der_from_file(PyObject *self, PyObject *args, PyObject *kwds)
         return NULL;
     }
     Py_DECREF(py_file);
-    
+
     if (ascii) {
         char *p, *tmp, *der_begin, *der_end;
 
@@ -18236,7 +18236,7 @@ cert_read_der_from_file(PyObject *self, PyObject *args, PyObject *kwds)
 	    if (!tmp) {
                 PyErr_SetString(PyExc_ValueError, "no line ending after PEM BEGIN");
                 Py_DECREF(py_file_contents);
-                return NULL;              
+                return NULL;
             }
             p = der_begin = tmp + 1;
             tmp = strstr(p, "-----END");
@@ -18252,7 +18252,7 @@ cert_read_der_from_file(PyObject *self, PyObject *args, PyObject *kwds)
 	    der_begin = p;
             der_end = p + PyString_GET_SIZE(py_file_contents);
 	}
-     
+
 	/* Convert to binary */
         if (NSSBase64_DecodeBuffer(NULL, &der, der_begin, der_end - der_begin) == NULL) {
             Py_DECREF(py_file_contents);
@@ -18263,7 +18263,7 @@ cert_read_der_from_file(PyObject *self, PyObject *args, PyObject *kwds)
         SECITEM_FreeItem(&der, PR_FALSE);
         return py_sec_item;
     }
-    
+
     der.data = (unsigned char *)PyString_AS_STRING(py_file_contents);
     der.len = PyString_GET_SIZE(py_file_contents);
     py_sec_item = SecItem_new_from_SECItem(&der, SECITEM_unknown);
@@ -18302,7 +18302,7 @@ cert_x509_key_usage(PyObject *self, PyObject *args)
     SECItem bitstr_item;
     int repr_kind = AsEnumDescription;
 
-    if (!PyArg_ParseTuple(args, "O!|i:x509_key_usage", 
+    if (!PyArg_ParseTuple(args, "O!|i:x509_key_usage",
                           &SecItemType, &py_sec_item, &repr_kind))
         return NULL;
 
@@ -18850,9 +18850,9 @@ pkcs12_enable_all_ciphers(PyObject *self, PyObject *args)
                           PKCS12_RC2_CBC_128,
                           PKCS12_DES_56,
                           PKCS12_DES_EDE3_168};
-    
+
     TraceMethodEnter(self);
-    
+
     for (i = 0; i < sizeof(all_ciphers)/sizeof(all_ciphers[0]); i++) {
         cipher = all_ciphers[i];
         if (SEC_PKCS12EnableCipher(cipher, PR_TRUE) != SECSuccess) {
@@ -19128,19 +19128,19 @@ pkcs12_export(PyObject *self, PyObject *args, PyObject *kwds)
             PyErr_SetString(PyExc_ValueError, "cert does not have a slot");
             goto exit;
         }
-    
+
         key_safe = SEC_PKCS12CreateUnencryptedSafe(export_ctx);
         if (cert_cipher == SEC_OID_UNKNOWN) {
             cert_safe = key_safe;
         } else {
             cert_safe = SEC_PKCS12CreatePasswordPrivSafe(export_ctx, &utf8_pkcs12_password_item, cert_cipher);
         }
-    
+
         if (!cert_safe || !key_safe) {
             PyErr_SetString(PyExc_ValueError, "key or cert safe creation failed");
             goto exit;
         }
-    
+
         if (SEC_PKCS12AddCertAndKey(export_ctx, cert_safe, NULL, cert,
                                     CERT_GetDefaultCertDB(), key_safe, NULL,
                                     PR_TRUE, &utf8_pkcs12_password_item, key_cipher) != SECSuccess) {
