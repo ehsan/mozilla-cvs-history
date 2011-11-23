@@ -156,7 +156,7 @@ $productBranchVersions = array(
            'nightly-mozilla-2.1'     => 'mozilla-2.1'
         ),
         '*'       => array(
-           'nightly'                 => 'mozilla-central',
+           'nightly'                 => 'birch',
            'aurora'                  => 'mozilla-aurora',
            'nightly-birch'           => 'birch',
            'nightly-ash'             => 'ash',
