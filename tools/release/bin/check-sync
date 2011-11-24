@@ -57,7 +57,7 @@ $TAR xfjp $latestBackup
 $RSYNC -ni -avO --delete $NEW_SNIPPET_DIR/ $LIVE_SNIPPET_DIR/ > /tmp/rsync.log 2>&1 || true
 
 # exclude rsync's normal output
-nonTrivialLogLines=`$GREP -vE '^(building file list|sent [0-9]+|total size|$)' /tmp/rsync.log || true`
+nonTrivialLogLines=`$GREP -vE '^(sending incremental file list|sent [0-9]+|total size|$)' /tmp/rsync.log || true`
 # then test the output for lines we weren't expecting (datastore differences!)
 if [[ -n $nonTrivialLogLines ]]; then
   echo "Error or differences between MPT backup and remote production."
