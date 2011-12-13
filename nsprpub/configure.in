@@ -1358,6 +1358,9 @@ case "$target" in
                 CPU_ARCH=i386
             fi
             ;;
+        x86_64)
+            CPU_ARCH=x86_64
+            ;;
         *)
             CPU_ARCH=ppc
             ;;
