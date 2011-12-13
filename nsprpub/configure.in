@@ -166,6 +166,36 @@ i?86-*android*)
     ;;
 esac
 
+dnl ========================================================
+dnl = Gonk is a fork of Android used for Mozilla's B2G project.
+dnl = Configuration is done largely by the top level config
+dnl = and the specified gonk directory doesn't matter here.
+dnl ========================================================
+
+AC_ARG_WITH(gonk,
+[  --with-gonk=DIR
+               location of gonk dir],
+    gonkdir=$withval)
+
+if test -n "$gonkdir" ; then
+    dnl Most things are directly configured by env vars when building for gonk
+
+    dnl prevent cross compile section from using these flags as host flags
+    if test -z "$HOST_CPPFLAGS" ; then
+        HOST_CPPFLAGS=" "
+    fi
+    if test -z "$HOST_CFLAGS" ; then
+        HOST_CFLAGS=" "
+    fi
+    if test -z "$HOST_CXXFLAGS" ; then
+        HOST_CXXFLAGS=" "
+    fi
+    if test -z "$HOST_LDFLAGS" ; then
+        HOST_LDFLAGS=" "
+    fi
+
+    AC_DEFINE(ANDROID)
+else
 case "$target" in
 *-android*|*-linuxandroid*)
     if test -z "$android_ndk" ; then
@@ -240,6 +270,7 @@ case "$target" in
     AC_DEFINE(ANDROID)
     ;;
 esac
+fi
 
 dnl ========================================================
 dnl =
