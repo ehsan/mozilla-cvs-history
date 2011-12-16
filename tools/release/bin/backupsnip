@@ -62,8 +62,8 @@ if [ -z "$args" ]; then
 fi
 
 pushd $LIVE_SNIPPET_DIR > /dev/null
-echo Running time $TAR cfvz $BACKUP_DIR/$backupDirName.tar.gz $args
-time $TAR cfvz $BACKUP_DIR/$backupDirName.tar.gz $args
+echo Running /usr/bin/time -p -o $BACKUP_DIR/$backupDirName.time $TAR cfvz $BACKUP_DIR/$backupDirName.tar.gz $args
+/usr/bin/time -p -o $BACKUP_DIR/$backupDirName.time $TAR cfvz $BACKUP_DIR/$backupDirName.tar.gz $args
 popd > /dev/null
 
 exit 0

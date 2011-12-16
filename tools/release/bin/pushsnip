@@ -35,8 +35,8 @@ fi
 # publish the new snippets
 echo "---------------------------------------------------------------------------"
 echo Updating MPT:
-echo Running time $RSYNC -PaO $STAGING_DIR/$1/ $LIVE_SNIPPET_DIR
-time $RSYNC -PaO $STAGING_DIR/$1/ $LIVE_SNIPPET_DIR
+echo Running /usr/bin/time -p -o $STAGING_DIR/$1.time $RSYNC -PaO $STAGING_DIR/$1/ $LIVE_SNIPPET_DIR
+/usr/bin/time -p -o $STAGING_DIR/$1.time $RSYNC -PaO $STAGING_DIR/$1/ $LIVE_SNIPPET_DIR
 echo
 echo Touching $LIVE_SNIPPET_DIR
 touch $LIVE_SNIPPET_DIR
