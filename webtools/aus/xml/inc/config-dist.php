@@ -190,6 +190,7 @@ $nightlyChannels = array(
     'nightly-ash',
     'nightly-elm',
     'nightly-oak',
+    'nightly-profiling',
     'aurora',
     'auroratest'
 );
@@ -213,6 +214,7 @@ $productBranchVersions = array(
            'nightly-ash'             => 'ash',
            'nightly-elm'             => 'elm',
            'nightly-oak'             => 'oak',
+           'nightly-profiling'       => 'profiling',
            'aurora'                  => 'mozilla-aurora',
            'auroratest'              => 'mozilla-aurora-test'
         )
