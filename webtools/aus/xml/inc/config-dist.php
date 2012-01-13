@@ -135,7 +135,7 @@ $nightlyChannels = array(
 // The ordering is !important!, given the wildcard block at the bottom.
 $productBranchVersions = array(
     'Firefox'     =>  array(
-        '3.5*'    => 'mozilla-1.9.1',
+        '3.5*'    => 'mozilla-1.9.2',
         '3.6*'    => 'mozilla-1.9.2',
         '*'       => array(
            'nightly'                 => 'mozilla-central',
