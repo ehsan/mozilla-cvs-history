@@ -44,12 +44,15 @@ package MozAUSLib;
 
 use Cwd;
 use File::Path;
+use File::Basename;
 use File::Copy qw(move copy);
 use English;
 
 use File::Spec::Functions;
+use Data::Dumper;
 
 use MozBuild::Util qw(RunShellCommand MkdirWithPath HashFile);
+use MozAUSConfig;
 
 require Exporter;
 
@@ -62,6 +65,7 @@ require Exporter;
                 GetSnippetDirFromChannel
                 CachedHashFile
                 $OBJDIR
+                PrepopulateHashCache
                );
 
 use strict;
@@ -79,6 +83,7 @@ use vars qw($OBJDIR $MAR_BIN $MBSDIFF_BIN $MAKE_BIN
             $DEFAULT_SNIPPET_BASE_DIR $DEFAULT_SNIPPET_TEST_DIR
             $SNIPPET_CHECKSUM_HASH_CACHE);
 
+$Data::Dumper::Indent = 1;
 $OBJDIR = 'obj';
 $MAR_BIN = "$OBJDIR/dist/host/bin/mar";
 $MBSDIFF_BIN = "$OBJDIR/dist/host/bin/mbsdiff";
@@ -126,6 +131,84 @@ $DEFAULT_SNIPPET_TEST_DIR = $DEFAULT_SNIPPET_BASE_DIR . '.test';
 
 $SNIPPET_CHECKSUM_HASH_CACHE = {};
 
+sub PrepopulateHashCache {
+   my %args = @_;
+   my $config = $args{'config'};
+   my $startdir = getcwd();
+   my $deliverableDir = EnsureDeliverablesDir(config => $config);
+   chdir($deliverableDir);
+   my $from = $config->GetCurrentUpdate()->{'from'};
+   my $to = $config->GetCurrentUpdate()->{'to'};
+   my $rl_config = $config->{'mAppConfig'}->{'release'}->{$to};
+   my $rlp_config = $rl_config->{'platforms'};
+   my @platforms = sort(keys(%{$rlp_config}));
+   for my $p (@platforms) {
+      my $platform_locales = $rlp_config->{$p}->{'locales'};
+      for my $l (@$platform_locales) {
+         chdir(catfile($deliverableDir, $to, 'ftp'));
+
+         my $checksums_file = SubstitutePath(
+          path => $MozAUSConfig::DEFAULT_CHECKSUMS_NAME,
+          platform => $p,
+          locale => $l,
+          version => $to,
+          app => lc($config->GetApp()));
+         my $partial_mar_path = SubstitutePath(
+          path => $config->GetCurrentUpdate()->{'partial'}->{'path'},
+          platform => $p,
+          locale => $l);
+         my $complete_mar_path = SubstitutePath(
+          path => $config->GetCurrentUpdate()->{'complete'}->{'path'},
+          platform => $p,
+          locale => $l);
+         my $complete_mar_local_path = SubstitutePath(
+          path => $MozAUSConfig::DEFAULT_MAR_NAME,
+          platform => $p,
+          locale => $l,
+          version => $to,
+          app => lc($config->GetApp()));
+
+         open F, "$checksums_file" || die("can't read $checksums_file\n");
+         while (my $line = <F>){
+            chomp($line);
+            my ($hash, $hash_type, $size, $fname) = split /\s/, $line;
+            $hash_type = uc($hash_type);
+            my $file = undef;
+            if ($fname =~ m/partial.mar$/ && 
+              basename($fname) eq basename($partial_mar_path)){
+               $file = $partial_mar_path;
+            } elsif ($fname =~ m/complete.mar$/ &&
+              basename($fname) eq basename($complete_mar_path)){
+               $file = $complete_mar_path;
+            }
+            if (defined($file)){
+               my @files = (catfile("$from-$to", "ftp", $file));
+               # work around snippet creation functions using
+               # different places for complete mars
+               if ($file =~ m/complete.mar$/){
+                 push(@files, catfile($to, "ftp", $complete_mar_local_path));
+               }
+               for my $f (@files){
+                  if (! exists($SNIPPET_CHECKSUM_HASH_CACHE->{$f})) {
+                     $SNIPPET_CHECKSUM_HASH_CACHE->{$f} = {};
+                  }
+                  if (! exists($SNIPPET_CHECKSUM_HASH_CACHE->{$f}->{$hash_type})) {
+                     $SNIPPET_CHECKSUM_HASH_CACHE->{$f}->{$hash_type} = $hash;
+                  }
+                  if (! exists($SNIPPET_CHECKSUM_HASH_CACHE->{$f}->{'size'})) {
+                     $SNIPPET_CHECKSUM_HASH_CACHE->{$f}->{'size'} = $size;
+                  }
+               }
+            }
+         }
+         close F;
+      }
+   }
+   chdir($startdir);
+   # print Data::Dumper::Dumper($SNIPPET_CHECKSUM_HASH_CACHE);
+}
+
+
 sub CachedHashFile {
    my %args = @_;
 
@@ -142,8 +225,12 @@ sub CachedHashFile {
    }
 
    if (! exists($SNIPPET_CHECKSUM_HASH_CACHE->{$file}->{$checksumType})) {
-      $SNIPPET_CHECKSUM_HASH_CACHE->{$file}->{$checksumType} = 
-       HashFile(file => $file, type => $checksumType);
+      if ($checksumType eq 'size'){
+         $SNIPPET_CHECKSUM_HASH_CACHE->{$file}->{'size'} = (stat($file))[7];
+      } else {
+        $SNIPPET_CHECKSUM_HASH_CACHE->{$file}->{$checksumType} =
+         HashFile(file => $file, type => $checksumType);
+     }
    }
 
    return $SNIPPET_CHECKSUM_HASH_CACHE->{$file}->{$checksumType};
@@ -250,7 +337,7 @@ sub CreatePartialMarFile
     }
 
     if ( not -r $fromCompleteMar) {
-        print STDERR "CreatePartialMarFile: $fromCompleteMardoesn't exist!";
+        print STDERR "CreatePartialMarFile: $fromCompleteMar doesn't exist!";
         return -1;
     }
 

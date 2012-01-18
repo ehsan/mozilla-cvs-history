@@ -62,7 +62,7 @@ use strict;
 use vars qw( @RUN_MODES
              $DEFAULT_APP $DEFAULT_MODE $DEFAULT_CONFIG_FILE
              $DEFAULT_DOWNLOAD_DIR $DEFAULT_DELIVERABLE_DIR
-             $DEFAULT_MAR_NAME
+             $DEFAULT_MAR_NAME $DEFAULT_CHECKSUMS_NAME
            );
 
 @RUN_MODES = qw( build-tools
@@ -75,6 +75,7 @@ $DEFAULT_APP = 'MyApp';
 $DEFAULT_DOWNLOAD_DIR = 'downloads';
 $DEFAULT_DELIVERABLE_DIR = 'temp';
 $DEFAULT_MAR_NAME = '%app%-%version%.%locale%.%platform%.complete.mar';
+$DEFAULT_CHECKSUMS_NAME = '%app%-%version%.%locale%.%platform%.checksums';
 
 sub new
 {
@@ -114,7 +115,7 @@ sub ProcessCommandLineArgs
     Getopt::Long::GetOptions(\%args,
      'help|h|?', 'man', 'version', 'app=s', 'brand=s', 'config=s', 'verbose',
      'dry-run', 'tools-dir=s', 'download-dir=s', 'deliverable-dir=s',
-     'tools-revision=s', 'partial-patchlist-file=s', @RUN_MODES)
+     'tools-revision=s', 'partial-patchlist-file=s', 'use-checksums', @RUN_MODES)
      or return 0;
 
     $this->{'mConfigFilename'} = defined($args{'config'}) ? $args{'config'} :
@@ -133,6 +134,7 @@ sub ProcessCommandLineArgs
 
     # Is this a dry run, and we'll just print what we *would* do?
     $this->{'dryRun'} = defined($args{'dryRun'}) ? 1 : 0;
+    $this->{'useChecksums'} = defined($args{'use-checksums'}) ? 1 : 0;
 
     ## Expects to be the dir that $mToolsDir/mozilla/[all the tools] will be in.
     $this->{'mToolsDir'} = defined($args{'mToolsDir'}) ? $args{'mToolsDir'} : getcwd();
@@ -740,7 +742,8 @@ sub RemoveBrokenUpdates
                 my $partial_pathname = "$u/ftp/$gen_partial_path";
 
                 # Go to next iteration if this partial patch already exists.
-                next if -e $partial_pathname;
+                next if -e $partial_pathname ||
+                 exists $MozAUSLib::SNIPPET_CHECKSUM_HASH_CACHE->{$partial_pathname};
                 $i++;
 
                 if ( ! -f $from_path or
@@ -800,6 +803,12 @@ sub IsDryRun
 {
     my $this = shift;
     return 1 == $this->{'dryRun'};
+}
+
+sub useChecksums
+{
+    my $this = shift;
+    return 1 == $this->{'useChecksums'};
 }
 
 sub GetToolsRevision

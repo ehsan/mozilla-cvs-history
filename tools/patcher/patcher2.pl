@@ -61,7 +61,8 @@ use MozAUSLib qw(CreatePartialMarFile
                  ValidateToolsDirectory SubstitutePath
                  GetSnippetDirFromChannel
                  CachedHashFile
-                 $OBJDIR);
+                 $OBJDIR
+                 PrepopulateHashCache);
 
 use MozBuild::Util qw(MkdirWithPath RunShellCommand DownloadFile);
 
@@ -80,10 +81,9 @@ use vars qw($PID_FILE
             $DEFAULT_HGROOT
             $DEFAULT_SCHEMA_VERSION
             @SCHEMA_2_OPTIONAL_ATTR
-            @COMPUTED_URLS
-            $ST_SIZE );
+            @COMPUTED_URLS);
 
-$PID_FILE = 'patcher2.pid';
+$PID_FILE = catfile(getcwd(), 'patcher2.pid');
 $DEFAULT_HASH_TYPE = 'SHA512';
 $DEFAULT_CVSROOT = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
 $DEFAULT_HGROOT  = 'http://hg.mozilla.org/mozilla-central';
@@ -105,7 +105,6 @@ $DEFAULT_SCHEMA_VERSION = 2;
                              showSurvey
                              actions);
 
-$ST_SIZE = 7;
 
 sub main {
     Startup();
@@ -116,7 +115,7 @@ sub main {
     PrintUsage(exitCode => 1) if ($config eq undef);
 
 
-    if (not ($config->RequestedStep('build-tools') or
+    if (not $config->useChecksums() and not ($config->RequestedStep('build-tools') or
              $config->RequestedStep('build-tools-hg')) and
         not ValidateToolsDirectory(toolsDir => $config->GetToolsDir())) {
         my $badDir = $config->GetToolsDir();
@@ -130,18 +129,22 @@ __END_TOOLS_ERROR__
     my $startdir = getcwd();
     my $deliverableDir = EnsureDeliverablesDir(config => $config);
 
-    #printf("PRE-REMOVE-BROKEN-UPDATES:\n\n%s", Data::Dumper::Dumper($config));
-    $config->RemoveBrokenUpdates();
-    #printf("POST-REMOVE-BROKEN:\n\n%s", Data::Dumper::Dumper($config));
-
     BuildTools(config => $config, fromHg => 0) if $config->RequestedStep('build-tools');
     BuildTools(config => $config, fromHg => 1) if $config->RequestedStep('build-tools-hg');
 
     run_download_complete_patches(config => $config) if $config->RequestedStep('download');
+    if ($config->useChecksums()) {
+        PrepopulateHashCache(config => $config);
+    }
+    #printf("PRE-REMOVE-BROKEN-UPDATES:\n\n%s", Data::Dumper::Dumper($config));
+    $config->RemoveBrokenUpdates();
+    #printf("POST-REMOVE-BROKEN:\n\n%s", Data::Dumper::Dumper($config));
 
     if ($config->RequestedStep('create-patches')) {
-        CreatePartialPatches(config => $config);
-        CreateCompletePatches(config => $config);
+        if (!$config->useChecksums()) {
+            CreatePartialPatches(config => $config);
+            CreateCompletePatches(config => $config);
+        }
     }
 
     if ($config->RequestedStep('(create-patches|create-patchinfo)')) {
@@ -185,6 +188,7 @@ Options:
                                 Only applicable when in "create-patches" mode
 --tools-revision=TAG            Specify tag to use for build-tools checkout
                                 Only applicable when in "build-tools" mode
+--use-checksums                 Use checksums files instead of MAR files.
 
 __END_USAGE__
    exit($exitCode) if (defined($exitCode));
@@ -329,6 +333,9 @@ sub download_complete_patches {
 
     my $r_config = $config->{'mAppConfig'}->{'release'};
     my @releases = ($fromReleaseVersion, $toReleaseVersion);
+    if ($config->useChecksums()){
+        @releases = ($toReleaseVersion);
+    }
 
     for my $r (@releases) {
         my $rl_config = $r_config->{$r};
@@ -345,13 +352,20 @@ sub download_complete_patches {
                 chdir($relPath);
 
                 my $download_url = $rl_config->{'completemarurl'};
+
+                if ($config->useChecksums()){
+                    $download_url = $rl_config->{'checksumsurl'};
+                }
                 $download_url = SubstitutePath(path => $download_url,
                                                platform => $p,
                                                version => $r,
                                                locale => $l);
-
+                my $output_filename = $MozAUSConfig::DEFAULT_MAR_NAME;
+                if ($config->useChecksums()){
+                  $output_filename = $MozAUSConfig::DEFAULT_CHECKSUMS_NAME;
+                }
                 my $output_filename = SubstitutePath(
-                 path => $MozAUSConfig::DEFAULT_MAR_NAME,
+                 path => $output_filename,
                  platform => $p,
                  locale => $l,
                  version => $r,
@@ -392,7 +406,6 @@ sub download_complete_patches {
                     DownloadFile(url => $download_url,
                      dest => $output_filename );
                 }
-
                 chdir(catfile($deliverableDir, $r, 'ftp'));
 
                 my $end_time = time();
@@ -802,8 +815,8 @@ sub CreateCompletePatchinfo {
                         $complete_patch->{'info_path'} = catfile($aus_prefix,
                          'complete.txt');
     
-                        # Go to next iteration if this partial patch already exists.
-                        next if ( -e $complete_patch->{'info_path'} or ! -e $complete_pathname );
+                        next if ( -e $complete_patch->{'info_path'} or
+                         (! $config->useChecksums() && ! -e $complete_pathname ) );
                         $i++;
     
                         #printf("partial = %s", Data::Dumper::Dumper($partial_patch));
@@ -833,7 +846,8 @@ sub CreateCompletePatchinfo {
                         $complete_patch->{'build_id'} = $to->{'build_id'};
                         $complete_patch->{'appv'} = $prettySnippetToAppVersion;
                         $complete_patch->{'extv'} = $to->{'extv'};
-                        $complete_patch->{'size'} = (stat($to_path))[$ST_SIZE];
+                        $complete_patch->{'size'} = CachedHashFile(
+                         file => $to_path, type => 'size');
     
                         my $channelSpecificUrlKey = $c . '-url';
     
@@ -1102,7 +1116,8 @@ sub CreatePastReleasePatchinfo {
                         $completePatch->{'build_id'} = $patchLocaleNode->{'build_id'};
                         $completePatch->{'appv'} = $prettySnippetToAppVersion;
                         $completePatch->{'extv'} = $patchLocaleNode->{'extv'};
-                        $completePatch->{'size'} = (stat($to_path))[$ST_SIZE];
+                        $completePatch->{'size'} = CachedHashFile(
+                         file => $to_path, type => 'size');
     
                         my $channelSpecificUrlKey = $channel . '-url';
     
@@ -1246,7 +1261,8 @@ sub CreatePartialPatchinfo {
 
                 my $partialPatchHash = CachedHashFile(file => $partial_pathname,
                                                 type => $DEFAULT_HASH_TYPE);
-                my $partialPatchSize = (stat($partial_pathname))[$ST_SIZE];
+                my $partialPatchSize = CachedHashFile(
+                 file => $partial_pathname, type => 'size');
 
                 my $gen_complete_path = SubstitutePath(path => $complete_path,
                                                        platform => $p,
@@ -1264,7 +1280,8 @@ sub CreatePartialPatchinfo {
                  file => $complete_pathname,
                  type => $DEFAULT_HASH_TYPE);
 
-                my $completePatchSize = (stat($complete_pathname))[$ST_SIZE];
+                my $completePatchSize = CachedHashFile(
+                 file => $complete_pathname, type => 'size');
 
                 my $computed_urls = {};
                 foreach my $attr (@COMPUTED_URLS) {
@@ -1322,8 +1339,8 @@ sub CreatePartialPatchinfo {
                         $partial_patch->{'info_path'} = catfile($aus_prefix,
                                                                 'partial.txt');
     
-                        # Go to next iteration if this partial patch already exists.
-                        next if ( -e $partial_patch->{'info_path'} or ! -e $snippetPathname );
+                        next if ( -e $partial_patch->{'info_path'}  or
+                         (! $config->useChecksums() && ! -e $snippetPathname) );
                         $i++;
     
                         # This is just prettyfication for the PrintProgress() call,
