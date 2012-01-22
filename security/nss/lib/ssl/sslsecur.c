@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsecur.c,v 1.53 2011/11/19 21:58:21 bsmith%mozilla.com Exp $ */
+/* $Id: sslsecur.c,v 1.54 2012/01/22 01:14:14 wtc%google.com Exp $ */
 #include "cert.h"
 #include "secitem.h"
 #include "keyhi.h"
@@ -395,8 +395,8 @@ SSL_ForceHandshake(PRFileDesc *fd)
     if (!ssl_SocketIsBlocking(ss)) {
 	ssl_GetXmitBufLock(ss);
 	if (ss->pendingBuf.len != 0) {
-	    rv = ssl_SendSavedWriteData(ss);
-	    if ((rv < 0) && (PORT_GetError() != PR_WOULD_BLOCK_ERROR)) {
+	    int sent = ssl_SendSavedWriteData(ss);
+	    if ((sent < 0) && (PORT_GetError() != PR_WOULD_BLOCK_ERROR)) {
 		ssl_ReleaseXmitBufLock(ss);
 		return SECFailure;
 	    }
