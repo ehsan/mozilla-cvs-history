@@ -392,6 +392,8 @@ def main(argv):
                   extra_compile_args = extra_compile_args,
                   )
 
+          #bug_enter       = 'https://bugzilla.redhat.com/buglist.cgi?submit&component=python-nss&product=Fedora&classification=Fedora'
+          #bug_tracker     = 'https://bugzilla.redhat.com/enter_bug.cgi?component=python-nss&product=Fedora&classification=Fedora',
     setup(name             = 'python-nss',
           version          = version,
           description      = 'Python bindings for Network Security Services (NSS) and Netscape Portable Runtime (NSPR)',
@@ -402,7 +404,7 @@ def main(argv):
           maintainer_email = 'jdennis@redhat.com',
           license          = 'MPLv1.1 or GPLv2+ or LGPLv2+',
           platforms        = 'posix',
-          url              = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot mozilla/security/python/nss',
+          url              = 'http://www.mozilla.org/projects/security/pki/python-nss',
           download_url     = '',
           ext_modules      = [nss_error_extension,
                               nss_io_extension,
