@@ -88,6 +88,19 @@ define('THROTTLE_LOGGING',false);
 $productThrottling = array(
      'Firefox' => array(
          '3.6.26' => 0,
+         '4.0' => 65,
+         '4.0.1' => 65,
+         '5.0' => 65,
+         '5.0.1' => 65,
+         '6.0' => 65,
+         '6.0.1' => 65,
+         '6.0.2' => 65,
+         '7.0' => 65,
+         '7.0.1' => 65,
+         '8.0' => 65,
+         '8.0.1' => 65,
+         '9.0' => 65,
+         '9.0.1' => 65,
      )
 );
 
@@ -107,6 +120,71 @@ $throttleExceptions = array(
     '3.6.26' => array (
         'betatest',
         'releasetest'
+    ),
+    '4.0' => array (
+        'betatest',
+        'releasetest',
+        'beta',
+    ),
+    '4.0.1' => array (
+        'betatest',
+        'releasetest',
+        'beta',
+    ),
+    '5.0' => array (
+        'betatest',
+        'releasetest',
+        'beta',
+    ),
+    '5.0.1' => array (
+        'betatest',
+        'releasetest',
+        'beta',
+    ),
+    '6.0' => array (
+        'betatest',
+        'releasetest',
+        'beta',
+    ),
+    '6.0.1' => array (
+        'betatest',
+        'releasetest',
+        'beta',
+    ),
+    '6.0.2' => array (
+        'betatest',
+        'releasetest',
+        'beta',
+    ),
+    '7.0' => array (
+        'betatest',
+        'releasetest',
+        'beta',
+    ),
+    '7.0.1' => array (
+        'betatest',
+        'releasetest',
+        'beta',
+    ),
+    '8.0' => array (
+        'betatest',
+        'releasetest',
+        'beta',
+    ),
+    '8.0.1' => array (
+        'betatest',
+        'releasetest',
+        'beta',
+    ),
+    '9.0' => array (
+        'betatest',
+        'releasetest',
+        'beta',
+    ),
+    '9.0.1' => array (
+        'betatest',
+        'releasetest',
+        'beta',
     ),
 );
 
