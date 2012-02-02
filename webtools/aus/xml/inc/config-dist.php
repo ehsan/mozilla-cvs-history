@@ -336,7 +336,13 @@ $unsupportedPlatforms = array(
         // Too old freetype - bug 666735
         '7.0a2+' => array(
             'GTK 2.10.'
-        )
+        ),
+        // Block Win2000, XP RTM & SP1 after switching to MSVC2010
+        '13.0a1+' => array (
+            'Windows_NT 5.0',
+            'Windows_NT 5.1.0',
+            'Windows_NT 5.1.1',
+        ),
     ),
     'Thunderbird'     =>  array(
         // Mac 10.2/10.3, Win < 2k, GTK < 2.10 - bug 418129
