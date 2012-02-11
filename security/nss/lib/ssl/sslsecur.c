@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsecur.c,v 1.55 2012/02/11 12:55:58 kaie%kuix.de Exp $ */
+/* $Id: sslsecur.c,v 1.56 2012/02/11 12:58:47 kaie%kuix.de Exp $ */
 #include "cert.h"
 #include "secitem.h"
 #include "keyhi.h"
@@ -1488,13 +1488,13 @@ SSL_RestartHandshakeAfterServerCert(sslSocket * ss)
 
 /* See documentation in ssl.h */
 SECStatus
-SSL_RestartHandshakeAfterAuthCertificate(PRFileDesc *fd)
+SSL_AuthCertificateComplete(PRFileDesc *fd, PRErrorCode status)
 {
-    SECStatus rv = SECSuccess;
+    SECStatus rv;
     sslSocket *ss = ssl_FindSocket(fd);
 
     if (!ss) {
-	SSL_DBG(("%d: SSL[%d]: bad socket in SSL_RestartHandshakeAfterPeerCert",
+	SSL_DBG(("%d: SSL[%d]: bad socket in SSL_AuthCertificateComplete",
 		 SSL_GETPID(), fd));
 	return SECFailure;
     }
@@ -1508,7 +1508,7 @@ SSL_RestartHandshakeAfterAuthCertificate(PRFileDesc *fd)
 	PORT_SetError(SSL_ERROR_FEATURE_NOT_SUPPORTED_FOR_SSL2);
 	rv = SECFailure;
     } else {
-	rv = ssl3_RestartHandshakeAfterAuthCertificate(ss);
+	rv = ssl3_AuthCertificateComplete(ss, status);
     }
 
     ssl_Release1stHandshakeLock(ss);
