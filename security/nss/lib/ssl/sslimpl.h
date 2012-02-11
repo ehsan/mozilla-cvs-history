@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslimpl.h,v 1.91 2012/02/11 12:55:58 kaie%kuix.de Exp $ */
+/* $Id: sslimpl.h,v 1.92 2012/02/11 12:57:28 kaie%kuix.de Exp $ */
 
 #ifndef __sslimpl_h_
 #define __sslimpl_h_
@@ -797,7 +797,7 @@ const ssl3CipherSuiteDef *suite_def;
      * One of NULL, ssl3_SendClientSecondRound, or ssl3_FinishHandshake. */
     sslRestartTarget      restartTarget;
     /* Shared state between ssl3_HandleFinished and ssl3_FinishHandshake */
-    PRBool                cacheSID; 
+    PRBool                cacheSID;
 } SSL3HandshakeState;
 
 
