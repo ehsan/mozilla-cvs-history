@@ -20,6 +20,7 @@
 # Contributor(s): 
 
 use strict;
+use POSIX;
 # Reading the log backwards saves time when we only want the tail.
 use Backwards;
 use Digest::MD5 qw(md5_hex);
