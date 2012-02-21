@@ -254,8 +254,8 @@ case "$target" in
     STRIP="$android_toolchain"/bin/"$android_tool_prefix"-strip
 
     CPPFLAGS="-I$android_platform/usr/include $CPPFLAGS"
-    CFLAGS="-mandroid -I$android_platform/usr/include -msoft-float -fno-short-enums -fno-exceptions $CFLAGS"
-    CXXFLAGS="-mandroid -I$android_platform/usr/include -msoft-float -fpic -fno-short-enums -fno-exceptions $CXXFLAGS"
+    CFLAGS="-mandroid -I$android_platform/usr/include -fno-short-enums -fno-exceptions $CFLAGS"
+    CXXFLAGS="-mandroid -I$android_platform/usr/include -fpic -fno-short-enums -fno-exceptions $CXXFLAGS"
     LDFLAGS="-mandroid -L$android_platform/usr/lib -Wl,-rpath-link=$android_platform/usr/lib --sysroot=$android_platform $LDFLAGS"
 
     dnl prevent cross compile section from using these flags as host flags
@@ -1015,6 +1015,7 @@ arm*-android*|arm*-linuxandroid*)
     MOZ_ARCH=armv7-a
     MOZ_FPU=vfp
     MOZ_FLOAT_ABI=softfp
+    MOZ_SOFT_FLOAT=yes
     ;;
 arm*-*)
     if test -n "$MOZ_PLATFORM_MAEMO"; then
@@ -1277,9 +1278,18 @@ case "$target" in
                                    # combo is not yet good at debugging inlined
                                    # functions (even when using DWARF2 as the
                                    # debugging format)
+    case "$target" in
+    arm*-*)
+      CPU_ARCH=arm
+      ;;
+    i*86-*)
+      CPU_ARCH=x86
+      PR_MD_ASFILES=os_Linux_x86.s
+      ;;
+    esac
+
     COMPILER_TAG=_glibc
-    CPU_ARCH=arm
-    CPU_ARCH_TAG=_arm
+    CPU_ARCH_TAG=_${CPU_ARCH}
     OS_TARGET=Android
     ;;
 
