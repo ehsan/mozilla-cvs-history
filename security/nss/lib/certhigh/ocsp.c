@@ -39,7 +39,7 @@
  * Implementation of OCSP services, for both client and server.
  * (XXX, really, mostly just for client right now, but intended to do both.)
  *
- * $Id: ocsp.c,v 1.67 2011/08/10 12:31:52 kaie%kuix.de Exp $
+ * $Id: ocsp.c,v 1.68 2012/02/22 22:34:02 wtc%google.com Exp $
  */
 
 #include "prerror.h"
@@ -296,7 +296,7 @@ SECStatus
 SEC_RegisterDefaultHttpClient(const SEC_HttpClientFcn *fcnTable)
 {
     if (!OCSP_Global.monitor) {
-      PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+      PORT_SetError(SEC_ERROR_NOT_INITIALIZED);
       return SECFailure;
     }
     
@@ -315,7 +315,7 @@ CERT_RegisterAlternateOCSPAIAInfoCallBack(
     CERT_StringFromCertFcn old;
 
     if (!OCSP_Global.monitor) {
-      PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+      PORT_SetError(SEC_ERROR_NOT_INITIALIZED);
       return SECFailure;
     }
 
@@ -991,7 +991,7 @@ const SEC_HttpClientFcn *SEC_GetRegisteredHttpClient()
     const SEC_HttpClientFcn *retval;
 
     if (!OCSP_Global.monitor) {
-      PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+      PORT_SetError(SEC_ERROR_NOT_INITIALIZED);
       return NULL;
     }
 
