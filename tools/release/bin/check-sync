@@ -50,6 +50,9 @@ fi
 # extract the Firefox 3.0 snippets, any errors here can be shown directly on the output
 $TAR xfjp $BACKUP_DIR/20110712-FX30-FINAL-BACKUP.tar.bz2
 
+# extract the Firefox 3.1 and 3.5 snippets, any errors here can be shown directly on the output
+$TAR xfjp $BACKUP_DIR/20120223-FX35-FINAL-BACKUP.tar.bz2
+
 # extract the 'active' snippets, any errors here can be shown directly on the output
 $TAR xfjp $latestBackup
 
