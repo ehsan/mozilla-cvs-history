@@ -112,6 +112,7 @@ void _MD_unix_map_default_error(int err)
             prError = PR_FILE_TOO_BIG_ERROR;
             break;
         case EHOSTUNREACH:
+        case EHOSTDOWN:
             prError = PR_HOST_UNREACHABLE_ERROR;
             break;
         case EINPROGRESS:
