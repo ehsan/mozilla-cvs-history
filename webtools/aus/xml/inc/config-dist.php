@@ -164,6 +164,7 @@ $productBranchVersions = array(
            'aurora'                  => 'mozilla-aurora',
            'nightly-birch'           => 'mozilla-central',
            'nightly-ash'             => 'ash',
+           'nightly-maple'           => 'maple',
            'nightly-oak'             => 'oak'
         )
     ),
