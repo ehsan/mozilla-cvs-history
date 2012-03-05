@@ -42,7 +42,7 @@ backupDirName=$currentDate-$nextPreDirCount-pre-$1
 
 ### Find list of directories that change
 absNewSnippetDir=$STAGING_DIR/$newSnippetDir
-changedDirs=$(find $absNewSnippetDir -maxdepth 3 -mindepth 3 -type d | $SED s,$absNewSnippetDir/,,g)
+changedDirs=$(find $absNewSnippetDir -maxdepth 4 -mindepth 4 -type d | $SED s,$absNewSnippetDir/,,g)
 args=""
 ### Skip directories that don't exist in the live snippets directory
 ### no need to back them up, since they don't exist yet!
