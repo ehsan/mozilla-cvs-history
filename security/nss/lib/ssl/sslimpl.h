@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslimpl.h,v 1.94 2012/02/15 21:52:08 kaie%kuix.de Exp $ */
+/* $Id: sslimpl.h,v 1.95 2012/03/07 01:27:40 wtc%google.com Exp $ */
 
 #ifndef __sslimpl_h_
 #define __sslimpl_h_
@@ -1641,6 +1641,11 @@ SECStatus SSL_DisableDefaultExportCipherSuites(void);
 SECStatus SSL_DisableExportCipherSuites(PRFileDesc * fd);
 PRBool    SSL_IsExportCipherSuite(PRUint16 cipherSuite);
 
+extern SECStatus
+ssl3_TLSPRFWithMasterSecret(ssl3CipherSpec *spec,
+                            const char *label, unsigned int labelLen,
+                            const unsigned char *val, unsigned int valLen,
+                            unsigned char *out, unsigned int outLen);
 
 #ifdef TRACE
 #define SSL_TRACE(msg) ssl_Trace msg
