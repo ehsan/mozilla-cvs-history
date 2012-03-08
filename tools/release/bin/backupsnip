@@ -38,7 +38,7 @@ popd > /dev/null
 ## about to create
 let nextPreDirCount=$preDirCount+1
 #echo $nextPreDirCount
-backupDirName=$currentDate-$nextPreDirCount-pre-$1
+backupDirName=$currentDate-$nextPreDirCount-pre-$newSnippetDir
 
 ### Find list of directories that change
 absNewSnippetDir=$STAGING_DIR/$newSnippetDir
