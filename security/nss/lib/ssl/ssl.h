@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl.h,v 1.50 2012/03/07 01:27:40 wtc%google.com Exp $ */
+/* $Id: ssl.h,v 1.51 2012/03/10 02:34:45 wtc%google.com Exp $ */
 
 #ifndef __ssl_h_
 #define __ssl_h_
@@ -706,12 +706,14 @@ SSL_IMPORT SECItem *SSL_GetNegotiatedHostInfo(PRFileDesc *fd);
 
 /* Export keying material according to RFC 5705.
 ** fd must correspond to a TLS 1.0 or higher socket and out must
-** already be allocated. If context is NULL and contextLen is 0,
-** it uses the no-context construction from the RFC.
+** already be allocated. If hasContext is false, it uses the no-context
+** construction from the RFC and ignores the context and contextLen
+** arguments.
 */
 SSL_IMPORT SECStatus SSL_ExportKeyingMaterial(PRFileDesc *fd,
                                               const char *label,
                                               unsigned int labelLen,
+                                              PRBool hasContext,
                                               const unsigned char *context,
                                               unsigned int contextLen,
                                               unsigned char *out,

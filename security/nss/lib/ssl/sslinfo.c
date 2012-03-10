@@ -35,7 +35,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslinfo.c,v 1.26 2012/03/07 01:27:40 wtc%google.com Exp $ */
+/* $Id: sslinfo.c,v 1.27 2012/03/10 02:34:45 wtc%google.com Exp $ */
 #include "ssl.h"
 #include "sslimpl.h"
 #include "sslproto.h"
@@ -357,13 +357,10 @@ SSL_GetNegotiatedHostInfo(PRFileDesc *fd)
     return sniName;
 }
 
-/* Export keying material according to RFC 5705.
-** fd must correspond to a TLS 1.0 or higher socket, out must
-** be already allocated.
-*/
 SECStatus
 SSL_ExportKeyingMaterial(PRFileDesc *fd,
                          const char *label, unsigned int labelLen,
+                         PRBool hasContext,
                          const unsigned char *context, unsigned int contextLen,
                          unsigned char *out, unsigned int outLen)
 {
@@ -384,8 +381,9 @@ SSL_ExportKeyingMaterial(PRFileDesc *fd,
 	return SECFailure;
     }
 
+    /* construct PRF arguments */
     valLen = SSL3_RANDOM_LENGTH * 2;
-    if (context) {
+    if (hasContext) {
 	valLen += 2 /* uint16 length */ + contextLen;
     }
     val = PORT_Alloc(valLen);
@@ -397,11 +395,13 @@ SSL_ExportKeyingMaterial(PRFileDesc *fd,
     i += SSL3_RANDOM_LENGTH;
     PORT_Memcpy(val + i, &ss->ssl3.hs.server_random.rand, SSL3_RANDOM_LENGTH);
     i += SSL3_RANDOM_LENGTH;
-    if (context) {
+    if (hasContext) {
 	val[i++] = contextLen >> 8;
 	val[i++] = contextLen;
-	PORT_Memcpy(val + i, context, contextLen);
-	i += contextLen;
+	if (contextLen > 0) {
+	    PORT_Memcpy(val + i, context, contextLen);
+	    i += contextLen;
+	}
     }
     PORT_Assert(i == valLen);
 
