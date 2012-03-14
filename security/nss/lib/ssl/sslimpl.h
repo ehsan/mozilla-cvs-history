@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslimpl.h,v 1.97 2012/03/13 02:39:11 wtc%google.com Exp $ */
+/* $Id: sslimpl.h,v 1.98 2012/03/14 23:02:01 wtc%google.com Exp $ */
 
 #ifndef __sslimpl_h_
 #define __sslimpl_h_
@@ -490,8 +490,8 @@ typedef enum {
 
 typedef enum { type_stream, type_block } CipherType;
 
-/* XXX Why is MAX_IV_LENGTH so big? */
-#define MAX_IV_LENGTH 64
+/* This value matches the size of IVs in ssl3SidKeys. */
+#define MAX_IV_LENGTH 24
 
 /*
  * Do not depend upon 64 bit arithmetic in the underlying machine. 

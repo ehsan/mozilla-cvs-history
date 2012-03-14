@@ -40,7 +40,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.170 2012/03/13 02:39:11 wtc%google.com Exp $ */
+/* $Id: ssl3con.c,v 1.171 2012/03/14 23:02:00 wtc%google.com Exp $ */
 
 #include "cert.h"
 #include "ssl.h"
@@ -2046,6 +2046,7 @@ ssl3_CompressMACEncryptRecord(ssl3CipherSpec *   cwSpec,
 	}
 	rv = PK11_GenerateRandom(wrBuf->buf + SSL3_RECORD_HEADER_LENGTH, ivLen);
 	if (rv != SECSuccess) {
+	    ssl_MapLowLevelError(SSL_ERROR_GENERATE_RANDOM_FAILURE);
 	    return rv;
 	}
 	rv = cwSpec->encode( cwSpec->encodeContext, 
@@ -9026,21 +9027,31 @@ ssl3_HandleRecord(sslSocket *ss, SSL3Ciphertext *cText, sslBuffer *databuf)
 	int decoded;
 
 	ivLen = cipher_def->iv_size;
-	if (ivLen < 8 || ivLen > sizeof(iv) || ivLen > cText->buf->len) {
+	if (ivLen < 8 || ivLen > sizeof(iv)) {
+	    ssl_ReleaseSpecReadLock(ss);
+	    PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+	    return SECFailure;
+	}
+	if (ivLen > cText->buf->len) {
 	    SSL_DBG(("%d: SSL3[%d]: HandleRecord, IV length check failed",
 		     SSL_GETPID(), ss->fd));
 	    /* must not hold spec lock when calling SSL3_SendAlert. */
 	    ssl_ReleaseSpecReadLock(ss);
-	    ssl3_DecodeError(ss);
+	    SSL3_SendAlert(ss, alert_fatal, bad_record_mac);
+	    /* always log mac error, in case attacker can read server logs. */
+	    PORT_SetError(SSL_ERROR_BAD_MAC_READ);
 	    return SECFailure;
 	}
 
 	PRINT_BUF(80, (ss, "IV (ciphertext):", cText->buf->buf, ivLen));
 
+	/* The decryption result is garbage, but since we just throw away
+	 * the block it doesn't matter.  The decryption of the next block
+	 * depends only on the ciphertext of the IV block.
+	 */
 	rv = crSpec->decode(crSpec->decodeContext, iv, &decoded,
 			    sizeof(iv), cText->buf->buf, ivLen);
 
-	PRINT_BUF(80, (ss, "IV (cleartext):", iv, ivLen));
 	if (rv != SECSuccess) {
 	    /* All decryption failures must be treated like a bad record
 	     * MAC; see RFC 5246 (TLS 1.2). 
