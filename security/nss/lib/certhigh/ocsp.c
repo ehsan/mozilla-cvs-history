@@ -39,7 +39,7 @@
  * Implementation of OCSP services, for both client and server.
  * (XXX, really, mostly just for client right now, but intended to do both.)
  *
- * $Id: ocsp.c,v 1.68 2012/02/22 22:34:02 wtc%google.com Exp $
+ * $Id: ocsp.c,v 1.69 2012/03/14 22:26:53 wtc%google.com Exp $
  */
 
 #include "prerror.h"
@@ -2700,10 +2700,10 @@ ocsp_GetResponseSignature(CERTOCSPResponse *response)
     if (NULL == response->responseBytes) {
         return NULL;
     }
-    PORT_Assert(response->responseBytes != NULL);
-    PORT_Assert(response->responseBytes->responseTypeTag
-		== SEC_OID_PKIX_OCSP_BASIC_RESPONSE);
-
+    if (response->responseBytes->responseTypeTag
+        != SEC_OID_PKIX_OCSP_BASIC_RESPONSE) {
+        return NULL;
+    }
     basic = response->responseBytes->decodedResponse.basic;
     PORT_Assert(basic != NULL);
 
