@@ -35,7 +35,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslinfo.c,v 1.27 2012/03/10 02:34:45 wtc%google.com Exp $ */
+/* $Id: sslinfo.c,v 1.28 2012/03/14 00:56:43 wtc%google.com Exp $ */
 #include "ssl.h"
 #include "sslimpl.h"
 #include "sslproto.h"
@@ -398,10 +398,8 @@ SSL_ExportKeyingMaterial(PRFileDesc *fd,
     if (hasContext) {
 	val[i++] = contextLen >> 8;
 	val[i++] = contextLen;
-	if (contextLen > 0) {
-	    PORT_Memcpy(val + i, context, contextLen);
-	    i += contextLen;
-	}
+	PORT_Memcpy(val + i, context, contextLen);
+	i += contextLen;
     }
     PORT_Assert(i == valLen);
 
