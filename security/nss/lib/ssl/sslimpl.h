@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslimpl.h,v 1.98 2012/03/14 23:02:01 wtc%google.com Exp $ */
+/* $Id: sslimpl.h,v 1.99 2012/03/16 01:23:55 wtc%google.com Exp $ */
 
 #ifndef __sslimpl_h_
 #define __sslimpl_h_
@@ -1357,7 +1357,8 @@ extern PRBool    ssl3_CanFalseStart(sslSocket *ss);
 #define SSL3_ALL_VERSIONS_DISABLED(vrange) \
     ((vrange)->min == SSL_LIBRARY_VERSION_NONE)
 
-extern PRBool ssl3_VersionIsSupported(SSL3ProtocolVersion version);
+extern PRBool ssl3_VersionIsSupported(SSLProtocolVariant protocolVariant,
+				      SSL3ProtocolVersion version);
 
 extern SECStatus ssl3_KeyAndMacDeriveBypass(ssl3CipherSpec * pwSpec,
 		    const unsigned char * cr, const unsigned char * sr,

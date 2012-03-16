@@ -40,7 +40,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.171 2012/03/14 23:02:00 wtc%google.com Exp $ */
+/* $Id: ssl3con.c,v 1.172 2012/03/16 01:23:55 wtc%google.com Exp $ */
 
 #include "cert.h"
 #include "ssl.h"
@@ -792,7 +792,7 @@ ssl3_NegotiateVersion(sslSocket *ss, SSL3ProtocolVersion peerVersion,
     }
 
     ss->version = PR_MIN(peerVersion, ss->vrange.max);
-    PORT_Assert(ssl3_VersionIsSupported(ss->version));
+    PORT_Assert(ssl3_VersionIsSupported(ssl_variant_stream, ss->version));
 
     return SECSuccess;
 }
