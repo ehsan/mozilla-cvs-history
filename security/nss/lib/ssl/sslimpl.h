@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslimpl.h,v 1.99 2012/03/16 01:23:55 wtc%google.com Exp $ */
+/* $Id: sslimpl.h,v 1.100 2012/03/18 00:31:20 wtc%google.com Exp $ */
 
 #ifndef __sslimpl_h_
 #define __sslimpl_h_
@@ -324,8 +324,8 @@ typedef struct sslOptionsStr {
     unsigned int handshakeAsClient	: 1;  /*  6 */
     unsigned int handshakeAsServer	: 1;  /*  7 */
     unsigned int enableSSL2		: 1;  /*  8 */
-    unsigned int unused9		: 1;  /*  9 */
-    unsigned int unused10		: 1;  /* 10 */
+    unsigned int unusedBit9		: 1;  /*  9 */
+    unsigned int unusedBit10		: 1;  /* 10 */
     unsigned int noCache		: 1;  /* 11 */
     unsigned int fdx			: 1;  /* 12 */
     unsigned int v2CompatibleHello	: 1;  /* 13 */

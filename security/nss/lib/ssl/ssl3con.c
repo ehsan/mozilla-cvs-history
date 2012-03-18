@@ -40,7 +40,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.172 2012/03/16 01:23:55 wtc%google.com Exp $ */
+/* $Id: ssl3con.c,v 1.173 2012/03/18 00:31:19 wtc%google.com Exp $ */
 
 #include "cert.h"
 #include "ssl.h"
@@ -773,8 +773,12 @@ Null_Cipher(void *ctx, unsigned char *output, int *outputLen, int maxOutputLen,
  * SSL3 Utility functions
  */
 
-/* If allowLargerPeerVersion is true, peerVersion is the peer's max version
- * and is allowed to be larger than our max version.
+/* allowLargerPeerVersion controls whether the function will select the
+ * highest enabled SSL version or fail when peerVersion is greater than the
+ * highest enabled version.
+ *
+ * If allowLargerPeerVersion is true, peerVersion is the peer's highest
+ * enabled version rather than the peer's selected version.
  */
 SECStatus
 ssl3_NegotiateVersion(sslSocket *ss, SSL3ProtocolVersion peerVersion,

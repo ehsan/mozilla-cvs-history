@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslcon.c,v 1.47 2012/03/11 04:32:35 wtc%google.com Exp $ */
+/* $Id: sslcon.c,v 1.48 2012/03/18 00:31:20 wtc%google.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -3111,7 +3111,7 @@ ssl2_BeginClientHandshake(sslSocket *ss)
     PORT_Assert(sid != NULL);
 
     if ((sid->version >= SSL_LIBRARY_VERSION_3_0 || !ss->opt.v2CompatibleHello) &&
-        !SSL3_ALL_VERSIONS_DISABLED(&ss->vrange)) {
+	!SSL3_ALL_VERSIONS_DISABLED(&ss->vrange)) {
 	ss->gs.state      = GS_INIT;
 	ss->handshake     = ssl_GatherRecord1stHandshake;
 
