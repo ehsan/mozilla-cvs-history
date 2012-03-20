@@ -1,3 +1,40 @@
+2012-03-20  John Dennis  <jdennis@redhat.com> 0.13
+  * Allow lables and values to be justified when printing objects
+
+  * Fix NSS SECITEM_CompareItem bug via workaround.
+
+  * Fix incorrect format strings in PyArg_ParseTuple* for:
+    - GeneralName
+    - BasicConstraints
+    - cert_x509_key_usage
+
+  * Fix hang in setup_certs.
+
+  * For NSS >= 3.13 support CERTDB_TERMINAL_RECORD
+
+  * You can now query for a specific certificate extension
+    Certficate.get_extension()
+
+  * The following class methods were added:
+    - nss.nss.Certificate.get_extension
+
+  * The following module functions were added:
+    - nss.nss.pub_wrap_sym_key
+
+  * The following internal utilities were added:
+    - PyString_UTF8
+    - SecItem_new_alloc()
+
+  * The following were deprecated:
+    - nss.nss.make_line_pairs (replaced by nss.nss.make_line_fmt_tuples)
+
+    Deprecated Functionality:
+    -------------------------
+    - make_line_pairs() has been replaced by make_line_fmt_tuples()
+      because 2-valued tuples were not sufficently general. It is
+      expected very few programs will have used this function, it's mostly
+      used internally but provided as a support utility.
+
 2011-04-22  John Dennis  <jdennis@redhat.com> 0.12
   * Major new enhancement is additon of PKCS12 support and
     AlgorithmID's.
@@ -120,7 +157,7 @@
     - test/test_client_server.py
     - test/test_digest.py (replaces digest_test.py)
     - test/test_pkcs12.py
-	
+
   * The following were deprecated:
     - SignatureAlgorithm
 

@@ -336,7 +336,7 @@ def cleanup_server(pid):
             pass                # child already exited
         else:
             print >>sys.stderr, "cleanup_server: %s" % e
-    
+
 class TestSSL(unittest.TestCase):
 
     def setUp(self):
@@ -352,7 +352,7 @@ class TestSSL(unittest.TestCase):
         reply = client(request)
         nss.nss_shutdown()
         self.assertEqual("{%s}" % request, reply)
-        
+
 
 if __name__ == '__main__':
     unittest.main()

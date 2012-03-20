@@ -314,47 +314,77 @@ NewType_new_from_NSSType(NSSType *id)
 #define PyDN_Check(op) PyObject_TypeCheck(op, &DNType)
 
 
-#define FMT_OBJ_AND_APPEND(dst_pairs, label, src_obj, level, fail)      \
+// FIXME, should use this in more places.
+PyObject *
+PyString_UTF8(PyObject *obj, char *name);
+
+
+/* ========================================================================== */
+/* ========================= Formatting Utilities =========================== */
+/* ========================================================================== */
+
+
+typedef PyObject *(*format_lines_func)(PyObject *self, PyObject *args, PyObject *kwds);
+
+static PyObject *
+line_fmt_tuple(int level, const char *label, PyObject *py_value);
+
+static PyObject *
+make_line_fmt_tuples(int level, PyObject *src);
+
+static PyObject *
+py_make_line_fmt_tuples(PyObject *self, PyObject *args, PyObject *kwds);
+
+static PyObject *
+fmt_label(int level, char *label);
+
+static PyObject *
+format_from_lines(format_lines_func formatter, PyObject *self, PyObject *args, PyObject *kwds);
+
+static PyObject *
+py_indented_format(PyObject *self, PyObject *args, PyObject *kwds);
+
+#define FMT_OBJ_AND_APPEND(dst_fmt_tuples, label, src_obj, level, fail) \
 {                                                                       \
-    PyObject *pair = NULL;                                              \
+    PyObject *fmt_tuple = NULL;                                         \
                                                                         \
-    if ((pair = fmt_pair(level, label, src_obj)) == NULL) {             \
+    if ((fmt_tuple = line_fmt_tuple(level, label, src_obj)) == NULL) {  \
         goto fail;                                                      \
     }                                                                   \
-    if (PyList_Append(dst_pairs, pair) != 0) {                          \
-        Py_DECREF(pair);                                                \
+    if (PyList_Append(dst_fmt_tuples, fmt_tuple) != 0) {                \
+        Py_DECREF(fmt_tuple);                                           \
         goto fail;                                                      \
     }                                                                   \
 }
 
-#define FMT_LABEL_AND_APPEND(dst_pairs, label, level, fail)     \
-{                                                               \
-    PyObject *pair = NULL;                                      \
-                                                                \
-    if ((pair = fmt_label(level, label)) == NULL) {             \
-        goto fail;                                              \
-    }                                                           \
-    if (PyList_Append(dst_pairs, pair) != 0) {                  \
-        Py_DECREF(pair);                                        \
-        goto fail;                                              \
-    }                                                           \
+#define FMT_LABEL_AND_APPEND(dst_fmt_tuples, label, level, fail)        \
+{                                                                       \
+    PyObject *fmt_tuple = NULL;                                         \
+                                                                        \
+    if ((fmt_tuple = fmt_label(level, label)) == NULL) {                \
+        goto fail;                                                      \
+    }                                                                   \
+    if (PyList_Append(dst_fmt_tuples, fmt_tuple) != 0) {                \
+        Py_DECREF(fmt_tuple);                                           \
+        goto fail;                                                      \
+    }                                                                   \
 }
 
-#define APPEND_LINE_PAIRS_AND_CLEAR(dst_pairs, src_pairs, fail) \
-{                                                               \
-    PyObject *src_obj;                                          \
-    Py_ssize_t len, i;                                          \
-    if (src_pairs) {                                            \
-        len = PyList_Size(src_pairs);                           \
-        for (i = 0; i < len; i++) {                             \
-            src_obj = PyList_GetItem(src_pairs, i);             \
-            PyList_Append(dst_pairs, src_obj);                  \
-        }                                                       \
-        Py_CLEAR(src_pairs);                                    \
-    }                                                           \
+#define APPEND_LINE_TUPLES_AND_CLEAR(dst_fmt_tuples, src_fmt_tuples, fail) \
+{                                                                       \
+    PyObject *src_obj;                                                  \
+    Py_ssize_t len, i;                                                  \
+    if (src_fmt_tuples) {                                               \
+        len = PyList_Size(src_fmt_tuples);                              \
+        for (i = 0; i < len; i++) {                                     \
+            src_obj = PyList_GetItem(src_fmt_tuples, i);                \
+            PyList_Append(dst_fmt_tuples, src_obj);                     \
+        }                                                               \
+        Py_CLEAR(src_fmt_tuples);                                       \
+    }                                                                   \
 }
 
-#define APPEND_LINES_AND_CLEAR(dst_pairs, src_lines, level, fail)       \
+#define APPEND_LINES_AND_CLEAR(dst_fmt_tuples, src_lines, level, fail)  \
 {                                                                       \
     PyObject *src_obj;                                                  \
     Py_ssize_t len, i;                                                  \
@@ -362,28 +392,28 @@ NewType_new_from_NSSType(NSSType *id)
         len = PySequence_Size(src_lines);                               \
         for (i = 0; i < len; i++) {                                     \
             src_obj = PySequence_GetItem(src_lines, i);                 \
-            FMT_OBJ_AND_APPEND(dst_pairs, NULL, src_obj, level, fail);  \
+            FMT_OBJ_AND_APPEND(dst_fmt_tuples, NULL, src_obj, level, fail); \
             Py_DECREF(src_obj);                                         \
         }                                                               \
         Py_CLEAR(src_lines);                                            \
     }                                                                   \
 }
 
-#define CALL_FORMAT_LINES_AND_APPEND(dst_pairs, obj, level, fail)       \
+#define CALL_FORMAT_LINES_AND_APPEND(dst_fmt_tuples, obj, level, fail)  \
 {                                                                       \
-    PyObject *obj_line_pairs;                                           \
+    PyObject *obj_line_fmt_tuples;                                      \
                                                                         \
-    if ((obj_line_pairs =                                               \
+    if ((obj_line_fmt_tuples =                                          \
          PyObject_CallMethod(obj, "format_lines",                       \
                              "(i)", level)) == NULL) {                  \
         goto fail;                                                      \
     }                                                                   \
                                                                         \
-    APPEND_LINE_PAIRS_AND_CLEAR(dst_pairs, obj_line_pairs, fail);       \
+    APPEND_LINE_TUPLES_AND_CLEAR(dst_fmt_tuples, obj_line_fmt_tuples, fail); \
 }
 
 
-#define APPEND_OBJ_TO_HEX_LINES_AND_CLEAR(dst_pairs, obj, level, fail)  \
+#define APPEND_OBJ_TO_HEX_LINES_AND_CLEAR(dst_fmt_tuples, obj, level, fail) \
 {                                                                       \
     PyObject *obj_lines;                                                \
                                                                         \
@@ -392,8 +422,592 @@ NewType_new_from_NSSType(NSSType *id)
         goto fail;                                                      \
     }                                                                   \
     Py_CLEAR(obj);                                                      \
-    APPEND_LINES_AND_CLEAR(dst_pairs, obj_lines, level, fail);          \
+    APPEND_LINES_AND_CLEAR(dst_fmt_tuples, obj_lines, level, fail);     \
 }
+
+PyDoc_STRVAR(generic_format_doc,
+"format(level=0, indent='    ') -> string)\n\
+\n\
+:Parameters:\n\
+    level : integer\n\
+        Initial indentation level, all subsequent indents are relative\n\
+        to this starting level.\n\
+    indent : string\n\
+        string replicated once for each indent level then prepended to output line\n\
+\n\
+This is equivalent to:\n\
+indented_format(obj.format_lines()) on an object providing a format_lines() method.\n\
+");
+
+PyDoc_STRVAR(generic_format_lines_doc,
+"format_lines(level=0) -> [(level, string),...]\n\
+\n\
+:Parameters:\n\
+    level : integer\n\
+        Initial indentation level, all subsequent indents are relative\n\
+        to this starting level.\n\
+\n\
+Formats the object into a sequence of lines with indent level\n\
+information.  The return value is a list where each list item is a\n\
+tuple.  The first item in the tuple is an integer\n\
+representing the indentation level for that line. Any remaining items\n\
+in the tuple are strings to be output on that line.\n\
+\n\
+The output of this function can be formatted into a single string by\n\
+calling `indented_format()`, e.g.:\n\
+\n\
+    print indented_format(obj.format_lines())\n\
+\n\
+The reason this function returns a tuple as opposed to an single\n\
+indented string is to support other text formatting systems such as\n\
+GUI's with indentation controls.  See `indented_format()` for a\n\
+complete explanation.\n\
+");
+
+
+/* Steals reference to obj_str */
+static PyObject *
+line_fmt_tuple(int level, const char *label, PyObject *py_value)
+{
+    Py_ssize_t tuple_size, i;
+    PyObject *fmt_tuple = NULL;
+    PyObject *py_label = NULL;
+    PyObject *py_value_str = NULL;
+
+    tuple_size = 1;             /* always have level */
+
+    if (label) {
+        tuple_size++;
+        if ((py_label = PyString_FromFormat("%s:", label)) == NULL) {
+            return NULL;
+        }
+    }
+
+    if (py_value) {
+        tuple_size++;
+        if (PyString_Check(py_value) || PyUnicode_Check(py_value)) {
+            py_value_str = py_value;
+            Py_INCREF(py_value_str);
+        } else {
+            if ((py_value_str = PyObject_Str(py_value)) == NULL) {
+                return NULL;
+            }
+        }
+    }
+
+    if ((fmt_tuple = PyTuple_New(tuple_size)) == NULL) {
+        return NULL;
+    }
+
+    i = 0;
+    PyTuple_SetItem(fmt_tuple, i++, PyInt_FromLong(level));
+
+    if (py_label) {
+        PyTuple_SetItem(fmt_tuple, i++, py_label);
+    }
+
+    if (py_value_str) {
+        PyTuple_SetItem(fmt_tuple, i++, py_value_str);
+    }
+
+    return fmt_tuple;
+}
+
+static PyObject *
+make_line_fmt_tuples(int level, PyObject *src)
+{
+    PyObject *lines = NULL;
+    PyObject *obj = NULL;
+    PyObject *fmt_tuple = NULL;
+    PyObject *seq = NULL;
+    Py_ssize_t n_objs, i;
+
+    if (PyList_Check(src) || PyTuple_Check(src)) {
+        seq = src;
+        n_objs = PySequence_Size(seq);
+        Py_INCREF(seq);
+    } else {
+        obj = src;
+        Py_INCREF(obj);
+        n_objs = 1;
+    }
+
+    if ((lines = PyList_New(n_objs)) == NULL) {
+        goto exit;
+    }
+
+    if (seq) {
+        for (i = 0; i < n_objs; i++) {
+            if ((obj = PySequence_GetItem(seq, i)) == NULL) { /* new reference */
+                Py_DECREF(lines);
+                goto exit;
+            }
+            if ((fmt_tuple = line_fmt_tuple(level, NULL, obj)) == NULL) {
+                Py_DECREF(lines);
+                goto exit;
+            }
+            PyList_SetItem(lines, i, fmt_tuple);
+            Py_CLEAR(obj);
+        }
+    } else {
+        if ((fmt_tuple = line_fmt_tuple(level, NULL, obj)) == NULL) {
+            Py_DECREF(lines);
+            goto exit;
+        }
+        PyList_SetItem(lines, 0, fmt_tuple);
+    }
+
+ exit:
+    Py_XDECREF(obj);
+    Py_XDECREF(seq);
+    return lines;
+}
+
+PyDoc_STRVAR(py_make_line_fmt_tuples_doc,
+"make_line_fmt_tuples(level, obj) -> [(level, str), ...]\n\
+\n\
+:Parameters:\n\
+    obj : object\n\
+        If obj is a tuple or list then each member will be wrapped\n\
+        in a 2-tuple of (level, str). If obj is a scalar object\n\
+        then obj will be wrapped in a 2-tuple of (level, obj)\n\
+    level : integer\n\
+        Initial indentation level, all subsequent indents are relative\n\
+        to this starting level.\n\
+\n\
+Return a list of line formatted tuples sutible to passing to\n\
+`indented_format()`. Each tuple consists of a integer\n\
+level value and a string object. This is equivalent to:\n\
+[(level, str(x)) for x in obj].\n\
+As a special case convenience if obj is a scalar object (i.e.\n\
+not a list or tuple) then [(level, str(obj))] will be returned.\n\
+");
+
+static PyObject *
+py_make_line_fmt_tuples(PyObject *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"level", "obj", NULL};
+    int level = 0;
+    PyObject *obj;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "iO:make_line_fmt_tuples", kwlist,
+                                     &level, &obj))
+        return NULL;
+
+    return make_line_fmt_tuples(level, obj);
+}
+
+static PyObject *
+fmt_label(int level, char *label)
+{
+    return line_fmt_tuple(level, label, NULL);
+}
+
+static PyObject *
+format_from_lines(format_lines_func formatter, PyObject *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"level", "indent_len",  NULL};
+    int level = 0;
+    int indent_len = 4;
+    PyObject *py_lines = NULL;
+    PyObject *py_formatted_result = NULL;
+    PyObject *tmp_args = NULL;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|ii:format", kwlist, &level, &indent_len))
+        return NULL;
+
+    if ((tmp_args = Py_BuildValue("(i)", level)) == NULL) {
+        goto fail;
+    }
+    if ((py_lines = formatter(self, tmp_args, NULL)) == NULL) {
+        goto fail;
+    }
+    Py_CLEAR(tmp_args);
+
+    if ((tmp_args = Py_BuildValue("Oi", py_lines, indent_len)) == NULL) {
+        goto fail;
+    }
+    if ((py_formatted_result = py_indented_format(NULL, tmp_args, NULL)) == NULL) {
+        goto fail;
+    }
+
+    Py_DECREF(tmp_args);
+    Py_DECREF(py_lines);
+    return py_formatted_result;
+
+ fail:
+    Py_XDECREF(tmp_args);
+    Py_XDECREF(py_lines);
+    return NULL;
+}
+
+PyDoc_STRVAR(py_indented_format_doc,
+"indented_format(line_fmt_tuples, indent_len=4) -> string\n\
+\n\
+The function supports the display of complex objects which may be\n\
+composed of other complex objects. There is often a need to output\n\
+section headers or single strings and lists of <attribute,value> pairs\n\
+(the attribute in this discussion is called a label), or even blank\n\
+lines. All of these items should line up in columns at different\n\
+indentation levels in order to visually see the structure.\n\
+\n\
+It would not be flexible enough to have object formatting routines\n\
+which simply returned a single string with all the indentation and\n\
+formatting pre-applied. The indentation width may not be what is\n\
+desired. Or more importantly you might not be outputting to text\n\
+display. It might be a GUI which desires to display the\n\
+information. Most GUI's want to handle each string seperately and\n\
+control indentation and the visibility of each item (e.g. a tree\n\
+control).\n\
+\n\
+At the same time we want to satisfy the need for easy and simple text\n\
+output. This routine will do that, e.g.:\n\
+\n\
+    print indented_format(obj.format_lines())\n\
+\n\
+To accomodate necessary flexibility the object formatting methods\n\
+(format_lines()) return a list of tuples. Each tuple represents a\n\
+single line with the first tuple item being the indentation level for\n\
+the line. There may be 0,1 or 2 additional strings in the tuple which\n\
+are to be output on the line. A single string are usually one of two\n\
+things, either a section header or data that has been continuted onto\n\
+multiple lines. Two strings usually represent a <attribute,value> pair\n\
+with the first string being a label (e.g. attribute name).\n\
+\n\
+Each tuple may be:\n\
+\n\
+    (int,)\n\
+        1-value tuple, no strings, e.g. blank line.\n\
+\n\
+    (int, string)\n\
+        2-value tuple, output string at indent level.\n\
+\n\
+    (int, string, string)\n\
+        3-value tuple, first string is a label, second string is a\n\
+        value.  Starting at the indent level output the label, then\n\
+        follow with the value. By keeping the label separate from the\n\
+        value the ouput formatter may elect to align the values in\n\
+        vertical columns for adjacent lines.\n\
+\n\
+Example::\n                                     \
+\n\
+    # This list of tuples,\n\
+\n\
+    [(0, 'Constraints'),\n\
+     (1, 'min:', '0')\n\
+     (1, 'max:', '100'),\n\
+     (1, 'Filter Data'),\n\
+     (2, 'ab bc de f0 12 34 56 78 9a bc de f0')\n\
+     (2, '12 34 56 78 9a bc de f0 12 34 56 78')\n\
+    ]\n\
+\n\
+    # would product this output\n\
+\n\
+    Constraints\n\
+        min: 0\n\
+        max: 100\n\
+        Filter Data:\n\
+           ab bc de f0 12 34 56 78 9a bc de f0\n\
+           12 34 56 78 9a bc de f0 12 34 56 78\n\
+\n\
+:Parameters:\n\
+    line_fmt_tuples : [(level, ...),...]\n\
+        A list of tuples. First tuple value is the indentation level\n\
+        followed by optional strings for the line.\n\
+    indent_len : int\n\
+        Number of space characters repeated for each level and\n\
+        prepended to the line string.\n\
+\n\
+");
+
+static PyObject *
+py_indented_format(PyObject *self, PyObject *args, PyObject *kwds)
+{
+    typedef struct {
+        Py_ssize_t indent_len;
+        Py_ssize_t label_len;
+        Py_ssize_t value_len;
+        Py_ssize_t justification_len;
+    } LineInfo;
+
+
+    static char *kwlist[] = {"lines_pairs", "indent_len", NULL};
+    PyObject *py_lines = NULL;
+    long line_level = 0;
+    int indent_len = 4;
+    int cur_indent_len = 0;
+    char *src=NULL, *dst=NULL;
+    Py_ssize_t num_lines, tuple_len;
+    char *label = NULL;
+    char *value = NULL;
+    Py_ssize_t label_len, value_len, justification_len, max_align;
+    char *src_end = NULL;
+    PyObject *py_line_fmt_tuple = NULL;
+    PyObject *py_level = NULL;
+    PyObject *py_label = NULL;
+    PyObject *py_value = NULL;
+    PyObject *py_string_utf8 = NULL;
+    Py_ssize_t cur_formatted_line_len;
+    PyObject *py_formatted_str = NULL;
+    Py_ssize_t formatted_str_len;
+    char *formatted_str;
+    Py_ssize_t i, j, k;
+    LineInfo *line_info = NULL;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!|i:indented_format", kwlist,
+                                     &PyList_Type, &py_lines, &indent_len))
+        return NULL;
+
+    num_lines = PyList_Size(py_lines);
+
+    /*
+     * Because we interrogate the length of the various strings
+     * multiple times in the various loops we don't want to repeatedly
+     * dereference and query the Pyton objects each time. So we
+     * allocate an array to cache the information for efficency
+     * purposes.
+     */
+
+    if ((line_info = PyMem_Malloc(num_lines*sizeof(LineInfo))) == NULL) {
+        return PyErr_NoMemory();
+    }
+
+    /*
+     * Step 1: Scan all the lines and get the string sizes.  Do all
+     * error checking in this loop so we don't have to do it again
+     * later. Cache the size information for faster access in
+     * subseqent loops.
+     */
+
+    for (i = 0; i < num_lines; i++) {
+        py_label = NULL;
+        label = NULL;
+        label_len = 0;
+
+        py_value = NULL;
+        value = NULL;
+        value_len = 0;
+
+        py_line_fmt_tuple = PyList_GetItem(py_lines, i);
+        if (!PyTuple_Check(py_line_fmt_tuple)) {
+            PyErr_Format(PyExc_TypeError, "line_fmt_tuples[%zd] must be a tuple, not %.200s",
+                         i, Py_TYPE(py_line_fmt_tuple)->tp_name);
+            goto fail;
+        }
+
+        tuple_len = PyTuple_Size(py_line_fmt_tuple);
+
+        if (tuple_len < 1 || tuple_len > 3) {
+            PyErr_Format(PyExc_TypeError, "line_fmt_tuples[%zd] tuple must have 1-3 items, not %d items",
+                         i, tuple_len);
+            goto fail;
+        }
+
+        py_level = PyTuple_GetItem(py_line_fmt_tuple, 0);
+        if (tuple_len == 2) {
+            py_label = PyTuple_GetItem(py_line_fmt_tuple, 1);
+        } else if (tuple_len == 3) {
+            py_label = PyTuple_GetItem(py_line_fmt_tuple, 1);
+            py_value = PyTuple_GetItem(py_line_fmt_tuple, 2);
+        }
+
+        if (!PyInt_Check(py_level)) {
+            PyErr_Format(PyExc_TypeError, "item[0] in the tuple at line_fmt_tuples[%zd] list must be an integer, not %.200s",
+                         i, Py_TYPE(py_level)->tp_name);
+            goto fail;
+        }
+        line_level = PyInt_AsLong(py_level);
+        if (line_level < 0) {
+            PyErr_Format(PyExc_TypeError, "item[0] in the tuple at line_fmt_tuples[%zd] list must be a non-negative integer, not %ld",
+                         i, line_level);
+            goto fail;
+        }
+
+        label_len = value_len = 0;
+        if (py_label) {
+            if ((py_string_utf8 = PyString_UTF8(py_label, "label")) == NULL) {
+                PyErr_Format(PyExc_TypeError, "item[1] in the tuple at line_fmt_tuples[%zd] list must be a string, not %.200s",
+                             i, Py_TYPE(py_label)->tp_name);
+                goto fail;
+            }
+            if (PyString_AsStringAndSize(py_string_utf8, &label, &label_len) == -1) {
+                goto fail;
+            }
+        }
+        Py_CLEAR(py_string_utf8);
+
+        if (py_value) {
+            if ((py_string_utf8 = PyString_UTF8(py_value, "value")) == NULL) {
+                PyErr_Format(PyExc_TypeError, "item[2] in the tuple at line_fmt_tuples[%zd] list must be a string, not %.200s",
+                             i, Py_TYPE(py_value)->tp_name);
+                goto fail;
+            }
+            if (PyString_AsStringAndSize(py_string_utf8, &value, &value_len) == -1) {
+                goto fail;
+            }
+        }
+        Py_CLEAR(py_string_utf8);
+
+        /* Cache the length information */
+        line_info[i].label_len = label_len;
+        line_info[i].value_len = value_len;
+        line_info[i].justification_len = 0;
+        line_info[i].indent_len = line_level * indent_len;
+    }
+
+    /*
+     * Step 2: Locate labels and values that appear on consecutive
+     * lines at the same indentation level. Compute the alignment for
+     * values such that values all line up in the same column.
+     *
+     * We consider only lines that have both a label and a value for
+     * the purpose of computing the alignment, if a line has only a
+     * label we ignore it when establishing value alignment.
+     *
+     * A change in the indendation level resets the alignment.
+     */
+    for (i = 0; i < num_lines;) {
+        cur_indent_len = line_info[i].indent_len;
+        if (line_info[i].value_len) {
+            max_align = line_info[i].label_len;
+        } else {
+            max_align = 0;
+        }
+
+        /*
+         * Search forward for consecutive lines that share the same
+         * indendation level.  If the line has value then use it's
+         * label to compute the maximum width of all labels in this
+         * group of lines.
+         */
+        for (j = i+1; j < num_lines && cur_indent_len == line_info[j].indent_len; j++) {
+            if (line_info[j].value_len) {
+                if (line_info[j].label_len > max_align) {
+                    max_align = line_info[j].label_len;
+                }
+            }
+        }
+
+        /*
+         * Now we know the maximum width of all labels in this group
+         * of lines.  We always provide 1 space between a label and
+         * it's value so we add 1 to the maximum label width, this
+         * becomes our column for value alignment.
+         *
+         * If there were no values in this group of lines max_align
+         * will be zero and we won't be doing any value alignment.
+         */
+        if (max_align) {
+            max_align += 1;
+        }
+
+        /*
+         * Now that we know the alignment column go back and compute
+         * how much space to add at the end of each label to hit the
+         * alignment column when we append the value.
+         */
+        for (k = i; k < j; k++) {
+            if (line_info[k].value_len) { /* Only justify if there is a value */
+                line_info[k].justification_len = max_align - line_info[k].label_len;
+            }
+        }
+
+        /* This group of lines is processed, advance to the next group. */
+        i = j;
+    }
+
+    /*
+     * Step 3: We now know how many characters every line consumes,
+     * compute the total buffer size required and allocate it.
+     */
+    formatted_str_len = 0;
+    for (i = 0; i < num_lines; i++) {
+        cur_formatted_line_len = line_info[i].indent_len +
+                                 line_info[i].label_len +
+                                 line_info[i].justification_len +
+                                 line_info[i].value_len + 1; /* +1 for newline */
+        formatted_str_len += cur_formatted_line_len;
+    }
+
+    if (num_lines > 0) formatted_str_len -= 1; /* last line doesn't get a new line appended */
+    if ((py_formatted_str = PyString_FromStringAndSize(NULL, formatted_str_len)) == NULL) {
+        goto fail;
+    }
+
+    formatted_str = PyString_AsString(py_formatted_str);
+    dst = formatted_str;
+
+    /*
+     * Step 4: For each line: Insert the indent. If it has a label
+     * insert the label. If it has a value insert the justification to
+     * align the values, then insert the value. Finally append a
+     * newline (except for the last line).
+     */
+    for (i = 0; i < num_lines; i++) {
+        py_label = NULL;
+        label = NULL;
+
+        py_value = NULL;
+        value = NULL;
+
+        py_line_fmt_tuple = PyList_GetItem(py_lines, i);
+
+        cur_indent_len = line_info[i].indent_len;
+        label_len = line_info[i].label_len;
+        value_len = line_info[i].value_len;
+        justification_len = line_info[i].justification_len;
+
+        /* Insert the indent */
+        for (j = 0; j < cur_indent_len; j++) *dst++ = ' ';
+
+        /* Insert the label */
+        if (label_len) {
+            py_label = PyTuple_GetItem(py_line_fmt_tuple, 1);
+            py_string_utf8 = PyString_UTF8(py_label, "label");
+            label = PyString_AsString(py_string_utf8);
+
+            for (src = label, src_end = label + label_len; src < src_end; *dst++ = *src++);
+
+            Py_CLEAR(py_string_utf8);
+        }
+
+        /* Insert the alignment justification for the value */
+        for (j = 0; j < justification_len; j++) *dst++ = ' ';
+
+        /* Insert the value */
+        if (value_len) {
+            py_value = PyTuple_GetItem(py_line_fmt_tuple, 2);
+            py_string_utf8 = PyString_UTF8(py_value, "value");
+            value = PyString_AsString(py_string_utf8);
+
+            for (src = value, src_end = value + value_len; src < src_end; *dst++ = *src++);
+
+            Py_CLEAR(py_string_utf8);
+        }
+
+        /* Add a new line, except for the last line */
+        if (i < num_lines-1)
+            *dst++ = '\n';
+    }
+
+    /*
+     * Done. Sanity check we've written exactly the buffer we allocated.
+     */
+    assert(formatted_str + PyString_Size(py_formatted_str) == dst);
+    return py_formatted_str;
+
+ fail:
+    Py_CLEAR(py_string_utf8);
+    PyMem_Free(line_info);
+    Py_XDECREF(py_formatted_str);
+    return NULL;
+}
+
+/* ========================================================================== */
 
 /* Copied from mozilla/security/nss/lib/certdb/alg1485.c */
 typedef struct DnAvaPropsStr {
@@ -619,8 +1233,6 @@ static PyObject *crl_reason_value_to_name = NULL;
 static PyObject *pkcs12_cipher_name_to_value = NULL;
 static PyObject *pkcs12_cipher_value_to_name = NULL;
 
-typedef PyObject *(*format_lines_func)(PyObject *self, PyObject *args, PyObject *kwds);
-
 static PyTypeObject PK11SymKeyType;
 static PyTypeObject PK11ContextType;
 static PyTypeObject SecItemType;
@@ -745,13 +1357,7 @@ static PyObject *
 SecItem_new_from_SECItem(SECItem *item, SECItemKind kind);
 
 static PyObject *
-fmt_pair(int level, const char *label, PyObject *obj);
-
-static PyObject *
-make_line_pairs(int level, PyObject *src);
-
-static PyObject *
-nss_indented_format(PyObject *self, PyObject *args, PyObject *kwds);
+SecItem_new_alloc(size_t len, SECItemType type, SECItemKind kind);
 
 static PyObject *
 pk11_md5_digest(PyObject *self, PyObject *args);
@@ -831,7 +1437,7 @@ static PyObject *
 SECItem_der_to_hex(SECItem *item, int octets_per_line, char *separator);
 
 static PyObject *
-cert_x509_key_usage(PyObject *self, PyObject *args);
+cert_x509_key_usage(PyObject *self, PyObject *args, PyObject *kwds);
 
 PyObject *
 CRLDistributionPts_new_from_SECItem(SECItem *item);
@@ -903,6 +1509,24 @@ static BitStringTable KeyUsageDef[] = {
     {KU_DECIPHER_ONLY,     _("Decipher Only")      }, /* bit 8 */
 #endif
 };
+
+/* returns new reference or NULL on error */
+PyObject *
+PyString_UTF8(PyObject *obj, char *name)
+{
+    if (PyString_Check(obj)) {
+        Py_INCREF(obj);
+        return obj;
+    }
+
+    if  (PyUnicode_Check(obj)) {
+        return PyUnicode_AsUTF8String(obj);
+    }
+
+    PyErr_Format(PyExc_TypeError, "%s must be a string, not %.200s",
+                 name, Py_TYPE(obj)->tp_name);
+    return NULL;
+}
 
 /*
  * read_data_from_file(PyObject *file_arg)
@@ -2162,257 +2786,6 @@ obj_sprintf(const char *fmt, ...)
     return result;
 }
 
-PyDoc_STRVAR(generic_format_doc,
-"format(level=0, indent='    ') -> string)\n\
-\n\
-:Parameters:\n\
-    level : integer\n\
-        Initial indentation level, all subsequent indents are relative\n\
-        to this starting level.\n\
-    indent : string\n\
-        string replicated once for each indent level then prepended to output line\n\
-\n\
-This is equivalent to:\n\
-nss.indented_format(cert.signed_data.format_lines())\n\
-");
-
-PyDoc_STRVAR(generic_format_lines_doc,
-"format_lines(level=0) -> [(level, string),...]\n\
-\n\
-:Parameters:\n\
-    level : integer\n\
-        Initial indentation level, all subsequent indents are relative\n\
-        to this starting level.\n\
-\n\
-Formats the object into a sequence of lines with indent level\n\
-information.  The return value is a list where each list item is a 2\n\
-valued tuple pair.  The first item in the pair is an integer\n\
-representing the indentation level for that line and the second item\n\
-in the pair is the string value for the line.\n\
-\n\
-The output of this function can be formatted into a single string\n\
-by calling nss.indented_format(). The reason this function returns\n\
-(level, string) pairs as opposed to an single indented string is to\n\
-support other text formatting systems with indentation controls.\n\
-");
-
-
-/* Steals reference to obj_str */
-static PyObject *
-line_pair(int level, PyObject *obj_str) {
-    PyObject *pair = NULL;
-
-    if ((pair = PyTuple_New(2)) == NULL) {
-        return NULL;
-    }
-
-    PyTuple_SetItem(pair, 0, PyInt_FromLong(level));
-    PyTuple_SetItem(pair, 1, obj_str);
-
-    return pair;
-}
-
-static PyObject *
-make_line_pairs(int level, PyObject *src)
-{
-    PyObject *lines = NULL;
-    PyObject *obj = NULL;
-    PyObject *pair = NULL;
-    PyObject *seq = NULL;
-    Py_ssize_t n_objs, i;
-
-    if (PyList_Check(src) || PyTuple_Check(src)) {
-        seq = src;
-        n_objs = PySequence_Size(seq);
-        Py_INCREF(seq);
-    } else {
-        obj = src;
-        Py_INCREF(obj);
-        n_objs = 1;
-    }
-
-    if ((lines = PyList_New(n_objs)) == NULL) {
-        goto exit;
-    }
-
-    if (seq) {
-        for (i = 0; i < n_objs; i++) {
-            if ((obj = PySequence_GetItem(seq, i)) == NULL) { /* new reference */
-                Py_DECREF(lines);
-                goto exit;
-            }
-            if ((pair = fmt_pair(level, NULL, obj)) == NULL) {
-                Py_DECREF(lines);
-                goto exit;
-            }
-            PyList_SetItem(lines, i, pair);
-            Py_CLEAR(obj);
-        }
-    } else {
-        if ((pair = fmt_pair(level, NULL, obj)) == NULL) {
-            Py_DECREF(lines);
-            goto exit;
-        }
-        PyList_SetItem(lines, 0, pair);
-    }
-
- exit:
-    Py_XDECREF(obj);
-    Py_XDECREF(seq);
-    return lines;
-}
-
-PyDoc_STRVAR(nss_make_line_pairs_doc,
-"make_line_pairs(level, obj) -> [(level, str), ...]\n\
-\n\
-:Parameters:\n\
-    obj : object\n\
-        If obj is a tuple or list then each member will be wrapped\n\
-        in a 2-tuple of (level, str). If obj is a scalar object\n\
-        then obj will be wrapped in a 2-tuple of (level, obj)\n\
-    level : integer\n\
-        Initial indentation level, all subsequent indents are relative\n\
-        to this starting level.\n\
-\n\
-Return a list of 2-tuple line pairs sutible to passing to\n\
-indented_format(). Each tuple pair consists of a integer\n\
-level value and a string object. This is equivalent to:\n\
-[(level, str(x)) for x in obj].\n\
-As a special case convenience if obj is a scalar object (i.e.\n\
-not a list or tuple) then [(level, str(obj))] will be returned.\n\
-");
-
-static PyObject *
-nss_make_line_pairs(PyObject *self, PyObject *args, PyObject *kwds)
-{
-    static char *kwlist[] = {"level", "obj", NULL};
-    int level = 0;
-    PyObject *obj;
-
-    TraceMethodEnter(self);
-
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "iO:make_line_pairs", kwlist,
-                                     &level, &obj))
-        return NULL;
-
-    return make_line_pairs(level, obj);
-}
-
-static PyObject *
-fmt_pair(int level, const char *label, PyObject *obj)
-{
-    PyObject *obj_str = NULL;
-
-    if (PyString_Check(obj) || PyUnicode_Check(obj)) {
-        Py_INCREF(obj);
-        obj_str = obj;
-    } else {
-        if ((obj_str = PyObject_Str(obj)) == NULL) {
-            return NULL;
-        }
-    }
-
-    if (label) {
-        PyObject *labeled_str = NULL;
-
-        if (obj_str) {
-            if ((labeled_str = PyString_FromFormat("%s: %s", label, PyString_AsString(obj_str))) == NULL) {
-                Py_DECREF(obj_str);
-                return NULL;
-            }
-            Py_DECREF(obj_str);
-            obj_str = labeled_str;
-        } else {
-            if ((obj_str = PyString_FromFormat("%s:", label)) == NULL) {
-                return NULL;
-            }
-        }
-    }
-
-    if (!obj_str) {
-        if ((obj_str = PyString_FromString("None")) == NULL) {
-            return NULL;
-        }
-    }
-
-    return line_pair(level, obj_str); /* steals reference to obj_str */
-}
-
-static PyObject *
-fmt_label(int level, char *label)
-{
-    PyObject *pair = NULL;
-    PyObject *label_str = NULL;
-
-    if (label) {
-        if ((label_str = PyString_FromFormat("%s:", label)) == NULL) {
-            return NULL;
-        }
-    } else {
-        if ((label_str = PyString_FromString("")) == NULL) {
-            return NULL;
-        }
-    }
-
-    if ((pair = PyTuple_New(2)) == NULL) {
-        return NULL;
-    }
-
-    PyTuple_SetItem(pair, 0, PyInt_FromLong(level));
-    PyTuple_SetItem(pair, 1, label_str);
-
-    return pair;
-}
-
-
-static PyObject *
-format_from_lines(format_lines_func formatter, PyObject *self, PyObject *args, PyObject *kwds)
-{
-    static char *kwlist[] = {"level", "indent",  NULL};
-    int level = 0;
-    PyObject *py_indent = NULL;
-    PyObject *py_lines = NULL;
-    PyObject *py_formatted_result = NULL;
-    PyObject *tmp_args = NULL;
-
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|iS:format", kwlist, &level, &py_indent))
-        return NULL;
-
-    if (!py_indent) {
-        if ((py_indent = PyString_FromString("    ")) == NULL) {
-            goto fail;
-        }
-    } else {
-        Py_INCREF(py_indent);
-    }
-
-    if ((tmp_args = Py_BuildValue("(i)", level)) == NULL) {
-        goto fail;
-    }
-    if ((py_lines = formatter(self, tmp_args, NULL)) == NULL) {
-        goto fail;
-    }
-    Py_CLEAR(tmp_args);
-
-    if ((tmp_args = Py_BuildValue("OO", py_lines, py_indent)) == NULL) {
-        goto fail;
-    }
-    if ((py_formatted_result = nss_indented_format(NULL, tmp_args, NULL)) == NULL) {
-        goto fail;
-    }
-
-    Py_DECREF(tmp_args);
-    Py_DECREF(py_lines);
-    Py_DECREF(py_indent);
-    return py_formatted_result;
-
- fail:
-    Py_XDECREF(tmp_args);
-    Py_XDECREF(py_lines);
-    Py_XDECREF(py_indent);
-    return NULL;
-}
-
 static PyObject *
 obj_to_hex(PyObject *obj, int octets_per_line, char *separator)
 {
@@ -2597,7 +2970,7 @@ read_hex(PyObject *self, PyObject *args, PyObject *kwds)
     const char *separators = " ,:\t\n";
     size_t input_len, separators_len;
     Py_ssize_t n_octets;
-    unsigned char octet, *data, *dst;
+    unsigned char octet, *data;
     const char *src, *input_end;
     const char *sep, *separators_end;
     PyObject *py_out_buf;
@@ -2623,7 +2996,6 @@ read_hex(PyObject *self, PyObject *args, PyObject *kwds)
     if ((data = PyMem_Malloc(input_len/2)) == NULL) {
         return PyErr_NoMemory();
     }
-    dst = data;
 
     separators_end = separators + separators_len;
     while (src < input_end) {
@@ -2788,9 +3160,7 @@ der_any_secitem_to_pystr(SECItem *item)
 static PyObject *
 der_set_or_str_secitem_to_pylist_of_pystr(SECItem *item)
 {
-    int type        = item->data[0] & SEC_ASN1_TAGNUM_MASK;
     int constructed = item->data[0] & SEC_ASN1_CONSTRUCTED;
-    char *label = NULL;
     SECItem tmp_item = *item;
     PyObject *py_items = NULL;
     PyObject *py_item = NULL;
@@ -2806,13 +3176,6 @@ der_set_or_str_secitem_to_pylist_of_pystr(SECItem *item)
     if ((py_items = PyList_New(0)) == NULL) {
         return NULL;
     }
-
-    if (type == SEC_ASN1_SET)
-    	label = "Set ";
-    else if (type == SEC_ASN1_SEQUENCE)
-    	label = "Sequence ";
-    else
-    	label = "";
 
     while (tmp_item.len >= 2) {
 	SECItem  tmp_item = tmp_item;
@@ -3687,6 +4050,17 @@ cert_trust_flags_str(unsigned int flags)
     if ((py_flags = PyList_New(0)) == NULL)
         return NULL;
 
+#if NSS_VMAJOR >= 3 && NSS_VMINOR >= 13
+    if (flags & CERTDB_TERMINAL_RECORD) {
+        flags &= ~CERTDB_TERMINAL_RECORD;
+	if ((py_flag = PyString_FromString(_("Terminal Record"))) == NULL) {
+            Py_DECREF(py_flags);
+            return NULL;
+        }
+        PyList_Append(py_flags, py_flag);
+	Py_DECREF(py_flag);
+    }
+#else
     if (flags & CERTDB_VALID_PEER) {
         flags &= ~CERTDB_VALID_PEER;
 	if ((py_flag = PyString_FromString(_("Valid Peer"))) == NULL) {
@@ -3696,6 +4070,7 @@ cert_trust_flags_str(unsigned int flags)
         PyList_Append(py_flags, py_flag);
 	Py_DECREF(py_flag);
     }
+#endif
     if (flags & CERTDB_TRUSTED) {
         flags &= ~CERTDB_TRUSTED;
 	if ((py_flag = PyString_FromString(_("Trusted"))) == NULL) {
@@ -4582,6 +4957,30 @@ SecItem_new_from_SECItem(SECItem *item, SECItemKind kind)
     return (PyObject *) self;
 }
 
+static PyObject *
+SecItem_new_alloc(size_t len, SECItemType type, SECItemKind kind)
+{
+    SecItem *self = NULL;
+
+    TraceObjNewEnter(NULL);
+
+    if ((self = (SecItem *) SecItemType.tp_new(&SecItemType, NULL, NULL)) == NULL) {
+        return NULL;
+    }
+
+    self->item.type = type;
+    self->item.len = len;
+    if ((self->item.data = PyMem_MALLOC(len)) == NULL) {
+        Py_CLEAR(self);
+        return PyErr_NoMemory();
+    }
+
+    self->kind = kind;
+
+    TraceObjNewLeave(self);
+    return (PyObject *) self;
+}
+
 /* ========================================================================== */
 /* ============================ AlgorithmID Class =========================== */
 /* ========================================================================== */
@@ -4681,7 +5080,7 @@ RSAPSSParams_format_lines(SECItem *item, int level)
         if (SEC_QuickDERDecodeItem(arena, &mask_hash_alg,
                                    SEC_ASN1_GET(SECOID_AlgorithmIDTemplate),
                                    &params.maskAlg->parameters) == SECSuccess) {
-            obj1 = oid_secitem_to_pystr_desc(&mask_hash_alg);
+            obj1 = oid_secitem_to_pystr_desc(&mask_hash_alg.algorithm);
         } else {
             obj1 = PyString_FromString("Invalid mask generation algorithm parameters");
         }
@@ -4938,22 +5337,22 @@ AlgorithmID_format_lines(AlgorithmID *self, PyObject *args, PyObject *kwds)
 	case SEC_OID_PKCS5_PBKDF2:
             FMT_LABEL_AND_APPEND(lines, _("Parameters"), level, fail);
             obj = KDF2Params_format_lines(&self->id.parameters, level+1);
-            APPEND_LINE_PAIRS_AND_CLEAR(lines, obj, fail);
+            APPEND_LINE_TUPLES_AND_CLEAR(lines, obj, fail);
 	    break;
 	case SEC_OID_PKCS5_PBES2:
             FMT_LABEL_AND_APPEND(lines, _("Encryption"), level, fail);
             obj = PKCS5V2Params_format_lines(&self->id.parameters, level+1);
-            APPEND_LINE_PAIRS_AND_CLEAR(lines, obj, fail);
+            APPEND_LINE_TUPLES_AND_CLEAR(lines, obj, fail);
 	    break;
 	case SEC_OID_PKCS5_PBMAC1:
             FMT_LABEL_AND_APPEND(lines, _("MAC"), level, fail);
             obj = PKCS5V2Params_format_lines(&self->id.parameters, level+1);
-            APPEND_LINE_PAIRS_AND_CLEAR(lines, obj, fail);
+            APPEND_LINE_TUPLES_AND_CLEAR(lines, obj, fail);
 	    break;
 	default:
             FMT_LABEL_AND_APPEND(lines, _("Parameters"), level, fail);
             obj = PBEParams_format_lines(&self->id.parameters, level+1);
-            APPEND_LINE_PAIRS_AND_CLEAR(lines, obj, fail);
+            APPEND_LINE_TUPLES_AND_CLEAR(lines, obj, fail);
 	    break;
 	}
     }
@@ -4962,7 +5361,7 @@ AlgorithmID_format_lines(AlgorithmID *self, PyObject *args, PyObject *kwds)
     if (alg_tag == SEC_OID_PKCS1_RSA_PSS_SIGNATURE) {
         FMT_LABEL_AND_APPEND(lines, _("Parameters"), level, fail);
         obj = RSAPSSParams_format_lines(&self->id.parameters, level+1);
-        APPEND_LINE_PAIRS_AND_CLEAR(lines, obj, fail);
+        APPEND_LINE_TUPLES_AND_CLEAR(lines, obj, fail);
     }
 #endif
 
@@ -5906,7 +6305,7 @@ SignedData_format_lines(SignedData *self, PyObject *args, PyObject *kwds)
     APPEND_OBJ_TO_HEX_LINES_AND_CLEAR(lines, obj, level+1, fail);
 
     obj = fingerprint_format_lines(&((SecItem *)self->py_der)->item, level);
-    APPEND_LINE_PAIRS_AND_CLEAR(lines, obj, fail);
+    APPEND_LINE_TUPLES_AND_CLEAR(lines, obj, fail);
 
     return lines;
 
@@ -7045,14 +7444,14 @@ CertificateExtension_format_lines(CertificateExtension *self, PyObject *args, Py
         if ((tmp_args = Py_BuildValue("(O)", self->py_value)) == NULL) {
             goto fail;
         }
-        if ((obj = cert_x509_key_usage(NULL, tmp_args)) == NULL) {
+        if ((obj = cert_x509_key_usage(NULL, tmp_args, NULL)) == NULL) {
             goto fail;
         }
         Py_CLEAR(tmp_args);
-        if ((obj_lines = make_line_pairs(level+1, obj)) == NULL) {
+        if ((obj_lines = make_line_fmt_tuples(level+1, obj)) == NULL) {
             goto fail;
         }
-        APPEND_LINE_PAIRS_AND_CLEAR(lines, obj_lines, fail);
+        APPEND_LINE_TUPLES_AND_CLEAR(lines, obj_lines, fail);
         break;
 
     case SEC_OID_X509_SUBJECT_KEY_ID:
@@ -7108,10 +7507,10 @@ CertificateExtension_format_lines(CertificateExtension *self, PyObject *args, Py
             goto fail;
         }
         Py_CLEAR(tmp_args);
-        if ((obj_lines = make_line_pairs(level+1, obj)) == NULL) {
+        if ((obj_lines = make_line_fmt_tuples(level+1, obj)) == NULL) {
             goto fail;
         }
-        APPEND_LINE_PAIRS_AND_CLEAR(lines, obj_lines, fail);
+        APPEND_LINE_TUPLES_AND_CLEAR(lines, obj_lines, fail);
         break;
 
     case SEC_OID_X509_BASIC_CONSTRAINTS:
@@ -7133,10 +7532,10 @@ CertificateExtension_format_lines(CertificateExtension *self, PyObject *args, Py
             goto fail;
         }
         Py_CLEAR(tmp_args);
-        if ((obj_lines = make_line_pairs(level+1, obj)) == NULL) {
+        if ((obj_lines = make_line_fmt_tuples(level+1, obj)) == NULL) {
             goto fail;
         }
-        APPEND_LINE_PAIRS_AND_CLEAR(lines, obj_lines, fail);
+        APPEND_LINE_TUPLES_AND_CLEAR(lines, obj_lines, fail);
         break;
 
     default:
@@ -7866,6 +8265,115 @@ Certificate_verify_now(Certificate *self, PyObject *args)
     return PyInt_FromLong(returned_usages);
 }
 
+PyDoc_STRVAR(Certificate_get_extension_doc,
+"get_extension(oid) -> `CertificateExtension`\n\
+\n\
+Given an oid identifying the extension try to locate it in the\n\
+certificate and return it as generic `CertificateExtension` object. If\n\
+the extension is not present raise a KeyError.\n\
+\n\
+The generic `CertificateExtension` object is not terribly useful on\n\
+it's own, howerver it's value property can be used to intialize\n\
+instances of a class representing the extension.  Or it may be passed\n\
+to functions that convert the value into some other usable format.\n\
+Although one might believe this function should do these conversions\n\
+for you automatically there are too many possible variations. Plus one\n\
+might simple be interested to know if an extension is present or\n\
+not. So why perform conversion work that might not be needed or might\n\
+not be in the format needed? Therefore this function is just one\n\
+simple element in a larger toolbox. Below are some suggestions on how\n\
+to convert the generic `CertificateExtension` object (this list may\n\
+not be complete).\n\
+\n\
+    SEC_OID_PKCS12_KEY_USAGE\n\
+        `x509_key_usage()`\n\
+    SEC_OID_X509_SUBJECT_KEY_ID\n\
+        `SecItem.der_to_hex()`\n\
+    SEC_OID_X509_CRL_DIST_POINTS\n\
+        `CRLDistributionPts()`\n\
+    case SEC_OID_X509_AUTH_KEY_ID\n\
+        `AuthKeyID()`\n\
+    SEC_OID_X509_EXT_KEY_USAGE\n\
+        `x509_ext_key_usage()`\n\
+    SEC_OID_X509_BASIC_CONSTRAINTS\n\
+        `BasicConstraints()`\n\
+    SEC_OID_X509_SUBJECT_ALT_NAME\n\
+        `x509_alt_name()`\n\
+    SEC_OID_X509_ISSUER_ALT_NAME\n\
+        `x509_alt_name()`\n\
+\n\
+:Parameters:\n\
+     oid : may be one of integer, string, SecItem\n\
+         The OID of the certification extension to retreive\n\
+         May be one of:\n\
+\n\
+         * integer: A SEC OID enumeration constant (i.e. SEC_OID\\_*)\n\
+           for example SEC_OID_X509_BASIC_CONSTRAINTS.\n\
+         * string: A string either the OID name, with or without the SEC_OID\\_\n\
+           prefix (e.g. \"SEC_OID_X509_BASIC_CONSTRAINTS\" or \"X509_BASIC_CONSTRAINTS\")\n\
+           or as the dotted decimal representation, for example\n\
+           'OID.2 5 29 19'. Case is not significant for either form.\n\
+         * SecItem: A SecItem object encapsulating the OID in \n\
+           DER format.\n\
+\n\
+:returns:\n\
+    generic `CertificateExtension` object\n\
+\n\
+");
+
+static PyObject *
+Certificate_get_extension(Certificate *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"oid", NULL};
+    PyObject *py_oid;
+    SECOidTag oid_tag = SEC_OID_UNKNOWN;
+    SECOidTag cur_oid_tag = SEC_OID_UNKNOWN;
+    CERTCertExtension **extensions = NULL;
+    CERTCertExtension *cur_extension = NULL, *extension = NULL;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O:get_extension", kwlist,
+                                     &py_oid))
+        return NULL;
+
+    if ((oid_tag = get_oid_tag_from_object(py_oid)) == -1) {
+        return NULL;
+    }
+
+    extension = NULL;
+    for (extensions = self->cert->extensions; extensions && *extensions; extensions++) {
+        cur_extension = *extensions;
+
+        cur_oid_tag = SECOID_FindOIDTag(&cur_extension->id);
+
+        if (cur_oid_tag == SEC_OID_UNKNOWN) {
+            continue;
+        }
+
+        if (oid_tag == cur_oid_tag) {
+            extension = cur_extension;
+            break;
+        }
+
+    }
+
+    if (extension == NULL) {
+        PyObject *py_oid_name = NULL;
+
+        if ((py_oid_name = oid_tag_name_from_tag(oid_tag)) == NULL) {
+            py_oid_name = PyObject_Str(py_oid);
+        }
+        PyErr_Format(PyExc_KeyError, "no extension with OID %s found",
+                     PyString_AsString(py_oid_name));
+        Py_DECREF(py_oid_name);
+        return NULL;
+    }
+
+    return CertificateExtension_new_from_CERTCertExtension(extension);
+
+}
+
 static PyObject *
 Certificate_format_lines(Certificate *self, PyObject *args, PyObject *kwds)
 {
@@ -7877,7 +8385,7 @@ Certificate_format_lines(Certificate *self, PyObject *args, PyObject *kwds)
     PyObject *obj1 = NULL;
     PyObject *obj2 = NULL;
     PyObject *obj3 = NULL;
-    PyObject *obj_line_pairs = NULL;
+    PyObject *obj_line_fmt_tuples = NULL;
     PyObject *obj_lines = NULL;
     PyObject *ssl_trust_lines = NULL, *email_trust_lines = NULL, *signing_trust_lines = NULL;
     PyObject *tmp_args = NULL;
@@ -7946,7 +8454,7 @@ Certificate_format_lines(Certificate *self, PyObject *args, PyObject *kwds)
     if ((obj = Certificate_get_valid_not_after_str(self, NULL)) == NULL) {
         goto fail;
     }
-    FMT_OBJ_AND_APPEND(lines, _("Not After "), obj, level+3, fail);
+    FMT_OBJ_AND_APPEND(lines, _("Not After"), obj, level+3, fail);
     Py_CLEAR(obj);
 
     if ((obj = Certificate_get_subject(self, NULL)) == NULL) {
@@ -8031,7 +8539,7 @@ Certificate_format_lines(Certificate *self, PyObject *args, PyObject *kwds)
     Py_XDECREF(obj2);
     Py_XDECREF(obj3);
     Py_XDECREF(lines);
-    Py_XDECREF(obj_line_pairs);
+    Py_XDECREF(obj_line_fmt_tuples);
     Py_XDECREF(obj_lines);
     Py_XDECREF(tmp_args);
     Py_XDECREF(ssl_trust_lines);
@@ -8066,6 +8574,7 @@ static PyMethodDef Certificate_methods[] = {
     {"verify_hostname",        (PyCFunction)Certificate_verify_hostname,        METH_VARARGS,               Certificate_verify_hostname_doc},
     {"check_valid_times",      (PyCFunction)Certificate_check_valid_times,      METH_VARARGS,               Certificate_check_valid_times_doc},
     {"verify_now",             (PyCFunction)Certificate_verify_now,             METH_VARARGS,               Certificate_verify_now_doc},
+    {"get_extension",          (PyCFunction)Certificate_get_extension,          METH_VARARGS|METH_KEYWORDS, Certificate_get_extension_doc},
     {"format_lines",           (PyCFunction)Certificate_format_lines,           METH_VARARGS|METH_KEYWORDS, generic_format_lines_doc},
     {"format",                 (PyCFunction)Certificate_format,                 METH_VARARGS|METH_KEYWORDS, generic_format_doc},
     {NULL, NULL}  /* Sentinel */
@@ -8642,20 +9151,25 @@ static PyMemberDef AVA_members[] = {
 static int
 CERTAVA_compare(CERTAVA *a, CERTAVA *b)
 {
-    SECComparison cmp_result;
+    SECComparison sec_cmp_result;
+    int int_cmp_result;
     PyObject *a_val_str, *b_val_str;
 
     if (a == NULL && b == NULL) return 0;
     if (a == NULL && b != NULL) return -1;
     if (a != NULL && b == NULL) return 1;
 
-    if ((cmp_result = SECITEM_CompareItem(&a->type, &b->type)) != SECEqual) {
-        return cmp_result == SECLessThan ? -1 : 1;
+    if ((sec_cmp_result = SECITEM_CompareItem(&a->type, &b->type)) != SECEqual) {
+#if 0 /* FIXME when https://bugzilla.redhat.com/show_bug.cgi?id=804802 is fixed */
+        return sec_cmp_result == SECLessThan ? -1 : 1;
+#else
+        return sec_cmp_result < 0 ? SECLessThan : SECGreaterThan;
+#endif
     }
 
     /* Attribute types matched, are values equal? */
-    if ((cmp_result = SECITEM_CompareItem(&a->value,
-                                          &b->value)) == SECEqual) {
+    if ((sec_cmp_result = SECITEM_CompareItem(&a->value,
+                                              &b->value)) == SECEqual) {
         return 0;
     }
 
@@ -8669,11 +9183,11 @@ CERTAVA_compare(CERTAVA *a, CERTAVA *b)
         return -2;
     }
 
-    cmp_result = strcasecmp(PyString_AS_STRING(a_val_str),
-                            PyString_AS_STRING(b_val_str));
+    int_cmp_result = strcasecmp(PyString_AS_STRING(a_val_str),
+                                PyString_AS_STRING(b_val_str));
     Py_DECREF(a_val_str);
     Py_DECREF(b_val_str);
-    return (cmp_result == 0) ? 0 : ((cmp_result < 0) ? -1 : 1);
+    return (int_cmp_result == 0) ? 0 : ((int_cmp_result < 0) ? -1 : 1);
 }
 
 static int
@@ -10436,7 +10950,7 @@ GeneralName_init(GeneralName *self, PyObject *args, PyObject *kwds)
 
     TraceMethodEnter(self);
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|i:GeneralName", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!:GeneralName", kwlist,
                                      &SecItemType, &py_sec_item))
         return -1;
 
@@ -12494,12 +13008,9 @@ CRLDistributionPt_repr(CRLDistributionPt *self)
     }
 
     if (self->pt->distPointType == generalName) {
-        Py_ssize_t n_names = 0;
-
         if ((names = CRLDistributionPt_general_names_tuple(self, AsString)) == NULL) {
             goto exit;
         }
-        n_names = PyTuple_GET_SIZE(names);
 
         /* Paste them all together with ", " between. */
         if ((name_str = _PyString_Join(sep, names)) == NULL) {
@@ -13242,7 +13753,6 @@ AuthKeyID_general_names_tuple(AuthKeyID *self, RepresentationKind repr_kind)
 static PyObject *
 AuthKeyID_repr(AuthKeyID *self)
 {
-    Py_ssize_t n_names;
     PyObject *result = NULL;
     PyObject *sep = NULL;
     PyObject *names = NULL;
@@ -13264,7 +13774,6 @@ AuthKeyID_repr(AuthKeyID *self)
     if ((names = AuthKeyID_general_names_tuple(self, AsString)) == NULL) {
         goto exit;
     }
-    n_names = PyTuple_GET_SIZE(names);
 
     /* Paste them all together with ", " between. */
     if ((name_str = _PyString_Join(sep, names)) == NULL) {
@@ -13520,7 +14029,7 @@ BasicConstraints_init(BasicConstraints *self, PyObject *args, PyObject *kwds)
 
     TraceMethodEnter(self);
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|i:BasicConstraints", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!:BasicConstraints", kwlist,
                                      &SecItemType, &py_sec_item))
 
         return -1;
@@ -16393,166 +16902,6 @@ pk11_pk11_is_fips(PyObject *self, PyObject *args, PyObject *kwds)
     else
         Py_RETURN_FALSE;
 }
-/* ========================================================================== */
-/* ========================= Formatting Utilities =========================== */
-/* ========================================================================== */
-
-
-PyDoc_STRVAR(nss_indented_format_doc,
-"indented_format(line_pairs, indent='    ') -> string\n\
-\n\
-:Parameters:\n\
-    line_pairs : [(level, string),...]\n\
-        A list of pairs. Each pair is a 2 valued tuple with the first pair\n\
-        value being the indentation level and the second pair value being\n\
-        a string value for the line.\n\
-    indent : string\n\
-        A string repeated level times and then prepended to the line string.\n\
-\n\
-This function is equivalent to::\n\
-\n\
-'\\n'.join([indent*x[0]+x[1] for x in obj.format()])\n\
-\n\
-But is more efficient and does more error checking.\n\
-\n\
-Example::\n\
-    \n\
-    format = [(0, 'line 1'), (1, 'line 2'), (0, 'line 3')]\n\
-    nss.indented(format)\n\
-\n\
-    would print\n\
-    line 1\n\
-        line 2\n\
-    line 3\n\
-");
-
-static PyObject *
-nss_indented_format(PyObject *self, PyObject *args, PyObject *kwds)
-{
-    static char *kwlist[] = {"lines_pairs", "indent", NULL};
-    PyObject *py_lines = NULL;
-    PyObject *py_indent = NULL;
-    long line_level = 0;
-    long cur_level = -1;
-    PyObject *py_cur_level_indent = NULL;
-    char *indent = NULL;
-    Py_ssize_t indent_len = 0;
-    long cur_indent_len = 0;
-    char *indent_end = NULL;
-    char *src=NULL, *dst=NULL;
-    Py_ssize_t num_lines;
-    char *line = NULL;
-    Py_ssize_t line_len;
-    char *line_end = NULL;
-    PyObject *py_pair = NULL;
-    PyObject *py_level;
-    PyObject *py_line;
-    Py_ssize_t cur_formatted_line_len;
-    PyObject *py_formatted_str = NULL;
-    Py_ssize_t formatted_str_len;
-    char *formatted_str;
-    long i;
-
-    TraceMethodEnter(self);
-
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!|S:indented_format", kwlist,
-                                     &PyList_Type, &py_lines, &py_indent))
-        return NULL;
-
-    if (!py_indent) {
-        if ((py_indent = PyString_FromString("    ")) == NULL) {
-            goto fail;
-        }
-    } else {
-        Py_INCREF(py_indent);
-    }
-
-    indent_len = PyString_Size(py_indent);
-    formatted_str_len = 0;
-
-    num_lines = PyList_Size(py_lines);
-
-    /* First, scan all the lines and compute the final destination size, do all error in this
-       loop so we don't have to do it again during the copy phase */
-    for (i = 0; i < num_lines; i++) {
-        py_pair = PyList_GetItem(py_lines, i);
-        if (!PyTuple_Check(py_pair) || PyTuple_Size(py_pair) != 2) {
-            PyErr_Format(PyExc_TypeError, "lines[%ld] must be a 2 valued tuple", i);
-            goto fail;
-        }
-
-        py_level = PyTuple_GetItem(py_pair, 0);
-        py_line  = PyTuple_GetItem(py_pair, 1);
-
-        if (!PyInt_Check(py_level)) {
-            PyErr_Format(PyExc_TypeError, "the first item in the pair at lines[%ld] list must be an integer", i);
-            goto fail;
-        }
-        line_level = PyInt_AsLong(py_level);
-        if (line_level < 0) {
-            PyErr_Format(PyExc_TypeError, "the first item in the pair at lines[%ld] list must be a non-negative integer", i);
-            goto fail;
-        }
-
-        if (!(PyString_Check(py_line) || PyUnicode_Check(py_line))) {
-            PyErr_Format(PyExc_TypeError, "the second item in the pair at lines[%ld] list must be a string", i);
-            goto fail;
-        }
-        if (PyString_AsStringAndSize(py_line, &line, &line_len) == -1)
-            goto fail;
-
-        cur_indent_len = line_level * indent_len;
-        cur_formatted_line_len = cur_indent_len + line_len + 1; /* +1 for newline */
-        formatted_str_len += cur_formatted_line_len;
-    }
-
-    /* Now copy the strings into the destination, note all error checking has been done above */
-    if (num_lines > 0) formatted_str_len -= 1; /* last line doesn't get a new line appended */
-    if ((py_formatted_str = PyString_FromStringAndSize(NULL, formatted_str_len)) == NULL) {
-        goto fail;
-    }
-
-    formatted_str = PyString_AsString(py_formatted_str);
-    dst = formatted_str;
-
-    for (i = 0; i < num_lines; i++) {
-        py_pair = PyList_GetItem(py_lines, i);
-        py_level = PyTuple_GetItem(py_pair, 0);
-        py_line  = PyTuple_GetItem(py_pair, 1);
-
-        line_level = PyInt_AsLong(py_level);
-        PyString_AsStringAndSize(py_line, &line, &line_len);
-        line_end = line + line_len;
-
-        if (line_level != cur_level) {
-            cur_level = line_level;
-	    Py_CLEAR(py_cur_level_indent);
-            if ((py_cur_level_indent = PySequence_Repeat(py_indent, cur_level)) == NULL) {
-                goto fail;
-            }
-            if (PyString_AsStringAndSize(py_cur_level_indent, &indent, &indent_len) == -1)
-                goto fail;
-            indent_end = indent + indent_len;
-        }
-
-        for (src = indent; src < indent_end; *dst++ = *src++);
-        for (src = line; src < line_end; *dst++ = *src++);
-        if (i < num_lines-1)
-            *dst++ = '\n';
-    }
-
-    assert(formatted_str + PyString_Size(py_formatted_str) == dst);
-    Py_DECREF(py_indent);
-    Py_XDECREF(py_cur_level_indent);
-    return py_formatted_str;
-
- fail:
-    Py_XDECREF(py_indent);
-    Py_XDECREF(py_cur_level_indent);
-    Py_XDECREF(py_formatted_str);
-    return NULL;
-}
-
 /* ============================== Module Methods ============================= */
 
 PyDoc_STRVAR(nss_nss_is_initialized_doc,
@@ -17762,6 +18111,55 @@ pk11_import_sym_key(PyObject *self, PyObject *args)
     return PyPK11SymKey_new_from_PK11SymKey(sym_key);
 }
 
+PyDoc_STRVAR(pk11_pub_wrap_sym_key_doc,
+"pub_wrap_sym_key(mechanism, pub_key, sym_key) -> SecItem\n\
+\n\
+:Parameters:\n\
+    mechanism : int\n\
+        CK_MECHANISM_TYPE enumerated constant\n\
+    pub_key : `PublicKey` object\n\
+        Public key used to wrap.\n\
+    sym_key : `PK11SymKey` object\n\
+        Symmetric key that will be wrapped.\n\
+:returns:\n\
+    Wrapped symmetric key as SecItem\n\
+\n\
+Wraps a public key wrap (which only RSA can do).\n\
+");
+static PyObject *
+pk11_pub_wrap_sym_key(PyObject *self, PyObject *args)
+{
+    unsigned long mechanism;
+    PublicKey *py_pub_key = NULL;
+    PyPK11SymKey *py_sym_key = NULL;
+    size_t key_len = 0;
+    SecItem  *py_wrapped_key = NULL;
+
+    TraceMethodEnter(self);
+
+    if (!PyArg_ParseTuple(args, "kO!O!:pub_wrap_sym_key",
+                          &mechanism,
+                          &PublicKeyType, &py_pub_key,
+                          &PK11SymKeyType, &py_sym_key))
+        return NULL;
+
+    key_len = SECKEY_PublicKeyStrength(py_pub_key->pk);
+    if ((py_wrapped_key = (SecItem *)SecItem_new_alloc(key_len, siBuffer, SECITEM_wrapped_key)) == NULL) {
+        return NULL;
+    }
+
+    Py_BEGIN_ALLOW_THREADS
+    if ((PK11_PubWrapSymKey(mechanism, py_pub_key->pk, py_sym_key->pk11_sym_key,
+                            &py_wrapped_key->item) != SECSuccess)) {
+	Py_BLOCK_THREADS
+        Py_CLEAR(py_wrapped_key);
+        return set_nspr_error(NULL);
+    }
+    Py_END_ALLOW_THREADS
+
+    return (PyObject *)py_wrapped_key;
+}
+
 PyDoc_STRVAR(pk11_create_digest_context_doc,
 "create_digest_context(hash_alg) -> PK11Context\n\
 \n\
@@ -18295,15 +18693,16 @@ usage bit string.\n\
 ");
 
 static PyObject *
-cert_x509_key_usage(PyObject *self, PyObject *args)
+cert_x509_key_usage(PyObject *self, PyObject *args, PyObject *kwds)
 {
+    static char *kwlist[] = {"bitstr", "repr_kind", NULL};
     PyObject *result;
     SecItem *py_sec_item;
     SECItem bitstr_item;
     int repr_kind = AsEnumDescription;
 
-    if (!PyArg_ParseTuple(args, "O!|i:x509_key_usage",
-                          &SecItemType, &py_sec_item, &repr_kind))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!|i:x509_key_usage", kwlist,
+                                     &SecItemType, &py_sec_item, &repr_kind))
         return NULL;
 
     if (der_bitstring_to_nss_bitstring(&bitstr_item, &py_sec_item->item) != SECSuccess) {
@@ -19187,7 +19586,7 @@ PyDoc_STRVAR(nss_fingerprint_format_lines_doc,
         to this starting level.\n\
 \n\
 Generates digests of data (i.e. fingerprint) and formats\n\
-it into line pairs for text output.\n\
+it into line tuples for text output.\n\
 ");
 
 static PyObject *
@@ -19250,8 +19649,8 @@ module_methods[] = {
     {"sha1_digest",                      (PyCFunction)pk11_sha1_digest,                    METH_VARARGS,               pk11_sha1_digest_doc},
     {"sha256_digest",                    (PyCFunction)pk11_sha256_digest,                  METH_VARARGS,               pk11_sha256_digest_doc},
     {"sha512_digest",                    (PyCFunction)pk11_sha512_digest,                  METH_VARARGS,               pk11_sha512_digest_doc},
-    {"indented_format",                  (PyCFunction)nss_indented_format,                 METH_VARARGS|METH_KEYWORDS, nss_indented_format_doc},
-    {"make_line_pairs",                  (PyCFunction)nss_make_line_pairs,                 METH_VARARGS|METH_KEYWORDS, nss_make_line_pairs_doc},
+    {"indented_format",                  (PyCFunction)py_indented_format,                  METH_VARARGS|METH_KEYWORDS, py_indented_format_doc},
+    {"make_line_fmt_tuples",             (PyCFunction)py_make_line_fmt_tuples,             METH_VARARGS|METH_KEYWORDS, py_make_line_fmt_tuples_doc},
     {"der_universal_secitem_fmt_lines",  (PyCFunction)cert_der_universal_secitem_fmt_lines, METH_VARARGS|METH_KEYWORDS, cert_der_universal_secitem_fmt_lines_doc},
     {"oid_str",                          (PyCFunction)cert_oid_str,                        METH_VARARGS,               cert_oid_str_doc},
     {"oid_tag_name",                     (PyCFunction)cert_oid_tag_name,                   METH_VARARGS,               cert_oid_tag_name_doc},
@@ -19274,6 +19673,7 @@ module_methods[] = {
     {"find_slot_by_name",                (PyCFunction)pk11_find_slot_by_name,              METH_VARARGS,               pk11_find_slot_by_name_doc},
     {"create_context_by_sym_key",        (PyCFunction)pk11_create_context_by_sym_key,      METH_VARARGS|METH_KEYWORDS, pk11_create_context_by_sym_key_doc},
     {"import_sym_key",                   (PyCFunction)pk11_import_sym_key,                 METH_VARARGS,               pk11_import_sym_key_doc},
+    {"pub_wrap_sym_key",                 (PyCFunction)pk11_pub_wrap_sym_key,               METH_VARARGS,               pk11_pub_wrap_sym_key_doc},
     {"create_digest_context",            (PyCFunction)pk11_create_digest_context,          METH_VARARGS,               pk11_create_digest_context_doc},
     {"param_from_iv",                    (PyCFunction)pk11_param_from_iv,                  METH_VARARGS|METH_KEYWORDS, pk11_param_from_iv_doc},
     {"param_from_algid",                 (PyCFunction)pk11_param_from_algid,               METH_VARARGS,               pk11_param_from_algid_doc},
@@ -19290,7 +19690,7 @@ module_methods[] = {
     /* jrdpk11 */
     {"decode_der_crl",                   (PyCFunction)cert_decode_der_crl,                 METH_VARARGS|METH_KEYWORDS, cert_decode_der_crl_doc},
     {"read_der_from_file",               (PyCFunction)cert_read_der_from_file,             METH_VARARGS|METH_KEYWORDS, cert_read_der_from_file_doc},
-    {"x509_key_usage",                   (PyCFunction)cert_x509_key_usage,                 METH_VARARGS,               cert_x509_key_usage_doc},
+    {"x509_key_usage",                   (PyCFunction)cert_x509_key_usage,                 METH_VARARGS|METH_KEYWORDS, cert_x509_key_usage_doc},
     {"x509_ext_key_usage",               (PyCFunction)cert_x509_ext_key_usage,             METH_VARARGS|METH_KEYWORDS, cert_x509_ext_key_usage_doc},
     {"x509_alt_name",                    (PyCFunction)cert_x509_alt_name,                  METH_VARARGS|METH_KEYWORDS, cert_x509_alt_name_doc},
     {"cert_usage_flags",                 (PyCFunction)cert_cert_usage_flags,               METH_VARARGS,               cert_cert_usage_flags_doc},

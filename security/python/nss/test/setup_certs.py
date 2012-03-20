@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import traceback
 import getopt
 import sys
 import os
@@ -11,6 +12,7 @@ import shlex
 import pty
 import tty
 import re
+import time
 
 #-------------------------------------------------------------------------------
 
@@ -28,7 +30,7 @@ client_username = 'test_user'
 config = {
     'verbose'          : False,
     'debug'            : False,
-    'logfile'          : None,
+    'logfile'          : 'setup_certs.log',
     'log_level'        : logging.INFO,
     'interactive'      : sys.stdout.isatty(),
     'dbdir'            : os.path.join(os.path.dirname(sys.argv[0]), 'pki'),
@@ -101,6 +103,7 @@ def run_cmd_with_password(cmd, password_prompt, password):
     if pid == 0:
         os.execlp(argv[0], *argv)
 
+    time.sleep(0.1)            # FIXME: why is this necessary?
     output = ''
     search_position = 0
     while True:
@@ -114,19 +117,19 @@ def run_cmd_with_password(cmd, password_prompt, password):
         if len(new_data) == 0:
             break               # EOF
         output += new_data
-        if config['debug']: loggin.debug("output=%s", output);
+        logging.debug("output=%s", output);
         match = prompt_re.search(output, search_position)
         if match:
             search_position = match.end()
             parsed = output[match.start() : match.end()]
-            if config['debug']: loggin.debug("found password: %s", parsed)
+            logging.debug("found password: %s", parsed)
             os.write(master_fd, "%s\n" % password)
 
     exit_value = os.waitpid(pid, 0)[1]
     exit_signal = exit_value & 0xFF
     exit_code = exit_value >> 8
-    if config['debug']: loggin.debug("output=%s" % output)
-    if config['debug']: loggin.debug("cmd signal=%s, exit_code=%s" % exit_signal, exit_code)
+    logging.debug("output=%s" % output)
+    logging.debug("cmd signal=%s, exit_code=%s" % (exit_signal, exit_code))
 
     return exit_code, output
 
@@ -187,7 +190,6 @@ def setup_certs():
             raise CmdError(cmd, exit_code, output)
 
         # 5. Import public root CA's
-
         cmd = 'modutil -dbdir %s -add ca_certs -libfile libnssckbi.so' % \
             (config['dbdir'])
 
@@ -301,6 +303,7 @@ def main(argv=None):
     try:
         setup_certs()
     except Exception, e:
+        logging.error(traceback.format_exc())
         logging.error(str(e))
         return 1
 
