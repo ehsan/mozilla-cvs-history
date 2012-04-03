@@ -612,8 +612,15 @@ PR_IMPLEMENT(PRDescIdentity) PR_GetUniqueIdentity(const char *layer_name)
     /* this initial code runs unsafe */
 retry:
     PR_ASSERT(NULL == names);
+    /*
+     * In the initial round, both identity_cache.ident and
+     * identity_cache.length are 0, so (identity_cache.ident + 1) is greater
+     * than length.  In later rounds, identity_cache.ident is always less
+     * than length, so (identity_cache.ident + 1) can be equal to but cannot
+     * be greater than length.
+     */
     length = identity_cache.length;
-    if (length < (identity_cache.ident + 1))
+    if ((identity_cache.ident + 1) >= length)
     {
         length += ID_CACHE_INCREMENT;
         names = (char**)PR_CALLOC(length * sizeof(char*));
@@ -627,12 +634,13 @@ retry:
 
     /* now we get serious about thread safety */
     PR_Lock(identity_cache.ml);
-    PR_ASSERT(identity_cache.ident <= identity_cache.length);
+    PR_ASSERT(identity_cache.length == 0 ||
+              identity_cache.ident < identity_cache.length);
     identity = identity_cache.ident + 1;
-    if (identity > identity_cache.length)  /* there's no room */
+    if (identity >= identity_cache.length)  /* there's no room */
     {
         /* we have to do something - hopefully it's already done */
-        if ((NULL != names) && (length >= identity))
+        if ((NULL != names) && (identity < length))
         {
             /* what we did is still okay */
             memcpy(
@@ -645,7 +653,6 @@ retry:
         }
         else
         {
-            PR_ASSERT(identity_cache.ident <= identity_cache.length);
             PR_Unlock(identity_cache.ml);
             if (NULL != names) PR_DELETE(names);
             goto retry;
@@ -656,7 +663,7 @@ retry:
         identity_cache.name[identity] = name;
     }
     identity_cache.ident = identity;
-    PR_ASSERT(identity_cache.ident <= identity_cache.length);
+    PR_ASSERT(identity_cache.ident < identity_cache.length);
     PR_Unlock(identity_cache.ml);
 
     if (NULL != old) PR_DELETE(old);
