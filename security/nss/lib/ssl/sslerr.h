@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslerr.h,v 1.20 2012/03/11 04:32:35 wtc%google.com Exp $ */
+/* $Id: sslerr.h,v 1.21 2012/04/03 02:30:54 wtc%google.com Exp $ */
 #ifndef __SSL_ERR_H_
 #define __SSL_ERR_H_
 
@@ -212,6 +212,7 @@ SSL_ERROR_FEATURE_NOT_SUPPORTED_FOR_SERVERS = (SSL_ERROR_BASE + 118),
 SSL_ERROR_FEATURE_NOT_SUPPORTED_FOR_CLIENTS = (SSL_ERROR_BASE + 119),
 
 SSL_ERROR_INVALID_VERSION_RANGE		= (SSL_ERROR_BASE + 120),
+SSL_ERROR_CIPHER_DISALLOWED_FOR_VERSION	= (SSL_ERROR_BASE + 121),
 
 SSL_ERROR_END_OF_LIST	/* let the c compiler determine the value of this. */
 } SSLErrorCodes;
