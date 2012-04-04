@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl.h,v 1.54 2012/03/18 00:31:19 wtc%google.com Exp $ */
+/* $Id: ssl.h,v 1.55 2012/04/04 03:37:07 wtc%google.com Exp $ */
 
 #ifndef __ssl_h_
 #define __ssl_h_
@@ -78,6 +78,12 @@ SSL_IMPORT PRUint16 SSL_GetNumImplementedCiphers(void);
 ** from model.
 */
 SSL_IMPORT PRFileDesc *SSL_ImportFD(PRFileDesc *model, PRFileDesc *fd);
+
+/*
+** Imports fd into DTLS, returning a new socket.  Copies DTLS configuration
+** from model.
+*/
+SSL_IMPORT PRFileDesc *DTLS_ImportFD(PRFileDesc *model, PRFileDesc *fd);
 
 /*
 ** Enable/disable an ssl mode
@@ -851,6 +857,14 @@ SSL_IMPORT SECStatus SSL_CanBypass(CERTCertificate *cert,
 SSL_IMPORT SECStatus SSL_HandshakeNegotiatedExtension(PRFileDesc * socket,
                                                       SSLExtensionType extId,
                                                       PRBool *yes);
+
+/*
+** How long should we wait before retransmitting the next flight of
+** the DTLS handshake? Returns SECFailure if not DTLS or not in a
+** handshake.
+*/
+SSL_IMPORT SECStatus DTLS_GetTimeout(PRFileDesc *socket,
+                                     PRIntervalTime *timeout);
 
 /*
  * Return a boolean that indicates whether the underlying library

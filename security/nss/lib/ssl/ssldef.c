@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssldef.c,v 1.11 2006/04/20 08:46:34 nelson%bolyard.com Exp $ */
+/* $Id: ssldef.c,v 1.12 2012/04/04 03:37:07 wtc%google.com Exp $ */
 
 #include "cert.h"
 #include "ssl.h"
@@ -138,6 +138,11 @@ int ssl_DefSend(sslSocket *ss, const unsigned char *buf, int len, int flags)
 	    return rv;
 	}
 	sent += rv;
+	
+	if (IS_DTLS(ss) && (len > sent)) { 
+	    /* We got a partial write so just return it */
+	    return sent;
+	}
     } while (len > sent);
     ss->lastWriteBlocked = 0;
     return sent;

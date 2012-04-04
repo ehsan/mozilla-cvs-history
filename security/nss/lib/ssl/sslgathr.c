@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslgathr.c,v 1.13 2012/03/11 04:32:35 wtc%google.com Exp $ */
+/* $Id: sslgathr.c,v 1.14 2012/04/04 03:37:07 wtc%google.com Exp $ */
 #include "cert.h"
 #include "ssl.h"
 #include "sslimpl.h"
@@ -434,6 +434,8 @@ ssl_InitGather(sslGather *gs)
     gs->state = GS_INIT;
     gs->writeOffset = 0;
     gs->readOffset  = 0;
+    gs->dtlsPacketOffset = 0;
+    gs->dtlsPacket.len = 0;
     status = sslBuffer_Grow(&gs->buf, 4096);
     return status;
 }
@@ -445,6 +447,7 @@ ssl_DestroyGather(sslGather *gs)
     if (gs) {	/* the PORT_*Free functions check for NULL pointers. */
 	PORT_ZFree(gs->buf.buf, gs->buf.space);
 	PORT_Free(gs->inbuf.buf);
+	PORT_Free(gs->dtlsPacket.buf);
     }
 }
 

@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslt.h,v 1.20 2012/03/16 01:23:55 wtc%google.com Exp $ */
+/* $Id: sslt.h,v 1.21 2012/04/04 03:37:07 wtc%google.com Exp $ */
 
 #ifndef __sslt_h_
 #define __sslt_h_
@@ -190,7 +190,8 @@ typedef struct SSLCipherSuiteInfoStr {
 } SSLCipherSuiteInfo;
 
 typedef enum {
-    ssl_variant_stream = 0
+    ssl_variant_stream = 0,
+    ssl_variant_datagram = 1
 } SSLProtocolVariant;
 
 typedef struct SSLVersionRangeStr {

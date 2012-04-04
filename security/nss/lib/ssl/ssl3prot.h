@@ -38,7 +38,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3prot.h,v 1.20 2011/10/29 00:29:11 bsmith%mozilla.com Exp $ */
+/* $Id: ssl3prot.h,v 1.21 2012/04/04 03:37:07 wtc%google.com Exp $ */
 
 #ifndef __ssl3proto_h_
 #define __ssl3proto_h_
@@ -60,6 +60,9 @@ typedef uint16 ssl3CipherSuite;
 #define SSL3_RANDOM_LENGTH		32
 
 #define SSL3_RECORD_HEADER_LENGTH	 5
+
+/* SSL3_RECORD_HEADER_LENGTH + epoch/sequence_number */
+#define DTLS_RECORD_HEADER_LENGTH       13
 
 #define MAX_FRAGMENT_LENGTH		16384
      
@@ -150,6 +153,7 @@ typedef enum {
     hello_request	= 0, 
     client_hello	= 1, 
     server_hello	= 2,
+    hello_verify_request = 3,
     new_session_ticket	= 4,
     certificate 	= 11, 
     server_key_exchange = 12,

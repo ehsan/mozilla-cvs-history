@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsecur.c,v 1.58 2012/03/01 18:36:35 kaie%kuix.de Exp $ */
+/* $Id: sslsecur.c,v 1.59 2012/04/04 03:37:07 wtc%google.com Exp $ */
 #include "cert.h"
 #include "secitem.h"
 #include "keyhi.h"
@@ -615,6 +615,7 @@ DoRecv(sslSocket *ss, unsigned char *out, int len, int flags)
     if (!(flags & PR_MSG_PEEK)) {
 	ss->gs.readOffset += amount;
     }
+    PORT_Assert(ss->gs.readOffset <= ss->gs.writeOffset);
     rv = amount;
 
     SSL_TRC(30, ("%d: SSL[%d]: amount=%d available=%d",

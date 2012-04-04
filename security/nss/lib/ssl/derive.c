@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: derive.c,v 1.13 2011/03/22 22:15:22 alexei.volkov.bugs%sun.com Exp $ */
+/* $Id: derive.c,v 1.14 2012/04/04 03:37:07 wtc%google.com Exp $ */
 
 #include "ssl.h" 	/* prereq to sslimpl.h */
 #include "certt.h"	/* prereq to sslimpl.h */
@@ -582,6 +582,8 @@ ssl_canExtractMS(PK11SymKey *pms, PRBool isTLS, PRBool isDH, PRBool *pcbp)
  * CanBypass sets (*pcanbypass) to FALSE and returns SECSuccess indicating the
  * arguments were all valid but the slot cannot be bypassed.
  */
+
+/* XXX Add SSL_CBP_TLS1_1 and test it in protocolmask when setting isTLS. */
 
 SECStatus 
 SSL_CanBypass(CERTCertificate *cert, SECKEYPrivateKey *srvPrivkey,
