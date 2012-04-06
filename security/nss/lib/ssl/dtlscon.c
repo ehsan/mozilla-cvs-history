@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: dtls1con.c,v 1.1 2012/04/04 03:37:07 wtc%google.com Exp $ */
+/* $Id: dtlscon.c,v 1.1 2012/04/06 00:34:25 wtc%google.com Exp $ */
 
 #include "ssl.h"
 #include "sslimpl.h"
