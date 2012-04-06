@@ -40,7 +40,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.176 2012/04/04 03:37:07 wtc%google.com Exp $ */
+/* $Id: ssl3con.c,v 1.177 2012/04/06 01:30:35 wtc%google.com Exp $ */
 
 /* TODO(ekr): Implement HelloVerifyRequest on server side. OK for now. */
 
@@ -2702,7 +2702,7 @@ SSL3_SendAlert(sslSocket *ss, SSL3AlertLevel level, SSL3AlertDescription desc)
 
     ssl_GetSSL3HandshakeLock(ss);
     if (level == alert_fatal) {
-	if (ss->sec.ci.sid) {
+	if (!ss->opt.noCache && ss->sec.ci.sid) {
 	    ss->sec.uncache(ss->sec.ci.sid);
 	}
     }
@@ -2872,7 +2872,9 @@ ssl3_HandleAlert(sslSocket *ss, sslBuffer *buf)
     default: 		error = SSL_ERROR_RX_UNKNOWN_ALERT;               break;
     }
     if (level == alert_fatal) {
-	ss->sec.uncache(ss->sec.ci.sid);
+	if (!ss->opt.noCache) {
+	    ss->sec.uncache(ss->sec.ci.sid);
+	}
 	if ((ss->ssl3.hs.ws == wait_server_hello) &&
 	    (desc == handshake_failure)) {
 	    /* XXX This is a hack.  We're assuming that any handshake failure
