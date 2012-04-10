@@ -114,6 +114,7 @@ $throttleExceptions = array(
 // All other channels only have access to the OVERRIDE_DIR for update info.
 $nightlyChannels = array(
     'nightly',
+    'nightlytest',
     'nightly-tracemonkey',
     'nightly-electrolysis',
     'nightly-mozilla-2.1',
@@ -140,6 +141,7 @@ $productBranchVersions = array(
         '3.6*'    => 'mozilla-1.9.2',
         '*'       => array(
            'nightly'                 => 'mozilla-central',
+           'nightlytest'             => 'mozilla-central-test',
            'nightly-tracemonkey'     => 'tracemonkey',
            'nightly-electrolysis'    => 'electrolysis',
            'nightly-jaegermonkey'    => 'jaegermonkey',
